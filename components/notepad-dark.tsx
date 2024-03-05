@@ -5,6 +5,8 @@
  */
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, Star } from "lucide-react"
+import { Textarea } from "./ui/textarea"
+import { Input } from "./ui/input"
 
 export default function Component() {
   return (
@@ -67,11 +69,11 @@ export default function Component() {
           </ul>
         </aside>
         <main className="flex-1 p-5">
-          <div className="border-b border-gray-700 pb-4 mb-4">
-            <h1 className="text-2xl font-bold mb-1">alana's notepad</h1>
+          <div className="bg-[#1e1e1e] pb-4 mb-4">
+            <Input placeholder="Alana's notes"/>
             <p className="text-gray-400">March 4, 2024 at 5:35 PM</p>
           </div>
-          <p>hi, welcome to my website/notepad</p>
+          <Textarea className="bg-[#1e1e1e]">hi, welcome to my website/notepad</Textarea>
         </main>
       </div>
     </div>
