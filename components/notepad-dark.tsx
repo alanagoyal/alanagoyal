@@ -3,10 +3,32 @@
  * @see https://v0.dev/t/RGOPJWMx88U
  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
  */
-import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Star } from "lucide-react"
-import { Textarea } from "./ui/textarea"
-import { Input } from "./ui/input"
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, Star } from "lucide-react";
+import { Textarea } from "./ui/textarea";
+import { Input } from "./ui/input";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+const items = [
+  {
+    title: "alana's notepad",
+    subtitle: "hi, welcome...",
+    href: "/",
+  },
+  {
+    title: "groceries 🍎",
+    href: "/examples/forms/account",
+  },
+  {
+    title: "priorities ✨",
+    href: "/examples/forms/appearance",
+  },
+  {
+    title: "likes ❤️",
+    href: "/examples/forms/notifications",
+  },
+];
 
 export default function Component() {
   return (
@@ -23,10 +45,20 @@ export default function Component() {
               <Badge variant="secondary">priority</Badge>
             </li>
             <li className="mb-4">Today</li>
-            <li className="mb-4">
+          </ul>
+          <ul>
+            {items.map((item, index) => (
+              <li key={index} className="mb-4">
+                <Link href={item.href}>
+                    <h2 className="font-bold">{item.title}</h2>
+                    <p>{item.subtitle}</p>
+                </Link>
+              </li>
+            ))}
+            <Link href="/" className="mb-4">
               <h2 className="font-bold">alana's notepad</h2>
               <p>5:35 PM hi, welcome...</p>
-            </li>
+            </Link>
             <li className="mb-4">
               <h2 className="font-bold">AI account takeov...</h2>
               <p>11:19 AM portmanteau</p>
@@ -70,12 +102,14 @@ export default function Component() {
         </aside>
         <main className="flex-1 p-5">
           <div className="bg-[#1e1e1e] pb-4 mb-4">
-            <Input placeholder="Alana's notes"/>
+            <Input placeholder="Alana's notes" />
             <p className="text-gray-400">March 4, 2024 at 5:35 PM</p>
           </div>
-          <Textarea className="bg-[#1e1e1e]">hi, welcome to my website/notepad</Textarea>
+          <Textarea className="bg-[#1e1e1e]">
+            hi, welcome to my website/notepad
+          </Textarea>
         </main>
       </div>
     </div>
-  )
+  );
 }
