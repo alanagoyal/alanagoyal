@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import Sidebar from "@/components/sidebar";
+import { createClient } from "@/utils/supabase/server";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -15,11 +16,13 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = createClient()
+  const {data, error} = await supabase.from("notes").select("*");
   return (
     <html lang="en">
       <head>
@@ -53,7 +56,7 @@ export default function RootLayout({
       >
         <div className="bg-[#1e1e1e] text-white min-h-screen">
           <div className="flex">
-            <Sidebar />
+            <Sidebar notes={data}/>
             {children}
           </div>
         </div>

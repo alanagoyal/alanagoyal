@@ -1,13 +1,13 @@
 import { sidebarItems } from "@/lib/utils";
 import Link from "next/link";
 
-export default function SidebarContent() {
+export default function SidebarContent({notes}: {notes: any[]}) {
   return (
     <>
       <ul className="space-y-4">
-        {sidebarItems.map((item, index) => (
+        {notes.map((item, index) => (
           <li key={index}>
-            <Link href={item.href}>
+            <Link href={`/${item.title}`}>
               <h2 className="font-bold">{item.title}</h2>
               <p>{item.subtitle}</p>
             </Link>
