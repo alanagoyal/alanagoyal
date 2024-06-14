@@ -3,7 +3,8 @@ import { createClient } from "@/utils/supabase/server";
 
 export default async function NotePage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const title = params.id;
+  // Replace hyphens with spaces to match the title format in the database
+  const title = params.id.replace(/-/g, ' ');
   const { data, error } = await supabase
     .from("notes")
     .select("*")
