@@ -7,7 +7,7 @@ export default function Sidebar({notes}: {notes: any[] | null}) {
     }
     
     return (
-        <aside className="w-64 border-r border-gray-700 p-5">
+        <aside className="w-[300px] border-r border-gray-700 p-5">
           <SidebarHeader />
           <SidebarContent notes={notes}/>
         </aside>

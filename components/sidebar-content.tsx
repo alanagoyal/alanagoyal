@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 export default function SidebarContent({notes}: {notes: any[]}) {
-  const sortedNotes = notes.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const publicNotes = notes.filter(note => note.public);
+  const sortedNotes = publicNotes.sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   function formatTitleForUrl(title: string): string {
     if (title) {
