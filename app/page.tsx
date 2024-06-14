@@ -2,8 +2,8 @@ import Notepad from "@/components/notepad";
 
 export default function Home() {
   return (
-    <div className="">
+    <main className="w-full flex-1 p-5">
       <Notepad />
-    </div>
+    </main>
   );
 }

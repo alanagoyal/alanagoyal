@@ -13,14 +13,14 @@ export const sidebarItems = [
   },
   {
     title: "groceries 🍎",
-    href: "/examples/forms/account",
+    href: "/",
   },
   {
     title: "priorities ✨",
-    href: "/examples/forms/appearance",
+    href: "/",
   },
   {
     title: "likes ❤️",
-    href: "/examples/forms/notifications",
+    href: "/",
   },
 ];

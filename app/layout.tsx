@@ -3,6 +3,7 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
+import Sidebar from "@/components/sidebar";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -50,7 +51,12 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        {children}
+        <div className="bg-[#1e1e1e] text-white min-h-screen">
+          <div className="flex">
+            <Sidebar />
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
