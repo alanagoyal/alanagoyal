@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import Sidebar from "@/components/sidebar";
 import { createClient } from "@/utils/supabase/server";
+import { Toaster } from "@/components/ui/toaster";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -58,6 +59,7 @@ export default async function RootLayout({
           <div className="flex">
             <Sidebar notes={data}/>
             {children}
+            <Toaster />
           </div>
         </div>
       </body>

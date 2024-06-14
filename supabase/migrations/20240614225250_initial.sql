@@ -3,7 +3,10 @@ create table "public"."notes" (
     "title" text,
     "content" text,
     "created_at" timestamp with time zone not null default now(),
-    "updated_at" timestamp with time zone
+    "updated_at" timestamp with time zone,
+    "emoji" text,
+    "public" boolean,
+    "session_id" uuid
 );
 
 
@@ -54,5 +57,13 @@ grant trigger on table "public"."notes" to "service_role";
 grant truncate on table "public"."notes" to "service_role";
 
 grant update on table "public"."notes" to "service_role";
+
+create policy "Anyone can do all"
+on "public"."notes"
+as permissive
+for all
+to public
+using (true);
+
 
 

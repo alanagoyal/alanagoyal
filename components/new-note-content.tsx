@@ -4,8 +4,9 @@ import { createClient } from "@/utils/supabase/client";
 import { Textarea } from "./ui/textarea";
 import { toast } from "./ui/use-toast";
 
-export default async function NewNoteContent() {
+export default function NewNoteContent() {
   const supabase = createClient();
+
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && event.metaKey) {
       const content = (event.target as HTMLTextAreaElement).value;
@@ -20,15 +21,23 @@ export default async function NewNoteContent() {
   };
 
   async function addNoteToDatabase(note: any, event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const { error } = await supabase.from("notes").insert(note);
-    if (error) {
-      console.error("Error adding note to database:", error);
-    } else {
-      toast({
-        title: "Note sent",
-        description: "Your note has been sent to the alana",
-      });
-      (event.target as HTMLTextAreaElement).value = "";
+    toast({
+      title: "Note sent",
+      description: "Your note has been sent to the database",
+    });
+    try {
+      const { error } = await supabase.from("notes").insert(note);
+      if (error) {
+        console.error("Error adding note to database:", error);
+      } else {
+        toast({
+          title: "Note sent",
+          description: "Your note has been sent to the database",
+        });
+        (event.target as HTMLTextAreaElement).value = "";
+      }
+    } catch (error) {
+      console.error("Error processing request:", error);
     }
   }
 
