@@ -21,18 +21,13 @@ export default function NewNoteContent() {
   };
 
   async function addNoteToDatabase(note: any, event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    toast({
-      title: "Note sent",
-      description: "Your note has been sent to the database",
-    });
     try {
       const { error } = await supabase.from("notes").insert(note);
       if (error) {
         console.error("Error adding note to database:", error);
       } else {
         toast({
-          title: "Note sent",
-          description: "Your note has been sent to the database",
+          title: "Thanks for your note!",
         });
         (event.target as HTMLTextAreaElement).value = "";
       }
