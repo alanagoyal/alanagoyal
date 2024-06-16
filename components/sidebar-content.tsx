@@ -17,7 +17,7 @@ export default function SidebarContent({ notes }: { notes: any[] }) {
       <ul className="space-y-4">
         {sortedNotes.map((item, index) => (
           <li key={index}>
-            <Link href={`/${item.slug}`}>
+            <Link href={`/${item.slug || ''}`}>
               <h2 className="font-bold">{item.title}</h2>
               <p>{item.subtitle}</p>
             </Link>

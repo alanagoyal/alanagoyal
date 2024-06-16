@@ -1,5 +1,4 @@
 import ReactMarkdown from "react-markdown";
-import NewNoteContent from "./new-note-content";
 
 export default function NoteContent({ note }: { note: any }) {
   return (
