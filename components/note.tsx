@@ -18,6 +18,12 @@ export default function Note({ note }: { note: any }) {
   const [title, setTitle] = useState("");
   const [sessionId, setSessionId] = useState("");
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && event.metaKey) {
+      addNoteToDatabase();
+    }
+  };
+
   async function addNoteToDatabase() {
    setContent(content);
    setTitle(title);
@@ -37,7 +43,7 @@ export default function Note({ note }: { note: any }) {
         console.error("Error adding note to database:", error);
       } else {
         toast({
-          description: "thanks for your note 🙂",
+          description: "Thanks for your note 🙂",
         });
         router.refresh();
       }
@@ -51,7 +57,10 @@ export default function Note({ note }: { note: any }) {
     <div>
       <SessionId setSessionId={setSessionId} />
       <NewNoteHeader note={note} setTitle={setTitle} />
-      <NewNoteContent setContent={setContent} addNoteToDatabase={addNoteToDatabase} />
+      <NewNoteContent setContent={setContent} handleKeyPress={handleKeyPress} />
+      <p className="text-xs text-muted-foreground pt-2 cursor-pointer" onClick={addNoteToDatabase}>
+        Press ⌘ + enter or click to save note
+      </p>
     </div>)
   }
   return (

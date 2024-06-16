@@ -22,8 +22,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient()
-  const {data, error} = await supabase.from("notes").select("*");
+  const supabase = createClient();
+  const { data } = await supabase.from("notes").select("*");
   return (
     <html lang="en">
       <head>
@@ -58,7 +58,7 @@ export default async function RootLayout({
       >
         <div className="bg-[#1e1e1e] text-white min-h-screen">
           <div className="flex">
-            <Sidebar notes={data}/>
+            <Sidebar notes={data} />
             {children}
             <Toaster />
           </div>

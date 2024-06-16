@@ -2,29 +2,16 @@
 
 import { Textarea } from "./ui/textarea";
 
-export default function NewNoteContent({ setContent, addNoteToDatabase }: { setContent: (content: string) => void, addNoteToDatabase: () => void }) {
+export default function NewNoteContent({ setContent, handleKeyPress }: { setContent: (content: string) => void, handleKeyPress: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void }) {
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && event.metaKey) {
-      const content = (event.target as HTMLTextAreaElement).value;
-      setContent(content); 
-      event.preventDefault(); 
-      addNoteToDatabase();
-      (event.target as HTMLTextAreaElement).value = "";
-
-    }
-  };
-   
   return (
     <div className="h-full">
       <Textarea
         className="bg-[#1e1e1e] h-full"
         placeholder="Enter your note here..."
+        onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyPress}
       />
-      <p className="text-xs text-muted-foreground pt-2">
-        Press ⌘ + Enter to send
-      </p>
     </div>
   );
 }
