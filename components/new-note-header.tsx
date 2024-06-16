@@ -22,7 +22,7 @@ export default function NewNoteHeader({ note, setTitle }: {note: any, setTitle: 
         />
         <NewNote/>
       </div>
-      <p className="text-muted-foreground text-sm">{formattedDate}</p>
+      <p className="text-muted-foreground text-sm pt-2">{formattedDate}</p>
     </div>
   );
 }
