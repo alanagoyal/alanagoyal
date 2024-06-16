@@ -3,10 +3,9 @@ create table "public"."notes" (
     "title" text,
     "content" text,
     "created_at" timestamp with time zone not null default now(),
-    "updated_at" timestamp with time zone,
-    "emoji" text,
     "public" boolean,
-    "session_id" uuid
+    "session_id" uuid,
+    "slug" text
 );
 
 

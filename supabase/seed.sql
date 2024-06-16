@@ -118,14 +118,14 @@ SET row_security = off;
 -- Data for Name: notes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "updated_at", "emoji", "public", "session_id") VALUES
-	('1d3b70d6-ce1b-4d66-9936-4f5fd38c43aa', 'todo', '-fix this', '2024-06-14 22:46:44.651141+00', NULL, '📌', true, NULL),
-	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries', '-perfect bars
--brie', '2024-06-14 22:47:45.808451+00', NULL, '🍎', true, NULL),
-	('02a00112-d0a2-4586-a43a-195b0f4105bf', 'currently listening to', '-morgan wallen
+INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "public", "session_id", "slug") VALUES
+	('1d3b70d6-ce1b-4d66-9936-4f5fd38c43aa', 'todo 📌', '-fix this', '2024-06-14 22:46:44.651141+00', true, NULL, 'todo'),
+	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries 🍎', '-perfect bars
+-brie', '2024-06-14 22:47:45.808451+00', true, NULL, 'groceries'),
+	('02a00112-d0a2-4586-a43a-195b0f4105bf', 'currently listening to 🎧', '-morgan wallen
 -sultan + shepherd
--ariana grande', '2024-06-14 22:48:41.026439+00', NULL, '🎧', true, NULL),
-	('165d6bdf-630f-4173-915b-04fa530c013e', 'new note from user', 'alana is the best', '2024-06-14 22:51:23.481+00', NULL, NULL, false, NULL);
+-ariana grande', '2024-06-14 22:48:41.026439+00', true, NULL, 'currently-listening-to'),
+	('46b61917-2133-4206-855c-baa16508bb07', 'reading list 📚', '-unreasonable hospitality', '2024-06-16 15:05:32.349377+00', true, NULL, 'reading-list');
 
 
 --
