@@ -21,7 +21,7 @@ export default function Note({ note }: { note: any }) {
   async function addNoteToDatabase() {
    setContent(content);
    setTitle(title);
-   
+
     const newNote = {
       title: title,
       slug: `new-note-${uuidv4()}`,
@@ -37,7 +37,7 @@ export default function Note({ note }: { note: any }) {
         console.error("Error adding note to database:", error);
       } else {
         toast({
-          description: "Thanks for your note!",
+          description: "thanks for your note 🙂",
         });
         router.refresh();
       }
