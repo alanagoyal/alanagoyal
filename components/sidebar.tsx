@@ -69,14 +69,14 @@ export default function Sidebar({ notes }: { notes: any[] }) {
   return (
     <div className="p-5">
       <SessionId setSessionId={setSessionId} />
-      <ul className="space-y-2">
+      <ul>
         {categoryOrder.map((categoryKey) =>
           groupedNotes[categoryKey] ? (
             <li key={categoryKey}>
-              <h3 className="py-2">
+              <h3 className="py-4">
                 {labels[categoryKey as keyof typeof labels]}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-4">
                 {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
                   (item: any, index: number) => renderNote(item, index)
                 )}
