@@ -45,6 +45,7 @@ export default function Note({ note }: { note: any }) {
         toast({
           description: "Thanks for your note 🙂",
         });
+        router.push(`/${newNote.slug}`);
         router.refresh();
       }
     } catch (error) {
