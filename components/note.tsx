@@ -9,7 +9,8 @@ import { toast } from "./ui/use-toast";
 import { useState } from "react";
 import SessionId from "./session-id";
 import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { isToday } from "date-fns";
 
 export default function Note({ note }: { note: any }) {
   const supabase = createClient();
@@ -25,8 +26,8 @@ export default function Note({ note }: { note: any }) {
   };
 
   async function addNoteToDatabase() {
-   setContent(content);
-   setTitle(title);
+    setContent(content);
+    setTitle(title);
 
     const newNote = {
       title: title,
@@ -35,6 +36,7 @@ export default function Note({ note }: { note: any }) {
       created_at: new Date(),
       public: false,
       session_id: sessionId,
+      category: "today",
     };
 
     try {
@@ -55,14 +57,21 @@ export default function Note({ note }: { note: any }) {
 
   if (note.title === "new note") {
     return (
-    <div>
-      <SessionId setSessionId={setSessionId} />
-      <NewNoteHeader note={note} setTitle={setTitle} />
-      <NewNoteContent setContent={setContent} handleKeyPress={handleKeyPress} />
-      <p className="text-xs text-muted-foreground pt-2 cursor-pointer" onClick={addNoteToDatabase}>
-        Press ⌘ + enter or click to save note
-      </p>
-    </div>)
+      <div>
+        <SessionId setSessionId={setSessionId} />
+        <NewNoteHeader note={note} setTitle={setTitle} />
+        <NewNoteContent
+          setContent={setContent}
+          handleKeyPress={handleKeyPress}
+        />
+        <p
+          className="text-xs text-muted-foreground pt-2 cursor-pointer"
+          onClick={addNoteToDatabase}
+        >
+          Press ⌘ + enter or click to save note
+        </p>
+      </div>
+    );
   }
   return (
     <div>

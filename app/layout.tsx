@@ -3,9 +3,9 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import Sidebar from "@/components/sidebar";
 import { createClient } from "@/utils/supabase/server";
 import { Toaster } from "@/components/ui/toaster";
+import Sidebar from "@/components/sidebar";
 
 const fontSans = FontSans({
   subsets: ["latin"],

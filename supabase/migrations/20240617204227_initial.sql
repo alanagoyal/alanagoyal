@@ -5,7 +5,8 @@ create table "public"."notes" (
     "created_at" timestamp with time zone not null default now(),
     "public" boolean,
     "session_id" uuid,
-    "slug" text
+    "slug" text,
+    "category" text
 );
 
 
