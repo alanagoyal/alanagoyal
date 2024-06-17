@@ -32,7 +32,7 @@ export default function Note({ note }: { note: any }) {
     const newNote = {
       title: title ? title : "new note 👋🏼",
       slug: `new-note-${uuidv4()}`,
-      content: content,
+      content: content ? content : "no additional text",
       created_at: new Date(),
       public: false,
       session_id: sessionId,
@@ -58,7 +58,7 @@ export default function Note({ note }: { note: any }) {
 
   if (note.title === "new note") {
     return (
-      <div className="p-5">
+      <div>
       <SessionId setSessionId={setSessionId} />
         <NewNoteHeader note={note} setTitle={setTitle} />
         <NewNoteContent
@@ -69,7 +69,7 @@ export default function Note({ note }: { note: any }) {
           className="text-xs text-muted-foreground pt-2 cursor-pointer"
           onClick={addNoteToDatabase}
         >
-          Press ⌘ + enter or click to save note
+          Press ⌘ + Enter or click to save note
         </p>
       </div>
     );

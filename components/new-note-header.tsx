@@ -21,9 +21,10 @@ export default function NewNoteHeader({
       <p className="text-center text-muted-foreground text-xs">{formattedDate}</p>
       <div className="flex items-center justify-between">
         <Input
-          className="placeholder:text-muted-foreground text-lg font-bold"
+          className="placeholder:text-muted-foreground text-lg font-bold mr-2"
           placeholder="Your title here..."
           onChange={(e) => setTitle(e.target.value)}
+          autoFocus
         />
         <NewNote />
       </div>
