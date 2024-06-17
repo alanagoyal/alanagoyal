@@ -30,7 +30,7 @@ export default function Note({ note }: { note: any }) {
     setTitle(title);
 
     const newNote = {
-      title: title,
+      title: title ? title : "new note 👋🏼",
       slug: `new-note-${uuidv4()}`,
       content: content,
       created_at: new Date(),
@@ -45,7 +45,8 @@ export default function Note({ note }: { note: any }) {
         console.error("Error adding note to database:", error);
       } else {
         toast({
-          description: "Thanks for your note 🙂",
+          title: "Thanks for your note 🙂",
+          description: "Your note will appear only to you in this session",
         });
         router.push(`/${newNote.slug}`);
         router.refresh();
