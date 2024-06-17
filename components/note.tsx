@@ -57,8 +57,8 @@ export default function Note({ note }: { note: any }) {
 
   if (note.title === "new note") {
     return (
-      <div>
-        <SessionId setSessionId={setSessionId} />
+      <div className="p-5">
+      <SessionId setSessionId={setSessionId} />
         <NewNoteHeader note={note} setTitle={setTitle} />
         <NewNoteContent
           setContent={setContent}

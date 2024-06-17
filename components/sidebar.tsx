@@ -66,7 +66,7 @@ export default function Sidebar({ notes }: { notes: any[] }) {
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
-    <aside className="w-[300px] border-r border-gray-700 p-5">
+    <div className="p-5">
       <SessionId setSessionId={setSessionId} />
       <ul className="space-y-2">
         {categoryOrder.map((categoryKey) =>
@@ -84,6 +84,6 @@ export default function Sidebar({ notes }: { notes: any[] }) {
           ) : null
         )}
       </ul>
-    </aside>
+    </div>
   );
 }
