@@ -15,6 +15,9 @@ export default function SidebarContent({ notes }: { notes: any[] }) {
     <li key={index}>
       <Link href={`/${item.slug || ''}`}>
         <h2 className="font-bold pl-4">{item.title}</h2>
+        <p className="text-xs pl-4 pr-4" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <strong>{new Date(item.created_at).toLocaleDateString('en-US')}</strong> {item.content.replace(/[#_*~`>+\[\]!()-]/g, '')}
+        </p>
       </Link>
     </li>
   );
