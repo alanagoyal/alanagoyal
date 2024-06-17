@@ -18,6 +18,7 @@ export default function NewNoteHeader({
 
   return (
     <div className="bg-[#1e1e1e] pb-4 mb-4">
+      <p className="text-center text-muted-foreground text-xs">{formattedDate}</p>
       <div className="flex items-center justify-between">
         <Input
           className="placeholder:text-muted-foreground text-lg font-bold"
@@ -26,7 +27,6 @@ export default function NewNoteHeader({
         />
         <NewNote />
       </div>
-      <p className="text-muted-foreground text-sm pt-2">{formattedDate}</p>
     </div>
   );
 }
