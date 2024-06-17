@@ -5,12 +5,9 @@ import Link from "next/link";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 
-export default function Sidebar({notes}: {notes: any[] | null}) {
-  if (!notes) {
-      return null
-  }
-  
+export default function Sidebar({ notes }: { notes: any[] }) {
   const [sessionId, setSessionId] = useState("");
+
   const userSpecificNotes = notes.filter(
     (note) => note.public || note.session_id === sessionId
   );
@@ -70,7 +67,6 @@ export default function Sidebar({notes}: {notes: any[] | null}) {
 
   return (
     <aside className="w-[300px] border-r border-gray-700 p-5">
-
       <SessionId setSessionId={setSessionId} />
       <ul className="space-y-2">
         {categoryOrder.map((categoryKey) =>

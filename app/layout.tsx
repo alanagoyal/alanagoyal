@@ -58,7 +58,7 @@ export default async function RootLayout({
       >
         <div className="bg-[#1e1e1e] text-white min-h-screen">
           <div className="flex">
-            <Sidebar notes={data} />
+            {data && <Sidebar notes={data} />}
             {children}
             <Toaster />
           </div>
