@@ -17,7 +17,7 @@ export default function NewNoteHeader({
   );
 
   return (
-    <div className="bg-[#1e1e1e] pb-4 mb-4">
+    <div className="bg-[#1e1e1e] mb-4">
       <p className="text-center text-muted-foreground text-xs">{formattedDate}</p>
       <div className="flex items-center justify-between">
         <Input
