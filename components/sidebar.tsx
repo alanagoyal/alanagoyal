@@ -44,8 +44,8 @@ export default function Sidebar({ notes }: { notes: any[] }) {
         >
           <strong>
             {new Date(item.created_at).toLocaleDateString("en-US")}
-          </strong>{" "}
-          {item.content.replace(/[#_*~`>+\[\]!()-]/g, "")}
+          </strong>
+          {item.content.replace(/[#_*~`>+\[\]!()-]/g, " ")}
         </p>
       </Link>
     </li>
