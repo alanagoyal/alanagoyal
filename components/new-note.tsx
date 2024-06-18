@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect } from 'react';
-import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Icons } from './icons';
 
 export default function NewNote() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function NewNote() {
     <TooltipProvider>
     <Tooltip>
       <TooltipTrigger>
-        <PlusCircle className="w-4 h-4" />
+        <Icons.new />
       </TooltipTrigger>
       <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
         Click or press ⌘+⇧+A to create a new note

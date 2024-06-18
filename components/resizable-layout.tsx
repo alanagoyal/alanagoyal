@@ -35,7 +35,7 @@ export default function ResizableLayout({
       setIsCollapsed(isMobile);
       setDefaultSidebarSize(isMobile ? 30 : 25);
       setDefaultNoteSize(isMobile ? 70 : 75);
-      setMinSidebarSize(isMobile ? 30 : 10);
+      setMinSidebarSize(isMobile ? 30 : 15);
     };
 
     // Set initial state based on window size
