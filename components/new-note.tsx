@@ -31,7 +31,6 @@ export default function NewNote() {
   };
 
   async function createNote() {
-    console.log(note);
     await supabase.from("notes").insert(note);
     router.push(`/${note.slug}`);
     router.refresh();
@@ -39,7 +38,7 @@ export default function NewNote() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "a" && event.metaKey && event.shiftKey) {
+      if (event.key === "/" && event.metaKey) {
         createNote();
       }
     };
@@ -60,7 +59,7 @@ export default function NewNote() {
           <Icons.new />
         </TooltipTrigger>
         <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
-          Click or press ⌘+⇧+A to create a new note
+          Click or press ⌘+/ to create a new note
         </TooltipContent>
       </Tooltip>
       </TooltipProvider>
