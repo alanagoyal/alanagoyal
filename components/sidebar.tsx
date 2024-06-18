@@ -40,7 +40,7 @@ export default function Sidebar({ notes }: { notes: any[] }) {
   });
 
   const renderNote = (item: any, index: number) => (
-    <li key={index} className={item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md py-2" : ""}>
+    <li key={index} className={`${item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md" : ""} min-h-[50px] py-2`}>
       <Link href={`/${item.slug || ""}`} onClick={() => setSelectedNoteSlug(item.slug)}>
         <h2 className="font-bold pl-4">{item.title}</h2>
         <p
@@ -82,10 +82,10 @@ export default function Sidebar({ notes }: { notes: any[] }) {
         {categoryOrder.map((categoryKey) =>
           groupedNotes[categoryKey] ? (
             <li key={categoryKey}>
-              <h3 className="py-4">
+              <h3 className="py-2">
                 {labels[categoryKey as keyof typeof labels]}
               </h3>
-              <ul className="space-y-4">
+              <ul className="space-y-2">
                 {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
                   (item: any, index: number) => renderNote(item, index)
                 )}
