@@ -30,13 +30,14 @@ export default function Note({ note }: { note: any }) {
     setTitle(title);
 
     const newNote = {
-      title: title ? title : "new note 👋🏼",
+      title: title ? title : "new note",
       slug: `new-note-${uuidv4()}`,
       content: content ? content : "no additional text",
       created_at: new Date(),
       public: false,
       session_id: sessionId,
       category: "today",
+      emoji: "👋🏼",
     };
 
     try {

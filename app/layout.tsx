@@ -4,13 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/server";
-import { Toaster } from "@/components/ui/toaster";
-import Sidebar from "@/components/sidebar";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import ResizableLayout from "@/components/resizable-layout";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -61,21 +55,7 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <div className="bg-[#1e1e1e] text-white min-h-screen">
-          <ResizablePanelGroup
-            direction="horizontal"
-            className="flex min-h-screen"
-          >
-            <ResizablePanel defaultSize={25} minSize={10}>
-              {data && <Sidebar notes={data} />}
-            </ResizablePanel>
-            <ResizableHandle className="bg-gray-500"/>
-            <ResizablePanel defaultSize={75}>
-              {children}
-              <Toaster />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
+        <ResizableLayout data={data} children={children} />
       </body>
     </html>
   );

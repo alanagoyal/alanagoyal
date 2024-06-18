@@ -13,3 +13,4 @@ export default function NoteHeader({ note }: {note: any}) {
     </div>
   );
 }
+

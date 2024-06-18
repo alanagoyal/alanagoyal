@@ -148,14 +148,21 @@ INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "public", 
 - the power broker
 - churchill
 - the passage of power
-- sam walton: made in america', '2024-06-14 15:05:32+00', true, NULL, 'reading-list', '7'),
-	('51e25beb-cec2-4159-961d-08f09c5a95c1', 'hi alana 👋🏼', '# hello
-*alana* is the best', '2024-06-17 16:56:18.051+00', false, 'd3f7c92c-ae43-4393-a71e-5e175d8b1e85', 'new-note-a408de7c-9951-4c51-bf84-cf1dfa7f165e', 'today'),
+- sam walton: made in america', '2024-06-14 15:05:32+00', true, NULL, 'reading-list', 'yesterday'),
+	('02a00112-d0a2-4586-a43a-195b0f4105bf', 'on repeat 🎧', '### dj sets
+- [sultan + shepherd dj set - malibu ranch](https://www.youtube.com/watch?v=QNtfijAcotU&t=2690s&ab_channel=ThisNeverHappened)
+- [chris luno sunset mix - thailand](https://www.youtube.com/watch?v=fIWRqMLhWbI&ab_channel=ThisNeverHappened)
+- [massane live set - portes du soleil, french alps](https://www.youtube.com/watch?v=LyOqMMQskU4&t=3191s&ab_channel=ThisNeverHappened)
+- [lane 8 sunrise set - grand lake, colorado](https://www.youtube.com/watch?v=n_LcVqqHSY8&t=1638s&ab_channel=ThisNeverHappened)
+
+### other favorite artists
+- morgan wallen
+- ariana grande', '2024-06-14 22:48:41.026439+00', true, NULL, 'on-repeat', 'yesterday'),
 	('1d3b70d6-ce1b-4d66-9936-4f5fd38c43aa', 'todo 📌', '- fix this', '2024-06-15 22:46:44+00', true, NULL, 'todo', 'today'),
-	('fd234e08-7ac1-4332-a3fe-06ece731c314', 'about me 🤗', '### current
+	('fd234e08-7ac1-4332-a3fe-06ece731c314', 'about me 👋🏼', '### current
 - founder & managing partner of [basecase capital](https://basecase.vc/)
 - partner to a number of incredible companies, including [ashby](https://www.ashbyhq.com/), [astral](https://astral.sh/), [baseten](https://www.baseten.co/), [braintrust](https://braintrust.dev/), [browserbase](https://browserbase.com/), [default](https://default.com/), [graphite](https://graphite.dev/), [resend](https://resend.com/), [supabase](https://supabase.com/), [vercel](https://vercel.com/), & others 
-- builder & maintainer of a few little open-source projects, including [branded](https://branded.ai), [draftmysafe](https://draftmysafe.com), & others that have been paused by ant @ supabase due to inactivity 😅
+- builder & maintainer of a few little open-source projects, including [branded](https://branded.ai), [draftmysafe](https://draftmysafe.com), & others that have been [paused by ant at supabase due to inactivity](https://x.com/kevcodez/status/1689970103826141184) 🥲
 
 
 ### past
@@ -163,9 +170,17 @@ INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "public", 
 - interned at greylock during their incubation of [abnormal security](https://https://abnormalsecurity.com/) as was lucky enough to help out on all things product & go-to-market
 - launched the [home equity platform at blend](https://blend.com/home-equity-opportunities/)
 - helped build the self-service product at [appdynamics](https://www.appdynamics.com/free-trial/)
-- worked on the research and development team at [natera](https://www.natera.com/)
-- studied cs at columbia university and made friends with all the best ta’s', '2024-06-16 19:00:00+00', true, NULL, NULL, 'pinned'),
-	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries 🍎', '- mangos
+- interned on the research and development team at [natera](https://www.natera.com/)
+- studied cs at columbia university and made friends with all the best ta’s ❤️', '2024-06-17 19:00:00+00', true, NULL, NULL, 'pinned'),
+	('65d8e406-8ceb-4f2a-918f-80e1f5a9cb61', 'quick links 🔗', '- [email](mailto:hi@basecase.vc): i respond to every email
+- [twitter](https://x.com/alanaagoyal): i tweet semi-frequently about my projects and the amazing founders i work with
+- [github](https://github.com/alanagoyal): i try to write code every day
+- [linkedin](https://www.linkedin.com/in/alanagoyal/): i use linkedin to stalk people
+- [instagram](https://www.instagram.com/alanaagoyal/): i post quarterly photo dumps of people + places + things i like', '2024-06-16 21:51:06+00', true, NULL, 'quick-links', 'pinned'),
+	('e5c549ec-cded-451d-89cb-4f085031b059', 'favorite pizza 🍕', 'pepperoni 
+margarita', '2024-06-16 22:59:16.084+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-cddfefca-ae4e-4bc4-9dc5-b2dcca35d002', 'yesterday'),
+	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries 🍎', '### weekly instacart order
+- mangos
 - blueberries
 - greek yogurt
 - steep hill granola
@@ -176,18 +191,26 @@ INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "public", 
 - seed crackers
 - coke zero
 - perrier', '2024-06-14 22:47:45.808451+00', true, NULL, 'groceries', '7'),
-	('e5c549ec-cded-451d-89cb-4f085031b059', 'favorite pizza 🍕', 'pepperoni 
-margarita', '2024-06-16 22:59:16.084+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-cddfefca-ae4e-4bc4-9dc5-b2dcca35d002', 'yesterday'),
-	('02a00112-d0a2-4586-a43a-195b0f4105bf', 'on repeat 🎧', '### dj sets
-- [sultan + shepherd dj set - malibu ranch](https://www.youtube.com/watch?v=QNtfijAcotU&t=2690s&ab_channel=ThisNeverHappened)
-- [chris luno sunset mix - thailand](https://www.youtube.com/watch?v=fIWRqMLhWbI&ab_channel=ThisNeverHappened)
-- [massane live set - portes du soleil, french alps](https://www.youtube.com/watch?v=LyOqMMQskU4&t=3191s&ab_channel=ThisNeverHappened)
-- [lane 8 sunrise set - grand lake, colorado](https://www.youtube.com/watch?v=n_LcVqqHSY8&t=1638s&ab_channel=ThisNeverHappened)
+	('767f8b2b-2f20-4c65-8c9d-c219bd689fa1', 'favorite products 🫶🏼', '### development stack
+- [supabase](https://supabase.com/): let''s not pretend we''re rolling our own postgres over here
+- [next.js](https://nextjs.org/): the only app framework you need
+- [vercel](https://vercel.com/): have literally never hosted a project elsewhere
+- [shadcn/ui](ui.shadcn.com/): simply could not build an app without these ui components
+- [resend](https://resend.com/): dead simple email api
+- [cursor](https://cursor.com/): the best ai ide i''ve found
+- [cleanshotx](https://cleanshot.com/): sick screenshots
 
-### other favorite artists
-- morgan wallen
-- ariana grande', '2024-06-14 22:48:41.026439+00', true, NULL, 'on-repeat', '7'),
-	('fcf7d40d-1313-4ca0-9608-5df4cf23879f', '', '', '2024-06-16 23:27:54.729+00', false, 'cad4d737-f597-4eb6-97ee-4c3aaf4c9274', 'new-note-4757b30b-8058-4cc4-9e5e-78c957236480', 'today');
+### productivity stack
+- [airtable](https://airtable.com): love an extensible crm
+- [dropbox paper](https://www.dropbox.com/paper/): die hard fan, won''t let them shut it down
+- [superhuman](https://superhuman.com): tried to live without it, but can''t
+- [texts](https://texts.com): amazing when it works
+
+### other
+- [waymo](https://waymo.com): almost exclusively in waymos these days (unelss in another city or going on the freeway)
+- [peloton](https://peloton.com): devout rider/runner (favorite instructors: olivia amato, alex toussaint, cody rigsby)
+- [apple airpods max](https://www.apple.com/airpods-max/): big headphone gal
+- [asics gel 1130](https://www.stadiumgoods.com/en-us/shopping/asics-gel-1130): wear these almost every day', '2024-06-18 00:48:49.104221+00', true, NULL, 'favorite-products', 'today');
 
 
 --
