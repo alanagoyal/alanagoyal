@@ -22,6 +22,7 @@ export default function ResizableLayout({
   const [defaultSidebarSize, setDefaultSidebarSize] = useState(25);
   const [minSidebarSize, setMinSidebarSize] = useState(10);
   const [defaultNoteSize, setDefaultNoteSize] = useState(75);
+  const [maxSidebarSize, setMaxSidebarSize] = useState(50);
 
   const handleResize = useCallback((size: number) => {
     setIsCollapsed(size <= minSidebarSize);
@@ -53,7 +54,7 @@ export default function ResizableLayout({
         <ResizablePanel
           defaultSize={defaultSidebarSize}
           minSize={minSidebarSize}
-          maxSize={50}
+          maxSize={maxSidebarSize}
           onResize={handleResize}
         >
           {data && <Sidebar notes={data} isCollapsed={isCollapsed} />}
