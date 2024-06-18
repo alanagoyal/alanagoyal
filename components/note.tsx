@@ -7,7 +7,6 @@ import NoteContent from "./note-content";
 import NoteHeader from "./note-header";
 import { toast } from "./ui/use-toast";
 import { useState } from "react";
-import SessionId from "./session-id";
 import { useRouter } from "next/navigation";
 
 export default function Note({ note }: { note: any }) {
@@ -15,18 +14,19 @@ export default function Note({ note }: { note: any }) {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [sessionId, setSessionId] = useState("");
+  const [emoji, setEmoji] = useState("");
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && event.metaKey) {
-      addNoteToDatabase();
+      saveNote();
     }
   };
 
-  async function addNoteToDatabase() {
+  async function saveNote() {
     const newNote = {
       content: content,
       title: title,
+      emoji: emoji,
     };
 
     try {
@@ -53,15 +53,14 @@ export default function Note({ note }: { note: any }) {
   if (note.title === "new note") {
     return (
       <div>
-        <SessionId setSessionId={setSessionId} />
-        <NewNoteHeader note={note} setTitle={setTitle} />
+        <NewNoteHeader note={note} setTitle={setTitle} setEmoji={setEmoji} />
         <NewNoteContent
           setContent={setContent}
           handleKeyPress={handleKeyPress}
         />
         <p
           className="text-xs text-muted-foreground pt-2 cursor-pointer"
-          onClick={addNoteToDatabase}
+          onClick={saveNote}
         >
           Press ⌘ + Enter or click to save note
         </p>

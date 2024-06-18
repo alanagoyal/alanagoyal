@@ -7,7 +7,7 @@ export default function NewNoteContent({ setContent, handleKeyPress }: { setCont
   return (
     <div className="h-full">
       <Textarea
-        className="bg-[#1e1e1e] h-full"
+        className="bg-[#1e1e1e] min-h-screen"
         placeholder="Start writing in markdown..."
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyPress}
