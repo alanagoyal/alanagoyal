@@ -20,7 +20,7 @@ export default function NewNote() {
   const noteId = uuidv4();
   const note = {
     id: noteId,
-    title: "new note",
+    title: "",
     slug: `new-note-${noteId}`,
     content: "",
     public: false,

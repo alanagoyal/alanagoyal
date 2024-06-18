@@ -1,16 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
+import { debounce } from "lodash";
 
-export default function NewNoteContent({ setContent, handleKeyPress }: { setContent: (content: string) => void, handleKeyPress: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void }) {
+export default function NewNoteContent({
+  note,
+  saveNote,
+}: {
+  note: any;
+  saveNote: (updates: { content: string }) => void;
+}) {
+  const [localContent, setLocalContent] = useState(note.content);
+  const debouncedSave = debounce((content) => {
+    saveNote({ content });
+  });
+
+  useEffect(() => {
+    setLocalContent(note.content);
+    debouncedSave(note.content);
+  }, [note.content]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setLocalContent(newContent);
+    debouncedSave(newContent);
+  };
 
   return (
     <div className="h-full">
       <Textarea
-        className="bg-[#1e1e1e] min-h-screen"
+        value={localContent}
+        className="bg-[#1e1e1e] min-h-screen focus-visible:ring-transparent"
         placeholder="Start writing in markdown..."
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={handleKeyPress}
+        onChange={handleChange}
       />
     </div>
   );

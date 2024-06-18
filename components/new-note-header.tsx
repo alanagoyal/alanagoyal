@@ -4,29 +4,27 @@ import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import EmojiPicker from "emoji-picker-react";
-import { Button } from "./ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { debounce } from 'lodash';
 
 export default function NewNoteHeader({
   note,
-  setTitle,
-  setEmoji,
+  saveNote,
 }: {
   note: any;
-  setTitle: (title: string) => void;
-  setEmoji: (emoji: string) => void;
+  saveNote: (updates: any) => void;
 }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [displayEmoji, setDisplayEmoji] = useState("😊");
-
+  const [localEmoji, setLocalEmoji] = useState(note.emoji);
+  const [localTitle, setLocalTitle] = useState(note.title);
   useEffect(() => {
     if (note.emoji) {
-      setDisplayEmoji(note.emoji);
+      setLocalEmoji(note.emoji);
     }
   }, [note.emoji]);
 
@@ -36,10 +34,23 @@ export default function NewNoteHeader({
   );
 
   const handleEmojiSelect = (emojiObject: any) => {
-    setDisplayEmoji(emojiObject.emoji);
-    setEmoji(emojiObject.emoji);
+    setLocalEmoji(emojiObject.emoji);
     setShowEmojiPicker(false);
   };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setLocalTitle(newTitle);
+    debouncedSave(newTitle, localEmoji);
+  };
+
+  const debouncedSave = debounce((title, emoji) => {
+    saveNote({ title, emoji });
+  });
+
+  useEffect(() => {
+    debouncedSave(note.title, localEmoji);
+  }, [note.title, localEmoji]);
 
   return (
     <div className="bg-[#1e1e1e] mb-4">
@@ -48,9 +59,10 @@ export default function NewNoteHeader({
       </p>
       <div className="flex justify-between items-center">
         <Input
-          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2"
+          value={localTitle}
+          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus-visible:ring-transparent"
           placeholder="Your title here..."
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleTitleChange}
           autoFocus
         />
         <TooltipProvider>
@@ -58,7 +70,7 @@ export default function NewNoteHeader({
             <TooltipTrigger
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
-              {displayEmoji}
+              {localEmoji}
             </TooltipTrigger>
             <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
               Click to choose an emoji
