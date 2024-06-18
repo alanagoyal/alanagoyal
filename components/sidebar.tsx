@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 
 export default function Sidebar({ notes }: { notes: any[] }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
+
+  const pathname = usePathname();
+
+  // Update selectedNoteSlug when the URL changes
+  useEffect(() => {
+    const slug = pathname.split("/").pop();
+    setSelectedNoteSlug(slug || null);
+  }, [pathname]);
 
   const userSpecificNotes = notes.filter(
     (note) => note.public || note.session_id === sessionId
@@ -31,7 +40,7 @@ export default function Sidebar({ notes }: { notes: any[] }) {
   });
 
   const renderNote = (item: any, index: number) => (
-    <li key={index} className={item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md" : ""}>
+    <li key={index} className={item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md py-2" : ""}>
       <Link href={`/${item.slug || ""}`} onClick={() => setSelectedNoteSlug(item.slug)}>
         <h2 className="font-bold pl-4">{item.title}</h2>
         <p
