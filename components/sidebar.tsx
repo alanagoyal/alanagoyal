@@ -31,7 +31,30 @@ export default function Sidebar({
 
   // Group notes by category
   const groupedNotes = userSpecificNotes.reduce((acc, note) => {
-    const category = note.category;
+    let category = note.category;
+    if (!note.public) {
+      const createdDate = new Date(note.created_at);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      if (createdDate.toDateString() === today.toDateString()) {
+        category = 'today';
+      } else if (createdDate.toDateString() === yesterday.toDateString()) {
+        category = 'yesterday';
+      } else if (createdDate > sevenDaysAgo) {
+        category = '7';
+      } else if (createdDate > thirtyDaysAgo) {
+        category = '30';
+      } else {
+        category = 'older';
+      }
+    }
+
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -115,6 +138,7 @@ export default function Sidebar({
     yesterday: "Yesterday",
     "7": "Previous 7 Days",
     "30": "Previous 30 Days",
+    older: "Older",
   };
 
   // Define the order of categories
