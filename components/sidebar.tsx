@@ -100,7 +100,15 @@ export default function Sidebar({
   const labels = {
     pinned: (
       <>
-        <Pin className="inline-block w-5 h-5 mr-1" /> Pinned
+        {isCollapsed ? (
+          <div className="flex justify-center">
+            Pinned
+          </div>
+        ) : (
+          <>
+            <Pin className="inline-block w-5 h-5 mr-1" /> Pinned
+          </>
+        )}
       </>
     ),
     today: "Today",
@@ -115,8 +123,8 @@ export default function Sidebar({
   return (
     <div className="p-5">
       <SessionId setSessionId={setSessionId} />
-      <div className="flex items-center justify-between">
-        <p className="text-lg font-bold">Notes</p>
+      <div className={`flex py-2 ${isCollapsed ? "justify-center" : "items-center justify-between"}`}>
+        {!isCollapsed && <p className="text-lg font-bold">Notes</p>}
         <NewNote />
       </div>
       <ul>

@@ -10,7 +10,7 @@ export default function NoteHeader({ note }: { note: any }) {
       <p className="text-center text-muted-foreground text-xs">
         {formattedDate}
       </p>
-      <p className="text-lg font-bold">{note.title}</p>
+      <p className="text-lg font-bold">{note.emoji} {note.title}</p>
     </div>
   );
 }

@@ -20,9 +20,9 @@ export default function ResizableLayout({
 }: ResizableLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [defaultSidebarSize, setDefaultSidebarSize] = useState(25);
-  const [minSidebarSize, setMinSidebarSize] = useState(10);
   const [defaultNoteSize, setDefaultNoteSize] = useState(75);
-  const [maxSidebarSize, setMaxSidebarSize] = useState(50);
+  const [minSidebarSize, setMinSidebarSize] = useState(15);
+  const [maxSidebarSize, setMaxSidebarSize] = useState(30);
 
   const handleResize = useCallback((size: number) => {
     setIsCollapsed(size <= minSidebarSize);
@@ -32,10 +32,10 @@ export default function ResizableLayout({
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth <= 768;
-      setIsCollapsed(isMobile);
       setDefaultSidebarSize(isMobile ? 30 : 25);
       setDefaultNoteSize(isMobile ? 70 : 75);
       setMinSidebarSize(isMobile ? 30 : 15);
+      setMaxSidebarSize(isMobile ? 30 : 50);
     };
 
     // Set initial state based on window size
