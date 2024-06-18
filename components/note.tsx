@@ -9,8 +9,6 @@ import { toast } from "./ui/use-toast";
 import { useState } from "react";
 import SessionId from "./session-id";
 import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
-import { isToday } from "date-fns";
 
 export default function Note({ note }: { note: any }) {
   const supabase = createClient();
@@ -26,30 +24,25 @@ export default function Note({ note }: { note: any }) {
   };
 
   async function addNoteToDatabase() {
-    setContent(content);
-    setTitle(title);
-
     const newNote = {
-      title: title ? title : "new note",
-      slug: `new-note-${uuidv4()}`,
-      content: content ? content : "no additional text",
-      created_at: new Date(),
-      public: false,
-      session_id: sessionId,
-      category: "today",
-      emoji: "👋🏼",
+      content: content,
+      title: title,
     };
 
     try {
-      const { error } = await supabase.from("notes").insert(newNote);
+      const { error } = await supabase
+        .from("notes")
+        .update(newNote)
+        .match({ slug: note.slug });
+
       if (error) {
-        console.error("Error adding note to database:", error);
+        console.error("Error updating note:", error);
       } else {
         toast({
           title: "Thanks for your note 🙂",
           description: "Your note will appear only to you in this session",
         });
-        router.push(`/${newNote.slug}`);
+        router.push(`/${note.slug}`);
         router.refresh();
       }
     } catch (error) {
@@ -60,7 +53,7 @@ export default function Note({ note }: { note: any }) {
   if (note.title === "new note") {
     return (
       <div>
-      <SessionId setSessionId={setSessionId} />
+        <SessionId setSessionId={setSessionId} />
         <NewNoteHeader note={note} setTitle={setTitle} />
         <NewNoteContent
           setContent={setContent}
