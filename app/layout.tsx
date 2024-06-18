@@ -55,7 +55,7 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <ResizableLayout data={data} children={children} />
+        <ResizableLayout data={data}>{children}</ResizableLayout>
       </body>
     </html>
   );
