@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
-import EmojiPicker from "emoji-picker-react";
+import Picker from "@emoji-mart/react";
 import {
   Tooltip,
   TooltipContent,
@@ -18,9 +18,19 @@ export default function NewNoteHeader({
   note: any;
   saveNote: (updates: any) => void;
 }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (note.emoji) {
@@ -45,7 +55,7 @@ export default function NewNoteHeader({
   );
 
   const handleEmojiSelect = (emojiObject: any) => {
-    setLocalEmoji(emojiObject.emoji);
+    setLocalEmoji(emojiObject.native);
     setShowEmojiPicker(false);
   };
 
@@ -74,15 +84,17 @@ export default function NewNoteHeader({
             >
               {localEmoji}
             </TooltipTrigger>
-            <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
-              Click to choose an emoji
-            </TooltipContent>
+            {!isMobile && (
+              <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
+                Click to choose an emoji
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
       </div>
-      {showEmojiPicker && (
+      {showEmojiPicker && !isMobile && (
         <div className="absolute top-full right-0 z-10">
-          <EmojiPicker onEmojiClick={handleEmojiSelect} />
+          <Picker onEmojiSelect={handleEmojiSelect} />
         </div>
       )}
     </div>
