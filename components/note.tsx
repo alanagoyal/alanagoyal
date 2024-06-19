@@ -1,11 +1,9 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import NewNoteContent from "./new-note-content";
-import NewNoteHeader from "./new-note-header";
-import NoteContent from "./note-content";
-import NoteHeader from "./note-header";
 import { useRouter } from "next/navigation";
+import NoteHeader from "./note-header";
+import NoteContent from "./note-content";
 
 export default function Note({ note }: { note: any }) {
   const supabase = createClient();
@@ -25,18 +23,10 @@ export default function Note({ note }: { note: any }) {
     router.refresh();
   };
 
-  if (note.slug && note.slug.includes("new-note")) {
-    return (
-      <div>
-        <NewNoteHeader note={note} saveNote={autosaveNote} />
-        <NewNoteContent note={note} saveNote={autosaveNote} />
-      </div>
-    );
-  }
   return (
     <div>
-      <NoteHeader note={note} />
-      <NoteContent note={note} />
+      <NoteHeader note={note} saveNote={autosaveNote} />
+      <NoteContent note={note} saveNote={autosaveNote} />
     </div>
   );
 }
