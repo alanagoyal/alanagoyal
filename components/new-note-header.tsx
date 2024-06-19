@@ -65,7 +65,7 @@ export default function NewNoteHeader({
           className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus:outline-none"
           placeholder="Your title here..."
           onChange={handleTitleChange}
-          autoFocus
+          autoFocus={!localTitle}
         />
         <TooltipProvider>
           <Tooltip>

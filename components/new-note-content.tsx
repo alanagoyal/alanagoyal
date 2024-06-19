@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
+import ReactMarkdown from "react-markdown";
 
 export default function NewNoteContent({
   note,
@@ -11,6 +12,7 @@ export default function NewNoteContent({
   saveNote: (updates: { content: string }) => void;
 }) {
   const [localContent, setLocalContent] = useState(note.content);
+  const [isEditing, setIsEditing] = useState(note.content ? false : true);
 
   useEffect(() => {
     setLocalContent(note.content);
@@ -29,14 +31,35 @@ export default function NewNoteContent({
     setLocalContent(newContent);
   };
 
+  const handleFocus = () => {
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
+
   return (
     <div>
-      <Textarea
-        value={localContent}
-        className="bg-[#1e1e1e] min-h-screen focus:outline-none"
-        placeholder="Start writing..."
-        onChange={handleChange}
-      />
+      {isEditing ? (
+        <Textarea
+          value={localContent}
+          className="bg-[#1e1e1e] min-h-screen focus:outline-none"
+          placeholder="Start writing..."
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+        />
+      ) : (
+        <div
+          className="bg-[#1e1e1e] h-full text-sm"
+          onClick={() => setIsEditing(true)}
+        >
+          <ReactMarkdown className="markdown-body min-h-screen">
+            {localContent}
+          </ReactMarkdown>
+        </div>
+      )}
     </div>
   );
 }
