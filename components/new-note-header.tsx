@@ -60,7 +60,7 @@ export default function NewNoteHeader({
       <div className="flex justify-between items-center">
         <Input
           value={localTitle}
-          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus-visible:ring-transparent"
+          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus:outline-none"
           placeholder="Your title here..."
           onChange={handleTitleChange}
           autoFocus

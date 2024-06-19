@@ -31,7 +31,7 @@ export default function NewNoteContent({
     <div className="h-full">
       <Textarea
         value={localContent}
-        className="bg-[#1e1e1e] min-h-screen focus-visible:ring-transparent"
+        className="bg-[#1e1e1e] min-h-screenq focus:outline-none"
         placeholder="Start writing in markdown..."
         onChange={handleChange}
       />
