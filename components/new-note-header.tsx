@@ -53,7 +53,7 @@ export default function NewNoteHeader({
   }, [note.title, localEmoji]);
 
   return (
-    <div className="bg-[#1e1e1e] mb-4">
+    <div className="bg-[#1e1e1e] mb-4 relative">
       <p className="text-center text-muted-foreground text-xs">
         {formattedDate}
       </p>
@@ -78,7 +78,11 @@ export default function NewNoteHeader({
           </Tooltip>
         </TooltipProvider>
       </div>
-      {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiSelect} />}
+      {showEmojiPicker && (
+        <div className="absolute top-full right-0 z-10">
+          <EmojiPicker onEmojiClick={handleEmojiSelect} />
+        </div>
+      )}
     </div>
   );
 }
