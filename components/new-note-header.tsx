@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
-import EmojiPicker from "emoji-picker-react";
-import { Button } from "./ui/button";
+import Picker from "@emoji-mart/react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,21 +13,41 @@ import {
 
 export default function NewNoteHeader({
   note,
-  setTitle,
-  setEmoji,
+  saveNote,
 }: {
   note: any;
-  setTitle: (title: string) => void;
-  setEmoji: (emoji: string) => void;
+  saveNote: (updates: any) => void;
 }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [displayEmoji, setDisplayEmoji] = useState("😊");
+  const [localEmoji, setLocalEmoji] = useState(note.emoji);
+  const [localTitle, setLocalTitle] = useState(note.title);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (note.emoji) {
-      setDisplayEmoji(note.emoji);
+      setLocalEmoji(note.emoji);
     }
-  }, [note.emoji]);
+    if (note.title) {
+      setLocalTitle(note.title);
+    }
+  }, [note.emoji, note.title]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      saveNote({ title: localTitle, emoji: localEmoji });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [localTitle, localEmoji, saveNote]);
 
   const formattedDate = format(
     parseISO(note.created_at),
@@ -36,37 +55,48 @@ export default function NewNoteHeader({
   );
 
   const handleEmojiSelect = (emojiObject: any) => {
-    setDisplayEmoji(emojiObject.emoji);
-    setEmoji(emojiObject.emoji);
+    setLocalEmoji(emojiObject.native);
     setShowEmojiPicker(false);
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setLocalTitle(newTitle);
+  };
+
   return (
-    <div className="bg-[#1e1e1e] mb-4">
+    <div className="bg-[#1e1e1e] mb-4 relative">
       <p className="text-center text-muted-foreground text-xs">
         {formattedDate}
       </p>
       <div className="flex justify-between items-center">
         <Input
-          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2"
+          value={localTitle}
+          className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus:outline-none"
           placeholder="Your title here..."
-          onChange={(e) => setTitle(e.target.value)}
-          autoFocus
+          onChange={handleTitleChange}
+          autoFocus={!note.title}
         />
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
-              {displayEmoji}
+              {localEmoji}
             </TooltipTrigger>
-            <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
-              Click to choose an emoji
-            </TooltipContent>
+            {!isMobile && (
+              <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
+                Click to choose an emoji
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
       </div>
-      {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiSelect} />}
+      {showEmojiPicker && !isMobile && (
+        <div className="absolute top-full right-0 z-10">
+          <Picker onEmojiSelect={handleEmojiSelect} />
+        </div>
+      )}
     </div>
   );
 }
