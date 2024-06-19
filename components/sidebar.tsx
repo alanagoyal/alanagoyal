@@ -141,7 +141,6 @@ export default function Sidebar({
     older: "Older",
   };
 
-  // Define the order of categories
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
@@ -152,19 +151,27 @@ export default function Sidebar({
         <NewNote />
       </div>
       <ul>
-        {categoryOrder.map((categoryKey) =>
-          groupedNotes[categoryKey] ? (
-            <li key={categoryKey}>
-              <h3 className={`py-2 ${isCollapsed ? "text-center" : ""}`}>
-                {labels[categoryKey as keyof typeof labels]}
-              </h3>
-              <ul className="space-y-2">
-                {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
-                  (item: any, index: number) => renderNote(item, index)
-                )}
-              </ul>
-            </li>
-          ) : null
+        {isCollapsed ? (
+          categoryOrder.map((categoryKey) =>
+            groupedNotes[categoryKey] ? (
+              groupedNotes[categoryKey].map((item: any, index: number) => renderNote(item, index))
+            ) : null
+          )
+        ) : (
+          categoryOrder.map((categoryKey) =>
+            groupedNotes[categoryKey] ? (
+              <li key={categoryKey}>
+                <h3 className={`py-2 ${isCollapsed ? "text-center" : ""}`}>
+                  {labels[categoryKey as keyof typeof labels]}
+                </h3>
+                <ul className="space-y-2">
+                  {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
+                    (item: any, index: number) => renderNote(item, index)
+                  )}
+                </ul>
+              </li>
+            ) : null
+          )
         )}
       </ul>
     </div>
