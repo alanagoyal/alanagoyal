@@ -10,7 +10,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { debounce } from 'lodash';
 
 export default function NewNoteHeader({
   note,
@@ -22,11 +21,23 @@ export default function NewNoteHeader({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
+
   useEffect(() => {
     if (note.emoji) {
       setLocalEmoji(note.emoji);
     }
-  }, [note.emoji]);
+    if (note.title) {
+      setLocalTitle(note.title);
+    }
+  }, [note.emoji, note.title]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      saveNote({ title: localTitle, emoji: localEmoji });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [localTitle, localEmoji, saveNote]);
 
   const formattedDate = format(
     parseISO(note.created_at),
@@ -41,16 +52,7 @@ export default function NewNoteHeader({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setLocalTitle(newTitle);
-    debouncedSave(newTitle, localEmoji);
   };
-
-  const debouncedSave = debounce((title, emoji) => {
-    saveNote({ title, emoji });
-  });
-
-  useEffect(() => {
-    debouncedSave(note.title, localEmoji);
-  }, [note.title, localEmoji]);
 
   return (
     <div className="bg-[#1e1e1e] mb-4 relative">

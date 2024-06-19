@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
-import { debounce } from "lodash";
 
 export default function NewNoteContent({
   note,
@@ -12,19 +11,22 @@ export default function NewNoteContent({
   saveNote: (updates: { content: string }) => void;
 }) {
   const [localContent, setLocalContent] = useState(note.content);
-  const debouncedSave = debounce((content) => {
-    saveNote({ content });
-  });
 
   useEffect(() => {
     setLocalContent(note.content);
-    debouncedSave(note.content);
   }, [note.content]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      saveNote({ content: localContent });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [localContent, saveNote]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setLocalContent(newContent);
-    debouncedSave(newContent);
   };
 
   return (
