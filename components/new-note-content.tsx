@@ -28,11 +28,11 @@ export default function NewNoteContent({
   };
 
   return (
-    <div className="h-full">
+    <div>
       <Textarea
         value={localContent}
-        className="bg-[#1e1e1e] min-h-screenq focus:outline-none"
-        placeholder="Start writing in markdown..."
+        className="bg-[#1e1e1e] min-h-screen focus:outline-none"
+        placeholder="Start writing..."
         onChange={handleChange}
       />
     </div>
