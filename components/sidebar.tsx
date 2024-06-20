@@ -9,10 +9,10 @@ import NewNote from "./new-note";
 
 export default function Sidebar({
   notes,
-  isCollapsed,
+  isMobile,
 }: {
   notes: any[];
-  isCollapsed: boolean;
+  isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function Sidebar({
   });
 
   const renderNote = (item: any, index: number) => {
-    if (isCollapsed) {
+    if (isMobile) {
       return (
         <li
           key={index}
@@ -123,7 +123,7 @@ export default function Sidebar({
   const labels = {
     pinned: (
       <>
-        {isCollapsed ? (
+        {isMobile ? (
           <div className="flex justify-center">
             Pinned
           </div>
@@ -144,14 +144,14 @@ export default function Sidebar({
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
-    <div className="p-5">
+    <div className={`${isMobile ? "px-2 pt-5" : "p-5"}`}>
       <SessionId setSessionId={setSessionId} />
-      <div className={`flex py-2 ${isCollapsed ? "justify-center" : "items-center justify-between"}`}>
-        {!isCollapsed && <p className="text-lg font-bold">Notes</p>}
+{      <div className={`flex py-2 ${isMobile ? "justify-center" : "items-center justify-between"}`}>
+        {!isMobile && <p className="text-lg font-bold">Notes</p>}
         <NewNote />
-      </div>
+      </div>}
       <ul>
-        {isCollapsed ? (
+        {isMobile ? (
           categoryOrder.map((categoryKey) =>
             groupedNotes[categoryKey] ? (
               groupedNotes[categoryKey].map((item: any, index: number) => renderNote(item, index))
@@ -161,7 +161,7 @@ export default function Sidebar({
           categoryOrder.map((categoryKey) =>
             groupedNotes[categoryKey] ? (
               <li key={categoryKey}>
-                <h3 className={`py-2 ${isCollapsed ? "text-center" : ""}`}>
+                <h3 className={`py-2 ${isMobile ? "text-center" : ""}`}>
                   {labels[categoryKey as keyof typeof labels]}
                 </h3>
                 <ul className="space-y-2">
@@ -177,3 +177,4 @@ export default function Sidebar({
     </div>
   );
 }
+

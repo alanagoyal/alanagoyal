@@ -18,24 +18,13 @@ export default function ResizableLayout({
   children,
   data,
 }: ResizableLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [defaultSidebarSize, setDefaultSidebarSize] = useState(25);
-  const [defaultNoteSize, setDefaultNoteSize] = useState(75);
-  const [minSidebarSize, setMinSidebarSize] = useState(15);
-  const [maxSidebarSize, setMaxSidebarSize] = useState(30);
-
-  const handleResize = useCallback((size: number) => {
-    setIsCollapsed(size <= minSidebarSize);
-  }, [minSidebarSize]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Effect to handle mobile view
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      setDefaultSidebarSize(isMobile ? 30 : 25);
-      setDefaultNoteSize(isMobile ? 70 : 75);
-      setMinSidebarSize(isMobile ? 30 : 15);
-      setMaxSidebarSize(isMobile ? 30 : 50);
+      const currentIsMobile = window.innerWidth <= 768;
+      setIsMobile(currentIsMobile);
     };
 
     // Set initial state based on window size
@@ -52,15 +41,14 @@ export default function ResizableLayout({
     <div className="bg-[#1e1e1e] text-white min-h-screen">
       <ResizablePanelGroup direction="horizontal" className="flex min-h-screen">
         <ResizablePanel
-          defaultSize={defaultSidebarSize}
-          minSize={minSidebarSize}
-          maxSize={maxSidebarSize}
-          onResize={handleResize}
+          defaultSize={25}
+          minSize={20}
+          maxSize={50}
         >
-          {data && <Sidebar notes={data} isCollapsed={isCollapsed} />}
+          {data && <Sidebar notes={data} isMobile={isMobile} />}
         </ResizablePanel>
         <ResizableHandle className="bg-gray-500" />
-        <ResizablePanel defaultSize={defaultNoteSize}>
+        <ResizablePanel defaultSize={70}>
           {children}
           <Toaster />
         </ResizablePanel>
