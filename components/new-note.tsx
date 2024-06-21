@@ -58,7 +58,7 @@ export default function NewNote() {
         <TooltipTrigger onClick={createNote}>
           <Icons.new />
         </TooltipTrigger>
-        <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
+        <TooltipContent className="bg-[#1c1c1c] text-muted-foreground border-none">
           Click or press ⌘+/ to create a new note
         </TooltipContent>
       </Tooltip>

@@ -66,8 +66,8 @@ export default function NoteHeader({
   };
 
   return (
-    <div className="bg-[#1e1e1e] mb-4 relative">
-      <p className="text-center text-muted-foreground text-xs">
+    <div className="bg-[#1c1c1c] mb-4 relative">
+      <p className="text-center text-gray-300 text-xs">
         {formattedDate}
       </p>
       <div className="flex justify-between items-center">
@@ -92,7 +92,7 @@ export default function NoteHeader({
               {localEmoji}
             </TooltipTrigger>
             {!isMobile && (
-              <TooltipContent className="bg-[#1e1e1e] text-muted-foreground border-none">
+              <TooltipContent className="bg-[#1c1c1c] text-muted-foreground border-none">
                 Click to choose an emoji
               </TooltipContent>
             )}
@@ -107,3 +107,4 @@ export default function NoteHeader({
     </div>
   );
 }
+

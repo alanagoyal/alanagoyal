@@ -70,54 +70,29 @@ export default function Sidebar({
   });
 
   const renderNote = (item: any, index: number) => {
-    if (isMobile) {
-      return (
-        <li
-          key={index}
-          className={`${
-            item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md" : ""
-          } min-h-[50px] py-2 flex items-center justify-center`}
+    return (
+      <li
+        key={index}
+        className={`min-h-[50px] py-2 ${item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""} ${isMobile ? "flex items-center justify-center" : ""}`}
+      >
+        <Link
+          href={`/${item.slug || ""}`}
+          onClick={() => setSelectedNoteSlug(item.slug)}
         >
-          <Link
-            href={`/${item.slug || ""}`}
-            onClick={() => setSelectedNoteSlug(item.slug)}
-          >
-            <span className="font-bold">{item.emoji}</span>
-          </Link>
-        </li>
-      );
-    } else {
-      return (
-        <li
-          key={index}
-          className={`${
-            item.slug === selectedNoteSlug ? "bg-[#a78825] rounded-md" : ""
-          } min-h-[50px] py-2`}
-        >
-          <Link
-            href={`/${item.slug || ""}`}
-            onClick={() => setSelectedNoteSlug(item.slug)}
-          >
-            <h2 className="font-bold pl-4">
-              {item.emoji} {item.title}
-            </h2>
-            <p
-              className="text-xs pl-4 pr-4"
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <strong>
+          <h2 className={`text-sm font-bold ${isMobile ? "" : "pl-4"}`}>
+            {item.emoji} {isMobile ? "" : item.title}
+          </h2>
+          {!isMobile && (
+            <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
+              <span className="text-white">
                 {new Date(item.created_at).toLocaleDateString("en-US")}
-              </strong>{" "}
+              </span>{" "}
               {item.content.trim().replace(/[#_*~`>+\[\]!()-]/g, " ")}
             </p>
-          </Link>
-        </li>
-      );
-    }
+          )}
+        </Link>
+      </li>
+    );
   };
 
   const labels = {
@@ -129,7 +104,7 @@ export default function Sidebar({
           </div>
         ) : (
           <>
-            <Pin className="inline-block w-5 h-5 mr-1" /> Pinned
+            <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
           </>
         )}
       </>
@@ -146,35 +121,26 @@ export default function Sidebar({
   return (
     <div className={`${isMobile ? "px-2 pt-5" : "p-5"}`}>
       <SessionId setSessionId={setSessionId} />
-{      <div className={`flex py-2 ${isMobile ? "justify-center" : "items-center justify-between"}`}>
+      <div className={`flex py-2 ${isMobile ? "justify-center" : "items-center justify-between"}`}>
         {!isMobile && <p className="text-lg font-bold">Notes</p>}
         <NewNote />
-      </div>}
+      </div>
       <ul>
-        {isMobile ? (
-          categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] ? (
-              groupedNotes[categoryKey].map((item: any, index: number) => renderNote(item, index))
-            ) : null
-          )
-        ) : (
-          categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] ? (
-              <li key={categoryKey}>
-                <h3 className={`py-2 ${isMobile ? "text-center" : ""}`}>
-                  {labels[categoryKey as keyof typeof labels]}
-                </h3>
-                <ul className="space-y-2">
-                  {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
-                    (item: any, index: number) => renderNote(item, index)
-                  )}
-                </ul>
-              </li>
-            ) : null
-          )
+        {categoryOrder.map((categoryKey) =>
+          groupedNotes[categoryKey] ? (
+            <li key={categoryKey}>
+              <h3 className={`py-2 ${isMobile ? "text-center" : ""} text-sm font-bold text-gray-300`}>
+                {labels[categoryKey as keyof typeof labels]}
+              </h3>
+              <ul className="space-y-2">
+                {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
+                  (item: any, index: number) => renderNote(item, index)
+                )}
+              </ul>
+            </li>
+          ) : null
         )}
       </ul>
     </div>
   );
 }
-

@@ -45,7 +45,7 @@ export default function NoteContent({
       {isEditing ? (
         <Textarea
           value={localContent}
-          className="bg-[#1e1e1e] min-h-screen focus:outline-none"
+          className="bg-[#1c1c1c] min-h-screen focus:outline-none"
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={handleFocus}
@@ -53,7 +53,7 @@ export default function NoteContent({
         />
       ) : (
         <div
-          className="bg-[#1e1e1e] h-full text-sm"
+          className="bg-[#1c1c1c] h-full text-sm"
           onClick={() => !isPublic && setIsEditing(true)}
         >
           <ReactMarkdown className="markdown-body min-h-screen">

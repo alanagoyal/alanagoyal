@@ -38,7 +38,7 @@ export default function ResizableLayout({
   }, []);
 
   return (
-    <div className="bg-[#1e1e1e] text-white min-h-screen">
+    <div className="bg-[#1c1c1c] text-white min-h-screen">
       <ResizablePanelGroup direction="horizontal" className="flex min-h-screen">
         <ResizablePanel
           defaultSize={25}
