@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/resizable";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/toaster";
+import { Separator } from "./ui/separator";
 
 interface ResizableLayoutProps {
   children: React.ReactNode;
@@ -40,14 +41,22 @@ export default function ResizableLayout({
   return (
     <div className="bg-[#1c1c1c] text-white min-h-screen">
       <ResizablePanelGroup direction="horizontal" className="flex min-h-screen">
-        <ResizablePanel
-          defaultSize={25}
-          minSize={20}
-          maxSize={50}
-        >
-          {data && <Sidebar notes={data} isMobile={isMobile} />}
-        </ResizablePanel>
-        <ResizableHandle className="bg-gray-500" />
+        {isMobile ? (
+          <div className="w-1/5"> 
+            {data && <Sidebar notes={data} isMobile={isMobile} />}
+          </div>
+        ) : (
+          <>
+            <ResizablePanel
+              defaultSize={25}
+              minSize={20}
+              maxSize={50}
+            >
+              {data && <Sidebar notes={data} isMobile={isMobile} />}
+            </ResizablePanel>
+            <ResizableHandle className="bg-gray-500" />
+          </>
+        )}
         <ResizablePanel defaultSize={70}>
           {children}
           <Toaster />

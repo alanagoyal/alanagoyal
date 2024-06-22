@@ -43,15 +43,15 @@ export default function Sidebar({
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       if (createdDate.toDateString() === today.toDateString()) {
-        category = 'today';
+        category = "today";
       } else if (createdDate.toDateString() === yesterday.toDateString()) {
-        category = 'yesterday';
+        category = "yesterday";
       } else if (createdDate > sevenDaysAgo) {
-        category = '7';
+        category = "7";
       } else if (createdDate > thirtyDaysAgo) {
-        category = '30';
+        category = "30";
       } else {
-        category = 'older';
+        category = "older";
       }
     }
 
@@ -73,7 +73,9 @@ export default function Sidebar({
     return (
       <li
         key={index}
-        className={`min-h-[50px] py-2 ${item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""} ${isMobile ? "flex items-center justify-center" : ""}`}
+        className={`min-h-[50px] py-2 ${
+          item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
+        } ${isMobile ? "flex items-center justify-center" : ""}`}
       >
         <Link
           href={`/${item.slug || ""}`}
@@ -99,9 +101,7 @@ export default function Sidebar({
     pinned: (
       <>
         {isMobile ? (
-          <div className="flex justify-center">
-            Pinned
-          </div>
+          <div className="flex justify-center">Pinned</div>
         ) : (
           <>
             <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
@@ -119,9 +119,13 @@ export default function Sidebar({
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
-    <div className={`${isMobile ? "px-2 pt-5" : "p-5"}`}>
+    <div className={`${isMobile ? "px-2 pt-10" : "pt-5 px-2"}`}>
       <SessionId setSessionId={setSessionId} />
-      <div className={`flex py-2 ${isMobile ? "justify-center" : "items-center justify-between"}`}>
+      <div
+        className={`flex py-2 mx-2 ${
+          isMobile ? "justify-center" : "items-center justify-between"
+        }`}
+      >
         {!isMobile && <p className="text-lg font-bold">Notes</p>}
         <NewNote />
       </div>
@@ -129,9 +133,11 @@ export default function Sidebar({
         {categoryOrder.map((categoryKey) =>
           groupedNotes[categoryKey] ? (
             <li key={categoryKey}>
-              <h3 className={`py-2 ${isMobile ? "text-center" : ""} text-sm font-bold text-gray-300`}>
-                {labels[categoryKey as keyof typeof labels]}
-              </h3>
+              {!isMobile && (
+                <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
+                  {labels[categoryKey as keyof typeof labels]}
+                </h3>
+              )}
               <ul className="space-y-2">
                 {groupedNotes[categoryKey as keyof typeof groupedNotes].map(
                   (item: any, index: number) => renderNote(item, index)
