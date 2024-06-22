@@ -84,20 +84,23 @@ export default function NoteHeader({
             autoFocus={!note.title}
           />
         )}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            >
-              {localEmoji}
-            </TooltipTrigger>
-            {!isMobile && (
-              <TooltipContent className="bg-[#1c1c1c] text-muted-foreground border-none">
+        {(!isPublic && !isMobile) ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="cursor-pointer"
+              >
+                {localEmoji}
+              </TooltipTrigger>
+              <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
                 Click to choose an emoji
               </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <span>{localEmoji}</span>
+        )}
       </div>
       {showEmojiPicker && !isMobile && !isPublic && (
         <div className="absolute top-full right-0 z-10">
@@ -107,4 +110,3 @@ export default function NoteHeader({
     </div>
   );
 }
-
