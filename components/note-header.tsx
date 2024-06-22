@@ -72,13 +72,13 @@ export default function NoteHeader({
       </p>
       <div className="flex justify-between items-center">
         {isPublic ? (
-          <span className="text-lg font-bold flex-grow mr-2 py-2">
+          <span className="text-2xl font-bold flex-grow mr-2 py-2">
             {localTitle}
           </span>
         ) : (
           <Input
             value={localTitle}
-            className="placeholder:text-muted-foreground text-lg font-bold flex-grow mr-2 focus:outline-none"
+            className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 focus:outline-none"
             placeholder="Your title here..."
             onChange={handleTitleChange}
             autoFocus={!note.title}
