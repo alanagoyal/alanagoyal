@@ -51,7 +51,7 @@ export default function NewNote() {
   }, [router]);
 
   return (
-    <div className="flex flex-col items-center justify-center mb-1">
+    <div className="flex flex-col items-center justify-center">
       <SessionId setSessionId={setSessionId} />
       <TooltipProvider>
         <Tooltip>
