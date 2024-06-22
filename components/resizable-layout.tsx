@@ -56,7 +56,7 @@ export default function ResizableLayout({
             <ResizableHandle className="bg-gray-500" />
           </>
         )}
-        <ResizablePanel defaultSize={70}>
+        <ResizablePanel defaultSize={75}>
           {children}
           <Toaster />
         </ResizablePanel>
