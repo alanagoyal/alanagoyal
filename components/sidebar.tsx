@@ -80,6 +80,7 @@ export default function Sidebar({
         <Link
           href={`/${item.slug || ""}`}
           onClick={() => setSelectedNoteSlug(item.slug)}
+          prefetch={true}
         >
           <h2 className={`text-sm font-bold ${isMobile ? "" : "pl-4"}`}>
             {item.emoji} {isMobile ? "" : item.title}
