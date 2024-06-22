@@ -6,7 +6,8 @@ create table "public"."notes" (
     "public" boolean,
     "session_id" uuid,
     "slug" text,
-    "category" text
+    "category" text,
+    "emoji" text
 );
 
 
