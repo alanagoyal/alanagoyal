@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/resizable";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { Separator } from "./ui/separator";
 
 interface ResizableLayoutProps {
   children: React.ReactNode;
