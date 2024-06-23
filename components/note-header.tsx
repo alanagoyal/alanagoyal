@@ -44,7 +44,8 @@ export default function NoteHeader({
     if (note.title) {
       setLocalTitle(note.title);
     }
-  }, [note.emoji, note.title]);
+    setIsPublic(note.public);
+  }, [note]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
