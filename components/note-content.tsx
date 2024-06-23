@@ -17,7 +17,8 @@ export default function NoteContent({
 
   useEffect(() => {
     setLocalContent(note.content);
-  }, [note.content]);
+    setIsPublic(note.public);
+  }, [note]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {

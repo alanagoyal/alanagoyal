@@ -18,19 +18,23 @@ export default function NoteHeader({
   note: any;
   saveNote: (updates: any) => void;
 }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
   const [isPublic, setIsPublic] = useState(note.public);
 
   useEffect(() => {
-    function handleResize() {
-      setIsMobile(window.innerWidth < 768);
-    }
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    
+    // Set initial state
+    checkMobile();
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    // Add event listener
+    window.addEventListener('resize', checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
