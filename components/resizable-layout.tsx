@@ -18,10 +18,11 @@ export default function ResizableLayout({
   children,
   data,
 }: ResizableLayoutProps) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Effect to handle mobile view
   useEffect(() => {
+    setIsMobile(window.innerWidth <= 768);
     const handleResize = () => {
       const currentIsMobile = window.innerWidth <= 768;
       setIsMobile(currentIsMobile);

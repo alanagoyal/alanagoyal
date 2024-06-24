@@ -18,15 +18,16 @@ export default function NoteHeader({
   note: any;
   saveNote: (updates: any) => void;
 }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
   const [isPublic, setIsPublic] = useState(note.public);
 
   useEffect(() => {
+    setIsMobile(window.innerWidth <= 768);
     function handleResize() {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth <= 768);
     }
 
     window.addEventListener("resize", handleResize);
@@ -40,7 +41,8 @@ export default function NoteHeader({
     if (note.title) {
       setLocalTitle(note.title);
     }
-  }, [note.emoji, note.title]);
+    setIsPublic(note.public);
+  }, [note.emoji, note.title, note.public]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
