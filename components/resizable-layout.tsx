@@ -20,17 +20,22 @@ export default function ResizableLayout({
 }: ResizableLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
 
+  // Effect to handle mobile view
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    
-    // Set initial state
-    checkMobile();
+    setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const currentIsMobile = window.innerWidth <= 768;
+      setIsMobile(currentIsMobile);
+    };
 
-    // Add event listener
-    window.addEventListener('resize', checkMobile);
+    // Set initial state based on window size
+    handleResize();
 
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
+    // Add event listener for window resize
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup event listener
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (

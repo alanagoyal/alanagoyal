@@ -47,14 +47,16 @@ export default function Sidebar({
           {categoryOrder.map((categoryKey) =>
             groupedNotes[categoryKey] ? (
               <li key={categoryKey}>
-                <ul className="space-y-2">
+                <ul>
+                  <ul className="space-y-2">
                   {groupedNotes[categoryKey].map((item: any, index: number) => (
-                    <MobileNoteItem
-                      key={index}
-                      item={item}
-                      selectedNoteSlug={selectedNoteSlug}
-                    />
-                  ))}
+                      <MobileNoteItem
+                        key={index}
+                        item={item}
+                        selectedNoteSlug={selectedNoteSlug}
+                      />
+                    ))}
+                </ul>
                 </ul>
               </li>
             ) : null
