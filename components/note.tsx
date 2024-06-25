@@ -30,3 +30,4 @@ export default function Note({ note }: { note: any }) {
     </div>
   );
 }
+

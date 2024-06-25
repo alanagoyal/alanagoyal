@@ -150,16 +150,49 @@ INSERT INTO "public"."notes" ("id", "title", "content", "created_at", "public", 
 - churchill
 - the passage of power
 - sam walton: made in america', '2024-06-14 15:05:32+00', true, NULL, 'reading-list', 'yesterday', '📚'),
-	('1d3b70d6-ce1b-4d66-9936-4f5fd38c43aa', 'welcome', 'as someone who reaches out to a lot of people, i love when i can learn more about them from their website. 
+	('c304aac4-9a2c-436d-a57b-9775cf74a444', 'hi alana', '## hello
 
-with that, i figured what better way to get to know me than a peek inside my notes. in addition to the boring basics (i.e. about me), i''ve shared some of my favorite products, books, music, foods, etc. 
-
-you can also interact with the site by adding your own note (visible only to you and me). ', '2024-06-22 22:46:44+00', true, NULL, NULL, 'pinned', '📌'),
+hello!!', '2024-06-23 23:05:34.978+00', false, 'd3f7c92c-ae43-4393-a71e-5e175d8b1e85', 'new-note-c304aac4-9a2c-436d-a57b-9775cf74a444', 'today', '😍'),
 	('1001a77a-55ee-4a21-bf79-762d87a9576b', 'hobbies', '- skiing
 - coding
 - reading', '2024-06-22 19:44:00.423+00', false, 'd3f7c92c-ae43-4393-a71e-5e175d8b1e85', 'new-note-1001a77a-55ee-4a21-bf79-762d87a9576b', 'today', '⛷️'),
+	('1d3b70d6-ce1b-4d66-9936-4f5fd38c43aa', 'welcome', 'hi, welcome to my notes! in addition to the boring basics (i.e. about me), i''ve shared some of my favorite products, books, music, foods, etc. 
+
+you can also interact with the site by adding your own note (visible only to you and me). ', '2024-06-22 22:46:44+00', true, NULL, NULL, 'pinned', '📌'),
 	('e7f4603e-c5df-4689-9a7b-d7674ad9909f', '', '', '2024-06-19 20:41:17.392+00', false, 'f690ead7-a3ef-49fd-8616-b05d82beb6d6', 'new-note-e7f4603e-c5df-4689-9a7b-d7674ad9909f', 'today', '👋🏼'),
+	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries', 'i hate cooking, so generally make things like yogurt bowls and [girl dinners](https://www.nytimes.com/2023/07/08/style/girl-dinner.html) 
+
+### my go-to items
+- mangos, blueberries
+- greek yogurt
+- [steep hill granola](https://www.steephillfoods.com/perfectnut) (the absolute best small-batch, locally made granola that is sadly going out of business 😢)
+- chia seeds, hemp seeds, cacao nibs, coconut flakes, goji berries, etc. etc.
+- parmesan, manchego
+- prosciutto, salami
+- tuna, sardines, anchovies (😝)
+- seed crackers
+- dates
+- coke zero
+- perrier', '2024-06-14 22:47:45.808451+00', true, NULL, 'groceries', '7', '🍎'),
+	('65d8e406-8ceb-4f2a-918f-80e1f5a9cb61', 'quick links', 'i''m omni-channel!
+
+- [email](mailto:hi@basecase.vc): inbox zero, always
+- [twitter](https://x.com/alanaagoyal): semi-frequent thoughts + updates on the amazing founders i work with
+- [github](https://github.com/alanagoyal): so many green squares!
+- [linkedin](https://www.linkedin.com/in/alanagoyal/): mostly for stalking people
+- [instagram](https://www.instagram.com/alanaagoyal/): quarterly photo dumps of people + places + things i like', '2024-06-16 21:51:06+00', true, NULL, 'quick-links', 'today', '📎'),
 	('f240198f-80d0-4f2e-9ca6-1f6a34ae974b', '', '', '2024-06-22 04:18:17.441+00', false, 'b97a37bb-70ee-42f0-8f80-d15edbe66cab', 'new-note-f240198f-80d0-4f2e-9ca6-1f6a34ae974b', 'today', '👋🏼'),
+	('151936ee-eba1-4321-9a8f-84f07de8b275', 'queen ', 'hi bitch 
+
+hi', '2024-06-19 00:29:26.118+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-151936ee-eba1-4321-9a8f-84f07de8b275', 'today', '👋🏼'),
+	('c4d6e1c0-3b5d-472b-902d-8def8aaed07f', '', '', '2024-06-22 20:43:05.607+00', false, '2c72e032-6b4c-46bd-9362-465f4eb098ca', 'new-note-c4d6e1c0-3b5d-472b-902d-8def8aaed07f', 'today', '👋🏼'),
+	('169bb5d4-bc6d-4ae2-ae95-6bbc12cf26a3', '', '', '2024-06-23 07:57:12.567+00', false, 'e7a9d2eb-c6eb-4ddd-9b60-299b7d601768', 'new-note-169bb5d4-bc6d-4ae2-ae95-6bbc12cf26a3', 'today', '👋🏼'),
+	('fd73a76e-80aa-4c25-874e-813493180f86', 'bookmarks', 'some of my favorite quotes!
+-  "you measure yourself by the people who measure themselves by you" - phil knight, *shoe dog*
+-  "sometimes magic is just someone spending more time on something than anyone else might reasonably expect" - will guidara, *unreasonable hospitality*
+- "anyone can get a first meeting" - michael ovitz, *who is michael ovitz*
+- "happiness is not a tangible thing, it''s a byproduct of achievement" - ray kroc, *grinding it out*
+- there''s aesthetic value in doing things the right way" - danny meyer, *setting the table*', '2024-06-23 18:21:08.13833+00', true, NULL, 'bookmarks', '7', '📁'),
 	('02a00112-d0a2-4586-a43a-195b0f4105bf', 'on repeat', 'i listen to a lot of music!
 
 ### edm/house
@@ -188,30 +221,6 @@ you can also interact with the site by adding your own note (visible only to you
 
 ### country
 - morgan wallen (obsessed, the only country artist i listen to)', '2024-06-14 22:48:41.026439+00', true, NULL, 'on-repeat', 'yesterday', '🎧'),
-	('34c07bc5-f111-4810-b267-18ddbe732bed', 'groceries', 'i hate cooking, so generally make things like yogurt bowls and [girl dinners](https://www.nytimes.com/2023/07/08/style/girl-dinner.html) 
-
-### my go-to items
-- mangos, blueberries
-- greek yogurt
-- [steep hill granola](https://www.steephillfoods.com/perfectnut) (the absolute best small-batch, locally made granola that is sadly going out of business 😢)
-- chia seeds, hemp seeds, cacao nibs, coconut flakes, goji berries, etc. etc.
-- parmesan, manchego
-- prosciutto, salami
-- tuna, sardines, anchovies (😝)
-- seed crackers
-- dates
-- coke zero
-- perrier', '2024-06-14 22:47:45.808451+00', true, NULL, 'groceries', '7', '🍎'),
-	('65d8e406-8ceb-4f2a-918f-80e1f5a9cb61', 'quick links', 'i am omni-channel!
-
-- [email](mailto:hi@basecase.vc): inbox zero, always
-- [twitter](https://x.com/alanaagoyal): semi-frequent thoughts + updates on the amazing founders i work with
-- [github](https://github.com/alanagoyal): so many green squares!
-- [linkedin](https://www.linkedin.com/in/alanagoyal/): mostly for stalking people
-- [instagram](https://www.instagram.com/alanaagoyal/): quarterly photo dumps of people + places + things i like', '2024-06-16 21:51:06+00', true, NULL, 'quick-links', 'today', '📎'),
-	('151936ee-eba1-4321-9a8f-84f07de8b275', 'queen ', 'hi bitch 
-
-hi', '2024-06-19 00:29:26.118+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-151936ee-eba1-4321-9a8f-84f07de8b275', 'today', '👋🏼'),
 	('fd234e08-7ac1-4332-a3fe-06ece731c314', 'about me', 'a brief overview of my current + past work
 
 ### current
@@ -227,8 +236,8 @@ hi', '2024-06-19 00:29:26.118+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926'
 - helped build the self-service product at [appdynamics](https://www.appdynamics.com/free-trial/)
 - interned on the research and development team at [natera](https://www.natera.com/)
 - studied computer science at [columbia university](https://www.columbia.edu/)', '2024-06-17 19:00:00+00', true, NULL, 'about-me', 'pinned', '🙋🏼‍♀️'),
-	('c4d6e1c0-3b5d-472b-902d-8def8aaed07f', '', '', '2024-06-22 20:43:05.607+00', false, '2c72e032-6b4c-46bd-9362-465f4eb098ca', 'new-note-c4d6e1c0-3b5d-472b-902d-8def8aaed07f', 'today', '👋🏼'),
-	('169bb5d4-bc6d-4ae2-ae95-6bbc12cf26a3', '', '', '2024-06-23 07:57:12.567+00', false, 'e7a9d2eb-c6eb-4ddd-9b60-299b7d601768', 'new-note-169bb5d4-bc6d-4ae2-ae95-6bbc12cf26a3', 'today', '👋🏼'),
+	('99f2bc87-2e54-455d-9b6a-4cedee5b77cc', 'molly ', '', '2024-06-23 22:52:44.973+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-99f2bc87-2e54-455d-9b6a-4cedee5b77cc', 'today', '👋🏼'),
+	('2435611e-f8b6-446c-96c3-adc4bf90c159', '', '', '2024-06-23 22:52:42.95+00', false, '5a3c799e-e0b6-4d94-8232-bfc0f5b2f926', 'new-note-2435611e-f8b6-446c-96c3-adc4bf90c159', 'today', '👋🏼'),
 	('767f8b2b-2f20-4c65-8c9d-c219bd689fa1', 'favorite products', 'i love trying new things and admire the craftsmanship that goes into building great products!
 
 ### development stack

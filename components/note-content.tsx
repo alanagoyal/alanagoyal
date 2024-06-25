@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
+import { debounce } from 'lodash'; 
 
 export default function NoteContent({
   note,
@@ -21,12 +22,16 @@ export default function NoteContent({
   }, [note.content, note.public]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      saveNote({ content: localContent });
+    const debouncedSave = debounce((content: string) => {
+      if (content !== note.content) {
+        saveNote({ content });
+      }
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [localContent, saveNote]);
+    debouncedSave(localContent);
+
+    return () => debouncedSave.cancel();
+  }, [localContent, saveNote, note.content]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;

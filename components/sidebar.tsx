@@ -6,7 +6,14 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import NewNote from "./new-note";
-import SearchBar from "./search";
+import { useRouter } from "next/navigation";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./ui/context-menu";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Sidebar({
   notes,
@@ -15,6 +22,7 @@ export default function Sidebar({
   notes: any[];
   isMobile: boolean;
 }) {
+
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const pathname = usePathname();
@@ -106,7 +114,8 @@ export default function Sidebar({
                         key={index}
                         item={item}
                         selectedNoteSlug={selectedNoteSlug}
-                      />
+                        sessionId={sessionId}
+                    />
                     ))}
                   </ul>
                 </div>
@@ -141,11 +150,41 @@ export default function Sidebar({
   function DesktopNoteItem({
     item,
     selectedNoteSlug,
+    sessionId,
   }: {
     item: any;
     selectedNoteSlug: string | null;
+    sessionId: string;
   }) {
-    return (
+    const router = useRouter();
+    const supabase = createClient();
+
+    const handleDelete = async () => {
+      try {
+        const { error } = await supabase
+          .from('notes')
+          .delete()
+          .eq('slug', item.slug)
+          .eq('session_id', sessionId);
+
+        if (error) {
+          throw error;
+        }
+
+        router.push('/');
+        router.refresh();
+      } catch (error) {
+        console.error('Error deleting note:', error);
+      }
+    };
+
+    const handleEdit = () => {
+      router.push(`/${item.slug}`);
+    };
+
+    const canEditOrDelete = item.session_id === sessionId;
+
+    const NoteContent = (
       <li
         className={`min-h-[50px] py-2 ${
           item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
@@ -163,6 +202,18 @@ export default function Sidebar({
           </p>
         </Link>
       </li>
+    );
+
+    return canEditOrDelete ? (
+      <ContextMenu>
+        <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+          <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    ) : (
+      NoteContent
     );
   }
 
@@ -243,3 +294,4 @@ export default function Sidebar({
     </>
   );
 }
+
