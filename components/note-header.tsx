@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { debounce } from 'lodash'; 
 
 export default function NoteHeader({
   note,
@@ -45,11 +46,15 @@ export default function NoteHeader({
   }, [note.emoji, note.title, note.public]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      saveNote({ title: localTitle, emoji: localEmoji });
+    const debouncedSave = debounce((title: string, emoji: string) => {
+      if (title !== note.title || emoji !== note.emoji) {
+        saveNote({ title, emoji });
+      }
     }, 1000);
 
-    return () => clearInterval(intervalId);
+    debouncedSave(localTitle, localEmoji);
+
+    return () => debouncedSave.cancel();
   }, [localTitle, localEmoji, saveNote]);
 
   const formattedDate = format(
@@ -112,3 +117,4 @@ export default function NoteHeader({
     </div>
   );
 }
+
