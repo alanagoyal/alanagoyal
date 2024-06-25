@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import NewNote from "./new-note";
+import SearchBar from "./search";
 import { useRouter } from "next/navigation";
 import {
   ContextMenu,
@@ -26,6 +27,7 @@ export default function Sidebar({
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const pathname = usePathname();
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     const slug = pathname.split("/").pop();
@@ -55,13 +57,15 @@ export default function Sidebar({
             groupedNotes[categoryKey] ? (
               <li key={categoryKey}>
                 <ul>
+                  <ul className="space-y-2">
                   {groupedNotes[categoryKey].map((item: any, index: number) => (
-                    <MobileNoteItem
-                      key={index}
-                      item={item}
-                      selectedNoteSlug={selectedNoteSlug}
-                    />
-                  ))}
+                      <MobileNoteItem
+                        key={index}
+                        item={item}
+                        selectedNoteSlug={selectedNoteSlug}
+                      />
+                    ))}
+                </ul>
                 </ul>
               </li>
             ) : null
@@ -78,33 +82,51 @@ export default function Sidebar({
     groupedNotes: any;
     selectedNoteSlug: string | null;
   }) {
+    const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+
     return (
       <div className="pt-4 px-2">
+        <SearchBar notes={notes} onSearchResults={setLocalSearchResults} />
         <div className="flex py-2 mx-2 items-center justify-between">
           <p className="text-lg font-bold">Notes</p>
           <NewNote />
         </div>
-        <ul>
-          {categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] ? (
-              <li key={categoryKey}>
-                <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
-                  {labels[categoryKey as keyof typeof labels]}
-                </h3>
-                <ul className="space-y-2">
-                  {groupedNotes[categoryKey].map((item: any, index: number) => (
-                    <DesktopNoteItem
-                      key={index}
-                      item={item}
-                      selectedNoteSlug={selectedNoteSlug}
-                      sessionId={sessionId}
-                    />
-                  ))}
-                </ul>
-              </li>
-            ) : null
-          )}
-        </ul>
+        {localSearchResults === null ? (
+          <div>
+            {categoryOrder.map((categoryKey) =>
+              groupedNotes[categoryKey] ? (
+                <div key={categoryKey}>
+                  <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
+                    {labels[categoryKey as keyof typeof labels]}
+                  </h3>
+                  <ul className="space-y-2">
+                    {groupedNotes[categoryKey].map((item: any, index: number) => (
+                      <DesktopNoteItem
+                        key={index}
+                        item={item}
+                        selectedNoteSlug={selectedNoteSlug}
+                        sessionId={sessionId}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ) : null
+            )}
+          </div>
+        ) : localSearchResults.length > 0 ? (
+          <ul className="space-y-2">
+            {localSearchResults.map((item) => (
+              <DesktopNoteItem
+                key={item.id}
+                item={item}
+                selectedNoteSlug={selectedNoteSlug}
+                sessionId={sessionId}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-400 px-2 mt-4">No results found</p>
+        )}
       </div>
     );
   }
@@ -276,4 +298,3 @@ export default function Sidebar({
     </>
   );
 }
-
