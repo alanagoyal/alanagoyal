@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import NewNote from "./new-note";
+import SearchBar from "./search";
 import { useRouter } from "next/navigation";
 import {
   ContextMenu,
@@ -81,7 +82,7 @@ export default function Sidebar({
     groupedNotes: any;
     selectedNoteSlug: string | null;
   }) {
-    const [localSearchResults, setLocalSearchResults] = useState<any[]>([]);
+    const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
 
     return (
       <div className="pt-4 px-2">
@@ -90,17 +91,7 @@ export default function Sidebar({
           <p className="text-lg font-bold">Notes</p>
           <NewNote />
         </div>
-        {localSearchResults.length > 0 ? (
-          <ul className="space-y-2">
-            {localSearchResults.map((item) => (
-              <DesktopNoteItem
-                key={item.id}
-                item={item}
-                selectedNoteSlug={selectedNoteSlug}
-              />
-            ))}
-          </ul>
-        ) : (
+        {localSearchResults === null ? (
           <div>
             {categoryOrder.map((categoryKey) =>
               groupedNotes[categoryKey] ? (
@@ -115,13 +106,26 @@ export default function Sidebar({
                         item={item}
                         selectedNoteSlug={selectedNoteSlug}
                         sessionId={sessionId}
-                    />
+                      />
                     ))}
                   </ul>
                 </div>
               ) : null
             )}
           </div>
+        ) : localSearchResults.length > 0 ? (
+          <ul className="space-y-2">
+            {localSearchResults.map((item) => (
+              <DesktopNoteItem
+                key={item.id}
+                item={item}
+                selectedNoteSlug={selectedNoteSlug}
+                sessionId={sessionId}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-400 px-2 mt-4">No results found</p>
         )}
       </div>
     );
@@ -294,4 +298,3 @@ export default function Sidebar({
     </>
   );
 }
-

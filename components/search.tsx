@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
+import { Search } from "lucide-react"; // Import the Search icon
 
-export default function SearchBar({ notes, onSearchResults }: { notes: any[], onSearchResults: (results: any[]) => void }) {
+export default function SearchBar({ notes, onSearchResults }: { notes: any[], onSearchResults: (results: any[] | null) => void }) {
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    onSearchResults(null);
+  }, []);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     setSearchTerm(term);
+    
     if (term.length > 0) {
       const results = notes.filter(note =>
         note.title.toLowerCase().includes(term.toLowerCase()) ||
@@ -14,18 +20,19 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
       );
       onSearchResults(results);
     } else {
-      onSearchResults([]);
+      onSearchResults(null);
     }
   };
 
   return (
-    <div className="mb-4">
+    <div className="relative">
+      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
       <Input
         type="text"
         value={searchTerm}
         onChange={handleSearch}
-        placeholder="Search notes..."
-        className="w-full p-2 border border-gray-300 rounded-md"
+        placeholder="Search"
+        className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-muted-foreground"
       />
     </div>
   );
