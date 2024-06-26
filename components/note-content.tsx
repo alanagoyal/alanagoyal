@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import { debounce } from 'lodash'; 
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 export default function NoteContent({
   note,
@@ -62,7 +64,16 @@ export default function NoteContent({
           className="bg-[#1c1c1c] h-full text-sm"
           onClick={() => !isPublic && setIsEditing(true)}
         >
-          <ReactMarkdown className="markdown-body min-h-screen">
+          <ReactMarkdown
+            className="markdown-body min-h-screen"
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              a: ({ node, ...props }) => (
+                <a {...props} target="_blank" rel="noopener noreferrer" />
+              ),
+            }}
+          >
             {localContent}
           </ReactMarkdown>
         </div>
