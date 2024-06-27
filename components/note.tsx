@@ -24,7 +24,7 @@ export default function Note({ note }: { note: any }) {
   };
 
   return (
-    <div>
+    <div className="p-3">
       <NoteHeader note={note} saveNote={autosaveNote} />
       <NoteContent note={note} saveNote={autosaveNote} />
     </div>
