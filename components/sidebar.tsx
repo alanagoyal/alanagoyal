@@ -282,19 +282,21 @@ export default function Sidebar({
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
-    <>
+    <div className="h-screen flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
-      {isMobile ? (
-        <MobileSidebar
-          groupedNotes={groupedNotes}
-          selectedNoteSlug={selectedNoteSlug}
-        />
-      ) : (
-        <DesktopSidebar
-          groupedNotes={groupedNotes}
-          selectedNoteSlug={selectedNoteSlug}
-        />
-      )}
-    </>
+      <div className="flex-1 overflow-y-auto">
+        {isMobile ? (
+          <MobileSidebar
+            groupedNotes={groupedNotes}
+            selectedNoteSlug={selectedNoteSlug}
+          />
+        ) : (
+          <DesktopSidebar
+            groupedNotes={groupedNotes}
+            selectedNoteSlug={selectedNoteSlug}
+          />
+        )}
+      </div>
+    </div>
   );
 }

@@ -39,29 +39,14 @@ export default function ResizableLayout({
   }, []);
 
   return (
-    <div className="bg-[#1c1c1c] text-white min-h-screen">
-      <ResizablePanelGroup direction="horizontal" className="flex min-h-screen">
-        {isMobile ? (
-          <div className="w-1/5"> 
-            {data && <Sidebar notes={data} isMobile={isMobile} />}
-          </div>
-        ) : (
-          <>
-            <ResizablePanel
-              defaultSize={25}
-              minSize={20}
-              maxSize={50}
-            >
-              {data && <Sidebar notes={data} isMobile={isMobile} />}
-            </ResizablePanel>
-            <ResizableHandle className="bg-gray-500" />
-          </>
-        )}
-        <ResizablePanel defaultSize={75}>
-          {children}
-          <Toaster />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+    <div className="bg-[#1c1c1c] text-white min-h-screen flex">
+      <div className="w-64 border-r border-gray-300/20">
+        {data && <Sidebar notes={data} isMobile={isMobile} />}
+      </div>
+      <div className="flex-1">
+        {children}
+      </div>
+      <Toaster />
     </div>
   );
 }
