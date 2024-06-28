@@ -13,7 +13,7 @@ const fontSans = FontSans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: siteConfig.name,
+  title: siteConfig.title,
   description: siteConfig.description,
 };
 
@@ -27,7 +27,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>{siteConfig.name}</title>
+        <title>{siteConfig.title}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>
         <meta property="twitter:title" content={siteConfig.name}></meta>
         <meta property="twitter:description" content={siteConfig.description}></meta>
