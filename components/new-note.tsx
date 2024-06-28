@@ -12,6 +12,8 @@ import { Icons } from "./icons";
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import SessionId from "./session-id";
+import { useContext } from "react";
+import { MobileContext } from "./sidebar-layout";
 
 export default function NewNote() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -30,8 +32,11 @@ export default function NewNote() {
     emoji: "👋🏼",
   };
 
+  const { setShowSidebar } = useContext(MobileContext);
+
   async function createNote() {
     await supabase.from("notes").insert(note);
+    if (setShowSidebar) setShowSidebar(false);
     router.push(`/${note.slug}`);
     router.refresh();
   }
