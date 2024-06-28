@@ -10,7 +10,7 @@ export default async function NotePage({ params }: { params: { slug: string } })
     .eq("slug", slug)
     .single();
   return (
-    <div className="w-full min-h-screen p-5">
+    <div className="w-full min-h-screen p-3">
       <Note note={note} />
     </div>
   );

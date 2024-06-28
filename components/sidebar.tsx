@@ -18,16 +18,15 @@ import { createClient } from "@/utils/supabase/client";
 
 export default function Sidebar({
   notes,
-  isMobile,
+  onNoteSelect,
 }: {
   notes: any[];
-  isMobile: boolean;
+  onNoteSelect?: () => void;
 }) {
 
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const pathname = usePathname();
-  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     const slug = pathname.split("/").pop();
@@ -40,42 +39,7 @@ export default function Sidebar({
   const groupedNotes = groupNotesByCategory(userSpecificNotes);
   sortGroupedNotes(groupedNotes);
 
-  function MobileSidebar({
-    groupedNotes,
-    selectedNoteSlug,
-  }: {
-    groupedNotes: any;
-    selectedNoteSlug: string | null;
-  }) {
-    return (
-      <div className="pt-4 px-2">
-        <ul className="space-y-2">
-          <li className="min-h-[50px] ml-1 flex items-center justify-center">
-            <NewNote />
-          </li>
-          {categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] ? (
-              <li key={categoryKey}>
-                <ul>
-                  <ul className="space-y-2">
-                  {groupedNotes[categoryKey].map((item: any, index: number) => (
-                      <MobileNoteItem
-                        key={index}
-                        item={item}
-                        selectedNoteSlug={selectedNoteSlug}
-                      />
-                    ))}
-                </ul>
-                </ul>
-              </li>
-            ) : null
-          )}
-        </ul>
-      </div>
-    );
-  }
-
-  function DesktopSidebar({
+  function Sidebar({
     groupedNotes,
     selectedNoteSlug,
   }: {
@@ -101,11 +65,12 @@ export default function Sidebar({
                   </h3>
                   <ul className="space-y-2">
                     {groupedNotes[categoryKey].map((item: any, index: number) => (
-                      <DesktopNoteItem
+                      <NoteItem
                         key={index}
                         item={item}
                         selectedNoteSlug={selectedNoteSlug}
                         sessionId={sessionId}
+                        onNoteSelect={onNoteSelect}
                       />
                     ))}
                   </ul>
@@ -116,11 +81,12 @@ export default function Sidebar({
         ) : localSearchResults.length > 0 ? (
           <ul className="space-y-2">
             {localSearchResults.map((item) => (
-              <DesktopNoteItem
+              <NoteItem
                 key={item.id}
                 item={item}
                 selectedNoteSlug={selectedNoteSlug}
                 sessionId={sessionId}
+                onNoteSelect={onNoteSelect}
               />
             ))}
           </ul>
@@ -131,34 +97,16 @@ export default function Sidebar({
     );
   }
 
-  function MobileNoteItem({
-    item,
-    selectedNoteSlug,
-  }: {
-    item: any;
-    selectedNoteSlug: string | null;
-  }) {
-    return (
-      <li
-        className={`min-h-[50px] py-2 flex items-center justify-center ${
-          item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
-        }`}
-      >
-        <Link href={`/${item.slug || ""}`} prefetch={true}>
-          <h2 className="text-sm font-bold">{item.emoji}</h2>
-        </Link>
-      </li>
-    );
-  }
-
-  function DesktopNoteItem({
+  function NoteItem({
     item,
     selectedNoteSlug,
     sessionId,
+    onNoteSelect,
   }: {
     item: any;
     selectedNoteSlug: string | null;
     sessionId: string;
+    onNoteSelect?: () => void;
   }) {
     const router = useRouter();
     const supabase = createClient();
@@ -188,11 +136,19 @@ export default function Sidebar({
 
     const canEditOrDelete = item.session_id === sessionId;
 
+    const handleNoteClick = () => {
+      router.push(`/${item.slug || ""}`);
+      if (onNoteSelect) {
+        onNoteSelect();
+      }
+    };
+
     const NoteContent = (
       <li
         className={`min-h-[50px] py-2 ${
           item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
         }`}
+        onClick={handleNoteClick}
       >
         <Link href={`/${item.slug || ""}`} prefetch={true}>
           <h2 className="text-sm font-bold pl-4">
@@ -285,17 +241,10 @@ export default function Sidebar({
     <div className="h-screen flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
       <div className="flex-1 overflow-y-auto">
-        {isMobile ? (
-          <MobileSidebar
-            groupedNotes={groupedNotes}
-            selectedNoteSlug={selectedNoteSlug}
-          />
-        ) : (
-          <DesktopSidebar
-            groupedNotes={groupedNotes}
-            selectedNoteSlug={selectedNoteSlug}
-          />
-        )}
+        <Sidebar
+          groupedNotes={groupedNotes}
+          selectedNoteSlug={selectedNoteSlug}
+        />
       </div>
     </div>
   );
