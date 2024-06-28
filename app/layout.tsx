@@ -12,6 +12,7 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: siteConfig.name,
   description: siteConfig.description,
 };
