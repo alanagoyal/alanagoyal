@@ -29,6 +29,7 @@ export default async function RootLayout({
       <head>
         <title>{siteConfig.name}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>
+        <meta property="twitter:title" content={siteConfig.name}></meta>
         <meta property="twitter:description" content={siteConfig.description}></meta>
         <meta
           property="twitter:image"
