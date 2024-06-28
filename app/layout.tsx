@@ -4,7 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/server";
-import ResizableLayout from "@/components/resizable-layout";
+import ResizableLayout from "@/components/sidebar-layout";
 
 const fontSans = FontSans({
   subsets: ["latin"],
