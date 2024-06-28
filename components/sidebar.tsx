@@ -39,7 +39,7 @@ export default function Sidebar({
   const groupedNotes = groupNotesByCategory(userSpecificNotes);
   sortGroupedNotes(groupedNotes);
 
-  function Sidebar({
+  function SidebarContent({
     groupedNotes,
     selectedNoteSlug,
   }: {
@@ -241,7 +241,7 @@ export default function Sidebar({
     <div className="h-screen flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
       <div className="flex-1 overflow-y-auto">
-        <Sidebar
+        <SidebarContent
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
         />
