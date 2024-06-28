@@ -238,7 +238,7 @@ export default function Sidebar({
   const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent

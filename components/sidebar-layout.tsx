@@ -33,8 +33,6 @@ export default function ResizableLayout({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleSidebar = () => setShowSidebar(!showSidebar);
-
   if (isMobile === null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#1c1c1c]">
@@ -43,11 +41,11 @@ export default function ResizableLayout({
     );
   }
 
-  return (
-    <MobileContext.Provider value={{ setShowSidebar }}>
-      <div className="bg-[#1c1c1c] text-white min-h-screen flex">
-        {isMobile ? (
-          showSidebar ? (
+  if (isMobile) {
+    return (
+      <MobileContext.Provider value={{ setShowSidebar }}>
+        <div className="bg-[#1c1c1c] text-white min-h-screen">
+          {showSidebar ? (
             <div className="w-full">
               {data && (
                 <Sidebar
@@ -57,10 +55,10 @@ export default function ResizableLayout({
               )}
             </div>
           ) : (
-            <div className="w-full pt-2">
+            <div className="w-full">
               <Button
                 variant="ghost"
-                onClick={toggleSidebar}
+                onClick={() => setShowSidebar(true)}
                 className="p-2 m-2"
               >
                 <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
@@ -68,15 +66,22 @@ export default function ResizableLayout({
               </Button>
               {children}
             </div>
-          )
-        ) : (
-          <>
-            <div className="w-64 border-r border-gray-300/20">
-              {data && <Sidebar notes={data} />}
-            </div>
-            <div className="flex-1">{children}</div>
-          </>
-        )}
+          )}
+          <Toaster />
+        </div>
+      </MobileContext.Provider>
+    );
+  }
+
+  return (
+    <MobileContext.Provider value={{ setShowSidebar }}>
+      <div className="bg-[#1c1c1c] text-white min-h-screen flex">
+        <div className="w-64 flex-shrink-0 border-r border-gray-300/20 overflow-y-auto h-screen">
+          {data && <Sidebar notes={data} onNoteSelect={() => {}} />}
+        </div>
+        <div className="flex-grow overflow-y-auto h-screen">
+          {children}
+        </div>
         <Toaster />
       </div>
     </MobileContext.Provider>
