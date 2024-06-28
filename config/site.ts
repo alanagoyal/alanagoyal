@@ -1,6 +1,5 @@
 export const siteConfig = {
-  name: "alana goyal",
-  description: "welcome to my personal site/notepad",
+  name: "alana goyal | notes",
   url: "https://alanagoyal.vercel.app",
 };
 
