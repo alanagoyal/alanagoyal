@@ -13,6 +13,7 @@ const fontSans = FontSans({
 
 export const metadata: Metadata = {
   title: siteConfig.name,
+  description: siteConfig.description,
 };
 
 export default async function RootLayout({
