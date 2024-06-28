@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { ArrowLeft, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "./ui/button";
+import { Icons } from "@/components/icons";
 
 interface ResizableLayoutProps {
   children: React.ReactNode;
@@ -15,28 +16,28 @@ export default function ResizableLayout({
   children,
   data,
 }: ResizableLayoutProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
 
-  // Effect to handle mobile view
   useEffect(() => {
-    setIsMobile(window.innerWidth <= 768);
     const handleResize = () => {
-      const currentIsMobile = window.innerWidth <= 768;
-      setIsMobile(currentIsMobile);
+      setIsMobile(window.innerWidth <= 768);
     };
 
-    // Set initial state based on window size
     handleResize();
-
-    // Add event listener for window resize
     window.addEventListener('resize', handleResize);
-
-    // Cleanup event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleSidebar = () => setShowSidebar(!showSidebar);
+
+  if (isMobile === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#1c1c1c]">
+        <Icons.spinner className="w-8 h-8 text-[#e2a727] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#1c1c1c] text-white min-h-screen flex">
@@ -68,3 +69,4 @@ export default function ResizableLayout({
     </div>
   );
 }
+
