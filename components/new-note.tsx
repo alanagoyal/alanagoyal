@@ -60,13 +60,13 @@ export default function NewNote() {
       <SessionId setSessionId={setSessionId} />
       <TooltipProvider>
         <Tooltip>
-        <TooltipTrigger onClick={createNote}>
-          <Icons.new />
-        </TooltipTrigger>
-        <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
-          Click or press ⌘+/ to create a new note
-        </TooltipContent>
-      </Tooltip>
+          <TooltipTrigger onClick={createNote} aria-label="Create new note">
+            <Icons.new />
+          </TooltipTrigger>
+          <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
+            Click or press ⌘+/ to create a new note
+          </TooltipContent>
+        </Tooltip>
       </TooltipProvider>
     </div>
   );
