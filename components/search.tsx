@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
-import { Search } from "lucide-react"; // Import the Search icon
+import { Search } from "lucide-react"; 
 
 export default function SearchBar({ notes, onSearchResults }: { notes: any[], onSearchResults: (results: any[] | null) => void }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,6 +33,7 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
         onChange={handleSearch}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-muted-foreground"
+        aria-label="Search notes"
       />
     </div>
   );
