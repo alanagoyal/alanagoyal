@@ -52,14 +52,14 @@ export default function Sidebar({
       <div className="pt-4 px-2">
         <SearchBar notes={notes} onSearchResults={setLocalSearchResults} />
         <div className="flex py-2 mx-2 items-center justify-between">
-          <p className="text-lg font-bold">Notes</p>
+          <h2 className="text-lg font-bold">Notes</h2>
           <NewNote />
         </div>
         {localSearchResults === null ? (
-          <div>
+          <nav>
             {categoryOrder.map((categoryKey) =>
               groupedNotes[categoryKey] ? (
-                <div key={categoryKey}>
+                <section key={categoryKey}>
                   <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
                     {labels[categoryKey as keyof typeof labels]}
                   </h3>
@@ -74,10 +74,10 @@ export default function Sidebar({
                       />
                     ))}
                   </ul>
-                </div>
+                </section>
               ) : null
             )}
-          </div>
+          </nav>
         ) : localSearchResults.length > 0 ? (
           <ul className="space-y-2">
             {localSearchResults.map((item) => (
