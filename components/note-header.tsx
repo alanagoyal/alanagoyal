@@ -55,7 +55,7 @@ export default function NoteHeader({
     debouncedSave(localTitle, localEmoji);
 
     return () => debouncedSave.cancel();
-  }, [localTitle, localEmoji, saveNote]);
+  }, [localTitle, localEmoji, saveNote, note.title, note.emoji]);
 
   const formattedDate = format(
     parseISO(note.created_at),

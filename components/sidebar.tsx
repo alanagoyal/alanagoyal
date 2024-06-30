@@ -16,6 +16,21 @@ import {
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
 
+const labels = {
+  pinned: (
+    <>
+      <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
+    </>
+  ),
+  today: "Today",
+  yesterday: "Yesterday",
+  "7": "Previous 7 Days",
+  "30": "Previous 30 Days",
+  older: "Older",
+};
+
+const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
+
 export default function Sidebar({
   notes,
   onNoteSelect,
@@ -23,7 +38,6 @@ export default function Sidebar({
   notes: any[];
   onNoteSelect?: () => void;
 }) {
-
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const pathname = usePathname();
@@ -38,144 +52,6 @@ export default function Sidebar({
   );
   const groupedNotes = groupNotesByCategory(userSpecificNotes);
   sortGroupedNotes(groupedNotes);
-
-  function SidebarContent({
-    groupedNotes,
-    selectedNoteSlug,
-  }: {
-    groupedNotes: any;
-    selectedNoteSlug: string | null;
-  }) {
-    const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
-
-    return (
-      <div className="pt-4 px-2">
-        <SearchBar notes={notes} onSearchResults={setLocalSearchResults} />
-        <div className="flex py-2 mx-2 items-center justify-between">
-          <h2 className="text-lg font-bold">Notes</h2>
-          <NewNote />
-        </div>
-        {localSearchResults === null ? (
-          <nav>
-            {categoryOrder.map((categoryKey) =>
-              groupedNotes[categoryKey] ? (
-                <section key={categoryKey}>
-                  <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
-                    {labels[categoryKey as keyof typeof labels]}
-                  </h3>
-                  <ul className="space-y-2">
-                    {groupedNotes[categoryKey].map((item: any, index: number) => (
-                      <NoteItem
-                        key={index}
-                        item={item}
-                        selectedNoteSlug={selectedNoteSlug}
-                        sessionId={sessionId}
-                        onNoteSelect={onNoteSelect}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              ) : null
-            )}
-          </nav>
-        ) : localSearchResults.length > 0 ? (
-          <ul className="space-y-2">
-            {localSearchResults.map((item) => (
-              <NoteItem
-                key={item.id}
-                item={item}
-                selectedNoteSlug={selectedNoteSlug}
-                sessionId={sessionId}
-                onNoteSelect={onNoteSelect}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-400 px-2 mt-4">No results found</p>
-        )}
-      </div>
-    );
-  }
-
-  function NoteItem({
-    item,
-    selectedNoteSlug,
-    sessionId,
-    onNoteSelect,
-  }: {
-    item: any;
-    selectedNoteSlug: string | null;
-    sessionId: string;
-    onNoteSelect?: () => void;
-  }) {
-    const router = useRouter();
-    const supabase = createClient();
-
-    const handleDelete = async () => {
-      try {
-        const { error } = await supabase
-          .from('notes')
-          .delete()
-          .eq('slug', item.slug)
-          .eq('session_id', sessionId);
-
-        if (error) {
-          throw error;
-        }
-
-        router.push('/');
-        router.refresh();
-      } catch (error) {
-        console.error('Error deleting note:', error);
-      }
-    };
-
-    const handleEdit = () => {
-      router.push(`/${item.slug}`);
-    };
-
-    const canEditOrDelete = item.session_id === sessionId;
-
-    const handleNoteClick = () => {
-      router.push(`/${item.slug || ""}`);
-      if (onNoteSelect) {
-        onNoteSelect();
-      }
-    };
-
-    const NoteContent = (
-      <li
-        className={`min-h-[50px] py-2 ${
-          item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
-        }`}
-        onClick={handleNoteClick}
-      >
-        <Link href={`/${item.slug || ""}`} prefetch={true}>
-          <h2 className="text-sm font-bold pl-4 pr-4 break-words">
-            {item.emoji} {item.title}
-          </h2>
-          <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
-            <span className="text-white">
-              {new Date(item.created_at).toLocaleDateString("en-US")}
-            </span>{" "}
-            {item.content.trim().replace(/[#_*~`>+\[\]!()-]/g, " ")}
-          </p>
-        </Link>
-      </li>
-    );
-
-    return canEditOrDelete ? (
-      <ContextMenu>
-        <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
-          <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    ) : (
-      NoteContent
-    );
-  }
 
   function groupNotesByCategory(notes: any[]) {
     const groupedNotes: any = {};
@@ -222,21 +98,6 @@ export default function Sidebar({
     });
   }
 
-  const labels = {
-    pinned: (
-      <>
-        <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
-      </>
-    ),
-    today: "Today",
-    yesterday: "Yesterday",
-    "7": "Previous 7 Days",
-    "30": "Previous 30 Days",
-    older: "Older",
-  };
-
-  const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
-
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
@@ -244,8 +105,157 @@ export default function Sidebar({
         <SidebarContent
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
+          onNoteSelect={onNoteSelect}
+          notes={notes}
+          sessionId={sessionId}
         />
       </div>
     </div>
+  );
+}
+
+function SidebarContent({
+  groupedNotes,
+  selectedNoteSlug,
+  onNoteSelect,
+  notes,
+  sessionId,
+}: {
+  groupedNotes: any;
+  selectedNoteSlug: string | null;
+  onNoteSelect?: () => void;
+  notes: any[];
+  sessionId: string;
+}) {
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
+    null
+  );
+
+  return (
+    <div className="pt-4 px-2">
+      <SearchBar notes={notes} onSearchResults={setLocalSearchResults} />
+      <div className="flex py-2 mx-2 items-center justify-between">
+        <h2 className="text-lg font-bold">Notes</h2>
+        <NewNote />
+      </div>
+      {localSearchResults === null ? (
+        <nav>
+          {categoryOrder.map((categoryKey) =>
+            groupedNotes[categoryKey] ? (
+              <section key={categoryKey}>
+                <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
+                  {labels[categoryKey as keyof typeof labels]}
+                </h3>
+                <ul className="space-y-2">
+                  {groupedNotes[categoryKey].map((item: any, index: number) => (
+                    <NoteItem
+                      key={index}
+                      item={item}
+                      selectedNoteSlug={selectedNoteSlug}
+                      sessionId={sessionId}
+                      onNoteSelect={onNoteSelect}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ) : null
+          )}
+        </nav>
+      ) : localSearchResults.length > 0 ? (
+        <ul className="space-y-2">
+          {localSearchResults.map((item) => (
+            <NoteItem
+              key={item.id}
+              item={item}
+              selectedNoteSlug={selectedNoteSlug}
+              sessionId={sessionId}
+              onNoteSelect={onNoteSelect}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-gray-400 px-2 mt-4">No results found</p>
+      )}
+    </div>
+  );
+}
+
+function NoteItem({
+  item,
+  selectedNoteSlug,
+  sessionId,
+  onNoteSelect,
+}: {
+  item: any;
+  selectedNoteSlug: string | null;
+  sessionId: string;
+  onNoteSelect?: () => void;
+}) {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("slug", item.slug)
+        .eq("session_id", sessionId);
+
+      if (error) {
+        throw error;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  const handleEdit = () => {
+    router.push(`/${item.slug}`);
+  };
+
+  const canEditOrDelete = item.session_id === sessionId;
+
+  const handleNoteClick = () => {
+    router.push(`/${item.slug || ""}`);
+    if (onNoteSelect) {
+      onNoteSelect();
+    }
+  };
+
+  const NoteContent = (
+    <li
+      className={`min-h-[50px] py-2 ${
+        item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
+      }`}
+      onClick={handleNoteClick}
+    >
+      <Link href={`/${item.slug || ""}`} prefetch={true}>
+        <h2 className="text-sm font-bold pl-4 pr-4 break-words">
+          {item.emoji} {item.title}
+        </h2>
+        <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
+          <span className="text-white">
+            {new Date(item.created_at).toLocaleDateString("en-US")}
+          </span>{" "}
+          {item.content.trim().replace(/[#_*~`>+\[\]!()-]/g, " ")}
+        </p>
+      </Link>
+    </li>
+  );
+
+  return canEditOrDelete ? (
+    <ContextMenu>
+      <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+        <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  ) : (
+    NoteContent
   );
 }

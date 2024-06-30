@@ -7,7 +7,7 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
 
   useEffect(() => {
     onSearchResults(null);
-  }, []);
+  }, [onSearchResults]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;

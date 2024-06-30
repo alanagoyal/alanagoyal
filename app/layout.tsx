@@ -4,7 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/server";
-import ResizableLayout from "@/components/sidebar-layout";
+import SidebarLayout from "@/components/sidebar-layout";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -50,7 +50,7 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <ResizableLayout data={data}>{children}</ResizableLayout>
+        <SidebarLayout data={data}>{children}</SidebarLayout>
       </body>
     </html>
   );
