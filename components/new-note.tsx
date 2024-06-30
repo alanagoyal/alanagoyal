@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tooltip,
@@ -20,26 +20,32 @@ export default function NewNote() {
   const router = useRouter();
   const supabase = createClient();
   const noteId = uuidv4();
-  const note = {
-    id: noteId,
-    title: "",
-    slug: `new-note-${noteId}`,
-    content: "",
-    public: false,
-    created_at: new Date().toISOString(),
-    session_id: sessionId,
-    category: "today",
-    emoji: "👋🏼",
-  };
+  const note = useMemo(
+    () => ({
+      id: noteId,
+      title: "",
+      slug: `new-note-${noteId}`,
+      content: "",
+      public: false,
+      created_at: new Date().toISOString(),
+      session_id: sessionId,
+      category: "today",
+      emoji: "👋🏼",
+    }),
+    [noteId, sessionId]
+  );
 
   const { setShowSidebar } = useContext(MobileContext);
 
-  async function createNote() {
-    await supabase.from("notes").insert(note);
-    if (setShowSidebar) setShowSidebar(false);
-    router.push(`/${note.slug}`);
-    router.refresh();
-  }
+  const createNote = useCallback(
+    () => async () => {
+      await supabase.from("notes").insert(note);
+      if (setShowSidebar) setShowSidebar(false);
+      router.push(`/${note.slug}`);
+      router.refresh();
+    },
+    [note, router, setShowSidebar, supabase]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -53,7 +59,7 @@ export default function NewNote() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [router]);
+  }, [createNote, router]);
 
   return (
     <div className="flex flex-col items-center justify-center">

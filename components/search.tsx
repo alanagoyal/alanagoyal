@@ -1,22 +1,29 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
-import { Search } from "lucide-react"; 
+import { Search } from "lucide-react";
 
-export default function SearchBar({ notes, onSearchResults }: { notes: any[], onSearchResults: (results: any[] | null) => void }) {
+export default function SearchBar({
+  notes,
+  onSearchResults,
+}: {
+  notes: any[];
+  onSearchResults: (results: any[] | null) => void;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     onSearchResults(null);
-  }, []);
+  }, [onSearchResults]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     setSearchTerm(term);
-    
+
     if (term.length > 0) {
-      const results = notes.filter(note =>
-        note.title.toLowerCase().includes(term.toLowerCase()) ||
-        note.content.toLowerCase().includes(term.toLowerCase())
+      const results = notes.filter(
+        (note) =>
+          note.title.toLowerCase().includes(term.toLowerCase()) ||
+          note.content.toLowerCase().includes(term.toLowerCase())
       );
       onSearchResults(results);
     } else {
@@ -37,4 +44,4 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
       />
     </div>
   );
-};
+}

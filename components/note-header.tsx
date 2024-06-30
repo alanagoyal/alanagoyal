@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { debounce } from 'lodash'; 
+import { debounce } from "lodash";
 
 export default function NoteHeader({
   note,
@@ -55,7 +55,7 @@ export default function NoteHeader({
     debouncedSave(localTitle, localEmoji);
 
     return () => debouncedSave.cancel();
-  }, [localTitle, localEmoji, saveNote]);
+  }, [localTitle, localEmoji, saveNote, note.title, note.emoji]);
 
   const formattedDate = format(
     parseISO(note.created_at),
@@ -74,9 +74,7 @@ export default function NoteHeader({
 
   return (
     <div className="bg-[#1c1c1c] mb-4 relative">
-      <p className="text-center text-gray-300 text-xs">
-        {formattedDate}
-      </p>
+      <p className="text-center text-gray-300 text-xs">{formattedDate}</p>
       <div className="flex justify-between items-center">
         {isPublic ? (
           <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
@@ -91,7 +89,7 @@ export default function NoteHeader({
             autoFocus={!note.title}
           />
         )}
-        {(!isPublic && !isMobile) ? (
+        {!isPublic && !isMobile ? (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger
@@ -117,4 +115,3 @@ export default function NoteHeader({
     </div>
   );
 }
-
