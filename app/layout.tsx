@@ -25,7 +25,7 @@ export default async function RootLayout({
   const supabase = createClient();
   const { data } = await supabase.from("notes").select("*");
   return (
-    <html lang="en">
+    <html lang="en" className="bg-[#1c1c1c]">
       <head>
         <title>{siteConfig.title}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>

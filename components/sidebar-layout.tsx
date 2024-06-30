@@ -55,14 +55,13 @@ export default function SidebarLayout({
             </div>
           ) : (
             <div className="w-full">
-              <Button
-                variant="ghost"
+              <button
                 onClick={() => setShowSidebar(true)}
-                className="p-2 m-2"
+                className="pt-4 m-2 flex items-center"
               >
                 <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
                 <span className="text-[#e2a727] text-base ml-1">Notes</span>
-              </Button>
+              </button>
               {children}
             </div>
           )}
