@@ -151,7 +151,7 @@ export default function Sidebar({
         onClick={handleNoteClick}
       >
         <Link href={`/${item.slug || ""}`} prefetch={true}>
-          <h2 className="text-sm font-bold pl-4">
+          <h2 className="text-sm font-bold pl-4 pr-4 break-words">
             {item.emoji} {item.title}
           </h2>
           <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
