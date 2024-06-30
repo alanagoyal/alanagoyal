@@ -37,15 +37,19 @@ export default function NewNote() {
 
   const { setShowSidebar } = useContext(MobileContext);
 
-  const createNote = useCallback(
-    () => async () => {
-      await supabase.from("notes").insert(note);
+  const createNote = useCallback(async () => {
+    try {
+      const { error } = await supabase.from("notes").insert(note);
+      if (error) throw error;
+      
       if (setShowSidebar) setShowSidebar(false);
       router.push(`/${note.slug}`);
       router.refresh();
-    },
-    [note, router, setShowSidebar, supabase]
-  );
+    } catch (error) {
+      console.error("Error creating note:", error);
+      // Optionally, add user-facing error handling here
+    }
+  }, [note, router, setShowSidebar, supabase]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

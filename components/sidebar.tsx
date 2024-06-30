@@ -206,7 +206,7 @@ function NoteItem({
         throw error;
       }
 
-      router.push("/");
+      router.push("/about-me");
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
