@@ -84,6 +84,7 @@ export default function NoteHeader({
           </span>
         ) : (
           <Input
+            id="title"
             value={localTitle}
             className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
             placeholder="Your title here..."

@@ -28,6 +28,7 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
     <div className="relative">
       <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
       <Input
+        id="search"
         type="text"
         value={searchTerm}
         onChange={handleSearch}
