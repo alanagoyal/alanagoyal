@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tooltip,
@@ -12,14 +12,15 @@ import { Icons } from "./icons";
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import SessionId from "./session-id";
-import { useContext } from "react";
 import { MobileContext } from "./sidebar-layout";
 
 export default function NewNote() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
-  const noteId = uuidv4();
+  const noteId = useMemo(() => uuidv4(), []); 
+  const { setShowSidebar } = useContext(MobileContext);
+
   const note = useMemo(
     () => ({
       id: noteId,
@@ -34,8 +35,6 @@ export default function NewNote() {
     }),
     [noteId, sessionId]
   );
-
-  const { setShowSidebar } = useContext(MobileContext);
 
   const createNote = useCallback(async () => {
     try {
@@ -62,7 +61,7 @@ export default function NewNote() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [createNote, router]);
+  }, [createNote]);
 
   return (
     <div className="flex flex-col items-center justify-center">

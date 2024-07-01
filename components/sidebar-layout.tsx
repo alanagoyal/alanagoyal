@@ -4,8 +4,7 @@ import React, { useState, createContext } from "react";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { ChevronLeft } from "lucide-react";
-import { Icons } from "@/components/icons";
-import { useMobileDetector } from "./mobile-detector";
+import { MobileProvider, useMobile } from "@/components/mobile-check";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -16,21 +15,18 @@ export const MobileContext = createContext<{
   setShowSidebar: React.Dispatch<React.SetStateAction<boolean>> | null;
 }>({ setShowSidebar: null });
 
-export default function SidebarLayout({
-  children,
-  data,
-}: SidebarLayoutProps) {
-  const isMobile = useMobileDetector();
+function SidebarLayoutContent({ children, data }: SidebarLayoutProps) {
   const [showSidebar, setShowSidebar] = useState(true);
+  const { isMobile } = useMobile();
+
+  // Render nothing until we know if it's mobile or not
+  if (isMobile === null) {
+    return null;
+  }
 
   return (
     <MobileContext.Provider value={{ setShowSidebar }}>
-      {isMobile === null ? (
-        <div className="flex items-center justify-center min-h-screen bg-[#1c1c1c]">
-          <Icons.spinner className="w-8 h-8 text-[#e2a727] animate-spin" />
-          <div className="hidden">{children}</div>
-        </div>
-      ) : isMobile ? (
+      {isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
           {showSidebar ? (
             <div className="w-full">
@@ -67,5 +63,13 @@ export default function SidebarLayout({
         </div>
       )}
     </MobileContext.Provider>
+  );
+}
+
+export default function SidebarLayout(props: SidebarLayoutProps) {
+  return (
+    <MobileProvider>
+      <SidebarLayoutContent {...props} />
+    </MobileProvider>
   );
 }

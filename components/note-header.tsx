@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { debounce } from 'lodash';
-import { useMobileDetector } from "./mobile-detector";
+import { useMobile } from "@/components/mobile-check";
 
 export default function NoteHeader({
   note,
@@ -20,7 +20,7 @@ export default function NoteHeader({
   note: any;
   saveNote: (updates: any) => void;
 }) {
-  const isMobile = useMobileDetector();
+  const { isMobile } = useMobile();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
@@ -75,6 +75,7 @@ export default function NoteHeader({
           </span>
         ) : (
           <Input
+            id="title"
             value={localTitle}
             className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
             placeholder="Your title here..."
