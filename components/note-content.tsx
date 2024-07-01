@@ -52,6 +52,7 @@ export default function NoteContent({
     <div>
       {isEditing ? (
         <Textarea
+          id="content"
           value={localContent}
           className="bg-[#1c1c1c] min-h-screen focus:outline-none"
           placeholder="Start writing..."
