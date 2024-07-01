@@ -47,7 +47,6 @@ export default function NewNote() {
       router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
-      // Optionally, add user-facing error handling here
     }
   }, [note, router, setShowSidebar, supabase]);
 
