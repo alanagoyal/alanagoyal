@@ -1,40 +1,36 @@
 "use client";
 
-import React, { useState, useEffect, createContext } from "react";
-import Sidebar from "@/components/sidebar";
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { ChevronLeft } from "lucide-react";
-import { Button } from "./ui/button";
 import { Icons } from "@/components/icons";
+import { useMobileDetect } from "./mobile-detector";
+import Sidebar from "./sidebar";
+import { useRouter, usePathname } from "next/navigation";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
   data: any;
 }
 
-export const MobileContext = createContext<{
-  setShowSidebar: React.Dispatch<React.SetStateAction<boolean>> | null;
-}>({ setShowSidebar: null });
-
-export default function SidebarLayout({
-  children,
-  data,
-}: SidebarLayoutProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const [showSidebar, setShowSidebar] = useState(true);
+export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
+  const isMobile = useMobileDetect();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    if (isMobile === false && pathname === "/") {
+      router.push("/about-me");
+    }
+  }, [isMobile, router, pathname]);
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleNoteSelect = (note: any) => {
+    router.push(`/${note.slug}`);
+  };
+
+  const showSidebar = !isMobile || (isMobile && pathname === "/");
 
   return (
-    <MobileContext.Provider value={{ setShowSidebar }}>
+    <>
       {isMobile === null ? (
         <div className="flex items-center justify-center min-h-screen bg-[#1c1c1c]">
           <Icons.spinner className="w-8 h-8 text-[#e2a727] animate-spin" />
@@ -43,27 +39,9 @@ export default function SidebarLayout({
       ) : isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
           {showSidebar ? (
-            <div className="w-full">
-              {data && (
-                <Sidebar
-                  notes={data}
-                  onNoteSelect={() => {
-                    setShowSidebar(false);
-                  }}
-                />
-              )}
-            </div>
+            <Sidebar notes={data} onNoteSelect={handleNoteSelect} />
           ) : (
-            <div className="w-full">
-              <button
-                onClick={() => setShowSidebar(true)}
-                className="pt-4 m-2 flex items-center"
-              >
-                <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
-                <span className="text-[#e2a727] text-base ml-1">Notes</span>
-              </button>
-              {children}
-            </div>
+            children
           )}
           <Toaster />
         </div>
@@ -76,6 +54,6 @@ export default function SidebarLayout({
           <Toaster />
         </div>
       )}
-    </MobileContext.Provider>
+    </>
   );
 }

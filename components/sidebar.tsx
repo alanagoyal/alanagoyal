@@ -15,6 +15,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
+import { useMobileDetect } from "@/components/mobile-detector";
 
 const labels = {
   pinned: (
@@ -36,7 +37,7 @@ export default function Sidebar({
   onNoteSelect,
 }: {
   notes: any[];
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -123,7 +124,7 @@ function SidebarContent({
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
   notes: any[];
   sessionId: string;
 }) {
@@ -189,12 +190,15 @@ function NoteItem({
   item: any;
   selectedNoteSlug: string | null;
   sessionId: string;
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const isMobile = useMobileDetect();
 
   const handleDelete = async () => {
+    router.push(isMobile ? "/" : "/about-me");
+
     try {
       const { error } = await supabase
         .from("notes")
@@ -206,7 +210,6 @@ function NoteItem({
         throw error;
       }
 
-      router.push("/about-me");
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -220,9 +223,8 @@ function NoteItem({
   const canEditOrDelete = item.session_id === sessionId;
 
   const handleNoteClick = () => {
-    router.push(`/${item.slug || ""}`);
     if (onNoteSelect) {
-      onNoteSelect();
+      onNoteSelect(item);
     }
   };
 
