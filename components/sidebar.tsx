@@ -197,6 +197,8 @@ function NoteItem({
   const isMobile = useMobileDetect();
 
   const handleDelete = async () => {
+    router.push(isMobile ? "/" : "/about-me");
+
     try {
       const { error } = await supabase
         .from("notes")
@@ -208,7 +210,6 @@ function NoteItem({
         throw error;
       }
 
-      router.push(isMobile ? "/" : "/about-me");
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
