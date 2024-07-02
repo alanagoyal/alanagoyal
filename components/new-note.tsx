@@ -18,9 +18,10 @@ export default function NewNote() {
   const router = useRouter();
   const supabase = createClient();
 
-  const createNote = useCallback(async () => {
+  const createNote = useCallback(() => {
     const noteId = uuidv4();
     const slug = `new-note-${noteId}`;
+    
     router.push(`/${slug}`);
 
     const note = {
@@ -35,13 +36,13 @@ export default function NewNote() {
       emoji: "👋🏼",
     };
 
-    try {
-      const { error } = await supabase.from("notes").insert(note);
-      if (error) throw error;
-      router.refresh();
-    } catch (error) {
-      console.error("Error creating note:", error);
-    }
+    supabase.from("notes").insert(note).then(({ error }) => {
+      if (error) {
+        console.error("Error creating note:", error);
+      } else {
+        router.refresh();
+      }
+    });
   }, [sessionId, router, supabase]);
 
   useEffect(() => {
