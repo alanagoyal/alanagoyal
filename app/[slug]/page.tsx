@@ -11,6 +11,7 @@ export default async function NotePage({ params }: { params: { slug: string } })
     .single();
 
   const newNote = {
+    id: slug.replace("new-note-", ""),
     slug: slug,
     title: "",
     content: "",

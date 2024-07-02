@@ -35,14 +35,20 @@ export default function NewNote() {
   const createNote = useCallback(async () => {
     try {
       router.push(`/${slug}`);
+      router.refresh(); 
 
-      supabase.from("notes").insert(note);
+      // Upsert the new note without awaiting
+      supabase
+        .from('notes')
+        .upsert(note, { onConflict: 'id' })
+        .then(({ error }) => {
+          if (error) console.error("Error upserting note:", error);
+        });
 
-      router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
     }
-  }, [note, router, supabase]);
+  }, [note, router, supabase, slug]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
