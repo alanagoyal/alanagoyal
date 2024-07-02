@@ -1,21 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Icons } from "@/components/icons";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
+import { useRouter, usePathname } from "next/navigation";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
   data: any;
 }
 
-export default function SidebarLayout({
-  children,
-  data,
-}: SidebarLayoutProps) {
+export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (isMobile === false) {
+      router.push("/about-me");
+    }
+  }, [isMobile, router]);
+
+  const handleNoteSelect = (note: any) => {
+    router.push(`/${note.slug}`);
+  };
+
+  const showSidebar = !isMobile || (isMobile && pathname === "/");
 
   return (
     <>
@@ -26,7 +38,11 @@ export default function SidebarLayout({
         </div>
       ) : isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
-          {children}
+          {showSidebar ? (
+            <Sidebar notes={data} onNoteSelect={handleNoteSelect} />
+          ) : (
+            children
+          )}
           <Toaster />
         </div>
       ) : (

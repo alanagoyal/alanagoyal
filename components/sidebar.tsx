@@ -37,7 +37,7 @@ export default function Sidebar({
   onNoteSelect,
 }: {
   notes: any[];
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -124,7 +124,7 @@ function SidebarContent({
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
   notes: any[];
   sessionId: string;
 }) {
@@ -190,7 +190,7 @@ function NoteItem({
   item: any;
   selectedNoteSlug: string | null;
   sessionId: string;
-  onNoteSelect?: () => void;
+  onNoteSelect: (note: any) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -222,9 +222,8 @@ function NoteItem({
   const canEditOrDelete = item.session_id === sessionId;
 
   const handleNoteClick = () => {
-    router.push(`/${item.slug || ""}`);
     if (onNoteSelect) {
-      onNoteSelect();
+      onNoteSelect(item);
     }
   };
 
