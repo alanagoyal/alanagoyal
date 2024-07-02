@@ -230,16 +230,16 @@ function NoteItem({
 
   const NoteContent = (
     <li
-      className={`min-h-[50px] py-2 ${
+      className={`min-h-[50px] ${
         item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
       }`}
       onClick={handleNoteClick}
     >
-      <Link href={`/${item.slug || ""}`} prefetch={true}>
-        <h2 className="text-sm font-bold pl-4 pr-4 break-words">
+      <Link href={`/${item.slug || ""}`} prefetch={true} className="block py-2 px-4">
+        <h2 className="text-sm font-bold break-words">
           {item.emoji} {item.title}
         </h2>
-        <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
+        <p className="text-xs overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
