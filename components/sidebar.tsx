@@ -229,12 +229,12 @@ function NoteItem({
 
   const NoteContent = (
     <li
-      className={`min-h-[50px] py-2 ${
+      className={`min-h-[50px] ${
         item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
       }`}
       onClick={handleNoteClick}
     >
-      <Link href={`/${item.slug || ""}`} prefetch={true}>
+      <Link href={`/${item.slug || ""}`} prefetch={true} className="block py-2">
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
           {item.emoji} {item.title}
         </h2>
