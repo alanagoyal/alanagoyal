@@ -12,8 +12,6 @@ import { Icons } from "./icons";
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import SessionId from "./session-id";
-import { useContext } from "react";
-import { MobileContext } from "./sidebar-layout";
 
 export default function NewNote() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -35,20 +33,17 @@ export default function NewNote() {
     [noteId, sessionId]
   );
 
-  const { setShowSidebar } = useContext(MobileContext);
-
   const createNote = useCallback(async () => {
     try {
       const { error } = await supabase.from("notes").insert(note);
       if (error) throw error;
       
-      if (setShowSidebar) setShowSidebar(false);
       router.push(`/${note.slug}`);
       router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
     }
-  }, [note, router, setShowSidebar, supabase]);
+  }, [note, router, supabase]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

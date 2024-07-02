@@ -15,6 +15,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
+import { useMobileDetect } from "@/components/mobile-detector";
 
 const labels = {
   pinned: (
@@ -193,6 +194,7 @@ function NoteItem({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const isMobile = useMobileDetect();
 
   const handleDelete = async () => {
     try {
@@ -206,7 +208,7 @@ function NoteItem({
         throw error;
       }
 
-      router.push("/about-me");
+      router.push(isMobile ? "/" : "/about-me");
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);

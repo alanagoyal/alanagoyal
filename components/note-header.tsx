@@ -10,8 +10,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { debounce } from 'lodash';
+import { debounce } from "lodash";
 import { useMobileDetect } from "./mobile-detector";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function NoteHeader({
   note,
@@ -21,6 +24,7 @@ export default function NoteHeader({
   saveNote: (updates: any) => void;
 }) {
   const isMobile = useMobileDetect();
+  const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
@@ -64,48 +68,56 @@ export default function NoteHeader({
   };
 
   return (
-    <div className="bg-[#1c1c1c] mb-4 relative">
-      <p className="text-center text-gray-300 text-xs">
-        {formattedDate}
-      </p>
-      <div className="flex justify-between items-center">
-        {isPublic ? (
-          <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
-            {localTitle}
-          </span>
-        ) : (
-          <Input
-            id="title"
-            value={localTitle}
-            className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
-            placeholder="Your title here..."
-            onChange={handleTitleChange}
-            autoFocus={!note.title}
-          />
-        )}
-        {(!isPublic && !isMobile) ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="cursor-pointer"
-              >
-                {localEmoji}
-              </TooltipTrigger>
-              <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
-                Click to choose an emoji
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <span>{localEmoji}</span>
+    <>
+      {isMobile && pathname !== "/" && (
+        <Link href="/">
+          <button className="pt-2 flex items-center">
+            <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
+            <span className="text-[#e2a727] text-base ml-1">Notes</span>
+          </button>
+        </Link>
+      )}
+      <div className=" px-2 bg-[#1c1c1c] mb-4 relative">
+        <p className="text-center text-gray-300 text-xs">{formattedDate}</p>
+        <div className="flex justify-between items-center">
+          {isPublic ? (
+            <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
+              {localTitle}
+            </span>
+          ) : (
+            <Input
+              id="title"
+              value={localTitle}
+              className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
+              placeholder="Your title here..."
+              onChange={handleTitleChange}
+              autoFocus={!note.title}
+            />
+          )}
+          {!isPublic && !isMobile ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="cursor-pointer"
+                >
+                  {localEmoji}
+                </TooltipTrigger>
+                <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
+                  Click to choose an emoji
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <span>{localEmoji}</span>
+          )}
+        </div>
+        {showEmojiPicker && !isMobile && !isPublic && (
+          <div className="absolute top-full right-0 z-10">
+            <Picker onEmojiSelect={handleEmojiSelect} />
+          </div>
         )}
       </div>
-      {showEmojiPicker && !isMobile && !isPublic && (
-        <div className="absolute top-full right-0 z-10">
-          <Picker onEmojiSelect={handleEmojiSelect} />
-        </div>
-      )}
-    </div>
+    </>
   );
 }

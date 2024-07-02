@@ -1,30 +1,24 @@
 "use client";
 
-import React, { useState, createContext } from "react";
-import Sidebar from "@/components/sidebar";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { ChevronLeft } from "lucide-react";
 import { Icons } from "@/components/icons";
 import { useMobileDetect } from "./mobile-detector";
+import Sidebar from "./sidebar";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
   data: any;
 }
 
-export const MobileContext = createContext<{
-  setShowSidebar: React.Dispatch<React.SetStateAction<boolean>> | null;
-}>({ setShowSidebar: null });
-
 export default function SidebarLayout({
   children,
   data,
 }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
-  const [showSidebar, setShowSidebar] = useState(true);
 
   return (
-    <MobileContext.Provider value={{ setShowSidebar }}>
+    <>
       {isMobile === null ? (
         <div className="flex items-center justify-center min-h-screen bg-[#1c1c1c]">
           <Icons.spinner className="w-8 h-8 text-[#e2a727] animate-spin" />
@@ -32,29 +26,7 @@ export default function SidebarLayout({
         </div>
       ) : isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
-          {showSidebar ? (
-            <div className="w-full">
-              {data && (
-                <Sidebar
-                  notes={data}
-                  onNoteSelect={() => {
-                    setShowSidebar(false);
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="w-full">
-              <button
-                onClick={() => setShowSidebar(true)}
-                className="pt-4 m-2 flex items-center"
-              >
-                <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
-                <span className="text-[#e2a727] text-base ml-1">Notes</span>
-              </button>
-              {children}
-            </div>
-          )}
+          {children}
           <Toaster />
         </div>
       ) : (
@@ -66,6 +38,6 @@ export default function SidebarLayout({
           <Toaster />
         </div>
       )}
-    </MobileContext.Provider>
+    </>
   );
 }

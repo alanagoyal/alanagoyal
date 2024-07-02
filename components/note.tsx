@@ -24,7 +24,7 @@ export default function Note({ note }: { note: any }) {
   };
 
   return (
-    <div className="px-4 h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto">
       <NoteHeader note={note} saveNote={autosaveNote} />
       <NoteContent note={note} saveNote={autosaveNote} />
     </div>

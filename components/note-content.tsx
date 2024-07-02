@@ -49,7 +49,7 @@ export default function NoteContent({
   };
 
   return (
-    <div>
+    <div className="px-2">
       {isEditing ? (
         <Textarea
           id="content"
