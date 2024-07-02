@@ -9,9 +9,20 @@ export default async function NotePage({ params }: { params: { slug: string } })
     .select("*")
     .eq("slug", slug)
     .single();
+
+  const newNote = {
+    slug: slug,
+    title: "",
+    content: "",
+    emoji: "👋🏼",
+    category: "today",
+    created_at: new Date().toISOString(),
+    public: false,
+  };
+
   return (
     <div className="w-full min-h-screen p-3">
-      <Note note={note} />
+      <Note note={note || newNote} />
     </div>
   );
 }
