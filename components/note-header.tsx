@@ -26,16 +26,16 @@ export default function NoteHeader({
   const isMobile = useMobileDetect();
   const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [localEmoji, setLocalEmoji] = useState(note.emoji || "👋🏼");
-  const [localTitle, setLocalTitle] = useState(note.title || "");
-  const [isPublic, setIsPublic] = useState(note.public || false);
+  const [localEmoji, setLocalEmoji] = useState(note.emoji);
+  const [localTitle, setLocalTitle] = useState(note.title);
+  const [isPublic, setIsPublic] = useState(note.public);
 
   useEffect(() => {
-    setLocalEmoji(note.emoji || "👋🏼");
+    setLocalEmoji(note.emoji);
     if (note.title) {
-      setLocalTitle(note.title || "");
+      setLocalTitle(note.title);
     }
-    setIsPublic(note.public || false);
+    setIsPublic(note.public);
   }, [note.emoji, note.title, note.public]);
 
   useEffect(() => {
