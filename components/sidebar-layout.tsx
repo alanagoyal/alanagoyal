@@ -18,10 +18,10 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (isMobile === false) {
+    if (isMobile === false && pathname === "/") {
       router.push("/about-me");
     }
-  }, [isMobile, router]);
+  }, [isMobile, router, pathname]);
 
   const handleNoteSelect = (note: any) => {
     router.push(`/${note.slug}`);
