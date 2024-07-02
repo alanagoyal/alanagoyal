@@ -14,13 +14,13 @@ export default function NoteContent({
   note: any;
   saveNote: (updates: { content: string }) => void;
 }) {
-  const [localContent, setLocalContent] = useState(note.content);
+  const [localContent, setLocalContent] = useState(note.content || "");
   const [isEditing, setIsEditing] = useState(note.content ? false : true);
-  const [isPublic, setIsPublic] = useState(note.public);
+  const [isPublic, setIsPublic] = useState(note.public || false);
 
   useEffect(() => {
-    setLocalContent(note.content);
-    setIsPublic(note.public);
+    setLocalContent(note.content || "");
+    setIsPublic(note.public || false);
   }, [note.content, note.public]);
 
   useEffect(() => {
