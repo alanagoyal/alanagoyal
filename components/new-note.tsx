@@ -20,13 +20,10 @@ export default function NewNote() {
 
   const createNote = useCallback(async () => {
     const noteId = uuidv4();
-    const slug = `new-note-${noteId}`;
-    router.push(`/${slug}`);
-
     const note = {
       id: noteId,
       title: "",
-      slug,
+      slug: `new-note-${noteId}`,
       content: "",
       public: false,
       created_at: new Date().toISOString(),
@@ -38,6 +35,7 @@ export default function NewNote() {
     try {
       const { error } = await supabase.from("notes").insert(note);
       if (error) throw error;
+      router.push(`/${note.slug}`);
       router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
