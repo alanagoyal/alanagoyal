@@ -19,9 +19,24 @@ export default async function NotePage({ params }: { params: { slug: string } })
     .select("*")
     .eq("slug", slug)
     .single();
+
+  const updatedNote = note ? {
+    ...note,
+    emoji: note.emoji || "👋🏼",
+    title: note.title || "",
+    content: note.content || "",
+    public: note.public || false,
+  } : {
+    slug,
+    emoji: "👋🏼",
+    title: "",
+    content: "",
+    public: false,
+  };
+
   return (
     <div className="w-full min-h-screen p-3">
-      <Note note={note} />
+      <Note note={updatedNote} />
     </div>
   );
 }
