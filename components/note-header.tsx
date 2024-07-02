@@ -10,7 +10,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { debounce } from 'lodash'; 
+import { debounce } from 'lodash';
+import { useMobileDetect } from "./mobile-detector";
 
 export default function NoteHeader({
   note,
@@ -19,21 +20,11 @@ export default function NoteHeader({
   note: any;
   saveNote: (updates: any) => void;
 }) {
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useMobileDetect();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
   const [isPublic, setIsPublic] = useState(note.public);
-
-  useEffect(() => {
-    setIsMobile(window.innerWidth <= 768);
-    function handleResize() {
-      setIsMobile(window.innerWidth <= 768);
-    }
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     if (note.emoji) {
@@ -118,4 +109,3 @@ export default function NoteHeader({
     </div>
   );
 }
-

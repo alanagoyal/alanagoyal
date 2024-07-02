@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, createContext } from "react";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { ChevronLeft } from "lucide-react";
-import { Button } from "./ui/button";
 import { Icons } from "@/components/icons";
+import { useMobileDetect } from "./mobile-detector";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -20,18 +20,8 @@ export default function SidebarLayout({
   children,
   data,
 }: SidebarLayoutProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const isMobile = useMobileDetect();
   const [showSidebar, setShowSidebar] = useState(true);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   return (
     <MobileContext.Provider value={{ setShowSidebar }}>
