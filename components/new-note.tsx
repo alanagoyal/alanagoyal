@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tooltip,
@@ -17,9 +17,10 @@ export default function NewNote() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
-  const noteId = uuidv4();
-  const note = useMemo(
-    () => ({
+
+  const createNote = useCallback(async () => {
+    const noteId = uuidv4();
+    const note = {
       id: noteId,
       title: "",
       slug: `new-note-${noteId}`,
@@ -29,21 +30,17 @@ export default function NewNote() {
       session_id: sessionId,
       category: "today",
       emoji: "👋🏼",
-    }),
-    [noteId, sessionId]
-  );
+    };
 
-  const createNote = useCallback(async () => {
     try {
       const { error } = await supabase.from("notes").insert(note);
       if (error) throw error;
-      
       router.push(`/${note.slug}`);
       router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
     }
-  }, [note, router, supabase]);
+  }, [sessionId, router, supabase]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
