@@ -34,18 +34,13 @@ export default function NewNote() {
 
   const createNote = useCallback(async () => {
     try {
-      // Navigate to the new note page immediately
       router.push(`/${slug}`);
-      
-      // Insert the note into the database
-      const { error } = await supabase.from("notes").insert(note);
-      if (error) throw error;
-      
-      // Refresh the router to update the UI
+
+      supabase.from("notes").insert(note);
+
       router.refresh();
     } catch (error) {
       console.error("Error creating note:", error);
-      // Optionally, handle the error (e.g., show an error message to the user)
     }
   }, [note, router, supabase]);
 
