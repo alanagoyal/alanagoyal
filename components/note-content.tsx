@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import { debounce } from 'lodash'; 
@@ -25,8 +25,9 @@ export default function NoteContent({
     setIsPublic(note.public);
   }, [note.content, note.public]);
 
-  useEffect(() => {
-    const debouncedSave = debounce(async (content: string) => {
+  // Create a memoized debounced save function
+  const debouncedSave = useCallback(
+    debounce(async (content: string) => {
       if (content !== note.content) {
         await saveNote({ content });
         
@@ -41,12 +42,15 @@ export default function NoteContent({
 
         router.refresh();
       }
-    }, 1000);
+    }, 1000),
+    [saveNote, note.content, note.slug, router]
+  );
 
+  // Trigger the debounced save when localContent changes
+  useEffect(() => {
     debouncedSave(localContent);
-
     return () => debouncedSave.cancel();
-  }, [localContent, saveNote, note.content, note.slug, router]);
+  }, [localContent, debouncedSave]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;

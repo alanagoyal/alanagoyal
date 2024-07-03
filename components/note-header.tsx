@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import Picker from "@emoji-mart/react";
@@ -14,8 +14,7 @@ import { debounce } from "lodash";
 import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function NoteHeader({
   note,
@@ -34,17 +33,22 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
-    if (note.emoji) {
-      setLocalEmoji(note.emoji);
-    }
-    if (note.title) {
-      setLocalTitle(note.title);
-    }
+    setLocalEmoji(note.emoji || "");
+    setLocalTitle(note.title || "");
     setIsPublic(note.public);
   }, [note.emoji, note.title, note.public]);
 
   useEffect(() => {
-    const debouncedSave = debounce(async (title: string, emoji: string) => {
+    const formatted = format(
+      parseISO(note.created_at),
+      "MMMM d, yyyy 'at' h:mm a"
+    );
+    setFormattedDate(formatted);
+  }, [note.created_at]);
+
+  // Create a memoized debounced save function
+  const debouncedSave = useCallback(
+    debounce(async (title: string, emoji: string) => {
       if (title !== note.title || emoji !== note.emoji) {
         await saveNote({ title, emoji });
         
@@ -59,20 +63,15 @@ export default function NoteHeader({
 
         router.refresh();
       }
-    }, 1000);
+    }, 1000),
+    [saveNote, note.title, note.emoji, note.slug, router]
+  );
 
-    debouncedSave(localTitle, localEmoji);
-
-    return () => debouncedSave.cancel();
-  }, [localTitle, localEmoji, saveNote, note.title, note.emoji, note.slug, router]);
-
+  // Trigger the debounced save when localTitle or localEmoji changes
   useEffect(() => {
-    const formatted = format(
-      parseISO(note.created_at),
-      "MMMM d, yyyy 'at' h:mm a"
-    );
-    setFormattedDate(formatted);
-  }, [note.created_at]);
+    debouncedSave(localTitle, localEmoji);
+    return () => debouncedSave.cancel();
+  }, [localTitle, localEmoji, debouncedSave]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     setLocalEmoji(emojiObject.native);
