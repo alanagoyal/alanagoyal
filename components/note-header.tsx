@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import Picker from "@emoji-mart/react";
@@ -25,11 +25,14 @@ export default function NoteHeader({
   const isMobile = useMobileDetect();
   const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [formattedDate, setFormattedDate] = useState("");
 
-  const formattedDate = format(
-    parseISO(note.created_at),
-    "MMMM d, yyyy 'at' h:mm a"
-  );
+  useEffect(() => {
+    setFormattedDate(format(
+      parseISO(note.created_at),
+      "MMMM d, yyyy 'at' h:mm a"
+    ));
+  }, [note.created_at]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;
