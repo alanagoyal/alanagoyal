@@ -37,7 +37,6 @@ export default function NewNote() {
       router.push(`/${slug}`);
       router.refresh(); 
 
-      // Upsert the new note without awaiting
       supabase
         .from('notes')
         .upsert(note, { onConflict: 'id' })

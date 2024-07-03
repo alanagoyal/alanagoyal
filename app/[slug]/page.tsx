@@ -17,7 +17,6 @@ export default async function NotePage({ params }: { params: { slug: string } })
     content: "",
     emoji: "👋🏼",
     category: "today",
-    created_at: new Date().toISOString(),
     public: false,
   };
 
