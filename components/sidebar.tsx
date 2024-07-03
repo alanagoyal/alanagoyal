@@ -144,7 +144,7 @@ function SidebarContent({
           {categoryOrder.map((categoryKey) =>
             groupedNotes[categoryKey] ? (
               <section key={categoryKey}>
-                <h3 className="py-2 text-sm font-bold text-gray-300 ml-2">
+                <h3 className="py-1 text-xs font-bold text-gray-400 ml-2">
                   {labels[categoryKey as keyof typeof labels]}
                 </h3>
                 <ul className="space-y-2">
@@ -268,9 +268,11 @@ function NoteItem({
     >
       <Link href={`/${item.slug || ""}`} prefetch={true} className="block py-2">
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
-          {item.title}
+          {item.emoji} {item.title}
         </h2>
-        <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
+        <p className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
+          item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
+        }`}>
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}

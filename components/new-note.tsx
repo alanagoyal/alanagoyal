@@ -76,7 +76,7 @@ export default function NewNote() {
           <TooltipTrigger onClick={createNote} aria-label="Create new note">
             <Icons.new />
           </TooltipTrigger>
-          <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
+          <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Click or press ⌘+/ to create a new note
           </TooltipContent>
         </Tooltip>

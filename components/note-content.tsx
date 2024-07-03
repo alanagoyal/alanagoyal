@@ -17,13 +17,11 @@ export default function NoteContent({
 }) {
   const [localContent, setLocalContent] = useState(note.content);
   const [isEditing, setIsEditing] = useState(note.content ? false : true);
-  const [isPublic, setIsPublic] = useState(note.public);
   const router = useRouter();
 
   useEffect(() => {
     setLocalContent(note.content);
-    setIsPublic(note.public);
-  }, [note.content, note.public]);
+  }, [note.content]);
 
   useEffect(() => {
     const debouncedSave = debounce(async (content: string) => {
@@ -49,16 +47,7 @@ export default function NoteContent({
   }, [localContent, saveNote, note.content, note.slug, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setLocalContent(newContent);
-  };
-
-  const handleFocus = () => {
-    setIsEditing(true);
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
+    saveNote({ content: e.target.value });
   };
 
   return (
@@ -66,17 +55,17 @@ export default function NoteContent({
       {isEditing ? (
         <Textarea
           id="content"
-          value={localContent}
+          value={note.content}
           className="bg-[#1c1c1c] min-h-screen focus:outline-none"
           placeholder="Start writing..."
           onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onFocus={() => setIsEditing(true)}
+          onBlur={() => setIsEditing(false)}
         />
       ) : (
         <div
           className="bg-[#1c1c1c] h-full text-sm"
-          onClick={() => !isPublic && setIsEditing(true)}
+          onClick={() => !note.public && setIsEditing(true)}
         >
           <ReactMarkdown
             className="markdown-body min-h-screen"
@@ -88,7 +77,7 @@ export default function NoteContent({
               ),
             }}
           >
-            {localContent}
+            {note.content}
           </ReactMarkdown>
         </div>
       )}

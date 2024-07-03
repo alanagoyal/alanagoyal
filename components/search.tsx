@@ -26,14 +26,14 @@ export default function SearchBar({ notes, onSearchResults }: { notes: any[], on
 
   return (
     <div className="relative">
-      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
         id="search"
         type="text"
         value={searchTerm}
         onChange={handleSearch}
         placeholder="Search"
-        className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-muted-foreground"
+        className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"
       />
     </div>
