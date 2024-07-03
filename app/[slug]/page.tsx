@@ -2,6 +2,8 @@ import Note from "@/components/note";
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 
+export const revalidate = 60 * 60 * 24;
+
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
   const { data: posts } = await supabase.from('notes').select('slug')
