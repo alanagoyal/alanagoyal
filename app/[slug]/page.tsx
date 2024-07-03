@@ -2,6 +2,8 @@ import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { notFound } from 'next/navigation';
 
+export const dynamic = "error";
+
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
   const { data: posts } = await supabase.from('notes').select('slug')
