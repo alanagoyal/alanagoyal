@@ -3,8 +3,8 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { createClient } from "@/utils/supabase/server";
 import SidebarLayout from "@/components/sidebar-layout";
+import { createClient as createBrowserClient } from "@/utils/supabase/client";
 
 const fontSans = FontSans({
   subsets: ["latin"],
