@@ -210,7 +210,18 @@ function NoteItem({
 
   const handleDelete = async () => {
     try {
-      // Delete the note
+      let nextRoute = '/';
+      if (!isMobile) {
+        const flattenedNotes = categoryOrder.flatMap(category => 
+          groupedNotes[category] ? groupedNotes[category] : []
+        );
+        const currentIndex = flattenedNotes.findIndex(note => note.slug === item.slug);
+        const nextNote = flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
+        nextRoute = nextNote ? `/${nextNote.slug}` : '/about-me';
+      }
+
+      router.push(nextRoute);
+
       const { error } = await supabase
         .from("notes")
         .delete()
@@ -221,21 +232,6 @@ function NoteItem({
         throw error;
       }
 
-      if (isMobile) {
-        router.push("/");
-      } else {
-        const flattenedNotes = categoryOrder.flatMap(category => 
-          groupedNotes[category] ? groupedNotes[category] : []
-        );
-        const currentIndex = flattenedNotes.findIndex(note => note.slug === item.slug);
-        const nextNote = flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
-
-        if (nextNote) {
-          router.push(`/${nextNote.slug}`);
-        } else {
-          router.push("/about-me");
-        }
-      }
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
