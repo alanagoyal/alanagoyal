@@ -6,17 +6,19 @@ import ReactMarkdown from "react-markdown";
 import { debounce } from 'lodash'; 
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { useRouter } from "next/navigation";
 
 export default function NoteContent({
   note,
   saveNote,
 }: {
   note: any;
-  saveNote: (updates: { content: string }) => void;
+  saveNote: (updates: { content: string }) => Promise<void>;
 }) {
   const [localContent, setLocalContent] = useState(note.content);
   const [isEditing, setIsEditing] = useState(note.content ? false : true);
   const [isPublic, setIsPublic] = useState(note.public);
+  const router = useRouter();
 
   useEffect(() => {
     setLocalContent(note.content);
@@ -24,16 +26,27 @@ export default function NoteContent({
   }, [note.content, note.public]);
 
   useEffect(() => {
-    const debouncedSave = debounce((content: string) => {
+    const debouncedSave = debounce(async (content: string) => {
       if (content !== note.content) {
-        saveNote({ content });
+        await saveNote({ content });
+        
+        // Revalidate after saving
+        await fetch('/revalidate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ slug: note.slug }),
+        });
+
+        router.refresh();
       }
     }, 1000);
 
     debouncedSave(localContent);
 
     return () => debouncedSave.cancel();
-  }, [localContent, saveNote, note.content]);
+  }, [localContent, saveNote, note.content, note.slug, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;

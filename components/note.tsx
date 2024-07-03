@@ -1,13 +1,11 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 
 export default function Note({ note }: { note: any }) {
   const supabase = createClient();
-  const router = useRouter();
 
   const autosaveNote = async (updates: any) => {
     try {
@@ -20,7 +18,6 @@ export default function Note({ note }: { note: any }) {
     } catch (error) {
       console.error("Autosave failed:", error);
     }
-    router.refresh();
   };
 
   return (

@@ -33,20 +33,25 @@ export default function NewNote() {
   };
 
   const createNote = useCallback(async () => {
-    try {
-      router.push(`/${slug}`);
-      router.refresh(); 
+    router.push(`/${slug}`);
 
-      supabase
-        .from('notes')
-        .upsert(note, { onConflict: 'id' })
-        .then(({ error }) => {
-          if (error) console.error("Error upserting note:", error);
-        });
+    // After redirecting, insert the note into the database
+    const { error } = await supabase
+      .from("notes")
+      .upsert(note, { onConflict: "id" });
 
-    } catch (error) {
-      console.error("Error creating note:", error);
-    }
+    if (error) throw error;
+
+    // Call the revalidate API
+    await fetch("/revalidate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ slug }),
+    });
+
+    router.refresh();
   }, [note, router, supabase, slug]);
 
   useEffect(() => {

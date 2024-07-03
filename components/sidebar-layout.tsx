@@ -16,6 +16,11 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
+  const [notes, setNotes] = useState(data);
+
+  useEffect(() => {
+    setNotes(data);
+  }, [data]);
 
   useEffect(() => {
     if (isMobile === false && pathname === "/") {
@@ -39,7 +44,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
       ) : isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
           {showSidebar ? (
-            <Sidebar notes={data} onNoteSelect={handleNoteSelect} />
+            <Sidebar notes={notes} onNoteSelect={handleNoteSelect} />
           ) : (
             children
           )}
@@ -48,7 +53,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
       ) : (
         <div className="bg-[#1c1c1c] text-white min-h-screen flex">
           <div className="w-64 flex-shrink-0 border-r border-gray-300/20 overflow-y-auto h-screen">
-            {data && <Sidebar notes={data} onNoteSelect={() => {}} />}
+            {notes && <Sidebar notes={notes} onNoteSelect={() => {}} />}
           </div>
           <div className="flex-grow overflow-y-auto h-screen">{children}</div>
           <Toaster />

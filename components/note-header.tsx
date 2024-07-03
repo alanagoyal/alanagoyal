@@ -15,13 +15,14 @@ import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function NoteHeader({
   note,
   saveNote,
 }: {
   note: any;
-  saveNote: (updates: any) => void;
+  saveNote: (updates: any) => Promise<void>;
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
@@ -29,6 +30,7 @@ export default function NoteHeader({
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
   const [isPublic, setIsPublic] = useState(note.public);
+  const router = useRouter();
 
   useEffect(() => {
     if (note.emoji) {
@@ -41,16 +43,27 @@ export default function NoteHeader({
   }, [note.emoji, note.title, note.public]);
 
   useEffect(() => {
-    const debouncedSave = debounce((title: string, emoji: string) => {
+    const debouncedSave = debounce(async (title: string, emoji: string) => {
       if (title !== note.title || emoji !== note.emoji) {
-        saveNote({ title, emoji });
+        await saveNote({ title, emoji });
+        
+        // Revalidate after saving
+        await fetch('/revalidate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ slug: note.slug }),
+        });
+
+        router.refresh();
       }
     }, 1000);
 
     debouncedSave(localTitle, localEmoji);
 
     return () => debouncedSave.cancel();
-  }, [localTitle, localEmoji, saveNote, note.title, note.emoji]);
+  }, [localTitle, localEmoji, saveNote, note.title, note.emoji, note.slug, router]);
 
   const formattedDate = format(
     parseISO(note.created_at),
