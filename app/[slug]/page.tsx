@@ -1,7 +1,15 @@
 import Note from "@/components/note";
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createBrowserClient } from "@/utils/supabase/client";
 
-export const preferredRegion = 'us-west-1';
+export async function generateStaticParams() {
+  const supabase = createBrowserClient();
+  const { data: posts } = await supabase.from('notes').select('slug')
+
+  return posts!.map(({ slug }) => ({
+    slug,
+  }))
+}
 
 export default async function NotePage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
@@ -19,6 +27,7 @@ export default async function NotePage({ params }: { params: { slug: string } })
     content: "",
     emoji: "👋🏼",
     category: "today",
+    created_at: new Date().toISOString(),
     public: false,
   };
 
