@@ -155,6 +155,9 @@ function SidebarContent({
                       selectedNoteSlug={selectedNoteSlug}
                       sessionId={sessionId}
                       onNoteSelect={onNoteSelect}
+                      notes={notes}
+                      groupedNotes={groupedNotes}
+                      categoryOrder={categoryOrder}
                     />
                   ))}
                 </ul>
@@ -171,6 +174,9 @@ function SidebarContent({
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
+              notes={notes}
+              groupedNotes={groupedNotes}
+              categoryOrder={categoryOrder}
             />
           ))}
         </ul>
@@ -186,11 +192,17 @@ function NoteItem({
   selectedNoteSlug,
   sessionId,
   onNoteSelect,
+  notes,
+  groupedNotes,
+  categoryOrder,
 }: {
   item: any;
   selectedNoteSlug: string | null;
   sessionId: string;
   onNoteSelect: (note: any) => void;
+  notes: any[];
+  groupedNotes: any;
+  categoryOrder: string[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -198,6 +210,7 @@ function NoteItem({
 
   const handleDelete = async () => {
     try {
+      // Delete the note
       const { error } = await supabase
         .from("notes")
         .delete()
@@ -208,7 +221,21 @@ function NoteItem({
         throw error;
       }
 
-      router.push(isMobile ? "/" : "/about-me");
+      if (isMobile) {
+        router.push("/");
+      } else {
+        const flattenedNotes = categoryOrder.flatMap(category => 
+          groupedNotes[category] ? groupedNotes[category] : []
+        );
+        const currentIndex = flattenedNotes.findIndex(note => note.slug === item.slug);
+        const nextNote = flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
+
+        if (nextNote) {
+          router.push(`/${nextNote.slug}`);
+        } else {
+          router.push("/about-me");
+        }
+      }
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
