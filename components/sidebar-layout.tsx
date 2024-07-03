@@ -23,7 +23,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
   }, [data]);
 
   useEffect(() => {
-    if (isMobile === false && pathname === "/") {
+    if (pathname && isMobile === false && pathname === "/") {
       router.push("/about-me");
     }
   }, [isMobile, router, pathname]);

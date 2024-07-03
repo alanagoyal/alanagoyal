@@ -44,8 +44,10 @@ export default function Sidebar({
   const pathname = usePathname();
 
   useEffect(() => {
-    const slug = pathname.split("/").pop();
-    setSelectedNoteSlug(slug || null);
+    if (pathname) {
+      const slug = pathname.split("/").pop();
+      setSelectedNoteSlug(slug || null);
+    }
   }, [pathname]);
 
   const userSpecificNotes = notes.filter(
