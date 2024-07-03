@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
-import { debounce } from 'lodash'; 
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 
@@ -15,29 +14,33 @@ export default function NoteContent({
   saveNote: (updates: { content: string }) => void;
 }) {
   const [localContent, setLocalContent] = useState(note.content);
-  const [isEditing, setIsEditing] = useState(note.content ? false : true);
+  const [isEditing, setIsEditing] = useState(!note.content);
   const [isPublic, setIsPublic] = useState(note.public);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setLocalContent(note.content);
     setIsPublic(note.public);
   }, [note.content, note.public]);
 
-  useEffect(() => {
-    const debouncedSave = debounce((content: string) => {
+  const debouncedSave = useCallback((content: string) => {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+
+    const newTimeout = setTimeout(() => {
       if (content !== note.content) {
         saveNote({ content });
       }
-    }, 1000);
+    }, 500);
 
-    debouncedSave(localContent);
-
-    return () => debouncedSave.cancel();
-  }, [localContent, saveNote, note.content]);
+    setSaveTimeout(newTimeout);
+  }, [saveNote, note.content]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setLocalContent(newContent);
+    debouncedSave(newContent);
   };
 
   const handleFocus = () => {

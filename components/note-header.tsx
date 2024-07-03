@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import Picker from "@emoji-mart/react";
@@ -10,7 +10,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { debounce } from "lodash";
 import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -29,28 +28,33 @@ export default function NoteHeader({
   const [localEmoji, setLocalEmoji] = useState(note.emoji);
   const [localTitle, setLocalTitle] = useState(note.title);
   const [isPublic, setIsPublic] = useState(note.public);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (note.emoji) {
-      setLocalEmoji(note.emoji);
-    }
-    if (note.title) {
-      setLocalTitle(note.title);
-    }
+    setLocalEmoji(note.emoji);
+    setLocalTitle(note.title);
     setIsPublic(note.public);
   }, [note.emoji, note.title, note.public]);
 
-  useEffect(() => {
-    const debouncedSave = debounce((title: string, emoji: string) => {
-      if (title !== note.title || emoji !== note.emoji) {
-        saveNote({ title, emoji });
+  const debouncedSave = useCallback(
+    (updates: { title?: string; emoji?: string }) => {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
       }
-    }, 1000);
 
-    debouncedSave(localTitle, localEmoji);
+      const newTimeout = setTimeout(() => {
+        const hasChanges =
+          (updates.title && updates.title !== note.title) ||
+          (updates.emoji && updates.emoji !== note.emoji);
+        if (hasChanges) {
+          saveNote(updates);
+        }
+      }, 500);
 
-    return () => debouncedSave.cancel();
-  }, [localTitle, localEmoji, saveNote, note.title, note.emoji]);
+      setSaveTimeout(newTimeout);
+    },
+    [saveNote, note.title, note.emoji]
+  );
 
   const formattedDate = format(
     parseISO(note.created_at),
@@ -58,13 +62,16 @@ export default function NoteHeader({
   );
 
   const handleEmojiSelect = (emojiObject: any) => {
-    setLocalEmoji(emojiObject.native);
+    const newEmoji = emojiObject.native;
+    setLocalEmoji(newEmoji);
     setShowEmojiPicker(false);
+    debouncedSave({ emoji: newEmoji });
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setLocalTitle(newTitle);
+    debouncedSave({ title: newTitle });
   };
 
   return (
