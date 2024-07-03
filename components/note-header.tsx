@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { debounce } from "lodash";
 import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -26,23 +27,61 @@ export default function NoteHeader({
   const isMobile = useMobileDetect();
   const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [localEmoji, setLocalEmoji] = useState(note.emoji);
+  const [localTitle, setLocalTitle] = useState(note.title);
+  const [isPublic, setIsPublic] = useState(note.public);
+  const router = useRouter();
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
-    setFormattedDate(format(
+    if (note.emoji) {
+      setLocalEmoji(note.emoji);
+    }
+    if (note.title) {
+      setLocalTitle(note.title);
+    }
+    setIsPublic(note.public);
+  }, [note.emoji, note.title, note.public]);
+
+  useEffect(() => {
+    const debouncedSave = debounce(async (title: string, emoji: string) => {
+      if (title !== note.title || emoji !== note.emoji) {
+        await saveNote({ title, emoji });
+        
+        // Revalidate after saving
+        await fetch('/revalidate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ slug: note.slug }),
+        });
+
+        router.refresh();
+      }
+    }, 1000);
+
+    debouncedSave(localTitle, localEmoji);
+
+    return () => debouncedSave.cancel();
+  }, [localTitle, localEmoji, saveNote, note.title, note.emoji, note.slug, router]);
+
+  useEffect(() => {
+    const formatted = format(
       parseISO(note.created_at),
       "MMMM d, yyyy 'at' h:mm a"
-    ));
+    );
+    setFormattedDate(formatted);
   }, [note.created_at]);
 
   const handleEmojiSelect = (emojiObject: any) => {
-    const newEmoji = emojiObject.native;
-    saveNote({ emoji: newEmoji });
+    setLocalEmoji(emojiObject.native);
     setShowEmojiPicker(false);
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    saveNote({ title: e.target.value });
+    const newTitle = e.target.value;
+    setLocalTitle(newTitle);
   };
 
   return (
@@ -55,42 +94,42 @@ export default function NoteHeader({
           </button>
         </Link>
       )}
-      <div className="px-2 bg-[#1c1c1c] mb-4 relative">
+      <div className=" px-2 bg-[#1c1c1c] mb-4 relative">
         <p className="text-center text-gray-400 text-xs">{formattedDate}</p>
         <div className="flex justify-between items-center">
-          {note.public ? (
+          {isPublic ? (
             <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
-              {note.title}
+              {localTitle}
             </span>
           ) : (
             <Input
               id="title"
-              value={note.title}
-              className="placeholder:text-gray-400 text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
+              value={localTitle}
+              className="placeholder:text-muted-foreground text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
               onChange={handleTitleChange}
               autoFocus={!note.title}
             />
           )}
-          {!note.public && !isMobile ? (
+          {!isPublic && !isMobile ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className="cursor-pointer"
                 >
-                  {note.emoji}
+                  {localEmoji}
                 </TooltipTrigger>
-                <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
+                <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
                   Click to choose an emoji
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <span>{note.emoji}</span>
+            <span>{localEmoji}</span>
           )}
         </div>
-        {showEmojiPicker && !isMobile && !note.public && (
+        {showEmojiPicker && !isMobile && !isPublic && (
           <div className="absolute top-full right-0 z-10">
             <Picker onEmojiSelect={handleEmojiSelect} />
           </div>
