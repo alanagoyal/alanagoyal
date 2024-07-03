@@ -52,7 +52,7 @@ export default function NoteHeader({
         </Link>
       )}
       <div className="px-2 bg-[#1c1c1c] mb-4 relative">
-        <p className="text-center text-gray-300 text-xs">{formattedDate}</p>
+        <p className="text-center text-gray-400 text-xs">{formattedDate}</p>
         <div className="flex justify-between items-center">
           {note.public ? (
             <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
@@ -77,7 +77,7 @@ export default function NoteHeader({
                 >
                   {note.emoji}
                 </TooltipTrigger>
-                <TooltipContent className="bg-[#1c1c1c] text-gray-300 border-none">
+                <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
                   Click to choose an emoji
                 </TooltipContent>
               </Tooltip>

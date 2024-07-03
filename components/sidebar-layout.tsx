@@ -47,7 +47,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
         </div>
       ) : (
         <div className="bg-[#1c1c1c] text-white min-h-screen flex">
-          <div className="w-64 flex-shrink-0 border-r border-gray-300/20 overflow-y-auto h-screen">
+          <div className="w-64 flex-shrink-0 border-r border-gray-400/20 overflow-y-auto h-screen">
             {data && <Sidebar notes={data} onNoteSelect={() => {}} />}
           </div>
           <div className="flex-grow overflow-y-auto h-screen">{children}</div>

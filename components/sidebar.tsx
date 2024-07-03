@@ -261,7 +261,9 @@ function NoteItem({
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
           {item.emoji} {item.title}
         </h2>
-        <p className="text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap text-gray-300">
+        <p className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
+          item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
+        }`}>
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
