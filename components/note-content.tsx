@@ -31,16 +31,18 @@ export default function NoteContent({
       if (content !== note.content) {
         await saveNote({ content });
         
-        // Revalidate after saving
-        await fetch('/revalidate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ slug: note.slug }),
-        });
+        // Revalidate after saving only if the slug starts with "new-note"
+        if (note.slug.startsWith("new-note")) {
+          await fetch('/revalidate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ slug: note.slug }),
+          });
 
-        router.refresh();
+          router.refresh();
+        }
       }
     }, 1000),
     [saveNote, note.content, note.slug, router]

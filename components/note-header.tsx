@@ -52,16 +52,18 @@ export default function NoteHeader({
       if (title !== note.title || emoji !== note.emoji) {
         await saveNote({ title, emoji });
         
-        // Revalidate after saving
-        await fetch('/revalidate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ slug: note.slug }),
-        });
+        // Revalidate after saving only if the slug starts with "new-note"
+        if (note.slug.startsWith("new-note")) {
+          await fetch('/revalidate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ slug: note.slug }),
+          });
 
-        router.refresh();
+          router.refresh();
+        }
       }
     }, 1000),
     [saveNote, note.title, note.emoji, note.slug, router]
