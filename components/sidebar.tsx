@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin } from "lucide-react";
+import { Pin, Trash2, Edit } from "lucide-react";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,7 @@ import {
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
+import { useSwipeable } from 'react-swipeable';
 
 const labels = {
   pinned: (
@@ -214,6 +215,7 @@ function NoteItem({
   const router = useRouter();
   const supabase = createClient();
   const isMobile = useMobileDetect();
+  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
@@ -297,20 +299,99 @@ function NoteItem({
     </li>
   );
 
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setIsSwipeOpen(true),
+    onSwipedRight: () => setIsSwipeOpen(false),
+    trackMouse: true,
+  });
+
+  if (isMobile) {
+    return (
+      <div 
+        {...handlers} 
+        className="relative overflow-hidden"
+      >
+        <div
+          className={`transition-transform duration-300 ease-out ${
+            isSwipeOpen ? 'transform -translate-x-24' : ''
+          }`}
+        >
+          {NoteContent}
+        </div>
+        <SwipeActions
+          isOpen={isSwipeOpen}
+          onPin={handlePinToggle}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isPinned={item.pinned}
+          canEditOrDelete={canEditOrDelete}
+        />
+      </div>
+    );
+  } else {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handlePinToggle}>
+            {item.pinned ? "Unpin" : "Pin"}
+          </ContextMenuItem>
+          {item.session_id === sessionId && (
+            <>
+              <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+              <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+}
+
+function SwipeActions({
+  isOpen,
+  onPin,
+  onEdit,
+  onDelete,
+  isPinned,
+  canEditOrDelete,
+}: {
+  isOpen: boolean;
+  onPin: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  isPinned: boolean;
+  canEditOrDelete: boolean;
+}) {
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handlePinToggle}>
-          {item.pinned ? "Unpin" : "Pin"}
-        </ContextMenuItem>
-        {canEditOrDelete && (
-          <>
-            <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
+    <div
+      className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
+        isOpen ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <button
+        onClick={onPin}
+        className="bg-blue-500 text-white p-2 h-full w-[50px] flex items-center justify-center"
+      >
+        <Pin size={20} />
+      </button>
+      {canEditOrDelete && (
+        <>
+          <button
+            onClick={onEdit}
+            className="bg-purple-500 text-white p-2 h-full w-[50px] flex items-center justify-center"
+          >
+            <Edit size={20} />
+          </button>
+          <button
+            onClick={onDelete}
+            className="bg-red-500 text-white p-2 h-full w-[50px] flex items-center justify-center"
+          >
+            <Trash2 size={20} />
+          </button>
+        </>
+      )}
+    </div>
   );
 }
+
