@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin } from "lucide-react";
+import { Pin, PinOff, Trash2, Edit } from "lucide-react";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,7 @@ import {
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
+import { useSwipeable } from 'react-swipeable';
 
 const labels = {
   pinned: (
@@ -135,9 +136,8 @@ function SidebarContent({
   notes: any[];
   sessionId: string;
 }) {
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
-    null
-  );
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
 
   return (
     <div className="pt-4 px-2">
@@ -162,9 +162,10 @@ function SidebarContent({
                       selectedNoteSlug={selectedNoteSlug}
                       sessionId={sessionId}
                       onNoteSelect={onNoteSelect}
-                      notes={notes}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
+                      isSwipeOpen={openSwipeItemId === item.id}
+                      setOpenSwipeItemId={setOpenSwipeItemId}
                     />
                   ))}
                 </ul>
@@ -181,9 +182,10 @@ function SidebarContent({
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
-              notes={notes}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
+              isSwipeOpen={openSwipeItemId === item.id}
+              setOpenSwipeItemId={setOpenSwipeItemId}
             />
           ))}
         </ul>
@@ -199,17 +201,19 @@ function NoteItem({
   selectedNoteSlug,
   sessionId,
   onNoteSelect,
-  notes,
   groupedNotes,
   categoryOrder,
+  isSwipeOpen,
+  setOpenSwipeItemId,
 }: {
   item: any;
   selectedNoteSlug: string | null;
   sessionId: string;
   onNoteSelect: (note: any) => void;
-  notes: any[];
   groupedNotes: any;
   categoryOrder: string[];
+  isSwipeOpen: boolean;
+  setOpenSwipeItemId: (id: string | null) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -239,6 +243,7 @@ function NoteItem({
         throw error;
       }
 
+      setOpenSwipeItemId(null);
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -246,6 +251,7 @@ function NoteItem({
   };
 
   const handleEdit = () => {
+    setOpenSwipeItemId(null);
     router.push(`/${item.slug}`);
   };
 
@@ -260,6 +266,7 @@ function NoteItem({
         throw error;
       }
 
+      setOpenSwipeItemId(null);
       router.refresh();
     } catch (error) {
       console.error("Error toggling pin status:", error);
@@ -297,20 +304,98 @@ function NoteItem({
     </li>
   );
 
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setOpenSwipeItemId(item.id),
+    onSwipedRight: () => setOpenSwipeItemId(null),
+    trackMouse: true,
+  });
+
+  if (isMobile) {
+    return (
+      <div 
+        {...handlers} 
+        className="relative overflow-hidden"
+      >
+        <div
+          className={`transition-transform duration-300 ease-out ${
+            isSwipeOpen ? 'transform -translate-x-24' : ''
+          }`}
+        >
+          {NoteContent}
+        </div>
+        <SwipeActions
+          isOpen={isSwipeOpen}
+          onPin={handlePinToggle}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isPinned={item.pinned}
+          canEditOrDelete={canEditOrDelete}
+        />
+      </div>
+    );
+  } else {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handlePinToggle}>
+            {item.pinned ? "Unpin" : "Pin"}
+          </ContextMenuItem>
+          {item.session_id === sessionId && (
+            <>
+              <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+              <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+}
+
+function SwipeActions({
+  isOpen,
+  onPin,
+  onEdit,
+  onDelete,
+  isPinned,
+  canEditOrDelete,
+}: {
+  isOpen: boolean;
+  onPin: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  isPinned: boolean;
+  canEditOrDelete: boolean;
+}) {
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handlePinToggle}>
-          {item.pinned ? "Unpin" : "Pin"}
-        </ContextMenuItem>
-        {canEditOrDelete && (
-          <>
-            <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
+    <div
+      className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
+        isOpen ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <button
+        onClick={onPin}
+        className="bg-[#3293FC] text-white p-2 h-full w-16 flex items-center justify-center"
+      >
+        {isPinned ? <PinOff size={20} /> : <Pin size={20} />}
+      </button>
+      {canEditOrDelete && (
+        <>
+          <button
+            onClick={onEdit}
+            className="bg-[#787BFF] text-white p-2 h-full w-16 flex items-center justify-center"
+          >
+            <Edit size={20} />
+          </button>
+          <button
+            onClick={onDelete}
+            className="bg-[#FF4539] text-white p-2 h-full w-16 flex items-center justify-center"
+          >
+            <Trash2 size={20} />
+          </button>
+        </>
+      )}
+    </div>
   );
 }
