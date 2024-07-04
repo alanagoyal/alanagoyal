@@ -134,7 +134,7 @@ function SidebarContent({
 
   return (
     <div className="pt-4 px-2">
-      <SearchBar notes={notes} onSearchResults={setLocalSearchResults} />
+      <SearchBar notes={notes} onSearchResults={setLocalSearchResults} sessionId={sessionId} />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
         <NewNote />
