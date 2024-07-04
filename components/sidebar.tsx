@@ -241,6 +241,7 @@ function NoteItem({
         throw error;
       }
 
+      setIsSwipeOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -248,6 +249,7 @@ function NoteItem({
   };
 
   const handleEdit = () => {
+    setIsSwipeOpen(false);
     router.push(`/${item.slug}`);
   };
 
@@ -262,6 +264,7 @@ function NoteItem({
         throw error;
       }
 
+      setIsSwipeOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Error toggling pin status:", error);
@@ -394,4 +397,3 @@ function SwipeActions({
     </div>
   );
 }
-
