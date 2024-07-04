@@ -7,7 +7,8 @@ create table "public"."notes" (
     "session_id" uuid,
     "slug" text,
     "category" text,
-    "emoji" text
+    "emoji" text,
+    "pinned" boolean default false
 );
 
 
