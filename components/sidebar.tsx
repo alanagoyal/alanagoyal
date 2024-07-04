@@ -306,8 +306,8 @@ function NoteItem({
         </ContextMenuItem>
         {canEditOrDelete && (
           <>
-            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
             <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
           </>
         )}
       </ContextMenuContent>
