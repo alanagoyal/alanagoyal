@@ -249,6 +249,23 @@ function NoteItem({
     router.push(`/${item.slug}`);
   };
 
+  const handlePinToggle = async () => {
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .update({ pinned: !item.pinned })
+        .eq("slug", item.slug);
+
+      if (error) {
+        throw error;
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
+    }
+  };
+
   const canEditOrDelete = item.session_id === sessionId;
 
   const handleNoteClick = () => {
@@ -280,15 +297,20 @@ function NoteItem({
     </li>
   );
 
-  return canEditOrDelete ? (
+  return (
     <ContextMenu>
       <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
-        <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+        <ContextMenuItem onClick={handlePinToggle}>
+          {item.pinned ? "Unpin" : "Pin"}
+        </ContextMenuItem>
+        {canEditOrDelete && (
+          <>
+            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+            <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
-  ) : (
-    NoteContent
   );
 }
