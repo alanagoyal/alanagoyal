@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin, Trash2, Edit } from "lucide-react";
+import { Pin, PinOff, Trash2, Edit } from "lucide-react";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { useRouter } from "next/navigation";
@@ -162,7 +162,6 @@ function SidebarContent({
                       selectedNoteSlug={selectedNoteSlug}
                       sessionId={sessionId}
                       onNoteSelect={onNoteSelect}
-                      notes={notes}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
                       isSwipeOpen={openSwipeItemId === item.id}
@@ -183,7 +182,6 @@ function SidebarContent({
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
-              notes={notes}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
               isSwipeOpen={openSwipeItemId === item.id}
@@ -203,7 +201,6 @@ function NoteItem({
   selectedNoteSlug,
   sessionId,
   onNoteSelect,
-  notes,
   groupedNotes,
   categoryOrder,
   isSwipeOpen,
@@ -213,7 +210,6 @@ function NoteItem({
   selectedNoteSlug: string | null;
   sessionId: string;
   onNoteSelect: (note: any) => void;
-  notes: any[];
   groupedNotes: any;
   categoryOrder: string[];
   isSwipeOpen: boolean;
@@ -382,7 +378,7 @@ function SwipeActions({
         onClick={onPin}
         className="bg-[#3293FC] text-white p-2 h-full w-16 flex items-center justify-center"
       >
-        <Pin size={20} />
+        {isPinned ? <PinOff size={20} /> : <Pin size={20} />}
       </button>
       {canEditOrDelete && (
         <>
