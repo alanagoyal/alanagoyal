@@ -136,9 +136,8 @@ function SidebarContent({
   notes: any[];
   sessionId: string;
 }) {
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
-    null
-  );
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
 
   return (
     <div className="pt-4 px-2">
@@ -166,6 +165,8 @@ function SidebarContent({
                       notes={notes}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
+                      isSwipeOpen={openSwipeItemId === item.id}
+                      setOpenSwipeItemId={setOpenSwipeItemId}
                     />
                   ))}
                 </ul>
@@ -185,6 +186,8 @@ function SidebarContent({
               notes={notes}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
+              isSwipeOpen={openSwipeItemId === item.id}
+              setOpenSwipeItemId={setOpenSwipeItemId}
             />
           ))}
         </ul>
@@ -203,6 +206,8 @@ function NoteItem({
   notes,
   groupedNotes,
   categoryOrder,
+  isSwipeOpen,
+  setOpenSwipeItemId,
 }: {
   item: any;
   selectedNoteSlug: string | null;
@@ -211,11 +216,12 @@ function NoteItem({
   notes: any[];
   groupedNotes: any;
   categoryOrder: string[];
+  isSwipeOpen: boolean;
+  setOpenSwipeItemId: (id: string | null) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
   const isMobile = useMobileDetect();
-  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
@@ -241,7 +247,7 @@ function NoteItem({
         throw error;
       }
 
-      setIsSwipeOpen(false);
+      setOpenSwipeItemId(null);
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -249,7 +255,7 @@ function NoteItem({
   };
 
   const handleEdit = () => {
-    setIsSwipeOpen(false);
+    setOpenSwipeItemId(null);
     router.push(`/${item.slug}`);
   };
 
@@ -264,7 +270,7 @@ function NoteItem({
         throw error;
       }
 
-      setIsSwipeOpen(false);
+      setOpenSwipeItemId(null);
       router.refresh();
     } catch (error) {
       console.error("Error toggling pin status:", error);
@@ -303,8 +309,8 @@ function NoteItem({
   );
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setIsSwipeOpen(true),
-    onSwipedRight: () => setIsSwipeOpen(false),
+    onSwipedLeft: () => setOpenSwipeItemId(item.id),
+    onSwipedRight: () => setOpenSwipeItemId(null),
     trackMouse: true,
   });
 
