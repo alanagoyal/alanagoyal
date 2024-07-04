@@ -30,7 +30,7 @@ const labels = {
   older: "Older",
 };
 
-const categoryOrder = ["pinned", "today", "yesterday", "7", "30"];
+const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 
 export default function Sidebar({
   notes,
@@ -55,9 +55,16 @@ export default function Sidebar({
   sortGroupedNotes(groupedNotes);
 
   function groupNotesByCategory(notes: any[]) {
-    const groupedNotes: any = {};
+    const groupedNotes: any = {
+      pinned: [],
+    };
 
     notes.forEach((note) => {
+      if (note.pinned) {
+        groupedNotes.pinned.push(note);
+        return;
+      }
+
       let category = note.category;
       if (!note.public) {
         const createdDate = new Date(note.created_at);
@@ -142,7 +149,7 @@ function SidebarContent({
       {localSearchResults === null ? (
         <nav>
           {categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] ? (
+            groupedNotes[categoryKey] && groupedNotes[categoryKey].length > 0 ? (
               <section key={categoryKey}>
                 <h3 className="py-1 text-xs font-bold text-gray-400 ml-2">
                   {labels[categoryKey as keyof typeof labels]}
@@ -242,6 +249,23 @@ function NoteItem({
     router.push(`/${item.slug}`);
   };
 
+  const handlePinToggle = async () => {
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .update({ pinned: !item.pinned })
+        .eq("slug", item.slug);
+
+      if (error) {
+        throw error;
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
+    }
+  };
+
   const canEditOrDelete = item.session_id === sessionId;
 
   const handleNoteClick = () => {
@@ -273,15 +297,20 @@ function NoteItem({
     </li>
   );
 
-  return canEditOrDelete ? (
+  return (
     <ContextMenu>
       <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
-        <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+        <ContextMenuItem onClick={handlePinToggle}>
+          {item.pinned ? "Unpin" : "Pin"}
+        </ContextMenuItem>
+        {canEditOrDelete && (
+          <>
+            <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+            <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
-  ) : (
-    NoteContent
   );
 }
