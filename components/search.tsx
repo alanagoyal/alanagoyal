@@ -36,6 +36,7 @@ export default function SearchBar({ notes, onSearchResults, sessionId }: { notes
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"
+        autoComplete="off"
       />
     </div>
   );
