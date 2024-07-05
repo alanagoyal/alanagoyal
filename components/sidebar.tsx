@@ -275,6 +275,22 @@ function NoteItem({
   const supabase = createClient();
   const isMobile = useMobileDetect();
 
+  const [isSwiping, setIsSwiping] = useState(false);
+
+  useEffect(() => {
+    const preventDefault = (e: TouchEvent) => {
+      if (isSwiping) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventDefault);
+    };
+  }, [isSwiping]);
+
   const handleDelete = async () => {
     try {
       let nextRoute = '/';
@@ -348,8 +364,16 @@ function NoteItem({
   );
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setOpenSwipeItemId(item.id),
-    onSwipedRight: () => setOpenSwipeItemId(null),
+    onSwipeStart: () => setIsSwiping(true),
+    onSwiped: () => setIsSwiping(false),
+    onSwipedLeft: () => {
+      setOpenSwipeItemId(item.id);
+      setIsSwiping(false);
+    },
+    onSwipedRight: () => {
+      setOpenSwipeItemId(null);
+      setIsSwiping(false);
+    },
     trackMouse: true,
   });
 
