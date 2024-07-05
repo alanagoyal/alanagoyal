@@ -405,13 +405,13 @@ function NoteItem({
       <ContextMenu>
         <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={handlePinToggle}>
+          <ContextMenuItem onClick={handlePinToggle} className="cursor-pointer">
             {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
           {item.session_id === sessionId && (
             <>
-              <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-              <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">Edit</ContextMenuItem>
+              <ContextMenuItem onClick={handleDelete} className="cursor-pointer">Delete</ContextMenuItem>
             </>
           )}
         </ContextMenuContent>
