@@ -370,8 +370,6 @@ function SidebarContent({
                       onNoteSelect={onNoteSelect}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
-                      isSwipeOpen={false}
-                      setOpenSwipeItemId={() => {}}
                       togglePinned={togglePinned}
                       isPinned={pinnedNotes.has(item.slug)}
                       isHighlighted={false}
@@ -394,8 +392,6 @@ function SidebarContent({
               onNoteSelect={onNoteSelect}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
-              isSwipeOpen={false}
-              setOpenSwipeItemId={() => {}}
               togglePinned={togglePinned}
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}
@@ -417,8 +413,6 @@ function NoteItem({
   onNoteSelect,
   groupedNotes,
   categoryOrder,
-  isSwipeOpen,
-  setOpenSwipeItemId,
   togglePinned,
   isPinned,
   isHighlighted,
@@ -430,8 +424,6 @@ function NoteItem({
   onNoteSelect: (note: any) => void;
   groupedNotes: any;
   categoryOrder: string[];
-  isSwipeOpen: boolean;
-  setOpenSwipeItemId: (id: string | null) => void;
   togglePinned: (slug: string) => void;
   isPinned: boolean;
   isHighlighted: boolean;
@@ -442,6 +434,7 @@ function NoteItem({
   const isMobile = useMobileDetect();
 
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -484,7 +477,7 @@ function NoteItem({
         throw error;
       }
 
-      setOpenSwipeItemId(null);
+      setIsSwipeOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -492,13 +485,13 @@ function NoteItem({
   };
 
   const handleEdit = () => {
-    setOpenSwipeItemId(null);
+    setIsSwipeOpen(false);
     router.push(`/${item.slug}`);
   };
 
   const handlePinToggle = () => {
     togglePinned(item.slug);
-    setOpenSwipeItemId(null);
+    setIsSwipeOpen(false);
   };
 
   const canEditOrDelete = item.session_id === sessionId;
@@ -548,11 +541,11 @@ function NoteItem({
     onSwipeStart: () => setIsSwiping(true),
     onSwiped: () => setIsSwiping(false),
     onSwipedLeft: () => {
-      setOpenSwipeItemId(item.id);
+      setIsSwipeOpen(true);
       setIsSwiping(false);
     },
     onSwipedRight: () => {
-      setOpenSwipeItemId(null);
+      setIsSwipeOpen(false);
       setIsSwiping(false);
     },
     trackMouse: true,
