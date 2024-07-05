@@ -29,7 +29,6 @@ export default function NewNote() {
     created_at: new Date().toISOString(),
     session_id: sessionId,
     category: "today",
-    pinned: true,
     emoji: "👋🏼",
   };
 

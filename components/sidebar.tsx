@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
@@ -42,6 +42,7 @@ export default function Sidebar({
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
+  const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
 
   useEffect(() => {
@@ -49,19 +50,43 @@ export default function Sidebar({
     setSelectedNoteSlug(slug || null);
   }, [pathname]);
 
+  useEffect(() => {
+    // Initialize pinned notes
+    const initialPinnedNotes = new Set(
+      notes.filter(note => 
+        note.slug === "about-me" || 
+        note.slug === "quick-links" || 
+        note.session_id === sessionId
+      ).map(note => note.slug)
+    );
+    setPinnedNotes(initialPinnedNotes);
+  }, [notes, sessionId]);
+
+  const togglePinned = useCallback((slug: string) => {
+    setPinnedNotes(prev => {
+      const newPinned = new Set(prev);
+      if (newPinned.has(slug)) {
+        newPinned.delete(slug);
+      } else {
+        newPinned.add(slug);
+      }
+      return newPinned;
+    });
+  }, []);
+
   const userSpecificNotes = notes.filter(
     (note) => note.public || note.session_id === sessionId
   );
-  const groupedNotes = groupNotesByCategory(userSpecificNotes);
+  const groupedNotes = groupNotesByCategory(userSpecificNotes, pinnedNotes);
   sortGroupedNotes(groupedNotes);
 
-  function groupNotesByCategory(notes: any[]) {
+  function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
     const groupedNotes: any = {
       pinned: [],
     };
 
     notes.forEach((note) => {
-      if (note.pinned) {
+      if (pinnedNotes.has(note.slug)) {
         groupedNotes.pinned.push(note);
         return;
       }
@@ -117,6 +142,8 @@ export default function Sidebar({
           onNoteSelect={onNoteSelect}
           notes={notes}
           sessionId={sessionId}
+          togglePinned={togglePinned}
+          pinnedNotes={pinnedNotes}
         />
       </div>
     </div>
@@ -129,12 +156,16 @@ function SidebarContent({
   onNoteSelect,
   notes,
   sessionId,
+  togglePinned,
+  pinnedNotes,
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
   onNoteSelect: (note: any) => void;
   notes: any[];
   sessionId: string;
+  togglePinned: (slug: string) => void;
+  pinnedNotes: Set<string>;
 }) {
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
@@ -166,6 +197,8 @@ function SidebarContent({
                       categoryOrder={categoryOrder}
                       isSwipeOpen={openSwipeItemId === item.id}
                       setOpenSwipeItemId={setOpenSwipeItemId}
+                      togglePinned={togglePinned}
+                      isPinned={pinnedNotes.has(item.slug)}
                     />
                   ))}
                 </ul>
@@ -186,6 +219,8 @@ function SidebarContent({
               categoryOrder={categoryOrder}
               isSwipeOpen={openSwipeItemId === item.id}
               setOpenSwipeItemId={setOpenSwipeItemId}
+              togglePinned={togglePinned}
+              isPinned={pinnedNotes.has(item.slug)}
             />
           ))}
         </ul>
@@ -205,6 +240,8 @@ function NoteItem({
   categoryOrder,
   isSwipeOpen,
   setOpenSwipeItemId,
+  togglePinned,
+  isPinned,
 }: {
   item: any;
   selectedNoteSlug: string | null;
@@ -214,6 +251,8 @@ function NoteItem({
   categoryOrder: string[];
   isSwipeOpen: boolean;
   setOpenSwipeItemId: (id: string | null) => void;
+  togglePinned: (slug: string) => void;
+  isPinned: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -255,22 +294,9 @@ function NoteItem({
     router.push(`/${item.slug}`);
   };
 
-  const handlePinToggle = async () => {
-    try {
-      const { error } = await supabase
-        .from("notes")
-        .update({ pinned: !item.pinned })
-        .eq("slug", item.slug);
-
-      if (error) {
-        throw error;
-      }
-
-      setOpenSwipeItemId(null);
-      router.refresh();
-    } catch (error) {
-      console.error("Error toggling pin status:", error);
-    }
+  const handlePinToggle = () => {
+    togglePinned(item.slug);
+    setOpenSwipeItemId(null);
   };
 
   const canEditOrDelete = item.session_id === sessionId;
@@ -328,7 +354,7 @@ function NoteItem({
           onPin={handlePinToggle}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isPinned={item.pinned}
+          isPinned={isPinned}
           canEditOrDelete={canEditOrDelete}
         />
       </div>
@@ -339,7 +365,7 @@ function NoteItem({
         <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem onClick={handlePinToggle}>
-            {item.pinned ? "Unpin" : "Pin"}
+            {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
           {item.session_id === sessionId && (
             <>

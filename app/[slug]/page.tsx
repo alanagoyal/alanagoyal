@@ -30,7 +30,6 @@ export default async function NotePage({ params }: { params: { slug: string } })
     emoji: "👋🏼",
     category: "today",
     public: false,
-    pinned: true,
   };
 
   return (
