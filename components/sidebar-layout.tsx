@@ -6,6 +6,7 @@ import { Icons } from "@/components/icons";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
 import { useRouter, usePathname } from "next/navigation";
+import { CommandMenu } from "./command-menu";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -52,6 +53,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
           </div>
           <div className="flex-grow overflow-y-auto h-screen">{children}</div>
           <Toaster />
+          <CommandMenu />
         </div>
       )}
     </>
