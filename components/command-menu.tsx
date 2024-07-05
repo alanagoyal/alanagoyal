@@ -34,11 +34,18 @@ export function CommandMenu({ notes, sessionId }: { notes: any[], sessionId: str
     }
   }
 
+  function toTitleCase(str: string): string {
+    return str.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <DialogTitle className="sr-only">Command Menu</DialogTitle>
-      <DialogDescription className="sr-only">Use this dialog to execute commands or search</DialogDescription>
-      <CommandInput placeholder="Type a command or search..." onValueChange={handleSearch} />
+      <DialogDescription className="sr-only">Use this dialog to execute commands or search for a note</DialogDescription>
+      <CommandInput placeholder="Type a command or search for a note..." onValueChange={handleSearch} />
       <CommandList>
         <CommandEmpty>No results found</CommandEmpty>
         <CommandGroup heading="Commands">
@@ -50,7 +57,7 @@ export function CommandMenu({ notes, sessionId }: { notes: any[], sessionId: str
           <CommandGroup heading="Search Results">
             {searchResults.map((note) => (
               <CommandItem key={note.id} onSelect={() => router.push(`/${note.slug}`)}>
-                {note.title}
+                {toTitleCase(note.title)}
               </CommandItem>
             ))}
           </CommandGroup>
