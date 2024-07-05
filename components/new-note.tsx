@@ -59,7 +59,7 @@ export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug:
                        target.tagName === 'TEXTAREA' ||
                        target.tagName === 'SELECT';
 
-      if (event.key === 'c' && !event.metaKey && !event.ctrlKey && !isTyping) {
+      if (event.key === 'n' && !event.metaKey && !event.ctrlKey && !isTyping) {
         event.preventDefault();
         createNote();
       }
