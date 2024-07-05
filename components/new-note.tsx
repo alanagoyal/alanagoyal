@@ -53,7 +53,14 @@ export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug:
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "/" && event.metaKey) {
+      const target = event.target as HTMLElement;
+      const isTyping = target.isContentEditable || 
+                       target.tagName === 'INPUT' || 
+                       target.tagName === 'TEXTAREA' ||
+                       target.tagName === 'SELECT';
+
+      if (event.key === 'c' && !event.metaKey && !event.ctrlKey && !isTyping) {
+        event.preventDefault();
         createNote();
       }
     };
@@ -63,7 +70,7 @@ export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug:
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [createNote, router]);
+  }, [createNote]);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -74,7 +81,7 @@ export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug:
             <Icons.new />
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
-            Click or press ⌘+/ to create a new note
+            Create a note
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
