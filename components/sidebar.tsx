@@ -340,6 +340,12 @@ function NoteItem({
     }
   };
 
+  const handleSwipeAction = (action: () => void) => {
+    if (isSwipeOpen) {
+      action();
+    }
+  };
+
   const NoteContent = (
     <li
       className={`min-h-[50px] ${
@@ -392,9 +398,9 @@ function NoteItem({
         </div>
         <SwipeActions
           isOpen={isSwipeOpen}
-          onPin={handlePinToggle}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onPin={() => handleSwipeAction(handlePinToggle)}
+          onEdit={() => handleSwipeAction(handleEdit)}
+          onDelete={() => handleSwipeAction(handleDelete)}
           isPinned={isPinned}
           canEditOrDelete={canEditOrDelete}
         />
@@ -438,7 +444,7 @@ function SwipeActions({
   return (
     <div
       className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
-        isOpen ? 'opacity-100' : 'opacity-0'
+        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
     >
       <button
