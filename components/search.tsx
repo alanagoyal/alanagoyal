@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
-import { Search } from "lucide-react"; 
+import { Search } from "lucide-react";
+import { searchNotes, Note } from "@/lib/search";
 
-export default function SearchBar({ notes, onSearchResults, sessionId }: { notes: any[], onSearchResults: (results: any[] | null) => void, sessionId: string }) {
+export default function SearchBar({ notes, onSearchResults, sessionId }: { notes: Note[], onSearchResults: (results: Note[] | null) => void, sessionId: string }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -14,11 +15,7 @@ export default function SearchBar({ notes, onSearchResults, sessionId }: { notes
     setSearchTerm(term);
     
     if (term.length > 0) {
-      const results = notes.filter(note =>
-        (note.public || note.sessionId === sessionId) &&
-        (note.title.toLowerCase().includes(term.toLowerCase()) ||
-         note.content.toLowerCase().includes(term.toLowerCase()))
-      );
+      const results = searchNotes(notes, term, sessionId);
       onSearchResults(results);
     } else {
       onSearchResults(null);

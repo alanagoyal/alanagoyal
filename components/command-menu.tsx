@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation"
 import { Icons } from "./icons"
 import { Pin, ArrowUp, ArrowDown } from "lucide-react";
 import { createNote } from "@/lib/create-note";
+import { searchNotes, Note } from "@/lib/search";
 
-export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes, togglePinned, selectedNoteSlug }: { notes: any[], sessionId: string, addNewPinnedNote: (slug: string) => void, navigateNotes: (direction: 'up' | 'down') => void, togglePinned: (slug: string) => void, selectedNoteSlug: string | null }) {
+export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes, togglePinned, selectedNoteSlug }: { notes: Note[], sessionId: string, addNewPinnedNote: (slug: string) => void, navigateNotes: (direction: 'up' | 'down') => void, togglePinned: (slug: string) => void, selectedNoteSlug: string | null }) {
   const [open, setOpen] = useState(false)
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -25,16 +26,7 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
   }, [])
 
   const handleSearch = (value: string) => {
-    if (value.length > 0) {
-      const results = notes.filter(note =>
-        (note.public || note.sessionId === sessionId) &&
-        (note.title.toLowerCase().includes(value.toLowerCase()) ||
-         note.content.toLowerCase().includes(value.toLowerCase()))
-      );
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    setSearchTerm(value)
   }
 
   function toTitleCase(str: string): string {
@@ -71,40 +63,41 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
     }
   }, [selectedNoteSlug, togglePinned]);
 
+  const commands = [
+    { name: "New note", icon: <Icons.new />, shortcut: "N", action: handleCreateNote },
+    { name: "Pin or unpin", icon: <Pin />, shortcut: "P", action: handleTogglePin },
+    { name: "Move up", icon: <ArrowUp />, shortcut: "K", action: handleMoveUp },
+    { name: "Move down", icon: <ArrowDown />, shortcut: "J", action: handleMoveDown },
+  ];
+
+  const filteredNotes = searchNotes(notes, searchTerm, sessionId);
+  const filteredCommands = commands.filter((command) => 
+    command.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <DialogTitle className="sr-only">Command Menu</DialogTitle>
       <DialogDescription className="sr-only">Use this dialog to execute commands or search for a note</DialogDescription>
-      <CommandInput placeholder="Type a command or search for a note..." onValueChange={handleSearch} />
+      <CommandInput placeholder="Type a command or search for a note..." value={searchTerm} onValueChange={setSearchTerm} />
       <CommandList>
         <CommandEmpty>No results found</CommandEmpty>
-        <CommandGroup heading="Commands">
-          <CommandItem onSelect={handleCreateNote}>
-            <Icons.new />
-            <span className="ml-2">New note</span>
-            <CommandShortcut>N</CommandShortcut>
-          </CommandItem>
-          <CommandItem onSelect={handleTogglePin}>
-            <Pin />
-            <span className="ml-2">Pin or unpin</span>
-            <CommandShortcut>P</CommandShortcut>
-          </CommandItem>
-          <CommandItem onSelect={handleMoveUp}>
-            <ArrowUp />
-            <span className="ml-2">Move up</span>
-            <CommandShortcut>K</CommandShortcut>
-          </CommandItem>
-          <CommandItem onSelect={handleMoveDown}>
-            <ArrowDown />
-            <span className="ml-2">Move down</span>
-            <CommandShortcut>J</CommandShortcut>
-          </CommandItem>
-        </CommandGroup>
-        {searchResults.length > 0 && (
-          <CommandGroup heading="Search Results">
-            {searchResults.map((note) => (
+        {filteredCommands.length > 0 && (
+          <CommandGroup heading="Commands">
+            {filteredCommands.map((command) => (
+              <CommandItem key={command.name} onSelect={command.action}>
+                {command.icon}
+                <span className="ml-2">{command.name}</span>
+                <CommandShortcut>{command.shortcut}</CommandShortcut>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+        {filteredNotes.length > 0 && (
+          <CommandGroup heading="Notes">
+            {filteredNotes.map((note) => (
               <CommandItem key={note.id} onSelect={() => handleNoteSelect(note.slug)}>
-                {toTitleCase(note.title)}
+                {note.emoji} {toTitleCase(note.title)}
               </CommandItem>
             ))}
           </CommandGroup>

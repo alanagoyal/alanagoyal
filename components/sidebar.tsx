@@ -198,7 +198,9 @@ export default function Sidebar({
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
 
-      if (!isTyping) {
+      if (isTyping && event.key === "Escape") {
+        (target as HTMLElement).blur();
+      } else if (!isTyping) {
         if (event.key === "j" && !event.metaKey) {
           event.preventDefault();
           navigateNotes("down");
