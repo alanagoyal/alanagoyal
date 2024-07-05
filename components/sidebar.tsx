@@ -291,22 +291,24 @@ function SidebarContent({
   }, [searchInputRef]);
 
   const handleKeyNavigation = useCallback((event: KeyboardEvent) => {
-    if (localSearchResults && localSearchResults.length > 0 && !isSearchInputFocused) {
-      if (event.key === 'j' || event.key === 'ArrowDown') {
-        event.preventDefault();
-        setHighlightedIndex((prevIndex) =>
-          (prevIndex + 1) % localSearchResults.length
-        );
-      } else if (event.key === 'k' || event.key === 'ArrowUp') {
-        event.preventDefault();
-        setHighlightedIndex((prevIndex) =>
-          (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
-        );
-      } else if (event.key === 'Enter') {
+    if (localSearchResults && localSearchResults.length > 0) {
+      if (event.key === 'Enter') {
         event.preventDefault();
         const selectedNote = localSearchResults[highlightedIndex];
         router.push(`/${selectedNote.slug}`);
         clearSearch();
+      } else if (!isSearchInputFocused) {
+        if (event.key === 'j' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex + 1) % localSearchResults.length
+          );
+        } else if (event.key === 'k' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+          );
+        }
       }
     }
   }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch]);
