@@ -180,13 +180,13 @@ export default function Sidebar({
                        target.tagName === 'SELECT';
 
       if (!isTyping) {
-        if (event.key === 'j') {
+        if (event.key === 'j' && !event.metaKey) {
           event.preventDefault();
           navigateNotes('down');
-        } else if (event.key === 'k') {
+        } else if (event.key === 'k' && !event.metaKey) {
           event.preventDefault();
           navigateNotes('up');
-        } else if (event.key === 'p') {
+        } else if (event.key === 'p' && !event.metaKey) {
           event.preventDefault();
           if (selectedNoteSlug) {
             togglePinned(selectedNoteSlug);
