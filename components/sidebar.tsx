@@ -276,43 +276,50 @@ function SidebarContent({
   addNewPinnedNote: (slug: string) => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
 }) {
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
-    null
-  );
-  const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
-    setHighlightedIndex(0);
     setSearchQuery('');
     if (searchInputRef.current) {
-      searchInputRef.current.blur();
+      searchInputRef.current.value = '';
     }
-  }, []);
+  }, [searchInputRef]);
+
+  const handleKeyNavigation = useCallback((event: KeyboardEvent) => {
+    if (localSearchResults && localSearchResults.length > 0 && !isSearchInputFocused) {
+      if (event.key === 'j' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          (prevIndex + 1) % localSearchResults.length
+        );
+      } else if (event.key === 'k' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+        );
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        const selectedNote = localSearchResults[highlightedIndex];
+        router.push(`/${selectedNote.slug}`);
+        clearSearch();
+      }
+    }
+  }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (localSearchResults && localSearchResults.length > 0) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          const selectedNote = localSearchResults[highlightedIndex];
-          router.push(`/${selectedNote.slug}`);
-          clearSearch();
-        } else if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          setHighlightedIndex((prevIndex) =>
-            (prevIndex + 1) % localSearchResults.length
-          );
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          setHighlightedIndex((prevIndex) =>
-            (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
-          );
+      if (event.key === 'Escape') {
+        if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+          searchInputRef.current.blur();
+          setIsSearchInputFocused(false);
         }
+      } else {
+        handleKeyNavigation(event);
       }
     };
 
@@ -320,15 +327,11 @@ function SidebarContent({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [localSearchResults, highlightedIndex, router, clearSearch]);
+  }, [handleKeyNavigation, searchInputRef]);
 
   useEffect(() => {
     setHighlightedIndex(0);
   }, [localSearchResults]);
-
-  useEffect(() => {
-    clearSearch();
-  }, [pathname, clearSearch]);
 
   return (
     <div className="pt-4 px-2">
@@ -339,6 +342,8 @@ function SidebarContent({
         inputRef={searchInputRef}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        onFocus={() => setIsSearchInputFocused(true)}
+        onBlur={() => setIsSearchInputFocused(false)}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
@@ -363,8 +368,8 @@ function SidebarContent({
                       onNoteSelect={onNoteSelect}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
-                      isSwipeOpen={openSwipeItemId === item.id}
-                      setOpenSwipeItemId={setOpenSwipeItemId}
+                      isSwipeOpen={false}
+                      setOpenSwipeItemId={() => {}}
                       togglePinned={togglePinned}
                       isPinned={pinnedNotes.has(item.slug)}
                       isHighlighted={false}
@@ -387,8 +392,8 @@ function SidebarContent({
               onNoteSelect={onNoteSelect}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
-              isSwipeOpen={openSwipeItemId === item.id}
-              setOpenSwipeItemId={setOpenSwipeItemId}
+              isSwipeOpen={false}
+              setOpenSwipeItemId={() => {}}
               togglePinned={togglePinned}
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}

@@ -9,14 +9,18 @@ export default function SearchBar({
   sessionId, 
   inputRef,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  onFocus,
+  onBlur
 }: { 
   notes: Note[], 
   onSearchResults: (results: Note[] | null) => void, 
   sessionId: string,
   inputRef: RefObject<HTMLInputElement>,
   searchQuery: string,
-  setSearchQuery: (query: string) => void
+  setSearchQuery: (query: string) => void,
+  onFocus: () => void,
+  onBlur: () => void
 }) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -43,6 +47,8 @@ export default function SearchBar({
         type="text"
         value={searchQuery}
         onChange={(e) => handleSearch(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"
@@ -51,4 +57,4 @@ export default function SearchBar({
       />
     </div>
   );
-};
+}
