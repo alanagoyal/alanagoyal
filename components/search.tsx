@@ -1,35 +1,38 @@
-import { useState, useEffect, RefObject } from "react";
+import { RefObject } from "react";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
-import { searchNotes, Note } from "@/lib/search";
+import { Note } from "@/lib/search";
 
 export default function SearchBar({ 
   notes, 
   onSearchResults, 
   sessionId, 
-  inputRef 
+  inputRef,
+  searchQuery,
+  setSearchQuery
 }: { 
   notes: Note[], 
   onSearchResults: (results: Note[] | null) => void, 
   sessionId: string,
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement>,
+  searchQuery: string,
+  setSearchQuery: (query: string) => void
 }) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    onSearchResults(null);
-  }, [onSearchResults]);
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    
-    if (term.length > 0) {
-      const results = searchNotes(notes, term, sessionId);
-      onSearchResults(results);
-    } else {
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
       onSearchResults(null);
+      return;
     }
+
+    const filteredNotes = notes.filter(
+      (note) =>
+        (note.public || note.session_id === sessionId) &&
+        (note.title.toLowerCase().includes(query.toLowerCase()) ||
+          note.content.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    onSearchResults(filteredNotes);
   };
 
   return (
@@ -38,8 +41,8 @@ export default function SearchBar({
       <Input
         id="search"
         type="text"
-        value={searchTerm}
-        onChange={handleSearch}
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"

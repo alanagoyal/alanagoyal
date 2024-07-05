@@ -280,6 +280,55 @@ function SidebarContent({
     null
   );
   const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const clearSearch = useCallback(() => {
+    setLocalSearchResults(null);
+    setHighlightedIndex(0);
+    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (localSearchResults && localSearchResults.length > 0) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const selectedNote = localSearchResults[highlightedIndex];
+          router.push(`/${selectedNote.slug}`);
+          clearSearch();
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex + 1) % localSearchResults.length
+          );
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+          );
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [localSearchResults, highlightedIndex, router, clearSearch]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [localSearchResults]);
+
+  useEffect(() => {
+    clearSearch();
+  }, [pathname, clearSearch]);
 
   return (
     <div className="pt-4 px-2">
@@ -288,6 +337,8 @@ function SidebarContent({
         onSearchResults={setLocalSearchResults}
         sessionId={sessionId}
         inputRef={searchInputRef}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
@@ -316,6 +367,8 @@ function SidebarContent({
                       setOpenSwipeItemId={setOpenSwipeItemId}
                       togglePinned={togglePinned}
                       isPinned={pinnedNotes.has(item.slug)}
+                      isHighlighted={false}
+                      isSearching={false}
                     />
                   ))}
                 </ul>
@@ -325,7 +378,7 @@ function SidebarContent({
         </nav>
       ) : localSearchResults.length > 0 ? (
         <ul className="space-y-2">
-          {localSearchResults.map((item) => (
+          {localSearchResults.map((item, index) => (
             <NoteItem
               key={item.id}
               item={item}
@@ -338,6 +391,8 @@ function SidebarContent({
               setOpenSwipeItemId={setOpenSwipeItemId}
               togglePinned={togglePinned}
               isPinned={pinnedNotes.has(item.slug)}
+              isHighlighted={index === highlightedIndex}
+              isSearching={true}
             />
           ))}
         </ul>
@@ -359,6 +414,8 @@ function NoteItem({
   setOpenSwipeItemId,
   togglePinned,
   isPinned,
+  isHighlighted,
+  isSearching,
 }: {
   item: any;
   selectedNoteSlug: string | null;
@@ -370,6 +427,8 @@ function NoteItem({
   setOpenSwipeItemId: (id: string | null) => void;
   togglePinned: (slug: string) => void;
   isPinned: boolean;
+  isHighlighted: boolean;
+  isSearching: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -452,7 +511,9 @@ function NoteItem({
   const NoteContent = (
     <li
       className={`min-h-[50px] ${
-        item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
+        (isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+          ? "bg-[#9D7D28] rounded-md"
+          : ""
       }`}
       onClick={handleNoteClick}
     >
@@ -462,7 +523,9 @@ function NoteItem({
         </h2>
         <p
           className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-            item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
+            (isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+              ? "text-gray-300"
+              : "text-gray-400"
           }`}
         >
           <span className="text-white">
