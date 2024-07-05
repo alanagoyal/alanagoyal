@@ -7,7 +7,6 @@ import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
 import { useRouter, usePathname } from "next/navigation";
 import { CommandMenu } from "./command-menu";
-import SessionId from "./session-id";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -18,7 +17,6 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
-  const [sessionId, setSessionId] = useState("");
 
   useEffect(() => {
     if (isMobile === false && pathname === "/") {
@@ -55,8 +53,6 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
           </div>
           <div className="flex-grow overflow-y-auto h-screen">{children}</div>
           <Toaster />
-          <SessionId setSessionId={setSessionId} />
-          <CommandMenu notes={data} sessionId={sessionId} />
         </div>
       )}
     </>

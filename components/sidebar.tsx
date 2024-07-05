@@ -16,7 +16,8 @@ import {
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
-import { useSwipeable } from 'react-swipeable';
+import { useSwipeable } from "react-swipeable";
+import { CommandMenu } from "./command-menu";
 
 const labels = {
   pinned: (
@@ -51,39 +52,51 @@ export default function Sidebar({
   }, [pathname]);
 
   useEffect(() => {
-    const storedPinnedNotes = localStorage.getItem('pinnedNotes');
+    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
     if (storedPinnedNotes) {
       setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
     } else {
       const initialPinnedNotes = new Set(
-        notes.filter(note => 
-          note.slug === "about-me" || 
-          note.slug === "quick-links" || 
-          note.session_id === sessionId
-        ).map(note => note.slug)
+        notes
+          .filter(
+            (note) =>
+              note.slug === "about-me" ||
+              note.slug === "quick-links" ||
+              note.session_id === sessionId
+          )
+          .map((note) => note.slug)
       );
       setPinnedNotes(initialPinnedNotes);
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(initialPinnedNotes)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(initialPinnedNotes))
+      );
     }
   }, [notes, sessionId]);
 
   const togglePinned = useCallback((slug: string) => {
-    setPinnedNotes(prev => {
+    setPinnedNotes((prev) => {
       const newPinned = new Set(prev);
       if (newPinned.has(slug)) {
         newPinned.delete(slug);
       } else {
         newPinned.add(slug);
       }
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(newPinned))
+      );
       return newPinned;
     });
   }, []);
 
   const addNewPinnedNote = useCallback((slug: string) => {
-    setPinnedNotes(prev => {
+    setPinnedNotes((prev) => {
       const newPinned = new Set(prev).add(slug);
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(newPinned))
+      );
       return newPinned;
     });
   }, []);
@@ -149,44 +162,50 @@ export default function Sidebar({
   const router = useRouter();
 
   const flattenedNotes = useCallback(() => {
-    return categoryOrder.flatMap(category => 
+    return categoryOrder.flatMap((category) =>
       groupedNotes[category] ? groupedNotes[category] : []
     );
   }, [groupedNotes]);
 
-  const navigateNotes = useCallback((direction: 'up' | 'down') => {
-    const flattened = flattenedNotes();
-    const currentIndex = flattened.findIndex(note => note.slug === selectedNoteSlug);
-    let nextIndex;
+  const navigateNotes = useCallback(
+    (direction: "up" | "down") => {
+      const flattened = flattenedNotes();
+      const currentIndex = flattened.findIndex(
+        (note) => note.slug === selectedNoteSlug
+      );
+      let nextIndex;
 
-    if (direction === 'up') {
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-    } else {
-      nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-    }
+      if (direction === "up") {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+      } else {
+        nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
+      }
 
-    const nextNote = flattened[nextIndex];
-    if (nextNote) {
-      router.push(`/${nextNote.slug}`);
-    }
-  }, [flattenedNotes, selectedNoteSlug, router]);
+      const nextNote = flattened[nextIndex];
+      if (nextNote) {
+        router.push(`/${nextNote.slug}`);
+      }
+    },
+    [flattenedNotes, selectedNoteSlug, router]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const isTyping = target.isContentEditable || 
-                       target.tagName === 'INPUT' || 
-                       target.tagName === 'TEXTAREA' ||
-                       target.tagName === 'SELECT';
+      const isTyping =
+        target.isContentEditable ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT";
 
       if (!isTyping) {
-        if (event.key === 'j' && !event.metaKey) {
+        if (event.key === "j" && !event.metaKey) {
           event.preventDefault();
-          navigateNotes('down');
-        } else if (event.key === 'k' && !event.metaKey) {
+          navigateNotes("down");
+        } else if (event.key === "k" && !event.metaKey) {
           event.preventDefault();
-          navigateNotes('up');
-        } else if (event.key === 'p' && !event.metaKey) {
+          navigateNotes("up");
+        } else if (event.key === "p" && !event.metaKey) {
           event.preventDefault();
           if (selectedNoteSlug) {
             togglePinned(selectedNoteSlug);
@@ -205,6 +224,14 @@ export default function Sidebar({
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
+      <CommandMenu
+        notes={notes}
+        sessionId={sessionId}
+        addNewPinnedNote={addNewPinnedNote}
+        navigateNotes={navigateNotes}
+        togglePinned={togglePinned}
+        selectedNoteSlug={selectedNoteSlug}
+      />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
           groupedNotes={groupedNotes}
@@ -240,12 +267,18 @@ function SidebarContent({
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
 }) {
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
+    null
+  );
   const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
 
   return (
     <div className="pt-4 px-2">
-      <SearchBar notes={notes} onSearchResults={setLocalSearchResults} sessionId={sessionId} />
+      <SearchBar
+        notes={notes}
+        onSearchResults={setLocalSearchResults}
+        sessionId={sessionId}
+      />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
         <NewNote addNewPinnedNote={addNewPinnedNote} />
@@ -253,7 +286,8 @@ function SidebarContent({
       {localSearchResults === null ? (
         <nav>
           {categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] && groupedNotes[categoryKey].length > 0 ? (
+            groupedNotes[categoryKey] &&
+            groupedNotes[categoryKey].length > 0 ? (
               <section key={categoryKey}>
                 <h3 className="py-1 text-xs font-bold text-gray-400 ml-2">
                   {labels[categoryKey as keyof typeof labels]}
@@ -340,23 +374,26 @@ function NoteItem({
       }
     };
 
-    document.addEventListener('touchmove', preventDefault, { passive: false });
+    document.addEventListener("touchmove", preventDefault, { passive: false });
 
     return () => {
-      document.removeEventListener('touchmove', preventDefault);
+      document.removeEventListener("touchmove", preventDefault);
     };
   }, [isSwiping]);
 
   const handleDelete = async () => {
     try {
-      let nextRoute = '/';
+      let nextRoute = "/";
       if (!isMobile) {
-        const flattenedNotes = categoryOrder.flatMap(category => 
+        const flattenedNotes = categoryOrder.flatMap((category) =>
           groupedNotes[category] ? groupedNotes[category] : []
         );
-        const currentIndex = flattenedNotes.findIndex(note => note.slug === item.slug);
-        const nextNote = flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
-        nextRoute = nextNote ? `/${nextNote.slug}` : '/about-me';
+        const currentIndex = flattenedNotes.findIndex(
+          (note) => note.slug === item.slug
+        );
+        const nextNote =
+          flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
+        nextRoute = nextNote ? `/${nextNote.slug}` : "/about-me";
       }
 
       router.push(nextRoute);
@@ -413,9 +450,11 @@ function NoteItem({
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
           {item.emoji} {item.title}
         </h2>
-        <p className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-          item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
-        }`}>
+        <p
+          className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
+            item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
+          }`}
+        >
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
@@ -441,13 +480,10 @@ function NoteItem({
 
   if (isMobile) {
     return (
-      <div 
-        {...handlers} 
-        className="relative overflow-hidden"
-      >
+      <div {...handlers} className="relative overflow-hidden">
         <div
           className={`transition-transform duration-300 ease-out ${
-            isSwipeOpen ? 'transform -translate-x-24' : ''
+            isSwipeOpen ? "transform -translate-x-24" : ""
           }`}
         >
           {NoteContent}
@@ -472,8 +508,15 @@ function NoteItem({
           </ContextMenuItem>
           {item.session_id === sessionId && (
             <>
-              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">Edit</ContextMenuItem>
-              <ContextMenuItem onClick={handleDelete} className="cursor-pointer">Delete</ContextMenuItem>
+              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
+                Edit
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={handleDelete}
+                className="cursor-pointer"
+              >
+                Delete
+              </ContextMenuItem>
             </>
           )}
         </ContextMenuContent>
@@ -500,7 +543,9 @@ function SwipeActions({
   return (
     <div
       className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
       }`}
     >
       <button
