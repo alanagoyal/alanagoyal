@@ -518,7 +518,7 @@ function NoteItem({
   const NoteContent = (
     <li
       className={`min-h-[50px] ${
-        (isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+        (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
           ? "bg-[#9D7D28] rounded-md"
           : ""
       }`}
@@ -530,7 +530,7 @@ function NoteItem({
         </h2>
         <p
           className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-            (isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+            (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
               ? "text-gray-300"
               : "text-gray-400"
           }`}
