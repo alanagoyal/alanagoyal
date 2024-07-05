@@ -180,10 +180,10 @@ export default function Sidebar({
                        target.tagName === 'SELECT';
 
       if (!isTyping) {
-        if (event.key === 'k') {
+        if (event.key === 'j') {
           event.preventDefault();
           navigateNotes('down');
-        } else if (event.key === 'j') {
+        } else if (event.key === 'k') {
           event.preventDefault();
           navigateNotes('up');
         } else if (event.key === 'p') {
