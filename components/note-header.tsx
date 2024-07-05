@@ -81,7 +81,7 @@ export default function NoteHeader({
                   {note.emoji}
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
-                  Click to choose an emoji
+                  Select an emoji
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

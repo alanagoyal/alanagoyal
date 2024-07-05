@@ -146,6 +146,62 @@ export default function Sidebar({
     });
   }
 
+  const router = useRouter();
+
+  const flattenedNotes = useCallback(() => {
+    return categoryOrder.flatMap(category => 
+      groupedNotes[category] ? groupedNotes[category] : []
+    );
+  }, [groupedNotes]);
+
+  const navigateNotes = useCallback((direction: 'up' | 'down') => {
+    const flattened = flattenedNotes();
+    const currentIndex = flattened.findIndex(note => note.slug === selectedNoteSlug);
+    let nextIndex;
+
+    if (direction === 'up') {
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+    } else {
+      nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
+    }
+
+    const nextNote = flattened[nextIndex];
+    if (nextNote) {
+      router.push(`/${nextNote.slug}`);
+    }
+  }, [flattenedNotes, selectedNoteSlug, router]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const isTyping = target.isContentEditable || 
+                       target.tagName === 'INPUT' || 
+                       target.tagName === 'TEXTAREA' ||
+                       target.tagName === 'SELECT';
+
+      if (!isTyping) {
+        if (event.key === 'j') {
+          event.preventDefault();
+          navigateNotes('down');
+        } else if (event.key === 'k') {
+          event.preventDefault();
+          navigateNotes('up');
+        } else if (event.key === 'p') {
+          event.preventDefault();
+          if (selectedNoteSlug) {
+            togglePinned(selectedNoteSlug);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigateNotes, selectedNoteSlug, togglePinned]);
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
