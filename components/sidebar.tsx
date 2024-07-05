@@ -80,6 +80,14 @@ export default function Sidebar({
     });
   }, []);
 
+  const addNewPinnedNote = useCallback((slug: string) => {
+    setPinnedNotes(prev => {
+      const newPinned = new Set(prev).add(slug);
+      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
+      return newPinned;
+    });
+  }, []);
+
   const userSpecificNotes = notes.filter(
     (note) => note.public || note.session_id === sessionId
   );
@@ -150,6 +158,7 @@ export default function Sidebar({
           sessionId={sessionId}
           togglePinned={togglePinned}
           pinnedNotes={pinnedNotes}
+          addNewPinnedNote={addNewPinnedNote}
         />
       </div>
     </div>
@@ -164,6 +173,7 @@ function SidebarContent({
   sessionId,
   togglePinned,
   pinnedNotes,
+  addNewPinnedNote,
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
@@ -172,6 +182,7 @@ function SidebarContent({
   sessionId: string;
   togglePinned: (slug: string) => void;
   pinnedNotes: Set<string>;
+  addNewPinnedNote: (slug: string) => void;
 }) {
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
@@ -181,7 +192,7 @@ function SidebarContent({
       <SearchBar notes={notes} onSearchResults={setLocalSearchResults} sessionId={sessionId} />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
-        <NewNote />
+        <NewNote addNewPinnedNote={addNewPinnedNote} />
       </div>
       {localSearchResults === null ? (
         <nav>

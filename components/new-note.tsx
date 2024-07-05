@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import SessionId from "./session-id";
 
-export default function NewNote() {
+export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug: string) => void }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -44,10 +44,12 @@ export default function NewNote() {
           if (error) console.error("Error upserting note:", error);
         });
 
+      addNewPinnedNote(slug); 
+
     } catch (error) {
       console.error("Error creating note:", error);
     }
-  }, [note, router, supabase, slug]);
+  }, [note, router, supabase, slug, addNewPinnedNote]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
