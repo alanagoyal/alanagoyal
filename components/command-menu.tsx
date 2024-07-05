@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command"
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "./ui/command"
 import { DialogTitle, DialogDescription } from "./ui/dialog"
 import { useRouter } from "next/navigation"
+import { Icons } from "./icons"
+import { Pin, ArrowUp, ArrowDown } from "lucide-react";
 
 export function CommandMenu({ notes, sessionId }: { notes: any[], sessionId: string }) {
   const [open, setOpen] = useState(false)
@@ -49,9 +51,26 @@ export function CommandMenu({ notes, sessionId }: { notes: any[], sessionId: str
       <CommandList>
         <CommandEmpty>No results found</CommandEmpty>
         <CommandGroup heading="Commands">
-          <CommandItem>Create a note</CommandItem>
-          <CommandItem>Next note</CommandItem>
-          <CommandItem>Previous note</CommandItem>
+          <CommandItem>
+            <Icons.new />
+            <span className="ml-2">Create a note</span>
+            <CommandShortcut>N</CommandShortcut>
+          </CommandItem>
+          <CommandItem>
+            <Pin />
+            <span className="ml-2">Pin or unpin</span>
+            <CommandShortcut>P</CommandShortcut>
+          </CommandItem>
+          <CommandItem>
+            <ArrowUp />
+            <span className="ml-2">Move up</span>
+            <CommandShortcut>K</CommandShortcut>
+          </CommandItem>
+          <CommandItem>
+            <ArrowDown />
+            <span className="ml-2">Move down</span>
+            <CommandShortcut>J</CommandShortcut>
+          </CommandItem>
         </CommandGroup>
         {searchResults.length > 0 && (
           <CommandGroup heading="Search Results">
