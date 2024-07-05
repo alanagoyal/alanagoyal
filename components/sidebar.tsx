@@ -51,15 +51,20 @@ export default function Sidebar({
   }, [pathname]);
 
   useEffect(() => {
-    // Initialize pinned notes
-    const initialPinnedNotes = new Set(
-      notes.filter(note => 
-        note.slug === "about-me" || 
-        note.slug === "quick-links" || 
-        note.session_id === sessionId
-      ).map(note => note.slug)
-    );
-    setPinnedNotes(initialPinnedNotes);
+    const storedPinnedNotes = localStorage.getItem('pinnedNotes');
+    if (storedPinnedNotes) {
+      setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
+    } else {
+      const initialPinnedNotes = new Set(
+        notes.filter(note => 
+          note.slug === "about-me" || 
+          note.slug === "quick-links" || 
+          note.session_id === sessionId
+        ).map(note => note.slug)
+      );
+      setPinnedNotes(initialPinnedNotes);
+      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(initialPinnedNotes)));
+    }
   }, [notes, sessionId]);
 
   const togglePinned = useCallback((slug: string) => {
@@ -70,6 +75,7 @@ export default function Sidebar({
       } else {
         newPinned.add(slug);
       }
+      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
       return newPinned;
     });
   }, []);
