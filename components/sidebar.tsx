@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
@@ -45,6 +45,7 @@ export default function Sidebar({
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const slug = pathname.split("/").pop();
@@ -212,6 +213,9 @@ export default function Sidebar({
           if (selectedNoteSlug) {
             togglePinned(selectedNoteSlug);
           }
+        } else if (event.key === "/") {
+          event.preventDefault();
+          searchInputRef.current?.focus();
         }
       }
     };
@@ -244,6 +248,7 @@ export default function Sidebar({
           togglePinned={togglePinned}
           pinnedNotes={pinnedNotes}
           addNewPinnedNote={addNewPinnedNote}
+          searchInputRef={searchInputRef}
         />
       </div>
     </div>
@@ -259,6 +264,7 @@ function SidebarContent({
   togglePinned,
   pinnedNotes,
   addNewPinnedNote,
+  searchInputRef,
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
@@ -268,6 +274,7 @@ function SidebarContent({
   togglePinned: (slug: string) => void;
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
+  searchInputRef: React.RefObject<HTMLInputElement>;
 }) {
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
     null
@@ -280,6 +287,7 @@ function SidebarContent({
         notes={notes}
         onSearchResults={setLocalSearchResults}
         sessionId={sessionId}
+        inputRef={searchInputRef}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>

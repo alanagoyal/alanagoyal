@@ -1,9 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, RefObject } from "react";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { searchNotes, Note } from "@/lib/search";
 
-export default function SearchBar({ notes, onSearchResults, sessionId }: { notes: Note[], onSearchResults: (results: Note[] | null) => void, sessionId: string }) {
+export default function SearchBar({ 
+  notes, 
+  onSearchResults, 
+  sessionId, 
+  inputRef 
+}: { 
+  notes: Note[], 
+  onSearchResults: (results: Note[] | null) => void, 
+  sessionId: string,
+  inputRef: RefObject<HTMLInputElement>
+}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -34,6 +44,7 @@ export default function SearchBar({ notes, onSearchResults, sessionId }: { notes
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"
         autoComplete="off"
+        ref={inputRef}
       />
     </div>
   );
