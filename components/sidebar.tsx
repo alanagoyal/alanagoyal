@@ -184,15 +184,21 @@ export default function Sidebar({
         return newGroupedNotes;
       });
 
-      const allNotes = Object.values(groupedNotes).flat() as Note[];
+      const allNotes = flattenedNotes();
       const deletedNoteIndex = allNotes.findIndex((note) => note.slug === noteToDelete.slug);
-      const nextNote = allNotes[deletedNoteIndex - 1] || allNotes[deletedNoteIndex + 1];
+      
+      let nextNote;
+      if (deletedNoteIndex === 0) {
+        nextNote = allNotes[1];
+      } else {
+        nextNote = allNotes[deletedNoteIndex - 1];
+      }
       
       router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
     } catch (error) {
       console.error("Error deleting note:", error);
     }
-  }, [supabase, sessionId, groupedNotes, router]);
+  }, [supabase, sessionId, flattenedNotes, router]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
