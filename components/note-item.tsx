@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSwipeable } from "react-swipeable";
 import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
-import { SwipeActions } from './swipe-actions';
+import { SwipeActions } from "./swipe-actions";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,6 +23,8 @@ interface NoteItemProps {
   isPinned: boolean;
   isHighlighted: boolean;
   isSearching: boolean;
+  onNoteDelete: (slug: string) => void;
+  router: any;
 }
 
 export function NoteItem({
@@ -36,8 +38,9 @@ export function NoteItem({
   isPinned,
   isHighlighted,
   isSearching,
+  onNoteDelete,
+  router,
 }: NoteItemProps) {
-  const router = useRouter();
   const supabase = createClient();
   const isMobile = useMobileDetect();
 
@@ -58,7 +61,7 @@ export function NoteItem({
     };
   }, [isSwiping]);
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     try {
       let nextRoute = "/";
       if (!isMobile) {
@@ -73,22 +76,18 @@ export function NoteItem({
         nextRoute = nextNote ? `/${nextNote.slug}` : "/about-me";
       }
 
+      onNoteDelete(item.slug);
+      setIsSwipeOpen(false);
+
       router.push(nextRoute);
 
-      const { error } = await supabase
+      supabase
         .from("notes")
         .delete()
         .eq("slug", item.slug)
         .eq("session_id", sessionId);
-
-      if (error) {
-        throw error;
-      }
-
-      setIsSwipeOpen(false);
-      router.refresh();
     } catch (error) {
-      console.error("Error deleting note:", error);
+      console.error("Error in handleDelete:", error);
     }
   };
 
@@ -119,7 +118,8 @@ export function NoteItem({
   const NoteContent = (
     <li
       className={`min-h-[50px] ${
-        (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+        (!isMobile && isSearching && isHighlighted) ||
+        (!isSearching && item.slug === selectedNoteSlug)
           ? "bg-[#9D7D28] rounded-md"
           : ""
       }`}
@@ -131,7 +131,8 @@ export function NoteItem({
         </h2>
         <p
           className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-            (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+            (!isMobile && isSearching && isHighlighted) ||
+            (!isSearching && item.slug === selectedNoteSlug)
               ? "text-gray-300"
               : "text-gray-400"
           }`}
@@ -153,55 +154,55 @@ export function NoteItem({
       setIsSwiping(false);
     },
     onSwipedRight: () => {
-        setIsSwipeOpen(false);
-        setIsSwiping(false);
-      },
-      trackMouse: true,
-    });
-  
-    if (isMobile) {
-      return (
-        <div {...handlers} className="relative overflow-hidden">
-          <div
-            className={`transition-transform duration-300 ease-out ${
-              isSwipeOpen ? "transform -translate-x-24" : ""
-            }`}
-          >
-            {NoteContent}
-          </div>
-          <SwipeActions
-            isOpen={isSwipeOpen}
-            onPin={() => handleSwipeAction(handlePinToggle)}
-            onEdit={() => handleSwipeAction(handleEdit)}
-            onDelete={() => handleSwipeAction(handleDelete)}
-            isPinned={isPinned}
-            canEditOrDelete={canEditOrDelete}
-          />
+      setIsSwipeOpen(false);
+      setIsSwiping(false);
+    },
+    trackMouse: true,
+  });
+
+  if (isMobile) {
+    return (
+      <div {...handlers} className="relative overflow-hidden">
+        <div
+          className={`transition-transform duration-300 ease-out ${
+            isSwipeOpen ? "transform -translate-x-24" : ""
+          }`}
+        >
+          {NoteContent}
         </div>
-      );
-    } else {
-      return (
-        <ContextMenu>
-          <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem onClick={handlePinToggle} className="cursor-pointer">
-              {isPinned ? "Unpin" : "Pin"}
-            </ContextMenuItem>
-            {item.session_id === sessionId && (
-              <>
-                <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
-                  Edit
-                </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={handleDelete}
-                  className="cursor-pointer"
-                >
-                  Delete
-                </ContextMenuItem>
-              </>
-            )}
-          </ContextMenuContent>
-        </ContextMenu>
-      );
-    }
+        <SwipeActions
+          isOpen={isSwipeOpen}
+          onPin={() => handleSwipeAction(handlePinToggle)}
+          onEdit={() => handleSwipeAction(handleEdit)}
+          onDelete={() => handleSwipeAction(handleDelete)}
+          isPinned={isPinned}
+          canEditOrDelete={canEditOrDelete}
+        />
+      </div>
+    );
+  } else {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handlePinToggle} className="cursor-pointer">
+            {isPinned ? "Unpin" : "Pin"}
+          </ContextMenuItem>
+          {item.session_id === sessionId && (
+            <>
+              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
+                Edit
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={handleDelete}
+                className="cursor-pointer"
+              >
+                Delete
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+    );
   }
+}

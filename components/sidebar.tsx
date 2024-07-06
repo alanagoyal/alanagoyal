@@ -38,6 +38,8 @@ export default function Sidebar({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [groupedNotes, setGroupedNotes] = useState<any>({});
+  const router = useRouter();
 
   useEffect(() => {
     if (pathname) {
@@ -69,6 +71,15 @@ export default function Sidebar({
     }
   }, [notes, sessionId]);
 
+  useEffect(() => {
+    const userSpecificNotes = notes.filter(
+      (note) => note.public || note.session_id === sessionId
+    );
+    const grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
+    sortGroupedNotes(grouped);
+    setGroupedNotes(grouped);
+  }, [notes, sessionId, pinnedNotes]);
+
   const togglePinned = useCallback((slug: string) => {
     setPinnedNotes((prev) => {
       const newPinned = new Set(prev);
@@ -95,14 +106,6 @@ export default function Sidebar({
       return newPinned;
     });
   }, []);
-
-  const userSpecificNotes = notes.filter(
-    (note) => note.public || note.session_id === sessionId
-  );
-  const groupedNotes = groupNotesByCategory(userSpecificNotes, pinnedNotes);
-  sortGroupedNotes(groupedNotes);
-
-  const router = useRouter();
 
   const flattenedNotes = useCallback(() => {
     return categoryOrder.flatMap((category) =>
@@ -197,6 +200,7 @@ export default function Sidebar({
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
           groupedNotes={groupedNotes}
+          setGroupedNotes={setGroupedNotes}
           selectedNoteSlug={selectedNoteSlug}
           onNoteSelect={onNoteSelect}
           notes={notes}

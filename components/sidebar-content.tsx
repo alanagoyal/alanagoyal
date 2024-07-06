@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { NoteItem } from './note-item';
+import { createClient } from "@/utils/supabase/client";
 
 interface SidebarContentProps {
   groupedNotes: any;
@@ -20,6 +21,7 @@ interface SidebarContentProps {
   setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>;
   categoryOrder: string[];
   labels: Record<string, React.ReactNode>;
+  setGroupedNotes: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export function SidebarContent({
@@ -38,6 +40,7 @@ export function SidebarContent({
   setHighlightedIndex,
   categoryOrder,
   labels,
+  setGroupedNotes,
 }: SidebarContentProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
@@ -97,6 +100,24 @@ export function SidebarContent({
     setHighlightedIndex(0);
   }, [localSearchResults, setHighlightedIndex]);
 
+  const onNoteDelete = useCallback((slugToDelete: string) => {
+    setGroupedNotes((prevGroupedNotes: any) => {
+      const newGroupedNotes = { ...prevGroupedNotes };
+      for (const category in newGroupedNotes) {
+        newGroupedNotes[category] = newGroupedNotes[category].filter(
+          (note: any) => note.slug !== slugToDelete
+        );
+      }
+      return newGroupedNotes;
+    });
+
+    if (localSearchResults) {
+      setLocalSearchResults((prevResults) =>
+        prevResults ? prevResults.filter((note) => note.slug !== slugToDelete) : null
+      );
+    }
+  }, [setGroupedNotes, localSearchResults, setLocalSearchResults]);
+
   return (
     <div className="pt-4 px-2">
       <SearchBar
@@ -136,6 +157,8 @@ export function SidebarContent({
                       isPinned={pinnedNotes.has(item.slug)}
                       isHighlighted={false}
                       isSearching={false}
+                      onNoteDelete={onNoteDelete}
+                      router={router}
                     />
                   ))}
                 </ul>
@@ -158,6 +181,8 @@ export function SidebarContent({
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}
               isSearching={true}
+              onNoteDelete={onNoteDelete}
+              router={router}
             />
           ))}
         </ul>
