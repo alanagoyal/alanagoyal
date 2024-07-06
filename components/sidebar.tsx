@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
@@ -16,7 +16,8 @@ import {
 } from "./ui/context-menu";
 import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
-import { useSwipeable } from 'react-swipeable';
+import { useSwipeable } from "react-swipeable";
+import { CommandMenu } from "./command-menu";
 
 const labels = {
   pinned: (
@@ -44,6 +45,9 @@ export default function Sidebar({
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   useEffect(() => {
     const slug = pathname.split("/").pop();
@@ -51,39 +55,51 @@ export default function Sidebar({
   }, [pathname]);
 
   useEffect(() => {
-    const storedPinnedNotes = localStorage.getItem('pinnedNotes');
+    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
     if (storedPinnedNotes) {
       setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
     } else {
       const initialPinnedNotes = new Set(
-        notes.filter(note => 
-          note.slug === "about-me" || 
-          note.slug === "quick-links" || 
-          note.session_id === sessionId
-        ).map(note => note.slug)
+        notes
+          .filter(
+            (note) =>
+              note.slug === "about-me" ||
+              note.slug === "quick-links" ||
+              note.session_id === sessionId
+          )
+          .map((note) => note.slug)
       );
       setPinnedNotes(initialPinnedNotes);
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(initialPinnedNotes)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(initialPinnedNotes))
+      );
     }
   }, [notes, sessionId]);
 
   const togglePinned = useCallback((slug: string) => {
-    setPinnedNotes(prev => {
+    setPinnedNotes((prev) => {
       const newPinned = new Set(prev);
       if (newPinned.has(slug)) {
         newPinned.delete(slug);
       } else {
         newPinned.add(slug);
       }
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(newPinned))
+      );
       return newPinned;
     });
   }, []);
 
   const addNewPinnedNote = useCallback((slug: string) => {
-    setPinnedNotes(prev => {
+    setPinnedNotes((prev) => {
       const newPinned = new Set(prev).add(slug);
-      localStorage.setItem('pinnedNotes', JSON.stringify(Array.from(newPinned)));
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(newPinned))
+      );
       return newPinned;
     });
   }, []);
@@ -149,48 +165,73 @@ export default function Sidebar({
   const router = useRouter();
 
   const flattenedNotes = useCallback(() => {
-    return categoryOrder.flatMap(category => 
+    return categoryOrder.flatMap((category) =>
       groupedNotes[category] ? groupedNotes[category] : []
     );
   }, [groupedNotes]);
 
-  const navigateNotes = useCallback((direction: 'up' | 'down') => {
-    const flattened = flattenedNotes();
-    const currentIndex = flattened.findIndex(note => note.slug === selectedNoteSlug);
-    let nextIndex;
+  const navigateNotes = useCallback(
+    (direction: "up" | "down") => {
+      if (!localSearchResults) {
+        const flattened = flattenedNotes();
+        const currentIndex = flattened.findIndex(
+          (note) => note.slug === selectedNoteSlug
+        );
+        let nextIndex;
 
-    if (direction === 'up') {
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-    } else {
-      nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-    }
+        if (direction === "up") {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+        } else {
+          nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
+        }
 
-    const nextNote = flattened[nextIndex];
-    if (nextNote) {
-      router.push(`/${nextNote.slug}`);
-    }
-  }, [flattenedNotes, selectedNoteSlug, router]);
+        const nextNote = flattened[nextIndex];
+        if (nextNote) {
+          router.push(`/${nextNote.slug}`);
+        }
+      }
+    },
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const isTyping = target.isContentEditable || 
-                       target.tagName === 'INPUT' || 
-                       target.tagName === 'TEXTAREA' ||
-                       target.tagName === 'SELECT';
+      const isTyping =
+        target.isContentEditable ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT";
 
-      if (!isTyping) {
-        if (event.key === 'j') {
+      if (isTyping && event.key === "Escape") {
+        (target as HTMLElement).blur();
+      } else if (!isTyping) {
+        if (event.key === "j" && !event.metaKey) {
           event.preventDefault();
-          navigateNotes('down');
-        } else if (event.key === 'k') {
+          if (localSearchResults) {
+            setHighlightedIndex((prevIndex) =>
+              (prevIndex + 1) % localSearchResults.length
+            );
+          } else {
+            navigateNotes("down");
+          }
+        } else if (event.key === "k" && !event.metaKey) {
           event.preventDefault();
-          navigateNotes('up');
-        } else if (event.key === 'p') {
+          if (localSearchResults) {
+            setHighlightedIndex((prevIndex) =>
+              (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+            );
+          } else {
+            navigateNotes("up");
+          }
+        } else if (event.key === "p" && !event.metaKey) {
           event.preventDefault();
           if (selectedNoteSlug) {
             togglePinned(selectedNoteSlug);
           }
+        } else if (event.key === "/") {
+          event.preventDefault();
+          searchInputRef.current?.focus();
         }
       }
     };
@@ -200,11 +241,19 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNoteSlug, togglePinned]);
+  }, [navigateNotes, selectedNoteSlug, togglePinned, localSearchResults, setHighlightedIndex]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
+      <CommandMenu
+        notes={notes}
+        sessionId={sessionId}
+        addNewPinnedNote={addNewPinnedNote}
+        navigateNotes={navigateNotes}
+        togglePinned={togglePinned}
+        selectedNoteSlug={selectedNoteSlug}
+      />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
           groupedNotes={groupedNotes}
@@ -215,6 +264,11 @@ export default function Sidebar({
           togglePinned={togglePinned}
           pinnedNotes={pinnedNotes}
           addNewPinnedNote={addNewPinnedNote}
+          searchInputRef={searchInputRef}
+          localSearchResults={localSearchResults}
+          setLocalSearchResults={setLocalSearchResults}
+          highlightedIndex={highlightedIndex}
+          setHighlightedIndex={setHighlightedIndex}
         />
       </div>
     </div>
@@ -230,6 +284,11 @@ function SidebarContent({
   togglePinned,
   pinnedNotes,
   addNewPinnedNote,
+  searchInputRef,
+  localSearchResults,
+  setLocalSearchResults,
+  highlightedIndex,
+  setHighlightedIndex,
 }: {
   groupedNotes: any;
   selectedNoteSlug: string | null;
@@ -239,13 +298,81 @@ function SidebarContent({
   togglePinned: (slug: string) => void;
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
+  searchInputRef: React.RefObject<HTMLInputElement>;
+  localSearchResults: any[] | null;
+  setLocalSearchResults: React.Dispatch<React.SetStateAction<any[] | null>>;
+  highlightedIndex: number;
+  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>;
 }) {
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
-  const [openSwipeItemId, setOpenSwipeItemId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
+  const router = useRouter();
+
+  const clearSearch = useCallback(() => {
+    setLocalSearchResults(null);
+    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
+  }, [searchInputRef, setLocalSearchResults]);
+
+  const handleKeyNavigation = useCallback((event: KeyboardEvent) => {
+    if (localSearchResults && localSearchResults.length > 0) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const selectedNote = localSearchResults[highlightedIndex];
+        router.push(`/${selectedNote.slug}`);
+        clearSearch();
+      } else if (!isSearchInputFocused) {
+        if (event.key === 'j' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex + 1) % localSearchResults.length
+          );
+        } else if (event.key === 'k' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          setHighlightedIndex((prevIndex) =>
+            (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+          );
+        }
+      }
+    }
+  }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch, setHighlightedIndex]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+          searchInputRef.current.blur();
+          setIsSearchInputFocused(false);
+        }
+      } else {
+        handleKeyNavigation(event);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyNavigation, searchInputRef, setIsSearchInputFocused]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [localSearchResults, setHighlightedIndex]);
 
   return (
     <div className="pt-4 px-2">
-      <SearchBar notes={notes} onSearchResults={setLocalSearchResults} sessionId={sessionId} />
+      <SearchBar
+        notes={notes}
+        onSearchResults={setLocalSearchResults}
+        sessionId={sessionId}
+        inputRef={searchInputRef}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onFocus={() => setIsSearchInputFocused(true)}
+        onBlur={() => setIsSearchInputFocused(false)}
+      />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
         <NewNote addNewPinnedNote={addNewPinnedNote} />
@@ -253,7 +380,8 @@ function SidebarContent({
       {localSearchResults === null ? (
         <nav>
           {categoryOrder.map((categoryKey) =>
-            groupedNotes[categoryKey] && groupedNotes[categoryKey].length > 0 ? (
+            groupedNotes[categoryKey] &&
+            groupedNotes[categoryKey].length > 0 ? (
               <section key={categoryKey}>
                 <h3 className="py-1 text-xs font-bold text-gray-400 ml-2">
                   {labels[categoryKey as keyof typeof labels]}
@@ -268,10 +396,10 @@ function SidebarContent({
                       onNoteSelect={onNoteSelect}
                       groupedNotes={groupedNotes}
                       categoryOrder={categoryOrder}
-                      isSwipeOpen={openSwipeItemId === item.id}
-                      setOpenSwipeItemId={setOpenSwipeItemId}
                       togglePinned={togglePinned}
                       isPinned={pinnedNotes.has(item.slug)}
+                      isHighlighted={false}
+                      isSearching={false}
                     />
                   ))}
                 </ul>
@@ -281,7 +409,7 @@ function SidebarContent({
         </nav>
       ) : localSearchResults.length > 0 ? (
         <ul className="space-y-2">
-          {localSearchResults.map((item) => (
+          {localSearchResults.map((item, index) => (
             <NoteItem
               key={item.id}
               item={item}
@@ -290,10 +418,10 @@ function SidebarContent({
               onNoteSelect={onNoteSelect}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
-              isSwipeOpen={openSwipeItemId === item.id}
-              setOpenSwipeItemId={setOpenSwipeItemId}
               togglePinned={togglePinned}
               isPinned={pinnedNotes.has(item.slug)}
+              isHighlighted={index === highlightedIndex}
+              isSearching={true}
             />
           ))}
         </ul>
@@ -311,10 +439,10 @@ function NoteItem({
   onNoteSelect,
   groupedNotes,
   categoryOrder,
-  isSwipeOpen,
-  setOpenSwipeItemId,
   togglePinned,
   isPinned,
+  isHighlighted,
+  isSearching,
 }: {
   item: any;
   selectedNoteSlug: string | null;
@@ -322,16 +450,17 @@ function NoteItem({
   onNoteSelect: (note: any) => void;
   groupedNotes: any;
   categoryOrder: string[];
-  isSwipeOpen: boolean;
-  setOpenSwipeItemId: (id: string | null) => void;
   togglePinned: (slug: string) => void;
   isPinned: boolean;
+  isHighlighted: boolean;
+  isSearching: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
   const isMobile = useMobileDetect();
 
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -340,23 +469,26 @@ function NoteItem({
       }
     };
 
-    document.addEventListener('touchmove', preventDefault, { passive: false });
+    document.addEventListener("touchmove", preventDefault, { passive: false });
 
     return () => {
-      document.removeEventListener('touchmove', preventDefault);
+      document.removeEventListener("touchmove", preventDefault);
     };
   }, [isSwiping]);
 
   const handleDelete = async () => {
     try {
-      let nextRoute = '/';
+      let nextRoute = "/";
       if (!isMobile) {
-        const flattenedNotes = categoryOrder.flatMap(category => 
+        const flattenedNotes = categoryOrder.flatMap((category) =>
           groupedNotes[category] ? groupedNotes[category] : []
         );
-        const currentIndex = flattenedNotes.findIndex(note => note.slug === item.slug);
-        const nextNote = flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
-        nextRoute = nextNote ? `/${nextNote.slug}` : '/about-me';
+        const currentIndex = flattenedNotes.findIndex(
+          (note) => note.slug === item.slug
+        );
+        const nextNote =
+          flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
+        nextRoute = nextNote ? `/${nextNote.slug}` : "/about-me";
       }
 
       router.push(nextRoute);
@@ -371,7 +503,7 @@ function NoteItem({
         throw error;
       }
 
-      setOpenSwipeItemId(null);
+      setIsSwipeOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -379,13 +511,13 @@ function NoteItem({
   };
 
   const handleEdit = () => {
-    setOpenSwipeItemId(null);
+    setIsSwipeOpen(false);
     router.push(`/${item.slug}`);
   };
 
   const handlePinToggle = () => {
     togglePinned(item.slug);
-    setOpenSwipeItemId(null);
+    setIsSwipeOpen(false);
   };
 
   const canEditOrDelete = item.session_id === sessionId;
@@ -405,7 +537,9 @@ function NoteItem({
   const NoteContent = (
     <li
       className={`min-h-[50px] ${
-        item.slug === selectedNoteSlug ? "bg-[#9D7D28] rounded-md" : ""
+        (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+          ? "bg-[#9D7D28] rounded-md"
+          : ""
       }`}
       onClick={handleNoteClick}
     >
@@ -413,9 +547,13 @@ function NoteItem({
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
           {item.emoji} {item.title}
         </h2>
-        <p className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-          item.slug === selectedNoteSlug ? "text-gray-300" : "text-gray-400"
-        }`}>
+        <p
+          className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
+            (!isMobile && isSearching && isHighlighted) || (!isSearching && item.slug === selectedNoteSlug)
+              ? "text-gray-300"
+              : "text-gray-400"
+          }`}
+        >
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
@@ -429,11 +567,11 @@ function NoteItem({
     onSwipeStart: () => setIsSwiping(true),
     onSwiped: () => setIsSwiping(false),
     onSwipedLeft: () => {
-      setOpenSwipeItemId(item.id);
+      setIsSwipeOpen(true);
       setIsSwiping(false);
     },
     onSwipedRight: () => {
-      setOpenSwipeItemId(null);
+      setIsSwipeOpen(false);
       setIsSwiping(false);
     },
     trackMouse: true,
@@ -441,13 +579,10 @@ function NoteItem({
 
   if (isMobile) {
     return (
-      <div 
-        {...handlers} 
-        className="relative overflow-hidden"
-      >
+      <div {...handlers} className="relative overflow-hidden">
         <div
           className={`transition-transform duration-300 ease-out ${
-            isSwipeOpen ? 'transform -translate-x-24' : ''
+            isSwipeOpen ? "transform -translate-x-24" : ""
           }`}
         >
           {NoteContent}
@@ -472,8 +607,15 @@ function NoteItem({
           </ContextMenuItem>
           {item.session_id === sessionId && (
             <>
-              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">Edit</ContextMenuItem>
-              <ContextMenuItem onClick={handleDelete} className="cursor-pointer">Delete</ContextMenuItem>
+              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
+                Edit
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={handleDelete}
+                className="cursor-pointer"
+              >
+                Delete
+              </ContextMenuItem>
             </>
           )}
         </ContextMenuContent>
@@ -500,7 +642,9 @@ function SwipeActions({
   return (
     <div
       className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
       }`}
     >
       <button

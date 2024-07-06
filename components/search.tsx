@@ -1,28 +1,42 @@
-import { useState, useEffect } from "react";
+import { RefObject } from "react";
 import { Input } from "./ui/input";
-import { Search } from "lucide-react"; 
+import { Search } from "lucide-react";
+import { Note } from "@/lib/search";
 
-export default function SearchBar({ notes, onSearchResults, sessionId }: { notes: any[], onSearchResults: (results: any[] | null) => void, sessionId: string }) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    onSearchResults(null);
-  }, [onSearchResults]);
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    
-    if (term.length > 0) {
-      const results = notes.filter(note =>
-        (note.public || note.sessionId === sessionId) &&
-        (note.title.toLowerCase().includes(term.toLowerCase()) ||
-         note.content.toLowerCase().includes(term.toLowerCase()))
-      );
-      onSearchResults(results);
-    } else {
+export default function SearchBar({ 
+  notes, 
+  onSearchResults, 
+  sessionId, 
+  inputRef,
+  searchQuery,
+  setSearchQuery,
+  onFocus,
+  onBlur
+}: { 
+  notes: Note[], 
+  onSearchResults: (results: Note[] | null) => void, 
+  sessionId: string,
+  inputRef: RefObject<HTMLInputElement>,
+  searchQuery: string,
+  setSearchQuery: (query: string) => void,
+  onFocus: () => void,
+  onBlur: () => void
+}) {
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
       onSearchResults(null);
+      return;
     }
+
+    const filteredNotes = notes.filter(
+      (note) =>
+        (note.public || note.session_id === sessionId) &&
+        (note.title.toLowerCase().includes(query.toLowerCase()) ||
+          note.content.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    onSearchResults(filteredNotes);
   };
 
   return (
@@ -31,13 +45,16 @@ export default function SearchBar({ notes, onSearchResults, sessionId }: { notes
       <Input
         id="search"
         type="text"
-        value={searchTerm}
-        onChange={handleSearch}
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
         aria-label="Search notes"
         autoComplete="off"
+        ref={inputRef}
       />
     </div>
   );
-};
+}
