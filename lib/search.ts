@@ -1,14 +1,6 @@
-export interface Note {
-    id: string;
-    slug: string;
-    title: string;
-    content: string;
-    public: boolean;
-    session_id: string;
-    emoji?: string;
-  }
-  
-  export function searchNotes(notes: Note[], searchTerm: string, sessionId: string): Note[] {
+import { Note } from "./types";
+
+export function searchNotes(notes: Note[], searchTerm: string, sessionId: string): Note[] {
     const searchLower = searchTerm.toLowerCase();
     
     return notes.filter((note) => {

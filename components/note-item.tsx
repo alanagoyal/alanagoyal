@@ -11,19 +11,21 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
+import { Note } from '@/lib/types';
 
 interface NoteItemProps {
-  item: any;
+  item: Note;
   selectedNoteSlug: string | null;
   sessionId: string;
-  onNoteSelect: (note: any) => void;
-  groupedNotes: any;
+  onNoteSelect: (note: Note) => void;
+  groupedNotes: Record<string, Note[]>;
   categoryOrder: string[];
   togglePinned: (slug: string) => void;
   isPinned: boolean;
   isHighlighted: boolean;
   isSearching: boolean;
   onNoteDelete: (slug: string) => void;
+  onNoteEdit: (slug: string) => void;
   router: any;
 }
 
@@ -39,6 +41,7 @@ export function NoteItem({
   isHighlighted,
   isSearching,
   onNoteDelete,
+  onNoteEdit,
   router,
 }: NoteItemProps) {
   const supabase = createClient();
@@ -61,7 +64,7 @@ export function NoteItem({
     };
   }, [isSwiping]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     try {
       let nextRoute = "/";
       if (!isMobile) {
@@ -76,29 +79,33 @@ export function NoteItem({
         nextRoute = nextNote ? `/${nextNote.slug}` : "/about-me";
       }
 
-      onNoteDelete(item.slug);
-      setIsSwipeOpen(false);
-
-      router.push(nextRoute);
-
-      supabase
+      const { error } = await supabase
         .from("notes")
         .delete()
         .eq("slug", item.slug)
         .eq("session_id", sessionId);
+
+      if (error) {
+        throw error;
+      }
+
+      onNoteDelete(item.slug);
+      setIsSwipeOpen(false);
+      router.push(nextRoute);
     } catch (error) {
-      console.error("Error in handleDelete:", error);
+      console.error("Error deleting note:", error);
     }
   };
 
   const handleEdit = () => {
     setIsSwipeOpen(false);
-    router.push(`/${item.slug}`);
+    onNoteEdit(item.slug);
   };
 
   const handlePinToggle = () => {
     togglePinned(item.slug);
     setIsSwipeOpen(false);
+    router.push(`/${item.slug}`);
   };
 
   const canEditOrDelete = item.session_id === sessionId;

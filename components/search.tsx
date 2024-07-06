@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
-import { Note } from "@/lib/search";
+import { Note } from "@/lib/types";
 
 export default function SearchBar({ 
   notes, 
