@@ -8,6 +8,10 @@ import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from './sidebar-content';
 import { groupNotesByCategory, sortGroupedNotes } from '@/lib/note-utils';
+import { createClient } from "@/utils/supabase/client";
+import { Note } from "@/lib/types";
+import { describe } from "node:test";
+import { toast } from "./ui/use-toast";
 
 const labels = {
   pinned: (
@@ -27,9 +31,11 @@ const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 export default function Sidebar({
   notes,
   onNoteSelect,
+  isMobile,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
+  isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -38,11 +44,26 @@ export default function Sidebar({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [groupedNotes, setGroupedNotes] = useState<any>({});
+  const router = useRouter();
+  const supabase = createClient();
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   useEffect(() => {
-    const slug = pathname.split("/").pop();
-    setSelectedNoteSlug(slug || null);
+    if (pathname) {
+      const slug = pathname.split("/").pop();
+      setSelectedNoteSlug(slug || null);
+    }
   }, [pathname]);
+
+  useEffect(() => {
+    if (selectedNoteSlug) {
+      const note = notes.find(note => note.slug === selectedNoteSlug);
+      setSelectedNote(note || null);
+    } else {
+      setSelectedNote(null);
+    }
+  }, [selectedNoteSlug, notes]);
 
   useEffect(() => {
     const storedPinnedNotes = localStorage.getItem("pinnedNotes");
@@ -66,6 +87,15 @@ export default function Sidebar({
       );
     }
   }, [notes, sessionId]);
+
+  useEffect(() => {
+    const userSpecificNotes = notes.filter(
+      (note) => note.public || note.session_id === sessionId
+    );
+    const grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
+    sortGroupedNotes(grouped);
+    setGroupedNotes(grouped);
+  }, [notes, sessionId, pinnedNotes]);
 
   const togglePinned = useCallback((slug: string) => {
     setPinnedNotes((prev) => {
@@ -94,14 +124,6 @@ export default function Sidebar({
     });
   }, []);
 
-  const userSpecificNotes = notes.filter(
-    (note) => note.public || note.session_id === sessionId
-  );
-  const groupedNotes = groupNotesByCategory(userSpecificNotes, pinnedNotes);
-  sortGroupedNotes(groupedNotes);
-
-  const router = useRouter();
-
   const flattenedNotes = useCallback(() => {
     return categoryOrder.flatMap((category) =>
       groupedNotes[category] ? groupedNotes[category] : []
@@ -110,27 +132,80 @@ export default function Sidebar({
 
   const navigateNotes = useCallback(
     (direction: "up" | "down") => {
-      if (!localSearchResults) {
-        const flattened = flattenedNotes();
-        const currentIndex = flattened.findIndex(
-          (note) => note.slug === selectedNoteSlug
-        );
-        let nextIndex;
+    if (!localSearchResults) {
+      const flattened = flattenedNotes();
+      const currentIndex = flattened.findIndex(
+        (note) => note.slug === selectedNoteSlug
+      );
+      let nextIndex;
 
-        if (direction === "up") {
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-        } else {
-          nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-        }
-
-        const nextNote = flattened[nextIndex];
-        if (nextNote) {
-          router.push(`/${nextNote.slug}`);
-        }
+      if (direction === "up") {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+      } else {
+        nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
       }
-    },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+
+      const nextNote = flattened[nextIndex];
+      if (nextNote) {
+        router.push(`/${nextNote.slug}`);
+      }
+    }
+  },
+  [flattenedNotes, selectedNoteSlug, router, localSearchResults]
   );
+
+  const handlePinToggle = useCallback((slug: string) => {
+    togglePinned(slug);
+    if (!isMobile) {
+      router.push(`/${slug}`);
+    }
+  }, [togglePinned, router, isMobile]);
+
+  const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
+    if (noteToDelete.public) {
+      toast({
+        description: "Oops! You can't delete that note",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("slug", noteToDelete.slug)
+        .eq("session_id", sessionId);
+
+      if (error) throw error;
+
+      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
+        const newGroupedNotes = { ...prevGroupedNotes };
+        for (const category in newGroupedNotes) {
+          newGroupedNotes[category] = newGroupedNotes[category].filter(
+            (note: Note) => note.slug !== noteToDelete.slug
+          );
+        }
+        return newGroupedNotes;
+      });
+
+      const allNotes = flattenedNotes();
+      const deletedNoteIndex = allNotes.findIndex((note) => note.slug === noteToDelete.slug);
+      
+      let nextNote;
+      if (deletedNoteIndex === 0) {
+        nextNote = allNotes[1];
+      } else {
+        nextNote = allNotes[deletedNoteIndex - 1];
+      }
+      
+      if (!isMobile) {
+        router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  }, [supabase, sessionId, flattenedNotes, router, isMobile]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -165,7 +240,12 @@ export default function Sidebar({
         } else if (event.key === "p" && !event.metaKey) {
           event.preventDefault();
           if (selectedNoteSlug) {
-            togglePinned(selectedNoteSlug);
+            handlePinToggle(selectedNoteSlug);
+          }
+        } else if (event.key === "d" && !event.metaKey) {
+          event.preventDefault();
+          if (selectedNote) {
+            handleNoteDelete(selectedNote);
           }
         } else if (event.key === "/") {
           event.preventDefault();
@@ -179,7 +259,7 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNoteSlug, togglePinned, localSearchResults, setHighlightedIndex]);
+  }, [navigateNotes, selectedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -191,15 +271,18 @@ export default function Sidebar({
         navigateNotes={navigateNotes}
         togglePinned={togglePinned}
         selectedNoteSlug={selectedNoteSlug}
+        selectedNote={selectedNote}
+        deleteNote={handleNoteDelete}
       />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
           groupedNotes={groupedNotes}
+          setGroupedNotes={setGroupedNotes}
           selectedNoteSlug={selectedNoteSlug}
           onNoteSelect={onNoteSelect}
           notes={notes}
           sessionId={sessionId}
-          togglePinned={togglePinned}
+          handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
           addNewPinnedNote={addNewPinnedNote}
           searchInputRef={searchInputRef}
@@ -209,6 +292,7 @@ export default function Sidebar({
           setHighlightedIndex={setHighlightedIndex}
           categoryOrder={categoryOrder}
           labels={labels}
+          handleNoteDelete={handleNoteDelete}
         />
       </div>
     </div>

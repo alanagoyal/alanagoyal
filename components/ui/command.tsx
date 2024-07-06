@@ -18,7 +18,7 @@ const Command = React.forwardRef<
       "flex h-full w-full flex-col overflow-hidden rounded-md bg-[#1c1c1c] text-popover-foreground",
       className
     )}
-    shouldFilter={false} // Add this line to disable default filtering
+    shouldFilter={false} 
     {...props}
   />
 ))

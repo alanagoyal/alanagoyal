@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 interface SessionIdProps {
-  setSessionId: (id: string) => void; // Prop to pass the sessionId to the parent component
+  setSessionId: (id: string) => void;
 }
 
 export default function SessionId({ setSessionId }: SessionIdProps) {
@@ -13,8 +13,8 @@ export default function SessionId({ setSessionId }: SessionIdProps) {
     if (!localStorage.getItem("session_id")) {
       localStorage.setItem("session_id", currentSessionId);
     }
-    setSessionId(currentSessionId); // Use the passed function to update the parent's state
+    setSessionId(currentSessionId);
   }, [setSessionId]);
 
-  return null; // This component does not need to render anything
+  return null;
 }

@@ -1,25 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NewNote from "./new-note";
 import SearchBar from "./search";
-import { NoteItem } from './note-item';
+import { NoteItem } from "./note-item";
+import { createClient } from "@/utils/supabase/client";
+import { Note } from "@/lib/types";
 
 interface SidebarContentProps {
-  groupedNotes: any;
+  groupedNotes: Record<string, Note[]>;
   selectedNoteSlug: string | null;
-  onNoteSelect: (note: any) => void;
-  notes: any[];
+  onNoteSelect: (note: Note) => void;
+  notes: Note[];
   sessionId: string;
-  togglePinned: (slug: string) => void;
+  handlePinToggle: (slug: string) => void;
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
-  localSearchResults: any[] | null;
-  setLocalSearchResults: React.Dispatch<React.SetStateAction<any[] | null>>;
+  localSearchResults: Note[] | null;
+  setLocalSearchResults: React.Dispatch<React.SetStateAction<Note[] | null>>;
   highlightedIndex: number;
   setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>;
   categoryOrder: string[];
   labels: Record<string, React.ReactNode>;
+  setGroupedNotes: React.Dispatch<React.SetStateAction<Record<string, Note[]>>>;
+  handleNoteDelete: (note: Note) => Promise<void>;
 }
 
 export function SidebarContent({
@@ -28,7 +32,7 @@ export function SidebarContent({
   onNoteSelect,
   notes,
   sessionId,
-  togglePinned,
+  handlePinToggle,
   pinnedNotes,
   addNewPinnedNote,
   searchInputRef,
@@ -38,47 +42,85 @@ export function SidebarContent({
   setHighlightedIndex,
   categoryOrder,
   labels,
+  setGroupedNotes,
+  handleNoteDelete,
 }: SidebarContentProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
   const router = useRouter();
 
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
-    setSearchQuery('');
+    setSearchQuery("");
+    setHighlightedIndex(0);
     if (searchInputRef.current) {
-      searchInputRef.current.value = '';
+      searchInputRef.current.value = "";
     }
-  }, [searchInputRef, setLocalSearchResults]);
+  }, [setLocalSearchResults, setHighlightedIndex, searchInputRef]);
 
-  const handleKeyNavigation = useCallback((event: KeyboardEvent) => {
-    if (localSearchResults && localSearchResults.length > 0) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const selectedNote = localSearchResults[highlightedIndex];
-        router.push(`/${selectedNote.slug}`);
-        clearSearch();
-        searchInputRef.current?.blur();
-      } else if (!isSearchInputFocused) {
-        if (event.key === 'j' || event.key === 'ArrowDown') {
+  const handleSearchInputBlur = useCallback(() => {
+    setIsSearchInputFocused(false);
+  }, []);
+
+  const handlePinToggleWithClear = useCallback((slug: string) => {
+    clearSearch();
+    handlePinToggle(slug);
+  }, [clearSearch, handlePinToggle]);
+
+  const handleEdit = useCallback((slug: string) => {
+    clearSearch();
+    router.push(`/${slug}`);
+  }, [clearSearch, router]);
+
+  const handleDelete = useCallback(async (note: Note) => {
+    clearSearch();
+    await handleNoteDelete(note);
+  }, [clearSearch, handleNoteDelete]);
+
+  const handleKeyNavigation = useCallback(
+    (event: KeyboardEvent) => {
+      if (localSearchResults && localSearchResults.length > 0) {
+        if (event.key === "Enter") {
           event.preventDefault();
-          setHighlightedIndex((prevIndex) =>
-            (prevIndex + 1) % localSearchResults.length
-          );
-        } else if (event.key === 'k' || event.key === 'ArrowUp') {
-          event.preventDefault();
-          setHighlightedIndex((prevIndex) =>
-            (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
-          );
+          const selectedNote = localSearchResults[highlightedIndex];
+          router.push(`/${selectedNote.slug}`);
+          clearSearch();
+          searchInputRef.current?.blur();
+        } else if (!isSearchInputFocused) {
+          if (event.key === "j" || event.key === "ArrowDown") {
+            event.preventDefault();
+            setHighlightedIndex(
+              (prevIndex) => (prevIndex + 1) % localSearchResults.length
+            );
+          } else if (event.key === "k" || event.key === "ArrowUp") {
+            event.preventDefault();
+            setHighlightedIndex(
+              (prevIndex) =>
+                (prevIndex - 1 + localSearchResults.length) %
+                localSearchResults.length
+            );
+          }
         }
       }
-    }
-  }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch, setHighlightedIndex, searchInputRef]);
+    },
+    [
+      localSearchResults,
+      highlightedIndex,
+      router,
+      isSearchInputFocused,
+      clearSearch,
+      setHighlightedIndex,
+      searchInputRef,
+    ]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+      if (event.key === "Escape") {
+        if (
+          searchInputRef.current &&
+          document.activeElement === searchInputRef.current
+        ) {
           searchInputRef.current.blur();
           setIsSearchInputFocused(false);
         }
@@ -87,15 +129,38 @@ export function SidebarContent({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyNavigation, searchInputRef, setIsSearchInputFocused]);
 
   useEffect(() => {
     setHighlightedIndex(0);
   }, [localSearchResults, setHighlightedIndex]);
+
+  const onNoteDelete = useCallback(
+    (slugToDelete: string) => {
+      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
+        const newGroupedNotes = { ...prevGroupedNotes };
+        for (const category in newGroupedNotes) {
+          newGroupedNotes[category] = newGroupedNotes[category].filter(
+            (note: Note) => note.slug !== slugToDelete
+          );
+        }
+        return newGroupedNotes;
+      });
+
+      if (localSearchResults) {
+        setLocalSearchResults((prevResults) =>
+          prevResults
+            ? prevResults.filter((note) => note.slug !== slugToDelete)
+            : null
+        );
+      }
+    },
+    [setGroupedNotes, localSearchResults, setLocalSearchResults]
+  );
 
   return (
     <div className="pt-4 px-2">
@@ -107,11 +172,12 @@ export function SidebarContent({
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onFocus={() => setIsSearchInputFocused(true)}
-        onBlur={() => setIsSearchInputFocused(false)}
+        onBlur={handleSearchInputBlur}
+        setHighlightedIndex={setHighlightedIndex}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
-        <NewNote addNewPinnedNote={addNewPinnedNote} />
+        <NewNote addNewPinnedNote={addNewPinnedNote} clearSearch={clearSearch} />
       </div>
       {localSearchResults === null ? (
         <nav>
@@ -123,21 +189,23 @@ export function SidebarContent({
                   {labels[categoryKey as keyof typeof labels]}
                 </h3>
                 <ul className="space-y-2">
-                  {groupedNotes[categoryKey].map((item: any, index: number) => (
-                    <NoteItem
-                      key={index}
-                      item={item}
-                      selectedNoteSlug={selectedNoteSlug}
-                      sessionId={sessionId}
-                      onNoteSelect={onNoteSelect}
-                      groupedNotes={groupedNotes}
-                      categoryOrder={categoryOrder}
-                      togglePinned={togglePinned}
-                      isPinned={pinnedNotes.has(item.slug)}
-                      isHighlighted={false}
-                      isSearching={false}
-                    />
-                  ))}
+                  {groupedNotes[categoryKey].map(
+                    (item: Note, index: number) => (
+                      <NoteItem
+                        key={index}
+                        item={item}
+                        selectedNoteSlug={selectedNoteSlug}
+                        sessionId={sessionId}
+                        onNoteSelect={onNoteSelect}
+                        handlePinToggle={handlePinToggle}
+                        isPinned={pinnedNotes.has(item.slug)}
+                        isHighlighted={false}
+                        isSearching={false}
+                        handleNoteDelete={handleNoteDelete}
+                        onNoteEdit={handleEdit}
+                      />
+                    )
+                  )}
                 </ul>
               </section>
             ) : null
@@ -145,19 +213,19 @@ export function SidebarContent({
         </nav>
       ) : localSearchResults.length > 0 ? (
         <ul className="space-y-2">
-          {localSearchResults.map((item, index) => (
+          {localSearchResults.map((item: Note, index: number) => (
             <NoteItem
               key={item.id}
               item={item}
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
-              groupedNotes={groupedNotes}
-              categoryOrder={categoryOrder}
-              togglePinned={togglePinned}
+              handlePinToggle={handlePinToggleWithClear}
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}
               isSearching={true}
+              handleNoteDelete={handleDelete}
+              onNoteEdit={handleEdit}
             />
           ))}
         </ul>

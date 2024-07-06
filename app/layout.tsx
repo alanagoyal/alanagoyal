@@ -3,7 +3,7 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { createClient } from "@/utils/supabase/server";
+import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import SidebarLayout from "@/components/sidebar-layout";
 
 const fontSans = FontSans({
@@ -17,12 +17,14 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
+export const revalidate = 0; // This will revalidate the page on every request
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient();
+  const supabase = createBrowserClient();
   const { data } = await supabase.from("notes").select("*");
   return (
     <html lang="en" className="bg-[#1c1c1c]">
