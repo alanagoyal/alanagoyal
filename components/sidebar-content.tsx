@@ -161,6 +161,7 @@ export function SidebarContent({
         setSearchQuery={setSearchQuery}
         onFocus={() => setIsSearchInputFocused(true)}
         onBlur={() => setIsSearchInputFocused(false)}
+        setHighlightedIndex={setHighlightedIndex}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
@@ -200,7 +201,7 @@ export function SidebarContent({
         </nav>
       ) : localSearchResults.length > 0 ? (
         <ul className="space-y-2">
-          {localSearchResults.map((item: Note) => (
+          {localSearchResults.map((item: Note, index: number) => (
             <NoteItem
               key={item.id}
               item={item}
@@ -209,7 +210,7 @@ export function SidebarContent({
               onNoteSelect={onNoteSelect}
               handlePinToggle={handlePinToggle}
               isPinned={pinnedNotes.has(item.slug)}
-              isHighlighted={false}
+              isHighlighted={index === highlightedIndex}
               isSearching={true}
               handleNoteDelete={handleNoteDelete}
               onNoteEdit={handleEdit}

@@ -11,7 +11,8 @@ export default function SearchBar({
   searchQuery,
   setSearchQuery,
   onFocus,
-  onBlur
+  onBlur,
+  setHighlightedIndex 
 }: { 
   notes: Note[], 
   onSearchResults: (results: Note[] | null) => void, 
@@ -20,12 +21,14 @@ export default function SearchBar({
   searchQuery: string,
   setSearchQuery: (query: string) => void,
   onFocus: () => void,
-  onBlur: () => void
+  onBlur: () => void,
+  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>
 }) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() === '') {
       onSearchResults(null);
+      setHighlightedIndex(0);
       return;
     }
 
@@ -37,6 +40,7 @@ export default function SearchBar({
     );
 
     onSearchResults(filteredNotes);
+    setHighlightedIndex(0);
   };
 
   return (
