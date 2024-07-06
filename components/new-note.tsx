@@ -12,13 +12,14 @@ import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
 
-export default function NewNote({ addNewPinnedNote }: { addNewPinnedNote: (slug: string) => void }) {
+export default function NewNote({ addNewPinnedNote, clearSearch }: { addNewPinnedNote: (slug: string) => void, clearSearch: () => void }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
 
   const handleCreateNote = useCallback(() => {
+    clearSearch();
     createNote(sessionId, router, addNewPinnedNote);
-  }, [sessionId, router, addNewPinnedNote]);
+  }, [sessionId, router, addNewPinnedNote, clearSearch]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

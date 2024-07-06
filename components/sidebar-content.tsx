@@ -56,7 +56,7 @@ export function SidebarContent({
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
-  }, [setLocalSearchResults, setHighlightedIndex]);
+  }, [setLocalSearchResults, setHighlightedIndex, searchInputRef]);
 
   const handleSearchInputBlur = useCallback(() => {
     setIsSearchInputFocused(false);
@@ -177,7 +177,7 @@ export function SidebarContent({
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
-        <NewNote addNewPinnedNote={addNewPinnedNote} />
+        <NewNote addNewPinnedNote={addNewPinnedNote} clearSearch={clearSearch} />
       </div>
       {localSearchResults === null ? (
         <nav>
