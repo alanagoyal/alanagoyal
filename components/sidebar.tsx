@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin, PinOff, Trash2, Edit } from "lucide-react";
+import { Pin } from "lucide-react";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { useSwipeable } from "react-swipeable";
 import { CommandMenu } from "./command-menu";
+import { SwipeActions } from './swipe-actions';
 
 const labels = {
   pinned: (
@@ -622,53 +623,4 @@ function NoteItem({
       </ContextMenu>
     );
   }
-}
-
-function SwipeActions({
-  isOpen,
-  onPin,
-  onEdit,
-  onDelete,
-  isPinned,
-  canEditOrDelete,
-}: {
-  isOpen: boolean;
-  onPin: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  isPinned: boolean;
-  canEditOrDelete: boolean;
-}) {
-  return (
-    <div
-      className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
-        isOpen
-          ? "opacity-100 pointer-events-auto"
-          : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <button
-        onClick={onPin}
-        className="bg-[#3293FC] text-white p-2 h-full w-16 flex items-center justify-center"
-      >
-        {isPinned ? <PinOff size={20} /> : <Pin size={20} />}
-      </button>
-      {canEditOrDelete && (
-        <>
-          <button
-            onClick={onEdit}
-            className="bg-[#787BFF] text-white p-2 h-full w-16 flex items-center justify-center"
-          >
-            <Edit size={20} />
-          </button>
-          <button
-            onClick={onDelete}
-            className="bg-[#FF4539] text-white p-2 h-full w-16 flex items-center justify-center"
-          >
-            <Trash2 size={20} />
-          </button>
-        </>
-      )}
-    </div>
-  );
 }
