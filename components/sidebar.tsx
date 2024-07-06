@@ -195,6 +195,7 @@ export default function Sidebar({
       }
       
       router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+      router.refresh();
     } catch (error) {
       console.error("Error deleting note:", error);
     }
