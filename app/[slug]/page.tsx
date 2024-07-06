@@ -23,7 +23,6 @@ export default async function NotePage({ params }: { params: { slug: string } })
     .single();
 
   if (!note) {
-    // If the note doesn't exist, check if it's a new note
     if (slug.startsWith("new-note-")) {
       const newNote = {
         id: slug.replace("new-note-", ""),
@@ -40,7 +39,6 @@ export default async function NotePage({ params }: { params: { slug: string } })
         </div>
       );
     }
-    // If it's not a new note and doesn't exist, return 404
     notFound();
   }
 
