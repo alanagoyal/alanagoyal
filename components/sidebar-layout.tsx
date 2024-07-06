@@ -6,6 +6,7 @@ import { Icons } from "@/components/icons";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
 import { useRouter, usePathname } from "next/navigation";
+import { CommandMenu } from "./command-menu";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
