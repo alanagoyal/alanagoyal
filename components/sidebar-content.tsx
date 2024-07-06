@@ -12,7 +12,7 @@ interface SidebarContentProps {
   onNoteSelect: (note: Note) => void;
   notes: Note[];
   sessionId: string;
-  togglePinned: (slug: string) => void;
+  handlePinToggle: (slug: string) => void;
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
@@ -31,7 +31,7 @@ export function SidebarContent({
   onNoteSelect,
   notes,
   sessionId,
-  togglePinned,
+  handlePinToggle,
   pinnedNotes,
   addNewPinnedNote,
   searchInputRef,
@@ -141,15 +141,6 @@ export function SidebarContent({
     [setGroupedNotes, localSearchResults, setLocalSearchResults]
   );
 
-  const handlePinUnpin = useCallback(
-    (slug: string) => {
-      togglePinned(slug);
-      clearSearch();
-      router.push(`/${slug}`);
-    },
-    [togglePinned, clearSearch, router]
-  );
-
   const handleEdit = useCallback(
     (slug: string) => {
       clearSearch();
@@ -219,7 +210,7 @@ export function SidebarContent({
                         onNoteSelect={onNoteSelect}
                         groupedNotes={groupedNotes}
                         categoryOrder={categoryOrder}
-                        togglePinned={togglePinned}
+                        handlePinToggle={handlePinToggle}
                         isPinned={pinnedNotes.has(item.slug)}
                         isHighlighted={false}
                         isSearching={false}
@@ -245,7 +236,7 @@ export function SidebarContent({
               onNoteSelect={onNoteSelect}
               groupedNotes={groupedNotes}
               categoryOrder={categoryOrder}
-              togglePinned={handlePinUnpin}
+              handlePinToggle={handlePinToggle}
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}
               isSearching={true}

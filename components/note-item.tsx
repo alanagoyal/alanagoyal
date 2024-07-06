@@ -20,7 +20,7 @@ interface NoteItemProps {
   onNoteSelect: (note: Note) => void;
   groupedNotes: Record<string, Note[]>;
   categoryOrder: string[];
-  togglePinned: (slug: string) => void;
+  handlePinToggle: (slug: string) => void;
   isPinned: boolean;
   isHighlighted: boolean;
   isSearching: boolean;
@@ -36,7 +36,7 @@ export function NoteItem({
   onNoteSelect,
   groupedNotes,
   categoryOrder,
-  togglePinned,
+  handlePinToggle,
   isPinned,
   isHighlighted,
   isSearching,
@@ -102,10 +102,9 @@ export function NoteItem({
     onNoteEdit(item.slug);
   };
 
-  const handlePinToggle = () => {
-    togglePinned(item.slug);
+  const handlePinAction = () => {
+    handlePinToggle(item.slug);
     setIsSwipeOpen(false);
-    router.push(`/${item.slug}`);
   };
 
   const canEditOrDelete = item.session_id === sessionId;
@@ -179,7 +178,7 @@ export function NoteItem({
         </div>
         <SwipeActions
           isOpen={isSwipeOpen}
-          onPin={() => handleSwipeAction(handlePinToggle)}
+          onPin={() => handleSwipeAction(handlePinAction)}
           onEdit={() => handleSwipeAction(handleEdit)}
           onDelete={() => handleSwipeAction(handleDelete)}
           isPinned={isPinned}
@@ -192,7 +191,7 @@ export function NoteItem({
       <ContextMenu>
         <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={handlePinToggle} className="cursor-pointer">
+          <ContextMenuItem onClick={handlePinAction} className="cursor-pointer">
             {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
           {item.session_id === sessionId && (

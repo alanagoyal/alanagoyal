@@ -137,6 +137,11 @@ export default function Sidebar({
     [flattenedNotes, selectedNoteSlug, router, localSearchResults]
   );
 
+  const handlePinToggle = useCallback((slug: string) => {
+    togglePinned(slug);
+    router.push(`/${slug}`);
+  }, [togglePinned, router]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -170,7 +175,7 @@ export default function Sidebar({
         } else if (event.key === "p" && !event.metaKey) {
           event.preventDefault();
           if (selectedNoteSlug) {
-            togglePinned(selectedNoteSlug);
+            handlePinToggle(selectedNoteSlug);
           }
         } else if (event.key === "/") {
           event.preventDefault();
@@ -184,7 +189,7 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNoteSlug, togglePinned, localSearchResults, setHighlightedIndex]);
+  }, [navigateNotes, selectedNoteSlug, handlePinToggle, localSearchResults, setHighlightedIndex]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -205,7 +210,7 @@ export default function Sidebar({
           onNoteSelect={onNoteSelect}
           notes={notes}
           sessionId={sessionId}
-          togglePinned={togglePinned}
+          handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
           addNewPinnedNote={addNewPinnedNote}
           searchInputRef={searchInputRef}
