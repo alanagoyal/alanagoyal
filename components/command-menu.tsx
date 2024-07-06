@@ -1,34 +1,56 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "./ui/command"
-import { DialogTitle, DialogDescription } from "./ui/dialog"
-import { useRouter } from "next/navigation"
-import { Icons } from "./icons"
-import { Pin, ArrowUp, ArrowDown } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandShortcut,
+} from "./ui/command";
+import { DialogTitle, DialogDescription } from "./ui/dialog";
+import { useRouter } from "next/navigation";
+import { Icons } from "./icons";
+import { Pin, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
 
-export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes, togglePinned, selectedNoteSlug }: { notes: Note[], sessionId: string, addNewPinnedNote: (slug: string) => void, navigateNotes: (direction: 'up' | 'down') => void, togglePinned: (slug: string) => void, selectedNoteSlug: string | null }) {
-  const [open, setOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const router = useRouter()
+export function CommandMenu({
+  notes,
+  sessionId,
+  addNewPinnedNote,
+  navigateNotes,
+  togglePinned,
+  selectedNoteSlug,
+  selectedNote,
+  deleteNote,
+}: {
+  notes: Note[];
+  sessionId: string;
+  addNewPinnedNote: (slug: string) => void;
+  navigateNotes: (direction: "up" | "down") => void;
+  togglePinned: (slug: string) => void;
+  selectedNoteSlug: string | null;
+  selectedNote: Note | null;
+  deleteNote: (note: Note) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((open) => !open)
+        e.preventDefault();
+        setOpen((open) => !open);
       }
-    }
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value)
-  }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   function toTitleCase(str: string): string {
     return str.replace(
@@ -48,12 +70,12 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
   };
 
   const handleMoveUp = useCallback(() => {
-    navigateNotes('up');
+    navigateNotes("up");
     setOpen(false);
   }, [navigateNotes]);
 
   const handleMoveDown = useCallback(() => {
-    navigateNotes('down');
+    navigateNotes("down");
     setOpen(false);
   }, [navigateNotes]);
 
@@ -64,23 +86,57 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
     }
   }, [selectedNoteSlug, togglePinned]);
 
+  const handleDeleteNote = useCallback(() => {
+    if (selectedNote) {
+      deleteNote(selectedNote);
+      setOpen(false);
+    }
+  }, [selectedNote, deleteNote]);
+
   const commands = [
-    { name: "New note", icon: <Icons.new />, shortcut: "N", action: handleCreateNote },
-    { name: "Pin or unpin", icon: <Pin />, shortcut: "P", action: handleTogglePin },
+    {
+      name: "New note",
+      icon: <Icons.new />,
+      shortcut: "N",
+      action: handleCreateNote,
+    },
+    {
+      name: "Pin or unpin",
+      icon: <Pin />,
+      shortcut: "P",
+      action: handleTogglePin,
+    },
     { name: "Move up", icon: <ArrowUp />, shortcut: "K", action: handleMoveUp },
-    { name: "Move down", icon: <ArrowDown />, shortcut: "J", action: handleMoveDown },
+    {
+      name: "Move down",
+      icon: <ArrowDown />,
+      shortcut: "J",
+      action: handleMoveDown,
+    },
+    {
+      name: "Delete note",
+      icon: <Trash />,
+      shortcut: "D",
+      action: handleDeleteNote,
+    },
   ];
 
   const filteredNotes = searchNotes(notes, searchTerm, sessionId);
-  const filteredCommands = commands.filter((command) => 
+  const filteredCommands = commands.filter((command) =>
     command.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <DialogTitle className="sr-only">Command Menu</DialogTitle>
-      <DialogDescription className="sr-only">Use this dialog to execute commands or search for a note</DialogDescription>
-      <CommandInput placeholder="Type a command or search for a note..." value={searchTerm} onValueChange={setSearchTerm} />
+      <DialogDescription className="sr-only">
+        Use this dialog to execute commands or search for a note
+      </DialogDescription>
+      <CommandInput
+        placeholder="Type a command or search for a note..."
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+      />
       <CommandList>
         <CommandEmpty>No results found</CommandEmpty>
         {filteredCommands.length > 0 && (
@@ -97,7 +153,10 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
         {filteredNotes.length > 0 && (
           <CommandGroup heading="Notes">
             {filteredNotes.map((note) => (
-              <CommandItem key={note.id} onSelect={() => handleNoteSelect(note.slug)}>
+              <CommandItem
+                key={note.id}
+                onSelect={() => handleNoteSelect(note.slug)}
+              >
                 {note.emoji} {toTitleCase(note.title)}
               </CommandItem>
             ))}
@@ -105,5 +164,5 @@ export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes,
         )}
       </CommandList>
     </CommandDialog>
-  )
+  );
 }

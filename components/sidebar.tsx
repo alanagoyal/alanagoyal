@@ -160,7 +160,7 @@ export default function Sidebar({
   const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
     if (noteToDelete.public) {
       toast({
-        description: "Sorry, you can't delete public notes",
+        description: "Oops! You can't delete that note",
       });
       return;
     }
@@ -264,6 +264,8 @@ export default function Sidebar({
         navigateNotes={navigateNotes}
         togglePinned={togglePinned}
         selectedNoteSlug={selectedNoteSlug}
+        selectedNote={selectedNote}
+        deleteNote={handleNoteDelete}
       />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
