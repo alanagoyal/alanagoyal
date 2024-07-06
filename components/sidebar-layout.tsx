@@ -45,7 +45,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
       ) : isMobile ? (
         <div className="bg-[#1c1c1c] text-white min-h-screen">
           {showSidebar ? (
-            <Sidebar notes={notes} onNoteSelect={handleNoteSelect} />
+            <Sidebar notes={notes} onNoteSelect={handleNoteSelect} isMobile={isMobile} />
           ) : (
             children
           )}
@@ -54,7 +54,7 @@ export default function SidebarLayout({ children, data }: SidebarLayoutProps) {
       ) : (
         <div className="bg-[#1c1c1c] text-white min-h-screen flex">
           <div className="w-64 flex-shrink-0 border-r border-gray-400/20 overflow-y-auto h-screen">
-            {notes && <Sidebar notes={notes} onNoteSelect={() => {}} />}
+            {notes && <Sidebar notes={notes} onNoteSelect={() => {}} isMobile={isMobile} />}
           </div>
           <div className="flex-grow overflow-y-auto h-screen">{children}</div>
           <Toaster />

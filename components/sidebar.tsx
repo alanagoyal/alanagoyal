@@ -31,9 +31,11 @@ const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 export default function Sidebar({
   notes,
   onNoteSelect,
+  isMobile,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
+  isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -130,32 +132,34 @@ export default function Sidebar({
 
   const navigateNotes = useCallback(
     (direction: "up" | "down") => {
-      if (!localSearchResults) {
-        const flattened = flattenedNotes();
-        const currentIndex = flattened.findIndex(
-          (note) => note.slug === selectedNoteSlug
-        );
-        let nextIndex;
+    if (!localSearchResults) {
+      const flattened = flattenedNotes();
+      const currentIndex = flattened.findIndex(
+        (note) => note.slug === selectedNoteSlug
+      );
+      let nextIndex;
 
-        if (direction === "up") {
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-        } else {
-          nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-        }
-
-        const nextNote = flattened[nextIndex];
-        if (nextNote) {
-          router.push(`/${nextNote.slug}`);
-        }
+      if (direction === "up") {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+      } else {
+        nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
       }
-    },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+
+      const nextNote = flattened[nextIndex];
+      if (nextNote) {
+        router.push(`/${nextNote.slug}`);
+      }
+    }
+  },
+  [flattenedNotes, selectedNoteSlug, router, localSearchResults]
   );
 
   const handlePinToggle = useCallback((slug: string) => {
     togglePinned(slug);
-    router.push(`/${slug}`);
-  }, [togglePinned, router]);
+    if (!isMobile) {
+      router.push(`/${slug}`);
+    }
+  }, [togglePinned, router, isMobile]);
 
   const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
     if (noteToDelete.public) {
@@ -194,12 +198,14 @@ export default function Sidebar({
         nextNote = allNotes[deletedNoteIndex - 1];
       }
       
-      router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
-      router.refresh();
+      if (!isMobile) {
+        router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+        router.refresh();
+      }
     } catch (error) {
       console.error("Error deleting note:", error);
     }
-  }, [supabase, sessionId, flattenedNotes, router]);
+  }, [supabase, sessionId, flattenedNotes, router, isMobile]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
