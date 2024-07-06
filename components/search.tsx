@@ -12,7 +12,7 @@ export default function SearchBar({
   setSearchQuery,
   onFocus,
   onBlur,
-  setHighlightedIndex 
+  setHighlightedIndex,
 }: { 
   notes: Note[], 
   onSearchResults: (results: Note[] | null) => void, 
@@ -22,7 +22,7 @@ export default function SearchBar({
   setSearchQuery: (query: string) => void,
   onFocus: () => void,
   onBlur: () => void,
-  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>
+  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>,
 }) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);

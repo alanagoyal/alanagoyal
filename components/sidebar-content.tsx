@@ -52,10 +52,30 @@ export function SidebarContent({
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
     setSearchQuery("");
+    setHighlightedIndex(0);
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
-  }, [searchInputRef, setLocalSearchResults]);
+  }, [setLocalSearchResults, setHighlightedIndex]);
+
+  const handleSearchInputBlur = useCallback(() => {
+    setIsSearchInputFocused(false);
+  }, []);
+
+  const handlePinToggleWithClear = useCallback((slug: string) => {
+    clearSearch();
+    handlePinToggle(slug);
+  }, [clearSearch, handlePinToggle]);
+
+  const handleEdit = useCallback((slug: string) => {
+    clearSearch();
+    router.push(`/${slug}`);
+  }, [clearSearch, router]);
+
+  const handleDelete = useCallback(async (note: Note) => {
+    clearSearch();
+    await handleNoteDelete(note);
+  }, [clearSearch, handleNoteDelete]);
 
   const handleKeyNavigation = useCallback(
     (event: KeyboardEvent) => {
@@ -142,14 +162,6 @@ export function SidebarContent({
     [setGroupedNotes, localSearchResults, setLocalSearchResults]
   );
 
-  const handleEdit = useCallback(
-    (slug: string) => {
-      clearSearch();
-      router.push(`/${slug}`);
-    },
-    [clearSearch, router]
-  );
-
   return (
     <div className="pt-4 px-2">
       <SearchBar
@@ -160,7 +172,7 @@ export function SidebarContent({
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onFocus={() => setIsSearchInputFocused(true)}
-        onBlur={() => setIsSearchInputFocused(false)}
+        onBlur={handleSearchInputBlur}
         setHighlightedIndex={setHighlightedIndex}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
@@ -208,11 +220,11 @@ export function SidebarContent({
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
-              handlePinToggle={handlePinToggle}
+              handlePinToggle={handlePinToggleWithClear}
               isPinned={pinnedNotes.has(item.slug)}
               isHighlighted={index === highlightedIndex}
               isSearching={true}
-              handleNoteDelete={handleNoteDelete}
+              handleNoteDelete={handleDelete}
               onNoteEdit={handleEdit}
             />
           ))}
