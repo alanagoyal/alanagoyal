@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation"
 import { Icons } from "./icons"
 import { Pin, ArrowUp, ArrowDown } from "lucide-react";
 import { createNote } from "@/lib/create-note";
-import { searchNotes, Note } from "@/lib/search";
+import { searchNotes } from "@/lib/search";
+import { Note } from "@/lib/types";
 
 export function CommandMenu({ notes, sessionId, addNewPinnedNote, navigateNotes, togglePinned, selectedNoteSlug }: { notes: Note[], sessionId: string, addNewPinnedNote: (slug: string) => void, navigateNotes: (direction: 'up' | 'down') => void, togglePinned: (slug: string) => void, selectedNoteSlug: string | null }) {
   const [open, setOpen] = useState(false)
