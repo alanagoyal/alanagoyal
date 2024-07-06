@@ -58,6 +58,7 @@ export function SidebarContent({
         const selectedNote = localSearchResults[highlightedIndex];
         router.push(`/${selectedNote.slug}`);
         clearSearch();
+        searchInputRef.current?.blur();
       } else if (!isSearchInputFocused) {
         if (event.key === 'j' || event.key === 'ArrowDown') {
           event.preventDefault();
@@ -72,7 +73,7 @@ export function SidebarContent({
         }
       }
     }
-  }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch, setHighlightedIndex]);
+  }, [localSearchResults, highlightedIndex, router, isSearchInputFocused, clearSearch, setHighlightedIndex, searchInputRef]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
