@@ -23,6 +23,7 @@ interface SidebarContentProps {
   categoryOrder: string[];
   labels: Record<string, React.ReactNode>;
   setGroupedNotes: React.Dispatch<React.SetStateAction<Record<string, Note[]>>>;
+  handleNoteDelete: (note: Note) => Promise<void>;
 }
 
 export function SidebarContent({
@@ -42,11 +43,11 @@ export function SidebarContent({
   categoryOrder,
   labels,
   setGroupedNotes,
+  handleNoteDelete,
 }: SidebarContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
@@ -149,31 +150,6 @@ export function SidebarContent({
     [clearSearch, router]
   );
 
-  const handleDelete = useCallback(
-    async (slugToDelete: string) => {
-      try {
-        clearSearch();
-        await onNoteDelete(slugToDelete);
-
-        const allNotes = Object.values(groupedNotes).flat();
-        const deletedNoteIndex = allNotes.findIndex(
-          (note) => note.slug === slugToDelete
-        );
-        const noteAbove =
-          allNotes[deletedNoteIndex - 1] || allNotes[deletedNoteIndex + 1];
-
-        if (noteAbove) {
-          router.push(`/${noteAbove.slug}`);
-        } else {
-          router.push("/");
-        }
-      } catch (error) {
-        console.error("Error deleting note:", error);
-      }
-    },
-    [clearSearch, onNoteDelete, groupedNotes, router]
-  );
-
   return (
     <div className="pt-4 px-2">
       <SearchBar
@@ -208,15 +184,12 @@ export function SidebarContent({
                         selectedNoteSlug={selectedNoteSlug}
                         sessionId={sessionId}
                         onNoteSelect={onNoteSelect}
-                        groupedNotes={groupedNotes}
-                        categoryOrder={categoryOrder}
                         handlePinToggle={handlePinToggle}
                         isPinned={pinnedNotes.has(item.slug)}
                         isHighlighted={false}
                         isSearching={false}
-                        onNoteDelete={onNoteDelete}
+                        handleNoteDelete={handleNoteDelete}
                         onNoteEdit={handleEdit}
-                        router={router}
                       />
                     )
                   )}
@@ -227,22 +200,19 @@ export function SidebarContent({
         </nav>
       ) : localSearchResults.length > 0 ? (
         <ul className="space-y-2">
-          {localSearchResults.map((item: Note, index: number) => (
+          {localSearchResults.map((item: Note) => (
             <NoteItem
               key={item.id}
               item={item}
               selectedNoteSlug={selectedNoteSlug}
               sessionId={sessionId}
               onNoteSelect={onNoteSelect}
-              groupedNotes={groupedNotes}
-              categoryOrder={categoryOrder}
               handlePinToggle={handlePinToggle}
               isPinned={pinnedNotes.has(item.slug)}
-              isHighlighted={index === highlightedIndex}
+              isHighlighted={false}
               isSearching={true}
-              onNoteDelete={handleDelete}
+              handleNoteDelete={handleNoteDelete}
               onNoteEdit={handleEdit}
-              router={router}
             />
           ))}
         </ul>

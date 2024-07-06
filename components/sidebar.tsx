@@ -8,6 +8,10 @@ import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from './sidebar-content';
 import { groupNotesByCategory, sortGroupedNotes } from '@/lib/note-utils';
+import { createClient } from "@/utils/supabase/client";
+import { Note } from "@/lib/types";
+import { describe } from "node:test";
+import { toast } from "./ui/use-toast";
 
 const labels = {
   pinned: (
@@ -40,6 +44,8 @@ export default function Sidebar({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [groupedNotes, setGroupedNotes] = useState<any>({});
   const router = useRouter();
+  const supabase = createClient();
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   useEffect(() => {
     if (pathname) {
@@ -47,6 +53,15 @@ export default function Sidebar({
       setSelectedNoteSlug(slug || null);
     }
   }, [pathname]);
+
+  useEffect(() => {
+    if (selectedNoteSlug) {
+      const note = notes.find(note => note.slug === selectedNoteSlug);
+      setSelectedNote(note || null);
+    } else {
+      setSelectedNote(null);
+    }
+  }, [selectedNoteSlug, notes]);
 
   useEffect(() => {
     const storedPinnedNotes = localStorage.getItem("pinnedNotes");
@@ -142,6 +157,43 @@ export default function Sidebar({
     router.push(`/${slug}`);
   }, [togglePinned, router]);
 
+  const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
+    if (noteToDelete.public) {
+      toast({
+        description: "Unable to delete public note",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("slug", noteToDelete.slug)
+        .eq("session_id", sessionId);
+
+      if (error) throw error;
+
+      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
+        const newGroupedNotes = { ...prevGroupedNotes };
+        for (const category in newGroupedNotes) {
+          newGroupedNotes[category] = newGroupedNotes[category].filter(
+            (note: Note) => note.slug !== noteToDelete.slug
+          );
+        }
+        return newGroupedNotes;
+      });
+
+      const allNotes = Object.values(groupedNotes).flat() as Note[];
+      const deletedNoteIndex = allNotes.findIndex((note) => note.slug === noteToDelete.slug);
+      const nextNote = allNotes[deletedNoteIndex - 1] || allNotes[deletedNoteIndex + 1];
+      
+      router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  }, [supabase, sessionId, groupedNotes, router]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -177,6 +229,11 @@ export default function Sidebar({
           if (selectedNoteSlug) {
             handlePinToggle(selectedNoteSlug);
           }
+        } else if (event.key === "d" && !event.metaKey) {
+          event.preventDefault();
+          if (selectedNote) {
+            handleNoteDelete(selectedNote);
+          }
         } else if (event.key === "/") {
           event.preventDefault();
           searchInputRef.current?.focus();
@@ -189,7 +246,7 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNoteSlug, handlePinToggle, localSearchResults, setHighlightedIndex]);
+  }, [navigateNotes, selectedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -220,6 +277,7 @@ export default function Sidebar({
           setHighlightedIndex={setHighlightedIndex}
           categoryOrder={categoryOrder}
           labels={labels}
+          handleNoteDelete={handleNoteDelete}
         />
       </div>
     </div>

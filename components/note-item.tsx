@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSwipeable } from "react-swipeable";
-import { createClient } from "@/utils/supabase/client";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
 import {
@@ -18,15 +16,12 @@ interface NoteItemProps {
   selectedNoteSlug: string | null;
   sessionId: string;
   onNoteSelect: (note: Note) => void;
-  groupedNotes: Record<string, Note[]>;
-  categoryOrder: string[];
+  onNoteEdit: (slug: string) => void;
   handlePinToggle: (slug: string) => void;
   isPinned: boolean;
   isHighlighted: boolean;
   isSearching: boolean;
-  onNoteDelete: (slug: string) => void;
-  onNoteEdit: (slug: string) => void;
-  router: any;
+  handleNoteDelete: (note: Note) => Promise<void>;
 }
 
 export function NoteItem({
@@ -34,17 +29,13 @@ export function NoteItem({
   selectedNoteSlug,
   sessionId,
   onNoteSelect,
-  groupedNotes,
-  categoryOrder,
+  onNoteEdit,
   handlePinToggle,
   isPinned,
   isHighlighted,
   isSearching,
-  onNoteDelete,
-  onNoteEdit,
-  router,
+  handleNoteDelete,
 }: NoteItemProps) {
-  const supabase = createClient();
   const isMobile = useMobileDetect();
 
   const [isSwiping, setIsSwiping] = useState(false);
@@ -65,36 +56,8 @@ export function NoteItem({
   }, [isSwiping]);
 
   const handleDelete = async () => {
-    try {
-      let nextRoute = "/";
-      if (!isMobile) {
-        const flattenedNotes = categoryOrder.flatMap((category) =>
-          groupedNotes[category] ? groupedNotes[category] : []
-        );
-        const currentIndex = flattenedNotes.findIndex(
-          (note) => note.slug === item.slug
-        );
-        const nextNote =
-          flattenedNotes[currentIndex - 1] || flattenedNotes[currentIndex + 1];
-        nextRoute = nextNote ? `/${nextNote.slug}` : "/about-me";
-      }
-
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("slug", item.slug)
-        .eq("session_id", sessionId);
-
-      if (error) {
-        throw error;
-      }
-
-      onNoteDelete(item.slug);
-      setIsSwipeOpen(false);
-      router.push(nextRoute);
-    } catch (error) {
-      console.error("Error deleting note:", error);
-    }
+    setIsSwipeOpen(false);
+    await handleNoteDelete(item);
   };
 
   const handleEdit = () => {
