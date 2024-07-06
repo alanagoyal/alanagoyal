@@ -160,7 +160,7 @@ export default function Sidebar({
   const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
     if (noteToDelete.public) {
       toast({
-        description: "Unable to delete public note",
+        description: "Sorry, you can't delete public notes",
       });
       return;
     }
