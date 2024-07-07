@@ -54,7 +54,7 @@ export default function SearchBar({
         onFocus={onFocus}
         onBlur={onBlur}
         placeholder="Search"
-        className="w-full pl-8 pr-2 rounded-md text-sm placeholder:text-gray-400"
+        className="w-full pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
         aria-label="Search notes"
         autoComplete="off"
         ref={inputRef}
