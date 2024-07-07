@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pin, PinOff, Trash2, Edit } from "lucide-react";
+import { animated, useSpring } from 'react-spring';
 
 interface SwipeActionsProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface SwipeActionsProps {
   onDelete: () => void;
   isPinned: boolean;
   canEditOrDelete: boolean;
+  x: any; // This is the animated value from react-spring
+  threshold: number; // Added threshold prop
 }
 
 export function SwipeActions({
@@ -17,14 +20,16 @@ export function SwipeActions({
   onDelete,
   isPinned,
   canEditOrDelete,
+  x,
+  threshold, // Use threshold prop
 }: SwipeActionsProps) {
   return (
-    <div
-      className={`absolute top-0 right-0 h-full flex items-center transition-opacity duration-300 ${
-        isOpen
-          ? "opacity-100 pointer-events-auto"
-          : "opacity-0 pointer-events-none"
-      }`}
+    <animated.div
+      className="absolute top-0 right-0 h-full flex items-center"
+      style={{
+        width: `${-threshold}px`, // Use threshold for width
+        transform: x.to((x: number) => `translateX(${x + -threshold}px)`), // Adjust translation
+      }}
     >
       <button
         onClick={onPin}
@@ -48,6 +53,6 @@ export function SwipeActions({
           </button>
         </>
       )}
-    </div>
+    </animated.div>
   );
 }

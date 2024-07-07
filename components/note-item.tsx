@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useSwipeable } from "react-swipeable";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
 import {
@@ -11,6 +10,8 @@ import {
 } from "./ui/context-menu";
 import { Note } from '@/lib/types';
 import { Dispatch, SetStateAction } from "react";
+import { useSpring, animated } from "react-spring";
+import { useDrag } from "@use-gesture/react";
 
 function previewContent(content: string): string {
   return content
@@ -51,50 +52,63 @@ export function NoteItem({
   setOpenSwipeItemSlug,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
-
-  const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
+  const [{ x }, api] = useSpring(() => ({ x: 0 }));
+
+  const canEditOrDelete = item.session_id === sessionId;
+  const buttonCount = 1 + (canEditOrDelete ? 2 : 0); // Pin + (Edit & Delete if allowed)
+  const buttonWidth = 64; // w-16 is 4rem, which is typically 64px
+  const threshold = -buttonWidth * buttonCount;
+
+  const bind = useDrag(
+    ({ down, movement: [mx], last }) => {
+      if (down) {
+        // Directly map the movement to the x position
+        api.start({ x: Math.max(threshold, Math.min(0, mx)), immediate: true });
+      } else if (last) {
+        // When released, snap to the nearest edge
+        const shouldOpen = mx < threshold / 2;
+        api.start({ x: shouldOpen ? threshold : 0 });
+        setOpenSwipeItemSlug(shouldOpen ? item.slug : null);
+      }
+    },
+    { 
+      axis: "x", 
+      bounds: { left: threshold, right: 0 }, 
+      rubberband: true,
+      from: () => [x.get(), 0], // Start from the current x position
+      filterTaps: true,
+      threshold: 5, // Add a small threshold to differentiate between taps and drags
+    }
+  );
 
   useEffect(() => {
-    const preventDefault = (e: TouchEvent) => {
-      if (isSwiping) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("touchmove", preventDefault, { passive: false });
-
-    return () => {
-      document.removeEventListener("touchmove", preventDefault);
-    };
-  }, [isSwiping]);
+    if (openSwipeItemSlug !== item.slug) {
+      api.start({ x: 0 });
+    }
+  }, [openSwipeItemSlug, item.slug, api]);
 
   const handleDelete = async () => {
     setOpenSwipeItemSlug(null);
+    api.start({ x: 0 });
     await handleNoteDelete(item);
   };
 
   const handleEdit = () => {
     setOpenSwipeItemSlug(null);
+    api.start({ x: 0 });
     onNoteEdit(item.slug);
   };
 
   const handlePinAction = () => {
     handlePinToggle(item.slug);
     setOpenSwipeItemSlug(null);
+    api.start({ x: 0 });
   };
-
-  const canEditOrDelete = item.session_id === sessionId;
 
   const handleNoteClick = () => {
     if (onNoteSelect) {
       onNoteSelect(item);
-    }
-  };
-
-  const handleSwipeAction = (action: () => void) => {
-    if (isSwipeOpen) {
-      action();
     }
   };
 
@@ -129,37 +143,21 @@ export function NoteItem({
     </li>
   );
 
-  const handlers = useSwipeable({
-    onSwipeStart: () => setIsSwiping(true),
-    onSwiped: () => setIsSwiping(false),
-    onSwipedLeft: () => {
-      setOpenSwipeItemSlug(item.slug);
-      setIsSwiping(false);
-    },
-    onSwipedRight: () => {
-      setOpenSwipeItemSlug(null);
-      setIsSwiping(false);
-    },
-    trackMouse: true,
-  });
-
   if (isMobile) {
     return (
-      <div {...handlers} className="relative overflow-hidden">
-        <div
-          className={`transition-transform duration-300 ease-out ${
-            isSwipeOpen ? "transform -translate-x-24" : ""
-          }`}
-        >
+      <div className="relative overflow-hidden touch-pan-y">
+        <animated.div {...bind()} style={{ x, touchAction: "pan-y" }}>
           {NoteContent}
-        </div>
+        </animated.div>
         <SwipeActions
           isOpen={isSwipeOpen}
-          onPin={() => handleSwipeAction(handlePinAction)}
-          onEdit={() => handleSwipeAction(handleEdit)}
-          onDelete={() => handleSwipeAction(handleDelete)}
+          onPin={handlePinAction}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           isPinned={isPinned}
           canEditOrDelete={canEditOrDelete}
+          x={x}
+          threshold={threshold}
         />
       </div>
     );
@@ -171,7 +169,7 @@ export function NoteItem({
           <ContextMenuItem onClick={handlePinAction} className="cursor-pointer">
             {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
-          {item.session_id === sessionId && (
+          {canEditOrDelete && (
             <>
               <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
                 Edit
