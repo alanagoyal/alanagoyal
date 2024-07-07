@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import NewNote from "./new-note";
 import SearchBar from "./search";
 import { NoteItem } from "./note-item";
-import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 
 interface SidebarContentProps {
@@ -24,6 +23,8 @@ interface SidebarContentProps {
   labels: Record<string, React.ReactNode>;
   setGroupedNotes: React.Dispatch<React.SetStateAction<Record<string, Note[]>>>;
   handleNoteDelete: (note: Note) => Promise<void>;
+  openSwipeItemSlug: string | null;
+  setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
 }
 
 export function SidebarContent({
@@ -44,6 +45,8 @@ export function SidebarContent({
   labels,
   setGroupedNotes,
   handleNoteDelete,
+  openSwipeItemSlug,
+  setOpenSwipeItemSlug,
 }: SidebarContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
@@ -203,6 +206,8 @@ export function SidebarContent({
                         isSearching={false}
                         handleNoteDelete={handleNoteDelete}
                         onNoteEdit={handleEdit}
+                        openSwipeItemSlug={openSwipeItemSlug}
+                        setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                       />
                     )
                   )}
@@ -226,6 +231,8 @@ export function SidebarContent({
               isSearching={true}
               handleNoteDelete={handleDelete}
               onNoteEdit={handleEdit}
+              openSwipeItemSlug={openSwipeItemSlug}
+              setOpenSwipeItemSlug={setOpenSwipeItemSlug}
             />
           ))}
         </ul>

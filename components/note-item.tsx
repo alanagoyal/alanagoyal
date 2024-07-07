@@ -10,6 +10,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { Note } from '@/lib/types';
+import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {
   return content
@@ -31,6 +32,8 @@ interface NoteItemProps {
   isHighlighted: boolean;
   isSearching: boolean;
   handleNoteDelete: (note: Note) => Promise<void>;
+  openSwipeItemSlug: string | null;
+  setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
 }
 
 export function NoteItem({
@@ -44,11 +47,13 @@ export function NoteItem({
   isHighlighted,
   isSearching,
   handleNoteDelete,
+  openSwipeItemSlug,
+  setOpenSwipeItemSlug,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
 
   const [isSwiping, setIsSwiping] = useState(false);
-  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
+  const isSwipeOpen = openSwipeItemSlug === item.slug;
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -65,18 +70,18 @@ export function NoteItem({
   }, [isSwiping]);
 
   const handleDelete = async () => {
-    setIsSwipeOpen(false);
+    setOpenSwipeItemSlug(null);
     await handleNoteDelete(item);
   };
 
   const handleEdit = () => {
-    setIsSwipeOpen(false);
+    setOpenSwipeItemSlug(null);
     onNoteEdit(item.slug);
   };
 
   const handlePinAction = () => {
     handlePinToggle(item.slug);
-    setIsSwipeOpen(false);
+    setOpenSwipeItemSlug(null);
   };
 
   const canEditOrDelete = item.session_id === sessionId;
@@ -128,11 +133,11 @@ export function NoteItem({
     onSwipeStart: () => setIsSwiping(true),
     onSwiped: () => setIsSwiping(false),
     onSwipedLeft: () => {
-      setIsSwipeOpen(true);
+      setOpenSwipeItemSlug(item.slug);
       setIsSwiping(false);
     },
     onSwipedRight: () => {
-      setIsSwipeOpen(false);
+      setOpenSwipeItemSlug(null);
       setIsSwiping(false);
     },
     trackMouse: true,

@@ -48,6 +48,7 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (pathname) {
@@ -293,6 +294,8 @@ export default function Sidebar({
           categoryOrder={categoryOrder}
           labels={labels}
           handleNoteDelete={handleNoteDelete}
+          openSwipeItemSlug={openSwipeItemSlug}
+          setOpenSwipeItemSlug={setOpenSwipeItemSlug}
         />
       </div>
     </div>
