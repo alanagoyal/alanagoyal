@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
@@ -63,8 +63,11 @@ export function NoteItem({
   const buttonWidth = 64;
   const threshold = -buttonWidth * buttonCount;
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const bind = useDrag(
     ({ down, movement: [mx], velocity: [vx], direction: [dx], last }) => {
+      setIsDragging(down);
       const currentX = x.get();
       const projectedEndpoint = currentX + vx * 0.2;
 
@@ -177,6 +180,7 @@ export function NoteItem({
           canEditOrDelete={canEditOrDelete}
           x={x}
           threshold={threshold}
+          isDragging={isDragging}
         />
       </div>
     );
