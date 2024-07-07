@@ -2,14 +2,10 @@ import { ImageResponse } from "next/og";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const slug = searchParams.get("slug");
-  const title = searchParams.get("title");
-  const emoji = searchParams.get("emoji");
+  const title = searchParams.get("title") || "notes";
+  const emoji = searchParams.get("emoji") || "";
 
-  // Decode the title to handle URL-encoded spaces
   const decodedTitle = title ? decodeURIComponent(title) : "new note";
-
-  // Truncate the title if it's too long
   const truncatedTitle = decodedTitle.length > 50 ? decodedTitle.slice(0, 47) + "..." : decodedTitle;
 
   return new ImageResponse(
@@ -63,7 +59,7 @@ export async function GET(request: Request) {
               color: "#96959B",
               margin: 0,
               marginTop: 10,
-              maxWidth: 1000, // Limit width to prevent overflow
+              maxWidth: 1000, 
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
