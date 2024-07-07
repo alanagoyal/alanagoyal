@@ -3,7 +3,11 @@ import { ImageResponse } from "next/og";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("slug");
-  const title = slug ? slug.replace(/-/g, " ") : "notes";
+  const title = slug
+    ? slug.startsWith("new-note")
+      ? "notes"
+      : slug.replace(/-/g, " ")
+    : "notes";
 
   return new ImageResponse(
     (
