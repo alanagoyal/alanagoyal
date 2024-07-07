@@ -1,8 +1,28 @@
 import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
 export const dynamic = "error";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const supabase = createBrowserClient();
+  const { data: note } = await supabase
+    .from("notes")
+    .select("title, emoji")
+    .eq("slug", params.slug)
+    .single();
+
+  const title = note?.title || "new note";
+  const emoji = note?.emoji || "👋🏼";
+
+  return {
+    title: title,
+    openGraph: {
+      images: [`/api/og/?slug=${params.slug}&title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(emoji)}`],
+    },
+  };
+}
 
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
