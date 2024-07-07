@@ -6,8 +6,8 @@ import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
-import { SidebarContent } from './sidebar-content';
-import { groupNotesByCategory, sortGroupedNotes } from '@/lib/note-utils';
+import { SidebarContent } from "./sidebar-content";
+import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { describe } from "node:test";
@@ -42,13 +42,17 @@ export default function Sidebar({
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
+    null
+  );
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [groupedNotes, setGroupedNotes] = useState<any>({});
   const router = useRouter();
   const supabase = createClient();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(null);
+  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (pathname) {
@@ -59,7 +63,7 @@ export default function Sidebar({
 
   useEffect(() => {
     if (selectedNoteSlug) {
-      const note = notes.find(note => note.slug === selectedNoteSlug);
+      const note = notes.find((note) => note.slug === selectedNoteSlug);
       setSelectedNote(note || null);
     } else {
       setSelectedNote(null);
@@ -133,80 +137,91 @@ export default function Sidebar({
 
   const navigateNotes = useCallback(
     (direction: "up" | "down") => {
-    if (!localSearchResults) {
-      const flattened = flattenedNotes();
-      const currentIndex = flattened.findIndex(
-        (note) => note.slug === selectedNoteSlug
-      );
-      let nextIndex;
+      if (!localSearchResults) {
+        const flattened = flattenedNotes();
+        const currentIndex = flattened.findIndex(
+          (note) => note.slug === selectedNoteSlug
+        );
+        let nextIndex;
 
-      if (direction === "up") {
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-      } else {
-        nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-      }
+        if (direction === "up") {
+          nextIndex =
+            currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+        } else {
+          nextIndex =
+            currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
+        }
 
-      const nextNote = flattened[nextIndex];
-      if (nextNote) {
-        router.push(`/${nextNote.slug}`);
+        const nextNote = flattened[nextIndex];
+        if (nextNote) {
+          router.push(`/${nextNote.slug}`);
+        }
       }
-    }
-  },
-  [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+    },
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
   );
 
-  const handlePinToggle = useCallback((slug: string) => {
-    togglePinned(slug);
-    if (!isMobile) {
-      router.push(`/${slug}`);
-    }
-  }, [togglePinned, router, isMobile]);
-
-  const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
-    if (noteToDelete.public) {
-      toast({
-        description: "Oops! You can't delete that note",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("slug", noteToDelete.slug)
-        .eq("session_id", sessionId);
-
-      if (error) throw error;
-
-      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
-        const newGroupedNotes = { ...prevGroupedNotes };
-        for (const category in newGroupedNotes) {
-          newGroupedNotes[category] = newGroupedNotes[category].filter(
-            (note: Note) => note.slug !== noteToDelete.slug
-          );
-        }
-        return newGroupedNotes;
-      });
-
-      const allNotes = flattenedNotes();
-      const deletedNoteIndex = allNotes.findIndex((note) => note.slug === noteToDelete.slug);
-      
-      let nextNote;
-      if (deletedNoteIndex === 0) {
-        nextNote = allNotes[1];
-      } else {
-        nextNote = allNotes[deletedNoteIndex - 1];
-      }
-      
+  const handlePinToggle = useCallback(
+    (slug: string) => {
+      togglePinned(slug);
       if (!isMobile) {
-        router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
-        router.refresh();
+        router.push(`/${slug}`);
       }
-    } catch (error) {
-      console.error("Error deleting note:", error);
-    }
-  }, [supabase, sessionId, flattenedNotes, router, isMobile]);
+    },
+    [togglePinned, router, isMobile]
+  );
+
+  const handleNoteDelete = useCallback(
+    async (noteToDelete: Note) => {
+      if (noteToDelete.public) {
+        toast({
+          description: "Oops! You can't delete that note",
+        });
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from("notes")
+          .delete()
+          .eq("slug", noteToDelete.slug)
+          .eq("session_id", sessionId);
+
+        if (error) throw error;
+
+        setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
+          const newGroupedNotes = { ...prevGroupedNotes };
+          for (const category in newGroupedNotes) {
+            newGroupedNotes[category] = newGroupedNotes[category].filter(
+              (note: Note) => note.slug !== noteToDelete.slug
+            );
+          }
+          return newGroupedNotes;
+        });
+
+        const allNotes = flattenedNotes();
+        const deletedNoteIndex = allNotes.findIndex(
+          (note) => note.slug === noteToDelete.slug
+        );
+
+        let nextNote;
+        if (deletedNoteIndex === 0) {
+          nextNote = allNotes[1];
+        } else {
+          nextNote = allNotes[deletedNoteIndex - 1];
+        }
+
+        if (!isMobile) {
+          router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+        }
+
+        router.refresh();
+      } catch (error) {
+        console.error("Error deleting note:", error);
+      }
+    },
+    [supabase, sessionId, flattenedNotes, router, isMobile]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -223,8 +238,8 @@ export default function Sidebar({
         if (event.key === "j" && !event.metaKey) {
           event.preventDefault();
           if (localSearchResults) {
-            setHighlightedIndex((prevIndex) =>
-              (prevIndex + 1) % localSearchResults.length
+            setHighlightedIndex(
+              (prevIndex) => (prevIndex + 1) % localSearchResults.length
             );
           } else {
             navigateNotes("down");
@@ -232,8 +247,10 @@ export default function Sidebar({
         } else if (event.key === "k" && !event.metaKey) {
           event.preventDefault();
           if (localSearchResults) {
-            setHighlightedIndex((prevIndex) =>
-              (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
+            setHighlightedIndex(
+              (prevIndex) =>
+                (prevIndex - 1 + localSearchResults.length) %
+                localSearchResults.length
             );
           } else {
             navigateNotes("up");
@@ -260,7 +277,14 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
+  }, [
+    navigateNotes,
+    selectedNote,
+    handlePinToggle,
+    localSearchResults,
+    setHighlightedIndex,
+    handleNoteDelete,
+  ]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
