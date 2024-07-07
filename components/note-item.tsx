@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
@@ -53,6 +53,8 @@ export function NoteItem({
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const isSwipeOpen = openSwipeItemSlug === item.slug;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [startY, setStartY] = useState<number | null>(null);
   const [{ x }, api] = useSpring(() => ({
     x: 0,
     config: { tension: 500, friction: 30, clamp: true },
@@ -111,6 +113,47 @@ export function NoteItem({
     }
   }, [openSwipeItemSlug, item.slug, api]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isSwipeOpen) {
+        setStartY(e.touches[0].clientY);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isSwipeOpen && startY !== null) {
+        const currentY = e.touches[0].clientY;
+        const deltaY = Math.abs(currentY - startY);
+
+        if (deltaY > 10) { // Threshold for vertical scroll detection
+          setOpenSwipeItemSlug(null);
+          api.start({ x: 0 });
+          setStartY(null);
+        }
+      }
+    };
+
+    const handleScroll = () => {
+      if (isSwipeOpen) {
+        setOpenSwipeItemSlug(null);
+        api.start({ x: 0 });
+      }
+    };
+
+    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchmove', handleTouchMove);
+    container.addEventListener('scroll', handleScroll);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [isSwipeOpen, setOpenSwipeItemSlug, api, startY]);
+
   const handleDelete = async () => {
     setOpenSwipeItemSlug(null);
     api.start({ x: 0 });
@@ -168,7 +211,7 @@ export function NoteItem({
 
   if (isMobile) {
     return (
-      <div className="relative overflow-hidden touch-pan-y">
+      <div ref={containerRef} className="relative overflow-hidden touch-pan-y">
         <animated.div {...bind()} style={{ x, touchAction: "pan-y" }}>
           {NoteContent}
         </animated.div>
@@ -180,7 +223,6 @@ export function NoteItem({
           canEditOrDelete={canEditOrDelete}
           x={x}
           threshold={threshold}
-          isDragging={isDragging}
         />
       </div>
     );

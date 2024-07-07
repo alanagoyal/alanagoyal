@@ -10,7 +10,6 @@ interface SwipeActionsProps {
   canEditOrDelete: boolean;
   x: any;
   threshold: number;
-  isDragging: boolean;
 }
 
 export function SwipeActions({
@@ -21,19 +20,7 @@ export function SwipeActions({
   canEditOrDelete,
   x,
   threshold,
-  isDragging,
 }: SwipeActionsProps) {
-  useEffect(() => {
-    if (isDragging) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isDragging]);
-
   return (
     <animated.div
       className="absolute top-0 right-0 h-full flex items-center"
