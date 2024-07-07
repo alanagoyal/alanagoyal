@@ -11,6 +11,15 @@ import {
 } from "./ui/context-menu";
 import { Note } from '@/lib/types';
 
+function previewContent(content: string): string {
+  return content
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') 
+    .replace(/[#*_~`>+\-]/g, '') 
+    .replace(/\n+/g, ' ') 
+    .replace(/\s+/g, ' ') 
+    .trim();
+}
+
 interface NoteItemProps {
   item: Note;
   selectedNoteSlug: string | null;
@@ -109,7 +118,7 @@ export function NoteItem({
           <span className="text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
-          {item.content.trim().replace(/[#_*~`>+\[\]!()-]/g, " ")}
+          {previewContent(item.content)}
         </p>
       </Link>
     </li>
