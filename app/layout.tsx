@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import SidebarLayout from "@/components/sidebar-layout";
-import { headers } from 'next/headers';
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -27,11 +26,6 @@ export default async function RootLayout({
 }>) {
   const supabase = createBrowserClient();
   const { data } = await supabase.from("notes").select("*");
-  
-  const headersList = headers();
-  const pathname = headersList.get('x-invoke-path') || '';
-  const slug = pathname.split('/').pop() || '';
-
   return (
     <html lang="en" className="bg-[#1c1c1c]">
       <head>
@@ -41,14 +35,14 @@ export default async function RootLayout({
         <meta property="twitter:description" content={siteConfig.description}></meta>
         <meta
           property="twitter:image"
-          content={`${siteConfig.url}/api/og?slug=${slug}`}
+          content={siteConfig.og}
         ></meta>
         <meta property="og:site_name" content={siteConfig.name}></meta>
         <meta property="og:description" content={siteConfig.description}></meta>
         <meta property="og:title" content={siteConfig.name}></meta>
         <meta
           property="og:image"
-          content={`${siteConfig.url}/api/og?slug=${slug}`}
+          content={siteConfig.og}
         />
         <meta property="og:url" content={siteConfig.url}></meta>
       </head>

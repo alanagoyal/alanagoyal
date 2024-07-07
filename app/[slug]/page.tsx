@@ -1,23 +1,19 @@
 import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
-import { notFound } from "next/navigation";
+import { notFound } from 'next/navigation';
 
 export const dynamic = "error";
 
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
-  const { data: posts } = await supabase.from("notes").select("slug");
+  const { data: posts } = await supabase.from('notes').select('slug')
 
   return posts!.map(({ slug }) => ({
     slug,
-  }));
+  }))
 }
 
-export default async function NotePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function NotePage({ params }: { params: { slug: string } }) {
   const supabase = createBrowserClient();
   const slug = params.slug;
   const { data: note } = await supabase
