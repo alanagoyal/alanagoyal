@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useMobileDetect } from "@/components/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
@@ -8,17 +8,17 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { Note } from '@/lib/types';
+import { Note } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
-import { useSpring, animated } from "react-spring";
+import { useSpring, animated, config } from "react-spring";
 import { useDrag } from "@use-gesture/react";
 
 function previewContent(content: string): string {
   return content
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') 
-    .replace(/[#*_~`>+\-]/g, '') 
-    .replace(/\n+/g, ' ') 
-    .replace(/\s+/g, ' ') 
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/[#*_~`>+\-]/g, "")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -53,38 +53,58 @@ export function NoteItem({
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const isSwipeOpen = openSwipeItemSlug === item.slug;
-  const [{ x }, api] = useSpring(() => ({ x: 0 }));
+  const [{ x }, api] = useSpring(() => ({
+    x: 0,
+    config: { tension: 500, friction: 30, clamp: true },
+  }));
 
   const canEditOrDelete = item.session_id === sessionId;
-  const buttonCount = 1 + (canEditOrDelete ? 2 : 0); // Pin + (Edit & Delete if allowed)
-  const buttonWidth = 64; // w-16 is 4rem, which is typically 64px
+  const buttonCount = 1 + (canEditOrDelete ? 2 : 0);
+  const buttonWidth = 64;
   const threshold = -buttonWidth * buttonCount;
 
   const bind = useDrag(
-    ({ down, movement: [mx], last }) => {
+    ({ down, movement: [mx], velocity: [vx], direction: [dx], last }) => {
+      const currentX = x.get();
+      const projectedEndpoint = currentX + vx * 0.2;
+
       if (down) {
-        // Directly map the movement to the x position
-        api.start({ x: Math.max(threshold, Math.min(0, mx)), immediate: true });
-      } else if (last) {
-        // When released, snap to the nearest edge
-        const shouldOpen = mx < threshold / 2;
-        api.start({ x: shouldOpen ? threshold : 0 });
-        setOpenSwipeItemSlug(shouldOpen ? item.slug : null);
+        api.start({
+          x: Math.max(threshold, Math.min(0, currentX + mx)),
+          immediate: true,
+        });
+      } else {
+        const shouldOpen =
+          projectedEndpoint < threshold / 2 || (dx < 0 && Math.abs(vx) > 0.5);
+
+        api.start({
+          x: shouldOpen ? threshold : 0,
+          immediate: false,
+          config: { tension: 500, friction: 30, clamp: true },
+        });
+
+        if (last) {
+          setOpenSwipeItemSlug(shouldOpen ? item.slug : null);
+        }
       }
     },
-    { 
-      axis: "x", 
-      bounds: { left: threshold, right: 0 }, 
+    {
+      axis: "x",
+      bounds: { left: threshold, right: 0 },
       rubberband: true,
-      from: () => [x.get(), 0], // Start from the current x position
+      from: () => [x.get(), 0],
       filterTaps: true,
-      threshold: 5, // Add a small threshold to differentiate between taps and drags
+      threshold: 5,
     }
   );
 
   useEffect(() => {
     if (openSwipeItemSlug !== item.slug) {
-      api.start({ x: 0 });
+      api.start({
+        x: 0,
+        immediate: false,
+        config: { tension: 500, friction: 30, clamp: true },
+      });
     }
   }, [openSwipeItemSlug, item.slug, api]);
 
@@ -150,7 +170,6 @@ export function NoteItem({
           {NoteContent}
         </animated.div>
         <SwipeActions
-          isOpen={isSwipeOpen}
           onPin={handlePinAction}
           onEdit={handleEdit}
           onDelete={handleDelete}
