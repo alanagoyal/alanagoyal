@@ -7,24 +7,14 @@ export const dynamic = "error";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const supabase = createBrowserClient();
-  let title = "notes";
-  let emoji = "";
+  const { data: note } = await supabase
+    .from("notes")
+    .select("title, emoji")
+    .eq("slug", params.slug)
+    .single();
 
-  if (params.slug && params.slug !== "") {
-    if (params.slug.startsWith("new-note")) {
-      title = "new note";
-      emoji = "👋🏼";
-    } else {
-      const { data: note } = await supabase
-        .from("notes")
-        .select("title, emoji")
-        .eq("slug", params.slug)
-        .single();
-
-      title = note?.title || "new note";
-      emoji = note?.emoji || "👋🏼";
-    }
-  }
+  const title = note?.title || "new note";
+  const emoji = note?.emoji || "👋🏼";
 
   return {
     title: title,
