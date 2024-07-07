@@ -41,14 +41,14 @@ export default async function RootLayout({
         <meta property="twitter:description" content={siteConfig.description}></meta>
         <meta
           property="twitter:image"
-          content={`${siteConfig.url}?slug=${slug}`}
+          content={`${siteConfig.url}/api/og?slug=${slug}`}
         ></meta>
         <meta property="og:site_name" content={siteConfig.name}></meta>
         <meta property="og:description" content={siteConfig.description}></meta>
         <meta property="og:title" content={siteConfig.name}></meta>
         <meta
           property="og:image"
-          content={`${siteConfig.url}?slug=${slug}`}
+          content={`${siteConfig.url}/api/og?slug=${slug}`}
         />
         <meta property="og:url" content={siteConfig.url}></meta>
       </head>
