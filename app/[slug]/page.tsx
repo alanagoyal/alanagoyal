@@ -1,19 +1,43 @@
 import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
-import { notFound } from 'next/navigation';
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
 export const dynamic = "error";
 
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const supabase = createBrowserClient();
+  const { data: note } = await supabase
+    .from("notes")
+    .select("title, emoji")
+    .eq("slug", params.slug)
+    .single();
+
+  const title = note?.title || "new note";
+  const emoji = note?.emoji || "👋🏼";
+
+  return {
+    title: `alana goyal | ${title}`,
+    openGraph: {
+      images: [`/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(emoji)}`],
+    },
+  };
+}
+
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
-  const { data: posts } = await supabase.from('notes').select('slug')
+  const { data: posts } = await supabase.from("notes").select("slug");
 
   return posts!.map(({ slug }) => ({
     slug,
-  }))
+  }));
 }
 
-export default async function NotePage({ params }: { params: { slug: string } }) {
+export default async function NotePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const supabase = createBrowserClient();
   const slug = params.slug;
   const { data: note } = await supabase
