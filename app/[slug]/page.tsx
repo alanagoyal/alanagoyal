@@ -1,7 +1,6 @@
 import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { notFound } from "next/navigation";
-import { Metadata } from "next";
 
 export const dynamic = "error";
 
@@ -12,20 +11,6 @@ export async function generateStaticParams() {
   return posts!.map(({ slug }) => ({
     slug,
   }));
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-  return {
-    openGraph: {
-      images: [`${BASE_URL}/api/og?slug=${params.slug}`],
-    },
-  };
 }
 
 export default async function NotePage({
