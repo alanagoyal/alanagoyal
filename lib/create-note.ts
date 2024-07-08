@@ -19,14 +19,16 @@ export async function createNote(sessionId: string | null, router: any, addNewPi
   };
 
   try {
-    router.push(`/${slug}`);
-    router.refresh();
 
     await supabase
       .from('notes')
       .upsert(note, { onConflict: 'id' });
 
     addNewPinnedNote(slug);
+
+    router.push(`/${slug}`);
+    router.refresh();
+    
   } catch (error) {
     console.error("Error creating note:", error);
   }
