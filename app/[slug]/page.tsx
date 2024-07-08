@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
 export const dynamic = "error";
+export const revalidate = 60 * 60 * 24;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const supabase = createBrowserClient();
