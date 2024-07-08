@@ -28,10 +28,9 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
-    setFormattedDate(format(
-      parseISO(note.created_at),
-      "MMMM d, yyyy 'at' h:mm a"
-    ));
+    setFormattedDate(
+      format(parseISO(note.created_at), "MMMM d, yyyy 'at' h:mm a")
+    );
   }, [note.created_at]);
 
   const handleEmojiSelect = (emojiObject: any) => {
@@ -91,7 +90,12 @@ export default function NoteHeader({
         </div>
         {showEmojiPicker && !isMobile && !note.public && (
           <div className="absolute top-full right-0 z-10">
-            <Picker onEmojiSelect={handleEmojiSelect} />
+            <Picker
+              onEmojiSelect={handleEmojiSelect}
+              autoFocus={true}
+              searchPosition="top"
+              onClickOutside={() => setShowEmojiPicker(false)}
+            />
           </div>
         )}
       </div>
