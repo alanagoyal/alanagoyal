@@ -25,7 +25,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = createBrowserClient();
-  const { data } = await supabase.from("notes").select("*");
+  const { data: notes } = await supabase.from("notes").select("*");
   
   return (
     <html lang="en" className="bg-[#1c1c1c]">
@@ -45,7 +45,7 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <SidebarLayout data={data}>{children}</SidebarLayout>
+        <SidebarLayout notes={notes}>{children}</SidebarLayout>
       </body>
     </html>
   );
