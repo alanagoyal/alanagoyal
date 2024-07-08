@@ -222,6 +222,7 @@ export default function Sidebar({
         (target as HTMLElement).blur();
       } else if (!isTyping) {
         if (event.key === "j" && !event.metaKey) {
+          (document.activeElement as HTMLElement)?.blur();
           event.preventDefault();
           if (localSearchResults) {
             setHighlightedIndex((prevIndex) =>
@@ -231,6 +232,7 @@ export default function Sidebar({
             navigateNotes("down");
           }
         } else if (event.key === "k" && !event.metaKey) {
+          (document.activeElement as HTMLElement)?.blur();
           event.preventDefault();
           if (localSearchResults) {
             setHighlightedIndex((prevIndex) =>

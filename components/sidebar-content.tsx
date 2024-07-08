@@ -82,6 +82,7 @@ export function SidebarContent({
     (event: KeyboardEvent) => {
       if (localSearchResults && localSearchResults.length > 0) {
         if (event.key === "Enter") {
+          (document.activeElement as HTMLElement)?.blur();
           event.preventDefault();
           const selectedNote = localSearchResults[highlightedIndex];
           router.push(`/${selectedNote.slug}`);
@@ -89,6 +90,7 @@ export function SidebarContent({
           searchInputRef.current?.blur();
         } else if (!isSearchInputFocused) {
           if (event.key === "j" || event.key === "ArrowDown") {
+            (document.activeElement as HTMLElement)?.blur();
             event.preventDefault();
             setHighlightedIndex(
               (prevIndex) => (prevIndex + 1) % localSearchResults.length
