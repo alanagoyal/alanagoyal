@@ -26,7 +26,6 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
     router.push(`/${note.slug}`);
   };
 
-  // Render nothing if isMobile is null
   if (isMobile === null) {
     return null;
   }

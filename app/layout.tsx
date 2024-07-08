@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export const revalidate = 0; // This will revalidate the page on every request
+export const revalidate = 0; 
 
 export default async function RootLayout({
   children,
