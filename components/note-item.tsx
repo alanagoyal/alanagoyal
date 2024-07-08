@@ -100,19 +100,15 @@ export function NoteItem({
 
   const NoteContent = (
     <li
-      className={`min-h-[50px] rounded-md ${
+      className={`min-h-[50px] ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
-          ? "bg-[#9D7D28]"
+          ? "bg-[#9D7D28] rounded-md"
           : ""
       }`}
       onClick={handleNoteClick}
     >
-      <Link 
-        href={`/${item.slug || ""}`} 
-        prefetch={true} 
-        className="block py-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#e2a727] focus-visible:ring-opacity-50 transition-shadow duration-200"
-      >
+      <Link href={`/${item.slug || ""}`} prefetch={true} className="block py-2">
         <h2 className="text-sm font-bold pl-4 pr-4 break-words">
           {item.emoji} {item.title}
         </h2>
