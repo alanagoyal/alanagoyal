@@ -65,11 +65,8 @@ export function NoteItem({
   const buttonWidth = 64;
   const threshold = -buttonWidth * buttonCount;
 
-  const [isDragging, setIsDragging] = useState(false);
-
   const bind = useDrag(
     ({ down, movement: [mx], velocity: [vx], direction: [dx], last }) => {
-      setIsDragging(down);
       const currentX = x.get();
       const projectedEndpoint = currentX + vx * 0.2;
 

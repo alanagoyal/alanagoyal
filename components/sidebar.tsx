@@ -50,9 +50,8 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(
-    null
-  );
+  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (pathname) {
@@ -286,8 +285,25 @@ export default function Sidebar({
     handleNoteDelete,
   ]);
 
+  useEffect(() => {
+    const sidebarElement = sidebarRef.current;
+    if (!sidebarElement || !isMobile) return;
+
+    const handleScroll = () => {
+      if (openSwipeItemSlug) {
+        setOpenSwipeItemSlug(null);
+      }
+    };
+
+    sidebarElement.addEventListener('scroll', handleScroll);
+
+    return () => {
+      sidebarElement.removeEventListener('scroll', handleScroll);
+    };
+  }, [isMobile, openSwipeItemSlug]);
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden" ref={sidebarRef}>
       <SessionId setSessionId={setSessionId} />
       <CommandMenu
         notes={notes}
