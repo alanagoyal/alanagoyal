@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 11%; 
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -52,7 +52,7 @@
   }  
  
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 0 0% 11%; 
     --foreground: 210 40% 98%;
  
     --card: 222.2 84% 4.9%;
@@ -89,4 +89,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Add this to ensure the background color is applied immediately */
+html, body {
+  background-color: #1c1c1c;
 }

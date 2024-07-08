@@ -28,7 +28,7 @@ export default async function RootLayout({
   const { data: notes } = await supabase.from("notes").select("*");
   
   return (
-    <html lang="en" className="bg-[#1c1c1c]">
+    <html lang="en">
       <head>
         <title>{siteConfig.title}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>
@@ -41,7 +41,7 @@ export default async function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen font-sans antialiased",
           fontSans.variable
         )}
       >
