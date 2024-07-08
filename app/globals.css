@@ -35,7 +35,6 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
-    --focus-ring: 2px solid #e2a727;
   }
 
 
@@ -89,11 +88,6 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  *:focus-visible {
-    outline: var(--focus-ring);
-    border-radius: 6px;
   }
 }
 
