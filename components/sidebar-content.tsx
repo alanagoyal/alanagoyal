@@ -21,7 +21,6 @@ interface SidebarContentProps {
   setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>;
   categoryOrder: string[];
   labels: Record<string, React.ReactNode>;
-  setGroupedNotes: React.Dispatch<React.SetStateAction<Record<string, Note[]>>>;
   handleNoteDelete: (note: Note) => Promise<void>;
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
@@ -43,7 +42,6 @@ export function SidebarContent({
   setHighlightedIndex,
   categoryOrder,
   labels,
-  setGroupedNotes,
   handleNoteDelete,
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
@@ -141,29 +139,6 @@ export function SidebarContent({
   useEffect(() => {
     setHighlightedIndex(0);
   }, [localSearchResults, setHighlightedIndex]);
-
-  const onNoteDelete = useCallback(
-    (slugToDelete: string) => {
-      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
-        const newGroupedNotes = { ...prevGroupedNotes };
-        for (const category in newGroupedNotes) {
-          newGroupedNotes[category] = newGroupedNotes[category].filter(
-            (note: Note) => note.slug !== slugToDelete
-          );
-        }
-        return newGroupedNotes;
-      });
-
-      if (localSearchResults) {
-        setLocalSearchResults((prevResults) =>
-          prevResults
-            ? prevResults.filter((note) => note.slug !== slugToDelete)
-            : null
-        );
-      }
-    },
-    [setGroupedNotes, localSearchResults, setLocalSearchResults]
-  );
 
   return (
     <div className="pt-4 px-2">

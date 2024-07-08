@@ -279,7 +279,6 @@ export default function Sidebar({
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
           groupedNotes={groupedNotes}
-          setGroupedNotes={setGroupedNotes}
           selectedNoteSlug={selectedNoteSlug}
           onNoteSelect={onNoteSelect}
           notes={notes}
