@@ -47,7 +47,11 @@ export default function NewNote({ addNewPinnedNote, clearSearch }: { addNewPinne
       <SessionId setSessionId={setSessionId} />
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger onClick={handleCreateNote} aria-label="Create new note">
+          <TooltipTrigger 
+            onClick={handleCreateNote} 
+            aria-label="Create new note"
+            className="cursor-pointer p-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#e2a727] focus-visible:ring-opacity-50 transition-shadow duration-200"
+          >
             <Icons.new />
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">

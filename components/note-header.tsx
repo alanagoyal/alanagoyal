@@ -48,7 +48,7 @@ export default function NoteHeader({
     <>
       {isMobile && pathname !== "/" && (
         <Link href="/">
-          <button className="pt-2 flex items-center">
+          <button className="pt-2 flex items-center outline-none focus-visible:ring-1 focus-visible:ring-[#e2a727] focus-visible:ring-opacity-50 transition-shadow duration-200 rounded-md">
             <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
             <span className="text-[#e2a727] text-base ml-1">Notes</span>
           </button>
@@ -76,7 +76,7 @@ export default function NoteHeader({
               <Tooltip>
                 <TooltipTrigger
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="cursor-pointer"
+                  className="cursor-pointer p-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#e2a727] focus-visible:ring-opacity-50 transition-shadow duration-200"
                 >
                   {note.emoji}
                 </TooltipTrigger>
