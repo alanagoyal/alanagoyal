@@ -2,7 +2,6 @@ import { ImageResponse } from "next/og";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const slug = searchParams.get("slug");
   const title = searchParams.get("title") || "notes";
   const emoji = searchParams.get("emoji") || "";
 
