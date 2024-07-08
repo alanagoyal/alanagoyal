@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         <img
           width="1200"
           height="630"
-          src="https://res.cloudinary.com/djp21wtxm/image/upload/v1720369498/i1200x630-Zf2lOvCxwvos_bzybpu.png"
+          src="https://base-case-images.s3.us-west-1.amazonaws.com/og-blank.png"
           style={{
             position: "absolute",
             top: 0,
