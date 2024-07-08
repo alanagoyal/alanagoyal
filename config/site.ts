@@ -3,6 +3,6 @@ export const siteConfig = {
   title: "alana goyal | notes",
   description: "founder, managing partner, & engineer @ basecase",
   url: "https://alanagoyal.com",
-  og: "https://res.cloudinary.com/djp21wtxm/image/upload/v1720369498/i1200x630-Zf2lOvCxwvos_bzybpu.png"
+  og: "https://base-case-images.s3.us-west-1.amazonaws.com/og-blank.png"
 };
 
