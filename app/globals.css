@@ -91,7 +91,6 @@
   }
 }
 
-/* Add this to ensure the background color is applied immediately */
 html, body {
   background-color: #1c1c1c;
 }
