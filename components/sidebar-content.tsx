@@ -64,6 +64,7 @@ export function SidebarContent({
   }, []);
 
   const handlePinToggleWithClear = useCallback((slug: string) => {
+    console.log("handlePinToggleWithClear called with slug:", slug);
     clearSearch();
     handlePinToggle(slug);
   }, [clearSearch, handlePinToggle]);
@@ -78,31 +79,49 @@ export function SidebarContent({
     await handleNoteDelete(note);
   }, [clearSearch, handleNoteDelete]);
 
-  const handleKeyNavigation = useCallback(
+  const handleSearchKeyNavigation = useCallback(
     (event: KeyboardEvent) => {
-      if (localSearchResults && localSearchResults.length > 0) {
-        if (event.key === "Enter") {
-          (document.activeElement as HTMLElement)?.blur();
-          event.preventDefault();
-          const selectedNote = localSearchResults[highlightedIndex];
-          router.push(`/${selectedNote.slug}`);
-          clearSearch();
-          searchInputRef.current?.blur();
-        } else if (!isSearchInputFocused) {
-          if (event.key === "j" || event.key === "ArrowDown") {
-            (document.activeElement as HTMLElement)?.blur();
+      console.log("Key pressed:", event.key);
+      if (localSearchResults && localSearchResults.length > 0 && !isSearchInputFocused) {
+        const keyActions: Record<string, () => void> = {
+          'Enter': () => {
+            event.preventDefault();
+            const selectedNote = localSearchResults[highlightedIndex];
+            router.push(`/${selectedNote.slug}`);
+            clearSearch();
+            searchInputRef.current?.blur();
+          },
+          'j': () => {
             event.preventDefault();
             setHighlightedIndex(
               (prevIndex) => (prevIndex + 1) % localSearchResults.length
             );
-          } else if (event.key === "k" || event.key === "ArrowUp") {
+          },
+          'k': () => {
             event.preventDefault();
             setHighlightedIndex(
               (prevIndex) =>
                 (prevIndex - 1 + localSearchResults.length) %
                 localSearchResults.length
             );
+          },
+          'p': () => {
+            console.log("'p' action triggered");
+            event.preventDefault();
+            const selectedNote = localSearchResults[highlightedIndex];
+            console.log("Calling handlePinToggleWithClear with slug:", selectedNote.slug);
+            handlePinToggleWithClear(selectedNote.slug);
+          },
+          'd': () => {
+            event.preventDefault();
+            const selectedNote = localSearchResults[highlightedIndex];
+            handleDelete(selectedNote);
           }
+        };
+
+        if (keyActions[event.key]) {
+          event.preventDefault();
+          keyActions[event.key]();
         }
       }
     },
@@ -114,6 +133,8 @@ export function SidebarContent({
       clearSearch,
       setHighlightedIndex,
       searchInputRef,
+      handlePinToggleWithClear,
+      handleDelete
     ]
   );
 
@@ -127,8 +148,8 @@ export function SidebarContent({
           searchInputRef.current.blur();
           setIsSearchInputFocused(false);
         }
-      } else {
-        handleKeyNavigation(event);
+      } else if (!isSearchInputFocused) {
+        handleSearchKeyNavigation(event);
       }
     };
 
@@ -136,7 +157,7 @@ export function SidebarContent({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyNavigation, searchInputRef, setIsSearchInputFocused]);
+  }, [handleSearchKeyNavigation, searchInputRef, setIsSearchInputFocused, isSearchInputFocused]);
 
   useEffect(() => {
     setHighlightedIndex(0);
@@ -151,9 +172,8 @@ export function SidebarContent({
         inputRef={searchInputRef}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onFocus={() => setIsSearchInputFocused(true)}
-        onBlur={handleSearchInputBlur}
         setHighlightedIndex={setHighlightedIndex}
+        setIsSearchInputFocused={setIsSearchInputFocused}
       />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>

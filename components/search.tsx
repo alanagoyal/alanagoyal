@@ -10,9 +10,8 @@ export default function SearchBar({
   inputRef,
   searchQuery,
   setSearchQuery,
-  onFocus,
-  onBlur,
   setHighlightedIndex,
+  setIsSearchInputFocused,
 }: { 
   notes: Note[], 
   onSearchResults: (results: Note[] | null) => void, 
@@ -20,9 +19,8 @@ export default function SearchBar({
   inputRef: RefObject<HTMLInputElement>,
   searchQuery: string,
   setSearchQuery: (query: string) => void,
-  onFocus: () => void,
-  onBlur: () => void,
   setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>,
+  setIsSearchInputFocused: React.Dispatch<React.SetStateAction<boolean>>,
 }) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -51,8 +49,8 @@ export default function SearchBar({
         type="text"
         value={searchQuery}
         onChange={(e) => handleSearch(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
+        onFocus={() => setIsSearchInputFocused(true)}
+        onBlur={() => setIsSearchInputFocused(false)}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
         aria-label="Search notes"
