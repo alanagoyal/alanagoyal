@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export const revalidate = 0; // This will revalidate the page on every request
+export const revalidate = 0; 
 
 export default async function RootLayout({
   children,
@@ -25,10 +25,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = createBrowserClient();
-  const { data } = await supabase.from("notes").select("*");
+  const { data: notes } = await supabase.from("notes").select("*");
   
   return (
-    <html lang="en" className="bg-[#1c1c1c]">
+    <html lang="en">
       <head>
         <title>{siteConfig.title}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>
@@ -41,11 +41,11 @@ export default async function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen font-sans antialiased",
           fontSans.variable
         )}
       >
-        <SidebarLayout data={data}>{children}</SidebarLayout>
+        <SidebarLayout notes={notes}>{children}</SidebarLayout>
       </body>
     </html>
   );
