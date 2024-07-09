@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -24,28 +24,39 @@ export interface CommandMenuProps {
   addNewPinnedNote: (slug: string) => void;
   navigateNotes: (direction: "up" | "down") => void;
   togglePinned: (slug: string) => void;
-  selectedNoteSlug: string | null;
-  selectedNote: Note | null;
   deleteNote: (note: Note) => void;
   highlightedNote: Note | null;
-  clearSearch: () => void;
+  ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
 }
 
-export function CommandMenu({
+export const CommandMenu = forwardRef<{ setOpen: (open: boolean) => void }, CommandMenuProps>(({
   notes,
   sessionId,
   addNewPinnedNote,
   navigateNotes,
   togglePinned,
-  selectedNoteSlug,
-  selectedNote,
   deleteNote,
   highlightedNote,
-  clearSearch,
-}: CommandMenuProps) {
+}, ref) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
+
+  useImperativeHandle(ref, () => ({
+    setOpen: (newOpen: boolean) => {
+      setOpen(newOpen);
+    },
+  }));
+
+  useEffect(() => {
+    if (open) {
+      const timeoutId = setTimeout(() => {
+        const input = document.querySelector('[cmdk-input]') as HTMLInputElement;
+        input?.focus();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -177,4 +188,6 @@ export function CommandMenu({
       </CommandList>
     </CommandDialog>
   );
-}
+});
+
+CommandMenu.displayName = "CommandMenu";

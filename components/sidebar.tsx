@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CommandMenu, CommandMenuProps } from "./command-menu"; // Update the import
+import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
 import SearchBar from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
@@ -56,6 +56,10 @@ export default function Sidebar({
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
+    null
+  );
 
   useEffect(() => {
     if (pathname) {
@@ -252,7 +256,7 @@ export default function Sidebar({
           } else {
             navigateNotes("down");
           }
-        } else if (event.key === "k" || event.key === "ArrowUp") {
+        } else if (event.key === "k" && !event.metaKey || event.key === "ArrowUp") {
           (document.activeElement as HTMLElement)?.blur();
           event.preventDefault();
           if (localSearchResults) {
@@ -277,6 +281,9 @@ export default function Sidebar({
         } else if (event.key === "/") {
           event.preventDefault();
           searchInputRef.current?.focus();
+        } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          commandMenuRef.current?.setOpen(true);
         }
       }
     };
@@ -293,25 +300,21 @@ export default function Sidebar({
     localSearchResults,
     setHighlightedIndex,
     handleNoteDelete,
+    commandMenuRef,
   ]);
-
-  const commandMenuProps: CommandMenuProps = {
-    notes,
-    sessionId,
-    addNewPinnedNote: handlePinToggle,
-    navigateNotes,
-    togglePinned: handlePinToggle,
-    selectedNoteSlug,
-    selectedNote,
-    deleteNote: handleNoteDelete,
-    highlightedNote,
-    clearSearch,
-  };
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
-      <CommandMenu {...commandMenuProps} />
+      <CommandMenu
+        notes={notes}
+        sessionId={sessionId}
+        addNewPinnedNote={handlePinToggle}
+        navigateNotes={navigateNotes}
+        togglePinned={handlePinToggle}
+        deleteNote={handleNoteDelete}
+        highlightedNote={highlightedNote}
+      />
       <div className="flex-1 overflow-y-auto">
         <SearchBar
           notes={notes}
