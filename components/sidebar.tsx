@@ -254,7 +254,6 @@ export default function Sidebar({
       'd': () => highlightedNote && handleNoteDelete(highlightedNote),
       '/': () => searchInputRef.current?.focus(),
       'Escape': () => (document.activeElement as HTMLElement)?.blur(),
-      'Enter': () => goToHighlightedNote(),
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -264,7 +263,7 @@ export default function Sidebar({
       if (isTyping) {
         if (event.key === 'Escape') {
           shortcuts['Escape']();
-        } else if (event.key === 'Enter' && localSearchResults) {
+        } else if (event.key === 'Enter' && localSearchResults && localSearchResults.length > 0) {
           event.preventDefault();
           goToHighlightedNote();
         }
@@ -287,6 +286,9 @@ export default function Sidebar({
       } else if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         commandMenuRef.current?.setOpen(true);
+      } else if (event.key === 'Enter' && localSearchResults && localSearchResults.length > 0) {
+        event.preventDefault();
+        goToHighlightedNote();
       }
     };
 
