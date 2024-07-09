@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 
-export async function createNote(sessionId: string | null, router: any, addNewPinnedNote: (slug: string) => void) {
+export async function createNote(
+  sessionId: string | null,
+  router: any,
+  addNewPinnedNote: (slug: string) => void,
+  refreshSessionNotes: () => void
+) {
   const supabase = createClient();
   const noteId = uuidv4();
   const slug = `new-note-${noteId}`;
@@ -19,16 +24,14 @@ export async function createNote(sessionId: string | null, router: any, addNewPi
   };
 
   try {
-
-    await supabase
-      .from('notes')
-      .upsert(note, { onConflict: 'id' });
+    await supabase.from("notes").upsert(note, { onConflict: "id" });
 
     addNewPinnedNote(slug);
 
     router.push(`/${slug}`);
     router.refresh();
-    
+
+    refreshSessionNotes();
   } catch (error) {
     console.error("Error creating note:", error);
   }

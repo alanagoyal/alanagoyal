@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
 import { useRouter, usePathname } from "next/navigation";
+import { SessionNotesProvider } from "@/app/session-notes";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -33,26 +34,28 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   const showSidebar = !isMobile || pathname === "/";
 
   return (
-    <div className="bg-[#1c1c1c] text-white min-h-screen flex">
-      {showSidebar && (
-        <div
-          className={`${
-            isMobile
-              ? "w-full"
-              : "w-64 flex-shrink-0 border-r border-gray-400/20"
-          } overflow-y-auto h-screen`}
-        >
-          <Sidebar
-            notes={notes}
-            onNoteSelect={isMobile ? handleNoteSelect : () => {}}
-            isMobile={isMobile}
-          />
-        </div>
-      )}
-      {(!isMobile || !showSidebar) && (
-        <div className="flex-grow overflow-y-auto h-screen">{children}</div>
-      )}
-      <Toaster />
-    </div>
+    <SessionNotesProvider>
+      <div className="bg-[#1c1c1c] text-white min-h-screen flex">
+        {showSidebar && (
+          <div
+            className={`${
+              isMobile
+                ? "w-full"
+                : "w-64 flex-shrink-0 border-r border-gray-400/20"
+            } overflow-y-auto h-screen`}
+          >
+            <Sidebar
+              notes={notes}
+              onNoteSelect={isMobile ? handleNoteSelect : () => {}}
+              isMobile={isMobile}
+            />
+          </div>
+        )}
+        {(!isMobile || !showSidebar) && (
+          <div className="flex-grow overflow-y-auto h-screen">{children}</div>
+        )}
+        <Toaster />
+      </div>
+    </SessionNotesProvider>
   );
 }

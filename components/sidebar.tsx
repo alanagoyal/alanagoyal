@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useContext,
+} from "react";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
@@ -12,7 +19,7 @@ import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
-import { getSessionNotes } from "@/app/session-notes";
+import { SessionNotesContext } from "@/app/session-notes";
 
 const labels = {
   pinned: (
@@ -41,7 +48,6 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
 
-  const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
@@ -62,17 +68,12 @@ export default function Sidebar({
     null
   );
 
-  const [sessionNotes, setSessionNotes] = useState<any[]>([]);
-  useEffect(() => {
-    if (sessionId) {
-      (async () => {
-        const notes = await getSessionNotes({ sessionId });
-        if (notes) {
-          setSessionNotes(notes);
-        }
-      })();
-    }
-  }, [sessionId]);
+  const {
+    notes: sessionNotes,
+    sessionId,
+    setSessionId,
+    refreshSessionNotes,
+  } = useContext(SessionNotesContext);
 
   const notes = useMemo(
     () => [...publicNotes, ...sessionNotes],
@@ -247,11 +248,12 @@ export default function Sidebar({
 
         clearSearch();
         router.refresh();
+        refreshSessionNotes();
       } catch (error) {
         console.error("Error deleting note:", error);
       }
     },
-    [supabase, sessionId, flattenedNotes, router, isMobile]
+    [supabase, sessionId, flattenedNotes, isMobile, clearSearch, router]
   );
 
   const goToHighlightedNote = useCallback(() => {
