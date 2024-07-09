@@ -1,34 +1,33 @@
-import { RefObject } from "react";
+import { RefObject, Dispatch, SetStateAction } from "react";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { Note } from "@/lib/types";
 
-export default function SearchBar({ 
-  notes, 
-  onSearchResults, 
-  sessionId, 
+interface SearchBarProps {
+  notes: Note[];
+  onSearchResults: (results: Note[] | null) => void;
+  sessionId: string;
+  inputRef: RefObject<HTMLInputElement>;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  setHighlightedIndex: Dispatch<SetStateAction<number>>;
+  clearSearch: () => void;
+}
+
+export default function SearchBar({
+  notes,
+  onSearchResults,
+  sessionId,
   inputRef,
   searchQuery,
   setSearchQuery,
-  onFocus,
-  onBlur,
   setHighlightedIndex,
-}: { 
-  notes: Note[], 
-  onSearchResults: (results: Note[] | null) => void, 
-  sessionId: string,
-  inputRef: RefObject<HTMLInputElement>,
-  searchQuery: string,
-  setSearchQuery: (query: string) => void,
-  onFocus: () => void,
-  onBlur: () => void,
-  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>,
-}) {
+  clearSearch,
+}: SearchBarProps) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      onSearchResults(null);
-      setHighlightedIndex(0);
+      clearSearch();
       return;
     }
 
@@ -51,8 +50,6 @@ export default function SearchBar({
         type="text"
         value={searchQuery}
         onChange={(e) => handleSearch(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
         placeholder="Search"
         className="w-full pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
         aria-label="Search notes"

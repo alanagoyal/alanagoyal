@@ -6,11 +6,11 @@ import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
-import { SidebarContent } from './sidebar-content';
-import { groupNotesByCategory, sortGroupedNotes } from '@/lib/note-utils';
+import { SidebarContent } from "./sidebar-content";
+import SearchBar from "./search";
+import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
-import { describe } from "node:test";
 import { toast } from "./ui/use-toast";
 
 const labels = {
@@ -37,18 +37,29 @@ export default function Sidebar({
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
 }) {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
+  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
+    null
+  );
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [groupedNotes, setGroupedNotes] = useState<any>({});
-  const router = useRouter();
-  const supabase = createClient();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(null);
+  const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(
+    null
+  );
+  const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
+    null
+  );
 
   useEffect(() => {
     if (pathname) {
@@ -59,7 +70,7 @@ export default function Sidebar({
 
   useEffect(() => {
     if (selectedNoteSlug) {
-      const note = notes.find(note => note.slug === selectedNoteSlug);
+      const note = notes.find((note) => note.slug === selectedNoteSlug);
       setSelectedNote(note || null);
     } else {
       setSelectedNote(null);
@@ -98,32 +109,22 @@ export default function Sidebar({
     setGroupedNotes(grouped);
   }, [notes, sessionId, pinnedNotes]);
 
-  const togglePinned = useCallback((slug: string) => {
-    setPinnedNotes((prev) => {
-      const newPinned = new Set(prev);
-      if (newPinned.has(slug)) {
-        newPinned.delete(slug);
-      } else {
-        newPinned.add(slug);
-      }
-      localStorage.setItem(
-        "pinnedNotes",
-        JSON.stringify(Array.from(newPinned))
-      );
-      return newPinned;
-    });
-  }, []);
+  useEffect(() => {
+    if (localSearchResults && localSearchResults.length > 0) {
+      setHighlightedNote(localSearchResults[highlightedIndex]);
+    } else {
+      setHighlightedNote(selectedNote);
+    }
+  }, [localSearchResults, highlightedIndex, selectedNote]);
 
-  const addNewPinnedNote = useCallback((slug: string) => {
-    setPinnedNotes((prev) => {
-      const newPinned = new Set(prev).add(slug);
-      localStorage.setItem(
-        "pinnedNotes",
-        JSON.stringify(Array.from(newPinned))
-      );
-      return newPinned;
-    });
-  }, []);
+  const clearSearch = useCallback(() => {
+    setLocalSearchResults(null);
+    setSearchQuery("");
+    setHighlightedIndex(0);
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+  }, [setLocalSearchResults, setHighlightedIndex]);
 
   const flattenedNotes = useCallback(() => {
     return categoryOrder.flatMap((category) =>
@@ -133,137 +134,202 @@ export default function Sidebar({
 
   const navigateNotes = useCallback(
     (direction: "up" | "down") => {
-    if (!localSearchResults) {
-      const flattened = flattenedNotes();
-      const currentIndex = flattened.findIndex(
-        (note) => note.slug === selectedNoteSlug
-      );
-      let nextIndex;
+      if (!localSearchResults) {
+        const flattened = flattenedNotes();
+        const currentIndex = flattened.findIndex(
+          (note) => note.slug === selectedNoteSlug
+        );
+        let nextIndex;
 
-      if (direction === "up") {
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
-      } else {
-        nextIndex = currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
-      }
+        if (direction === "up") {
+          nextIndex =
+            currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
+        } else {
+          nextIndex =
+            currentIndex < flattened.length - 1 ? currentIndex + 1 : 0;
+        }
 
-      const nextNote = flattened[nextIndex];
-      if (nextNote) {
-        router.push(`/${nextNote.slug}`);
+        const nextNote = flattened[nextIndex];
+        if (nextNote) {
+          router.push(`/${nextNote.slug}`);
+        }
       }
-    }
-  },
-  [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+    },
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
   );
 
-  const handlePinToggle = useCallback((slug: string) => {
-    togglePinned(slug);
-    if (!isMobile) {
-      router.push(`/${slug}`);
-    }
-  }, [togglePinned, router, isMobile]);
-
-  const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
-    if (noteToDelete.public) {
-      toast({
-        description: "Oops! You can't delete that note",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("slug", noteToDelete.slug)
-        .eq("session_id", sessionId);
-
-      if (error) throw error;
-
-      setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
-        const newGroupedNotes = { ...prevGroupedNotes };
-        for (const category in newGroupedNotes) {
-          newGroupedNotes[category] = newGroupedNotes[category].filter(
-            (note: Note) => note.slug !== noteToDelete.slug
-          );
+  const handlePinToggle = useCallback(
+    (slug: string) => {
+      setPinnedNotes((prev) => {
+        const newPinned = new Set(prev);
+        if (newPinned.has(slug)) {
+          newPinned.delete(slug);
+        } else {
+          newPinned.add(slug);
         }
-        return newGroupedNotes;
+        localStorage.setItem(
+          "pinnedNotes",
+          JSON.stringify(Array.from(newPinned))
+        );
+        return newPinned;
       });
 
-      const allNotes = flattenedNotes();
-      const deletedNoteIndex = allNotes.findIndex((note) => note.slug === noteToDelete.slug);
-      
-      let nextNote;
-      if (deletedNoteIndex === 0) {
-        nextNote = allNotes[1];
-      } else {
-        nextNote = allNotes[deletedNoteIndex - 1];
-      }
-      
-      if (!isMobile) {
-        router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
-      }
-      router.refresh();
+      clearSearch();
 
-    } catch (error) {
-      console.error("Error deleting note:", error);
+      if (!isMobile) {
+        router.push(`/${slug}`);
+      }
+    },
+    [router, isMobile, clearSearch]
+  );
+
+  const handleNoteDelete = useCallback(
+    async (noteToDelete: Note) => {
+      if (noteToDelete.public) {
+        toast({
+          description: "Oops! You can't delete that note",
+        });
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from("notes")
+          .delete()
+          .eq("slug", noteToDelete.slug)
+          .eq("session_id", sessionId);
+
+        if (error) throw error;
+
+        setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
+          const newGroupedNotes = { ...prevGroupedNotes };
+          for (const category in newGroupedNotes) {
+            newGroupedNotes[category] = newGroupedNotes[category].filter(
+              (note: Note) => note.slug !== noteToDelete.slug
+            );
+          }
+          return newGroupedNotes;
+        });
+
+        const allNotes = flattenedNotes();
+        const deletedNoteIndex = allNotes.findIndex(
+          (note) => note.slug === noteToDelete.slug
+        );
+
+        let nextNote;
+        if (deletedNoteIndex === 0) {
+          nextNote = allNotes[1];
+        } else {
+          nextNote = allNotes[deletedNoteIndex - 1];
+        }
+
+        if (!isMobile) {
+          router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+        }
+
+        clearSearch();
+        router.refresh();
+      } catch (error) {
+        console.error("Error deleting note:", error);
+      }
+    },
+    [supabase, sessionId, flattenedNotes, router, isMobile]
+  );
+
+  const goToHighlightedNote = useCallback(() => {
+    if (localSearchResults && localSearchResults[highlightedIndex]) {
+      const selectedNote = localSearchResults[highlightedIndex];
+      router.push(`/${selectedNote.slug}`);
+      clearSearch();
     }
-  }, [supabase, sessionId, flattenedNotes, router, isMobile]);
+  }, [localSearchResults, highlightedIndex, router, clearSearch]);
 
   useEffect(() => {
+    const shortcuts = {
+      j: () => navigateNotes("down"),
+      ArrowDown: () => navigateNotes("down"),
+      k: () => navigateNotes("up"),
+      ArrowUp: () => navigateNotes("up"),
+      p: () => highlightedNote && handlePinToggle(highlightedNote.slug),
+      d: () => highlightedNote && handleNoteDelete(highlightedNote),
+      "/": () => searchInputRef.current?.focus(),
+      Escape: () => (document.activeElement as HTMLElement)?.blur(),
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       const isTyping =
-        target.isContentEditable ||
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT";
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable;
 
-      if (isTyping && event.key === "Escape") {
-        (target as HTMLElement).blur();
-      } else if (!isTyping) {
-        if (event.key === "j" && !event.metaKey) {
-          (document.activeElement as HTMLElement)?.blur();
+      if (isTyping) {
+        if (event.key === "Escape") {
+          shortcuts["Escape"]();
+        } else if (
+          event.key === "Enter" &&
+          localSearchResults &&
+          localSearchResults.length > 0
+        ) {
           event.preventDefault();
-          if (localSearchResults) {
-            setHighlightedIndex((prevIndex) =>
-              (prevIndex + 1) % localSearchResults.length
-            );
-          } else {
-            navigateNotes("down");
-          }
-        } else if (event.key === "k" && !event.metaKey) {
-          (document.activeElement as HTMLElement)?.blur();
-          event.preventDefault();
-          if (localSearchResults) {
-            setHighlightedIndex((prevIndex) =>
-              (prevIndex - 1 + localSearchResults.length) % localSearchResults.length
-            );
-          } else {
-            navigateNotes("up");
-          }
-        } else if (event.key === "p" && !event.metaKey) {
-          event.preventDefault();
-          if (selectedNoteSlug) {
-            handlePinToggle(selectedNoteSlug);
-          }
-        } else if (event.key === "d" && !event.metaKey) {
-          event.preventDefault();
-          if (selectedNote) {
-            handleNoteDelete(selectedNote);
-          }
-        } else if (event.key === "/") {
-          event.preventDefault();
-          searchInputRef.current?.focus();
+          goToHighlightedNote();
         }
+        return;
+      }
+
+      const key = event.key as keyof typeof shortcuts;
+      if (shortcuts[key] && !(event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        (document.activeElement as HTMLElement)?.blur();
+
+        if (
+          localSearchResults &&
+          ["j", "ArrowDown", "k", "ArrowUp"].includes(key)
+        ) {
+          const direction = ["j", "ArrowDown"].includes(key) ? 1 : -1;
+          setHighlightedIndex(
+            (prevIndex) =>
+              (prevIndex + direction + localSearchResults.length) %
+              localSearchResults.length
+          );
+        } else {
+          shortcuts[key]();
+        }
+      } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        commandMenuRef.current?.setOpen(true);
+      } else if (
+        event.key === "Enter" &&
+        localSearchResults &&
+        localSearchResults.length > 0
+      ) {
+        event.preventDefault();
+        goToHighlightedNote();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    navigateNotes,
+    highlightedNote,
+    handlePinToggle,
+    localSearchResults,
+    setHighlightedIndex,
+    handleNoteDelete,
+    commandMenuRef,
+    goToHighlightedNote,
+  ]);
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [navigateNotes, selectedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
+  const handleNoteSelect = useCallback(
+    (note: any) => {
+      onNoteSelect(note);
+      if (!isMobile) {
+        router.push(`/${note.slug}`);
+      }
+      clearSearch();
+    },
+    [clearSearch, onNoteSelect, isMobile, router]
+  );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -271,33 +337,39 @@ export default function Sidebar({
       <CommandMenu
         notes={notes}
         sessionId={sessionId}
-        addNewPinnedNote={addNewPinnedNote}
+        addNewPinnedNote={handlePinToggle}
         navigateNotes={navigateNotes}
-        togglePinned={togglePinned}
-        selectedNoteSlug={selectedNoteSlug}
-        selectedNote={selectedNote}
+        togglePinned={handlePinToggle}
         deleteNote={handleNoteDelete}
+        highlightedNote={highlightedNote}
       />
       <div className="flex-1 overflow-y-auto">
+        <SearchBar
+          notes={notes}
+          onSearchResults={setLocalSearchResults}
+          sessionId={sessionId}
+          inputRef={searchInputRef}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setHighlightedIndex={setHighlightedIndex}
+          clearSearch={clearSearch}
+        />
         <SidebarContent
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
-          onNoteSelect={onNoteSelect}
-          notes={notes}
+          onNoteSelect={handleNoteSelect}
           sessionId={sessionId}
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
-          addNewPinnedNote={addNewPinnedNote}
-          searchInputRef={searchInputRef}
+          addNewPinnedNote={handlePinToggle}
           localSearchResults={localSearchResults}
-          setLocalSearchResults={setLocalSearchResults}
           highlightedIndex={highlightedIndex}
-          setHighlightedIndex={setHighlightedIndex}
           categoryOrder={categoryOrder}
           labels={labels}
           handleNoteDelete={handleNoteDelete}
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+          clearSearch={clearSearch}
         />
       </div>
     </div>
