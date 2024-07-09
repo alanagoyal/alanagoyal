@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
@@ -35,8 +35,18 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   return (
     <div className="bg-[#1c1c1c] text-white min-h-screen flex">
       {showSidebar && (
-        <div className={`${isMobile ? 'w-full' : 'w-64 flex-shrink-0 border-r border-gray-400/20'} overflow-y-auto h-screen`}>
-          <Sidebar notes={notes} onNoteSelect={isMobile ? handleNoteSelect : () => {}} isMobile={isMobile} />
+        <div
+          className={`${
+            isMobile
+              ? "w-full"
+              : "w-64 flex-shrink-0 border-r border-gray-400/20"
+          } overflow-y-auto h-screen`}
+        >
+          <Sidebar
+            notes={notes}
+            onNoteSelect={isMobile ? handleNoteSelect : () => {}}
+            isMobile={isMobile}
+          />
         </div>
       )}
       {(!isMobile || !showSidebar) && (
