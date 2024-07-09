@@ -301,6 +301,14 @@ export default function Sidebar({
     goToHighlightedNote,
   ]);
 
+  const handleNoteSelect = useCallback((note: any) => {
+    clearSearch();
+    onNoteSelect(note);
+    if (!isMobile) {
+      router.push(`/${note.slug}`);
+    }
+  }, [clearSearch, onNoteSelect, isMobile, router]);
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
@@ -327,7 +335,7 @@ export default function Sidebar({
         <SidebarContent
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
-          onNoteSelect={onNoteSelect}
+          onNoteSelect={handleNoteSelect}
           sessionId={sessionId}
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
