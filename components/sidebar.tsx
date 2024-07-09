@@ -160,12 +160,14 @@ export default function Sidebar({
 
   const handlePinToggle = useCallback(
     (slug: string) => {
+      let isPinning = false;
       setPinnedNotes((prev) => {
         const newPinned = new Set(prev);
-        if (newPinned.has(slug)) {
-          newPinned.delete(slug);
-        } else {
+        isPinning = !newPinned.has(slug);
+        if (isPinning) {
           newPinned.add(slug);
+        } else {
+          newPinned.delete(slug);
         }
         localStorage.setItem(
           "pinnedNotes",
@@ -179,6 +181,11 @@ export default function Sidebar({
       if (!isMobile) {
         router.push(`/${slug}`);
       }
+      
+      toast({
+        title: isPinning ? "Note pinned" : "Note unpinned",
+        description: isPinning ? "Your note is now pinned" : "Your note is no longer pinned",
+      });
     },
     [router, isMobile, clearSearch]
   );
@@ -187,7 +194,8 @@ export default function Sidebar({
     async (noteToDelete: Note) => {
       if (noteToDelete.public) {
         toast({
-          description: "Oops! You can't delete that note",
+          title: "Oops! You can't delete that note",
+          description: "You can't delete public notes",
         });
         return;
       }
@@ -229,6 +237,12 @@ export default function Sidebar({
 
         clearSearch();
         router.refresh();
+
+        toast({
+          title: "Note deleted",
+          description: "Your note has been deleted",
+        });
+
       } catch (error) {
         console.error("Error deleting note:", error);
       }

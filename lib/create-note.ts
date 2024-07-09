@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 export async function createNote(sessionId: string | null, router: any, addNewPinnedNote: (slug: string) => void) {
   const supabase = createClient();
@@ -28,7 +29,12 @@ export async function createNote(sessionId: string | null, router: any, addNewPi
 
     router.push(`/${slug}`);
     router.refresh();
-    
+
+    toast({
+      title: "Note created",
+      description: "Your note is private to you in this session",
+    });
+
   } catch (error) {
     console.error("Error creating note:", error);
   }
