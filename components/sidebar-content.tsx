@@ -24,6 +24,8 @@ interface SidebarContentProps {
   handleNoteDelete: (note: Note) => Promise<void>;
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
+  highlightedNote: Note | null;
+  setHighlightedNote: React.Dispatch<React.SetStateAction<Note | null>>;
 }
 
 export function SidebarContent({
@@ -45,10 +47,12 @@ export function SidebarContent({
   handleNoteDelete,
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
+  highlightedNote,
+  setHighlightedNote,
 }: SidebarContentProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
-  const router = useRouter();
 
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
@@ -95,6 +99,7 @@ export function SidebarContent({
             setHighlightedIndex(
               (prevIndex) => (prevIndex + 1) % localSearchResults.length
             );
+            setHighlightedNote(localSearchResults[(highlightedIndex + 1) % localSearchResults.length]);
           } else if (event.key === "k" || event.key === "ArrowUp") {
             event.preventDefault();
             setHighlightedIndex(
@@ -102,6 +107,17 @@ export function SidebarContent({
                 (prevIndex - 1 + localSearchResults.length) %
                 localSearchResults.length
             );
+            setHighlightedNote(localSearchResults[(highlightedIndex - 1 + localSearchResults.length) % localSearchResults.length]);
+          } else if (event.key === "p") {
+            event.preventDefault();
+            if (highlightedNote) {
+              handlePinToggleWithClear(highlightedNote.slug);
+            }
+          } else if (event.key === "d") {
+            event.preventDefault();
+            if (highlightedNote) {
+              handleDelete(highlightedNote);
+            }
           }
         }
       }
@@ -109,11 +125,14 @@ export function SidebarContent({
     [
       localSearchResults,
       highlightedIndex,
-      router,
       isSearchInputFocused,
       clearSearch,
       setHighlightedIndex,
       searchInputRef,
+      highlightedNote,
+      handlePinToggleWithClear,
+      handleDelete,
+      setHighlightedNote,
     ]
   );
 

@@ -27,6 +27,7 @@ export function CommandMenu({
   selectedNoteSlug,
   selectedNote,
   deleteNote,
+  highlightedNote,
 }: {
   notes: Note[];
   sessionId: string;
@@ -36,6 +37,7 @@ export function CommandMenu({
   selectedNoteSlug: string | null;
   selectedNote: Note | null;
   deleteNote: (note: Note) => void;
+  highlightedNote: Note | null;
 }) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,18 +88,18 @@ export function CommandMenu({
   }, [navigateNotes]);
 
   const handleTogglePin = useCallback(() => {
-    if (selectedNoteSlug) {
-      togglePinned(selectedNoteSlug);
+    if (highlightedNote) {
+      togglePinned(highlightedNote.slug);
       setOpen(false);
     }
-  }, [selectedNoteSlug, togglePinned]);
+  }, [highlightedNote, togglePinned]);
 
   const handleDeleteNote = useCallback(() => {
-    if (selectedNote) {
-      deleteNote(selectedNote);
+    if (highlightedNote) {
+      deleteNote(highlightedNote);
       setOpen(false);
     }
-  }, [selectedNote, deleteNote]);
+  }, [highlightedNote, deleteNote]);
 
   const commands = [
     {

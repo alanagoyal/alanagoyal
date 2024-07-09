@@ -10,7 +10,6 @@ import { SidebarContent } from './sidebar-content';
 import { groupNotesByCategory, sortGroupedNotes } from '@/lib/note-utils';
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
-import { describe } from "node:test";
 import { toast } from "./ui/use-toast";
 
 const labels = {
@@ -37,6 +36,9 @@ export default function Sidebar({
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
 }) {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
@@ -45,10 +47,9 @@ export default function Sidebar({
   const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [groupedNotes, setGroupedNotes] = useState<any>({});
-  const router = useRouter();
-  const supabase = createClient();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(null);
+  const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
 
   useEffect(() => {
     if (pathname) {
@@ -98,32 +99,13 @@ export default function Sidebar({
     setGroupedNotes(grouped);
   }, [notes, sessionId, pinnedNotes]);
 
-  const togglePinned = useCallback((slug: string) => {
-    setPinnedNotes((prev) => {
-      const newPinned = new Set(prev);
-      if (newPinned.has(slug)) {
-        newPinned.delete(slug);
-      } else {
-        newPinned.add(slug);
-      }
-      localStorage.setItem(
-        "pinnedNotes",
-        JSON.stringify(Array.from(newPinned))
-      );
-      return newPinned;
-    });
-  }, []);
-
-  const addNewPinnedNote = useCallback((slug: string) => {
-    setPinnedNotes((prev) => {
-      const newPinned = new Set(prev).add(slug);
-      localStorage.setItem(
-        "pinnedNotes",
-        JSON.stringify(Array.from(newPinned))
-      );
-      return newPinned;
-    });
-  }, []);
+  useEffect(() => {
+    if (localSearchResults && localSearchResults.length > 0) {
+      setHighlightedNote(localSearchResults[highlightedIndex]);
+    } else {
+      setHighlightedNote(selectedNote);
+    }
+  }, [localSearchResults, highlightedIndex, selectedNote]);
 
   const flattenedNotes = useCallback(() => {
     return categoryOrder.flatMap((category) =>
@@ -156,11 +138,24 @@ export default function Sidebar({
   );
 
   const handlePinToggle = useCallback((slug: string) => {
-    togglePinned(slug);
+    setPinnedNotes((prev) => {
+      const newPinned = new Set(prev);
+      if (newPinned.has(slug)) {
+        newPinned.delete(slug);
+      } else {
+        newPinned.add(slug);
+      }
+      localStorage.setItem(
+        "pinnedNotes",
+        JSON.stringify(Array.from(newPinned))
+      );
+      return newPinned;
+    });
+
     if (!isMobile) {
       router.push(`/${slug}`);
     }
-  }, [togglePinned, router, isMobile]);
+  }, [router, isMobile]);
 
   const handleNoteDelete = useCallback(async (noteToDelete: Note) => {
     if (noteToDelete.public) {
@@ -243,13 +238,13 @@ export default function Sidebar({
           }
         } else if (event.key === "p" && !event.metaKey) {
           event.preventDefault();
-          if (selectedNoteSlug) {
-            handlePinToggle(selectedNoteSlug);
+          if (highlightedNote) {
+            handlePinToggle(highlightedNote.slug);
           }
         } else if (event.key === "d" && !event.metaKey) {
           event.preventDefault();
-          if (selectedNote) {
-            handleNoteDelete(selectedNote);
+          if (highlightedNote) {
+            handleNoteDelete(highlightedNote);
           }
         } else if (event.key === "/") {
           event.preventDefault();
@@ -263,7 +258,7 @@ export default function Sidebar({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [navigateNotes, selectedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
+  }, [navigateNotes, highlightedNote, handlePinToggle, localSearchResults, setHighlightedIndex, handleNoteDelete]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -271,12 +266,13 @@ export default function Sidebar({
       <CommandMenu
         notes={notes}
         sessionId={sessionId}
-        addNewPinnedNote={addNewPinnedNote}
+        addNewPinnedNote={handlePinToggle}
         navigateNotes={navigateNotes}
-        togglePinned={togglePinned}
+        togglePinned={handlePinToggle}
         selectedNoteSlug={selectedNoteSlug}
         selectedNote={selectedNote}
         deleteNote={handleNoteDelete}
+        highlightedNote={highlightedNote}
       />
       <div className="flex-1 overflow-y-auto">
         <SidebarContent
@@ -287,7 +283,7 @@ export default function Sidebar({
           sessionId={sessionId}
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
-          addNewPinnedNote={addNewPinnedNote}
+          addNewPinnedNote={handlePinToggle}
           searchInputRef={searchInputRef}
           localSearchResults={localSearchResults}
           setLocalSearchResults={setLocalSearchResults}
@@ -298,6 +294,8 @@ export default function Sidebar({
           handleNoteDelete={handleNoteDelete}
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+          highlightedNote={highlightedNote}
+          setHighlightedNote={setHighlightedNote}
         />
       </div>
     </div>

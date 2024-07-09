@@ -51,7 +51,6 @@ export function NoteItem({
   setOpenSwipeItemSlug,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
-
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
 
