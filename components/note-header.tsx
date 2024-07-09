@@ -11,9 +11,10 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { useMobileDetect } from "./mobile-detector";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 export default function NoteHeader({
   note,
@@ -54,7 +55,15 @@ export default function NoteHeader({
         </Link>
       )}
       <div className="px-2 bg-[#1c1c1c] mb-4 relative">
-        <p className="text-center text-gray-400 text-xs">{formattedDate}</p>
+        <div className="flex justify-center items-center">
+          <p className="text-gray-400 text-xs">{formattedDate}</p>
+          {!note.public && (
+            <Badge className="text-xs justify-center items-center ml-2">
+              <Lock className="w-3 h-3 mr-1" />
+              Private
+            </Badge>
+          )}
+        </div>
         <div className="flex justify-between items-center">
           {note.public ? (
             <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
