@@ -4,12 +4,14 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
+import SessionId from "./session-id";
 import { useState, useCallback, useRef } from "react";
 
 export default function Note({ note: initialNote }: { note: any }) {
   const supabase = createClient();
   const router = useRouter();
   const [note, setNote] = useState(initialNote);
+  const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveNote = useCallback(
@@ -46,10 +48,13 @@ export default function Note({ note: initialNote }: { note: any }) {
     [note, supabase, router]
   );
 
+  const canEdit = sessionId === note.session_id;
+
   return (
     <div className="h-full overflow-y-auto">
-      <NoteHeader note={note} saveNote={saveNote} />
-      <NoteContent note={note} saveNote={saveNote} />
+      <SessionId setSessionId={setSessionId} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} />
+      <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
     </div>
   );
 }

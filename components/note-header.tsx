@@ -19,9 +19,11 @@ import { Badge } from "@/components/ui/badge";
 export default function NoteHeader({
   note,
   saveNote,
+  canEdit,
 }: {
   note: any;
   saveNote: (updates: Partial<typeof note>) => void;
+  canEdit: boolean;
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
@@ -65,7 +67,7 @@ export default function NoteHeader({
           )}
         </div>
         <div className="flex justify-between items-center">
-          {note.public ? (
+          {note.public || !canEdit ? (
             <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
               {note.title}
             </span>
@@ -79,7 +81,7 @@ export default function NoteHeader({
               autoFocus={!note.title}
             />
           )}
-          {!note.public && !isMobile ? (
+          {canEdit && !note.public && !isMobile ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger
@@ -97,7 +99,7 @@ export default function NoteHeader({
             <span>{note.emoji}</span>
           )}
         </div>
-        {showEmojiPicker && !isMobile && !note.public && (
+        {showEmojiPicker && !isMobile && !note.public && canEdit && (
           <div className="absolute top-full right-0 z-10">
             <Picker
               onEmojiSelect={handleEmojiSelect}
