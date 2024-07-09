@@ -6,6 +6,7 @@ import {
   useCallback,
   forwardRef,
   useImperativeHandle,
+  useTransition,
 } from "react";
 import {
   CommandDialog,
@@ -54,6 +55,7 @@ export const CommandMenu = forwardRef<
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const router = useRouter();
+    const [, startTransition] = useTransition();
 
     useImperativeHandle(ref, () => ({
       setOpen: (newOpen: boolean) => {
@@ -98,7 +100,7 @@ export const CommandMenu = forwardRef<
     }
 
     const handleCreateNote = () => {
-      createNote(sessionId, router, addNewPinnedNote);
+      createNote(sessionId, router, addNewPinnedNote, startTransition);
       setOpen(false);
     };
 
