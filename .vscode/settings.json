@@ -5,6 +5,6 @@
   "deno.lint": true,
   "deno.unstable": true,
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
