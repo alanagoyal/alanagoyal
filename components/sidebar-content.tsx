@@ -8,7 +8,6 @@ interface SidebarContentProps {
   groupedNotes: Record<string, Note[]>;
   selectedNoteSlug: string | null;
   onNoteSelect: (note: Note) => void;
-  notes: Note[];
   sessionId: string;
   handlePinToggle: (slug: string) => void;
   pinnedNotes: Set<string>;
@@ -20,8 +19,6 @@ interface SidebarContentProps {
   handleNoteDelete: (note: Note) => Promise<void>;
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
-  highlightedNote: Note | null;
-  searchQuery: string;
   clearSearch: () => void;
 }
 
@@ -29,7 +26,6 @@ export function SidebarContent({
   groupedNotes,
   selectedNoteSlug,
   onNoteSelect,
-  notes,
   sessionId,
   handlePinToggle,
   pinnedNotes,
@@ -41,8 +37,6 @@ export function SidebarContent({
   handleNoteDelete,
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
-  highlightedNote,
-  searchQuery,
   clearSearch,
 }: SidebarContentProps) {
   const router = useRouter();

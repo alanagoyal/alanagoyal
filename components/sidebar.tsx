@@ -234,65 +234,62 @@ export default function Sidebar({
     [supabase, sessionId, flattenedNotes, router, isMobile]
   );
 
+  const goToHighlightedNote = useCallback(() => {
+    if (localSearchResults && localSearchResults[highlightedIndex]) {
+      const selectedNote = localSearchResults[highlightedIndex];
+      router.push(`/${selectedNote.slug}`);
+      clearSearch();
+    }
+  }, [localSearchResults, highlightedIndex, router, clearSearch]);
+
   useEffect(() => {
+    const shortcuts = {
+      'j': () => navigateNotes('down'),
+      'ArrowDown': () => navigateNotes('down'),
+      'k': () => navigateNotes('up'),
+      'ArrowUp': () => navigateNotes('up'),
+      'p': () => highlightedNote && handlePinToggle(highlightedNote.slug),
+      'd': () => highlightedNote && handleNoteDelete(highlightedNote),
+      '/': () => searchInputRef.current?.focus(),
+      'Escape': () => (document.activeElement as HTMLElement)?.blur(),
+      'Enter': () => goToHighlightedNote(),
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const isTyping =
-        target.isContentEditable ||
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT";
+      const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
 
-      if (isTyping && event.key === "Escape") {
-        (target as HTMLElement).blur();
-      } else if (!isTyping) {
-        if (event.key === "j" || event.key === "ArrowDown") {
-          (document.activeElement as HTMLElement)?.blur();
+      if (isTyping) {
+        if (event.key === 'Escape') {
+          shortcuts['Escape']();
+        } else if (event.key === 'Enter' && localSearchResults) {
           event.preventDefault();
-          if (localSearchResults) {
-            setHighlightedIndex(
-              (prevIndex) => (prevIndex + 1) % localSearchResults.length
-            );
-          } else {
-            navigateNotes("down");
-          }
-        } else if (event.key === "k" && !event.metaKey || event.key === "ArrowUp") {
-          (document.activeElement as HTMLElement)?.blur();
-          event.preventDefault();
-          if (localSearchResults) {
-            setHighlightedIndex(
-              (prevIndex) =>
-                (prevIndex - 1 + localSearchResults.length) %
-                localSearchResults.length
-            );
-          } else {
-            navigateNotes("up");
-          }
-        } else if (event.key === "p" && !event.metaKey) {
-          event.preventDefault();
-          if (highlightedNote) {
-            handlePinToggle(highlightedNote.slug);
-          }
-        } else if (event.key === "d" && !event.metaKey) {
-          event.preventDefault();
-          if (highlightedNote) {
-            handleNoteDelete(highlightedNote);
-          }
-        } else if (event.key === "/") {
-          event.preventDefault();
-          searchInputRef.current?.focus();
-        } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
-          event.preventDefault();
-          commandMenuRef.current?.setOpen(true);
+          goToHighlightedNote();
         }
+        return;
+      }
+
+      const key = event.key as keyof typeof shortcuts;
+      if (shortcuts[key] && !(event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        (document.activeElement as HTMLElement)?.blur();
+        
+        if (localSearchResults && ['j', 'ArrowDown', 'k', 'ArrowUp'].includes(key)) {
+          const direction = ['j', 'ArrowDown'].includes(key) ? 1 : -1;
+          setHighlightedIndex((prevIndex) => 
+            (prevIndex + direction + localSearchResults.length) % localSearchResults.length
+          );
+        } else {
+          shortcuts[key]();
+        }
+      } else if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        commandMenuRef.current?.setOpen(true);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     navigateNotes,
     highlightedNote,
@@ -301,6 +298,7 @@ export default function Sidebar({
     setHighlightedIndex,
     handleNoteDelete,
     commandMenuRef,
+    goToHighlightedNote,
   ]);
 
   return (
@@ -330,7 +328,6 @@ export default function Sidebar({
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
           onNoteSelect={onNoteSelect}
-          notes={notes}
           sessionId={sessionId}
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
@@ -342,8 +339,6 @@ export default function Sidebar({
           handleNoteDelete={handleNoteDelete}
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-          highlightedNote={highlightedNote}
-          searchQuery={searchQuery}
           clearSearch={clearSearch}
         />
       </div>
