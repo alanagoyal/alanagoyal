@@ -246,24 +246,30 @@ export default function Sidebar({
 
   useEffect(() => {
     const shortcuts = {
-      'j': () => navigateNotes('down'),
-      'ArrowDown': () => navigateNotes('down'),
-      'k': () => navigateNotes('up'),
-      'ArrowUp': () => navigateNotes('up'),
-      'p': () => highlightedNote && handlePinToggle(highlightedNote.slug),
-      'd': () => highlightedNote && handleNoteDelete(highlightedNote),
-      '/': () => searchInputRef.current?.focus(),
-      'Escape': () => (document.activeElement as HTMLElement)?.blur(),
+      j: () => navigateNotes("down"),
+      ArrowDown: () => navigateNotes("down"),
+      k: () => navigateNotes("up"),
+      ArrowUp: () => navigateNotes("up"),
+      p: () => highlightedNote && handlePinToggle(highlightedNote.slug),
+      d: () => highlightedNote && handleNoteDelete(highlightedNote),
+      "/": () => searchInputRef.current?.focus(),
+      Escape: () => (document.activeElement as HTMLElement)?.blur(),
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
+      const isTyping =
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable;
 
       if (isTyping) {
-        if (event.key === 'Escape') {
-          shortcuts['Escape']();
-        } else if (event.key === 'Enter' && localSearchResults && localSearchResults.length > 0) {
+        if (event.key === "Escape") {
+          shortcuts["Escape"]();
+        } else if (
+          event.key === "Enter" &&
+          localSearchResults &&
+          localSearchResults.length > 0
+        ) {
           event.preventDefault();
           goToHighlightedNote();
         }
@@ -274,26 +280,35 @@ export default function Sidebar({
       if (shortcuts[key] && !(event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         (document.activeElement as HTMLElement)?.blur();
-        
-        if (localSearchResults && ['j', 'ArrowDown', 'k', 'ArrowUp'].includes(key)) {
-          const direction = ['j', 'ArrowDown'].includes(key) ? 1 : -1;
-          setHighlightedIndex((prevIndex) => 
-            (prevIndex + direction + localSearchResults.length) % localSearchResults.length
+
+        if (
+          localSearchResults &&
+          ["j", "ArrowDown", "k", "ArrowUp"].includes(key)
+        ) {
+          const direction = ["j", "ArrowDown"].includes(key) ? 1 : -1;
+          setHighlightedIndex(
+            (prevIndex) =>
+              (prevIndex + direction + localSearchResults.length) %
+              localSearchResults.length
           );
         } else {
           shortcuts[key]();
         }
-      } else if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+      } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         commandMenuRef.current?.setOpen(true);
-      } else if (event.key === 'Enter' && localSearchResults && localSearchResults.length > 0) {
+      } else if (
+        event.key === "Enter" &&
+        localSearchResults &&
+        localSearchResults.length > 0
+      ) {
         event.preventDefault();
         goToHighlightedNote();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     navigateNotes,
     highlightedNote,
@@ -305,13 +320,16 @@ export default function Sidebar({
     goToHighlightedNote,
   ]);
 
-  const handleNoteSelect = useCallback((note: any) => {
-    onNoteSelect(note);
-    if (!isMobile) {
-      router.push(`/${note.slug}`);
-    }
-    clearSearch();
-  }, [clearSearch, onNoteSelect, isMobile, router]);
+  const handleNoteSelect = useCallback(
+    (note: any) => {
+      onNoteSelect(note);
+      if (!isMobile) {
+        router.push(`/${note.slug}`);
+      }
+      clearSearch();
+    },
+    [clearSearch, onNoteSelect, isMobile, router]
+  );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
