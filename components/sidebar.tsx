@@ -226,6 +226,8 @@ export default function Sidebar({
         if (!isMobile) {
           router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
         }
+
+        clearSearch();
         router.refresh();
       } catch (error) {
         console.error("Error deleting note:", error);
@@ -302,11 +304,11 @@ export default function Sidebar({
   ]);
 
   const handleNoteSelect = useCallback((note: any) => {
-    clearSearch();
     onNoteSelect(note);
     if (!isMobile) {
       router.push(`/${note.slug}`);
     }
+    clearSearch();
   }, [clearSearch, onNoteSelect, isMobile, router]);
 
   return (
