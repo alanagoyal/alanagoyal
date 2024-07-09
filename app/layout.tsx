@@ -26,7 +26,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = createBrowserClient();
-  const { data: notes } = await supabase.from("notes").select("*").limit(10000);
+  const { data: notes } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("public", true);
 
   return (
     <html lang="en">
