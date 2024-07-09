@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
@@ -12,6 +12,7 @@ import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
+import { getSessionNotes } from "@/app/session-notes";
 
 const labels = {
   pinned: (
@@ -29,7 +30,7 @@ const labels = {
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 
 export default function Sidebar({
-  notes,
+  notes: publicNotes,
   onNoteSelect,
   isMobile,
 }: {
@@ -59,6 +60,23 @@ export default function Sidebar({
 
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
+  );
+
+  const [sessionNotes, setSessionNotes] = useState<any[]>([]);
+  useEffect(() => {
+    if (sessionId) {
+      (async () => {
+        const notes = await getSessionNotes({ sessionId });
+        if (notes) {
+          setSessionNotes(notes);
+        }
+      })();
+    }
+  }, [sessionId]);
+
+  const notes = useMemo(
+    () => [...publicNotes, ...sessionNotes],
+    [publicNotes, sessionNotes]
   );
 
   useEffect(() => {
