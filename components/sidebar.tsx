@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CommandMenu } from "./command-menu";
+import { CommandMenu, CommandMenuProps } from "./command-menu"; // Update the import
 import { SidebarContent } from "./sidebar-content";
+import SearchBar from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
@@ -54,6 +55,7 @@ export default function Sidebar({
     null
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (pathname) {
@@ -111,6 +113,15 @@ export default function Sidebar({
     }
   }, [localSearchResults, highlightedIndex, selectedNote]);
 
+  const clearSearch = useCallback(() => {
+    setLocalSearchResults(null);
+    setSearchQuery("");
+    setHighlightedIndex(0);
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+  }, [setLocalSearchResults, setHighlightedIndex]);
+
   const flattenedNotes = useCallback(() => {
     return categoryOrder.flatMap((category) =>
       groupedNotes[category] ? groupedNotes[category] : []
@@ -159,11 +170,13 @@ export default function Sidebar({
         return newPinned;
       });
 
+      clearSearch();
+
       if (!isMobile) {
         router.push(`/${slug}`);
       }
     },
-    [router, isMobile]
+    [router, isMobile, clearSearch]
   );
 
   const handleNoteDelete = useCallback(
@@ -282,21 +295,34 @@ export default function Sidebar({
     handleNoteDelete,
   ]);
 
+  const commandMenuProps: CommandMenuProps = {
+    notes,
+    sessionId,
+    addNewPinnedNote: handlePinToggle,
+    navigateNotes,
+    togglePinned: handlePinToggle,
+    selectedNoteSlug,
+    selectedNote,
+    deleteNote: handleNoteDelete,
+    highlightedNote,
+    clearSearch,
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <SessionId setSessionId={setSessionId} />
-      <CommandMenu
-        notes={notes}
-        sessionId={sessionId}
-        addNewPinnedNote={handlePinToggle}
-        navigateNotes={navigateNotes}
-        togglePinned={handlePinToggle}
-        selectedNoteSlug={selectedNoteSlug}
-        selectedNote={selectedNote}
-        deleteNote={handleNoteDelete}
-        highlightedNote={highlightedNote}
-      />
+      <CommandMenu {...commandMenuProps} />
       <div className="flex-1 overflow-y-auto">
+        <SearchBar
+          notes={notes}
+          onSearchResults={setLocalSearchResults}
+          sessionId={sessionId}
+          inputRef={searchInputRef}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setHighlightedIndex={setHighlightedIndex}
+          clearSearch={clearSearch}
+        />
         <SidebarContent
           groupedNotes={groupedNotes}
           selectedNoteSlug={selectedNoteSlug}
@@ -306,18 +332,16 @@ export default function Sidebar({
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
           addNewPinnedNote={handlePinToggle}
-          searchInputRef={searchInputRef}
           localSearchResults={localSearchResults}
-          setLocalSearchResults={setLocalSearchResults}
           highlightedIndex={highlightedIndex}
-          setHighlightedIndex={setHighlightedIndex}
           categoryOrder={categoryOrder}
           labels={labels}
           handleNoteDelete={handleNoteDelete}
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           highlightedNote={highlightedNote}
-          setHighlightedNote={setHighlightedNote}
+          searchQuery={searchQuery}
+          clearSearch={clearSearch}
         />
       </div>
     </div>

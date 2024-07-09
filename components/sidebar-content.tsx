@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, Dispatch, SetStateAction } from "react";
+import React, { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NewNote from "./new-note";
-import SearchBar from "./search";
 import { NoteItem } from "./note-item";
 import { Note } from "@/lib/types";
 
@@ -14,18 +13,16 @@ interface SidebarContentProps {
   handlePinToggle: (slug: string) => void;
   pinnedNotes: Set<string>;
   addNewPinnedNote: (slug: string) => void;
-  searchInputRef: React.RefObject<HTMLInputElement>;
   localSearchResults: Note[] | null;
-  setLocalSearchResults: React.Dispatch<React.SetStateAction<Note[] | null>>;
   highlightedIndex: number;
-  setHighlightedIndex: React.Dispatch<React.SetStateAction<number>>;
   categoryOrder: string[];
   labels: Record<string, React.ReactNode>;
   handleNoteDelete: (note: Note) => Promise<void>;
   openSwipeItemSlug: string | null;
-  setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
+  setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   highlightedNote: Note | null;
-  setHighlightedNote: React.Dispatch<React.SetStateAction<Note | null>>;
+  searchQuery: string;
+  clearSearch: () => void;
 }
 
 export function SidebarContent({
@@ -37,35 +34,18 @@ export function SidebarContent({
   handlePinToggle,
   pinnedNotes,
   addNewPinnedNote,
-  searchInputRef,
   localSearchResults,
-  setLocalSearchResults,
   highlightedIndex,
-  setHighlightedIndex,
   categoryOrder,
   labels,
   handleNoteDelete,
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
   highlightedNote,
-  setHighlightedNote,
+  searchQuery,
+  clearSearch,
 }: SidebarContentProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
-
-  const clearSearch = useCallback(() => {
-    setLocalSearchResults(null);
-    setSearchQuery("");
-    setHighlightedIndex(0);
-    if (searchInputRef.current) {
-      searchInputRef.current.value = "";
-    }
-  }, [setLocalSearchResults, setHighlightedIndex, searchInputRef]);
-
-  const handleSearchInputBlur = useCallback(() => {
-    setIsSearchInputFocused(false);
-  }, []);
 
   const handlePinToggleWithClear = useCallback((slug: string) => {
     clearSearch();
@@ -82,98 +62,8 @@ export function SidebarContent({
     await handleNoteDelete(note);
   }, [clearSearch, handleNoteDelete]);
 
-  const handleKeyNavigation = useCallback(
-    (event: KeyboardEvent) => {
-      if (localSearchResults && localSearchResults.length > 0) {
-        if (event.key === "Enter") {
-          (document.activeElement as HTMLElement)?.blur();
-          event.preventDefault();
-          const selectedNote = localSearchResults[highlightedIndex];
-          router.push(`/${selectedNote.slug}`);
-          clearSearch();
-          searchInputRef.current?.blur();
-        } else if (!isSearchInputFocused) {
-          if (event.key === "j" || event.key === "ArrowDown") {
-            (document.activeElement as HTMLElement)?.blur();
-            event.preventDefault();
-            setHighlightedIndex(
-              (prevIndex) => (prevIndex + 1) % localSearchResults.length
-            );
-            setHighlightedNote(localSearchResults[(highlightedIndex + 1) % localSearchResults.length]);
-          } else if (event.key === "k" || event.key === "ArrowUp") {
-            event.preventDefault();
-            setHighlightedIndex(
-              (prevIndex) =>
-                (prevIndex - 1 + localSearchResults.length) %
-                localSearchResults.length
-            );
-            setHighlightedNote(localSearchResults[(highlightedIndex - 1 + localSearchResults.length) % localSearchResults.length]);
-          } else if (event.key === "p") {
-            event.preventDefault();
-            if (highlightedNote) {
-              handlePinToggleWithClear(highlightedNote.slug);
-            }
-          } else if (event.key === "d") {
-            event.preventDefault();
-            if (highlightedNote) {
-              handleDelete(highlightedNote);
-            }
-          }
-        }
-      }
-    },
-    [
-      localSearchResults,
-      highlightedIndex,
-      isSearchInputFocused,
-      clearSearch,
-      setHighlightedIndex,
-      searchInputRef,
-      highlightedNote,
-      handlePinToggleWithClear,
-      handleDelete,
-      setHighlightedNote,
-    ]
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (
-          searchInputRef.current &&
-          document.activeElement === searchInputRef.current
-        ) {
-          searchInputRef.current.blur();
-          setIsSearchInputFocused(false);
-        }
-      } else {
-        handleKeyNavigation(event);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyNavigation, searchInputRef, setIsSearchInputFocused]);
-
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [localSearchResults, setHighlightedIndex]);
-
   return (
     <div className="pt-4 px-2">
-      <SearchBar
-        notes={notes}
-        onSearchResults={setLocalSearchResults}
-        sessionId={sessionId}
-        inputRef={searchInputRef}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onFocus={() => setIsSearchInputFocused(true)}
-        onBlur={handleSearchInputBlur}
-        setHighlightedIndex={setHighlightedIndex}
-      />
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
         <NewNote addNewPinnedNote={addNewPinnedNote} clearSearch={clearSearch} />

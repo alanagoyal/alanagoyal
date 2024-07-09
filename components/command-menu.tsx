@@ -18,6 +18,19 @@ import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
 
+export interface CommandMenuProps {
+  notes: Note[];
+  sessionId: string;
+  addNewPinnedNote: (slug: string) => void;
+  navigateNotes: (direction: "up" | "down") => void;
+  togglePinned: (slug: string) => void;
+  selectedNoteSlug: string | null;
+  selectedNote: Note | null;
+  deleteNote: (note: Note) => void;
+  highlightedNote: Note | null;
+  clearSearch: () => void;
+}
+
 export function CommandMenu({
   notes,
   sessionId,
@@ -28,17 +41,8 @@ export function CommandMenu({
   selectedNote,
   deleteNote,
   highlightedNote,
-}: {
-  notes: Note[];
-  sessionId: string;
-  addNewPinnedNote: (slug: string) => void;
-  navigateNotes: (direction: "up" | "down") => void;
-  togglePinned: (slug: string) => void;
-  selectedNoteSlug: string | null;
-  selectedNote: Note | null;
-  deleteNote: (note: Note) => void;
-  highlightedNote: Note | null;
-}) {
+  clearSearch,
+}: CommandMenuProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
