@@ -23,10 +23,10 @@ export default function NoteContent({
 
   return (
     <div className="px-2">
-      {isEditing && canEdit ? (
+      {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
           id="content"
-          value={note.content}
+          value={note.content || ""}
           className="bg-[#1c1c1c] min-h-screen focus:outline-none"
           placeholder="Start writing..."
           onChange={handleChange}
@@ -48,7 +48,7 @@ export default function NoteContent({
               ),
             }}
           >
-            {note.content}
+            {note.content || "Start writing..."}
           </ReactMarkdown>
         </div>
       )}
