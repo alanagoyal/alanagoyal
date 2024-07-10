@@ -7,7 +7,6 @@ import {
   forwardRef,
   useImperativeHandle,
   useContext,
-  useTransition,
 } from "react";
 import {
   CommandDialog,
@@ -59,7 +58,6 @@ export const CommandMenu = forwardRef<
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const router = useRouter();
-    const [, startTransition] = useTransition();
 
     useImperativeHandle(ref, () => ({
       setOpen: (newOpen: boolean) => {
