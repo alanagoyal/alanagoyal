@@ -32,13 +32,15 @@ export default function Note({ note: initialNote }: { note: any }) {
 
           if (error) throw error;
 
-          await supabase.rpc("update_note", {
-            uuid_arg: note.id,
-            session_arg: sessionId,
-            title_arg: updatedNote.title,
-            emoji_arg: updatedNote.emoji,
-            content_arg: updatedNote.content,
-          });
+          if (note.id && sessionId && updatedNote.title && updatedNote.emoji && updatedNote.content) {
+            await supabase.rpc("update_note", {
+              uuid_arg: note.id,
+              session_arg: sessionId,
+              title_arg: updatedNote.title,
+              emoji_arg: updatedNote.emoji,
+              content_arg: updatedNote.content,
+            });
+          }
 
           await fetch("/revalidate", {
             method: "POST",
@@ -53,7 +55,7 @@ export default function Note({ note: initialNote }: { note: any }) {
         }
       }, 500);
     },
-    [note, supabase, router]
+    [note, supabase, router, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
