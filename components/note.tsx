@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 import SessionId from "./session-id";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useContext } from "react";
+import { SessionNotesContext } from "@/app/session-notes";
 
 export default function Note({ note: initialNote }: { note: any }) {
   const supabase = createClient();
@@ -13,6 +14,8 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { refreshSessionNotes } = useContext(SessionNotesContext);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -47,13 +50,14 @@ export default function Note({ note: initialNote }: { note: any }) {
             },
             body: JSON.stringify({ slug: note.slug }),
           });
+          refreshSessionNotes();
           router.refresh();
         } catch (error) {
           console.error("Save failed:", error);
         }
       }, 500);
     },
-    [note, supabase, router]
+    [note, supabase, router, refreshSessionNotes]
   );
 
   const canEdit = sessionId === note.session_id;
