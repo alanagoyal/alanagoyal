@@ -70,7 +70,7 @@ export default async function NotePage({
         public: false,
       };
       return (
-        <div className="w-full min-h-screen p-3">
+        <div className="w-full min-h-dvh p-3">
           <Note note={newNote} />
         </div>
       );
@@ -79,7 +79,7 @@ export default async function NotePage({
   }
 
   return (
-    <div className="w-full min-h-screen p-3">
+    <div className="w-full min-h-dvh p-3">
       <Note note={note} />
     </div>
   );
