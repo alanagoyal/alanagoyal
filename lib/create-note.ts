@@ -30,11 +30,14 @@ export async function createNote(
       .insert(note);
 
     if (error) throw error;
-
-    addNewPinnedNote(slug);
+    
     refreshSessionNotes();
+    addNewPinnedNote(slug);
+
     router.push(`/${slug}`);
     router.refresh();
+
+
 
     toast({
       title: "Note created",
