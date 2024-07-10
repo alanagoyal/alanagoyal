@@ -34,19 +34,19 @@ export async function createNote(
 
       addNewPinnedNote(slug);
 
-      await refreshSessionNotes();
-      setSelectedNoteSlug(slug);
-      router.push(`/${slug}`);
-      router.refresh();
-
+      refreshSessionNotes().then(() => {
+        setSelectedNoteSlug(slug);
+        router.push(`/${slug}`);
+        router.refresh();
+      });
       toast({
         description: "Private note created",
       });
     } catch (error) {
       console.error("Error creating note:", error);
+      
       toast({
         description: "Error creating note",
-        variant: "destructive",
       });
     }
   });
