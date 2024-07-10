@@ -6,6 +6,7 @@ import {
   useCallback,
   forwardRef,
   useImperativeHandle,
+  useContext,
 } from "react";
 import {
   CommandDialog,
@@ -23,6 +24,7 @@ import { Pin, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
+import { SessionNotesContext } from "@/app/session-notes";
 
 export interface CommandMenuProps {
   notes: Note[];
@@ -33,6 +35,7 @@ export interface CommandMenuProps {
   deleteNote: (note: Note) => void;
   highlightedNote: Note | null;
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
+  setSelectedNoteSlug: (slug: string | null) => void;
 }
 
 export const CommandMenu = forwardRef<
@@ -48,6 +51,7 @@ export const CommandMenu = forwardRef<
       togglePinned,
       deleteNote,
       highlightedNote,
+      setSelectedNoteSlug,
     },
     ref
   ) => {
@@ -97,8 +101,16 @@ export const CommandMenu = forwardRef<
       );
     }
 
+    const { refreshSessionNotes } = useContext(SessionNotesContext);
+
     const handleCreateNote = () => {
-      createNote(sessionId, router, addNewPinnedNote);
+      createNote(
+        sessionId,
+        router,
+        addNewPinnedNote,
+        refreshSessionNotes,
+        setSelectedNoteSlug
+      );
       setOpen(false);
     };
 

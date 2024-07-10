@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useContext,
+} from "react";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
@@ -12,6 +19,7 @@ import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
+import { SessionNotesContext } from "@/app/session-notes";
 
 const labels = {
   pinned: (
@@ -29,7 +37,7 @@ const labels = {
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 
 export default function Sidebar({
-  notes,
+  notes: publicNotes,
   onNoteSelect,
   isMobile,
 }: {
@@ -40,7 +48,6 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
 
-  const [sessionId, setSessionId] = useState("");
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
@@ -59,6 +66,18 @@ export default function Sidebar({
 
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
+  );
+
+  const {
+    notes: sessionNotes,
+    sessionId,
+    setSessionId,
+    refreshSessionNotes,
+  } = useContext(SessionNotesContext);
+
+  const notes = useMemo(
+    () => [...publicNotes, ...sessionNotes],
+    [publicNotes, sessionNotes]
   );
 
   useEffect(() => {
@@ -181,10 +200,12 @@ export default function Sidebar({
       if (!isMobile) {
         router.push(`/${slug}`);
       }
-      
+
       toast({
         title: isPinning ? "Note pinned" : "Note unpinned",
-        description: isPinning ? "Your note is now pinned" : "Your note is no longer pinned",
+        description: isPinning
+          ? "Your note is now pinned"
+          : "Your note is no longer pinned",
       });
     },
     [router, isMobile, clearSearch]
@@ -243,18 +264,26 @@ export default function Sidebar({
         }
 
         clearSearch();
+        refreshSessionNotes();
         router.refresh();
 
         toast({
           title: "Note deleted",
           description: "Your note has been deleted",
         });
-
       } catch (error) {
         console.error("Error deleting note:", error);
       }
     },
-    [supabase, sessionId, flattenedNotes, router, isMobile]
+    [
+      supabase,
+      sessionId,
+      flattenedNotes,
+      isMobile,
+      clearSearch,
+      refreshSessionNotes,
+      router,
+    ]
   );
 
   const goToHighlightedNote = useCallback(() => {
@@ -363,6 +392,7 @@ export default function Sidebar({
         togglePinned={handlePinToggle}
         deleteNote={handleNoteDelete}
         highlightedNote={highlightedNote}
+        setSelectedNoteSlug={setSelectedNoteSlug}
       />
       <div className="flex-1 overflow-y-auto">
         <SearchBar
@@ -391,6 +421,7 @@ export default function Sidebar({
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
         />
       </div>
     </div>
