@@ -28,29 +28,22 @@ export default function Note({ note: initialNote }: { note: any }) {
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          const { error } = await supabase
-            .from("notes")
-            .update(updatedNote)
-            .match({ id: note.id });
-
-          if (error) throw error;
-
           if (note.id && sessionId) {
-            if (updatedNote.title !== note.title) {
+            if ('title' in updates) {
               await supabase.rpc("update_note_title", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
                 title_arg: updatedNote.title,
               });
             }
-            if (updatedNote.emoji !== note.emoji) {
+            if ('emoji' in updates) {
               await supabase.rpc("update_note_emoji", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
                 emoji_arg: updatedNote.emoji,
               });
             }
-            if (updatedNote.content !== note.content) {
+            if ('content' in updates) {
               await supabase.rpc("update_note_content", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
@@ -73,7 +66,7 @@ export default function Note({ note: initialNote }: { note: any }) {
         }
       }, 500);
     },
-    [note, supabase, router, refreshSessionNotes]
+    [note, supabase, router, refreshSessionNotes, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
