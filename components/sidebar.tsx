@@ -202,10 +202,7 @@ export default function Sidebar({
       }
 
       toast({
-        title: isPinning ? "Note pinned" : "Note unpinned",
-        description: isPinning
-          ? "Your note is now pinned"
-          : "Your note is no longer pinned",
+        description: isPinning ? "Note pinned" : "Note unpinned",
       });
     },
     [router, isMobile, clearSearch]
@@ -215,8 +212,7 @@ export default function Sidebar({
     async (noteToDelete: Note) => {
       if (noteToDelete.public) {
         toast({
-          title: "Oops! You can't delete that note",
-          description: "You can't delete public notes",
+          description: "Oops! You can't delete public notes",
         });
         return;
       }
@@ -268,8 +264,7 @@ export default function Sidebar({
         router.refresh();
 
         toast({
-          title: "Note deleted",
-          description: "Your note has been deleted",
+          description: "Note deleted",
         });
       } catch (error) {
         console.error("Error deleting note:", error);

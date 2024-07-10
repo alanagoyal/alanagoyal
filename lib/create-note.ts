@@ -39,8 +39,7 @@ export async function createNote(
     });
 
     toast({
-      title: "Note created",
-      description: "Your note is private to you in this session",
+      description: "Private note created",
     });
   } catch (error) {
     console.error("Error creating note:", error);
