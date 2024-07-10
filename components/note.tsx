@@ -32,6 +32,14 @@ export default function Note({ note: initialNote }: { note: any }) {
 
           if (error) throw error;
 
+          await supabase.rpc("update_note", {
+            uuid_arg: note.id,
+            session_arg: sessionId,
+            title_arg: updatedNote.title,
+            emoji_arg: updatedNote.emoji,
+            content_arg: updatedNote.content,
+          });
+
           await fetch("/revalidate", {
             method: "POST",
             headers: {
