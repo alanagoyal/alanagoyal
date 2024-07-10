@@ -36,6 +36,7 @@ export interface CommandMenuProps {
   highlightedNote: Note | null;
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
   setSelectedNoteSlug: (slug: string | null) => void;
+  isMobile: boolean;
 }
 
 export const CommandMenu = forwardRef<
@@ -52,6 +53,7 @@ export const CommandMenu = forwardRef<
       deleteNote,
       highlightedNote,
       setSelectedNoteSlug,
+      isMobile,
     },
     ref
   ) => {
@@ -109,7 +111,8 @@ export const CommandMenu = forwardRef<
         router,
         addNewPinnedNote,
         refreshSessionNotes,
-        setSelectedNoteSlug
+        setSelectedNoteSlug,
+        isMobile
       );
       setOpen(false);
     };

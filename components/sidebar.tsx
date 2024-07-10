@@ -380,6 +380,7 @@ export default function Sidebar({
         deleteNote={handleNoteDelete}
         highlightedNote={highlightedNote}
         setSelectedNoteSlug={setSelectedNoteSlug}
+        isMobile={isMobile}
       />
       <div className="flex-1 overflow-y-auto">
         <SearchBar
@@ -409,6 +410,7 @@ export default function Sidebar({
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
+          isMobile={isMobile}
         />
       </div>
     </div>
