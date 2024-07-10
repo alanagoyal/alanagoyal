@@ -12,6 +12,7 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void;
   setHighlightedIndex: Dispatch<SetStateAction<number>>;
   clearSearch: () => void;
+  isMobile: boolean;
 }
 
 export default function SearchBar({
@@ -23,6 +24,7 @@ export default function SearchBar({
   setSearchQuery,
   setHighlightedIndex,
   clearSearch,
+  isMobile,
 }: SearchBarProps) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -43,7 +45,7 @@ export default function SearchBar({
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${isMobile ? 'w-[calc(100% - 1rem)]' : 'w-full'}`}>
       <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
         id="search"

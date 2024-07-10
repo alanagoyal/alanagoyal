@@ -391,6 +391,7 @@ export default function Sidebar({
           setSearchQuery={setSearchQuery}
           setHighlightedIndex={setHighlightedIndex}
           clearSearch={clearSearch}
+          isMobile={isMobile}
         />
         <SidebarContent
           groupedNotes={groupedNotes}
