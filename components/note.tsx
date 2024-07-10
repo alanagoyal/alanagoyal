@@ -35,13 +35,29 @@ export default function Note({ note: initialNote }: { note: any }) {
 
           if (error) throw error;
 
-          await supabase.rpc("update_note", {
-            uuid_arg: note.id,
-            session_arg: sessionId,
-            title_arg: updatedNote.title,
-            emoji_arg: updatedNote.emoji,
-            content_arg: updatedNote.content,
-          });
+          if (note.id && sessionId) {
+            if (updatedNote.title !== note.title) {
+              await supabase.rpc("update_note_title", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                title_arg: updatedNote.title,
+              });
+            }
+            if (updatedNote.emoji !== note.emoji) {
+              await supabase.rpc("update_note_emoji", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                emoji_arg: updatedNote.emoji,
+              });
+            }
+            if (updatedNote.content !== note.content) {
+              await supabase.rpc("update_note_content", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                content_arg: updatedNote.content,
+              });
+            }
+          }
 
           await fetch("/revalidate", {
             method: "POST",
