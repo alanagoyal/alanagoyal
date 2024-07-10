@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition, useContext } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tooltip,
@@ -11,26 +11,53 @@ import {
 import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
+import { SessionNotesContext } from "@/app/session-notes";
 
-export default function NewNote({ addNewPinnedNote, clearSearch }: { addNewPinnedNote: (slug: string) => void, clearSearch: () => void }) {
+export default function NewNote({
+  addNewPinnedNote,
+  clearSearch,
+  setSelectedNoteSlug,
+}: {
+  addNewPinnedNote: (slug: string) => void;
+  clearSearch: () => void;
+  setSelectedNoteSlug: (slug: string | null) => void;
+}) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
+  const { refreshSessionNotes } = useContext(SessionNotesContext);
+
   const handleCreateNote = useCallback(() => {
     clearSearch();
-    createNote(sessionId, router, addNewPinnedNote, startTransition);
-  }, [sessionId, router, addNewPinnedNote, clearSearch]);
+    createNote(
+      sessionId,
+      router,
+      addNewPinnedNote,
+      refreshSessionNotes,
+      setSelectedNoteSlug,
+      startTransition
+    );
+  }, [
+    sessionId,
+    router,
+    addNewPinnedNote,
+    clearSearch,
+    refreshSessionNotes,
+    setSelectedNoteSlug,
+    startTransition
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const isTyping = target.isContentEditable ||
-                       target.tagName === 'INPUT' ||
-                       target.tagName === 'TEXTAREA' ||
-                       target.tagName === 'SELECT';
+      const isTyping =
+        target.isContentEditable ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT";
 
-      if (event.key === 'n' && !event.metaKey && !isTyping) {
+      if (event.key === "n" && !event.metaKey && !isTyping) {
         event.preventDefault();
         handleCreateNote();
       }
@@ -49,7 +76,7 @@ export default function NewNote({ addNewPinnedNote, clearSearch }: { addNewPinne
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger onClick={handleCreateNote} aria-label="Create new note">
-            {pending ? <div className="pr-1 pt-1"><Icons.spinner /></div > : <Icons.new /> }
+            {pending ? <div className="pr-1 pt-1"><Icons.spinner /></div> : <Icons.new />}
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Create a note

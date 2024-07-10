@@ -9,11 +9,13 @@ import rehypeRaw from "rehype-raw";
 export default function NoteContent({
   note,
   saveNote,
+  canEdit,
 }: {
   note: any;
   saveNote: (updates: Partial<typeof note>) => void;
+  canEdit: boolean;
 }) {
-  const [isEditing, setIsEditing] = useState(!note.content);
+  const [isEditing, setIsEditing] = useState(!note.content && canEdit);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
@@ -21,10 +23,10 @@ export default function NoteContent({
 
   return (
     <div className="px-2">
-      {isEditing ? (
+      {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
           id="content"
-          value={note.content}
+          value={note.content || ""}
           className="bg-[#1c1c1c] min-h-screen focus:outline-none"
           placeholder="Start writing..."
           onChange={handleChange}
@@ -34,7 +36,7 @@ export default function NoteContent({
       ) : (
         <div
           className="bg-[#1c1c1c] h-full text-sm"
-          onClick={() => !note.public && setIsEditing(true)}
+          onClick={() => canEdit && !note.public && setIsEditing(true)}
         >
           <ReactMarkdown
             className="markdown-body min-h-screen"
@@ -46,7 +48,7 @@ export default function NoteContent({
               ),
             }}
           >
-            {note.content}
+            {note.content || "Start writing..."}
           </ReactMarkdown>
         </div>
       )}

@@ -4,13 +4,18 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
-import { useState, useCallback, useRef } from "react";
+import SessionId from "./session-id";
+import { useState, useCallback, useRef, useContext } from "react";
+import { SessionNotesContext } from "@/app/session-notes";
 
 export default function Note({ note: initialNote }: { note: any }) {
   const supabase = createClient();
   const router = useRouter();
   const [note, setNote] = useState(initialNote);
+  const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { refreshSessionNotes } = useContext(SessionNotesContext);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -30,6 +35,30 @@ export default function Note({ note: initialNote }: { note: any }) {
 
           if (error) throw error;
 
+          if (note.id && sessionId) {
+            if (updatedNote.title !== note.title) {
+              await supabase.rpc("update_note_title", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                title_arg: updatedNote.title,
+              });
+            }
+            if (updatedNote.emoji !== note.emoji) {
+              await supabase.rpc("update_note_emoji", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                emoji_arg: updatedNote.emoji,
+              });
+            }
+            if (updatedNote.content !== note.content) {
+              await supabase.rpc("update_note_content", {
+                uuid_arg: note.id,
+                session_arg: sessionId,
+                content_arg: updatedNote.content,
+              });
+            }
+          }
+
           await fetch("/revalidate", {
             method: "POST",
             headers: {
@@ -37,19 +66,23 @@ export default function Note({ note: initialNote }: { note: any }) {
             },
             body: JSON.stringify({ slug: note.slug }),
           });
+          refreshSessionNotes();
           router.refresh();
         } catch (error) {
           console.error("Save failed:", error);
         }
       }, 500);
     },
-    [note, supabase, router]
+    [note, supabase, router, refreshSessionNotes]
   );
+
+  const canEdit = sessionId === note.session_id;
 
   return (
     <div className="h-full overflow-y-auto">
-      <NoteHeader note={note} saveNote={saveNote} />
-      <NoteContent note={note} saveNote={saveNote} />
+      <SessionId setSessionId={setSessionId} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} />
+      <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
     </div>
   );
 }
