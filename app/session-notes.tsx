@@ -67,9 +67,10 @@ async function getSessionNotes({
   supabase: SupabaseClient;
   sessionId: string;
 }) {
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("session_id", sessionId);
+
+  const { data : notes } = await supabase.rpc("select_session_notes", {
+    note_session_id: sessionId
+  });
+
   return notes;
 }
