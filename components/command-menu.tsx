@@ -111,9 +111,9 @@ export const CommandMenu = forwardRef<
         router,
         addNewPinnedNote,
         refreshSessionNotes,
-        setSelectedNoteSlug
-      , startTransition);
-      setOpen(false);
+        setSelectedNoteSlug,
+        () => setOpen(false)
+      );
     };
 
     const handleNoteSelect = (slug: string) => {

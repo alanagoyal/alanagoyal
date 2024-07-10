@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition, useContext } from "react";
+import { useCallback, useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tooltip,
@@ -24,19 +24,20 @@ export default function NewNote({
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
   const handleCreateNote = useCallback(() => {
     clearSearch();
+    setIsPending(true);
     createNote(
       sessionId,
       router,
       addNewPinnedNote,
       refreshSessionNotes,
       setSelectedNoteSlug,
-      startTransition
+      () => setIsPending(false)
     );
   }, [
     sessionId,
@@ -45,7 +46,6 @@ export default function NewNote({
     clearSearch,
     refreshSessionNotes,
     setSelectedNoteSlug,
-    startTransition
   ]);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function NewNote({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger onClick={handleCreateNote} aria-label="Create new note">
-            {pending ? <div className="pr-1 pt-1"><Icons.spinner /></div> : <Icons.new />}
+            {isPending ? <div className="pr-1 pt-1"><Icons.spinner /></div> : <Icons.new />}
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Create a note

@@ -8,7 +8,7 @@ export async function createNote(
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
-  startTransition: React.TransitionStartFunction
+  onComplete: () => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -26,28 +26,28 @@ export async function createNote(
     emoji: "👋🏼",
   };
 
-  startTransition(async () => {
-    try {
-      const { error } = await supabase.from("notes").insert(note);
+  try {
+    const { error } = await supabase.from("notes").insert(note);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      addNewPinnedNote(slug);
+    addNewPinnedNote(slug);
 
-      refreshSessionNotes().then(() => {
-        setSelectedNoteSlug(slug);
-        router.push(`/${slug}`);
-        router.refresh();
-      });
-      toast({
-        description: "Private note created",
-      });
-    } catch (error) {
-      console.error("Error creating note:", error);
-      
-      toast({
-        description: "Error creating note",
-      });
-    }
-  });
+    refreshSessionNotes().then(() => {
+      setSelectedNoteSlug(slug);
+      router.push(`/${slug}`);
+      router.refresh();
+    });
+    toast({
+      description: "Private note created",
+    });
+  } catch (error) {
+    console.error("Error creating note:", error);
+
+    toast({
+      description: "Error creating note",
+    });
+  } finally {
+    onComplete();
+  }
 }
