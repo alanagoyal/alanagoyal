@@ -20,10 +20,11 @@ export async function createNote(sessionId: string | null, router: any, addNewPi
   };
 
   try {
-
-    await supabase
+    const { error } = await supabase
       .from('notes')
-      .upsert(note, { onConflict: 'id' });
+      .insert(note);
+
+    if (error) throw error;
 
     addNewPinnedNote(slug);
 

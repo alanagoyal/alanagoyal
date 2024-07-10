@@ -209,6 +209,8 @@ export default function Sidebar({
 
         if (error) throw error;
 
+        await supabase.rpc('delete_note', {uuid_arg: noteToDelete.id, session_arg: sessionId})
+
         setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
           const newGroupedNotes = { ...prevGroupedNotes };
           for (const category in newGroupedNotes) {
