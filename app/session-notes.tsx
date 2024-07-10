@@ -69,7 +69,7 @@ async function getSessionNotes({
 }) {
 
   const { data : notes } = await supabase.rpc("select_session_notes", {
-    note_session_id: sessionId
+    session_id_arg: sessionId
   });
 
   return notes;
