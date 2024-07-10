@@ -16,14 +16,14 @@ export interface SessionNotes {
   sessionId: string;
   notes: any[];
   setSessionId: (sessionId: string) => void;
-  refreshSessionNotes: () => void;
+  refreshSessionNotes: () => Promise<void>;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
   sessionId: "",
   notes: [],
   setSessionId: () => {},
-  refreshSessionNotes: () => {},
+  refreshSessionNotes: async () => {},
 });
 
 export function SessionNotesProvider({
@@ -34,19 +34,17 @@ export function SessionNotesProvider({
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>("");
   const [notes, setNotes] = useState<any[]>([]);
-  const [refreshSessionNotes, setRefreshSessionNotes] = useState(0);
 
-  const runRefreshSessionNotes = useCallback(() => {
-    setRefreshSessionNotes((prev) => prev + 1);
-  }, []);
+  const refreshSessionNotes = useCallback(async () => {
+    if (sessionId) {
+      const notes = await getSessionNotes({ supabase, sessionId });
+      setNotes(notes || []);
+    }
+  }, [supabase, sessionId]);
 
   useEffect(() => {
-    if (sessionId) {
-      getSessionNotes({ supabase, sessionId }).then((notes) =>
-        setNotes(notes || [])
-      );
-    }
-  }, [sessionId, refreshSessionNotes, supabase]);
+    refreshSessionNotes();
+  }, [refreshSessionNotes, sessionId, supabase]);
 
   return (
     <SessionNotesContext.Provider
@@ -54,7 +52,7 @@ export function SessionNotesProvider({
         sessionId,
         notes,
         setSessionId,
-        refreshSessionNotes: runRefreshSessionNotes,
+        refreshSessionNotes,
       }}
     >
       {children}

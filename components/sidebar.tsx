@@ -200,10 +200,12 @@ export default function Sidebar({
       if (!isMobile) {
         router.push(`/${slug}`);
       }
-      
+
       toast({
         title: isPinning ? "Note pinned" : "Note unpinned",
-        description: isPinning ? "Your note is now pinned" : "Your note is no longer pinned",
+        description: isPinning
+          ? "Your note is now pinned"
+          : "Your note is no longer pinned",
       });
     },
     [router, isMobile, clearSearch]
@@ -228,7 +230,10 @@ export default function Sidebar({
 
         if (error) throw error;
 
-        await supabase.rpc('delete_note', {uuid_arg: noteToDelete.id, session_arg: sessionId})
+        await supabase.rpc("delete_note", {
+          uuid_arg: noteToDelete.id,
+          session_arg: sessionId,
+        });
 
         setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
           const newGroupedNotes = { ...prevGroupedNotes };
@@ -264,12 +269,19 @@ export default function Sidebar({
           title: "Note deleted",
           description: "Your note has been deleted",
         });
-
       } catch (error) {
         console.error("Error deleting note:", error);
       }
     },
-    [supabase, sessionId, flattenedNotes, isMobile, clearSearch, router]
+    [
+      supabase,
+      sessionId,
+      flattenedNotes,
+      isMobile,
+      clearSearch,
+      refreshSessionNotes,
+      router,
+    ]
   );
 
   const goToHighlightedNote = useCallback(() => {
@@ -378,6 +390,7 @@ export default function Sidebar({
         togglePinned={handlePinToggle}
         deleteNote={handleNoteDelete}
         highlightedNote={highlightedNote}
+        setSelectedNoteSlug={setSelectedNoteSlug}
       />
       <div className="flex-1 overflow-y-auto">
         <SearchBar
@@ -406,6 +419,7 @@ export default function Sidebar({
           openSwipeItemSlug={openSwipeItemSlug}
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
         />
       </div>
     </div>

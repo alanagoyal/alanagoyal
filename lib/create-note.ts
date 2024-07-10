@@ -6,7 +6,8 @@ export async function createNote(
   sessionId: string | null,
   router: any,
   addNewPinnedNote: (slug: string) => void,
-  refreshSessionNotes: () => void
+  refreshSessionNotes: () => Promise<void>,
+  setSelectedNoteSlug: (slug: string | null) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -25,25 +26,22 @@ export async function createNote(
   };
 
   try {
-    const { error } = await supabase
-      .from('notes')
-      .insert(note);
+    const { error } = await supabase.from("notes").insert(note);
 
     if (error) throw error;
-    
-    refreshSessionNotes();
+
     addNewPinnedNote(slug);
 
-    router.push(`/${slug}`);
-    router.refresh();
-
-
+    refreshSessionNotes().then(() => {
+      setSelectedNoteSlug(slug);
+      router.push(`/${slug}`);
+      router.refresh();
+    });
 
     toast({
       title: "Note created",
       description: "Your note is private to you in this session",
     });
-
   } catch (error) {
     console.error("Error creating note:", error);
   }

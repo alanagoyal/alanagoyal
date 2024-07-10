@@ -16,9 +16,11 @@ import { SessionNotesContext } from "@/app/session-notes";
 export default function NewNote({
   addNewPinnedNote,
   clearSearch,
+  setSelectedNoteSlug,
 }: {
   addNewPinnedNote: (slug: string) => void;
   clearSearch: () => void;
+  setSelectedNoteSlug: (slug: string | null) => void;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
@@ -27,8 +29,21 @@ export default function NewNote({
 
   const handleCreateNote = useCallback(() => {
     clearSearch();
-    createNote(sessionId, router, addNewPinnedNote, refreshSessionNotes);
-  }, [sessionId, router, addNewPinnedNote, clearSearch, refreshSessionNotes]);
+    createNote(
+      sessionId,
+      router,
+      addNewPinnedNote,
+      refreshSessionNotes,
+      setSelectedNoteSlug
+    );
+  }, [
+    sessionId,
+    router,
+    addNewPinnedNote,
+    clearSearch,
+    refreshSessionNotes,
+    setSelectedNoteSlug,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

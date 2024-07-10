@@ -20,6 +20,7 @@ interface SidebarContentProps {
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   clearSearch: () => void;
+  setSelectedNoteSlug: (slug: string | null) => void;
 }
 
 export function SidebarContent({
@@ -38,29 +39,44 @@ export function SidebarContent({
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
   clearSearch,
+  setSelectedNoteSlug,
 }: SidebarContentProps) {
   const router = useRouter();
 
-  const handlePinToggleWithClear = useCallback((slug: string) => {
-    clearSearch();
-    handlePinToggle(slug);
-  }, [clearSearch, handlePinToggle]);
+  const handlePinToggleWithClear = useCallback(
+    (slug: string) => {
+      clearSearch();
+      handlePinToggle(slug);
+    },
+    [clearSearch, handlePinToggle]
+  );
 
-  const handleEdit = useCallback((slug: string) => {
-    clearSearch();
-    router.push(`/${slug}`);
-  }, [clearSearch, router]);
+  const handleEdit = useCallback(
+    (slug: string) => {
+      clearSearch();
+      router.push(`/${slug}`);
+      setSelectedNoteSlug(slug);
+    },
+    [clearSearch, router, setSelectedNoteSlug]
+  );
 
-  const handleDelete = useCallback(async (note: Note) => {
-    clearSearch();
-    await handleNoteDelete(note);
-  }, [clearSearch, handleNoteDelete]);
+  const handleDelete = useCallback(
+    async (note: Note) => {
+      clearSearch();
+      await handleNoteDelete(note);
+    },
+    [clearSearch, handleNoteDelete]
+  );
 
   return (
     <div className="pt-4 px-2">
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
-        <NewNote addNewPinnedNote={addNewPinnedNote} clearSearch={clearSearch} />
+        <NewNote
+          addNewPinnedNote={addNewPinnedNote}
+          clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
+        />
       </div>
       {localSearchResults === null ? (
         <nav>
