@@ -218,14 +218,6 @@ export default function Sidebar({
       }
 
       try {
-        const { error } = await supabase
-          .from("notes")
-          .delete()
-          .eq("slug", noteToDelete.slug)
-          .eq("session_id", sessionId);
-
-        if (error) throw error;
-
         if (noteToDelete.id && sessionId) {
           await supabase.rpc('delete_note', {
             uuid_arg: noteToDelete.id,
