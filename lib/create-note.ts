@@ -7,7 +7,8 @@ export async function createNote(
   router: any,
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
-  setSelectedNoteSlug: (slug: string | null) => void
+  setSelectedNoteSlug: (slug: string | null) => void,
+  isMobile: boolean
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -32,11 +33,18 @@ export async function createNote(
 
     addNewPinnedNote(slug);
 
-    refreshSessionNotes().then(() => {
-      setSelectedNoteSlug(slug);
-      router.push(`/${slug}`);
-      router.refresh();
-    });
+    if (!isMobile) {
+      refreshSessionNotes().then(() => {
+        setSelectedNoteSlug(slug);
+        router.push(`/${slug}`);
+        router.refresh();
+      });
+    } else {
+      router.push(`/${slug}`).then(() => {
+        refreshSessionNotes();
+        setSelectedNoteSlug(slug);
+      });
+    }
 
     toast({
       description: "Private note created",

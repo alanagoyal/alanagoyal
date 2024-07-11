@@ -59,22 +59,6 @@ export default async function NotePage({
   }).single();
 
   if (!note) {
-    if (slug.startsWith("new-note-")) {
-      const newNote = {
-        id: slug.replace("new-note-", ""),
-        slug: slug,
-        title: "",
-        content: "",
-        emoji: "👋🏼",
-        category: "today",
-        public: false,
-      };
-      return (
-        <div className="w-full min-h-dvh p-3">
-          <Note note={newNote} />
-        </div>
-      );
-    }
     notFound();
   }
 
