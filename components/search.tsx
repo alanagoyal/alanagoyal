@@ -12,7 +12,6 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void;
   setHighlightedIndex: Dispatch<SetStateAction<number>>;
   clearSearch: () => void;
-  isMobile: boolean;
 }
 
 export default function SearchBar({
@@ -24,7 +23,6 @@ export default function SearchBar({
   setSearchQuery,
   setHighlightedIndex,
   clearSearch,
-  isMobile,
 }: SearchBarProps) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -53,9 +51,7 @@ export default function SearchBar({
         value={searchQuery}
         onChange={(e) => handleSearch(e.target.value)}
         placeholder="Search"
-        className={`pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400 ${
-          isMobile ? 'w-[calc(100% - 1rem)]' : 'w-full'
-        }`}
+        className="pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
         aria-label="Search notes"
         autoComplete="off"
         ref={inputRef}
