@@ -71,7 +71,7 @@ export function SidebarContent({
   );
 
   return (
-    <div className="pt-4 px-2">
+    <div className="px-2">
       <div className="flex py-2 mx-2 items-center justify-between">
         <h2 className="text-lg font-bold">Notes</h2>
         <NewNote
