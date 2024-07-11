@@ -66,27 +66,13 @@ export default function NoteHeader({
             </Badge>
           )}
         </div>
-        <div className="flex justify-between items-center">
-          {note.public || !canEdit ? (
-            <span className="text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]">
-              {note.title}
-            </span>
-          ) : (
-            <Input
-              id="title"
-              value={note.title}
-              className="placeholder:text-gray-400 text-2xl font-bold flex-grow mr-2 py-2 leading-normal min-h-[50px]"
-              placeholder="Your title here..."
-              onChange={handleTitleChange}
-              autoFocus={!note.title}
-            />
-          )}
+        <div className="flex items-center relative">
           {canEdit && !note.public && !isMobile ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="cursor-pointer"
+                  className="cursor-pointer mr-2"
                 >
                   {note.emoji}
                 </TooltipTrigger>
@@ -96,11 +82,25 @@ export default function NoteHeader({
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <span>{note.emoji}</span>
+            <span className="mr-2">{note.emoji}</span>
+          )}
+          {note.public || !canEdit ? (
+            <span className="text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]">
+              {note.title}
+            </span>
+          ) : (
+            <Input
+              id="title"
+              value={note.title}
+              className="placeholder:text-gray-400 text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
+              placeholder="Your title here..."
+              onChange={handleTitleChange}
+              autoFocus={!note.title}
+            />
           )}
         </div>
         {showEmojiPicker && !isMobile && !note.public && canEdit && (
-          <div className="absolute top-full right-0 z-10">
+          <div className="absolute top-full left-0 z-10">
             <Picker
               onEmojiSelect={handleEmojiSelect}
               autoFocus={true}
