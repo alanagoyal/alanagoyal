@@ -27,7 +27,7 @@ export default function NoteContent({
         <Textarea
           id="content"
           value={note.content || ""}
-          className="bg-[#1c1c1c] min-h-screen focus:outline-none"
+          className="bg-[#1c1c1c] min-h-dvh focus:outline-none"
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
@@ -39,7 +39,7 @@ export default function NoteContent({
           onClick={() => canEdit && !note.public && setIsEditing(true)}
         >
           <ReactMarkdown
-            className="markdown-body min-h-screen"
+            className="markdown-body min-h-dvh"
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
             components={{

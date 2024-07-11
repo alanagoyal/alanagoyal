@@ -35,14 +35,14 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
 
   return (
     <SessionNotesProvider>
-      <div className="bg-[#1c1c1c] text-white min-h-screen flex">
+      <div className="bg-[#1c1c1c] text-white min-h-dvh flex">
         {showSidebar && (
           <div
             className={`${
               isMobile
                 ? "w-full"
                 : "w-64 flex-shrink-0 border-r border-gray-400/20"
-            } overflow-y-auto h-screen`}
+            } overflow-y-auto h-dvh`}
           >
             <Sidebar
               notes={notes}
@@ -52,7 +52,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
           </div>
         )}
         {(!isMobile || !showSidebar) && (
-          <div className="flex-grow overflow-y-auto h-screen">{children}</div>
+          <div className="flex-grow overflow-y-auto h-dvh">{children}</div>
         )}
         <Toaster />
       </div>

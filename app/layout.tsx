@@ -47,7 +47,7 @@ export default async function RootLayout({
         <meta property="og:url" content={siteConfig.url}></meta>
       </head>
       <body
-        className={cn("min-h-screen font-sans antialiased", fontSans.variable)}
+        className={cn("min-h-dvh font-sans antialiased", fontSans.variable)}
       >
         <SidebarLayout notes={notes}>
           <Analytics />
