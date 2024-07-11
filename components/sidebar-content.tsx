@@ -21,6 +21,7 @@ interface SidebarContentProps {
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
+  isMobile: boolean;
 }
 
 export function SidebarContent({
@@ -40,6 +41,7 @@ export function SidebarContent({
   setOpenSwipeItemSlug,
   clearSearch,
   setSelectedNoteSlug,
+  isMobile,
 }: SidebarContentProps) {
   const router = useRouter();
 
@@ -76,6 +78,7 @@ export function SidebarContent({
           addNewPinnedNote={addNewPinnedNote}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
+          isMobile={isMobile}
         />
       </div>
       {localSearchResults === null ? (

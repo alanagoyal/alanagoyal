@@ -17,10 +17,12 @@ export default function NewNote({
   addNewPinnedNote,
   clearSearch,
   setSelectedNoteSlug,
+  isMobile,
 }: {
   addNewPinnedNote: (slug: string) => void;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
+  isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
@@ -34,7 +36,8 @@ export default function NewNote({
       router,
       addNewPinnedNote,
       refreshSessionNotes,
-      setSelectedNoteSlug
+      setSelectedNoteSlug,
+      isMobile
     );
   }, [
     sessionId,
@@ -43,6 +46,7 @@ export default function NewNote({
     clearSearch,
     refreshSessionNotes,
     setSelectedNoteSlug,
+    isMobile,
   ]);
 
   useEffect(() => {
