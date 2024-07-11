@@ -45,7 +45,7 @@ export default function SearchBar({
   };
 
   return (
-    <div className={`relative ${isMobile ? 'w-[calc(100% - 1rem)]' : 'w-full'}`}>
+    <div className="relative">
       <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
         id="search"
@@ -53,7 +53,9 @@ export default function SearchBar({
         value={searchQuery}
         onChange={(e) => handleSearch(e.target.value)}
         placeholder="Search"
-        className="w-full pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
+        className={`pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400 ${
+          isMobile ? 'w-[calc(100% - 1rem)]' : 'w-full'
+        }`}
         aria-label="Search notes"
         autoComplete="off"
         ref={inputRef}
