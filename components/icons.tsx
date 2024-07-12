@@ -1,7 +1,9 @@
+import { LucideProps } from "lucide-react";
+
 type IconProps = React.HTMLAttributes<SVGElement>
 
 export const Icons = {
-  new: () => (
+  new: (props: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
@@ -9,6 +11,7 @@ export const Icons = {
       strokeWidth={1.5}
       stroke="currentColor"
       className="size-5"
+      {...props}
     >
       <path
         strokeLinecap="round"
