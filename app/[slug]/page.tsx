@@ -1,6 +1,6 @@
 import Note from "@/components/note";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
@@ -59,7 +59,7 @@ export default async function NotePage({
   }).single();
 
   if (!note) {
-    notFound();
+    redirect("/error");
   }
 
   return (
