@@ -104,18 +104,19 @@ export const CommandMenu = forwardRef<
     }
 
     const { refreshSessionNotes } = useContext(SessionNotesContext);
-
-    const handleCreateNote = () => {
-      createNote(
-        sessionId,
-        router,
-        addNewPinnedNote,
-        refreshSessionNotes,
-        setSelectedNoteSlug,
-        isMobile
-      );
-      setOpen(false);
-    };
+    
+    const handleCreateNote = useCallback(async () => {
+      try {
+        const newSlug = await createNote(sessionId);
+        router.push(`/${newSlug}`);
+        addNewPinnedNote(newSlug);
+        await refreshSessionNotes();
+        setSelectedNoteSlug(newSlug);
+        setOpen(false);
+      } catch (error) {
+        console.error("Error creating note:", error);
+      }
+    }, [sessionId, router, addNewPinnedNote, refreshSessionNotes, setSelectedNoteSlug]);
 
     const handleNoteSelect = (slug: string) => {
       router.push(`/${slug}`);

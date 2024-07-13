@@ -12,6 +12,7 @@ import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
 import { SessionNotesContext } from "@/app/session-notes";
+import { toast } from "./ui/use-toast";
 
 export default function NewNote({
   addNewPinnedNote,
@@ -25,20 +26,39 @@ export default function NewNote({
   isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
   const router = useRouter();
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
-  const handleCreateNote = useCallback(() => {
+  const handleCreateNote = useCallback(async () => {
     clearSearch();
-    createNote(
-      sessionId,
-      router,
-      addNewPinnedNote,
-      refreshSessionNotes,
-      setSelectedNoteSlug,
-      isMobile
-    );
+    setIsCreatingNote(true);
+    try {
+      const newSlug = await createNote(
+        sessionId,
+      );
+
+      // Navigate to the new note
+      await router.push(`/${newSlug}`);
+
+      // After navigation, update the sidebar
+      addNewPinnedNote(newSlug);
+      await refreshSessionNotes();
+      setSelectedNoteSlug(newSlug);
+
+      toast({
+        description: "Private note created",
+      });
+    } catch (error) {
+      console.error("Error creating note:", error);
+      toast({
+        description: "Error creating note",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingNote(false);
+    }
   }, [
     sessionId,
     router,
@@ -80,8 +100,13 @@ export default function NewNote({
             onClick={handleCreateNote}
             aria-label="Create new note"
             className={isMobile ? "p-2" : ""}
+            disabled={isCreatingNote}
           >
-            <Icons.new className={isMobile ? "size-6" : "size-5"} />
+            {isCreatingNote ? (
+              <Icons.spinner className={`animate-spin ${isMobile ? "size-6" : "size-5"}`} />
+            ) : (
+              <Icons.new className={isMobile ? "size-6" : "size-5"} />
+            )}
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Create a note
