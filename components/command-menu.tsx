@@ -30,7 +30,7 @@ import { toast } from "./ui/use-toast";
 export interface CommandMenuProps {
   notes: Note[];
   sessionId: string;
-  addNewPinnedNote: (slug: string) => void;
+  addNewPinnedNote: (slug: string, isNewNote?: boolean) => void;
   navigateNotes: (direction: "up" | "down") => void;
   togglePinned: (slug: string) => void;
   deleteNote: (note: Note) => void;
@@ -112,7 +112,7 @@ export const CommandMenu = forwardRef<
 
         await router.push(`/${newSlug}`);
         setSelectedNoteSlug(newSlug);
-        addNewPinnedNote(newSlug);
+        addNewPinnedNote(newSlug, true); 
         await refreshSessionNotes();
 
         toast({

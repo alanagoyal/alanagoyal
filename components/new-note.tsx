@@ -20,7 +20,7 @@ export default function NewNote({
   setSelectedNoteSlug,
   isMobile,
 }: {
-  addNewPinnedNote: (slug: string) => void;
+  addNewPinnedNote: (slug: string, isNewNote: boolean) => void;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
@@ -39,7 +39,7 @@ export default function NewNote({
       
       await router.push(`/${newSlug}`);
       setSelectedNoteSlug(newSlug);
-      addNewPinnedNote(newSlug);
+      addNewPinnedNote(newSlug, true); 
       await refreshSessionNotes();
       
       toast({
