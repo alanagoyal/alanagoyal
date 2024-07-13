@@ -37,11 +37,17 @@ export default function NewNote({
     try {
       const newSlug = await createNote(sessionId);
       
-      await router.push(`/${newSlug}`);
-      setSelectedNoteSlug(newSlug);
-      addNewPinnedNote(newSlug, true); 
-      await refreshSessionNotes();
-      
+      const updates = [
+        router.push(`/${newSlug}`),
+        (async () => {
+          setSelectedNoteSlug(newSlug);
+          addNewPinnedNote(newSlug, true);
+          await refreshSessionNotes();
+        })()
+      ];
+
+      await Promise.all(updates);
+
       toast({
         description: "Private note created",
       });
