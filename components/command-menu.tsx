@@ -25,6 +25,7 @@ import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
 import { SessionNotesContext } from "@/app/session-notes";
+import { toast } from "./ui/use-toast";
 
 export interface CommandMenuProps {
   notes: Note[];
@@ -36,7 +37,6 @@ export interface CommandMenuProps {
   highlightedNote: Note | null;
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
   setSelectedNoteSlug: (slug: string | null) => void;
-  isMobile: boolean;
 }
 
 export const CommandMenu = forwardRef<
@@ -53,7 +53,6 @@ export const CommandMenu = forwardRef<
       deleteNote,
       highlightedNote,
       setSelectedNoteSlug,
-      isMobile,
     },
     ref
   ) => {
@@ -107,11 +106,18 @@ export const CommandMenu = forwardRef<
     
     const handleCreateNote = useCallback(async () => {
       try {
-        const newSlug = await createNote(sessionId);
-        router.push(`/${newSlug}`);
+        const newSlug = await createNote(
+          sessionId,
+        );
+
+        await router.push(`/${newSlug}`);
+        setSelectedNoteSlug(newSlug);
         addNewPinnedNote(newSlug);
         await refreshSessionNotes();
-        setSelectedNoteSlug(newSlug);
+
+        toast({
+          description: "Private note created",
+        });
         setOpen(false);
       } catch (error) {
         console.error("Error creating note:", error);

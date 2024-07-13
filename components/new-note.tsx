@@ -35,35 +35,26 @@ export default function NewNote({
     clearSearch();
     setIsCreatingNote(true);
     try {
-      const newSlug = await createNote(
-        sessionId,
-      );
+      const newSlug = await createNote(sessionId);
+      
       await router.push(`/${newSlug}`);
+      setSelectedNoteSlug(newSlug);
       addNewPinnedNote(newSlug);
       await refreshSessionNotes();
-      setSelectedNoteSlug(newSlug);
-
+      
       toast({
         description: "Private note created",
       });
     } catch (error) {
       console.error("Error creating note:", error);
       toast({
-        description: "Error creating note",
         variant: "destructive",
+        description: "Failed to create note. Please try again.",
       });
     } finally {
       setIsCreatingNote(false);
     }
-  }, [
-    sessionId,
-    router,
-    addNewPinnedNote,
-    clearSearch,
-    refreshSessionNotes,
-    setSelectedNoteSlug,
-    isMobile,
-  ]);
+  }, [sessionId, router, addNewPinnedNote, refreshSessionNotes, setSelectedNoteSlug, clearSearch]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
