@@ -23,9 +23,7 @@ export async function createNote(
 
     try {
       const { error } = await supabase.from("notes").insert(note);
-
       if (error) throw error;
-
       resolve(slug);
     } catch (error) {
       console.error("Error creating note:", error);

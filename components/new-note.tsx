@@ -38,11 +38,7 @@ export default function NewNote({
       const newSlug = await createNote(
         sessionId,
       );
-
-      // Navigate to the new note
       await router.push(`/${newSlug}`);
-
-      // After navigation, update the sidebar
       addNewPinnedNote(newSlug);
       await refreshSessionNotes();
       setSelectedNoteSlug(newSlug);
