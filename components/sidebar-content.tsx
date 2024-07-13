@@ -72,8 +72,8 @@ export function SidebarContent({
 
   return (
     <div className="px-2">
-      <div className="flex py-2 mx-2 items-center justify-between">
-        <h2 className="text-lg font-bold">Notes</h2>
+      <div className="flex py-2 items-center justify-between">
+        <h2 className={`pl-2 font-bold ${isMobile ? 'text-2xl' : 'text-xl'}`}>Notes</h2>
         <NewNote
           addNewPinnedNote={addNewPinnedNote}
           clearSearch={clearSearch}

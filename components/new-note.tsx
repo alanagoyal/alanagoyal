@@ -79,8 +79,9 @@ export default function NewNote({
           <TooltipTrigger
             onClick={handleCreateNote}
             aria-label="Create new note"
+            className={isMobile ? "p-2" : ""}
           >
-            <Icons.new />
+            <Icons.new className={isMobile ? "size-6" : "size-5"} />
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Create a note
