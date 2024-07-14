@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "alana goyal",
-  title: "alana goyal | notes",
-  description: "founder, managing partner, & engineer @ basecase",
-  url: "https://alanagoyal.com",
+  name: "lca x family",
+  title: "lca x family | notes",
+  description: "what's on my mind",
+  url: "https://pastacartel.vercel.app",
 };
 
