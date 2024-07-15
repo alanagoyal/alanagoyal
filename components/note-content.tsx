@@ -22,64 +22,53 @@ export default function NoteContent({
   }, [saveNote]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
-    const lines = note.content.split('\n');
-    const updatedLines = lines.map(line => {
-      if (line.includes(`] ${taskText}`)) {
-        return line.replace(/\[[ x]\]/, isChecked ? '[x]' : '[ ]');
-      }
-      return line;
-    });
-    const updatedContent = updatedLines.join('\n');
+    const updatedContent = note.content.replace(
+      new RegExp(`\\[[ x]\\] ${taskText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'),
+      `[${isChecked ? 'x' : ' '}] ${taskText}`
+    );
     saveNote({ content: updatedContent });
   }, [note.content, saveNote]);
 
   const renderListItem = useCallback(({ children, ...props }: any) => {
-    if (props.className?.includes('task-list-item')) {
-      const checkboxIndex = children.findIndex((child: any) => child.type === 'input');
-      if (checkboxIndex === -1) return <li {...props}>{children}</li>;
+    if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>;
 
-      const isChecked = children[checkboxIndex].props.checked;
-      const taskContent = children.slice(checkboxIndex + 1);
-      
-      const taskText = taskContent
-        .map((child: any) => {
-          if (typeof child === 'string') return child;
-          if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
-          return child.props.children;
-        })
-        .join('')
-        .trim();
-      
-      const taskId = `task-${taskText.substring(0, 20).replace(/\s+/g, '-').toLowerCase()}-${props.index}`;
-      
-      const handleCheckboxClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (canEdit) {
-          handleMarkdownCheckboxChange(taskText, !isChecked);
-        }
-      };
+    const checkbox = children.find((child: any) => child.type === 'input');
+    if (!checkbox) return <li {...props}>{children}</li>;
 
-      return (
-        <li {...props}>
-          <span className="flex items-start">
-            <span
-              onClick={handleCheckboxClick}
-              className={`${canEdit ? 'cursor-pointer' : 'cursor-default'} mr-1`}
-            >
-              <input
-                type="checkbox"
-                checked={isChecked}
-                className="pointer-events-none"
-                id={taskId}
-                readOnly
-              />
-            </span>
-            <span>{taskContent}</span>
+    const isChecked = checkbox.props.checked;
+    const taskContent = children.filter((child: any) => child !== checkbox);
+    const taskText = taskContent.map((child: any) => {
+      if (typeof child === 'string') return child;
+      if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
+      return child.props.children;
+    }).join('').trim();
+
+    const taskId = `task-${taskText.substring(0, 20).replace(/\s+/g, '-').toLowerCase()}-${props.index}`;
+
+    const handleCheckboxClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (canEdit) handleMarkdownCheckboxChange(taskText, !isChecked);
+    };
+
+    return (
+      <li {...props}>
+        <span className="flex items-start">
+          <span
+            onClick={handleCheckboxClick}
+            className={`${canEdit ? 'cursor-pointer' : 'cursor-default'} mr-1`}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              className="pointer-events-none"
+              id={taskId}
+              readOnly
+            />
           </span>
-        </li>
-      );
-    }
-    return <li {...props}>{children}</li>;
+          <span>{taskContent}</span>
+        </span>
+      </li>
+    );
   }, [canEdit, handleMarkdownCheckboxChange]);
 
   return (
