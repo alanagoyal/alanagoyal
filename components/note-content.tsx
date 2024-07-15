@@ -41,17 +41,20 @@ export default function NoteContent({
       const isChecked = children[checkboxIndex].props.checked;
       const taskContent = children.slice(checkboxIndex + 1);
       
+      const taskText = taskContent
+        .map((child: any) => {
+          if (typeof child === 'string') return child;
+          if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
+          return child.props.children;
+        })
+        .join('')
+        .trim();
+      
+      const taskId = `task-${taskText.substring(0, 20).replace(/\s+/g, '-').toLowerCase()}-${props.index}`;
+      
       const handleCheckboxClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (canEdit) {
-          const taskText = taskContent
-            .map((child: any) => {
-              if (typeof child === 'string') return child;
-              if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
-              return child.props.children;
-            })
-            .join('')
-            .trim();
           handleMarkdownCheckboxChange(taskText, !isChecked);
         }
       };
@@ -66,8 +69,9 @@ export default function NoteContent({
               <input
                 type="checkbox"
                 checked={isChecked}
-                readOnly
                 className="pointer-events-none"
+                id={taskId}
+                readOnly
               />
             </span>
             <span>{taskContent}</span>
@@ -82,7 +86,7 @@ export default function NoteContent({
     <div className="px-2">
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
-          id="content"
+          id="note-content"
           value={note.content || ""}
           className="bg-[#1c1c1c] min-h-dvh focus:outline-none"
           placeholder="Start writing..."
