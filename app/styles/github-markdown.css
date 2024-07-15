@@ -58,6 +58,44 @@
   margin-bottom: 16px;
 }
 
+.markdown-body ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.markdown-body .task-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5em;
+}
+
+.markdown-body .task-list-item input[type="checkbox"] {
+  margin-right: 0.5em;
+  appearance: none;
+  width: 1.2em;
+  height: 1.2em;
+  border: 1px solid #6a737d;
+  border-radius: 3px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.markdown-body .task-list-item input[type="checkbox"]:checked {
+  background-color: #e2a727;
+  border-color: #e2a727;
+}
+
+.markdown-body .task-list-item input[type="checkbox"]:checked::after {
+  content: '\2713'; 
+  font-size: 1em;
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .markdown-body ol {
   list-style-type: decimal;
   padding-left: 2em;
