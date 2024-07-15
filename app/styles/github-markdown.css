@@ -79,6 +79,7 @@
   vertical-align: middle;
   position: relative;
   top: -1px;
+  cursor: pointer; 
 }
 
 .markdown-body .task-list-item input[type="checkbox"]:checked {
