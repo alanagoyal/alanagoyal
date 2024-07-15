@@ -39,26 +39,38 @@ export default function NoteContent({
       if (checkboxIndex === -1) return <li {...props}>{children}</li>;
 
       const isChecked = children[checkboxIndex].props.checked;
-      const taskText = children.slice(checkboxIndex + 1).join('').trim();
+      const taskContent = children.slice(checkboxIndex + 1);
       
+      const handleCheckboxClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (canEdit) {
+          const taskText = taskContent
+            .map((child: any) => {
+              if (typeof child === 'string') return child;
+              if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
+              return child.props.children;
+            })
+            .join('')
+            .trim();
+          handleMarkdownCheckboxChange(taskText, !isChecked);
+        }
+      };
+
       return (
         <li {...props}>
-          <span 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (canEdit) {
-                handleMarkdownCheckboxChange(taskText, !isChecked);
-              }
-            }}
-            className={`${canEdit ? 'cursor-pointer' : 'cursor-default'}`}
-          >
-            <input
-              type="checkbox"
-              checked={isChecked}
-              readOnly
-              className="pointer-events-none"
-            />
-            {' ' + taskText}
+          <span className="flex items-start">
+            <span
+              onClick={handleCheckboxClick}
+              className={`${canEdit ? 'cursor-pointer' : 'cursor-default'} mt-1 mr-2`}
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                readOnly
+                className="pointer-events-none"
+              />
+            </span>
+            <span>{taskContent}</span>
           </span>
         </li>
       );
@@ -81,7 +93,11 @@ export default function NoteContent({
       ) : (
         <div
           className="bg-[#1c1c1c] h-full text-sm"
-          onClick={() => canEdit && !note.public && setIsEditing(true)}
+          onClick={(e) => {
+            if (canEdit && !note.public) {
+              setIsEditing(true);
+            }
+          }}
         >
           <ReactMarkdown
             className="markdown-body min-h-dvh"
