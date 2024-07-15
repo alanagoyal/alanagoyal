@@ -76,9 +76,9 @@
   height: 1.2em;
   border: 1px solid #6a737d;
   border-radius: 3px;
-  vertical-align: middle;
+  vertical-align: top;
   position: relative;
-  top: -1px;
+  top: 0.2em;
   cursor: pointer; 
 }
 

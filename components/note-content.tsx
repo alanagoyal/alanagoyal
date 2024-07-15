@@ -64,7 +64,7 @@ export default function NoteContent({
           <span className="flex items-start">
             <span
               onClick={handleCheckboxClick}
-              className={`${canEdit ? 'cursor-pointer' : 'cursor-default'} mt-1 mr-2`}
+              className={`${canEdit ? 'cursor-pointer' : 'cursor-default'} mr-1`}
             >
               <input
                 type="checkbox"
