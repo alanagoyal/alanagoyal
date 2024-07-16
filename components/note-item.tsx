@@ -14,10 +14,11 @@ import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {
   return content
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') 
-    .replace(/[#*_~`>+\-]/g, '') 
-    .replace(/\n+/g, ' ') 
-    .replace(/\s+/g, ' ') 
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/\[[ x]\]/g, '') 
+    .replace(/[#*_~`>+\-]/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
