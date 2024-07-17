@@ -30,6 +30,7 @@ export default async function RootLayout({
     .from("notes")
     .select("*")
     .eq("public", true);
+  
 
   return (
     <html lang="en">
