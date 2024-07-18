@@ -3,6 +3,7 @@
   min-width: 200px;
   max-width: 980px;
   margin-left: 0;
+  line-height: 1.5; 
 }
 
 .markdown-body h1 {

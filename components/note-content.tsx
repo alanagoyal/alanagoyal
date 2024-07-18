@@ -77,7 +77,7 @@ export default function NoteContent({
         <Textarea
           id="note-content"
           value={note.content || ""}
-          className="bg-[#1c1c1c] min-h-dvh focus:outline-none"
+          className="bg-[#1c1c1c] min-h-dvh focus:outline-none leading-normal"
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
