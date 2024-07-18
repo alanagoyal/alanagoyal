@@ -25,18 +25,18 @@ import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
 import { SessionNotesContext } from "@/app/session-notes";
+import { toast } from "./ui/use-toast";
 
 export interface CommandMenuProps {
   notes: Note[];
   sessionId: string;
-  addNewPinnedNote: (slug: string) => void;
+  addNewPinnedNote: (slug: string, isNewNote?: boolean) => void;
   navigateNotes: (direction: "up" | "down") => void;
   togglePinned: (slug: string) => void;
   deleteNote: (note: Note) => void;
   highlightedNote: Note | null;
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
   setSelectedNoteSlug: (slug: string | null) => void;
-  isMobile: boolean;
 }
 
 export const CommandMenu = forwardRef<
@@ -53,7 +53,6 @@ export const CommandMenu = forwardRef<
       deleteNote,
       highlightedNote,
       setSelectedNoteSlug,
-      isMobile,
     },
     ref
   ) => {
@@ -104,18 +103,32 @@ export const CommandMenu = forwardRef<
     }
 
     const { refreshSessionNotes } = useContext(SessionNotesContext);
+    
+    const handleCreateNote = useCallback(async () => {
+      try {
+        const newSlug = await createNote(
+          sessionId,
+        );
+        
+        const updates = [
+          router.push(`/${newSlug}`),
+          (async () => {
+            setSelectedNoteSlug(newSlug);
+            addNewPinnedNote(newSlug, true);
+            await refreshSessionNotes();
+          })()
+        ];
+  
+        await Promise.all(updates);
 
-    const handleCreateNote = () => {
-      createNote(
-        sessionId,
-        router,
-        addNewPinnedNote,
-        refreshSessionNotes,
-        setSelectedNoteSlug,
-        isMobile
-      );
-      setOpen(false);
-    };
+        toast({
+          description: "Private note created",
+        });
+        setOpen(false);
+      } catch (error) {
+        console.error("Error creating note:", error);
+      }
+    }, [sessionId, router, addNewPinnedNote, refreshSessionNotes, setSelectedNoteSlug]);
 
     const handleNoteSelect = (slug: string) => {
       router.push(`/${slug}`);
