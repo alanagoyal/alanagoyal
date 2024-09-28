@@ -71,6 +71,14 @@ export default function NoteContent({
     );
   }, [canEdit, handleMarkdownCheckboxChange]);
 
+  const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    return (
+      <a {...props} target="_blank" rel="noopener noreferrer">
+        {props.children}
+      </a>
+    );
+  }, []);
+
   return (
     <div className="px-2">
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
@@ -97,6 +105,7 @@ export default function NoteContent({
             remarkPlugins={[remarkGfm]}
             components={{
               li: renderListItem,
+              a: renderLink,
             }}
           >
             {note.content || "Start writing..."}
