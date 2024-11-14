@@ -73,6 +73,7 @@ export default function NoteContent({
   }, [canEdit, handleMarkdownCheckboxChange]);
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    delete (props as any).node
     return (
       <a {...props} target="_blank" rel="noopener noreferrer">
         {props.children}
