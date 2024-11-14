@@ -30,6 +30,7 @@ export default function NoteContent({
   }, [note.content, saveNote]);
 
   const renderListItem = useCallback(({ children, ...props }: any) => {
+    delete props.node
     if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>;
 
     const checkbox = children.find((child: any) => child.type === 'input');
