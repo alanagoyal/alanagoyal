@@ -3,21 +3,22 @@ import { Message } from "../types";
 
 interface MessageBubbleProps {
   message: Message;
+  isLastUserMessage?: boolean;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, isLastUserMessage }: MessageBubbleProps) {
   return (
     <div
       className={cn(
-        "flex w-full mb-2",
-        message.sender === "me" ? "justify-end" : "justify-start"
+        "flex w-full mb-2 flex-col",
+        message.sender === "me" ? "items-end" : "items-start"
       )}
     >
       <div
         className={cn(
-          "rounded-2xl px-4 py-2 max-w-[80%]",
+          "rounded-[20px] px-4 py-2 max-w-[80%]",
           message.sender === "me"
-            ? "bg-blue-500 text-white"
+            ? "bg-[#0A7CFF] text-white"
             : "bg-gray-200 text-gray-900"
         )}
       >
@@ -25,6 +26,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <div className="text-sm">{message.content}</div>
         </div>
       </div>
+      {message.sender === "me" && isLastUserMessage && (
+        <div className="text-xs text-gray-500 mt-1 mr-1">Delivered</div>
+      )}
     </div>
   );
 }

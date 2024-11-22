@@ -7,11 +7,17 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages }: MessageListProps) {
+  const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
+
   return (
     <ScrollArea className="flex-1 p-4">
       <div className="space-y-4">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+        {messages.map((message, index) => (
+          <MessageBubble 
+            key={message.id} 
+            message={message} 
+            isLastUserMessage={index === lastUserMessageIndex}
+          />
         ))}
       </div>
     </ScrollArea>
