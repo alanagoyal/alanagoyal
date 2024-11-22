@@ -1,9 +1,7 @@
-import { Icons } from "./icons";
-import { ScrollArea } from "./ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { Message } from "../types";
-import { InfoIcon } from "lucide-react";
 import { useState } from "react";
+import { ChatHeader } from "./chat-header";
+import { MessageInput } from "./message-input";
 
 const messages: Message[] = [
   {
@@ -20,7 +18,6 @@ const messages: Message[] = [
     timestamp: "9:31 AM",
     isMe: false,
   },
-  // Add more messages as needed
 ];
 
 interface ChatAreaProps {
@@ -28,90 +25,63 @@ interface ChatAreaProps {
   setIsNewChat: (value: boolean) => void;
 }
 
-export default function ChatArea({ isNewChat, setIsNewChat }: ChatAreaProps) {
+export function ChatArea({ isNewChat, setIsNewChat }: ChatAreaProps) {
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
+  const [message, setMessage] = useState("");
   const [recipient, setRecipient] = useState("");
 
-  const handleCreateChat = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && recipient.trim()) {
+  const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && recipient.trim()) {
       setIsNewChat(false);
-      setChatMessages([]);
-      setRecipient(recipient.trim());
+    }
+  };
+
+  const handleSend = () => {
+    if (message.trim()) {
+      const newMessage: Message = {
+        id: String(Date.now()),
+        content: message,
+        sender: "me",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isMe: true,
+      };
+      setChatMessages([...chatMessages, newMessage]);
+      setMessage("");
     }
   };
 
   return (
     <div className="flex flex-1 flex-col h-screen">
-      <div className="flex items-center justify-between p-4 h-16 border-b">
-        {isNewChat ? (
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="To:"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              onKeyDown={handleCreateChat}
-              className="w-full bg-transparent focus:outline-none"
-              autoFocus
-            />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">{recipient || "Ankur 💙"}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2">
-          <button 
-            className="p-2 hover:bg-muted rounded-lg"
-            onClick={() => {
-              setIsNewChat(true);
-              setRecipient("");
-              setChatMessages([]);
-            }}
+      <ChatHeader 
+        isNewChat={isNewChat}
+        recipient={recipient}
+        setRecipient={setRecipient}
+        handleCreateChat={handleCreateChat}
+        setIsNewChat={setIsNewChat}
+      />
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        {chatMessages.map((message) => (
+          <div
+            key={message.id}
+            className={message.isMe ? "flex justify-end" : "flex justify-start"}
           >
-            <Icons.info />
-          </button>
-        </div>
-      </div>
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {chatMessages.map((message) => (
             <div
-              key={message.id}
-              className={cn(
-                "flex",
-                message.isMe ? "justify-end" : "justify-start"
-              )}
+              className={message.isMe
+                ? "bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-[80%]"
+                : "bg-muted rounded-lg px-4 py-2 max-w-[80%]"
+              }
             >
-              <div
-                className={cn(
-                  "rounded-lg px-4 py-2 max-w-[80%]",
-                  message.isMe
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                )}
-              >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {message.timestamp}
-                </p>
-              </div>
+              <div className="text-sm">{message.content}</div>
+              <div className="text-xs text-muted-foreground">{message.timestamp}</div>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
-      <div className="p-4 border-t">
-        <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
-          <input
-            type="text"
-            placeholder="iMessage"
-            className="flex-1 bg-transparent focus:outline-none text-sm"
-          />
-          <button className="p-2 hover:bg-muted rounded-lg">
-            <Icons.smile />
-          </button>
-        </div>
+          </div>
+        ))}
       </div>
+      <MessageInput 
+        message={message}
+        setMessage={setMessage}
+        handleSend={handleSend}
+      />
     </div>
   );
 }

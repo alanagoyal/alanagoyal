@@ -1,7 +1,7 @@
-import { Nav } from "./nav";
 import { Sidebar } from "./sidebar";
-import ChatArea from "./chat-area";
+import { ChatArea } from "./chat-area";
 import { useState } from "react";
+import { Nav } from "./nav";
 
 export default function App() {
   const [isNewChat, setIsNewChat] = useState(false);

@@ -12,4 +12,5 @@ export const Icons = {
   spinner: (props: IconProps) => (
     <Loader className="animate-spin text-muted-foreground" size={16} {...props} />
   ),
+  send: (props: IconProps) => <PenSquare className="text-muted-foreground" size={16} {...props} />,
 };
