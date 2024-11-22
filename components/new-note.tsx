@@ -12,6 +12,7 @@ import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
 import { SessionNotesContext } from "@/app/session-notes";
+import { toast } from "./ui/use-toast";
 
 export default function NewNote({
   addNewPinnedNote,
@@ -19,35 +20,47 @@ export default function NewNote({
   setSelectedNoteSlug,
   isMobile,
 }: {
-  addNewPinnedNote: (slug: string) => void;
+  addNewPinnedNote: (slug: string, isNewNote: boolean) => void;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
   const router = useRouter();
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
-  const handleCreateNote = useCallback(() => {
+  const handleCreateNote = useCallback(async () => {
     clearSearch();
-    createNote(
-      sessionId,
-      router,
-      addNewPinnedNote,
-      refreshSessionNotes,
-      setSelectedNoteSlug,
-      isMobile
-    );
-  }, [
-    sessionId,
-    router,
-    addNewPinnedNote,
-    clearSearch,
-    refreshSessionNotes,
-    setSelectedNoteSlug,
-    isMobile,
-  ]);
+    setIsCreatingNote(true);
+    try {
+      const newSlug = await createNote(sessionId);
+      
+      const updates = [
+        router.push(`/${newSlug}`),
+        (async () => {
+          setSelectedNoteSlug(newSlug);
+          addNewPinnedNote(newSlug, true);
+          await refreshSessionNotes();
+        })()
+      ];
+
+      await Promise.all(updates);
+
+      toast({
+        description: "Private note created",
+      });
+    } catch (error) {
+      console.error("Error creating note:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to create note. Please try again.",
+      });
+    } finally {
+      setIsCreatingNote(false);
+    }
+  }, [sessionId, router, addNewPinnedNote, refreshSessionNotes, setSelectedNoteSlug, clearSearch]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -80,8 +93,13 @@ export default function NewNote({
             onClick={handleCreateNote}
             aria-label="Create new note"
             className={isMobile ? "p-2" : ""}
+            disabled={isCreatingNote}
           >
-            <Icons.new className={isMobile ? "size-6" : "size-5"} />
+            {isCreatingNote ? (
+              <Icons.spinner className={`animate-spin ${isMobile ? "size-6" : "size-5"}`} />
+            ) : (
+              <Icons.new className={isMobile ? "size-6" : "size-5"} />
+            )}
           </TooltipTrigger>
           <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
             Create a note
