@@ -5,11 +5,24 @@ import { Nav } from "./nav";
 import { Conversation } from "../types";
 import { v4 as uuidv4 } from 'uuid';
 
+const STORAGE_KEY = 'dialogueConversations';
+
 export default function App() {
   const [isNewChat, setIsNewChat] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [recipient, setRecipient] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      setConversations(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  }, [conversations]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
