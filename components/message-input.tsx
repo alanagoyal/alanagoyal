@@ -19,6 +19,8 @@ export function MessageInput({
   };
 
   return (
+    <div className="p-4 border-t">
+
     <div className="flex gap-2 items-center">
       <input
         type="text"
@@ -48,6 +50,7 @@ export function MessageInput({
           <path d="M22 2L15 22L11 13L2 9L22 2Z" />
         </svg>
       </button>
+      </div>
     </div>
   );
 }

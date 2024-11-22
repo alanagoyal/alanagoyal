@@ -41,16 +41,41 @@ export default function App() {
   }, [activeConversation]);
 
   const handleNewConversation = (recipient: string) => {
+    const now = new Date();
+    console.log('Creating new conversation with timestamp:', now);
+    
     const newConversation: Conversation = {
       id: uuidv4(),
-      recipient,
+      recipient: {
+        id: uuidv4(),
+        name: recipient,
+        avatar: undefined
+      },
       messages: [],
-      lastMessageTime: new Date().toISOString(),
+      lastMessageTime: now.toISOString(),
     };
+    
+    console.log('New conversation object:', newConversation);
+    console.log('Validating lastMessageTime:', newConversation.lastMessageTime);
+    
+    if (!isValidDate(newConversation.lastMessageTime)) {
+      console.error('Invalid date created:', newConversation.lastMessageTime);
+      console.error('Date validation result:', new Date(newConversation.lastMessageTime));
+      return;
+    }
+    
     setConversations([newConversation, ...conversations]);
     setActiveConversation(newConversation.id);
     setIsNewChat(false);
     setRecipient("");
+  };
+
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    console.log('Validating date string:', dateString);
+    console.log('Parsed date object:', date);
+    console.log('Date.getTime():', date.getTime());
+    return date instanceof Date && !isNaN(date.getTime());
   };
 
   return (
