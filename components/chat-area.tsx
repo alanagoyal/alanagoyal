@@ -1,87 +1,94 @@
-import { Message } from "../types";
+import { Message, Conversation } from "../types";
 import { useState } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 
-const messages: Message[] = [
-  {
-    id: "1",
-    content: "good",
-    sender: "me",
-    timestamp: "9:30 AM",
-    isMe: true,
-  },
-  {
-    id: "2",
-    content: "have you taken off yet?",
-    sender: "other",
-    timestamp: "9:31 AM",
-    isMe: false,
-  },
-];
-
 interface ChatAreaProps {
   isNewChat: boolean;
   setIsNewChat: (value: boolean) => void;
+  onNewConversation: (recipient: string) => void;
+  activeConversation?: Conversation;
+  recipient: string;
+  setRecipient: (value: string) => void;
+  onUpdateConversations: (conversation: Conversation) => void;
 }
 
-export function ChatArea({ isNewChat, setIsNewChat }: ChatAreaProps) {
-  const [chatMessages, setChatMessages] = useState<Message[]>(messages);
+export function ChatArea({ 
+  isNewChat, 
+  setIsNewChat, 
+  onNewConversation,
+  activeConversation,
+  recipient,
+  setRecipient,
+  onUpdateConversations 
+}: ChatAreaProps) {
   const [message, setMessage] = useState("");
-  const [recipient, setRecipient] = useState("");
 
   const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && recipient.trim()) {
+      onNewConversation(recipient.trim());
+      setRecipient("");
       setIsNewChat(false);
     }
   };
 
   const handleSend = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: String(Date.now()),
-        content: message,
-        sender: "me",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isMe: true,
+    if (!message.trim() || (!activeConversation && !isNewChat)) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: message.trim(),
+      sender: "me",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isMe: true,
+    };
+
+    if (activeConversation) {
+      const updatedConversation = {
+        ...activeConversation,
+        messages: [...activeConversation.messages, newMessage],
+        lastMessageTime: new Date().toISOString(),
       };
-      setChatMessages([...chatMessages, newMessage]);
-      setMessage("");
+      onUpdateConversations(updatedConversation);
     }
+
+    setMessage("");
   };
 
   return (
-    <div className="flex flex-1 flex-col h-screen">
+    <div className="flex-1 flex flex-col">
       <ChatHeader 
         isNewChat={isNewChat}
-        recipient={recipient}
+        recipient={activeConversation?.recipient || recipient}
         setRecipient={setRecipient}
         handleCreateChat={handleCreateChat}
-        setIsNewChat={setIsNewChat}
       />
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        {chatMessages.map((message) => (
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeConversation?.messages.map((msg) => (
           <div
-            key={message.id}
-            className={message.isMe ? "flex justify-end" : "flex justify-start"}
+            key={msg.id}
+            className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'} mb-4`}
           >
             <div
-              className={message.isMe
-                ? "bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-[80%]"
-                : "bg-muted rounded-lg px-4 py-2 max-w-[80%]"
-              }
+              className={`max-w-[70%] rounded-lg p-3 ${
+                msg.isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              }`}
             >
-              <div className="text-sm">{message.content}</div>
-              <div className="text-xs text-muted-foreground">{message.timestamp}</div>
+              <p>{msg.content}</p>
+              <span className="text-xs opacity-70">{msg.timestamp}</span>
             </div>
           </div>
         ))}
       </div>
-      <MessageInput 
-        message={message}
-        setMessage={setMessage}
-        handleSend={handleSend}
-      />
+
+      <div className="p-4 border-t">
+        <MessageInput
+          message={message}
+          setMessage={setMessage}
+          handleSend={handleSend}
+          disabled={!activeConversation && !isNewChat}
+        />
+      </div>
     </div>
   );
 }
