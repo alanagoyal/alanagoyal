@@ -16,22 +16,23 @@ export function ChatHeader({
   setIsNewChat 
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-4 h-16 border-b">
+    <div className="flex items-center justify-between p-4 h-12 border-b bg-[#F7F7F7]">
       {isNewChat ? (
-        <div className="flex-1">
+        <div className="flex-1 flex items-center">
+          <span className="text-gray-500 mr-2 text-sm">To:</span>
           <input
             type="text"
-            placeholder="To:"
+            placeholder=""
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             onKeyDown={handleCreateChat}
-            className="w-full bg-transparent focus:outline-none"
+            className="w-full bg-transparent focus:outline-none text-sm"
             autoFocus
           />
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <span className="font-semibold">{recipient || "Ankur "}</span>
+          <span className="text-sm"><span className="text-muted-foreground">To:</span> {recipient || "Ankur"}</span>
         </div>
       )}
       <div className="flex items-center gap-2">
