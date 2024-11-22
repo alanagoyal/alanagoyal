@@ -2,6 +2,8 @@ import { Icons } from "./icons";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Message } from "../types";
+import { InfoIcon } from "lucide-react";
+import { useState } from "react";
 
 const messages: Message[] = [
   {
@@ -21,28 +23,59 @@ const messages: Message[] = [
   // Add more messages as needed
 ];
 
-export default function ChatArea() {
+interface ChatAreaProps {
+  isNewChat: boolean;
+  setIsNewChat: (value: boolean) => void;
+}
+
+export default function ChatArea({ isNewChat, setIsNewChat }: ChatAreaProps) {
+  const [chatMessages, setChatMessages] = useState<Message[]>(messages);
+  const [recipient, setRecipient] = useState("");
+
+  const handleCreateChat = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && recipient.trim()) {
+      setIsNewChat(false);
+      setChatMessages([]);
+      setRecipient(recipient.trim());
+    }
+  };
+
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="flex items-center justify-between p-4 h-12 border-b">
+    <div className="flex flex-1 flex-col h-screen">
+      <div className="flex items-center justify-between p-4 h-16 border-b">
+        {isNewChat ? (
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="To:"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              onKeyDown={handleCreateChat}
+              className="w-full bg-transparent focus:outline-none"
+              autoFocus
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{recipient || "Ankur 💙"}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
-          <span className="font-semibold">Ankur 💙</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-muted rounded-full">
-            <Icons.phone />
-          </button>
-          <button className="p-2 hover:bg-muted rounded-full">
-            <Icons.video />
-          </button>
-          <button className="p-2 hover:bg-muted rounded-full">
-            <Icons.smile />
+          <button 
+            className="p-2 hover:bg-muted rounded-lg"
+            onClick={() => {
+              setIsNewChat(true);
+              setRecipient("");
+              setChatMessages([]);
+            }}
+          >
+            <Icons.info />
           </button>
         </div>
       </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
+          {chatMessages.map((message) => (
             <div
               key={message.id}
               className={cn(
@@ -74,7 +107,7 @@ export default function ChatArea() {
             placeholder="iMessage"
             className="flex-1 bg-transparent focus:outline-none text-sm"
           />
-          <button className="p-2 hover:bg-muted rounded-full">
+          <button className="p-2 hover:bg-muted rounded-lg">
             <Icons.smile />
           </button>
         </div>
