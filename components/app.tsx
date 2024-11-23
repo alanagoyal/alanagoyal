@@ -14,6 +14,7 @@ export default function App() {
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -95,6 +96,7 @@ export default function App() {
 
     // Generate initial conversation
     console.log(' [handleNewConversation] Starting EventSource connection');
+    setIsStreaming(true);
     const eventSource = new EventSource(
       `/api/stream-chat?${new URLSearchParams({
         prompt: JSON.stringify({
@@ -113,6 +115,7 @@ export default function App() {
       
       if (event.data === "[DONE]") {
         console.log(' [EventSource] Stream completed');
+        setIsStreaming(false);
         eventSource.close();
       } else {
         try {
@@ -144,6 +147,7 @@ export default function App() {
 
     eventSource.onerror = (error) => {
       console.error(' [EventSource] Error:', error);
+      setIsStreaming(false);
       eventSource.close();
     };
   };
@@ -190,6 +194,7 @@ export default function App() {
             isMobileView={isMobileView}
             onBack={() => setActiveConversation(null)}
             inputRef={inputRef}
+            isStreaming={isStreaming}
           />
         </div>
       </div>

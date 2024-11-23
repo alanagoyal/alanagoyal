@@ -15,6 +15,7 @@ interface ChatAreaProps {
   isMobileView?: boolean;
   onBack?: () => void;
   inputRef?: React.RefObject<HTMLInputElement>;
+  isStreaming?: boolean;
 }
 
 export function ChatArea({
@@ -28,6 +29,7 @@ export function ChatArea({
   isMobileView,
   onBack,
   inputRef,
+  isStreaming,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
 
@@ -74,7 +76,11 @@ export function ChatArea({
         onBack={onBack}
         activeConversation={activeConversation}
       />
-      <MessageList messages={activeConversation?.messages || []} />
+      <MessageList 
+        messages={activeConversation?.messages || []} 
+        isStreaming={isStreaming}
+        conversation={activeConversation}
+      />
       <MessageInput
         message={message}
         setMessage={setMessage}
