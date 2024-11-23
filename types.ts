@@ -7,7 +7,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  recipient: Recipient;
+  recipients: Recipient[];
   messages: Message[];
   lastMessageTime: string;
 }

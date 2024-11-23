@@ -7,10 +7,10 @@ import { MessageList } from "./message-list";
 interface ChatAreaProps {
   isNewChat: boolean;
   setIsNewChat: (value: boolean) => void;
-  onNewConversation: (recipient: string) => void;
+  onNewConversation: (recipientInput: string) => void;
   activeConversation?: Conversation;
-  recipient: string;
-  setRecipient: (value: string) => void;
+  recipientInput: string;
+  setRecipientInput: (value: string) => void;
   onUpdateConversations: (conversation: Conversation) => void;
   isMobileView?: boolean;
   onBack?: () => void;
@@ -22,8 +22,8 @@ export function ChatArea({
   setIsNewChat,
   onNewConversation,
   activeConversation,
-  recipient,
-  setRecipient,
+  recipientInput,
+  setRecipientInput,
   onUpdateConversations,
   isMobileView,
   onBack,
@@ -32,10 +32,9 @@ export function ChatArea({
   const [message, setMessage] = useState("");
 
   const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && recipient.trim()) {
-      onNewConversation(recipient.trim());
-      setRecipient("");
-      setIsNewChat(false);
+    if (event.key === "Enter" && recipientInput.trim()) {
+      onNewConversation(recipientInput.trim());
+      setRecipientInput("");
     }
   };
 
@@ -68,11 +67,12 @@ export function ChatArea({
     <div className="h-full flex flex-col">
       <ChatHeader
         isNewChat={isNewChat}
-        recipient={activeConversation?.recipient.name || recipient}
-        setRecipient={setRecipient}
+        recipientInput={recipientInput}
+        setRecipientInput={setRecipientInput}
         handleCreateChat={handleCreateChat}
         isMobileView={isMobileView}
         onBack={onBack}
+        activeConversation={activeConversation}
       />
       <MessageList messages={activeConversation?.messages || []} />
       <MessageInput

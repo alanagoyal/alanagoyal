@@ -1,25 +1,28 @@
 import { Icons } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
+import { Conversation } from "../types";
 
 interface ChatHeaderProps {
   isNewChat: boolean;
-  recipient: string;
-  setRecipient: (value: string) => void;
+  recipientInput: string;
+  setRecipientInput: (value: string) => void;
   handleCreateChat: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onBack?: () => void;
   isMobileView?: boolean;
+  activeConversation?: Conversation;
 }
 
 export function ChatHeader({
   isNewChat,
-  recipient,
-  setRecipient,
+  recipientInput,
+  setRecipientInput,
   handleCreateChat,
   onBack,
   isMobileView,
+  activeConversation,
 }: ChatHeaderProps) {
   return (
-    <div className="h-12 flex items-center justify-between p-2 sm:p-4 border-b dark:border-foreground/20 bg-muted">
+    <div className="h-auto min-h-12 flex items-center justify-between p-2 sm:p-4 border-b dark:border-foreground/20 bg-muted">
       <div className="flex items-center gap-2 flex-1">
         {isMobileView && (
           <button
@@ -38,11 +41,10 @@ export function ChatHeader({
               </span>
               <input
                 type="text"
-                value={recipient}
-                onChange={(e) => {
-                  setRecipient(e.target.value);
-                }}
+                value={recipientInput}
+                onChange={(e) => setRecipientInput(e.target.value)}
                 onKeyDown={handleCreateChat}
+                placeholder="Enter recipients (separate by comma)"
                 className="flex-1 bg-transparent outline-none text-sm"
                 autoFocus
               />
@@ -51,11 +53,8 @@ export function ChatHeader({
         ) : (
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">
-              To:
+              {activeConversation?.recipients.map(r => r.name).join(', ')}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">{recipient}</span>
-            </div>
           </div>
         )}
       </div>

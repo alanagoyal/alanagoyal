@@ -2,7 +2,7 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
-import { Conversation } from "../types";
+import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from 'uuid';
 
 const STORAGE_KEY = 'dialogueConversations';
@@ -11,7 +11,7 @@ export default function App() {
   const [isNewChat, setIsNewChat] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
-  const [recipient, setRecipient] = useState("");
+  const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,29 +60,92 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleNewConversation = (recipient: string) => {
+  const handleNewConversation = async (input: string) => {
+    console.log(' [handleNewConversation] Starting with input:', input);
+    
+    const recipientList = input.split(',').map(r => r.trim()).filter(r => r.length > 0);
+    if (recipientList.length === 0) return;
+
+    console.log(' [handleNewConversation] Recipient list:', recipientList);
+
     const now = new Date();    
     const newConversation: Conversation = {
       id: uuidv4(),
-      recipient: {
+      recipients: recipientList.map(name => ({
         id: uuidv4(),
-        name: recipient,
+        name,
         avatar: undefined
-      },
+      })),
       messages: [],
       lastMessageTime: now.toISOString(),
     };
     
     if (!isValidDate(newConversation.lastMessageTime)) {
-      console.error('Invalid date created:', newConversation.lastMessageTime);
-      console.error('Date validation result:', new Date(newConversation.lastMessageTime));
+      console.error(' [handleNewConversation] Invalid date created:', newConversation.lastMessageTime);
+      console.error(' [handleNewConversation] Date validation result:', new Date(newConversation.lastMessageTime));
       return;
     }
+    
+    console.log(' [handleNewConversation] Created new conversation:', newConversation);
     
     setConversations([newConversation, ...conversations]);
     setActiveConversation(newConversation.id);
     setIsNewChat(false);
-    setRecipient("");
+    setRecipientInput("");
+
+    // Generate initial conversation
+    console.log(' [handleNewConversation] Starting EventSource connection');
+    const eventSource = new EventSource(
+      `/api/stream-chat?${new URLSearchParams({
+        prompt: JSON.stringify({
+          recipients: recipientList,
+          topic: "Open Discussion",
+          conversationHistory: [],
+          isInitialMessage: true,
+        }),
+      })}`
+    );
+
+    let aiResponse = "";
+    let currentSender = "";
+    eventSource.onmessage = (event) => {
+      console.log(' [EventSource] Message received:', event.data);
+      
+      if (event.data === "[DONE]") {
+        console.log(' [EventSource] Stream completed');
+        eventSource.close();
+      } else {
+        try {
+          const messageData = JSON.parse(event.data);
+          console.log(' [EventSource] Parsed message:', messageData);
+          
+          const newMessage: Message = {
+            id: uuidv4(),
+            content: messageData.content,
+            sender: messageData.sender,
+            timestamp: new Date().toISOString()
+          };
+          
+          setConversations(prevConversations => 
+            prevConversations.map(conv => 
+              conv.id === newConversation.id 
+                ? { 
+                    ...conv, 
+                    messages: [...conv.messages, newMessage]
+                  }
+                : conv
+            )
+          );
+        } catch (error) {
+          console.error(' [EventSource] Error parsing message:', error);
+        }
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error(' [EventSource] Error:', error);
+      eventSource.close();
+    };
   };
 
   const isValidDate = (dateString: string) => {
@@ -106,33 +169,26 @@ export default function App() {
           >
             <Nav onNewChat={() => {
               setIsNewChat(true);
-              setRecipient("");
+              setRecipientInput("");
               setActiveConversation(null);
             }} />
           </Sidebar>
         </div>
         <div className={`flex-1 h-full ${isMobileView ? 'w-full' : ''} ${(isMobileView && !activeConversation && !isNewChat) ? 'hidden' : 'block'}`}>
           <ChatArea 
-            isNewChat={isNewChat} 
-            setIsNewChat={(value) => {
-              setIsNewChat(value);
-            }}
+            isNewChat={isNewChat}
+            setIsNewChat={setIsNewChat}
             onNewConversation={handleNewConversation}
             activeConversation={conversations.find(c => c.id === activeConversation)}
-            recipient={recipient}
-            setRecipient={(value) => {
-              setRecipient(value);
-            }}
+            recipientInput={recipientInput}
+            setRecipientInput={setRecipientInput}
             onUpdateConversations={(updatedConversation) => {
               setConversations(conversations.map(c => 
                 c.id === updatedConversation.id ? updatedConversation : c
               ).sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()));
             }}
             isMobileView={isMobileView}
-            onBack={() => {
-              setActiveConversation(null);
-              setIsNewChat(false);
-            }}
+            onBack={() => setActiveConversation(null)}
             inputRef={inputRef}
           />
         </div>
