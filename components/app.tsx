@@ -34,7 +34,7 @@ export default function App() {
     if (conversationId && conversations.some(c => c.id === conversationId)) {
       setActiveConversation(conversationId);
     }
-  }, []);
+  }, [conversations]);
 
   useEffect(() => {
     if (activeConversation) {
@@ -108,8 +108,6 @@ export default function App() {
       })}`
     );
 
-    let aiResponse = "";
-    let currentSender = "";
     eventSource.onmessage = (event) => {
       console.log(' [EventSource] Message received:', event.data);
       
@@ -181,7 +179,6 @@ export default function App() {
         <div className={`flex-1 h-full ${isMobileView ? 'w-full' : ''} ${(isMobileView && !activeConversation && !isNewChat) ? 'hidden' : 'block'}`}>
           <ChatArea 
             isNewChat={isNewChat}
-            setIsNewChat={setIsNewChat}
             onNewConversation={handleNewConversation}
             activeConversation={conversations.find(c => c.id === activeConversation)}
             recipientInput={recipientInput}

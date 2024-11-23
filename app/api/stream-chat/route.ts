@@ -63,9 +63,9 @@ export async function GET(req: NextRequest) {
               for (const msg of messages) {
                 const match = msg.match(/^([^:]+):\s*(.+)$/);
                 if (match) {
-                  const [_, speaker, content] = match;
+                  const [, speaker, content] = match;
                   const messageData = {
-                    sender: speaker.trim(),
+                    sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
                     content: content.trim()
                   };
                   console.log(' [stream-chat] Sending message data:', messageData);
@@ -82,9 +82,9 @@ export async function GET(req: NextRequest) {
         if (currentMessage.trim()) {
           const match = currentMessage.trim().match(/^([^:]+):\s*(.+)$/);
           if (match) {
-            const [_, speaker, content] = match;
+            const [, speaker, content] = match;
             const messageData = {
-              sender: speaker.trim(),
+              sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
               content: content.trim()
             };
             console.log(' [stream-chat] Sending final message data:', messageData);
@@ -164,9 +164,9 @@ export async function POST(req: Request) {
               for (const msg of messages) {
                 const match = msg.match(/^([^:]+):\s*(.+)$/);
                 if (match) {
-                  const [_, speaker, content] = match;
+                  const [, speaker, content] = match;
                   const messageData = {
-                    sender: speaker.trim(),
+                    sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
                     content: content.trim()
                   };
                   console.log(' [stream-chat] Sending message data:', messageData);
@@ -183,9 +183,9 @@ export async function POST(req: Request) {
         if (currentMessage.trim()) {
           const match = currentMessage.trim().match(/^([^:]+):\s*(.+)$/);
           if (match) {
-            const [_, speaker, content] = match;
+            const [, speaker, content] = match;
             const messageData = {
-              sender: speaker.trim(),
+              sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
               content: content.trim()
             };
             console.log(' [stream-chat] Sending final message data:', messageData);

@@ -6,7 +6,6 @@ import { MessageList } from "./message-list";
 
 interface ChatAreaProps {
   isNewChat: boolean;
-  setIsNewChat: (value: boolean) => void;
   onNewConversation: (recipientInput: string) => void;
   activeConversation?: Conversation;
   recipientInput: string;
@@ -20,7 +19,6 @@ interface ChatAreaProps {
 
 export function ChatArea({
   isNewChat,
-  setIsNewChat,
   onNewConversation,
   activeConversation,
   recipientInput,
