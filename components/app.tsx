@@ -12,6 +12,8 @@ export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [recipient, setRecipient] = useState("");
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -40,10 +42,19 @@ export default function App() {
     }
   }, [activeConversation]);
 
-  const handleNewConversation = (recipient: string) => {
-    const now = new Date();
-    console.log('Creating new conversation with timestamp:', now);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
     
+    handleResize();
+    setIsLayoutInitialized(true);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleNewConversation = (recipient: string) => {
+    const now = new Date();    
     const newConversation: Conversation = {
       id: uuidv4(),
       recipient: {
@@ -54,9 +65,6 @@ export default function App() {
       messages: [],
       lastMessageTime: now.toISOString(),
     };
-    
-    console.log('New conversation object:', newConversation);
-    console.log('Validating lastMessageTime:', newConversation.lastMessageTime);
     
     if (!isValidDate(newConversation.lastMessageTime)) {
       console.error('Invalid date created:', newConversation.lastMessageTime);
@@ -72,43 +80,54 @@ export default function App() {
 
   const isValidDate = (dateString: string) => {
     const date = new Date(dateString);
-    console.log('Validating date string:', dateString);
-    console.log('Parsed date object:', date);
-    console.log('Date.getTime():', date.getTime());
     return date instanceof Date && !isNaN(date.getTime());
   };
 
+  if (!isLayoutInitialized) {
+    return null;
+  }
+
   return (
     <main className="h-screen w-screen bg-background flex flex-col">
-      <div className="flex-1 flex">
-        <Sidebar 
-          conversations={conversations}
-          activeConversation={activeConversation}
-          onSelectConversation={setActiveConversation}
-        >
-          <Nav onNewChat={() => {
-            setIsNewChat(true);
-            setRecipient("");
-            setActiveConversation(null);
-          }} />
-        </Sidebar>
-        <ChatArea 
-          isNewChat={isNewChat} 
-          setIsNewChat={(value) => {
-            setIsNewChat(value);
-          }}
-          onNewConversation={handleNewConversation}
-          activeConversation={conversations.find(c => c.id === activeConversation)}
-          recipient={recipient}
-          setRecipient={(value) => {
-            setRecipient(value);
-          }}
-          onUpdateConversations={(updatedConversation) => {
-            setConversations(conversations.map(c => 
-              c.id === updatedConversation.id ? updatedConversation : c
-            ).sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()));
-          }}
-        />
+      <div className="flex-1 flex h-full">
+        <div className={`h-full ${isMobileView ? 'w-full' : ''} ${(isMobileView && (activeConversation || isNewChat)) ? 'hidden' : 'block'}`}>
+          <Sidebar 
+            conversations={conversations}
+            activeConversation={activeConversation}
+            onSelectConversation={setActiveConversation}
+            isMobileView={isMobileView}
+          >
+            <Nav onNewChat={() => {
+              setIsNewChat(true);
+              setRecipient("");
+              setActiveConversation(null);
+            }} />
+          </Sidebar>
+        </div>
+        <div className={`flex-1 h-full ${isMobileView ? 'w-full' : ''} ${(isMobileView && !activeConversation && !isNewChat) ? 'hidden' : 'block'}`}>
+          <ChatArea 
+            isNewChat={isNewChat} 
+            setIsNewChat={(value) => {
+              setIsNewChat(value);
+            }}
+            onNewConversation={handleNewConversation}
+            activeConversation={conversations.find(c => c.id === activeConversation)}
+            recipient={recipient}
+            setRecipient={(value) => {
+              setRecipient(value);
+            }}
+            onUpdateConversations={(updatedConversation) => {
+              setConversations(conversations.map(c => 
+                c.id === updatedConversation.id ? updatedConversation : c
+              ).sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()));
+            }}
+            isMobileView={isMobileView}
+            onBack={() => {
+              setActiveConversation(null);
+              setIsNewChat(false);
+            }}
+          />
+        </div>
       </div>
     </main>
   );

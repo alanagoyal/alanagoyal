@@ -12,6 +12,8 @@ interface ChatAreaProps {
   recipient: string;
   setRecipient: (value: string) => void;
   onUpdateConversations: (conversation: Conversation) => void;
+  isMobileView?: boolean;
+  onBack?: () => void;
 }
 
 export function ChatArea({
@@ -22,6 +24,8 @@ export function ChatArea({
   recipient,
   setRecipient,
   onUpdateConversations,
+  isMobileView,
+  onBack,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
 
@@ -59,12 +63,14 @@ export function ChatArea({
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="h-full flex flex-col">
       <ChatHeader
         isNewChat={isNewChat}
         recipient={activeConversation?.recipient.name || recipient}
         setRecipient={setRecipient}
         handleCreateChat={handleCreateChat}
+        isMobileView={isMobileView}
+        onBack={onBack}
       />
       <MessageList messages={activeConversation?.messages || []} />
       <MessageInput

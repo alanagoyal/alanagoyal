@@ -13,7 +13,7 @@ export function Nav({ onNewChat }: NavProps) {
         <div className="w-3 h-3 rounded-full bg-green-500" />
       </div>
       <button 
-        className="p-2 hover:bg-muted rounded-lg"
+        className="p-2 hover:bg-muted-foreground/10 rounded-lg"
         onClick={onNewChat}
       >
         <Icons.new />

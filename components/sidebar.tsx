@@ -8,13 +8,15 @@ interface SidebarProps {
   conversations: Conversation[];
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
+  isMobileView?: boolean;
 }
 
 export function Sidebar({ 
   children, 
   conversations, 
   activeConversation,
-  onSelectConversation 
+  onSelectConversation,
+  isMobileView
 }: SidebarProps) {
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
@@ -28,8 +30,16 @@ export function Sidebar({
     }
   };
 
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
+
   return (
-    <div className="w-80 flex flex-col border-r bg-muted">
+    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-full flex flex-col border-r bg-muted`}>
       {children}
       <SearchBar value="" onChange={() => {}} />
       <div className="flex-1 overflow-y-auto">
@@ -37,8 +47,10 @@ export function Sidebar({
           <button
             key={conversation.id}
             onClick={() => onSelectConversation(conversation.id)}
-            className={`w-full p-4 text-left hover:bg-muted-foreground/10 ${
-              activeConversation === conversation.id ? 'bg-muted-foreground/20' : ''
+            className={`w-full p-4 text-left ${
+              activeConversation === conversation.id 
+                ? 'bg-blue-500 text-white rounded-sm' 
+                : ''
             }`}
           >
             <div className="flex items-start gap-3">
@@ -50,22 +62,30 @@ export function Sidebar({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-medium">
-                    {conversation.recipient.name[0].toUpperCase()}
+                  <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                    {getInitials(conversation.recipient.name)}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-medium truncate">{conversation.recipient.name}</span>
+                  <span className="text-sm font-bold truncate">{conversation.recipient.name}</span>
                   {conversation.lastMessageTime && (
-                    <span className="text-sm text-muted-foreground ml-2 flex-shrink-0">
+                    <span className={`text-xs ml-2 flex-shrink-0 ${
+                      activeConversation === conversation.id 
+                        ? 'text-white/80' 
+                        : 'text-muted-foreground'
+                    }`}>
                       {formatTime(conversation.lastMessageTime)}
                     </span>
                   )}
                 </div>
                 {conversation.messages.length > 0 && (
-                  <p className="text-sm text-muted-foreground truncate">
+                  <p className={`text-xs truncate ${
+                    activeConversation === conversation.id 
+                      ? 'text-white/80' 
+                      : 'text-muted-foreground'
+                  }`}>
                     {conversation.messages[conversation.messages.length - 1].content}
                   </p>
                 )}

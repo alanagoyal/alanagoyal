@@ -1,4 +1,4 @@
-import { InfoIcon, PenSquare, Phone, Video, Smile, Loader, Search } from "lucide-react";
+import { InfoIcon, PenSquare, Phone, Video, Smile, Loader, Search, ChevronLeft } from "lucide-react";
 
 type IconProps = React.HTMLAttributes<SVGElement>
 
@@ -13,4 +13,5 @@ export const Icons = {
     <Loader className="animate-spin text-muted-foreground" size={16} {...props} />
   ),
   send: (props: IconProps) => <PenSquare className="text-muted-foreground" size={16} {...props} />,
+  back: (props: IconProps) => <ChevronLeft className="text-[#0A7CFF]" size={32} {...props} />,
 };
