@@ -39,59 +39,65 @@ export function Sidebar({
   };
 
   return (
-    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-full flex flex-col border-r bg-muted`}>
+    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-full flex flex-col border-r dark:border-foreground/20 bg-muted`}>
       {children}
       <SearchBar value="" onChange={() => {}} />
       <div className="flex-1 overflow-y-auto">
         {conversations.map((conversation) => (
-          <button
-            key={conversation.id}
-            onClick={() => onSelectConversation(conversation.id)}
-            className={`w-full p-4 text-left ${
-              activeConversation === conversation.id 
-                ? 'bg-blue-500 text-white rounded-sm' 
-                : ''
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                {conversation.recipient.avatar ? (
-                  <img 
-                    src={conversation.recipient.avatar} 
-                    alt="" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-                    {getInitials(conversation.recipient.name)}
+          <React.Fragment key={conversation.id}>
+            <button
+              onClick={() => onSelectConversation(conversation.id)}
+              className={`w-full p-4 text-left ${
+                activeConversation === conversation.id 
+                  ? 'bg-blue-500 text-white rounded-sm' 
+                  : ''
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                  {conversation.recipient.avatar ? (
+                    <img 
+                      src={conversation.recipient.avatar} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                      {getInitials(conversation.recipient.name)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-sm font-medium truncate">{conversation.recipient.name}</span>
+                    {conversation.lastMessageTime && (
+                      <span className={`text-xs ml-2 flex-shrink-0 ${
+                        activeConversation === conversation.id 
+                          ? 'text-white/80' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        {formatTime(conversation.lastMessageTime)}
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-medium truncate">{conversation.recipient.name}</span>
-                  {conversation.lastMessageTime && (
-                    <span className={`text-xs ml-2 flex-shrink-0 ${
+                  {conversation.messages.length > 0 && (
+                    <p className={`text-xs truncate ${
                       activeConversation === conversation.id 
                         ? 'text-white/80' 
                         : 'text-muted-foreground'
                     }`}>
-                      {formatTime(conversation.lastMessageTime)}
-                    </span>
+                      {conversation.messages[conversation.messages.length - 1].content}
+                    </p>
                   )}
                 </div>
-                {conversation.messages.length > 0 && (
-                  <p className={`text-xs truncate ${
-                    activeConversation === conversation.id 
-                      ? 'text-white/80' 
-                      : 'text-muted-foreground'
-                  }`}>
-                    {conversation.messages[conversation.messages.length - 1].content}
-                  </p>
-                )}
               </div>
-            </div>
-          </button>
+            </button>
+            {conversations.indexOf(conversation) < conversations.length - 1 && (
+              <div className="px-[56px] pr-2">
+                <div className="h-[1px] bg-foreground/10 dark:bg-foreground/20" />
+              </div>
+            )}
+          </React.Fragment>
         ))}
       </div>
     </div>

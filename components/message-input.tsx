@@ -32,7 +32,7 @@ export function MessageInput({
         onKeyDown={handleKeyPress}
         disabled={disabled}
         placeholder="Type a message..."
-        className="flex-1 bg-transparent border rounded-full px-4 py-2 text-sm focus:outline-none disabled:opacity-50"
+        className="flex-1 bg-transparent border border-foreground/20 rounded-full px-4 py-2 text-sm focus:outline-none disabled:opacity-50"
       />
       </div>
     </div>

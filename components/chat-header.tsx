@@ -1,4 +1,5 @@
 import { Icons } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
 
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -18,7 +19,7 @@ export function ChatHeader({
   isMobileView,
 }: ChatHeaderProps) {
   return (
-    <div className="h-12 flex items-center justify-between p-2 sm:p-4 border-b bg-muted">
+    <div className="h-12 flex items-center justify-between p-2 sm:p-4 border-b dark:border-foreground/20 bg-muted">
       <div className="flex items-center gap-2 flex-1">
         {isMobileView && (
           <button
@@ -58,6 +59,7 @@ export function ChatHeader({
           </div>
         )}
       </div>
+      <ThemeToggle />
     </div>
   );
 }

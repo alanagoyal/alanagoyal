@@ -1,4 +1,4 @@
-import { InfoIcon, PenSquare, Phone, Video, Smile, Loader, Search, ChevronLeft } from "lucide-react";
+import { InfoIcon, PenSquare, Phone, Video, Smile, Loader, Search, ChevronLeft, Sun, Moon } from "lucide-react";
 
 type IconProps = React.HTMLAttributes<SVGElement>
 
@@ -14,4 +14,6 @@ export const Icons = {
   ),
   send: (props: IconProps) => <PenSquare className="text-muted-foreground" size={16} {...props} />,
   back: (props: IconProps) => <ChevronLeft className="text-[#0A7CFF]" size={32} {...props} />,
+  sun: (props: IconProps) => <Sun className="text-muted-foreground" size={16} {...props} />,
+  moon: (props: IconProps) => <Moon className="text-muted-foreground" size={16} {...props} />
 };
