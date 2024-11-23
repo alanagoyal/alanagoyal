@@ -1,6 +1,7 @@
 import { streamText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { wrapAISDKModel } from "braintrust";
+import { Span } from "braintrust";
 import { logger } from "../logger";
 
 export async function POST(req: Request) {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
     After each message, automatically continue the conversation with a response from the other participant.`;
 
   return await logger.traced(
-    async (span: any) => {
+    async (span: Span) => {
       const apiMessages = [
         {
           role: "system",
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
 
         return response.toDataStreamResponse({ headers });
       } catch (e) {
-        span.setError(e);
+        span.log({ error: e });
         return new Response("Error processing your request", { status: 500 });
       }
     },
