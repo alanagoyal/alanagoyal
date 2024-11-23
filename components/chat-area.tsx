@@ -14,6 +14,7 @@ interface ChatAreaProps {
   onUpdateConversations: (conversation: Conversation) => void;
   isMobileView?: boolean;
   onBack?: () => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
 export function ChatArea({
@@ -26,6 +27,7 @@ export function ChatArea({
   onUpdateConversations,
   isMobileView,
   onBack,
+  inputRef,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
 
@@ -78,6 +80,7 @@ export function ChatArea({
         setMessage={setMessage}
         handleSend={handleSend}
         disabled={!activeConversation && !isNewChat}
+        inputRef={inputRef}
       />
     </div>
   );

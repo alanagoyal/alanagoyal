@@ -69,7 +69,7 @@ export function Sidebar({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-bold truncate">{conversation.recipient.name}</span>
+                  <span className="text-sm font-medium truncate">{conversation.recipient.name}</span>
                   {conversation.lastMessageTime && (
                     <span className={`text-xs ml-2 flex-shrink-0 ${
                       activeConversation === conversation.id 

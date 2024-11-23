@@ -1,6 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
 import { Conversation } from "../types";
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +14,7 @@ export default function App() {
   const [recipient, setRecipient] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -41,6 +42,12 @@ export default function App() {
       window.history.pushState({}, '', window.location.pathname);
     }
   }, [activeConversation]);
+
+  useEffect(() => {
+    if (!isNewChat && activeConversation && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isNewChat, activeConversation]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -126,6 +133,7 @@ export default function App() {
               setActiveConversation(null);
               setIsNewChat(false);
             }}
+            inputRef={inputRef}
           />
         </div>
       </div>
