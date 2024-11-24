@@ -98,7 +98,7 @@ export function ChatArea({
       abortControllerRef.current = new AbortController();
 
       // Create EventSource for streaming response
-      const response = await fetch('/api/stream-chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

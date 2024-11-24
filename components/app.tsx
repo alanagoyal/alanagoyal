@@ -91,7 +91,7 @@ export default function App() {
     console.log(' [handleNewConversation] Starting stream connection');
     setIsStreaming(true);
     
-    const response = await fetch('/api/stream-chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
