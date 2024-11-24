@@ -15,7 +15,6 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -43,12 +42,6 @@ export default function App() {
       window.history.pushState({}, '', window.location.pathname);
     }
   }, [activeConversation]);
-
-  useEffect(() => {
-    if (!isNewChat && activeConversation && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isNewChat, activeConversation]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -95,59 +88,90 @@ export default function App() {
     setRecipientInput("");
 
     // Generate initial conversation
-    console.log(' [handleNewConversation] Starting EventSource connection');
+    console.log(' [handleNewConversation] Starting stream connection');
     setIsStreaming(true);
-    const eventSource = new EventSource(
-      `/api/stream-chat?${new URLSearchParams({
-        prompt: JSON.stringify({
-          recipients: recipientList,
-          topic: "Open Discussion",
-          conversationHistory: [],
-          isInitialMessage: true,
-        }),
-      })}`
-    );
+    
+    const response = await fetch('/api/stream-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipients: recipientList,
+        topic: "Open Discussion",
+        conversationHistory: [],
+        isInitialMessage: true,
+      }),
+    });
 
-    eventSource.onmessage = (event) => {
-      console.log(' [EventSource] Message received:', event.data);
-      
-      if (event.data === "[DONE]") {
-        console.log(' [EventSource] Stream completed');
-        setIsStreaming(false);
-        eventSource.close();
-      } else {
-        try {
-          const messageData = JSON.parse(event.data);
-          console.log(' [EventSource] Parsed message:', messageData);
-          
-          const newMessage: Message = {
-            id: uuidv4(),
-            content: messageData.content,
-            sender: messageData.sender,
-            timestamp: new Date().toISOString()
-          };
-          
-          setConversations(prevConversations => 
-            prevConversations.map(conv => 
-              conv.id === newConversation.id 
-                ? { 
-                    ...conv, 
-                    messages: [...conv.messages, newMessage]
-                  }
-                : conv
-            )
-          );
-        } catch (error) {
-          console.error(' [EventSource] Error parsing message:', error);
+    if (!response.ok) {
+      console.error(' [handleNewConversation] Error:', response.statusText);
+      setIsStreaming(false);
+      return;
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      console.error(' [handleNewConversation] No reader available');
+      setIsStreaming(false);
+      return;
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          setIsStreaming(false);
+          break;
+        }
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              console.log(' [Stream] Stream completed');
+              setIsStreaming(false);
+            } else {
+              try {
+                const messageData = JSON.parse(data);
+                console.log(' [Stream] Parsed message:', messageData);
+                
+                const newMessage: Message = {
+                  id: uuidv4(),
+                  content: messageData.content,
+                  sender: messageData.sender,
+                  timestamp: new Date().toISOString()
+                };
+                
+                setConversations(prevConversations => 
+                  prevConversations.map(conv => 
+                    conv.id === newConversation.id 
+                      ? { 
+                          ...conv, 
+                          messages: [...conv.messages, newMessage]
+                        }
+                      : conv
+                  )
+                );
+              } catch (error) {
+                console.error(' [Stream] Error parsing message:', error);
+              }
+            }
+          }
         }
       }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error(' [EventSource] Error:', error);
+    } catch (error) {
+      console.error(' [Stream] Error reading stream:', error);
       setIsStreaming(false);
-      eventSource.close();
-    };
+    } finally {
+      reader.releaseLock();
+    }
   };
 
   const isValidDate = (dateString: string) => {
@@ -190,7 +214,6 @@ export default function App() {
             }}
             isMobileView={isMobileView}
             onBack={() => setActiveConversation(null)}
-            inputRef={inputRef}
             isStreaming={isStreaming}
           />
         </div>

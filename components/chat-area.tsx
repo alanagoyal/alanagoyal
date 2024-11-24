@@ -1,5 +1,5 @@
 import { Message, Conversation } from "../types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
@@ -13,7 +13,6 @@ interface ChatAreaProps {
   onUpdateConversations: (conversation: Conversation) => void;
   isMobileView?: boolean;
   onBack?: () => void;
-  inputRef?: React.RefObject<HTMLInputElement>;
   isStreaming?: boolean;
 }
 
@@ -26,18 +25,32 @@ export function ChatArea({
   onUpdateConversations,
   isMobileView,
   onBack,
-  inputRef,
   isStreaming,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<Conversation | undefined>(activeConversation);
   const [isResponding, setIsResponding] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setConversation(activeConversation);
+    // Focus input when conversation becomes active
+    if (activeConversation && messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
   }, [activeConversation]);
 
-  // True if either initial conversation is streaming or we're waiting for a response
+  // Cleanup function to abort any ongoing streams when component unmounts
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // True if we're currently streaming messages
   const isCurrentlyStreaming = isStreaming || isResponding;
 
   const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,6 +63,13 @@ export function ChatArea({
   const handleSend = async () => {
     if (!message.trim() || (!conversation && !isNewChat)) return;
 
+    // Abort any ongoing streams before sending a new message
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsResponding(false);
+    }
+
     const newMessage: Message = {
       id: Date.now().toString(),
       content: message.trim(),
@@ -59,6 +79,9 @@ export function ChatArea({
         minute: "2-digit",
       }),
     };
+
+    // Clear the input
+    setMessage("");
 
     if (conversation) {
       // Update conversation with user's message
@@ -74,61 +97,102 @@ export function ChatArea({
       // Set streaming state to true before creating EventSource
       setIsResponding(true);
 
+      // Create new AbortController for this stream
+      abortControllerRef.current = new AbortController();
+
       // Create EventSource for streaming response
-      const eventSource = new EventSource(
-        `/api/stream-chat?${new URLSearchParams({
-          prompt: JSON.stringify({
-            recipients: updatedConversation.recipients.map(r => r.name),
-            conversationHistory: updatedConversation.messages,
-            topic: "Ongoing Discussion",
-            isInitialMessage: false,
-          }),
-        })}`
-      );
+      const response = await fetch('/api/stream-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipients: updatedConversation.recipients.map(r => r.name),
+          conversationHistory: updatedConversation.messages,
+          topic: "Ongoing Discussion",
+          isInitialMessage: false,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
 
-      eventSource.onmessage = (event) => {
-        if (event.data === "[DONE]") {
-          eventSource.close();
-          setIsResponding(false);
-        } else {
-          try {
-            const messageData = JSON.parse(event.data);
-            const responseMessage: Message = {
-              id: Date.now().toString(),
-              content: messageData.content,
-              sender: messageData.sender,
-              timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            };
+      if (!response.ok) {
+        console.error(' [handleSend] Error:', response.statusText);
+        setIsResponding(false);
+        return;
+      }
 
-            // Update both states using functional updates
-            setConversation(current => {
-              if (!current) return current;
-              const updated = {
-                ...current,
-                messages: [...current.messages, responseMessage],
-                lastMessageTime: new Date().toISOString(),
-              };
-              // Update parent state after local state is updated
-              setTimeout(() => onUpdateConversations(updated), 0);
-              return updated;
-            });
-          } catch (error) {
-            console.error(' [handleSend] Error processing message:', error);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        console.error(' [handleSend] No reader available');
+        setIsResponding(false);
+        return;
+      }
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            setIsResponding(false);
+            // Focus input after stream completes
+            if (messageInputRef.current) {
+              messageInputRef.current.focus();
+            }
+            break;
+          }
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                setIsResponding(false);
+                // Focus input after stream completes
+                if (messageInputRef.current) {
+                  messageInputRef.current.focus();
+                }
+              } else {
+                try {
+                  const messageData = JSON.parse(data);
+                  const responseMessage: Message = {
+                    id: Date.now().toString(),
+                    content: messageData.content,
+                    sender: messageData.sender,
+                    timestamp: new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }),
+                  };
+
+                  setConversation(current => {
+                    if (!current) return current;
+                    const updated = {
+                      ...current,
+                      messages: [...current.messages, responseMessage],
+                      lastMessageTime: new Date().toISOString(),
+                    };
+                    setTimeout(() => onUpdateConversations(updated), 0);
+                    return updated;
+                  });
+                } catch (error) {
+                  console.error(' [handleSend] Error processing message:', error);
+                }
+              }
+            }
           }
         }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error(' [handleSend] EventSource error:', error);
-        eventSource.close();
+      } catch (error) {
+        console.error(' [handleSend] Error reading stream:', error);
         setIsResponding(false);
-      };
+      } finally {
+        reader.releaseLock();
+      }
     }
 
-    setMessage("");
   };
 
   return (
@@ -144,15 +208,15 @@ export function ChatArea({
       />
       <MessageList 
         messages={conversation?.messages || []} 
-        isStreaming={isCurrentlyStreaming}
+        isStreaming={isNewChat} // Only show loading for initial message
         conversation={conversation}
       />
       <MessageInput
         message={message}
         setMessage={setMessage}
         handleSend={handleSend}
-        disabled={!conversation && !isNewChat}
-        inputRef={inputRef}
+        inputRef={messageInputRef}
+        disabled={!conversation && !isNewChat} // Only disable if there's no conversation and it's not a new chat
       />
     </div>
   );

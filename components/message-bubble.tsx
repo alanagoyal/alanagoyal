@@ -36,7 +36,7 @@ export function MessageBubble({ message, isLastUserMessage, isStreaming, convers
       >
         <div className="flex flex-col">
           <div className="text-sm">
-            {(!isStreaming || message.sender === "me") ? (
+            {(!isStreaming) ? (
               message.content
             ) : (
               <span className="typing-indicator">
@@ -56,11 +56,12 @@ export function MessageBubble({ message, isLastUserMessage, isStreaming, convers
         .typing-indicator {
           display: flex;
           align-items: center;
-          gap: 2px;
+          justify-content: center;
+          height: 20px;
         }
         .dot {
           font-size: 24px;
-          line-height: 8px;
+          line-height: 1;
           animation: typing 1.4s infinite;
           opacity: 0.3;
         }
