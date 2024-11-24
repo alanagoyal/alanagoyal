@@ -30,7 +30,7 @@ export function MessageBubble({ message, isLastUserMessage, isStreaming, convers
           "rounded-[20px] px-4 py-2 max-w-[80%]",
           message.sender === "me"
             ? "bg-[#0A7CFF] text-white"
-            : "bg-gray-200 text-gray-900",
+            : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
           isStreaming && message.sender !== "me" && "min-h-[32px] min-w-[60px]"
         )}
       >
