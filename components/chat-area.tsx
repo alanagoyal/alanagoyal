@@ -50,9 +50,6 @@ export function ChatArea({
     };
   }, []);
 
-  // True if we're currently streaming messages
-  const isCurrentlyStreaming = isStreaming || isResponding;
-
   const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && recipientInput.trim()) {
       onNewConversation(recipientInput.trim());

@@ -1,6 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from 'uuid';

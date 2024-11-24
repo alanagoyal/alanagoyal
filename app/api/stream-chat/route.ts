@@ -114,11 +114,11 @@ export async function POST(req: Request) {
 
         console.log(' [stream-chat] Stream completed');
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(' [stream-chat] Error in stream:', error);
         
         // Check if the request was aborted
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           console.log(' [stream-chat] Request aborted by client');
           controller.close();
           return;
