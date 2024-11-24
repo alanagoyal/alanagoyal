@@ -203,18 +203,20 @@ export function ChatArea({
         onBack={onBack}
         activeConversation={conversation}
       />
-      <MessageList 
-        messages={conversation?.messages || []} 
-        isStreaming={isNewChat} // Only show loading for initial message
-        conversation={conversation}
-      />
-      <MessageInput
-        message={message}
-        setMessage={setMessage}
-        handleSend={handleSend}
-        inputRef={messageInputRef}
-        disabled={!conversation && !isNewChat} // Only disable if there's no conversation and it's not a new chat
-      />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <MessageList 
+          messages={conversation?.messages || []} 
+          conversation={conversation}
+          isStreaming={isStreaming && isResponding}
+        />
+        <MessageInput
+          message={message}
+          setMessage={setMessage}
+          handleSend={handleSend}
+          inputRef={messageInputRef}
+          disabled={!conversation && !isNewChat} // Only disable if there's no conversation and it's not a new chat
+        />
+      </div>
     </div>
   );
 }
