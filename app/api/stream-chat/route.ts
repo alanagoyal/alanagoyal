@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { OpenAI } from "openai";
+import { Message } from "@/types";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -26,11 +27,21 @@ export async function GET(req: NextRequest) {
 
   const prompt = `
     You are simulating a conversation between these people: ${recipients.join(', ')}.
-    Generate a natural conversation between them.
-    Format each message as "[Speaker]: [Message]" with each message on a new line.
+    Generate a natural back-and-forth conversation between them with multiple messages.
+    Format each message exactly as "[Speaker]: [Message]" with each message on a new line.
     Make the conversation engaging and natural, reflecting each person's known personality and relationship.
-    Keep messages concise and conversational.
-    Continue the conversation naturally.
+    Keep individual messages concise and conversational.
+    Generate at least 2-3 messages to maintain a flowing conversation.
+    Continue the conversation naturally based on the previous messages.
+    Do not use quotes around messages.
+    Do not add closing quotes or punctuation at the end of messages.
+    Do not end the conversation abruptly - keep the dialogue going.
+    
+    Remember to:
+    1. Generate multiple messages (at least 2-3)
+    2. Keep the conversation flowing naturally
+    3. Have participants respond to each other
+    4. Stay in context with the previous messages
   `;
 
   console.log(' [stream-chat] Generated prompt:', prompt);
@@ -41,12 +52,24 @@ export async function GET(req: NextRequest) {
     async start(controller) {
       try {
         console.log(' [stream-chat] Starting OpenAI stream');
+
+        // Convert conversation history to OpenAI message format
+        const messages = [
+          { role: "system", content: prompt },
+          ...(conversationHistory || []).map((msg: Message) => ({
+            role: "user",
+            content: `${msg.sender}: ${msg.content}`
+          }))
+        ];
+
+        console.log(' [stream-chat] Messages array:', messages);
+
         const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [{ role: "system", content: prompt }],
+          model: "gpt-4o-mini",
+          messages,
           stream: true,
           temperature: 0.9,
-          max_tokens: 500,
+          max_tokens: 1000, // Increased to allow for more messages
         });
 
         console.log(' [stream-chat] OpenAI stream connected');
@@ -64,7 +87,7 @@ export async function GET(req: NextRequest) {
                 const match = msg.match(/^([^:]+):\s*(.+)$/);
                 if (match) {
                   const [, speaker, content] = match;
-                  const messageData = {
+                  const messageData: Partial<Message> = {
                     sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
                     content: content.trim()
                   };
@@ -83,7 +106,7 @@ export async function GET(req: NextRequest) {
           const match = currentMessage.trim().match(/^([^:]+):\s*(.+)$/);
           if (match) {
             const [, speaker, content] = match;
-            const messageData = {
+            const messageData: Partial<Message> = {
               sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
               content: content.trim()
             };
@@ -119,38 +142,62 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { recipients, conversationHistory, topic, isInitialMessage } = body;
   
-  console.log(' [stream-chat] Request params:', {
+  console.log(' [stream-chat] Received message:', {
+    from: 'user',
     recipients,
     topic,
     isInitialMessage,
-    conversationHistoryLength: conversationHistory?.length
+    conversationHistoryLength: conversationHistory?.length,
+    lastMessage: conversationHistory?.[conversationHistory.length - 1]
   });
 
   const prompt = `
     You are simulating a conversation between these people: ${recipients.join(', ')}.
-    Generate a natural conversation between them.
-    Format each message as "[Speaker]: [Message]" with each message on a new line.
+    Generate a natural back-and-forth conversation between them with multiple messages.
+    Format each message exactly as "[Speaker]: [Message]" with each message on a new line.
     Make the conversation engaging and natural, reflecting each person's known personality and relationship.
-    Keep messages concise and conversational.
-    Continue the conversation naturally.
+    Keep individual messages concise and conversational.
+    Generate at least 2-3 messages to maintain a flowing conversation.
+    Continue the conversation naturally based on the previous messages.
+    Do not use quotes around messages.
+    Do not add closing quotes or punctuation at the end of messages.
+    Do not end the conversation abruptly - keep the dialogue going.
+    
+    Remember to:
+    1. Generate multiple messages (at least 2-3)
+    2. Keep the conversation flowing naturally
+    3. Have participants respond to each other
+    4. Stay in context with the previous messages
   `;
 
-  console.log(' [stream-chat] Generated prompt:', prompt);
+  console.log(' [stream-chat] Initiating OpenAI stream for response');
 
   let currentMessage = '';
   const stream = new ReadableStream({
     async start(controller) {
       try {
         console.log(' [stream-chat] Starting OpenAI stream');
+
+        // Convert conversation history to OpenAI message format
+        const messages = [
+          { role: "system", content: prompt },
+          ...(conversationHistory || []).map((msg: Message) => ({
+            role: "user",
+            content: `${msg.sender}: ${msg.content}`
+          }))
+        ];
+
+        console.log(' [stream-chat] Messages array:', messages);
+
         const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [{ role: "system", content: prompt }],
+          model: "gpt-4o-mini",
+          messages,
           stream: true,
           temperature: 0.9,
-          max_tokens: 500,
+          max_tokens: 1000, // Increased to allow for more messages
         });
 
-        console.log(' [stream-chat] OpenAI stream connected');
+        console.log(' [stream-chat] OpenAI stream connected successfully');
 
         for await (const part of response) {
           const token = part.choices[0]?.delta?.content || "";
@@ -165,11 +212,11 @@ export async function POST(req: Request) {
                 const match = msg.match(/^([^:]+):\s*(.+)$/);
                 if (match) {
                   const [, speaker, content] = match;
-                  const messageData = {
+                  const messageData: Partial<Message> = {
                     sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
                     content: content.trim()
                   };
-                  console.log(' [stream-chat] Sending message data:', messageData);
+                  console.log(' [stream-chat] Sending message:', messageData);
                   controller.enqueue(`data: ${JSON.stringify(messageData)}\n\n`);
                 }
               }
@@ -184,16 +231,16 @@ export async function POST(req: Request) {
           const match = currentMessage.trim().match(/^([^:]+):\s*(.+)$/);
           if (match) {
             const [, speaker, content] = match;
-            const messageData = {
+            const messageData: Partial<Message> = {
               sender: speaker.trim().replace(/^"|"$/g, ''),  // Remove any surrounding quotes
               content: content.trim()
             };
-            console.log(' [stream-chat] Sending final message data:', messageData);
+            console.log(' [stream-chat] Sending final message:', messageData);
             controller.enqueue(`data: ${JSON.stringify(messageData)}\n\n`);
           }
         }
 
-        console.log(' [stream-chat] Stream completed');
+        console.log(' [stream-chat] Stream completed successfully');
         controller.enqueue('data: [DONE]\n\n');
       } catch (error) {
         console.error(' [stream-chat] Error in stream:', error);
