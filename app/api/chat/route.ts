@@ -70,7 +70,8 @@ export async function POST(req: Request) {
     let messageData;
     try {
       messageData = JSON.parse(content);
-    } catch (e) {
+    } catch (error) {
+      console.error(' [chat] Error parsing JSON:', error);
       // If JSON parsing fails, try to extract sender and content from the format "Sender: Message"
       const match = content.match(/^([^:]+):\s*(.+)$/);
       if (match) {
