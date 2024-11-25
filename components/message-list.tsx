@@ -5,11 +5,12 @@ import { useEffect, useRef } from "react";
 
 interface MessageListProps {
   messages: Message[];
-  isStreaming?: boolean;
   conversation?: Conversation;
+  isStreaming?: boolean;
+  typingParticipant?: string | null;
 }
 
-export function MessageList({ messages, isStreaming, conversation }: MessageListProps) {
+export function MessageList({ messages, conversation, isStreaming, typingParticipant }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const lastMessageIndex = messages.length - 1;
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -33,6 +34,7 @@ export function MessageList({ messages, isStreaming, conversation }: MessageList
             conversation={conversation}
             isLastUserMessage={index === lastUserMessageIndex}
             isStreaming={isStreaming && index === lastMessageIndex && message.sender !== "me"}
+            typingParticipant={typingParticipant}
           />
         ))}
       </div>

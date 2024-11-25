@@ -1,6 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +15,8 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [typingParticipant, setTypingParticipant] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -55,12 +57,12 @@ export default function App() {
   }, []);
 
   const handleNewConversation = async (input: string) => {
-    console.log(' [handleNewConversation] Starting with input:', input);
+    console.log(' [NEW CONVERSATION] Starting new conversation with input:', input);
     
     const recipientList = input.split(',').map(r => r.trim()).filter(r => r.length > 0);
     if (recipientList.length === 0) return;
 
-    console.log(' [handleNewConversation] Recipient list:', recipientList);
+    console.log(' [NEW CONVERSATION] Recipient list:', recipientList);
 
     const now = new Date();    
     const newConversation: Conversation = {
@@ -75,108 +77,171 @@ export default function App() {
     };
     
     if (!isValidDate(newConversation.lastMessageTime)) {
-      console.error(' [handleNewConversation] Invalid date created:', newConversation.lastMessageTime);
-      console.error(' [handleNewConversation] Date validation result:', new Date(newConversation.lastMessageTime));
+      console.error(' [NEW CONVERSATION] Invalid date created:', newConversation.lastMessageTime);
       return;
     }
     
-    console.log(' [handleNewConversation] Created new conversation:', newConversation);
-    
-    setConversations([newConversation, ...conversations]);
+    console.log(' [NEW CONVERSATION] Created conversation:', {
+      id: newConversation.id,
+      recipients: newConversation.recipients.map(r => r.name)
+    });
+
+    // Create a promise to track when the state is updated
+    const stateUpdatePromise = new Promise<void>(resolve => {
+      setConversations(prevConversations => {
+        const newState = [newConversation, ...prevConversations];
+        setTimeout(resolve, 0);
+        return newState;
+      });
+    });
+
     setActiveConversation(newConversation.id);
     setIsNewChat(false);
     setRecipientInput("");
 
-    // Generate initial conversation
-    console.log(' [handleNewConversation] Starting stream connection');
-    setIsStreaming(true);
+    await stateUpdatePromise;
+    console.log(' [NEW CONVERSATION] State updated, starting first message generation');
     
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        recipients: recipientList,
-        topic: "Open Discussion",
-        conversationHistory: [],
-        isInitialMessage: true,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error(' [handleNewConversation] Error:', response.statusText);
-      setIsStreaming(false);
-      return;
-    }
-
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (!reader) {
-      console.error(' [handleNewConversation] No reader available');
-      setIsStreaming(false);
-      return;
-    }
-
     try {
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          setIsStreaming(false);
-          break;
-        }
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              console.log(' [Stream] Stream completed');
-              setIsStreaming(false);
-            } else {
-              try {
-                const messageData = JSON.parse(data);
-                console.log(' [Stream] Parsed message:', messageData);
-                
-                const newMessage: Message = {
-                  id: uuidv4(),
-                  content: messageData.content,
-                  sender: messageData.sender,
-                  timestamp: new Date().toISOString()
-                };
-                
-                setConversations(prevConversations => 
-                  prevConversations.map(conv => 
-                    conv.id === newConversation.id 
-                      ? { 
-                          ...conv, 
-                          messages: [...conv.messages, newMessage]
-                        }
-                      : conv
-                  )
-                );
-              } catch (error) {
-                console.error(' [Stream] Error parsing message:', error);
-              }
-            }
-          }
-        }
-      }
+      await generateNextMessage(newConversation);
     } catch (error) {
-      console.error(' [Stream] Error reading stream:', error);
-      setIsStreaming(false);
-    } finally {
-      reader.releaseLock();
+      console.error(' [NEW CONVERSATION] Error generating first message:', error);
     }
   };
 
   const isValidDate = (dateString: string) => {
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  const generateNextMessage = async (conversation: Conversation, userMessage?: Message) => {
+    console.log(' [generateNextMessage] Starting for conversation:', conversation.id);
+    
+    let currentMessages = [...conversation.messages];
+    setIsStreaming(true);
+    
+    if (userMessage) {
+      currentMessages = [...currentMessages, userMessage];
+      setConversations(prevConversations => {
+        return prevConversations.map(c => 
+          c.id === conversation.id 
+            ? {
+                ...c,
+                messages: currentMessages,
+                lastMessageTime: new Date().toISOString(),
+              }
+            : c
+        );
+      });
+    }
+
+    // Abort any ongoing streams
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      console.log(' [generateNextMessage] Sending request with messages:', currentMessages);
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipients: conversation.recipients,
+          messages: currentMessages,
+        }),
+        signal: abortControllerRef.current.signal
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch');
+
+      const data = await response.json();
+      console.log(' [generateNextMessage] Received response:', data);
+      
+      const nextParticipant = data.sender;
+      
+      // Show typing indicator
+      setTypingParticipant(nextParticipant);
+      
+      // Wait for 3 seconds to simulate typing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Add the message
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        content: data.content,
+        sender: nextParticipant,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      console.log(' [generateNextMessage] Adding new message:', newMessage);
+
+      // Update conversations with the new message
+      setConversations(prevConversations => {
+        const updatedConversations = prevConversations.map(c => {
+          if (c.id !== conversation.id) return c;
+          
+          const updatedMessages = [...c.messages, newMessage];
+          return {
+            ...c,
+            messages: updatedMessages,
+            lastMessageTime: new Date().toISOString(),
+          };
+        });
+        return updatedConversations;
+      });
+      
+      setTypingParticipant(null);
+      setIsStreaming(false);
+      
+      // Wait for state to update before continuing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get the latest conversation state and continue
+      const currentConversation = conversations.find(c => c.id === conversation.id);
+      if (currentConversation) {
+        setTimeout(() => {
+          generateNextMessage({
+            ...currentConversation,
+            messages: [...currentConversation.messages, newMessage]
+          });
+        }, 3000);
+      }
+      
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      console.error('Error generating message:', error instanceof Error ? error.message : 'Unknown error');
+      setIsStreaming(false);
+      setTypingParticipant(null);
+    }
+  };
+
+  const handleSendMessage = async (message: string, conversationId: string) => {
+    if (!message.trim()) return;
+
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (!conversation) {
+      console.error('Conversation not found:', conversationId);
+      return;
+    }
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: message.trim(),
+      sender: "me",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    generateNextMessage(conversation, newMessage);
   };
 
   if (!isLayoutInitialized) {
@@ -207,14 +272,11 @@ export default function App() {
             activeConversation={conversations.find(c => c.id === activeConversation)}
             recipientInput={recipientInput}
             setRecipientInput={setRecipientInput}
-            onUpdateConversations={(updatedConversation) => {
-              setConversations(conversations.map(c => 
-                c.id === updatedConversation.id ? updatedConversation : c
-              ).sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()));
-            }}
             isMobileView={isMobileView}
             onBack={() => setActiveConversation(null)}
             isStreaming={isStreaming}
+            typingParticipant={typingParticipant}
+            onSendMessage={handleSendMessage}
           />
         </div>
       </div>

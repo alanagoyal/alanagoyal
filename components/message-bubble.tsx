@@ -7,13 +7,22 @@ interface MessageBubbleProps {
   isLastUserMessage?: boolean;
   isStreaming?: boolean;
   conversation?: Conversation;
+  typingParticipant?: string | null;
 }
 
-export function MessageBubble({ message, isLastUserMessage, isStreaming, conversation }: MessageBubbleProps) {
+export function MessageBubble({ 
+  message, 
+  isLastUserMessage, 
+  isStreaming, 
+  conversation,
+  typingParticipant 
+}: MessageBubbleProps) {
   const showRecipientName = conversation && conversation.recipients.length >= 2 && message.sender !== "me";
   const recipientName = showRecipientName 
     ? message.sender
     : null;
+
+  const isTyping = typingParticipant === message.sender && isStreaming;
 
   return (
     <div
@@ -36,14 +45,14 @@ export function MessageBubble({ message, isLastUserMessage, isStreaming, convers
       >
         <div className="flex flex-col">
           <div className="text-sm">
-            {(!isStreaming) ? (
-              message.content
-            ) : (
+            {isTyping ? (
               <span className="typing-indicator">
                 <span className="dot">•</span>
                 <span className="dot">•</span>
                 <span className="dot">•</span>
               </span>
+            ) : (
+              message.content
             )}
           </div>
         </div>
