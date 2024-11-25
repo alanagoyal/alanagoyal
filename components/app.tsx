@@ -1,6 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from 'uuid';
@@ -135,30 +135,18 @@ export default function App() {
         afterLastUserMessage: messageCountToConsider
       });
 
-      // Check if we've reached the limit
+      // Check if we've already reached the limit
       if (messageCountToConsider >= 6) {
-        console.log(' [generateNextMessage] Reached message limit, adding wrap-up message');
-        const wrapUpMessage: Message = {
-          id: uuidv4(),
-          sender: conversation.recipients[1].name,
-          content: "I need to wrap up our conversation now. Feel free to start a new message if you'd like to continue the discussion!",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        };
-
-        setConversations(prev => prev.map(c => 
-          c.id === conversation.id 
-            ? { ...c, messages: [...c.messages, wrapUpMessage] }
-            : c
-        ));
+        console.log(' [generateNextMessage] Already at message limit, stopping conversation');
         return;
       }
 
+      // Check if this will be the last message
+      const isLastMessage = messageCountToConsider === 5;
       console.log(' [generateNextMessage] Sending API request with:', {
         recipientCount: conversation.recipients.length,
-        messageCount: currentMessages.length
+        messageCount: currentMessages.length,
+        shouldWrapUp: isLastMessage
       });
       
       const response = await fetch('/api/chat', {
@@ -167,6 +155,7 @@ export default function App() {
         body: JSON.stringify({
           recipients: conversation.recipients,
           messages: currentMessages,
+          shouldWrapUp: isLastMessage
         })
       });
 
@@ -234,23 +223,6 @@ export default function App() {
         // Use await to prevent parallel chains
         await new Promise(resolve => setTimeout(resolve, 1000));
         await generateNextMessage(updatedConversation);
-      } else {
-        // Add wrap-up message when we reach the limit
-        const wrapUpMessage: Message = {
-          id: uuidv4(),
-          sender: conversation.recipients[1].name,
-          content: "I need to wrap up our conversation now. Feel free to start a new message if you'd like to continue the discussion!",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        };
-
-        setConversations(prev => prev.map(c => 
-          c.id === conversation.id 
-            ? { ...c, messages: [...c.messages, wrapUpMessage] }
-            : c
-        ));
       }
     } catch (error) {
       console.error(' [generateNextMessage] Error:', error);

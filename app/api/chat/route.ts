@@ -8,19 +8,26 @@ export async function POST(req: Request) {
   console.log(' [chat] POST request received');
   
   const body = await req.json();
-  const { recipients, messages } = body;
+  const { recipients, messages, shouldWrapUp } = body;
   
   console.log(' [chat] Request params:', {
     recipients,
-    messagesLength: messages?.length
+    messagesLength: messages?.length,
+    shouldWrapUp
   });
 
   // Determine who spoke last to ensure proper turn-taking
   const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
   const availableParticipants = recipients.filter((r: Recipient) => r !== lastMessage?.sender);
 
+  const wrapUpGuidelines = shouldWrapUp ? `
+    8. This should be the last message in the conversation
+    9. Naturally conclude the discussion in a way that doesn't require further response
+    10. Be subtle about ending the conversation - don't explicitly state that you need to leave
+    11. End on a positive or conclusive note that wraps up the current topic` : '';
+
   const prompt = `
-    You are participating in a conversation between these people: ${recipients.map((r: Recipient) => r.name).join(', ')}.
+    You are participating in a socratic-style conversation between these people: ${recipients.map((r: Recipient) => r.name).join(', ')}.
     Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${availableParticipants.map((r: Recipient) => r.name).join(', ')}.
     The message should be natural and contextually appropriate.
 
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
     4. Keep responses natural and engaging
     5. Do not use quotes or special formatting in the content
     6. Keep messages concise and conversational
-    7. Make sure to advance the conversation naturally
+    7. Make sure to advance the conversation naturally${wrapUpGuidelines}
   `;
 
   try {
