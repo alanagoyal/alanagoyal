@@ -14,9 +14,8 @@ export default function App() {
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
   const [typingParticipant, setTypingParticipant] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const [aiMessageCount, setAiMessageCount] = useState<number>(0);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -57,8 +56,6 @@ export default function App() {
   }, []);
 
   const handleNewConversation = async (input: string) => {
-    console.log(' [NEW CONVERSATION] Starting new conversation with input:', input);
-    
     const recipientList = input.split(',').map(r => r.trim()).filter(r => r.length > 0);
     if (recipientList.length === 0) return;
 
@@ -70,81 +67,99 @@ export default function App() {
       recipients: recipientList.map(name => ({
         id: uuidv4(),
         name,
-        avatar: undefined
       })),
       messages: [],
       lastMessageTime: now.toISOString(),
     };
-    
-    if (!isValidDate(newConversation.lastMessageTime)) {
-      console.error(' [NEW CONVERSATION] Invalid date created:', newConversation.lastMessageTime);
-      return;
-    }
-    
+
     console.log(' [NEW CONVERSATION] Created conversation:', {
       id: newConversation.id,
-      recipients: newConversation.recipients.map(r => r.name)
+      recipients: newConversation.recipients
     });
 
-    // Create a promise to track when the state is updated
-    const stateUpdatePromise = new Promise<void>(resolve => {
-      setConversations(prevConversations => {
-        const newState = [newConversation, ...prevConversations];
-        setTimeout(resolve, 0);
-        return newState;
-      });
-    });
-
-    setActiveConversation(newConversation.id);
-    setIsNewChat(false);
-    setRecipientInput("");
-
-    await stateUpdatePromise;
-    console.log(' [NEW CONVERSATION] State updated, starting first message generation');
-    
     try {
+      // Update state and wait for it to complete
+      await new Promise<void>(resolve => {
+        setConversations(prevConversations => {
+          const newState = [newConversation, ...prevConversations];
+          console.log(' [NEW CONVERSATION] Updated conversation state:', {
+            conversationId: newConversation.id,
+            totalConversations: newState.length
+          });
+          resolve();
+          return newState;
+        });
+      });
+
+      // Set active conversation
+      console.log(' [NEW CONVERSATION] Setting active conversation:', newConversation.id);
+      setActiveConversation(newConversation.id);
+      setIsNewChat(false);
+
+      // Generate first message using the new conversation object directly
+      console.log(' [NEW CONVERSATION] Starting first message generation');
       await generateNextMessage(newConversation);
     } catch (error) {
-      console.error(' [NEW CONVERSATION] Error generating first message:', error);
+      console.error(' [NEW CONVERSATION] Error:', error);
     }
   };
 
-  const isValidDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date instanceof Date && !isNaN(date.getTime());
-  };
+  const generateNextMessage = async (conversation: Conversation, lastMessage?: Message) => {
+    console.log(' [generateNextMessage] Starting with:', {
+      conversationId: conversation.id,
+      lastMessage,
+      currentAiCount: aiMessageCount
+    });
 
-  const generateNextMessage = async (conversation: Conversation, userMessage?: Message) => {
-    console.log(' [generateNextMessage] Starting for conversation:', conversation.id);
-    
+    // Use the conversation object passed in instead of finding it in state
     let currentMessages = [...conversation.messages];
-    setIsStreaming(true);
     
-    if (userMessage) {
-      currentMessages = [...currentMessages, userMessage];
-      setConversations(prevConversations => {
-        return prevConversations.map(c => 
-          c.id === conversation.id 
-            ? {
-                ...c,
-                messages: currentMessages,
-                lastMessageTime: new Date().toISOString(),
-              }
-            : c
-        );
-      });
+    // Add the last message if it's not already included
+    if (lastMessage && !currentMessages.some(m => m.id === lastMessage.id)) {
+      console.log(' [generateNextMessage] Adding last message to current messages:', lastMessage);
+      currentMessages = [...currentMessages, lastMessage];
     }
-
-    // Abort any ongoing streams
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    abortControllerRef.current = new AbortController();
 
     try {
-      console.log(' [generateNextMessage] Sending request with messages:', currentMessages);
+      // Get current AI messages in the conversation
+      const aiMessages = currentMessages.filter(m => m.sender !== 'me').length;
+      
+      // If this is after a user message, only count AI messages after their last message
+      const lastUserMessageIndex = currentMessages.map(m => m.sender).lastIndexOf('me');
+      const messageCountToConsider = lastUserMessageIndex >= 0 
+        ? currentMessages.slice(lastUserMessageIndex).filter(m => m.sender !== 'me').length
+        : aiMessages;
+      
+      console.log(' [generateNextMessage] Message counts:', {
+        totalAiMessages: aiMessages,
+        afterLastUserMessage: messageCountToConsider
+      });
+
+      // Check if we've reached the limit
+      if (messageCountToConsider >= 6) {
+        console.log(' [generateNextMessage] Reached message limit, adding wrap-up message');
+        const wrapUpMessage: Message = {
+          id: uuidv4(),
+          sender: conversation.recipients[1].name,
+          content: "I need to wrap up our conversation now. Feel free to start a new message if you'd like to continue the discussion!",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        };
+
+        setConversations(prev => prev.map(c => 
+          c.id === conversation.id 
+            ? { ...c, messages: [...c.messages, wrapUpMessage] }
+            : c
+        ));
+        return;
+      }
+
+      console.log(' [generateNextMessage] Sending API request with:', {
+        recipientCount: conversation.recipients.length,
+        messageCount: currentMessages.length
+      });
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -152,95 +167,147 @@ export default function App() {
         body: JSON.stringify({
           recipients: conversation.recipients,
           messages: currentMessages,
-        }),
-        signal: abortControllerRef.current.signal
+        })
       });
 
-      if (!response.ok) throw new Error('Failed to fetch');
+      if (!response.ok) {
+        console.error(' [generateNextMessage] API request failed:', response.status);
+        throw new Error('Failed to fetch');
+      }
 
       const data = await response.json();
-      console.log(' [generateNextMessage] Received response:', data);
+      console.log(' [generateNextMessage] API response:', data);
       
-      const nextParticipant = data.sender;
-      
-      // Show typing indicator
-      setTypingParticipant(nextParticipant);
+      // Show typing indicator for the next participant
+      console.log(' [generateNextMessage] Setting typing participant:', data.sender);
+      setTypingParticipant(data.sender);
       
       // Wait for 3 seconds to simulate typing
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Add the message
+      // Create the new message
       const newMessage: Message = {
-        id: Date.now().toString(),
+        id: uuidv4(),
         content: data.content,
-        sender: nextParticipant,
+        sender: data.sender,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
-        }),
+        })
       };
 
-      console.log(' [generateNextMessage] Adding new message:', newMessage);
-
       // Update conversations with the new message
-      setConversations(prevConversations => {
-        const updatedConversations = prevConversations.map(c => {
+      setConversations(prev => {
+        const updated = prev.map(c => {
           if (c.id !== conversation.id) return c;
           
-          const updatedMessages = [...c.messages, newMessage];
+          const updatedMessages = [...c.messages];
+          if (lastMessage && !updatedMessages.some(m => m.id === lastMessage.id)) {
+            updatedMessages.push(lastMessage);
+          }
+          updatedMessages.push(newMessage);
+          
           return {
             ...c,
             messages: updatedMessages,
             lastMessageTime: new Date().toISOString(),
           };
         });
-        return updatedConversations;
+        return updated;
       });
       
+      // Clear typing indicator
       setTypingParticipant(null);
-      setIsStreaming(false);
-      
-      // Wait for state to update before continuing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Get the latest conversation state and continue
-      const currentConversation = conversations.find(c => c.id === conversation.id);
-      if (currentConversation) {
-        setTimeout(() => {
-          generateNextMessage({
-            ...currentConversation,
-            messages: [...currentConversation.messages, newMessage]
-          });
-        }, 3000);
+
+      // Get the updated conversation with the new message
+      const updatedConversation = {
+        ...conversation,
+        messages: [...currentMessages, newMessage]
+      };
+
+      // Calculate next AI message count
+      const nextAiMessages = messageCountToConsider + 1;
+      console.log(' [generateNextMessage] Next AI message count:', nextAiMessages);
+
+      // Only continue if we haven't reached the limit
+      if (nextAiMessages < 6) {
+        // Use await to prevent parallel chains
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await generateNextMessage(updatedConversation);
+      } else {
+        // Add wrap-up message when we reach the limit
+        const wrapUpMessage: Message = {
+          id: uuidv4(),
+          sender: conversation.recipients[1].name,
+          content: "I need to wrap up our conversation now. Feel free to start a new message if you'd like to continue the discussion!",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        };
+
+        setConversations(prev => prev.map(c => 
+          c.id === conversation.id 
+            ? { ...c, messages: [...c.messages, wrapUpMessage] }
+            : c
+        ));
       }
-      
-    } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') return;
-      console.error('Error generating message:', error instanceof Error ? error.message : 'Unknown error');
-      setIsStreaming(false);
+    } catch (error) {
+      console.error(' [generateNextMessage] Error:', error);
       setTypingParticipant(null);
     }
   };
 
-  const handleSendMessage = async (message: string, conversationId: string) => {
-    if (!message.trim()) return;
+  const handleSendMessage = async (content: string) => {
+    console.log(' [handleSendMessage] Starting with:', {
+      activeConversation,
+      content,
+      contentLength: content.length
+    });
 
-    const conversation = conversations.find(c => c.id === conversationId);
+    if (!activeConversation || !content.trim()) {
+      console.log(' [handleSendMessage] Invalid input, returning');
+      return;
+    }
+
+    // Reset AI message count when user sends a message
+    console.log(' [handleSendMessage] Resetting AI message count');
+    setAiMessageCount(0);
+
+    const conversation = conversations.find(c => c.id === activeConversation);
     if (!conversation) {
-      console.error('Conversation not found:', conversationId);
+      console.error(' [handleSendMessage] Conversation not found:', activeConversation);
       return;
     }
 
     const newMessage: Message = {
-      id: Date.now().toString(),
-      content: message.trim(),
+      id: uuidv4(),
+      content: content.trim(),
       sender: "me",
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      })
     };
 
+    console.log(' [handleSendMessage] Created user message:', newMessage);
+
+    // Add user's message to the conversation
+    setConversations(prev => {
+      const updated = prev.map(c => 
+        c.id === activeConversation 
+          ? { ...c, messages: [...c.messages, newMessage] }
+          : c
+      );
+      console.log(' [handleSendMessage] Updated conversation state:', {
+        conversationId: activeConversation,
+        messageCount: updated.find(c => c.id === activeConversation)?.messages.length
+      });
+      return updated;
+    });
+
+    // Generate next AI message
+    console.log(' [handleSendMessage] Starting next message generation');
     generateNextMessage(conversation, newMessage);
   };
 
@@ -259,6 +326,7 @@ export default function App() {
             isMobileView={isMobileView}
           >
             <Nav onNewChat={() => {
+              console.log(' [NEW CHAT] Starting new chat');
               setIsNewChat(true);
               setRecipientInput("");
               setActiveConversation(null);
@@ -274,7 +342,6 @@ export default function App() {
             setRecipientInput={setRecipientInput}
             isMobileView={isMobileView}
             onBack={() => setActiveConversation(null)}
-            isStreaming={isStreaming}
             typingParticipant={typingParticipant}
             onSendMessage={handleSendMessage}
           />
