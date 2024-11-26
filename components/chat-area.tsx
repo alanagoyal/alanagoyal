@@ -12,9 +12,8 @@ interface ChatAreaProps {
   setRecipientInput: (value: string) => void;
   isMobileView?: boolean;
   onBack?: () => void;
-  isStreaming?: boolean;
-  typingParticipant?: string | null;
   onSendMessage: (message: string, conversationId: string) => void;
+  typingRecipient: string | null;
 }
 
 export function ChatArea({
@@ -25,9 +24,8 @@ export function ChatArea({
   setRecipientInput,
   isMobileView,
   onBack,
-  isStreaming,
-  typingParticipant,
   onSendMessage,
+  typingRecipient,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -70,8 +68,7 @@ export function ChatArea({
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
-          isStreaming={isStreaming}
-          typingParticipant={typingParticipant}
+          typingRecipient={typingRecipient}
         />
         <MessageInput
           message={message}

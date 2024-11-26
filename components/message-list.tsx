@@ -6,13 +6,11 @@ import { useEffect, useRef } from "react";
 interface MessageListProps {
   messages: Message[];
   conversation?: Conversation;
-  isStreaming?: boolean;
-  typingParticipant?: string | null;
+  typingRecipient?: string | null;
 }
 
-export function MessageList({ messages, conversation, isStreaming, typingParticipant }: MessageListProps) {
+export function MessageList({ messages, conversation, typingRecipient }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
-  const lastMessageIndex = messages.length - 1;
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,7 +20,7 @@ export function MessageList({ messages, conversation, isStreaming, typingPartici
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [messages, isStreaming]); // Scroll when messages change or streaming status changes
+  }, [messages]); // Scroll when messages change
 
   return (
     <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -33,8 +31,8 @@ export function MessageList({ messages, conversation, isStreaming, typingPartici
             message={message} 
             conversation={conversation}
             isLastUserMessage={index === lastUserMessageIndex}
-            isStreaming={isStreaming && index === lastMessageIndex && message.sender !== "me"}
-            typingParticipant={typingParticipant}
+            typingRecipient={typingRecipient}
+            isLastMessage={index === messages.length - 1}
           />
         ))}
       </div>
