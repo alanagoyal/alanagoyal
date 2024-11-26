@@ -20,7 +20,7 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [messages]); // Scroll when messages change
+  }, [messages, typingRecipient]); // Add typingRecipient to dependency array
 
   return (
     <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
