@@ -5,24 +5,20 @@ import { Conversation } from "../types";
 interface MessageBubbleProps {
   message: Message;
   isLastUserMessage?: boolean;
-  isLastMessage?: boolean;
   conversation?: Conversation;
-  typingRecipient?: string | null;
+  isTyping?: boolean;
 }
 
 export function MessageBubble({ 
   message, 
   isLastUserMessage, 
-  isLastMessage,
   conversation,
-  typingRecipient,
+  isTyping,
 }: MessageBubbleProps) {
   const showRecipientName = conversation && conversation.recipients.length >= 2 && message.sender !== "me";
   const recipientName = showRecipientName 
     ? message.sender
     : null;
-
-  const isTyping = isLastMessage && typingRecipient === message.sender;
 
   return (
     <div
@@ -40,7 +36,7 @@ export function MessageBubble({
           message.sender === "me"
             ? "bg-[#0A7CFF] text-white"
             : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
-          isTyping && message.sender !== "me" && "min-h-[32px] min-w-[60px]"
+          isTyping && "min-h-[32px] min-w-[60px]"
         )}
       >
         <div className="flex flex-col">
@@ -57,7 +53,7 @@ export function MessageBubble({
           </div>
         </div>
       </div>
-      {message.sender === "me" && isLastUserMessage && (
+      {message.sender === "me" && isLastUserMessage && !isTyping && (
         <div className="text-xs text-gray-500 mt-1 mr-1">Delivered</div>
       )}
 

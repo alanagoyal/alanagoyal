@@ -20,7 +20,7 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [messages, typingRecipient]); // Add typingRecipient to dependency array
+  }, [messages, typingRecipient]);
 
   return (
     <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -31,10 +31,20 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
             message={message} 
             conversation={conversation}
             isLastUserMessage={index === lastUserMessageIndex}
-            typingRecipient={typingRecipient}
-            isLastMessage={index === messages.length - 1}
           />
         ))}
+        {typingRecipient && (
+          <MessageBubble 
+            message={{
+              id: 'typing',
+              content: '',
+              sender: typingRecipient,
+              timestamp: new Date().toLocaleTimeString()
+            }}
+            isTyping={true}
+            conversation={conversation}
+          />
+        )}
       </div>
     </ScrollArea>
   );

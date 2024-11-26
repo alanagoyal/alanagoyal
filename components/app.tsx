@@ -142,7 +142,9 @@ export default function App() {
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
 
-      // Create new message
+      setTypingRecipient(data.sender);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
       const newMessage: Message = {
         id: uuidv4(),
         content: data.content,
@@ -152,36 +154,31 @@ export default function App() {
           minute: "2-digit",
         })
       };
-      console.log('[generateNextMessage] created new message:', newMessage);
 
-      // Show typing indicator for sender of new message
-      setTypingRecipient(data.sender);
-      console.log('[generateNextMessage] set typing recipient:', data.sender);
-
-      // Update conversation state atomically
+      // Update conversation state
       setConversations(prev => prev.map(c => {
         if (c.id !== conversation.id) return c;
         return {
           ...c,
-          messages: [...conversation.messages, newMessage],
+          messages: [...c.messages, newMessage],
           lastMessageTime: new Date().toISOString(),
         };
       }));
 
-      // Wait 3 seconds before hiding typing indicator
-      await new Promise(resolve => setTimeout(resolve, 3000));
       setTypingRecipient(null);
 
       // Continue conversation if not at limit
       if (!shouldWrapUp) {
-        await generateNextMessage({
+        const updatedConversation = {
           ...conversation,
           messages: [...conversation.messages, newMessage]
-        });
-        console.log('[generateNextMessage] continued conversation');
+        };
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await generateNextMessage(updatedConversation);
       }
     } catch (error) {
       console.error('Error:', error);
+      setTypingRecipient(null);
     }
   };
 
@@ -213,29 +210,19 @@ export default function App() {
       })
     };
 
-    console.log('[handleSendMessage] created user message:', newMessage);
+    // First, add the user's message
+    const updatedConversation = {
+      ...conversation,
+      messages: [...conversation.messages, newMessage]
+    };
 
-    // Add user's message to the conversation
-    setConversations(prev => {
-      const updated = prev.map(c => 
-        c.id === activeConversation 
-          ? { ...c, messages: [...c.messages, newMessage] }
-          : c
-      );
-      console.log('[handleSendMessage] updated conversation state:', {
-        conversationId: activeConversation,
-        messageCount: updated.find(c => c.id === activeConversation)?.messages.length
-      });
+    // Update state with user's message
+    setConversations(prev => prev.map(c => 
+      c.id === activeConversation ? updatedConversation : c
+    ));
 
-      // Get the updated conversation
-      const updatedConversation = updated.find(c => c.id === activeConversation);
-      if (updatedConversation) {
-        // Generate next AI message using updated conversation
-        generateNextMessage(updatedConversation);
-      }
-      
-      return updated;
-    });
+    // Then start a new generation chain with the updated conversation
+    await generateNextMessage(updatedConversation);
   };
 
   if (!isLayoutInitialized) {
