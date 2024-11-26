@@ -40,12 +40,13 @@ export async function POST(req: Request) {
 
     Guidelines:
     1. Generate only ONE message
-    2. Choose an appropriate next speaker from the available participants list
-    3. Stay in context with the previous messages
-    4. Keep responses natural and engaging
-    5. Do not use quotes or special formatting in the content
-    6. Keep messages concise and conversational
-    7. Make sure to advance the conversation naturally${wrapUpGuidelines}
+    2. Speak in the style and tone of the participant you are responding as
+    3. Choose an appropriate next speaker from the available participants list
+    4. Stay in context with the previous messages
+    5. Keep responses natural and engaging
+    6. Do not use quotes or special formatting in the content
+    7. Keep messages concise and conversational
+    8. Make sure to advance the conversation naturally${wrapUpGuidelines}
   `;
 
   try {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from 'uuid';
+import { initialConversations } from '../data/initial-conversations';
 
 const STORAGE_KEY = 'dialogueConversations';
 
@@ -18,8 +19,31 @@ export default function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get('id');
+
+    let allConversations = [...initialConversations];
     if (saved) {
-      setConversations(JSON.parse(saved));
+      const savedConversations = JSON.parse(saved);
+      allConversations = [...savedConversations];
+    }
+
+    setConversations(allConversations);
+
+    // Find the most recent conversation
+    const mostRecentConvo = allConversations.reduce((latest, current) => {
+      const latestTime = new Date(latest.lastMessageTime).getTime();
+      const currentTime = new Date(current.lastMessageTime).getTime();
+      return currentTime > latestTime ? current : latest;
+    }, allConversations[0]);
+
+    // If there's a valid conversation ID in the URL and it exists, use that
+    if (conversationId && allConversations.some((c) => c.id === conversationId)) {
+      setActiveConversation(conversationId);
+    } else {
+      // Otherwise, use the most recent conversation
+      setActiveConversation(mostRecentConvo.id);
+      window.history.replaceState({}, '', `?id=${mostRecentConvo.id}`);
     }
   }, []);
 
@@ -30,10 +54,10 @@ export default function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const conversationId = urlParams.get('id');
-    if (conversationId && conversations.some(c => c.id === conversationId)) {
+    if (conversationId && conversations.length > 0 && conversations.some(c => c.id === conversationId)) {
       setActiveConversation(conversationId);
     }
-  }, [conversations]);
+  }, [conversations.length]);
 
   useEffect(() => {
     if (activeConversation) {
