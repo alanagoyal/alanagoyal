@@ -60,8 +60,6 @@ export default function App() {
     const recipientList = input.split(',').map(r => r.trim()).filter(r => r.length > 0);
     if (recipientList.length === 0) return;
 
-    console.log('[handleNewConversation] starting new conversation with participants:', recipientList);
-
     // Create new conversation object
     const now = new Date();    
     const newConversation: Conversation = {
@@ -74,32 +72,21 @@ export default function App() {
       lastMessageTime: now.toISOString(),
     };
 
-    console.log('[handleNewConversation] created conversation:', {
-      id: newConversation.id,
-      recipients: newConversation.recipients
-    });
-
     try {
       // Add new conversation to conversations state
       await new Promise<void>(resolve => {
         setConversations(prevConversations => {
           const newState = [newConversation, ...prevConversations];
-          console.log('updated conversation state:', {
-            conversationId: newConversation.id,
-            totalConversations: newState.length
-          });
           resolve();
           return newState;
         });
       });
 
       // Set active conversation
-      console.log('[handleNewConversation] setting active conversation:', newConversation.id);
       setActiveConversation(newConversation.id);
       setIsNewConversation(false);
 
       // Generate first message using the new conversation object directly
-      console.log('[handleNewConversation] starting first message generation');
       await generateNextMessage(newConversation);
     } catch (error) {
       console.error('Error sending first message:', error);
@@ -107,7 +94,6 @@ export default function App() {
   };
 
   const generateNextMessage = async (conversation: Conversation) => {
-    console.log('[generateNextMessage] starting with conversation:', conversation);
     try {
       // Count consecutive AI messages from the end
       let consecutiveAiMessages = 0;
@@ -121,7 +107,6 @@ export default function App() {
 
       // Check if we've reached the message limit
       if (consecutiveAiMessages >= 6) {
-        console.log('[generateNextMessage] at message limit, stopping conversation');
         return;
       }
 
@@ -183,23 +168,19 @@ export default function App() {
   };
 
   const handleSendMessage = async (content: string) => {
-    console.log('[handleSendMessage] starting with:', {
-      activeConversation,
-      content,
-      contentLength: content.length
-    });
-
+    // Validate input
     if (!activeConversation || !content.trim()) {
-      console.log('[handleSendMessage] invalid input, returning');
       return;
     }
 
+    // Get conversation
     const conversation = conversations.find(c => c.id === activeConversation);
     if (!conversation) {
-      console.error('[handleSendMessage] conversation not found:', activeConversation);
+      console.error('Conversation not found:', activeConversation);
       return;
     }
 
+    // Create new message
     const newMessage: Message = {
       id: uuidv4(),
       content: content.trim(),
@@ -225,6 +206,7 @@ export default function App() {
     await generateNextMessage(updatedConversation);
   };
 
+  // Don't render until layout is initialized
   if (!isLayoutInitialized) {
     return null;
   }

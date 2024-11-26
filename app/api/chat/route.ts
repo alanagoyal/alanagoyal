@@ -5,16 +5,8 @@ import { Recipient } from "../../../types";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export async function POST(req: Request) {
-  console.log(" [chat] POST request received");
-
   const body = await req.json();
   const { recipients, messages, shouldWrapUp } = body;
-
-  console.log(" [chat] Request params:", {
-    recipients,
-    messagesLength: messages?.length,
-    shouldWrapUp,
-  });
 
   // Determine who spoke last to ensure proper turn-taking
   const lastMessage =
@@ -27,7 +19,7 @@ export async function POST(req: Request) {
     ? `
     8. This should be the last message in the conversation
     9. Naturally conclude the discussion in a way that doesn't require further response
-    10. Be subtle about ending the conversation - don't explicitly state that you need to leave
+    10. Be subtle about ending the conversation - don't allude to a wrap-up
     11. End on a positive or conclusive note that wraps up the current topic`
     : "";
 
@@ -57,8 +49,6 @@ export async function POST(req: Request) {
   `;
 
   try {
-    console.log(" [chat] Starting OpenAI request");
-
     // Convert conversation history to OpenAI message format
     const openaiMessages = [
       { role: "system", content: prompt },
@@ -67,8 +57,6 @@ export async function POST(req: Request) {
         content: `${msg.sender}: ${msg.content}`,
       })),
     ];
-
-    console.log(" [chat] Messages array:", openaiMessages);
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -113,7 +101,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(" [chat] Generated message:", messageData);
     return new Response(JSON.stringify(messageData), {
       headers: { "Content-Type": "application/json" },
     });
