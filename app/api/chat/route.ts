@@ -17,20 +17,19 @@ export async function POST(req: Request) {
 
   const wrapUpGuidelines = shouldWrapUp
     ? `
-    8. This should be the last message in the conversation
-    9. Naturally conclude the discussion in a way that doesn't require further response
-    10. Be subtle about ending the conversation - don't allude to a wrap-up
-    11. End on a positive or conclusive note that wraps up the current topic`
+    10. This should be the last message in the conversation
+    11. Naturally conclude the discussion in a way that doesn't require further response
+    12. Be subtle about ending the conversation without explicitly alluding to a wrap-up`
     : "";
 
   const prompt = `
-    You are participating in a socratic-style conversation between these people: ${recipients
+    You are participating in a socratic-style group chat conversation between these people: ${recipients
       .map((r: Recipient) => r.name)
       .join(", ")}.
     Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${availableParticipants
       .map((r: Recipient) => r.name)
       .join(", ")}.
-    The message should be natural and contextually appropriate.
+    The message should be natural and contextually appropriate and in the tone of the person speaking it.
 
     IMPORTANT: Your response must be a valid JSON object with exactly this format:
     {
@@ -40,13 +39,13 @@ export async function POST(req: Request) {
 
     Guidelines:
     1. Generate only ONE message
-    2. Speak in the style and tone of the participant you are responding as
     3. Choose an appropriate next speaker from the available participants list
     4. Stay in context with the previous messages
-    5. Keep responses natural and engaging
-    6. Do not use quotes or special formatting in the content
-    7. Keep messages concise and conversational
-    8. Make sure to advance the conversation naturally${wrapUpGuidelines}
+    5. Speak in the style and tone of the participant you are speaking as
+    6. Keep responses natural and engaging
+    7. Do not use quotes or special formatting in the content
+    8. Keep messages concise and conversational like a group chat
+    9. Make sure to advance the conversation naturally${wrapUpGuidelines}
   `;
 
   try {
