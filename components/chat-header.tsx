@@ -45,7 +45,7 @@ export function ChatHeader({
                 onChange={(e) => setRecipientInput(e.target.value)}
                 onKeyDown={handleCreateChat}
                 placeholder="Enter recipients (separate by comma)"
-                className="flex-1 bg-transparent outline-none text-sm"
+                className="flex-1 bg-transparent outline-none text-base sm:text-sm placeholder:text-sm"
                 autoFocus
               />
             </div>
