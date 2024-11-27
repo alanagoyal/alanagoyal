@@ -16,7 +16,10 @@ export default function App() {
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
-  const [typingRecipient, setTypingRecipient] = useState<string | null>(null);
+  const [typingStatus, setTypingStatus] = useState<{
+    conversationId: string;
+    recipient: string;
+  } | null>(null);
 
   // Get conversations from local storage
   useEffect(() => {
@@ -174,7 +177,10 @@ export default function App() {
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
-      setTypingRecipient(data.sender);
+      setTypingStatus({
+        conversationId: conversation.id,
+        recipient: data.sender
+      });
       await new Promise((resolve) => setTimeout(resolve, 4000));
 
       const newMessage: Message = {
@@ -199,7 +205,7 @@ export default function App() {
         })
       );
 
-      setTypingRecipient(null);
+      setTypingStatus(null);
 
       // Continue conversation if not at limit
       if (!shouldWrapUp) {
@@ -212,7 +218,7 @@ export default function App() {
       }
     } catch (error) {
       console.error("Error:", error);
-      setTypingRecipient(null);
+      setTypingStatus(null);
     }
   };
 
@@ -308,7 +314,8 @@ export default function App() {
               setIsNewConversation(false);
             }}
             onSendMessage={handleSendMessage}
-            typingRecipient={typingRecipient}
+            typingStatus={typingStatus}
+            conversationId={activeConversation}
           />
         </div>
       </div>

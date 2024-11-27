@@ -5,12 +5,21 @@ import { useEffect, useRef } from "react";
 interface MessageListProps {
   messages: Message[];
   conversation?: Conversation;
-  typingRecipient?: string | null;
+  typingStatus: { conversationId: string; recipient: string; } | null;
+  conversationId: string | null;
 }
 
-export function MessageList({ messages, conversation, typingRecipient }: MessageListProps) {
+export function MessageList({ 
+  messages, 
+  conversation, 
+  typingStatus, 
+  conversationId 
+}: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const isTypingInThisConversation = typingStatus && 
+    typingStatus.conversationId === conversationId;
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -30,12 +39,12 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
             isLastUserMessage={index === lastUserMessageIndex}
           />
         ))}
-        {typingRecipient && (
+        {isTypingInThisConversation && (
           <MessageBubble 
             message={{
               id: 'typing',
               content: '',
-              sender: typingRecipient,
+              sender: typingStatus.recipient,
               timestamp: new Date().toLocaleTimeString()
             }}
             isTyping={true}

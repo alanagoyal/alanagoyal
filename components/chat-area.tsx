@@ -13,7 +13,8 @@ interface ChatAreaProps {
   isMobileView?: boolean;
   onBack?: () => void;
   onSendMessage: (message: string, conversationId: string) => void;
-  typingRecipient: string | null;
+  typingStatus: { conversationId: string; recipient: string; } | null;
+  conversationId: string | null;
 }
 
 export function ChatArea({
@@ -25,7 +26,8 @@ export function ChatArea({
   isMobileView,
   onBack,
   onSendMessage,
-  typingRecipient,
+  typingStatus,
+  conversationId,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +72,8 @@ export function ChatArea({
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
-          typingRecipient={typingRecipient}
+          typingStatus={typingStatus}
+          conversationId={conversationId}
         />
         <div className="sticky bottom-0 bg-background">
           <MessageInput
