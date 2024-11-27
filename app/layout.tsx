@@ -1,12 +1,28 @@
 import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
 import { siteConfig } from "@/config/site";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
   title: siteConfig.name,
   description: siteConfig.description,
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: ["/api/og"],
+  },
 };
 
 export default function RootLayout({
@@ -16,19 +32,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <title>{siteConfig.name}</title>
-        <meta property="twitter:card" content="summary_large_image"></meta>
-        <meta property="twitter:title" content={siteConfig.name}></meta>
-        <meta
-          property="twitter:description"
-          content={siteConfig.description}
-        ></meta>
-        <meta property="og:site_name" content={siteConfig.name}></meta>
-        <meta property="og:description" content={siteConfig.description}></meta>
-        <meta property="og:title" content={siteConfig.name}></meta>
-        <meta property="og:url" content={siteConfig.url}></meta>
-      </head>
       <body className="h-screen">
         <ThemeProvider
           attribute="class"
