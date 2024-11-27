@@ -175,7 +175,7 @@ export default function App() {
       const data = await response.json();
 
       setTypingRecipient(data.sender);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 4000));
 
       const newMessage: Message = {
         id: uuidv4(),
