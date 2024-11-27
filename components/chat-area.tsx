@@ -55,22 +55,24 @@ export function ChatArea({
 
   return (
     <div className="h-full flex flex-col">
-      <ChatHeader
-        isNewChat={isNewChat}
-        recipientInput={recipientInput}
-        setRecipientInput={setRecipientInput}
-        handleCreateChat={handleCreateChat}
-        isMobileView={isMobileView}
-        onBack={onBack}
-        activeConversation={activeConversation}
-      />
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="sticky top-0 z-10">
+        <ChatHeader
+          isNewChat={isNewChat}
+          recipientInput={recipientInput}
+          setRecipientInput={setRecipientInput}
+          handleCreateChat={handleCreateChat}
+          isMobileView={isMobileView}
+          onBack={onBack}
+          activeConversation={activeConversation}
+        />
+      </div>
+      <div className="flex-1 flex flex-col min-h-0 relative">
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
           typingRecipient={typingRecipient}
         />
-        <div className="mt-auto">
+        <div className="sticky bottom-0 bg-background">
           <MessageInput
             message={message}
             setMessage={setMessage}
