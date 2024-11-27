@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 
 export default function App() {
+  // State
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(
@@ -17,6 +18,7 @@ export default function App() {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [typingRecipient, setTypingRecipient] = useState<string | null>(null);
 
+  // Get conversations from local storage
   useEffect(() => {
     const saved = localStorage.getItem("dialogueConversations");
     const urlParams = new URLSearchParams(window.location.search);
@@ -50,6 +52,7 @@ export default function App() {
     }
   }, []);
 
+  // Save user's conversations to local storage
   useEffect(() => {
     localStorage.setItem(
       "dialogueConversations",
@@ -57,6 +60,7 @@ export default function App() {
     );
   }, [conversations]);
 
+  // Set active conversation
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const conversationId = urlParams.get("id");
@@ -69,6 +73,7 @@ export default function App() {
     }
   }, [conversations.length]);
 
+  // Update URL to active conversation
   useEffect(() => {
     if (activeConversation) {
       window.history.pushState({}, "", `?id=${activeConversation}`);
@@ -77,6 +82,7 @@ export default function App() {
     }
   }, [activeConversation]);
 
+  // Set mobile view
   useEffect(() => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
@@ -210,6 +216,7 @@ export default function App() {
     }
   };
 
+  // Function to handle user message
   const handleSendMessage = async (content: string) => {
     // Validate input
     if (!activeConversation || !content.trim()) {
@@ -234,7 +241,7 @@ export default function App() {
       }),
     };
 
-    // First, add the user's message
+    // Add the user's message
     const updatedConversation = {
       ...conversation,
       messages: [...conversation.messages, newMessage],
