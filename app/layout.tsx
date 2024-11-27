@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: siteConfig.name,
     description: siteConfig.description,
+    siteName: siteConfig.name,
+    url: siteConfig.url,
     images: [
       {
         url: "/api/og",
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
-    images: ["/api/og"],
+    images: ["/og-image"],
   },
 };
 
