@@ -1,4 +1,3 @@
-import { ScrollArea } from "./ui/scroll-area";
 import { Message, Conversation } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef } from "react";
@@ -15,15 +14,13 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+      const scrollContainer = scrollAreaRef.current;
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
     }
-  }, [messages, typingRecipient]);
+  }, [messages]);
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+    <div ref={scrollAreaRef} className="flex-1 p-4 pb-0 overflow-y-auto">
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageBubble 
@@ -46,6 +43,6 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
           />
         )}
       </div>
-    </ScrollArea>
+    </div>
   );
 }

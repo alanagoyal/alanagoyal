@@ -302,7 +302,10 @@ export default function App() {
             recipientInput={recipientInput}
             setRecipientInput={setRecipientInput}
             isMobileView={isMobileView}
-            onBack={() => setActiveConversation(null)}
+            onBack={() => {
+              setActiveConversation(null);
+              setIsNewConversation(false);
+            }}
             onSendMessage={handleSendMessage}
             typingRecipient={typingRecipient}
           />

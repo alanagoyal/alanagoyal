@@ -39,7 +39,7 @@ export function Sidebar({
   };
 
   return (
-    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-full flex flex-col border-r dark:border-foreground/20 bg-muted`}>
+    <div className={`${isMobileView ? 'w-full' : 'w-80 border-r dark:border-foreground/20'} h-full flex flex-col bg-muted`}>
       {children}
       <SearchBar value="" onChange={() => {}} />
       <div className="flex-1 overflow-y-auto">
