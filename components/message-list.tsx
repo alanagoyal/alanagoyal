@@ -23,7 +23,7 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
   }, [messages, typingRecipient]);
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+    <div ref={scrollAreaRef} className="flex-1 p-4 pb-0 overflow-y-scroll">
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageBubble 
@@ -46,6 +46,6 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
           />
         )}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
