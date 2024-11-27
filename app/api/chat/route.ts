@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp } = body;
+  const { recipients, messages, shouldWrapUp, isFirstMessage } = body;
 
   // Determine who spoke last to ensure proper turn-taking
   const lastMessage =
@@ -23,6 +23,13 @@ export async function POST(req: Request) {
     10. This should be the last message in the conversation
     11. Naturally conclude the discussion in a way that doesn't require further response
     12. Be subtle about ending the conversation without explicitly alluding to a wrap-up`
+    : "";
+
+  const firstMessageGuidelines = isFirstMessage
+    ? `
+    10. As this is the first message, warmly initiate the conversation
+    11. Set a friendly and engaging tone
+    12. Pose a question or make a statement that encourages response from others`
     : "";
 
   const prompt = `
@@ -48,7 +55,7 @@ export async function POST(req: Request) {
     6. Keep responses natural and engaging
     7. Do not use quotes or special formatting in the content
     8. Keep messages concise and conversational like a group chat
-    9. Make sure to advance the conversation naturally${wrapUpGuidelines}
+    9. Make sure to advance the conversation naturally${wrapUpGuidelines}${firstMessageGuidelines}
   `;
 
   return await logger.traced(
@@ -130,7 +137,8 @@ export async function POST(req: Request) {
         input: {
           recipients,
           messages,
-          shouldWrapUp
+          shouldWrapUp,
+          isFirstMessage
         },
       },
     }

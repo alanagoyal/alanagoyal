@@ -111,13 +111,13 @@ export default function App() {
       setIsNewConversation(false);
 
       // Generate first message using the new conversation object directly
-      await generateNextMessage(newConversation);
+      await generateNextMessage(newConversation, true);
     } catch (error) {
       console.error('Error sending first message:', error);
     }
   };
 
-  const generateNextMessage = async (conversation: Conversation) => {
+  const generateNextMessage = async (conversation: Conversation, isFirstMessage: boolean) => {
     try {
       // Count consecutive AI messages from the end
       let consecutiveAiMessages = 0;
@@ -144,7 +144,8 @@ export default function App() {
         body: JSON.stringify({
           recipients: conversation.recipients,
           messages: conversation.messages,
-          shouldWrapUp
+          shouldWrapUp,
+          isFirstMessage,
         })
       });
 
@@ -183,7 +184,7 @@ export default function App() {
           messages: [...conversation.messages, newMessage]
         };
         await new Promise(resolve => setTimeout(resolve, 500));
-        await generateNextMessage(updatedConversation);
+        await generateNextMessage(updatedConversation, false);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -227,7 +228,7 @@ export default function App() {
     ));
 
     // Then start a new generation chain with the updated conversation
-    await generateNextMessage(updatedConversation);
+    await generateNextMessage(updatedConversation, false);
   };
 
   // Don't render until layout is initialized
