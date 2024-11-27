@@ -38,12 +38,18 @@ export function Sidebar({
     return name[0].toUpperCase();
   };
 
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+    const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+    return timeB - timeA; // Most recent first
+  });
+
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80 border-r dark:border-foreground/20'} h-full flex flex-col bg-muted`}>
       {children}
       <SearchBar value="" onChange={() => {}} />
       <div className="flex-1 overflow-y-auto">
-        {conversations.map((conversation) => (
+        {sortedConversations.map((conversation) => (
           <React.Fragment key={conversation.id}>
             <button
               onClick={() => onSelectConversation(conversation.id)}

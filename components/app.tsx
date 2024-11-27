@@ -241,10 +241,11 @@ export default function App() {
       }),
     };
 
-    // Add the user's message
+    // Add the user's message and update lastMessageTime
     const updatedConversation = {
       ...conversation,
       messages: [...conversation.messages, newMessage],
+      lastMessageTime: new Date().toISOString(),
     };
 
     // Update state with user's message
