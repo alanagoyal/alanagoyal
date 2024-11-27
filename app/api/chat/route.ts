@@ -1,8 +1,11 @@
 import { OpenAI } from "openai";
-import { Message } from "@/types";
-import { Recipient } from "../../../types";
+import { Recipient, Message } from "../../../types";
+import { logger } from "../logger";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+const openai = new OpenAI({ 
+  baseURL: "https://api.braintrust.dev/v1/proxy",
+  apiKey: process.env.OPENAI_API_KEY! 
+});
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -48,70 +51,88 @@ export async function POST(req: Request) {
     9. Make sure to advance the conversation naturally${wrapUpGuidelines}
   `;
 
-  try {
-    // Convert conversation history to OpenAI message format
-    const openaiMessages = [
-      { role: "system", content: prompt },
-      ...(messages || []).map((msg: Message) => ({
-        role: "user",
-        content: `${msg.sender}: ${msg.content}`,
-      })),
-    ];
+  return await logger.traced(
+    async () => {
+      try {
+        // Convert conversation history to OpenAI message format
+        const openaiMessages = [
+          { role: "system", content: prompt },
+          ...(messages || []).map((msg: Message) => ({
+            role: "user",
+            content: `${msg.sender}: ${msg.content}`,
+          })),
+        ];
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: openaiMessages,
-      temperature: 0.9,
-      max_tokens: 150,
-    });
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: openaiMessages,
+          temperature: 0.9,
+          max_tokens: 150,
+        });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No response from OpenAI");
-    }
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error("No response from OpenAI");
+        }
 
-    // Parse the response as JSON
-    let messageData;
-    try {
-      messageData = JSON.parse(content);
-    } catch (error) {
-      console.error(" [chat] Error parsing JSON:", error);
-      // If JSON parsing fails, try to extract sender and content from the format "Sender: Message"
-      const match = content.match(/^([^:]+):\s*(.+)$/);
-      if (match) {
-        const [, sender, messageContent] = match;
-        messageData = {
-          sender: sender.trim(),
-          content: messageContent.trim(),
-        };
-      } else {
-        throw new Error("Invalid response format");
+        // Parse the response as JSON
+        let messageData;
+        try {
+          messageData = JSON.parse(content);
+        } catch (error) {
+          console.error(" [chat] Error parsing JSON:", error);
+          // If JSON parsing fails, try to extract sender and content from the format "Sender: Message"
+          const match = content.match(/^([^:]+):\s*(.+)$/);
+          if (match) {
+            const [, sender, messageContent] = match;
+            messageData = {
+              sender: sender.trim(),
+              content: messageContent.trim(),
+            };
+          } else {
+            throw new Error("Invalid response format");
+          }
+        }
+
+        // Validate that the sender is one of the available participants
+        if (
+          !availableParticipants.find(
+            (r: Recipient) =>
+              r.name.toLowerCase() === messageData.sender.toLowerCase()
+          )
+        ) {
+          throw new Error(
+            "Invalid sender: must be one of the available participants"
+          );
+        }
+
+        return new Response(JSON.stringify(messageData), {
+          headers: { 
+            "Content-Type": "application/json"
+          },
+        });
+      } catch (error) {
+        console.error(" [chat] Error:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to generate message" }),
+          {
+            status: 500,
+            headers: { 
+              "Content-Type": "application/json"
+            },
+          }
+        );
       }
+    },
+    {
+      name: "dialogue",
+      event: {
+        input: {
+          recipients,
+          messages,
+          shouldWrapUp
+        },
+      },
     }
-
-    // Validate that the sender is one of the available participants
-    if (
-      !availableParticipants.find(
-        (r: Recipient) =>
-          r.name.toLowerCase() === messageData.sender.toLowerCase()
-      )
-    ) {
-      throw new Error(
-        "Invalid sender: must be one of the available participants"
-      );
-    }
-
-    return new Response(JSON.stringify(messageData), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error(" [chat] Error:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to generate message" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+  );
 }
