@@ -52,13 +52,19 @@ export function ChatHeader({
         // pressing Enter will create the chat
         handleCreateChat(e);
       }
+    } else if (e.key === 'Backspace' && e.currentTarget.value === '') {
+      // If backspace is pressed and input is empty, remove the last recipient
+      const recipients = recipientInput.split(',').filter(r => r.trim());
+      if (recipients.length > 0) {
+        setRecipientInput(recipients.slice(0, -1).join(',') + ',');
+      }
     }
   };
 
   // Renders recipient "pills" for all complete entries
   const renderRecipients = () => {
     const recipients = recipientInput.split(',');
-    const completeRecipients = recipients.slice(0, -1); // Exclude the one being typed
+    const completeRecipients = recipients.slice(0, -1);
     
     return (
       <>
@@ -72,6 +78,20 @@ export function ChatHeader({
               className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100"
             >
               {trimmedRecipient}
+              <button
+                onClick={() => {
+                  const newRecipients = recipientInput
+                    .split(',')
+                    .filter(r => r.trim())
+                    .filter((_, i) => i !== index)
+                    .join(',');
+                  setRecipientInput(newRecipients + ',');
+                }}
+                className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
+                aria-label={`Remove ${trimmedRecipient}`}
+              >
+                <Icons.close className="h-3 w-3" />
+              </button>
             </span>
           );
         })}
