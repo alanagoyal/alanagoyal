@@ -1,4 +1,3 @@
-import { ScrollArea } from "./ui/scroll-area";
 import { Message, Conversation } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef } from "react";
@@ -23,7 +22,7 @@ export function MessageList({ messages, conversation, typingRecipient }: Message
   }, [messages, typingRecipient]);
 
   return (
-    <div ref={scrollAreaRef} className="flex-1 p-4 pb-0 overflow-y-scroll">
+    <div ref={scrollAreaRef} className="flex-1 p-4 pb-0 overflow-y-auto">
       <div className="space-y-4">
         {messages.map((message, index) => (
           <MessageBubble 
