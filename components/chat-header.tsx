@@ -36,7 +36,7 @@ export function ChatHeader({
         {isNewChat ? (
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-base sm:text-sm font-medium text-muted-foreground">
                 To:
               </span>
               <input
