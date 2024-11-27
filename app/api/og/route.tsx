@@ -58,7 +58,7 @@ export async function GET() {
           maxWidth: '70%',
           alignSelf: 'flex-end'
         }}>
-          Wow, that's sick
+          Wow, that&apos;s sick
         </div>
 
         {/* Blue message bubble */}
@@ -125,4 +125,3 @@ export async function GET() {
     },
   )
 }
-
