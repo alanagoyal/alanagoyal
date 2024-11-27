@@ -64,19 +64,21 @@ export function ChatArea({
         onBack={onBack}
         activeConversation={activeConversation}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
           typingRecipient={typingRecipient}
         />
-        <MessageInput
-          message={message}
-          setMessage={setMessage}
-          handleSend={handleSend}
-          inputRef={messageInputRef}
-          disabled={!activeConversation && !isNewChat} // Only disable if there's no conversation and it's not a new chat
-        />
+        <div className="mt-auto">
+          <MessageInput
+            message={message}
+            setMessage={setMessage}
+            handleSend={handleSend}
+            inputRef={messageInputRef}
+            disabled={!activeConversation && !isNewChat}
+          />
+        </div>
       </div>
     </div>
   );
