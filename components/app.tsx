@@ -179,12 +179,12 @@ export default function App() {
       }
 
       // Check if we've reached the message limit
-      if (consecutiveAiMessages >= 4) {
+      if (consecutiveAiMessages >= 5) {
         return;
       }
 
       // Determine if this should be the wrap-up message
-      const shouldWrapUp = consecutiveAiMessages === 3;
+      const shouldWrapUp = consecutiveAiMessages === 4;
 
       // Make API request
       const response = await fetch("/api/chat", {

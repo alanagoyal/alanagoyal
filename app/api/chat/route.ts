@@ -44,9 +44,8 @@ export async function POST(req: Request) {
     11. Do not repeat yourself or use the same phrase twice in a row.
     12. Avoid using quotes or special formatting in the content.
     ${shouldWrapUp ? `
-    13. This should be the last message in the conversation
-    14. Naturally conclude the discussion in a way that doesn't require further response
-    15. Be subtle about ending the conversation without explicitly alluding to a wrap-up` : ""}
+    13. This should be the last message in the conversation so don't ask a question or make a statement that encourages response from the group
+    14. Be subtle about ending the conversation without explicitly saying you have to go` : ""}
     ${isFirstMessage ? `
     13. As this is the first message, warmly initiate the conversation with a friendly and engaging tone
     14. Pose a question or make a statement that encourages response from the group` : ""}`;
