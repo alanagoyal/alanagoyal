@@ -20,6 +20,7 @@ export default function App() {
     conversationId: string;
     recipient: string;
   } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Get conversations from local storage
   useEffect(() => {
@@ -307,6 +308,8 @@ export default function App() {
             activeConversation={activeConversation}
             onSelectConversation={setActiveConversation}
             isMobileView={isMobileView}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           >
             <Nav
               onNewChat={() => {

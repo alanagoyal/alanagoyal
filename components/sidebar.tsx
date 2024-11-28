@@ -9,6 +9,8 @@ interface SidebarProps {
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   isMobileView?: boolean;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
 }
 
 export function Sidebar({ 
@@ -16,7 +18,9 @@ export function Sidebar({
   conversations, 
   activeConversation,
   onSelectConversation,
-  isMobileView
+  isMobileView,
+  searchTerm,
+  onSearchChange
 }: SidebarProps) {
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
@@ -44,12 +48,28 @@ export function Sidebar({
     return timeB - timeA; // Most recent first
   });
 
+  const filteredConversations = sortedConversations.filter(conversation => {
+    if (!searchTerm) return true;
+    
+    // Search in messages content
+    const hasMatchInMessages = conversation.messages.some(message =>
+      message.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    // Search in recipient names
+    const hasMatchInNames = conversation.recipients.some(recipient =>
+      recipient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    return hasMatchInMessages || hasMatchInNames;
+  });
+
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80 border-r dark:border-foreground/20'} h-full flex flex-col bg-muted`}>
       {children}
-      <SearchBar value="" onChange={() => {}} />
+      <SearchBar value={searchTerm} onChange={onSearchChange} />
       <div className="flex-1 overflow-y-auto">
-        {sortedConversations.map((conversation) => (
+        {filteredConversations.map((conversation) => (
           <React.Fragment key={conversation.id}>
             <button
               onClick={() => onSelectConversation(conversation.id)}
@@ -100,7 +120,7 @@ export function Sidebar({
                 </div>
               </div>
             </button>
-            {conversations.indexOf(conversation) < conversations.length - 1 && (
+            {filteredConversations.indexOf(conversation) < filteredConversations.length - 1 && (
               <div className="px-[56px] pr-2">
                 <div className="h-[1px] bg-foreground/10 dark:bg-foreground/20" />
               </div>
