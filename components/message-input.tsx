@@ -47,6 +47,8 @@ export function MessageInput({
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSend();
+            } else if (e.key === 'Escape') {
+              (e.target as HTMLInputElement).blur();
             }
           }}
           disabled={disabled}

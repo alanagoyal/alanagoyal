@@ -14,6 +14,11 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.currentTarget.blur();
+            }
+          }}
           placeholder="Search"
           className="w-full pl-8 pr-8 py-1.5 bg-muted/50 rounded-lg text-base sm:text-sm placeholder:text-sm focus:outline-none bg-transparent border dark:border-foreground/20"
         />

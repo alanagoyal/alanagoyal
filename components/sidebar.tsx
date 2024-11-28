@@ -64,12 +64,42 @@ export function Sidebar({
     return hasMatchInMessages || hasMatchInNames;
   });
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+        return;
+      }
+
+      e.preventDefault();
+      
+      const currentIndex = filteredConversations.findIndex(
+        conv => conv.id === activeConversation
+      );
+      
+      if (currentIndex === -1) return;
+      
+      let nextIndex = currentIndex;
+      if (e.key === 'ArrowUp') {
+        nextIndex = Math.max(0, currentIndex - 1);
+      } else {
+        nextIndex = Math.min(filteredConversations.length - 1, currentIndex + 1);
+      }
+      
+      if (nextIndex !== currentIndex) {
+        onSelectConversation(filteredConversations[nextIndex].id);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeConversation, filteredConversations, onSelectConversation]);
+
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80 border-r dark:border-foreground/20'} h-full flex flex-col bg-muted`}>
       {children}
       <SearchBar value={searchTerm} onChange={onSearchChange} />
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.map((conversation) => (
+        {filteredConversations.map((conversation, index) => (
           <React.Fragment key={conversation.id}>
             <button
               onClick={() => onSelectConversation(conversation.id)}
@@ -120,7 +150,7 @@ export function Sidebar({
                 </div>
               </div>
             </button>
-            {filteredConversations.indexOf(conversation) < filteredConversations.length - 1 && (
+            {index < filteredConversations.length - 1 && (
               <div className="px-[56px] pr-2">
                 <div className="h-[1px] bg-foreground/10 dark:bg-foreground/20" />
               </div>
