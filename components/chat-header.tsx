@@ -75,7 +75,7 @@ export function ChatHeader({
           return (
             <span 
               key={index}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
+              className="inline-flex items-center px-1.5 py-0.5 rounded-lg text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
             >
               {trimmedRecipient}
               <button
@@ -113,20 +113,20 @@ export function ChatHeader({
         )}
         {isNewChat ? (
           <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 flex-wrap">
               <span className="text-base sm:text-sm font-medium text-muted-foreground">
                 To:
               </span>
-              <div className="flex flex-wrap gap-2 flex-1 items-center">
+              <div className="flex flex-wrap gap-1 flex-1 items-center">
                 {renderRecipients()}
                 <input
                   type="text"
                   onChange={(e) => {
-                    e.currentTarget.value = e.currentTarget.value;  // Let the input manage its own value
+                    e.currentTarget.value = e.currentTarget.value;
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Enter two or more recipients and hit enter"
-                  className="flex-1 bg-transparent outline-none text-base sm:text-sm placeholder:text-sm min-w-[200px]"
+                  className="flex-1 bg-transparent outline-none text-base sm:text-sm placeholder:text-sm min-w-[120px]"
                   autoFocus
                 />
               </div>
