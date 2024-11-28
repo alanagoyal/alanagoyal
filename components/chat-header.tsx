@@ -126,7 +126,7 @@ export function ChatHeader({
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Enter two or more recipients and hit enter"
-                  className="flex-1 bg-transparent outline-none text-base sm:text-sm placeholder:text-sm min-w-[120px]"
+                  className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px]"
                   autoFocus
                 />
               </div>
