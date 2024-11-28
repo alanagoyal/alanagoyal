@@ -95,7 +95,7 @@ export function MessageInput({
           <div ref={pickerRef} className="absolute bottom-full right-0 mb-2">
             <Picker
               data={data}
-              onEmojiSelect={(emoji: any) => {
+              onEmojiSelect={(emoji: { native: string }) => {
                 setMessage(message + emoji.native);
                 setShowEmojiPicker(false);
               }}
