@@ -6,7 +6,7 @@ interface NavProps {
 }
 
 export function Nav({ onNewChat }: NavProps) {
-  
+
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,7 +26,7 @@ export function Nav({ onNewChat }: NavProps) {
   }, [onNewChat]);
 
   return (
-    <div className="h-12 bg-background flex items-center justify-between px-4 bg-muted">
+    <div className="py-4 sm:py-2 px-4 bg-background flex items-center justify-between bg-muted">
       <div className="flex items-center gap-1.5">
         <div className="w-3 h-3 rounded-full bg-red-500" />
         <div className="w-3 h-3 rounded-full bg-yellow-500" />
