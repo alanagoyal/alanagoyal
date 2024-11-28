@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Conversation } from "../types";
 import { SearchBar } from "./search-bar";
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -64,7 +64,8 @@ export function Sidebar({
     return hasMatchInMessages || hasMatchInNames;
   });
 
-  React.useEffect(() => {
+  // Keyboard navigation
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
         return;

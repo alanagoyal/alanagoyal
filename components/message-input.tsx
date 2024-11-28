@@ -17,6 +17,7 @@ export function MessageInput({
   inputRef,
   recipients
 }: MessageInputProps) {
+  // Helper function to get input styles
   const getInputStyles = () => {
     const currentMention = message.match(/@(\w+)$/);
     if (currentMention) {

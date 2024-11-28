@@ -1,12 +1,14 @@
 import { Icons } from "./icons";
-import React from 'react';
+import { useEffect } from 'react';
 
 interface NavProps {
   onNewChat: () => void;
 }
 
 export function Nav({ onNewChat }: NavProps) {
-  React.useEffect(() => {
+  
+  // Keyboard shortcut for creating a new chat
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input or if command/meta key is pressed
       if (document.activeElement?.tagName === 'INPUT' || e.metaKey) {
