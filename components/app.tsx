@@ -27,29 +27,53 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const conversationId = urlParams.get("id");
 
-    let allConversations = [...initialConversations];
-    if (saved) {
-      const savedConversations = JSON.parse(saved);
-      allConversations = [...savedConversations];
+    let allConversations = [];
+
+    // Start with initial conversations if there are no saved ones
+    if (!saved) {
+      allConversations = [...initialConversations];
+    } else {
+      try {
+        // Load saved conversations
+        allConversations = JSON.parse(saved);
+
+        // Check if we need to add any initial conversations
+        // Only add if they don't exist in saved conversations
+        const savedIds = new Set(allConversations.map((c: Conversation) => c.id));
+        const missingInitialConvos = initialConversations.filter((c) => !savedIds.has(c.id));
+
+        if (missingInitialConvos.length > 0) {
+          allConversations = [...allConversations, ...missingInitialConvos];
+        }
+      } catch (e) {
+        console.error("Error parsing saved conversations:", e);
+        allConversations = [...initialConversations];
+      }
     }
+
+    // Sort all conversations by last message time, most recent first
+    allConversations.sort((a: Conversation, b: Conversation) => {
+      return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
+    });
 
     setConversations(allConversations);
 
     // Find the most recent conversation
-    const mostRecentConvo = allConversations.reduce((latest, current) => {
-      const latestTime = new Date(latest.lastMessageTime).getTime();
-      const currentTime = new Date(current.lastMessageTime).getTime();
-      return currentTime > latestTime ? current : latest;
-    }, allConversations[0]);
+    const mostRecentConvo = allConversations.length > 0
+      ? allConversations.reduce((latest: Conversation, current: Conversation) => {
+          const latestTime = new Date(latest.lastMessageTime).getTime();
+          const currentTime = new Date(current.lastMessageTime).getTime();
+          return currentTime > latestTime ? current : latest;
+        }, allConversations[0])
+      : null;
 
     // If there's a valid conversation ID in the URL and it exists, use that
     if (
       conversationId &&
-      allConversations.some((c) => c.id === conversationId)
+      allConversations.some((c: Conversation) => c.id === conversationId)
     ) {
       setActiveConversation(conversationId);
-    } else {
-      // Otherwise, use the most recent conversation
+    } else if (mostRecentConvo) {
       setActiveConversation(mostRecentConvo.id);
       window.history.replaceState({}, "", `?id=${mostRecentConvo.id}`);
     }
@@ -155,12 +179,12 @@ export default function App() {
       }
 
       // Check if we've reached the message limit
-      if (consecutiveAiMessages >= 6) {
+      if (consecutiveAiMessages >= 5) {
         return;
       }
 
       // Determine if this should be the wrap-up message
-      const shouldWrapUp = consecutiveAiMessages === 5;
+      const shouldWrapUp = consecutiveAiMessages === 4;
 
       // Make API request
       const response = await fetch("/api/chat", {
@@ -179,7 +203,7 @@ export default function App() {
 
       setTypingStatus({
         conversationId: conversation.id,
-        recipient: data.sender
+        recipient: data.sender,
       });
       await new Promise((resolve) => setTimeout(resolve, 4000));
 

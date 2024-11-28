@@ -11,57 +11,48 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { recipients, messages, shouldWrapUp, isFirstMessage } = body;
 
-  // Determine who spoke last to ensure proper turn-taking
-  const lastMessage =
-    messages?.length > 0 ? messages[messages.length - 1] : null;
+  const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
   const availableParticipants = recipients.filter(
-    (r: Recipient) => r !== lastMessage?.sender
+    (r: Recipient) => r.name !== lastMessage?.sender
   );
 
-  const wrapUpGuidelines = shouldWrapUp
-    ? `
-    10. This should be the last message in the conversation
-    11. Naturally conclude the discussion in a way that doesn't require further response
-    12. Be subtle about ending the conversation without explicitly alluding to a wrap-up`
-    : "";
-
-  const firstMessageGuidelines = isFirstMessage
-    ? `
-    10. As this is the first message, warmly initiate the conversation
-    11. Set a friendly and engaging tone
-    12. Pose a question or make a statement that encourages response from others`
-    : "";
-
   const prompt = `
-    You are participating in a socratic-style group chat conversation between these people: ${recipients
-      .map((r: Recipient) => r.name)
-      .join(", ")}.
-    Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${availableParticipants
-      .map((r: Recipient) => r.name)
-      .join(", ")}.
-    The message should be natural and contextually appropriate and in the tone of the person speaking it.
-
-    IMPORTANT: Your response must be a valid JSON object with exactly this format:
+    You are participating in a group chat conversation between ${recipients.map((r: Recipient) => r.name).join(", ")}.
+    Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${availableParticipants.map((r: Recipient) => r.name).join(", ")}.
+    The message should be natural, contextually appropriate, and reflect the style and tone of the person speaking.
+    
+    IMPORTANT: 
+    1. Your response must be a valid JSON object with exactly this format:
     {
       "sender": "name_of_participant",
       "content": "their_message"
     }
-
+    2. The "sender" MUST be one of these names: ${availableParticipants.map((r: Recipient) => r.name).join(", ")}
+    3. Do NOT use "me" as a sender name
+    
     Guidelines:
-    1. Generate only ONE message
-    3. Choose an appropriate next speaker from the available participants list
-    4. Stay in context with the previous messages
-    5. Speak in the style and tone of the participant you are speaking as
-    6. Keep responses natural and engaging
-    7. Do not use quotes or special formatting in the content
-    8. Keep messages concise and conversational like a group chat
-    9. Make sure to advance the conversation naturally${wrapUpGuidelines}${firstMessageGuidelines}
-  `;
+    1. Generate only ONE message.
+    2. Choose an appropriate next speaker from the available participants list.
+    3. Stay in context with the previous messages.
+    4. Speak in the style and tone of the participant you are speaking as.
+    5. Keep responses natural and engaging.
+    6. Do not overuse the names of other participants; use names only when it feels natural.
+    7. Encourage interaction by directing questions or comments to the group or individuals without making it seem forced.
+    8. Keep messages concise and conversational like a real group chat.
+    9. Make sure to advance the conversation naturally.
+    10. Include elements of spontaneity or humor when appropriate to make the conversation more realistic.
+    11. Do not repeat yourself or use the same phrase twice in a row.
+    12. Avoid using quotes or special formatting in the content.
+    ${shouldWrapUp ? `
+    13. This should be the last message in the conversation so don't ask a question or make a statement that encourages response from the group
+    14. Be subtle about ending the conversation without explicitly saying you have to go` : ""}
+    ${isFirstMessage ? `
+    13. As this is the first message, warmly initiate the conversation with a friendly and engaging tone
+    14. Pose a question or make a statement that encourages response from the group` : ""}`;
 
   return await logger.traced(
     async () => {
       try {
-        // Convert conversation history to OpenAI message format
         const openaiMessages = [
           { role: "system", content: prompt },
           ...(messages || []).map((msg: Message) => ({
@@ -78,17 +69,16 @@ export async function POST(req: Request) {
         });
 
         const content = response.choices[0]?.message?.content;
+
         if (!content) {
           throw new Error("No response from OpenAI");
         }
 
-        // Parse the response as JSON
         let messageData;
         try {
           messageData = JSON.parse(content);
         } catch (error) {
-          console.error(" [chat] Error parsing JSON:", error);
-          // If JSON parsing fails, try to extract sender and content from the format "Sender: Message"
+          console.error("Error parsing JSON:", error);
           const match = content.match(/^([^:]+):\s*(.+)$/);
           if (match) {
             const [, sender, messageContent] = match;
@@ -101,7 +91,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // Validate that the sender is one of the available participants
+        // Validate sender
         if (
           !availableParticipants.find(
             (r: Recipient) =>
@@ -119,9 +109,12 @@ export async function POST(req: Request) {
           },
         });
       } catch (error) {
-        console.error(" [chat] Error:", error);
+        console.error("Error:", error);
         return new Response(
-          JSON.stringify({ error: "Failed to generate message" }),
+          JSON.stringify({ 
+            error: "Failed to generate message",
+            details: error instanceof Error ? error.message : String(error)
+          }),
           {
             status: 500,
             headers: { 

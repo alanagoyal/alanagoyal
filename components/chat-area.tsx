@@ -31,6 +31,7 @@ export function ChatArea({
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const showRecipientInput = isNewChat && !activeConversation;
 
   useEffect(() => {
     // Focus input when conversation becomes active
@@ -55,11 +56,13 @@ export function ChatArea({
     }
   };
 
+  const conversationRecipients = activeConversation?.recipients || [];
+
   return (
     <div className="h-full flex flex-col">
       <div className="sticky top-0 z-10">
         <ChatHeader
-          isNewChat={isNewChat}
+          isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
           handleCreateChat={handleCreateChat}
@@ -82,6 +85,7 @@ export function ChatArea({
             handleSend={handleSend}
             inputRef={messageInputRef}
             disabled={!activeConversation && !isNewChat}
+            recipients={conversationRecipients}
           />
         </div>
       </div>
