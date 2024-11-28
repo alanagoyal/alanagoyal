@@ -1,4 +1,9 @@
 import { Recipient } from "@/types";
+import { useState, useRef, useEffect } from 'react';
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import { Smile } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 interface MessageInputProps {
   message: string;
@@ -17,6 +22,27 @@ export function MessageInput({
   inputRef,
   recipients
 }: MessageInputProps) {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pickerRef.current && 
+        buttonRef.current && 
+        !pickerRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Helper function to get input styles
   const getInputStyles = () => {
     const currentMention = message.match(/@(\w+)$/);
@@ -38,7 +64,7 @@ export function MessageInput({
 
   return (
     <div className="p-4 bg-background">
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center relative">
         <input
           ref={inputRef}
           type="text"
@@ -49,14 +75,35 @@ export function MessageInput({
               e.preventDefault();
               handleSend();
             } else if (e.key === 'Escape') {
-              (e.target as HTMLInputElement).blur();
+              setShowEmojiPicker(false);
             }
           }}
-          disabled={disabled}
           placeholder="Type a message..."
-          className="w-full bg-transparent border border-foreground/20 rounded-full px-4 py-2 text-base sm:text-sm focus:outline-none disabled:opacity-50"
+          className="w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"
           style={getInputStyles()}
+          disabled={disabled}
         />
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Smile className="h-6 w-6" />
+        </button>
+        {showEmojiPicker && (
+          <div ref={pickerRef} className="absolute bottom-full right-0 mb-2">
+            <Picker
+              data={data}
+              onEmojiSelect={(emoji: any) => {
+                setMessage(message + emoji.native);
+                setShowEmojiPicker(false);
+              }}
+              theme={theme === 'dark' ? 'dark' : 'light'}
+              previewPosition="none"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
