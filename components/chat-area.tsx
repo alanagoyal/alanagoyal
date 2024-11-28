@@ -56,6 +56,8 @@ export function ChatArea({
     }
   };
 
+  const conversationRecipients = activeConversation?.recipients || [];
+
   return (
     <div className="h-full flex flex-col">
       <div className="sticky top-0 z-10">
@@ -83,6 +85,7 @@ export function ChatArea({
             handleSend={handleSend}
             inputRef={messageInputRef}
             disabled={!activeConversation && !isNewChat}
+            recipients={conversationRecipients}
           />
         </div>
       </div>

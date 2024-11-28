@@ -20,6 +20,30 @@ export function MessageBubble({
     ? message.sender
     : null;
 
+  const highlightRecipientNames = (content: string, recipients: Conversation['recipients']) => {
+    if (!recipients) return content;
+    
+    let highlightedContent = content;
+    recipients.forEach(recipient => {
+      // Check for full name and first name, with optional @ prefix
+      const fullNameRegex = new RegExp(`@?\\b${recipient.name}\\b`, 'gi');
+      const firstName = recipient.name.split(' ')[0];
+      const firstNameRegex = new RegExp(`@?\\b${firstName}\\b`, 'gi');
+      
+      highlightedContent = highlightedContent
+        .replace(fullNameRegex, match => {
+          const name = match.startsWith('@') ? match.slice(1) : match;
+          return `<span class="font-medium">${name}</span>`;
+        })
+        .replace(firstNameRegex, match => {
+          const name = match.startsWith('@') ? match.slice(1) : match;
+          return `<span class="font-medium">${name}</span>`;
+        });
+    });
+    
+    return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
+  };
+
   return (
     <div
       className={cn(
@@ -48,7 +72,7 @@ export function MessageBubble({
                 <span className="dot">•</span>
               </span>
             ) : (
-              message.content
+              highlightRecipientNames(message.content, conversation?.recipients || [])
             )}
           </div>
         </div>
