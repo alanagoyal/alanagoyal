@@ -80,9 +80,15 @@ export function Sidebar({
       
       let nextIndex = currentIndex;
       if (e.key === 'ArrowUp') {
-        nextIndex = Math.max(0, currentIndex - 1);
+        nextIndex = currentIndex - 1;
+        if (nextIndex < 0) {
+          nextIndex = filteredConversations.length - 1;
+        }
       } else {
-        nextIndex = Math.min(filteredConversations.length - 1, currentIndex + 1);
+        nextIndex = currentIndex + 1;
+        if (nextIndex >= filteredConversations.length) {
+          nextIndex = 0;
+        }
       }
       
       if (nextIndex !== currentIndex) {
