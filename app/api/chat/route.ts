@@ -3,8 +3,9 @@ import { Recipient, Message } from "../../../types";
 import { logger } from "../logger";
 
 const openai = new OpenAI({ 
-  baseURL: "https://api.braintrust.dev/v1/proxy",
-  apiKey: process.env.OPENAI_API_KEY! 
+  apiKey: process.env.OPENAI_API_KEY!,
+  timeout: 30000, // 30 second timeout
+  maxRetries: 3
 });
 
 export async function POST(req: Request) {
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
         ];
 
         const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
+          model: "gpt-4-turbo-preview",
           messages: openaiMessages,
           temperature: 0.9,
           max_tokens: 150,
