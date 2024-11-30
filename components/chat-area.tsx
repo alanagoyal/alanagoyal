@@ -6,7 +6,6 @@ import { MessageList } from "./message-list";
 
 interface ChatAreaProps {
   isNewChat: boolean;
-  onNewConversation: (recipientInput: string) => void;
   activeConversation?: Conversation;
   recipientInput: string;
   setRecipientInput: (value: string) => void;
@@ -19,7 +18,6 @@ interface ChatAreaProps {
 
 export function ChatArea({
   isNewChat,
-  onNewConversation,
   activeConversation,
   recipientInput,
   setRecipientInput,
@@ -45,7 +43,14 @@ export function ChatArea({
     
     if (activeConversation) {
       onSendMessage(message, activeConversation.id);
-    } else if (isNewChat && recipientInput.trim()) {
+    } else if (isNewChat) {
+      const recipientList = recipientInput
+        .split(",")
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+      
+      if (recipientList.length === 0) return;
+      
       // For new conversations, we don't pass a conversationId
       onSendMessage(message);
     }

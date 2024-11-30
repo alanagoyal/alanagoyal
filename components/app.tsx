@@ -122,19 +122,6 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Function to start a new conversation
-  const handleNewConversation = (input: string) => {
-    const recipientList = input
-      .split(",")
-      .map((r) => r.trim())
-      .filter((r) => r.length > 0);
-    if (recipientList.length === 0) return;
-
-    setRecipientInput(input);
-    setIsNewConversation(true);
-    setActiveConversation(null);
-  };
-
   // Function to generate next message
   const generateNextMessage = async (
     conversation: Conversation,
@@ -321,7 +308,6 @@ export default function App() {
         >
           <ChatArea
             isNewChat={isNewConversation}
-            onNewConversation={handleNewConversation}
             activeConversation={conversations.find(
               (c) => c.id === activeConversation
             )}
