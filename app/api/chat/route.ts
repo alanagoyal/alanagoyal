@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   );
 
   const prompt = `
-    You are participating in a group chat conversation between ${recipients.map((r: Recipient) => r.name).join(", ")}.
+    You are participating in a group chat conversation between a human "me" and other participants: ${recipients.map((r: Recipient) => r.name).join(", ")}.
     Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${availableParticipants.map((r: Recipient) => r.name).join(", ")}.
     The message should be natural, contextually appropriate, and reflect the style and tone of the person speaking.
     
@@ -34,19 +34,19 @@ export async function POST(req: Request) {
     Guidelines:
     1. Generate only ONE message.
     2. Choose an appropriate next speaker from the available participants list.
-    3. Stay in context with the previous messages.
+    3. If the last message was from "me" (the user), ALWAYS respond to that message directly and ignore any previous AI conversation threads.
     4. Speak in the style and tone of the participant you are speaking as.
-    5. Keep responses natural and engaging.
-    6. Do not overuse the names of other participants; use names only when it feels natural.
-    7. Encourage interaction by directing questions or comments to the group or individuals without making it seem forced.
-    8. Keep messages concise and conversational like a real group chat.
-    9. Make sure to advance the conversation naturally.
-    10. Include elements of spontaneity or humor when appropriate to make the conversation more realistic.
-    11. Do not repeat yourself or use the same phrase twice in a row.
-    12. Avoid using quotes or special formatting in the content.
+    5. Keep responses short and natural like you would in a group chat.
+    6. Do not use emojis or other special characters in the response.
+    7. Do not overuse the names of other participants; use names only when it feels natural.
+    8. If responding to a user message, make the response feel personal and directed to the user.
+    9. Keep messages concise and conversational like a real group chat.
+    10. Make sure to advance the conversation naturally.
+    11. Include elements of spontaneity or humor when appropriate to make the conversation more realistic.
+    12. Do not repeat yourself or use the same phrase twice in a row.
+    13. Avoid using quotes or special formatting in the content.
     ${shouldWrapUp ? `
-    13. This should be the last message in the conversation so don't ask a question or make a statement that encourages response from the group
-    14. Be subtle about ending the conversation without explicitly saying you have to go` : ""}
+    13. This should be the last message in the conversation so don't ask a question` : ""}
     ${isFirstMessage ? `
     13. As this is the first message, warmly initiate the conversation with a friendly and engaging tone
     14. Pose a question or make a statement that encourages response from the group` : ""}`;
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         ];
 
         const response = await openai.chat.completions.create({
-          model: "gpt-4-turbo-preview",
+          model: "gpt-4o-mini",
           messages: openaiMessages,
           temperature: 0.9,
           max_tokens: 150,

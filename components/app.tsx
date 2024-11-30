@@ -21,6 +21,7 @@ export default function App() {
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Get conversations from local storage
   useEffect(() => {
@@ -128,6 +129,15 @@ export default function App() {
     isFirstMessage: boolean
   ) => {
     try {
+      // Cancel any ongoing message generation
+      if (abortController) {
+        abortController.abort();
+      }
+      
+      // Create new controller for this request
+      const controller = new AbortController();
+      setAbortController(controller);
+
       // Count consecutive AI messages from the end
       let consecutiveAiMessages = 0;
       for (let i = conversation.messages.length - 1; i >= 0; i--) {
@@ -156,16 +166,24 @@ export default function App() {
           shouldWrapUp,
           isFirstMessage,
         }),
+        signal: controller.signal,
       });
 
-      if (!response.ok) throw new Error("Failed to fetch");
+      if (!response.ok) {
+        if (response.status === 499) { 
+          return;
+        }
+        throw new Error("Failed to fetch");
+      }
+      
       const data = await response.json();
 
       setTypingStatus({
         conversationId: conversation.id,
         recipient: data.sender,
       });
-      await new Promise((resolve) => setTimeout(resolve, 4000));
+      
+      await new Promise((resolve) => setTimeout(resolve, 3000 + Math.floor(Math.random() * 2001)));
 
       const newMessage: Message = {
         id: uuidv4(),
@@ -191,8 +209,9 @@ export default function App() {
 
       setTypingStatus(null);
 
-      // Continue conversation if not at limit
-      if (!shouldWrapUp) {
+      // Only continue the conversation if the last message wasn't from the user
+      const lastMessage = [...conversation.messages, newMessage].slice(-1)[0];
+      if (!shouldWrapUp && lastMessage.sender !== "me") {
         const updatedConversation = {
           ...conversation,
           messages: [...conversation.messages, newMessage],
@@ -200,8 +219,15 @@ export default function App() {
         await new Promise((resolve) => setTimeout(resolve, 500));
         await generateNextMessage(updatedConversation, false);
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+        console.error("Error generating message:", error.message);
+      } else {
+        console.error("Unknown error generating message");
+      }
       setTypingStatus(null);
     }
   };
