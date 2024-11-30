@@ -12,7 +12,7 @@ interface ChatAreaProps {
   setRecipientInput: (value: string) => void;
   isMobileView?: boolean;
   onBack?: () => void;
-  onSendMessage: (message: string, conversationId: string) => void;
+  onSendMessage: (message: string, conversationId?: string) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
 }
@@ -40,20 +40,16 @@ export function ChatArea({
     }
   }, [activeConversation]);
 
-  const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && recipientInput.trim()) {
-      onNewConversation(recipientInput.trim());
-      setRecipientInput("");
-    }
-  };
-
   const handleSend = () => {
-    if (!message.trim() || (!activeConversation && !isNewChat)) return;
+    if (!message.trim()) return;
     
     if (activeConversation) {
       onSendMessage(message, activeConversation.id);
-      setMessage("");
+    } else if (isNewChat && recipientInput.trim()) {
+      // For new conversations, we don't pass a conversationId
+      onSendMessage(message);
     }
+    setMessage("");
   };
 
   const conversationRecipients = activeConversation?.recipients || [];
@@ -65,7 +61,6 @@ export function ChatArea({
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
-          handleCreateChat={handleCreateChat}
           isMobileView={isMobileView}
           onBack={onBack}
           activeConversation={activeConversation}

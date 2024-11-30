@@ -123,47 +123,19 @@ export default function App() {
   }, []);
 
   // Function to start a new conversation
-  const handleNewConversation = async (input: string) => {
-    // Get list of recipients
+  const handleNewConversation = (input: string) => {
     const recipientList = input
       .split(",")
       .map((r) => r.trim())
       .filter((r) => r.length > 0);
     if (recipientList.length === 0) return;
 
-    // Create new conversation object
-    const now = new Date();
-    const newConversation: Conversation = {
-      id: uuidv4(),
-      recipients: recipientList.map((name) => ({
-        id: uuidv4(),
-        name,
-      })),
-      messages: [],
-      lastMessageTime: now.toISOString(),
-    };
-
-    try {
-      // Add new conversation to conversations state
-      await new Promise<void>((resolve) => {
-        setConversations((prevConversations) => {
-          const newState = [newConversation, ...prevConversations];
-          resolve();
-          return newState;
-        });
-      });
-
-      // Set active conversation
-      setActiveConversation(newConversation.id);
-      setIsNewConversation(false);
-
-      // Generate first message using the new conversation object directly
-      await generateNextMessage(newConversation, true);
-    } catch (error) {
-      console.error("Error sending first message:", error);
-    }
+    setRecipientInput(input);
+    setIsNewConversation(true);
+    setActiveConversation(null);
   };
 
+  // Function to generate next message
   const generateNextMessage = async (
     conversation: Conversation,
     isFirstMessage: boolean
@@ -247,45 +219,65 @@ export default function App() {
     }
   };
 
-  // Function to handle user message
-  const handleSendMessage = async (content: string) => {
-    // Validate input
-    if (!activeConversation || !content.trim()) {
-      return;
-    }
-
-    // Get conversation
-    const conversation = conversations.find((c) => c.id === activeConversation);
-    if (!conversation) {
-      console.error("Conversation not found:", activeConversation);
-      return;
-    }
-
-    // Create new message
+  // Function to handle sending a message
+  const handleSendMessage = async (message: string, conversationId?: string) => {
+    const now = new Date();
     const newMessage: Message = {
       id: uuidv4(),
-      content: content.trim(),
+      content: message,
       sender: "me",
-      timestamp: new Date().toLocaleTimeString([], {
+      timestamp: now.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
 
-    // Add the user's message and update lastMessageTime
-    const updatedConversation = {
-      ...conversation,
-      messages: [...conversation.messages, newMessage],
-      lastMessageTime: new Date().toISOString(),
-    };
+    if (!conversationId) {
+      // This is a new conversation
+      const newConversation: Conversation = {
+        id: uuidv4(),
+        recipients: recipientInput
+          .split(",")
+          .map((r) => r.trim())
+          .filter((r) => r.length > 0)
+          .map((name) => ({
+            id: uuidv4(),
+            name,
+          })),
+        messages: [newMessage],
+        lastMessageTime: now.toISOString(),
+      };
 
-    // Update state with user's message
-    setConversations((prev) =>
-      prev.map((c) => (c.id === activeConversation ? updatedConversation : c))
-    );
+      // Add new conversation to state
+      setConversations((prev) => [newConversation, ...prev]);
+      setActiveConversation(newConversation.id);
+      setIsNewConversation(false);
 
-    // Then start a new generation chain with the updated conversation
-    await generateNextMessage(updatedConversation, false);
+      // Generate AI response
+      await generateNextMessage(newConversation, true);
+    } else {
+      // Update existing conversation
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conversationId) return c;
+          return {
+            ...c,
+            messages: [...c.messages, newMessage],
+            lastMessageTime: now.toISOString(),
+          };
+        })
+      );
+
+      // Find the updated conversation
+      const updatedConversation = conversations.find((c) => c.id === conversationId);
+      if (updatedConversation) {
+        const conversationWithNewMessage = {
+          ...updatedConversation,
+          messages: [...updatedConversation.messages, newMessage],
+        };
+        await generateNextMessage(conversationWithNewMessage, false);
+      }
+    }
   };
 
   // Don't render until layout is initialized

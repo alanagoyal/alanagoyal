@@ -8,7 +8,6 @@ interface ChatHeaderProps {
   isNewChat: boolean;
   recipientInput: string;
   setRecipientInput: (value: string) => void;
-  handleCreateChat: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onBack?: () => void;
   isMobileView?: boolean;
   activeConversation?: Conversation;
@@ -18,19 +17,10 @@ export function ChatHeader({
   isNewChat,
   recipientInput,
   setRecipientInput,
-  handleCreateChat,
   onBack,
   isMobileView,
   activeConversation,
 }: ChatHeaderProps) {
-  // Helper function to get valid recipients by splitting the comma-separated string,
-  // trimming whitespace, and filtering out empty entries
-  const getValidRecipients = () => {
-    return recipientInput
-      .split(',')
-      .map(r => r.trim())
-      .filter(r => r.length > 0);
-  };
 
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
