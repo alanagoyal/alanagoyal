@@ -1,46 +1,59 @@
 import { Conversation, Message } from "../types";
 
+// Represents a task in the message queue
+// Each task corresponds to a message that needs to be processed
 type MessageTask = {
   id: string;
   conversation: Conversation;
   isFirstMessage: boolean;
-  priority: number; // Higher number = higher priority
+  priority: number;
   timestamp: number;
   abortController: AbortController;
   consecutiveAiMessages: number;
 };
 
+// Represents the current state of the message queue
 type MessageQueueState = {
-  status: 'idle' | 'processing';
+  status: "idle" | "processing";
   currentTask: MessageTask | null;
   tasks: MessageTask[];
 };
 
+// Callback functions for handling various queue events
 type MessageQueueCallbacks = {
   onMessageGenerated: (conversationId: string, message: Message) => void;
-  onTypingStatusChange: (conversationId: string | null, recipient: string | null) => void;
+  onTypingStatusChange: (
+    conversationId: string | null,
+    recipient: string | null
+  ) => void;
   onError: (error: Error) => void;
 };
 
+// Maximum number of consecutive AI messages allowed to prevent infinite loops
 const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 
+//  MessageQueue class manages the processing of chat messages with priority handling
+//  It ensures messages are processed in order and handles both user and AI messages
 export class MessageQueue {
   private state: MessageQueueState = {
-    status: 'idle',
+    status: "idle",
     currentTask: null,
     tasks: [],
   };
   private callbacks: MessageQueueCallbacks;
 
+  //  Initializes the MessageQueue instance with callback functions
   constructor(callbacks: MessageQueueCallbacks) {
     this.callbacks = callbacks;
   }
 
+  //  Adds a user message to the queue with highest priority
+  //  Cancels all pending AI messages when a user sends a message
   public enqueueUserMessage(conversation: Conversation) {
-    console.log(' Enqueueing USER message response');
+    console.log(" Enqueueing USER message response");
     // Cancel all pending AI messages when user sends a message
     this.cancelAllTasks();
-    
+
     // Create a new task for responding to user message
     const task: MessageTask = {
       id: crypto.randomUUID(),
@@ -52,17 +65,23 @@ export class MessageQueue {
       consecutiveAiMessages: 0, // Reset counter for user messages
     };
 
-    console.log(' Created user response task:', {
+    console.log(" Created user response task:", {
       id: task.id,
       consecutiveAiMessages: task.consecutiveAiMessages,
-      lastMessage: conversation.messages[conversation.messages.length - 1]?.sender
+      lastMessage:
+        conversation.messages[conversation.messages.length - 1]?.sender,
     });
 
     this.addTask(task);
   }
 
-  public enqueueAIMessage(conversation: Conversation, isFirstMessage: boolean = false) {
-    console.log(' Enqueueing AI message');
+  // Adds an AI message to the queue with normal priority
+  // Tracks and limits consecutive AI messages to prevent infinite loops
+  public enqueueAIMessage(
+    conversation: Conversation,
+    isFirstMessage: boolean = false
+  ) {
+    console.log(" Enqueueing AI message");
     // Count consecutive AI messages
     let consecutiveAiMessages = 0;
     for (let i = conversation.messages.length - 1; i >= 0; i--) {
@@ -73,15 +92,16 @@ export class MessageQueue {
       }
     }
 
-    console.log(' AI message stats:', {
+    console.log(" AI message stats:", {
       consecutiveAiMessages,
       messageCount: conversation.messages.length,
-      lastSender: conversation.messages[conversation.messages.length - 1]?.sender
+      lastSender:
+        conversation.messages[conversation.messages.length - 1]?.sender,
     });
 
     // Don't add more AI messages if we've reached the limit
     if (consecutiveAiMessages >= MAX_CONSECUTIVE_AI_MESSAGES) {
-      console.log(' Max consecutive AI messages reached, stopping');
+      console.log(" Max consecutive AI messages reached, stopping");
       return;
     }
 
@@ -95,20 +115,22 @@ export class MessageQueue {
       consecutiveAiMessages,
     };
 
-    console.log(' Created AI message task:', {
+    console.log(" Created AI message task:", {
       id: task.id,
       isFirstMessage,
-      consecutiveAiMessages: task.consecutiveAiMessages
+      consecutiveAiMessages: task.consecutiveAiMessages,
     });
 
     this.addTask(task);
   }
 
+  // Adds a new task to the queue and sorts tasks by priority and timestamp
+  // Triggers processing if the queue is idle
   private addTask(task: MessageTask) {
-    console.log(' Adding task to queue:', {
+    console.log(" Adding task to queue:", {
       id: task.id,
       priority: task.priority,
-      queueLength: this.state.tasks.length
+      queueLength: this.state.tasks.length,
     });
 
     this.state.tasks.push(task);
@@ -119,37 +141,39 @@ export class MessageQueue {
       }
       return a.timestamp - b.timestamp;
     });
-    
-    console.log(' Queue state after add:', {
+
+    console.log(" Queue state after add:", {
       queueLength: this.state.tasks.length,
       status: this.state.status,
-      currentTaskId: this.state.currentTask?.id
+      currentTaskId: this.state.currentTask?.id,
     });
 
-    if (this.state.status === 'idle') {
-      console.log(' Queue is idle, processing next task');
+    if (this.state.status === "idle") {
+      console.log(" Queue is idle, processing next task");
       this.processNextTask();
     }
   }
 
+  // Processes the next task in the queue
+  // Handles API calls, typing indicators, and message generation
   private async processNextTask() {
-    if (this.state.status === 'processing' || this.state.tasks.length === 0) {
-      console.log(' Cannot process next task:', {
+    if (this.state.status === "processing" || this.state.tasks.length === 0) {
+      console.log(" Cannot process next task:", {
         status: this.state.status,
-        queueLength: this.state.tasks.length
+        queueLength: this.state.tasks.length,
       });
       return;
     }
 
-    this.state.status = 'processing';
+    this.state.status = "processing";
     const task = this.state.tasks.shift()!;
     this.state.currentTask = task;
 
-    console.log(' Processing task:', {
+    console.log(" Processing task:", {
       id: task.id,
       priority: task.priority,
       consecutiveAiMessages: task.consecutiveAiMessages,
-      remainingTasks: this.state.tasks.length
+      remainingTasks: this.state.tasks.length,
     });
 
     try {
@@ -157,14 +181,15 @@ export class MessageQueue {
       this.callbacks.onTypingStatusChange(task.conversation.id, null);
 
       // Make API request
-      console.log(' Making API request for task:', task.id);
+      console.log(" Making API request for task:", task.id);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
-          shouldWrapUp: task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
+          shouldWrapUp:
+            task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
           isFirstMessage: task.isFirstMessage,
         }),
         signal: task.abortController.signal,
@@ -175,19 +200,21 @@ export class MessageQueue {
       }
 
       const data = await response.json();
-      console.log(' Received API response:', {
+      console.log(" Received API response:", {
         taskId: task.id,
         sender: data.sender,
-        contentPreview: data.content.substring(0, 50)
+        contentPreview: data.content.substring(0, 50),
       });
 
       // Simulate typing delay
       const typingDelay = task.priority === 100 ? 2000 : 4000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
-      await new Promise(resolve => setTimeout(resolve, typingDelay + Math.random() * 2000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, typingDelay + Math.random() * 2000)
+      );
 
       if (task.abortController.signal.aborted) {
-        console.log(' Task aborted:', task.id);
+        console.log(" Task aborted:", task.id);
         return;
       }
 
@@ -208,11 +235,11 @@ export class MessageQueue {
       // Clear typing status
       this.callbacks.onTypingStatusChange(null, null);
 
-      console.log(' Checking if should queue next message:', {
+      console.log(" Checking if should queue next message:", {
         taskId: task.id,
         consecutiveAiMessages: task.consecutiveAiMessages,
         maxLimit: MAX_CONSECUTIVE_AI_MESSAGES - 1,
-        currentSender: data.sender
+        currentSender: data.sender,
       });
 
       // Queue next AI message if we haven't hit the limit
@@ -221,63 +248,72 @@ export class MessageQueue {
           ...task.conversation,
           messages: [...task.conversation.messages, newMessage],
         };
-        
+
         // Add a small delay before the next AI message
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         if (!task.abortController.signal.aborted) {
-          console.log(' Queueing next AI message after:', {
+          console.log(" Queueing next AI message after:", {
             currentTaskId: task.id,
             currentSender: data.sender,
-            consecutiveAiMessages: task.consecutiveAiMessages
+            consecutiveAiMessages: task.consecutiveAiMessages,
           });
-          
+
           // Only queue next AI message if:
           // 1. This was a user message (task.priority === 100), or
           // 2. We want to allow the other AI personality to respond
           const lastAiSender = data.sender;
-          const otherRecipients = task.conversation.recipients.filter(r => r !== lastAiSender);
-          
-          if (task.priority === 100 || (otherRecipients.length > 0 && Math.random() > 0.3)) {
+          const otherRecipients = task.conversation.recipients.filter(
+            (r) => r !== lastAiSender
+          );
+
+          if (
+            task.priority === 100 ||
+            (otherRecipients.length > 0 && Math.random() > 0.3)
+          ) {
             // If this was an AI message, ensure the next message comes from a different AI
             const updatedConversationWithNextSender = {
               ...updatedConversation,
-              recipients: task.priority === 100 ? task.conversation.recipients : otherRecipients,
+              recipients:
+                task.priority === 100
+                  ? task.conversation.recipients
+                  : otherRecipients,
             };
             this.enqueueAIMessage(updatedConversationWithNextSender);
           }
         }
       } else {
-        console.log(' Reached max consecutive messages, not queueing next');
+        console.log(" Reached max consecutive messages, not queueing next");
       }
     } catch (error) {
       if (error instanceof Error) {
-        if (error.name !== 'AbortError') {
-          console.error(' Error processing task:', {
+        if (error.name !== "AbortError") {
+          console.error(" Error processing task:", {
             taskId: task.id,
-            error: error.message
+            error: error.message,
           });
           this.callbacks.onError(error);
         } else {
-          console.log(' Task aborted:', task.id);
+          console.log(" Task aborted:", task.id);
         }
       }
     } finally {
-      console.log(' Task completed:', {
+      console.log(" Task completed:", {
         id: task.id,
-        remainingTasks: this.state.tasks.length
+        remainingTasks: this.state.tasks.length,
       });
-      
-      this.state.status = 'idle';
+
+      this.state.status = "idle";
       this.state.currentTask = null;
       this.processNextTask(); // Process next task if available
     }
   }
 
+  // Cancels all tasks in the queue and resets the queue state
   public cancelAllTasks() {
-    console.log(' Cancelling all tasks:', {
+    console.log(" Cancelling all tasks:", {
       currentTaskId: this.state.currentTask?.id,
-      pendingTasks: this.state.tasks.length
+      pendingTasks: this.state.tasks.length,
     });
 
     // Cancel current task if exists
@@ -292,9 +328,9 @@ export class MessageQueue {
 
     // Clear the queue
     this.state.tasks = [];
-    this.state.status = 'idle';
+    this.state.status = "idle";
     this.state.currentTask = null;
-    
+
     // Clear typing status
     this.callbacks.onTypingStatusChange(null, null);
   }
