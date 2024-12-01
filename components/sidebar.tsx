@@ -110,50 +110,55 @@ export function Sidebar({
           <React.Fragment key={conversation.id}>
             <button
               onClick={() => onSelectConversation(conversation.id)}
-              className={`w-full p-4 text-left ${
+              className={`w-full p-4 pl-6 text-left relative ${
                 activeConversation === conversation.id 
                   ? 'bg-blue-500 text-white rounded-sm' 
                   : ''
               }`}
             >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                  {conversation.recipients[0].avatar ? (
-                    <img 
-                      src={conversation.recipients[0].avatar} 
-                      alt="" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-                      {getInitials(conversation.recipients[0].name)}
+              <div className="flex items-center">
+                {conversation.unreadCount > 0 && (
+                  <div className="absolute left-2 w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0" />
+                )}
+                <div className="flex items-start gap-2 w-full min-w-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    {conversation.recipients[0].avatar ? (
+                      <img 
+                        src={conversation.recipients[0].avatar} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                        {getInitials(conversation.recipients[0].name)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-sm font-medium truncate max-w-[70%]">
+                        {conversation.recipients.map(r => r.name).join(', ')}
+                      </span>
+                      {conversation.lastMessageTime && (
+                        <span className={`text-xs ml-2 flex-shrink-0 ${
+                          activeConversation === conversation.id 
+                            ? 'text-white/80' 
+                            : 'text-muted-foreground'
+                        }`}>
+                          {formatTime(conversation.lastMessageTime)}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-sm font-medium truncate">
-                      {conversation.recipients.map(r => r.name).join(', ')}
-                    </span>
-                    {conversation.lastMessageTime && (
-                      <span className={`text-xs ml-2 flex-shrink-0 ${
+                    {conversation.messages.length > 0 && (
+                      <p className={`text-xs truncate ${
                         activeConversation === conversation.id 
                           ? 'text-white/80' 
                           : 'text-muted-foreground'
                       }`}>
-                        {formatTime(conversation.lastMessageTime)}
-                      </span>
+                        {conversation.messages[conversation.messages.length - 1].content}
+                      </p>
                     )}
                   </div>
-                  {conversation.messages.length > 0 && (
-                    <p className={`text-xs truncate ${
-                      activeConversation === conversation.id 
-                        ? 'text-white/80' 
-                        : 'text-muted-foreground'
-                    }`}>
-                      {conversation.messages[conversation.messages.length - 1].content}
-                    </p>
-                  )}
                 </div>
               </div>
             </button>

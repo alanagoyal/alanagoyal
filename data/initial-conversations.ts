@@ -335,7 +335,8 @@ export const initialConversations: Conversation[] = [
         timestamp: "10:54 AM"
       }
     ],
-    lastMessageTime: getTimeAgo(5)
+    lastMessageTime: getTimeAgo(5),
+    unreadCount: 0
   },
   {
     id: "initial-convo-2",
@@ -508,6 +509,7 @@ export const initialConversations: Conversation[] = [
         timestamp: "11:52 AM"
       }
     ],
-    lastMessageTime: getTimeAgo(10)
+    lastMessageTime: getTimeAgo(10),
+    unreadCount: 0
   }
 ];

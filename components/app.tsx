@@ -31,6 +31,8 @@ export default function App() {
             ...c,
             messages: [...c.messages, message],
             lastMessageTime: new Date().toISOString(),
+            // Increment unread count if this is not the active conversation
+            unreadCount: c.id === activeConversation ? 0 : (c.unreadCount || 0) + 1
           };
         })
       );
@@ -148,6 +150,19 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Effect to reset unread count when conversation becomes active
+  useEffect(() => {
+    if (activeConversation) {
+      setConversations(prev => 
+        prev.map(c => 
+          c.id === activeConversation 
+            ? { ...c, unreadCount: 0 }
+            : c
+        )
+      );
+    }
+  }, [activeConversation]);
+
   // Handle sending a message
   const handleSendMessage = (message: string, conversationId?: string) => {
     if (!conversationId) {
@@ -164,6 +179,7 @@ export default function App() {
           })),
         messages: [],
         lastMessageTime: new Date().toISOString(),
+        unreadCount: 0
       };
 
       // Add user message

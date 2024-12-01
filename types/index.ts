@@ -10,6 +10,7 @@ export interface Conversation {
   recipients: Recipient[];
   messages: Message[];
   lastMessageTime: string;
+  unreadCount: number;
 }
 
 export interface Recipient {
