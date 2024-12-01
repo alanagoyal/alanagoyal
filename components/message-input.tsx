@@ -76,7 +76,7 @@ export function MessageInput({
   };
 
   return (
-    <div className="p-4 bg-background">
+    <div className="px-4 py-2 bg-background">
       <div className="flex gap-2 items-center relative">
         <input
           ref={inputRef}
@@ -92,7 +92,7 @@ export function MessageInput({
             }
           }}
           placeholder="Type a message..."
-          className="w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"
+          className="w-full bg-transparent border border-foreground/20 rounded-full py-1.5 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"
           style={getInputStyles()}
           disabled={disabled}
         />

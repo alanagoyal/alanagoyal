@@ -67,7 +67,7 @@ export function ChatArea({
   const conversationRecipients = activeConversation?.recipients || [];
 
   return (
-    <div className="h-[100dvh] flex flex-col">
+    <div className="h-dvh flex flex-col">
       <div className="sticky top-0 z-20 bg-background">
         <ChatHeader
           isNewChat={showRecipientInput}

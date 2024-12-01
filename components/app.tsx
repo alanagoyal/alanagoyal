@@ -244,7 +244,7 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen w-screen bg-background flex flex-col">
+    <main className="h-dvh w-full bg-background flex flex-col">
       <div className="flex-1 flex h-full">
         <div
           className={`h-full ${isMobileView ? "w-full" : ""} ${

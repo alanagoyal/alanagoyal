@@ -40,7 +40,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
         />
       </head>
-      <body className="h-screen">
+      <body className="h-dvh">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
