@@ -222,24 +222,6 @@ export default function App() {
     messageQueue.current.enqueueUserMessage(updatedConversation);
   };
 
-  // Start new conversation
-  const handleStartConversation = async (recipients: Recipient[]) => {
-    const newConversation: Conversation = {
-      id: uuidv4(),
-      recipients,
-      messages: [],
-      lastMessageTime: new Date().toISOString(),
-    };
-
-    setConversations((prev) => [newConversation, ...prev]);
-    setActiveConversation(newConversation.id);
-    setIsNewConversation(false);
-    window.history.pushState({}, "", `?id=${newConversation.id}`);
-
-    // Start the AI conversation
-    messageQueue.current.enqueueAIMessage(newConversation, true);
-  };
-
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
     return null;

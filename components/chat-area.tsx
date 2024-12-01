@@ -1,4 +1,4 @@
-import { Conversation } from "../types";
+import { Conversation, Recipient } from "../types";
 import { useState, useEffect, useRef } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
