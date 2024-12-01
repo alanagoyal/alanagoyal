@@ -267,9 +267,14 @@ export class MessageQueue {
             (r) => r !== lastAiSender
           );
 
+          // Check if the last message contains a question
+          const lastMessageContent = data.content.toLowerCase();
+          const hasQuestion = lastMessageContent.includes("?") || 
+            /\b(what|who|when|where|why|how|which|whose|whom)\b/i.test(lastMessageContent);
+
           if (
             task.priority === 100 ||
-            (otherRecipients.length > 0 && Math.random() > 0.3)
+            (otherRecipients.length > 0 && (hasQuestion || Math.random() > 0.25))
           ) {
             // If this was an AI message, ensure the next message comes from a different AI
             const updatedConversationWithNextSender = {

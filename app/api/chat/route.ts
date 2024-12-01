@@ -50,7 +50,9 @@ export async function POST(req: Request) {
     Guidelines:
     1. Generate only ONE message.
     2. Choose an appropriate next speaker from the available participants list, preferring those who haven't spoken recently.
-    3. If the last message was from "me" (the user), ALWAYS respond to that message directly and ignore any previous AI conversation threads.
+    3. If the last message was from "me" (the user), carefully check if the message was directed at a specific participant:
+       - If the user's message mentions or addresses a specific participant by name, DO NOT respond unless you are that participant
+       - If the user's message is a general question or statement, any participant can respond
     4. Speak in the style and tone of the participant you are speaking as.
     5. Keep responses short and natural like you would in a group chat (1-3 sentences).
     6. Do not use emojis or other special characters in the response.
@@ -61,12 +63,13 @@ export async function POST(req: Request) {
     11. Include elements of spontaneity or humor when appropriate to make the conversation more realistic.
     12. Do not repeat yourself or use the same phrase twice in a row.
     13. Avoid using quotes or special formatting in the content.
-    14. If another AI has already responded to the user's message, try to add a new perspective or direction to the conversation.
+    14. If another AI has already responded to the user's message and it wasn't specifically directed at you, start a new conversation thread instead of continuing the existing one.
+    15. Never answer questions that were clearly directed at another participant or the user.
     ${shouldWrapUp ? `
-    15. This should be the last message in the conversation, so wrap up naturally without asking questions.` : ""}
+    16. This should be the last message in the conversation, so wrap up naturally without asking questions.` : ""}
     ${isFirstMessage ? `
-    15. As this is the first message, warmly initiate the conversation with a friendly and engaging tone.
-    16. Pose a question or make a statement that encourages response from the group.` : ""}`;
+    16. As this is the first message, warmly initiate the conversation with a friendly and engaging tone.
+    17. Pose a question or make a statement that encourages response from the group.` : ""}`;
 
   return await logger.traced(
     async () => {
