@@ -154,7 +154,7 @@ export class MessageQueue {
       const data = await response.json();
 
       // Simulate typing delay
-      const typingDelay = task.priority === 100 ? 2000 : 4000; // Faster for user responses
+      const typingDelay = task.priority === 100 ? 3000 : 4000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
         setTimeout(resolve, typingDelay + Math.random() * 2000)
@@ -189,7 +189,7 @@ export class MessageQueue {
         };
 
         // Add a small delay before the next AI message
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 750));
 
         if (!task.abortController.signal.aborted) {
           // Only queue next AI message if:
