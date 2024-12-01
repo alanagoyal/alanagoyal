@@ -2,7 +2,7 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message, Recipient } from "../types";
+import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
