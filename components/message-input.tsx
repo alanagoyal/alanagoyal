@@ -75,6 +75,18 @@ export function MessageInput({
     };
   };
 
+  const handleMessageSend = () => {
+    handleSend();
+    if (isMobileView && inputRef?.current) {
+      // Try multiple approaches to dismiss keyboard
+      inputRef.current.blur();
+      
+      // Force any active element to blur
+      const activeElement = document.activeElement as HTMLElement;
+      activeElement?.blur();
+    }
+  };
+
   return (
     <div className="px-4 py-2 bg-background">
       <div className="flex gap-2 items-center relative">
@@ -87,7 +99,7 @@ export function MessageInput({
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleSend();
+              handleMessageSend();
               if (isMobileView) {
                 setTimeout(() => {
                   e.currentTarget.blur();
