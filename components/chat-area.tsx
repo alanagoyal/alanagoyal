@@ -40,7 +40,7 @@ export function ChatArea({
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
-      // @ts-ignore - TypeScript may not know about this API yet
+      // @ts-expect-error VirtualKeyboard API is not yet in TypeScript types
       navigator.virtualKeyboard.overlaysContent = true;
     }
   }, []);
