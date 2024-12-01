@@ -1,18 +1,17 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message } from "../types";
+import { Conversation, Message, Recipient } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
+import { MessageQueue } from "../lib/message-queue";
 
 export default function App() {
   // State
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<string | null>(
-    null
-  );
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
@@ -21,7 +20,33 @@ export default function App() {
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  // Initialize message queue
+  const messageQueue = useRef<MessageQueue>(new MessageQueue({
+    onMessageGenerated: (conversationId: string, message: Message) => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conversationId) return c;
+          return {
+            ...c,
+            messages: [...c.messages, message],
+            lastMessageTime: new Date().toISOString(),
+          };
+        })
+      );
+    },
+    onTypingStatusChange: (conversationId: string | null, recipient: string | null) => {
+      if (!conversationId || !recipient) {
+        setTypingStatus(null);
+      } else {
+        setTypingStatus({ conversationId, recipient });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error generating message:", error);
+      setTypingStatus(null);
+    },
+  }));
 
   // Get conversations from local storage
   useEffect(() => {
@@ -123,130 +148,10 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Function to generate next message
-  const generateNextMessage = async (
-    conversation: Conversation,
-    isFirstMessage: boolean
-  ) => {
-    try {
-      // Cancel any ongoing message generation
-      if (abortController) {
-        abortController.abort();
-      }
-      
-      // Create new controller for this request
-      const controller = new AbortController();
-      setAbortController(controller);
-
-      // Count consecutive AI messages from the end
-      let consecutiveAiMessages = 0;
-      for (let i = conversation.messages.length - 1; i >= 0; i--) {
-        if (conversation.messages[i].sender !== "me") {
-          consecutiveAiMessages++;
-        } else {
-          break;
-        }
-      }
-
-      // Check if we've reached the message limit
-      if (consecutiveAiMessages >= 5) {
-        return;
-      }
-
-      // Determine if this should be the wrap-up message
-      const shouldWrapUp = consecutiveAiMessages === 4;
-
-      // Make API request
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients: conversation.recipients,
-          messages: conversation.messages,
-          shouldWrapUp,
-          isFirstMessage,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        if (response.status === 499) { 
-          return;
-        }
-        throw new Error("Failed to fetch");
-      }
-      
-      const data = await response.json();
-
-      setTypingStatus({
-        conversationId: conversation.id,
-        recipient: data.sender,
-      });
-      
-      await new Promise((resolve) => setTimeout(resolve, 3000 + Math.floor(Math.random() * 2001)));
-
-      const newMessage: Message = {
-        id: uuidv4(),
-        content: data.content,
-        sender: data.sender,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      // Update conversation state
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id !== conversation.id) return c;
-          return {
-            ...c,
-            messages: [...c.messages, newMessage],
-            lastMessageTime: new Date().toISOString(),
-          };
-        })
-      );
-
-      setTypingStatus(null);
-
-      // Only continue the conversation if the last message wasn't from the user
-      const lastMessage = [...conversation.messages, newMessage].slice(-1)[0];
-      if (!shouldWrapUp && lastMessage.sender !== "me") {
-        const updatedConversation = {
-          ...conversation,
-          messages: [...conversation.messages, newMessage],
-        };
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await generateNextMessage(updatedConversation, false);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          return;
-        }
-        console.error("Error generating message:", error.message);
-      } else {
-        console.error("Unknown error generating message");
-      }
-      setTypingStatus(null);
-    }
-  };
-
-  // Function to handle sending a message
-  const handleSendMessage = async (message: string, conversationId?: string) => {
-    const now = new Date();
-    const newMessage: Message = {
-      id: uuidv4(),
-      content: message,
-      sender: "me",
-      timestamp: now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
+  // Handle sending a message
+  const handleSendMessage = (message: string, conversationId?: string) => {
     if (!conversationId) {
-      // This is a new conversation
+      // Handle new conversation
       const newConversation: Conversation = {
         id: uuidv4(),
         recipients: recipientInput
@@ -257,40 +162,82 @@ export default function App() {
             id: uuidv4(),
             name,
           })),
-        messages: [newMessage],
-        lastMessageTime: now.toISOString(),
+        messages: [],
+        lastMessageTime: new Date().toISOString(),
       };
 
-      // Add new conversation to state
-      setConversations((prev) => [newConversation, ...prev]);
+      // Add user message
+      const userMessage: Message = {
+        id: uuidv4(),
+        content: message,
+        sender: "me",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      const conversationWithMessage = {
+        ...newConversation,
+        messages: [userMessage],
+      };
+
+      setConversations((prev) => [conversationWithMessage, ...prev]);
       setActiveConversation(newConversation.id);
       setIsNewConversation(false);
+      window.history.pushState({}, "", `?id=${newConversation.id}`);
 
-      // Generate AI response
-      await generateNextMessage(newConversation, true);
-    } else {
-      // Update existing conversation
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id !== conversationId) return c;
-          return {
-            ...c,
-            messages: [...c.messages, newMessage],
-            lastMessageTime: now.toISOString(),
-          };
-        })
-      );
-
-      // Find the updated conversation
-      const updatedConversation = conversations.find((c) => c.id === conversationId);
-      if (updatedConversation) {
-        const conversationWithNewMessage = {
-          ...updatedConversation,
-          messages: [...updatedConversation.messages, newMessage],
-        };
-        await generateNextMessage(conversationWithNewMessage, false);
-      }
+      // Queue first AI message
+      messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
+      return;
     }
+
+    // Handle existing conversation
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+
+    // Add user message
+    const userMessage: Message = {
+      id: uuidv4(),
+      content: message,
+      sender: "me",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    // Update conversation with user message
+    const updatedConversation = {
+      ...conversation,
+      messages: [...conversation.messages, userMessage],
+      lastMessageTime: new Date().toISOString(),
+    };
+
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? updatedConversation : c))
+    );
+
+    // Queue user message response
+    messageQueue.current.enqueueUserMessage(updatedConversation);
+  };
+
+  // Start new conversation
+  const handleStartConversation = async (recipients: Recipient[]) => {
+    const newConversation: Conversation = {
+      id: uuidv4(),
+      recipients,
+      messages: [],
+      lastMessageTime: new Date().toISOString(),
+    };
+
+    setConversations((prev) => [newConversation, ...prev]);
+    setActiveConversation(newConversation.id);
+    setIsNewConversation(false);
+    window.history.pushState({}, "", `?id=${newConversation.id}`);
+
+    // Start the AI conversation
+    messageQueue.current.enqueueAIMessage(newConversation, true);
   };
 
   // Don't render until layout is initialized
