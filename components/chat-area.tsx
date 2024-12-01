@@ -6,20 +6,18 @@ import { MessageList } from "./message-list";
 
 interface ChatAreaProps {
   isNewChat: boolean;
-  onNewConversation: (recipientInput: string) => void;
   activeConversation?: Conversation;
   recipientInput: string;
   setRecipientInput: (value: string) => void;
   isMobileView?: boolean;
   onBack?: () => void;
-  onSendMessage: (message: string, conversationId: string) => void;
+  onSendMessage: (message: string, conversationId?: string) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
 }
 
 export function ChatArea({
   isNewChat,
-  onNewConversation,
   activeConversation,
   recipientInput,
   setRecipientInput,
@@ -40,20 +38,23 @@ export function ChatArea({
     }
   }, [activeConversation]);
 
-  const handleCreateChat = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && recipientInput.trim()) {
-      onNewConversation(recipientInput.trim());
-      setRecipientInput("");
-    }
-  };
-
   const handleSend = () => {
-    if (!message.trim() || (!activeConversation && !isNewChat)) return;
+    if (!message.trim()) return;
     
     if (activeConversation) {
       onSendMessage(message, activeConversation.id);
-      setMessage("");
+    } else if (isNewChat) {
+      const recipientList = recipientInput
+        .split(",")
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+      
+      if (recipientList.length === 0) return;
+      
+      // For new conversations, we don't pass a conversationId
+      onSendMessage(message);
     }
+    setMessage("");
   };
 
   const conversationRecipients = activeConversation?.recipients || [];
@@ -65,7 +66,6 @@ export function ChatArea({
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
-          handleCreateChat={handleCreateChat}
           isMobileView={isMobileView}
           onBack={onBack}
           activeConversation={activeConversation}

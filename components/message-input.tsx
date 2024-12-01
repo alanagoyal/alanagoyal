@@ -76,6 +76,7 @@ export function MessageInput({
               handleSend();
             } else if (e.key === 'Escape') {
               setShowEmojiPicker(false);
+              e.currentTarget.blur();
             }
           }}
           placeholder="Type a message..."

@@ -1,12 +1,13 @@
 import { Icons } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 import { Conversation } from "../types";
+import { useState, useRef, useEffect } from "react";
+import { techPersonalities } from "../data/tech-personalities";
 
 interface ChatHeaderProps {
   isNewChat: boolean;
   recipientInput: string;
   setRecipientInput: (value: string) => void;
-  handleCreateChat: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onBack?: () => void;
   isMobileView?: boolean;
   activeConversation?: Conversation;
@@ -16,52 +17,74 @@ export function ChatHeader({
   isNewChat,
   recipientInput,
   setRecipientInput,
-  handleCreateChat,
   onBack,
   isMobileView,
   activeConversation,
 }: ChatHeaderProps) {
-  // Helper function to get valid recipients by splitting the comma-separated string,
-  // trimming whitespace, and filtering out empty entries
-  const getValidRecipients = () => {
-    return recipientInput
-      .split(',')
-      .map(r => r.trim())
-      .filter(r => r.length > 0);
+
+  const [searchValue, setSearchValue] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const filteredPeople = techPersonalities.filter((person) =>
+    person.name.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Reset selected index when search value changes
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [searchValue]);
+
+  const handlePersonSelect = (person: typeof techPersonalities[0]) => {
+    const newValue = recipientInput 
+      ? recipientInput.split(',').filter(r => r.trim()).concat(person.name).join(',')
+      : person.name;
+    setRecipientInput(newValue + ',');
+    setSearchValue('');
+    setShowResults(false);
+    setSelectedIndex(-1);
   };
 
-  // Handles keyboard events in the recipient input field
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const currentInput = e.currentTarget.value.trim();
-      
-      if (currentInput) {
-        // If there's text in the input field:
-        // 1. Get existing recipients by splitting the comma-separated string
-        // 2. Check if the new recipient isn't already in the list
-        // 3. Add the new recipient and append a comma for the next entry
-        const recipients = recipientInput ? recipientInput.split(',').filter(r => r.trim()) : [];
-        if (!recipients.includes(currentInput)) {
-          const newValue = [...recipients, currentInput].join(',');
-          setRecipientInput(newValue + ',');
-          e.currentTarget.value = ''; // Clear the input field for the next recipient
+    if (!showResults || !searchValue) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredPeople.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > -1 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
+          handlePersonSelect(filteredPeople[selectedIndex]);
         }
-      } else if (getValidRecipients().length >= 2) {
-        // If input is empty and we have at least 2 recipients,
-        // pressing Enter will create the chat
-        handleCreateChat(e);
-      }
-    } else if (e.key === 'Backspace' && e.currentTarget.value === '') {
-      // If backspace is pressed and input is empty, remove the last recipient
-      const recipients = recipientInput.split(',').filter(r => r.trim());
-      if (recipients.length > 0) {
-        setRecipientInput(recipients.slice(0, -1).join(',') + ',');
-      }
+        break;
+      case 'Escape':
+        setShowResults(false);
+        setSelectedIndex(-1);
+        break;
     }
   };
 
-  // Renders recipient "pills" for all complete entries
   const renderRecipients = () => {
     const recipients = recipientInput.split(',');
     const completeRecipients = recipients.slice(0, -1);
@@ -119,16 +142,44 @@ export function ChatHeader({
               </span>
               <div className="flex flex-wrap gap-1 flex-1 items-center">
                 {renderRecipients()}
-                <input
-                  type="text"
-                  onChange={(e) => {
-                    e.currentTarget.value = e.currentTarget.value;
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter two or more recipients and hit enter"
-                  className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px]"
-                  autoFocus
-                />
+                <div ref={searchRef} className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => {
+                      setSearchValue(e.target.value);
+                      setShowResults(true);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type to find recipients..."
+                    className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+                    autoFocus
+                  />
+                  {showResults && searchValue && (
+                    <div className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50">
+                      {filteredPeople.length > 0 ? (
+                        filteredPeople.map((person, index) => (
+                          <div
+                            key={person.name}
+                            className={`px-4 py-2 cursor-pointer ${
+                              selectedIndex === index 
+                                ? "bg-[#0A7CFF]" 
+                                : ""
+                            }`}
+                            onClick={() => handlePersonSelect(person)}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                          >
+                            <div className="flex flex-col">
+                              <span className={`text-sm ${selectedIndex === index ? "text-white" : "text-[#0A7CFF]"}`}>{person.name}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-gray-500">No results found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -1,18 +1,17 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
+import { MessageQueue } from "../lib/message-queue";
 
 export default function App() {
   // State
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<string | null>(
-    null
-  );
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
@@ -21,6 +20,33 @@ export default function App() {
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Initialize message queue
+  const messageQueue = useRef<MessageQueue>(new MessageQueue({
+    onMessageGenerated: (conversationId: string, message: Message) => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conversationId) return c;
+          return {
+            ...c,
+            messages: [...c.messages, message],
+            lastMessageTime: new Date().toISOString(),
+          };
+        })
+      );
+    },
+    onTypingStatusChange: (conversationId: string | null, recipient: string | null) => {
+      if (!conversationId || !recipient) {
+        setTypingStatus(null);
+      } else {
+        setTypingStatus({ conversationId, recipient });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error generating message:", error);
+      setTypingStatus(null);
+    },
+  }));
 
   // Get conversations from local storage
   useEffect(() => {
@@ -122,149 +148,58 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Function to start a new conversation
-  const handleNewConversation = async (input: string) => {
-    // Get list of recipients
-    const recipientList = input
-      .split(",")
-      .map((r) => r.trim())
-      .filter((r) => r.length > 0);
-    if (recipientList.length === 0) return;
-
-    // Create new conversation object
-    const now = new Date();
-    const newConversation: Conversation = {
-      id: uuidv4(),
-      recipients: recipientList.map((name) => ({
+  // Handle sending a message
+  const handleSendMessage = (message: string, conversationId?: string) => {
+    if (!conversationId) {
+      // Handle new conversation
+      const newConversation: Conversation = {
         id: uuidv4(),
-        name,
-      })),
-      messages: [],
-      lastMessageTime: now.toISOString(),
-    };
+        recipients: recipientInput
+          .split(",")
+          .map((r) => r.trim())
+          .filter((r) => r.length > 0)
+          .map((name) => ({
+            id: uuidv4(),
+            name,
+          })),
+        messages: [],
+        lastMessageTime: new Date().toISOString(),
+      };
 
-    try {
-      // Add new conversation to conversations state
-      await new Promise<void>((resolve) => {
-        setConversations((prevConversations) => {
-          const newState = [newConversation, ...prevConversations];
-          resolve();
-          return newState;
-        });
-      });
-
-      // Set active conversation
-      setActiveConversation(newConversation.id);
-      setIsNewConversation(false);
-
-      // Generate first message using the new conversation object directly
-      await generateNextMessage(newConversation, true);
-    } catch (error) {
-      console.error("Error sending first message:", error);
-    }
-  };
-
-  const generateNextMessage = async (
-    conversation: Conversation,
-    isFirstMessage: boolean
-  ) => {
-    try {
-      // Count consecutive AI messages from the end
-      let consecutiveAiMessages = 0;
-      for (let i = conversation.messages.length - 1; i >= 0; i--) {
-        if (conversation.messages[i].sender !== "me") {
-          consecutiveAiMessages++;
-        } else {
-          break;
-        }
-      }
-
-      // Check if we've reached the message limit
-      if (consecutiveAiMessages >= 5) {
-        return;
-      }
-
-      // Determine if this should be the wrap-up message
-      const shouldWrapUp = consecutiveAiMessages === 4;
-
-      // Make API request
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients: conversation.recipients,
-          messages: conversation.messages,
-          shouldWrapUp,
-          isFirstMessage,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-
-      setTypingStatus({
-        conversationId: conversation.id,
-        recipient: data.sender,
-      });
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-
-      const newMessage: Message = {
+      // Add user message
+      const userMessage: Message = {
         id: uuidv4(),
-        content: data.content,
-        sender: data.sender,
+        content: message,
+        sender: "me",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
 
-      // Update conversation state
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id !== conversation.id) return c;
-          return {
-            ...c,
-            messages: [...c.messages, newMessage],
-            lastMessageTime: new Date().toISOString(),
-          };
-        })
-      );
+      const conversationWithMessage = {
+        ...newConversation,
+        messages: [userMessage],
+      };
 
-      setTypingStatus(null);
+      setConversations((prev) => [conversationWithMessage, ...prev]);
+      setActiveConversation(newConversation.id);
+      setIsNewConversation(false);
+      window.history.pushState({}, "", `?id=${newConversation.id}`);
 
-      // Continue conversation if not at limit
-      if (!shouldWrapUp) {
-        const updatedConversation = {
-          ...conversation,
-          messages: [...conversation.messages, newMessage],
-        };
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await generateNextMessage(updatedConversation, false);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setTypingStatus(null);
-    }
-  };
-
-  // Function to handle user message
-  const handleSendMessage = async (content: string) => {
-    // Validate input
-    if (!activeConversation || !content.trim()) {
+      // Queue first AI message
+      messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
       return;
     }
 
-    // Get conversation
-    const conversation = conversations.find((c) => c.id === activeConversation);
-    if (!conversation) {
-      console.error("Conversation not found:", activeConversation);
-      return;
-    }
+    // Handle existing conversation
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
 
-    // Create new message
-    const newMessage: Message = {
+    // Add user message
+    const userMessage: Message = {
       id: uuidv4(),
-      content: content.trim(),
+      content: message,
       sender: "me",
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -272,20 +207,19 @@ export default function App() {
       }),
     };
 
-    // Add the user's message and update lastMessageTime
+    // Update conversation with user message
     const updatedConversation = {
       ...conversation,
-      messages: [...conversation.messages, newMessage],
+      messages: [...conversation.messages, userMessage],
       lastMessageTime: new Date().toISOString(),
     };
 
-    // Update state with user's message
     setConversations((prev) =>
-      prev.map((c) => (c.id === activeConversation ? updatedConversation : c))
+      prev.map((c) => (c.id === conversationId ? updatedConversation : c))
     );
 
-    // Then start a new generation chain with the updated conversation
-    await generateNextMessage(updatedConversation, false);
+    // Queue user message response
+    messageQueue.current.enqueueUserMessage(updatedConversation);
   };
 
   // Don't render until layout is initialized
@@ -329,7 +263,6 @@ export default function App() {
         >
           <ChatArea
             isNewChat={isNewConversation}
-            onNewConversation={handleNewConversation}
             activeConversation={conversations.find(
               (c) => c.id === activeConversation
             )}
