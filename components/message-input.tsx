@@ -99,12 +99,10 @@ export function MessageInput({
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleMessageSend();
               if (isMobileView) {
-                setTimeout(() => {
-                  e.currentTarget.blur();
-                }, 100);
+                (document.activeElement as HTMLElement)?.blur();
               }
+              handleSend();
             } else if (e.key === 'Escape') {
               e.currentTarget.blur();
             }
