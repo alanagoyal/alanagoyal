@@ -12,6 +12,7 @@ interface MessageInputProps {
   disabled?: boolean;
   inputRef?: React.RefObject<HTMLInputElement>;
   recipients: Recipient[];
+  isMobileView?: boolean;
 }
 
 export function MessageInput({ 
@@ -20,7 +21,8 @@ export function MessageInput({
   handleSend,
   disabled = false,
   inputRef,
-  recipients
+  recipients,
+  isMobileView = false
 }: MessageInputProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -39,9 +41,20 @@ export function MessageInput({
       }
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showEmojiPicker) {
+        setShowEmojiPicker(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleEscape);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showEmojiPicker]);
 
   // Helper function to get input styles
   const getInputStyles = () => {
@@ -75,7 +88,6 @@ export function MessageInput({
               e.preventDefault();
               handleSend();
             } else if (e.key === 'Escape') {
-              setShowEmojiPicker(false);
               e.currentTarget.blur();
             }
           }}
@@ -87,12 +99,14 @@ export function MessageInput({
         <button
           ref={buttonRef}
           type="button"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => !isMobileView && setShowEmojiPicker(!showEmojiPicker)}
+          className={`text-muted-foreground transition-colors ${
+            isMobileView ? 'hidden' : 'hover:text-foreground'
+          }`}
         >
           <Smile className="h-6 w-6" />
         </button>
-        {showEmojiPicker && (
+        {showEmojiPicker && !isMobileView && (
           <div ref={pickerRef} className="absolute bottom-full right-0 mb-2">
             <Picker
               data={data}

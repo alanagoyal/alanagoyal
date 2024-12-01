@@ -86,6 +86,7 @@ export function ChatArea({
             inputRef={messageInputRef}
             disabled={!activeConversation && !isNewChat}
             recipients={conversationRecipients}
+            isMobileView={isMobileView}
           />
         </div>
       </div>
