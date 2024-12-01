@@ -151,12 +151,12 @@ export function ChatHeader({
                       setShowResults(true);
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type to search tech personalities..."
+                    placeholder="Type to find recipients..."
                     className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
                     autoFocus
                   />
                   {showResults && searchValue && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50">
+                    <div className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50">
                       {filteredPeople.length > 0 ? (
                         filteredPeople.map((person, index) => (
                           <div
@@ -175,7 +175,7 @@ export function ChatHeader({
                           </div>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-gray-500">No results found</div>
+                        <div className="px-4 py-2 text-sm text-gray-500">No results found</div>
                       )}
                     </div>
                   )}
