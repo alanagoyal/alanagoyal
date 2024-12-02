@@ -26,6 +26,7 @@ export function ChatHeader({
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredPeople = techPersonalities.filter((person) =>
     person.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -46,6 +47,13 @@ export function ChatHeader({
   // Reset selected index when search value changes
   useEffect(() => {
     setSelectedIndex(-1);
+  }, [searchValue]);
+
+  // Add effect to handle focus when searchValue changes
+  useEffect(() => {
+    if (searchValue === '') {
+      inputRef.current?.focus();
+    }
   }, [searchValue]);
 
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
@@ -144,6 +152,7 @@ export function ChatHeader({
                 {renderRecipients()}
                 <div ref={searchRef} className="relative flex-1">
                   <input
+                    ref={inputRef}
                     type="text"
                     value={searchValue}
                     onChange={(e) => {
