@@ -32,11 +32,18 @@ export function ChatArea({
   const showRecipientInput = isNewChat && !activeConversation;
 
   useEffect(() => {
-    // Focus input when conversation becomes active
-    if (activeConversation && messageInputRef.current) {
+    // Focus input when conversation becomes active, but only on desktop
+    if (activeConversation && messageInputRef.current && !isMobileView) {
       messageInputRef.current.focus();
     }
-  }, [activeConversation]);
+  }, [activeConversation, isMobileView]);
+
+  useEffect(() => {
+    if ("virtualKeyboard" in navigator) {
+      // @ts-expect-error VirtualKeyboard API is not yet in TypeScript types
+      navigator.virtualKeyboard.overlaysContent = true;
+    }
+  }, []);
 
   const handleSend = () => {
     if (!message.trim()) return;
@@ -60,8 +67,8 @@ export function ChatArea({
   const conversationRecipients = activeConversation?.recipients || [];
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="sticky top-0 z-10">
+    <div className="h-dvh flex flex-col">
+      <div className="sticky top-0 z-20 bg-background">
         <ChatHeader
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
@@ -71,24 +78,26 @@ export function ChatArea({
           activeConversation={activeConversation}
         />
       </div>
-      <div className="flex-1 flex flex-col min-h-0 relative">
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
           typingStatus={typingStatus}
           conversationId={conversationId}
         />
-        <div className="sticky bottom-0 bg-background">
-          <MessageInput
-            message={message}
-            setMessage={setMessage}
-            handleSend={handleSend}
-            inputRef={messageInputRef}
-            disabled={!activeConversation && !isNewChat}
-            recipients={conversationRecipients}
-            isMobileView={isMobileView}
-          />
-        </div>
+      </div>
+      <div className="sticky bottom-0 bg-background z-20" style={{
+        marginBottom: 'env(keyboard-inset-height, 0px)'
+      }}>
+        <MessageInput
+          message={message}
+          setMessage={setMessage}
+          handleSend={handleSend}
+          inputRef={messageInputRef}
+          disabled={!activeConversation && !isNewChat}
+          recipients={conversationRecipients}
+          isMobileView={isMobileView}
+        />
       </div>
     </div>
   );

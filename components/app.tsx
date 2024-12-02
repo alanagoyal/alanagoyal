@@ -138,6 +138,21 @@ export default function App() {
     }
   }, [activeConversation]);
 
+  // Clear unread count when conversation becomes active
+  useEffect(() => {
+    if (activeConversation) {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== activeConversation) return c;
+          return {
+            ...c,
+            unreadCount: 0
+          };
+        })
+      );
+    }
+  }, [activeConversation]);
+
   // Set mobile view
   useEffect(() => {
     const handleResize = () => {
@@ -149,19 +164,6 @@ export default function App() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Effect to reset unread count when conversation becomes active
-  useEffect(() => {
-    if (activeConversation) {
-      setConversations(prev => 
-        prev.map(c => 
-          c.id === activeConversation 
-            ? { ...c, unreadCount: 0 }
-            : c
-        )
-      );
-    }
-  }, [activeConversation]);
 
   // Handle sending a message
   const handleSendMessage = (message: string, conversationId?: string) => {
@@ -244,7 +246,7 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen w-screen bg-background flex flex-col">
+    <main className="h-dvh w-full bg-background flex flex-col">
       <div className="flex-1 flex h-full">
         <div
           className={`h-full ${isMobileView ? "w-full" : ""} ${
@@ -286,6 +288,15 @@ export default function App() {
             setRecipientInput={setRecipientInput}
             isMobileView={isMobileView}
             onBack={() => {
+              if (activeConversation) {
+                setConversations(prev =>
+                  prev.map(c =>
+                    c.id === activeConversation
+                      ? { ...c, unreadCount: 0 }
+                      : c
+                  )
+                );
+              }
               setActiveConversation(null);
               setIsNewConversation(false);
             }}

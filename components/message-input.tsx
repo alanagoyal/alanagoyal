@@ -1,9 +1,9 @@
 import { Recipient } from "@/types";
-import { useState, useRef, useEffect } from 'react';
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
-import { Smile } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useState, useRef, useEffect } from "react";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import { Smile } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface MessageInputProps {
   message: string;
@@ -15,14 +15,14 @@ interface MessageInputProps {
   isMobileView?: boolean;
 }
 
-export function MessageInput({ 
-  message, 
-  setMessage, 
+export function MessageInput({
+  message,
+  setMessage,
   handleSend,
   disabled = false,
   inputRef,
   recipients,
-  isMobileView = false
+  isMobileView = false,
 }: MessageInputProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -32,8 +32,8 @@ export function MessageInput({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        pickerRef.current && 
-        buttonRef.current && 
+        pickerRef.current &&
+        buttonRef.current &&
         !pickerRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
       ) {
@@ -42,17 +42,17 @@ export function MessageInput({
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showEmojiPicker) {
+      if (event.key === "Escape" && showEmojiPicker) {
         setShowEmojiPicker(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-    
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [showEmojiPicker]);
 
@@ -61,17 +61,17 @@ export function MessageInput({
     const currentMention = message.match(/@(\w+)$/);
     if (currentMention) {
       const mention = currentMention[1];
-      const isValidRecipient = recipients.some(
-        recipient => recipient.name.toLowerCase().startsWith(mention.toLowerCase())
+      const isValidRecipient = recipients.some((recipient) =>
+        recipient.name.toLowerCase().startsWith(mention.toLowerCase())
       );
       return {
-        color: isValidRecipient ? '#0A7CFF' : '#6b7280',
-        fontWeight: isValidRecipient ? '500' : 'normal'
+        color: isValidRecipient ? "#0A7CFF" : "#6b7280",
+        fontWeight: isValidRecipient ? "500" : "normal",
       };
     }
     return {
-      color: 'currentColor',
-      fontWeight: 'normal'
+      color: "currentColor",
+      fontWeight: "normal",
     };
   };
 
@@ -84,14 +84,18 @@ export function MessageInput({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
+              if (isMobileView) {
+                e.currentTarget.blur();
+              }
               handleSend();
-            } else if (e.key === 'Escape') {
+            } else if (e.key === "Escape") {
               e.currentTarget.blur();
             }
           }}
           placeholder="Type a message..."
+          enterKeyHint="send"
           className="w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"
           style={getInputStyles()}
           disabled={disabled}
@@ -101,7 +105,7 @@ export function MessageInput({
           type="button"
           onClick={() => !isMobileView && setShowEmojiPicker(!showEmojiPicker)}
           className={`text-muted-foreground transition-colors ${
-            isMobileView ? 'hidden' : 'hover:text-foreground'
+            isMobileView ? "hidden" : "hover:text-foreground"
           }`}
         >
           <Smile className="h-6 w-6" />
@@ -114,7 +118,7 @@ export function MessageInput({
                 setMessage(message + emoji.native);
                 setShowEmojiPicker(false);
               }}
-              theme={theme === 'dark' ? 'dark' : 'light'}
+              theme={theme === "dark" ? "dark" : "light"}
               previewPosition="none"
             />
           </div>

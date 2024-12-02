@@ -26,6 +26,7 @@ export function ChatHeader({
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredPeople = techPersonalities.filter((person) =>
     person.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -48,6 +49,13 @@ export function ChatHeader({
     setSelectedIndex(-1);
   }, [searchValue]);
 
+  // Add effect to handle focus when searchValue changes
+  useEffect(() => {
+    if (searchValue === '') {
+      inputRef.current?.focus();
+    }
+  }, [searchValue]);
+
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
     const newValue = recipientInput 
       ? recipientInput.split(',').filter(r => r.trim()).concat(person.name).join(',')
@@ -59,6 +67,16 @@ export function ChatHeader({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !searchValue) {
+      e.preventDefault();
+      const recipients = recipientInput.split(',').filter(r => r.trim());
+      if (recipients.length > 0) {
+        const newRecipients = recipients.slice(0, -1).join(',');
+        setRecipientInput(newRecipients + (newRecipients ? ',' : ''));
+      }
+      return;
+    }
+
     if (!showResults || !searchValue) return;
 
     switch (e.key) {
@@ -144,6 +162,7 @@ export function ChatHeader({
                 {renderRecipients()}
                 <div ref={searchRef} className="relative flex-1">
                   <input
+                    ref={inputRef}
                     type="text"
                     value={searchValue}
                     onChange={(e) => {
