@@ -76,24 +76,30 @@ export function MessageInput({
   };
 
   return (
-    <div className="px-4 py-2 bg-background">
+    <div className="p-4 bg-background">
       <div className="flex gap-2 items-center relative">
         <input
           ref={inputRef}
           type="text"
           value={message}
-          enterKeyHint="send"
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
+            console.log('KeyDown event:', e.key, 'isMobileView:', isMobileView);
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               if (isMobileView) {
-                (document.activeElement as HTMLElement)?.blur();
+                e.currentTarget.blur();
               }
               handleSend();
             } else if (e.key === 'Escape') {
               e.currentTarget.blur();
             }
+          }}
+          onBlur={() => {
+            console.log('Input blur event fired');
+          }}
+          onFocus={() => {
+            console.log('Input focus event fired');
           }}
           placeholder="Type a message..."
           className="w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"

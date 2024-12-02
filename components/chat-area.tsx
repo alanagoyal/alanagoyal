@@ -32,11 +32,11 @@ export function ChatArea({
   const showRecipientInput = isNewChat && !activeConversation;
 
   useEffect(() => {
-    // Focus input when conversation becomes active
-    if (activeConversation && messageInputRef.current) {
+    // Focus input when conversation becomes active, but only on desktop
+    if (activeConversation && messageInputRef.current && !isMobileView) {
       messageInputRef.current.focus();
     }
-  }, [activeConversation]);
+  }, [activeConversation, isMobileView]);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
