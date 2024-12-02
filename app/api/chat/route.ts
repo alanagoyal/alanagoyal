@@ -10,7 +10,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage } = body;
+  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } = body;
 
   const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
   const availableParticipants = recipients.filter(
@@ -34,8 +34,14 @@ export async function POST(req: Request) {
   });
 
   const prompt = `
+    ${isOneOnOne ? `
+    You are having a one-on-one conversation with a human user "me".
+    You are ${recipients[0].name}. Respond naturally as yourself.
+    ` : `
     You are participating in a group chat conversation between a human "me" and other participants: ${recipients.map((r: Recipient) => r.name).join(", ")}.
     Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}.
+    `}
+    
     The message should be natural, contextually appropriate, and reflect the style and tone of the person speaking.
     
     IMPORTANT: 
@@ -44,10 +50,17 @@ export async function POST(req: Request) {
       "sender": "name_of_participant",
       "content": "their_message"
     }
-    2. The "sender" MUST be one of these names: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}
+    2. ${isOneOnOne 
+      ? `The "sender" MUST be "${recipients[0].name}"`
+      : `The "sender" MUST be one of these names: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}`}
     3. Do NOT use "me" as a sender name
     
     Guidelines:
+    ${isOneOnOne ? `
+    1. Generate only ONE message in response to the user.
+    2. Keep responses personal and directed to the user.
+    3. Maintain a natural conversation flow.
+    ` : `
     1. Generate only ONE message.
     2. Choose an appropriate next speaker from the available participants list, preferring those who haven't spoken recently.
     3. If the last message was from "me" (the user), carefully check if the message was directed at a specific participant:
@@ -69,7 +82,8 @@ export async function POST(req: Request) {
     16. This should be the last message in the conversation, so wrap up naturally without asking questions.` : ""}
     ${isFirstMessage ? `
     16. As this is the first message, warmly initiate the conversation with a friendly and engaging tone.
-    17. Pose a question or make a statement that encourages response from the group.` : ""}`;
+    17. Pose a question or make a statement that encourages response from the group.` : ""}`}
+  `;
 
   return await logger.traced(
     async () => {
@@ -152,7 +166,8 @@ export async function POST(req: Request) {
           recipients,
           messages,
           shouldWrapUp,
-          isFirstMessage
+          isFirstMessage,
+          isOneOnOne
         },
       },
     }
