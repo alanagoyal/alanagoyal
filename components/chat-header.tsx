@@ -67,6 +67,16 @@ export function ChatHeader({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !searchValue) {
+      e.preventDefault();
+      const recipients = recipientInput.split(',').filter(r => r.trim());
+      if (recipients.length > 0) {
+        const newRecipients = recipients.slice(0, -1).join(',');
+        setRecipientInput(newRecipients + (newRecipients ? ',' : ''));
+      }
+      return;
+    }
+
     if (!showResults || !searchValue) return;
 
     switch (e.key) {
