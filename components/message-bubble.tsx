@@ -15,7 +15,7 @@ export function MessageBubble({
   conversation,
   isTyping,
 }: MessageBubbleProps) {
-  const showRecipientName = conversation && conversation.recipients.length >= 2 && message.sender !== "me";
+  const showRecipientName = message.sender !== "me";
   const recipientName = showRecipientName 
     ? message.sender
     : null;

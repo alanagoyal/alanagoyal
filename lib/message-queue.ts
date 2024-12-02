@@ -140,9 +140,9 @@ export class MessageQueue {
         body: JSON.stringify({
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
-          shouldWrapUp:
-            task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
+          shouldWrapUp: task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
           isFirstMessage: task.isFirstMessage,
+          isOneOnOne: task.conversation.recipients.length === 1,
         }),
         signal: task.abortController.signal,
       });
@@ -181,7 +181,7 @@ export class MessageQueue {
       // Clear typing status
       this.callbacks.onTypingStatusChange(null, null);
 
-      // Queue next AI message if we haven't hit the limit
+      // Modify the AI message queueing logic
       if (task.consecutiveAiMessages < MAX_CONSECUTIVE_AI_MESSAGES - 1) {
         const updatedConversation = {
           ...task.conversation,
@@ -192,32 +192,30 @@ export class MessageQueue {
         await new Promise((resolve) => setTimeout(resolve, 750));
 
         if (!task.abortController.signal.aborted) {
-          // Only queue next AI message if:
-          // 1. This was a user message (task.priority === 100), or
-          // 2. We want to allow the other AI personality to respond
-          const lastAiSender = data.sender;
-          const otherRecipients = task.conversation.recipients.filter(
-            (r) => r !== lastAiSender
-          );
+          // Only queue next AI message in group chats
+          if (task.conversation.recipients.length > 1) {
+            const lastAiSender = data.sender;
+            const otherRecipients = task.conversation.recipients.filter(
+              (r) => r !== lastAiSender
+            );
 
-          // Check if the last message contains a question
-          const lastMessageContent = data.content.toLowerCase();
-          const hasQuestion = lastMessageContent.includes("?") || 
-            /\b(what|who|when|where|why|how|which|whose|whom)\b/i.test(lastMessageContent);
+            const lastMessageContent = data.content.toLowerCase();
+            const hasQuestion = lastMessageContent.includes("?") || 
+              /\b(what|who|when|where|why|how|which|whose|whom)\b/i.test(lastMessageContent);
 
-          if (
-            task.priority === 100 ||
-            (otherRecipients.length > 0 && (hasQuestion || Math.random() > 0.25))
-          ) {
-            // If this was an AI message, ensure the next message comes from a different AI
-            const updatedConversationWithNextSender = {
-              ...updatedConversation,
-              recipients:
-                task.priority === 100
-                  ? task.conversation.recipients
-                  : otherRecipients,
-            };
-            this.enqueueAIMessage(updatedConversationWithNextSender);
+            if (
+              task.priority === 100 ||
+              (otherRecipients.length > 0 && (hasQuestion || Math.random() > 0.25))
+            ) {
+              const updatedConversationWithNextSender = {
+                ...updatedConversation,
+                recipients:
+                  task.priority === 100
+                    ? task.conversation.recipients
+                    : otherRecipients,
+              };
+              this.enqueueAIMessage(updatedConversationWithNextSender);
+            }
           }
         }
       }
