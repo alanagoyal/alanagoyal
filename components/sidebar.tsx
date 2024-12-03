@@ -163,7 +163,9 @@ export function Sidebar({
                           ? 'text-white/80' 
                           : 'text-muted-foreground'
                       }`}>
-                        {conversation.messages[conversation.messages.length - 1].content}
+                        {conversation.messages
+                          .filter(message => message.sender !== 'system')
+                          .slice(-1)[0]?.content || ''}
                       </p>
                     )}
                   </div>
