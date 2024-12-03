@@ -11,6 +11,7 @@ interface ChatHeaderProps {
   onBack?: () => void;
   isMobileView?: boolean;
   activeConversation?: Conversation;
+  onUpdateRecipients?: (recipientNames: string[]) => void;
 }
 
 export function ChatHeader({
@@ -20,11 +21,13 @@ export function ChatHeader({
   onBack,
   isMobileView,
   activeConversation,
+  onUpdateRecipients,
 }: ChatHeaderProps) {
 
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isEditMode, setIsEditMode] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -34,15 +37,28 @@ export function ChatHeader({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click was on a close button
+      const isCloseButton = (event.target as Element).closest('button[aria-label^="Remove"]');
+      
+      if (isCloseButton) {
+        return;
+      }
+
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
         setSelectedIndex(-1);
+        if (isEditMode) {
+          setIsEditMode(false);
+          const recipientNames = recipientInput.split(',').filter(r => r.trim());
+          onUpdateRecipients?.(recipientNames);
+          setRecipientInput('');
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isEditMode, recipientInput, onUpdateRecipients]);
 
   // Reset selected index when search value changes
   useEffect(() => {
@@ -56,6 +72,12 @@ export function ChatHeader({
     }
   }, [searchValue]);
 
+  useEffect(() => {
+    if (!isNewChat && !isEditMode) {
+      setRecipientInput('');
+    }
+  }, [isNewChat, isEditMode]);
+
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
     const newValue = recipientInput 
       ? recipientInput.split(',').filter(r => r.trim()).concat(person.name).join(',')
@@ -67,6 +89,9 @@ export function ChatHeader({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevent sidebar navigation when dropdown is active
+    e.stopPropagation();
+
     if (e.key === 'Backspace' && !searchValue) {
       e.preventDefault();
       const recipients = recipientInput.split(',').filter(r => r.trim());
@@ -100,6 +125,14 @@ export function ChatHeader({
         setShowResults(false);
         setSelectedIndex(-1);
         break;
+    }
+  };
+
+  const handleHeaderClick = () => {
+    if (!isNewChat && !isEditMode) {
+      setIsEditMode(true);
+      const recipients = activeConversation?.recipients.map(r => r.name).join(',') || '';
+      setRecipientInput(recipients + ',');
     }
   };
 
@@ -141,18 +174,28 @@ export function ChatHeader({
   };
 
   return (
-    <div className="h-auto flex items-center justify-between p-4 sm:px-4 sm:py-2 border-b dark:border-foreground/20 bg-muted">
+    <div 
+      className="h-auto flex items-center justify-between p-4 sm:px-4 sm:py-2 border-b dark:border-foreground/20 bg-muted cursor-pointer"
+      onClick={() => {
+        if (!isNewChat && !isEditMode) {
+          setIsEditMode(true);
+          const recipients = activeConversation?.recipients.map(r => r.name).join(',') || '';
+          setRecipientInput(recipients + ',');
+        }
+      }}
+      data-chat-header="true"
+    >
       <div className="flex items-center gap-2 flex-1">
         {isMobileView && (
           <button
             onClick={onBack}
-            className="hover:bg-background rounded-sm"
+            className="rounded-sm"
             aria-label="Back to conversations"
           >
             <Icons.back />
           </button>
         )}
-        {isNewChat ? (
+        {isNewChat || isEditMode ? (
           <div className="flex-1">
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-base sm:text-sm font-medium text-muted-foreground">
@@ -160,7 +203,7 @@ export function ChatHeader({
               </span>
               <div className="flex flex-wrap gap-1 flex-1 items-center">
                 {renderRecipients()}
-                <div ref={searchRef} className="relative flex-1">
+                <div ref={searchRef} className="relative flex-1" data-chat-header="true">
                   <input
                     ref={inputRef}
                     type="text"
@@ -173,14 +216,18 @@ export function ChatHeader({
                     placeholder="Type to find recipients..."
                     className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
                     autoFocus
+                    data-chat-header="true"
                   />
                   {showResults && searchValue && (
-                    <div className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50">
+                    <div 
+                      className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
+                      data-chat-header-dropdown="true"
+                    >
                       {filteredPeople.length > 0 ? (
                         filteredPeople.map((person, index) => (
                           <div
                             key={person.name}
-                            className={`px-4 py-2 cursor-pointer ${
+                            className={`px-4 py-2 ${
                               selectedIndex === index 
                                 ? "bg-[#0A7CFF]" 
                                 : ""
@@ -203,7 +250,11 @@ export function ChatHeader({
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2" 
+            onClick={handleHeaderClick}
+            data-chat-header="true"
+          >
             <span className="text-sm font-medium text-muted-foreground">
               {activeConversation?.recipients.map(r => r.name).join(', ')}
             </span>

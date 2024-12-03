@@ -51,10 +51,12 @@ export function Sidebar({
   const filteredConversations = sortedConversations.filter(conversation => {
     if (!searchTerm) return true;
     
-    // Search in messages content
-    const hasMatchInMessages = conversation.messages.some(message =>
-      message.content.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Search in non-system messages content only
+    const hasMatchInMessages = conversation.messages
+      .filter(message => message.sender !== 'system')
+      .some(message =>
+        message.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     
     // Search in recipient names
     const hasMatchInNames = conversation.recipients.some(recipient =>
@@ -67,6 +69,14 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if the active element is within a chat header input or dropdown
+      const activeElement = document.activeElement;
+      const isChatHeaderActive = activeElement?.closest('[data-chat-header="true"]') !== null;
+      
+      if (isChatHeaderActive) {
+        return;
+      }
+
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
         return;
       }
@@ -155,7 +165,9 @@ export function Sidebar({
                           ? 'text-white/80' 
                           : 'text-muted-foreground'
                       }`}>
-                        {conversation.messages[conversation.messages.length - 1].content}
+                        {conversation.messages
+                          .filter(message => message.sender !== 'system')
+                          .slice(-1)[0]?.content || ''}
                       </p>
                     )}
                   </div>

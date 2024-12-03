@@ -84,6 +84,71 @@ export default function App() {
     );
   };
 
+  // Method to update conversation recipients
+  const updateConversationRecipients = (
+    conversationId: string, 
+    recipientNames: string[]
+  ) => {
+    setConversations(prev => {
+      const currentConversation = prev.find(conv => conv.id === conversationId);
+      if (!currentConversation) return prev;
+
+      // Find added and removed recipients
+      const currentNames = currentConversation.recipients.map(r => r.name);
+      const added = recipientNames.filter(name => !currentNames.includes(name));
+      const removed = currentNames.filter(name => !recipientNames.includes(name));
+
+      // Create system messages (one for each change)
+      const systemMessages: Message[] = [];
+      
+      // Format timestamp
+      const timestamp = new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      removed.forEach(name => {
+        systemMessages.push({
+          id: uuidv4(),
+          content: `${timestamp}\n${name} was removed from the conversation`,
+          sender: "system",
+          timestamp
+        });
+      });
+
+      added.forEach(name => {
+        systemMessages.push({
+          id: uuidv4(),
+          content: `${timestamp}\n${name} was added to the conversation`,
+          sender: "system",
+          timestamp
+        });
+      });
+
+      // Find the recipient IDs for the given names
+      const newRecipients = recipientNames.map(name => {
+        const existingRecipient = currentConversation.recipients.find(r => r.name === name);
+        return existingRecipient || {
+          id: uuidv4(),
+          name: name,
+        };
+      });
+
+      return prev.map(conversation => 
+        conversation.id === conversationId
+          ? {
+              ...conversation,
+              recipients: newRecipients,
+              messages: [...conversation.messages, ...systemMessages],
+            }
+          : conversation
+      );
+    });
+  };
+
   // Get conversations from local storage
   useEffect(() => {
     const saved = localStorage.getItem("dialogueConversations");
@@ -446,6 +511,7 @@ export default function App() {
             onSendMessage={handleSendMessage}
             typingStatus={typingStatus}
             conversationId={activeConversation}
+            onUpdateConversationRecipients={updateConversationRecipients}
           />
         </div>
       </div>
