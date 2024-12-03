@@ -67,6 +67,14 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if the active element is within a chat header input or dropdown
+      const activeElement = document.activeElement;
+      const isChatHeaderActive = activeElement?.closest('[data-chat-header="true"]') !== null;
+      
+      if (isChatHeaderActive) {
+        return;
+      }
+
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
         return;
       }

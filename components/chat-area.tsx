@@ -14,6 +14,7 @@ interface ChatAreaProps {
   onSendMessage: (message: string, conversationId?: string) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
+  onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
 }
 
 export function ChatArea({
@@ -26,6 +27,7 @@ export function ChatArea({
   onSendMessage,
   typingStatus,
   conversationId,
+  onUpdateConversationRecipients,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +78,11 @@ export function ChatArea({
           isMobileView={isMobileView}
           onBack={onBack}
           activeConversation={activeConversation}
+          onUpdateRecipients={(recipientNames) => {
+            if (activeConversation) {
+              onUpdateConversationRecipients?.(activeConversation.id, recipientNames);
+            }
+          }}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">

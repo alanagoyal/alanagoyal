@@ -15,10 +15,9 @@ export function MessageBubble({
   conversation,
   isTyping,
 }: MessageBubbleProps) {
-  const showRecipientName = message.sender !== "me";
-  const recipientName = showRecipientName 
-    ? message.sender
-    : null;
+  const isSystemMessage = message.sender === "system";
+  const showRecipientName = message.sender !== "me" && !isSystemMessage;
+  const recipientName = showRecipientName ? message.sender : null;
 
   const highlightRecipientNames = (content: string, recipients: Conversation['recipients']) => {
     if (!recipients) return content;
@@ -48,7 +47,11 @@ export function MessageBubble({
     <div
       className={cn(
         "flex w-full mb-2 flex-col",
-        message.sender === "me" ? "items-end" : "items-start"
+        isSystemMessage 
+          ? "items-center" 
+          : message.sender === "me" 
+            ? "items-end" 
+            : "items-start"
       )}
     >
       {recipientName && (
@@ -57,14 +60,19 @@ export function MessageBubble({
       <div
         className={cn(
           "rounded-[20px] px-4 py-2 max-w-[80%]",
-          message.sender === "me"
-            ? "bg-[#0A7CFF] text-white"
-            : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
+          isSystemMessage
+            ? "text-xs text-muted-foreground"
+            : message.sender === "me"
+              ? "bg-[#0A7CFF] text-white"
+              : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
           isTyping && "min-h-[32px] min-w-[60px]"
         )}
       >
         <div className="flex flex-col">
-          <div className="text-sm">
+          <div className={cn(
+            "text-sm",
+            isSystemMessage && "text-center text-xs whitespace-pre-line"
+          )}>
             {isTyping ? (
               <span className="typing-indicator">
                 <span className="dot">•</span>
@@ -72,7 +80,9 @@ export function MessageBubble({
                 <span className="dot">•</span>
               </span>
             ) : (
-              highlightRecipientNames(message.content, conversation?.recipients || [])
+              isSystemMessage 
+                ? message.content
+                : highlightRecipientNames(message.content, conversation?.recipients || [])
             )}
           </div>
         </div>
