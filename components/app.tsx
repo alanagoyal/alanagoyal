@@ -102,7 +102,7 @@ export default function App() {
         
         // Validate parsed conversations
         if (!Array.isArray(parsedConversations)) {
-          console.error("❌ Saved conversations is not an array:", parsedConversations);
+          console.error("Saved conversations is not an array:", parsedConversations);
           allConversations = [...initialConversations];
         } else {
           allConversations = parsedConversations;
@@ -116,7 +116,7 @@ export default function App() {
           }
         }
       } catch (e) {
-        console.error("❌ Error parsing saved conversations:", e);
+        console.error("Error parsing saved conversations:", e);
         allConversations = [...initialConversations];
       }
     }
