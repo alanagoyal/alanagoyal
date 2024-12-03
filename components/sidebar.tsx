@@ -51,10 +51,12 @@ export function Sidebar({
   const filteredConversations = sortedConversations.filter(conversation => {
     if (!searchTerm) return true;
     
-    // Search in messages content
-    const hasMatchInMessages = conversation.messages.some(message =>
-      message.content.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Search in non-system messages content only
+    const hasMatchInMessages = conversation.messages
+      .filter(message => message.sender !== 'system')
+      .some(message =>
+        message.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     
     // Search in recipient names
     const hasMatchInNames = conversation.recipients.some(recipient =>
