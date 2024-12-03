@@ -45,22 +45,17 @@ export default function App() {
     message: Message, 
     isAIMessage: boolean = false
   ) => {
-    console.log("📬 Incoming message:", {
-      conversationId, 
-      isAIMessage,
-      activeConversation,
-      sender: message.sender
-    });
-
     // Update conversations with new message
     setConversations(prev => 
       prev.map(conversation => {
         if (conversation.id !== conversationId) return conversation;
 
         // Determine if the message should increment unread count
+        // For AI messages, only increment if it's not the active conversation
+        // For non-AI messages, increment if not from the user and not in active conversation
         const shouldIncrementUnread = 
           conversationId !== activeConversation && 
-          message.sender !== "me" &&
+          (isAIMessage || message.sender !== "me") &&
           // Ensure we don't increment for messages already in the conversation
           !conversation.messages.some(m => m.id === message.id);
 
@@ -80,8 +75,6 @@ export default function App() {
 
   // Method to reset unread count when conversation is selected
   const resetUnreadCount = (conversationId: string) => {
-    console.log("🔔 Resetting unread count:", conversationId);
-
     setConversations(prev => 
       prev.map(conversation => 
         conversation.id === conversationId
@@ -97,17 +90,11 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const conversationId = urlParams.get("id");
 
-    console.log("🔍 Initializing conversations:", {
-      savedConversations: saved,
-      urlConversationId: conversationId
-    });
-
     let allConversations: Conversation[] = [];
 
     // Start with initial conversations if there are no saved ones
     if (!saved) {
       allConversations = [...initialConversations];
-      console.log("📦 No saved conversations, using initial conversations");
     } else {
       try {
         // Load saved conversations
@@ -126,7 +113,6 @@ export default function App() {
 
           if (missingInitialConvos.length > 0) {
             allConversations = [...allConversations, ...missingInitialConvos];
-            console.log("➕ Added missing initial conversations:", missingInitialConvos.length);
           }
         }
       } catch (e) {
@@ -140,23 +126,13 @@ export default function App() {
       return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
     });
 
-    console.log("📋 Total conversations loaded:", allConversations.length);
-    console.log("📝 Conversation details:", allConversations.map(c => ({
-      id: c.id,
-      recipients: c.recipients.map(r => r.name),
-      messageCount: c.messages.length
-    })));
-
     // Determine the initial active conversation
     const determineActiveConversation = () => {
-      console.log("🔍 Determining active conversation:");
-      
       // Priority 1: URL parameter
       if (
         conversationId &&
         allConversations.some((c: Conversation) => c.id === conversationId)
       ) {
-        console.log("🔗 Using conversation from URL:", conversationId);
         return conversationId;
       }
 
@@ -166,14 +142,12 @@ export default function App() {
         : null;
 
       if (mostRecentConvo) {
-        console.log("🕒 Using most recent conversation:", mostRecentConvo.id);
         window.history.replaceState({}, "", `?id=${mostRecentConvo.id}`);
         return mostRecentConvo.id;
       }
 
       // Priority 3: First conversation if exists
       const fallbackConvo = allConversations.length > 0 ? allConversations[0].id : null;
-      console.log("🚦 Fallback conversation selection:", fallbackConvo);
       return fallbackConvo;
     };
 
@@ -182,16 +156,10 @@ export default function App() {
     // Ensure we always set an active conversation if conversations exist
     if (initialActiveConversation || allConversations.length > 0) {
       const conversationToActivate = initialActiveConversation || allConversations[0].id;
-      
-      console.log("🎯 Setting initial active conversation:", {
-        conversationId: conversationToActivate,
-        conversationExists: !!allConversations.find(c => c.id === conversationToActivate)
-      });
 
       setConversations(allConversations);
       setActiveConversation(conversationToActivate);
     } else {
-      console.warn("⚠️ No conversations available to set as active");
       setConversations([]);
       setActiveConversation(null);
     }
@@ -199,18 +167,10 @@ export default function App() {
 
   // Robust conversation selection method
   const selectConversation = (conversationId: string | null) => {
-    console.log("🔀 Selecting conversation:", conversationId, {
-      currentActiveConversation: activeConversation,
-      isMobileView: isMobileView
-    });
-    
     // In mobile view, if no conversation is selected, return to sidebar
     if (isMobileView && conversationId === null) {
-      console.log("📱 Mobile view: Returning to sidebar");
-      
       // Reset unread count for the previous active conversation
       if (activeConversation) {
-        console.log("🔔 Resetting unread count for previous conversation:", activeConversation);
         setConversations(prev => 
           prev.map(conversation => 
             conversation.id === activeConversation
@@ -228,9 +188,6 @@ export default function App() {
 
     // If there's a currently active conversation, mark it as read
     if (activeConversation) {
-      console.log("📖 Marking previous conversation as read:", activeConversation);
-      
-      // Reset unread count for the previously active conversation
       setConversations(prev => 
         prev.map(conversation => 
           conversation.id === activeConversation
@@ -242,7 +199,6 @@ export default function App() {
 
     // If no conversation ID is provided, handle new conversation state
     if (conversationId === null) {
-      console.log("🆕 Preparing for new conversation");
       setActiveConversation(null);
       setIsNewConversation(true);
       window.history.pushState({}, "", "/");
@@ -254,22 +210,13 @@ export default function App() {
       (conversation) => conversation.id === conversationId
     );
 
-    // Log detailed selection information
-    console.log("🕵️ Conversation selection details:", {
-      requestedId: conversationId,
-      conversationFound: !!selectedConversation,
-      totalConversations: conversations.length,
-      conversationIds: conversations.map(c => c.id)
-    });
-
     // If conversation is not found, handle gracefully
     if (!selectedConversation) {
-      console.warn(`❌ Conversation with ID ${conversationId} not found`);
+      console.error(`Conversation with ID ${conversationId} not found`);
       
       // Fallback to most recent conversation if available
       if (conversations.length > 0) {
         const fallbackConversation = conversations[0];
-        console.log("🚧 Falling back to most recent conversation:", fallbackConversation.id);
         
         // Reset unread count for fallback conversation
         resetUnreadCount(fallbackConversation.id);
@@ -280,7 +227,6 @@ export default function App() {
       }
 
       // If no conversations exist, reset to new conversation state
-      console.warn("⚠️ No conversations available. Resetting to new conversation state.");
       setActiveConversation(null);
       setIsNewConversation(false);
       window.history.pushState({}, "", "/");
@@ -299,17 +245,15 @@ export default function App() {
   // Ensure active conversation remains valid
   useEffect(() => {
     if (activeConversation && !conversations.some(c => c.id === activeConversation)) {
-      console.warn("⚠️ Active conversation no longer exists:", activeConversation);
+      console.error("Active conversation no longer exists:", activeConversation);
       
       // If current active conversation no longer exists
       if (conversations.length > 0) {
         // Select the first conversation
         const newActiveConversation = conversations[0].id;
-        console.log("🔄 Switching to first available conversation:", newActiveConversation);
         selectConversation(newActiveConversation);
       } else {
         // No conversations left
-        console.log("🚫 No conversations available, setting active conversation to null");
         selectConversation(null);
       }
     }
@@ -337,12 +281,6 @@ export default function App() {
 
   // Handle sending a message
   const handleSendMessage = (message: string, conversationId?: string) => {
-    console.log("📨 Sending message:", {
-      message,
-      conversationId,
-      isNewConversation: isNewConversation
-    });
-
     // Validate input
     if (!message.trim()) return;
 
@@ -392,11 +330,6 @@ export default function App() {
       setConversations(prev => {
         const updatedConversations = [conversationWithMessage, ...prev];
         
-        console.log("🆕 Created new conversation:", {
-          conversationId: newConversation.id,
-          recipients: recipients.map(r => r.name)
-        });
-
         // Immediately after state update, set active conversation and reset new conversation state
         setActiveConversation(newConversation.id);
         setIsNewConversation(false);
@@ -418,7 +351,7 @@ export default function App() {
     // Handle existing conversation
     const conversation = conversations.find((c) => c.id === conversationId);
     if (!conversation) {
-      console.warn(`❌ Conversation with ID ${conversationId} not found. Skipping message.`);
+      console.error(`Conversation with ID ${conversationId} not found. Skipping message.`);
       return;
     }
 
@@ -454,11 +387,6 @@ export default function App() {
     });
 
     // Ensure the current conversation is selected
-    console.log("✅ Sending message in existing conversation:", {
-      conversationId,
-      messageContent: message
-    });
-
     setActiveConversation(conversationId);
     setIsNewConversation(false);
     window.history.pushState({}, "", `?id=${conversationId}`);
