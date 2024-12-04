@@ -15,6 +15,8 @@ interface ChatAreaProps {
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
   onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
+  messageDraft?: string;
+  onMessageDraftChange?: (conversationId: string, message: string) => void;
 }
 
 export function ChatArea({
@@ -28,8 +30,9 @@ export function ChatArea({
   typingStatus,
   conversationId,
   onUpdateConversationRecipients,
+  messageDraft = "",
+  onMessageDraftChange,
 }: ChatAreaProps) {
-  const [message, setMessage] = useState("");
   const showRecipientInput = isNewChat && !activeConversation;
 
   useEffect(() => {
@@ -38,25 +41,6 @@ export function ChatArea({
       navigator.virtualKeyboard.overlaysContent = true;
     }
   }, []);
-
-  const handleSend = () => {
-    if (!message.trim()) return;
-    
-    if (activeConversation) {
-      onSendMessage(message, activeConversation.id);
-    } else if (isNewChat) {
-      const recipientList = recipientInput
-        .split(",")
-        .map((r) => r.trim())
-        .filter((r) => r.length > 0);
-      
-      if (recipientList.length === 0) return;
-      
-      // For new conversations, we don't pass a conversationId
-      onSendMessage(message);
-    }
-    setMessage("");
-  };
 
   const conversationRecipients = activeConversation?.recipients || [];
 
@@ -89,13 +73,30 @@ export function ChatArea({
         marginBottom: 'env(keyboard-inset-height, 0px)'
       }}>
         <MessageInput
-          message={message}
-          setMessage={setMessage}
-          handleSend={handleSend}
-          disabled={!activeConversation && !isNewChat}
+          message={messageDraft}
+          setMessage={(msg) => {
+            if (conversationId && onMessageDraftChange) {
+              onMessageDraftChange(conversationId, msg);
+            }
+          }}
+          handleSend={() => {
+            if (!messageDraft.trim()) return;
+            
+            if (activeConversation) {
+              onSendMessage(messageDraft, activeConversation.id);
+            } else if (isNewChat) {
+              const recipientList = recipientInput
+                .split(",")
+                .map((r) => r.trim())
+                .filter((r) => r.length > 0);
+              if (recipientList.length === 0) return;
+              onSendMessage(messageDraft);
+            }
+          }}
+          disabled={showRecipientInput && !recipientInput.trim()}
           recipients={conversationRecipients}
           isMobileView={isMobileView}
-          conversationId={activeConversation?.id}
+          conversationId={conversationId || undefined}
         />
       </div>
     </div>

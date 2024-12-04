@@ -110,11 +110,13 @@ export function MessageInput({
     content: message,
     autofocus: !isMobileView ? 'end' : false,
     onUpdate: ({ editor }) => {
-      setMessage(editor.getText())
+      const content = editor.getHTML();
+      if (content !== message) {
+        setMessage(content);
+      }
     },
     onCreate: ({ editor }) => {
       if (!isMobileView) {
-        console.log('Editor created, attempting focus')
         editor.commands.focus('end')
       }
     },
@@ -174,7 +176,7 @@ export function MessageInput({
   }, [showEmojiPicker, editor]);
 
   useEffect(() => {
-    if (editor && message !== editor.getText()) {
+    if (editor && message !== editor.getHTML()) {
       editor.commands.setContent(message)
     }
   }, [message, editor])
@@ -184,6 +186,12 @@ export function MessageInput({
       console.log('Editor mounted:', editor.isFocused)
     }
   }, [editor])
+
+  useEffect(() => {
+    if (editor) {
+      editor.destroy();
+    }
+  }, [conversationId])
 
   return (
     <div className="p-4 bg-background">

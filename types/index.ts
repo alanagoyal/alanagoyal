@@ -1,8 +1,10 @@
 export interface Message {
   id: string;
   content: string;
+  htmlContent?: string;  // Store the HTML content to preserve mentions
   sender: "me" | "system" | string;
   timestamp: string;
+  mentions?: { id: string; name: string; }[];
 }
 
 export interface Conversation {
