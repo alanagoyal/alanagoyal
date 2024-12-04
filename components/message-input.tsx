@@ -13,9 +13,9 @@ interface MessageInputProps {
   setMessage: (value: string) => void;
   handleSend: () => void;
   disabled?: boolean;
-  inputRef?: React.RefObject<HTMLInputElement>;
   recipients: Recipient[];
   isMobileView?: boolean;
+  conversationId?: string;
 }
 
 export function MessageInput({
@@ -23,9 +23,9 @@ export function MessageInput({
   setMessage,
   handleSend,
   disabled = false,
-  inputRef,
   recipients,
   isMobileView = false,
+  conversationId,
 }: MessageInputProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -98,8 +98,15 @@ export function MessageInput({
       }),
     ],
     content: message,
+    autofocus: !isMobileView ? 'end' : false,
     onUpdate: ({ editor }) => {
       setMessage(editor.getText())
+    },
+    onCreate: ({ editor }) => {
+      if (!isMobileView) {
+        console.log('Editor created, attempting focus')
+        editor.commands.focus('end')
+      }
     },
     editorProps: {
       attributes: {
@@ -118,6 +125,12 @@ export function MessageInput({
   })
 
   useEffect(() => {
+    if (editor && conversationId && !isMobileView) {
+      editor.commands.focus('end');
+    }
+  }, [editor, conversationId, isMobileView]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         pickerRef.current &&
@@ -134,7 +147,9 @@ export function MessageInput({
         if (showEmojiPicker) {
           setShowEmojiPicker(false);
         } else if (editor) {
+          console.log('Attempting to blur editor')
           editor.commands.blur()
+          console.log('Editor focused after blur:', editor.isFocused)
         }
       }
     };
@@ -153,6 +168,12 @@ export function MessageInput({
       editor.commands.setContent(message)
     }
   }, [message, editor])
+
+  useEffect(() => {
+    if (editor) {
+      console.log('Editor mounted:', editor.isFocused)
+    }
+  }, [editor])
 
   return (
     <div className="p-4 bg-background">

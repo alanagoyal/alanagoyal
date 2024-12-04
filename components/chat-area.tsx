@@ -30,15 +30,7 @@ export function ChatArea({
   onUpdateConversationRecipients,
 }: ChatAreaProps) {
   const [message, setMessage] = useState("");
-  const messageInputRef = useRef<HTMLInputElement>(null);
   const showRecipientInput = isNewChat && !activeConversation;
-
-  useEffect(() => {
-    // Focus input when conversation becomes active, but only on desktop
-    if (activeConversation && messageInputRef.current && !isMobileView) {
-      messageInputRef.current.focus();
-    }
-  }, [activeConversation, isMobileView]);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
@@ -100,10 +92,10 @@ export function ChatArea({
           message={message}
           setMessage={setMessage}
           handleSend={handleSend}
-          inputRef={messageInputRef}
           disabled={!activeConversation && !isNewChat}
           recipients={conversationRecipients}
           isMobileView={isMobileView}
+          conversationId={activeConversation?.id}
         />
       </div>
     </div>
