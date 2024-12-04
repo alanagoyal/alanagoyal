@@ -80,7 +80,11 @@ export function MessageInput({
           render: () => {
             let component: {
               element: HTMLElement;
-              update: (props: { items: any[]; query: string; command: Function }) => void;
+              update: (props: { 
+                items: Array<{ id: string; label: string }>;
+                query: string;
+                command: (attrs: { id: string; label: string }) => void;
+              }) => void;
             };
 
             return {
@@ -226,7 +230,7 @@ export function MessageInput({
           >
             <Picker
               data={data}
-              onEmojiSelect={(emoji: any) => {
+              onEmojiSelect={(emoji: { native: string }) => {
                 if (editor) {
                   editor.commands.insertContent(emoji.native)
                 }
