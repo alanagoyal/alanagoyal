@@ -40,17 +40,25 @@ export function MessageInput({
           class: 'mention-node',
           style: 'color: #0A7CFF !important; font-weight: 500 !important;'
         },
-        renderText: ({ node }) => node.attrs.label ?? node.attrs.id,
+        renderText: ({ node }) => {
+          // Try to find the recipient by ID to get their name
+          const recipient = recipients.find(r => r.id === node.attrs.id);
+          return recipient?.name.split(' ')[0] ?? node.attrs.label ?? node.attrs.id;
+        },
         renderHTML: ({ node }) => {
+          // Try to find the recipient by ID to get their name
+          const recipient = recipients.find(r => r.id === node.attrs.id);
+          const label = recipient?.name.split(' ')[0] ?? node.attrs.label ?? node.attrs.id;
           return [
             'span',
             { 
               'data-type': 'mention',
               'data-id': node.attrs.id,
+              'data-label': label,
               class: 'mention-node',
               style: 'color: #0A7CFF !important; font-weight: 500 !important;'
             },
-            node.attrs.label ?? node.attrs.id
+            label
           ]
         },
         suggestion: {
