@@ -62,35 +62,21 @@ export function MessageInput({
           render: () => {
             let component: {
               element: HTMLElement;
-              update: (props: { items: any[]; query: string }) => void;
+              update: (props: { items: any[]; query: string; command: Function }) => void;
             };
 
             return {
-              onStart: (props) => {
-                console.log("🔍 onStart range:", props.range);
+              onStart: () => {
                 component = {
                   element: document.createElement('div'),
-                  update: ({ items, query }) => {
-                    console.log("🔄 update called:", {
-                      items,
-                      query,
-                      range: props.range,
-                      text: props.editor.getText()
-                    });
-                    
-                    if (!query) return;
-                    
-                    const match = items.find(item => 
-                      item.label.toLowerCase() === query.toLowerCase().replace(/^@/, '')
+                  update: (props) => {
+                    if (!props.query) return;
+                  
+                    const match = props.items.find(item => 
+                      item.label.toLowerCase() === props.query.toLowerCase().replace(/^@/, '')
                     );
-                    
+                  
                     if (match) {
-                      console.log("✨ Found match:", {
-                        match,
-                        range: props.range,
-                        textBefore: props.editor.getText()
-                      });
-                      
                       props.command({ id: match.id, label: match.label });
                     }
                   }
