@@ -4,6 +4,9 @@ import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { Smile } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Mention from '@tiptap/extension-mention'
 
 interface MessageInputProps {
   message: string;
@@ -29,6 +32,105 @@ export function MessageInput({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { theme } = useTheme();
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention-node',
+          style: 'color: #0A7CFF !important; font-weight: 500 !important;'
+        },
+        renderLabel: ({ node }) => {
+          return node.attrs.label ?? node.attrs.id
+        },
+        suggestion: {
+          items: ({ query }: { query: string }) => {
+            if (!query) return []
+            
+            const searchText = query.toLowerCase().replace(/^@/, '');
+            return recipients
+              .filter(recipient => {
+                const [firstName] = recipient.name.split(' ');
+                return firstName.toLowerCase().startsWith(searchText);
+              })
+              .slice(0, 5)
+              .map(match => ({
+                id: match.id,
+                label: match.name.split(' ')[0]
+              }));
+          },
+          render: () => {
+            let component: {
+              element: HTMLElement;
+              update: (props: { items: any[]; query: string }) => void;
+            };
+
+            return {
+              onStart: (props) => {
+                console.log("🔍 onStart range:", props.range);
+                component = {
+                  element: document.createElement('div'),
+                  update: ({ items, query }) => {
+                    console.log("🔄 update called:", {
+                      items,
+                      query,
+                      range: props.range,
+                      text: props.editor.getText()
+                    });
+                    
+                    if (!query) return;
+                    
+                    const match = items.find(item => 
+                      item.label.toLowerCase() === query.toLowerCase().replace(/^@/, '')
+                    );
+                    
+                    if (match) {
+                      console.log("✨ Found match:", {
+                        match,
+                        range: props.range,
+                        textBefore: props.editor.getText()
+                      });
+                      
+                      props.command({ id: match.id, label: match.label });
+                    }
+                  }
+                };
+                return component;
+              },
+              onUpdate: (props) => {
+                component?.update(props);
+              },
+              onExit: () => {
+                component?.element.remove();
+              },
+            }
+          },
+          char: '@',
+          allowSpaces: false,
+          decorationClass: 'suggestion',
+        },
+      }),
+    ],
+    content: message,
+    onUpdate: ({ editor }) => {
+      setMessage(editor.getText())
+    },
+    editorProps: {
+      attributes: {
+        class: 'w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose',
+      },
+      handleKeyDown: (view, event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          handleSend();
+          return true;
+        }
+        return false;
+      },
+    },
+    immediatelyRender: false,
+  })
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -42,8 +144,12 @@ export function MessageInput({
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && showEmojiPicker) {
-        setShowEmojiPicker(false);
+      if (event.key === "Escape") {
+        if (showEmojiPicker) {
+          setShowEmojiPicker(false);
+        } else if (editor) {
+          editor.commands.blur()
+        }
       }
     };
 
@@ -54,72 +160,44 @@ export function MessageInput({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [showEmojiPicker]);
+  }, [showEmojiPicker, editor]);
 
-  // Helper function to get input styles
-  const getInputStyles = () => {
-    const currentMention = message.match(/@(\w+)$/);
-    if (currentMention) {
-      const mention = currentMention[1];
-      const isValidRecipient = recipients.some((recipient) =>
-        recipient.name.toLowerCase().startsWith(mention.toLowerCase())
-      );
-      return {
-        color: isValidRecipient ? "#0A7CFF" : "#6b7280",
-        fontWeight: isValidRecipient ? "500" : "normal",
-      };
+  useEffect(() => {
+    if (editor && message !== editor.getText()) {
+      editor.commands.setContent(message)
     }
-    return {
-      color: "currentColor",
-      fontWeight: "normal",
-    };
-  };
+  }, [message, editor])
 
   return (
     <div className="p-4 bg-background">
       <div className="flex gap-2 items-center relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              if (isMobileView) {
-                e.currentTarget.blur();
-              }
-              handleSend();
-            } else if (e.key === "Escape") {
-              e.currentTarget.blur();
-            }
-          }}
-          placeholder="Type a message..."
-          enterKeyHint="send"
-          className="w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50"
-          style={getInputStyles()}
-          disabled={disabled}
+        <EditorContent 
+          editor={editor}
+          className="w-full"
         />
         <button
           ref={buttonRef}
-          type="button"
-          onClick={() => !isMobileView && setShowEmojiPicker(!showEmojiPicker)}
-          className={`text-muted-foreground transition-colors ${
-            isMobileView ? "hidden" : "hover:text-foreground"
-          }`}
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          disabled={disabled}
         >
-          <Smile className="h-6 w-6" />
+          <Smile className="h-5 w-5" />
         </button>
-        {showEmojiPicker && !isMobileView && (
-          <div ref={pickerRef} className="absolute bottom-full right-0 mb-2">
+        {showEmojiPicker && (
+          <div
+            ref={pickerRef}
+            className="absolute bottom-12 right-0 z-50"
+            style={{ width: "352px" }}
+          >
             <Picker
               data={data}
-              onEmojiSelect={(emoji: { native: string }) => {
-                setMessage(message + emoji.native);
+              onEmojiSelect={(emoji: any) => {
+                if (editor) {
+                  editor.commands.insertContent(emoji.native)
+                }
                 setShowEmojiPicker(false);
               }}
               theme={theme === "dark" ? "dark" : "light"}
-              previewPosition="none"
             />
           </div>
         )}

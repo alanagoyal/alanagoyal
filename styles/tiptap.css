@@ -1,0 +1,23 @@
+.ProseMirror {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.suggestion {
+  color: #6b7280; /* gray-500 */
+}
+
+.ProseMirror .mention-node {
+  color: #0A7CFF !important;
+  font-weight: 500 !important;
+}
+
+/* Hide the default prosemirror menu */
+.ProseMirror-menubar {
+  display: none;
+}

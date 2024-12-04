@@ -1,3 +1,5 @@
+@import '../styles/tiptap.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -69,4 +71,15 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Base text color */
+.ProseMirror {
+  @apply text-foreground;
+}
+
+/* globals.css */
+.ProseMirror .mention-node {
+  color: #0A7CFF !important;
+  font-weight: 500 !important;
 }
