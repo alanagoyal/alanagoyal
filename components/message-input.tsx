@@ -40,8 +40,18 @@ export function MessageInput({
           class: 'mention-node',
           style: 'color: #0A7CFF !important; font-weight: 500 !important;'
         },
-        renderLabel: ({ node }) => {
-          return node.attrs.label ?? node.attrs.id
+        renderText: ({ node }) => node.attrs.label ?? node.attrs.id,
+        renderHTML: ({ node }) => {
+          return [
+            'span',
+            { 
+              'data-type': 'mention',
+              'data-id': node.attrs.id,
+              class: 'mention-node',
+              style: 'color: #0A7CFF !important; font-weight: 500 !important;'
+            },
+            node.attrs.label ?? node.attrs.id
+          ]
         },
         suggestion: {
           items: ({ query }: { query: string }) => {
