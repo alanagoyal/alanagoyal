@@ -485,9 +485,15 @@ export default function App() {
           >
             <Nav
               onNewChat={() => {
+                // First update the conversation state
                 setIsNewConversation(true);
                 setRecipientInput("");
-                selectConversation(null);
+                setActiveConversation(null);
+                
+                // For mobile, ensure URL is cleared
+                if (isMobileView) {
+                  window.history.pushState({}, "", window.location.pathname);
+                }
               }}
             />
           </Sidebar>
