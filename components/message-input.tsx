@@ -161,15 +161,17 @@ export function MessageInput({
           editor={editor}
           className="w-full"
         />
-        <button
-          ref={buttonRef}
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          disabled={disabled}
-        >
-          <Smile className="h-5 w-5" />
-        </button>
-        {showEmojiPicker && (
+        {!isMobileView && (
+          <button
+            ref={buttonRef}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            disabled={disabled}
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+        )}
+        {showEmojiPicker && !isMobileView && (
           <div
             ref={pickerRef}
             className="absolute bottom-12 right-0 z-50"
