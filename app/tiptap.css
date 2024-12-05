@@ -20,6 +20,31 @@
   font-weight: 500;
   position: relative;
   display: inline-block;
+  background: #0A7CFF -webkit-gradient(linear, 100% 0, 0 0, from(#0A7CFF), color-stop(0.5, #ffffff), to(#0A7CFF));
+  background-position: -4rem top;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 4rem 100%;
+}
+
+.ProseMirror .mention-node:not(.shimmer-done) {
+  animation: shimmer 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation-iteration-count: 1;
+  animation-play-state: running;
+}
+
+.ProseMirror .mention-node.shimmer-done {
+  animation: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -4rem top;
+  }
+  100% {
+    background-position: 12.5rem top;
+  }
 }
 
 .ProseMirror .mention-node::after {

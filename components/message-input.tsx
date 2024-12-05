@@ -43,7 +43,8 @@ export function MessageInput({
       Mention.configure({
         HTMLAttributes: {
           class: 'mention-node',
-          style: 'color: #0A7CFF !important; font-weight: 500 !important;'
+          style: 'color: #0A7CFF !important; font-weight: 500 !important;',
+          onanimationend: 'this.classList.add("shimmer-done")'
         },
         renderText: ({ node }) => {
           // Try to find the recipient by ID to get their name
