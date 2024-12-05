@@ -191,6 +191,7 @@ export default function App() {
           name,
         }));
 
+      // Don't send if no recipients are selected
       if (recipients.length === 0) return;
 
       // Create new conversation object
@@ -224,6 +225,8 @@ export default function App() {
         const updatedConversations = [conversationWithMessage, ...prev];
         setActiveConversation(newConversation.id);
         setIsNewConversation(false);
+        setRecipientInput("");
+        clearMessageDraft("new");
         localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
         return updatedConversations;
       });
@@ -496,11 +499,11 @@ export default function App() {
                 setIsNewConversation(true);
                 setRecipientInput("");
                 setActiveConversation(null);
+                // Clear any existing draft for the new conversation
+                handleMessageDraftChange("new", "");
                 
-                // For mobile, ensure URL is cleared
-                if (isMobileView) {
-                  window.history.pushState({}, "", window.location.pathname);
-                }
+                // Update URL
+                window.history.pushState({}, "", "/");
               }}
             />
           </Sidebar>
@@ -525,7 +528,7 @@ export default function App() {
             typingStatus={typingStatus}
             conversationId={activeConversation}
             onUpdateConversationRecipients={updateConversationRecipients}
-            messageDraft={messageDrafts[activeConversation || ""]}
+            messageDraft={isNewConversation ? messageDrafts["new"] || "" : messageDrafts[activeConversation || ""] || ""}
             onMessageDraftChange={handleMessageDraftChange}
           />
         </div>

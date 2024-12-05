@@ -200,7 +200,10 @@ export function MessageInput({
   }, [editor])
 
   useEffect(() => {
-    if (editor) {
+    const isNewChat = conversationId === undefined;
+    const shouldDestroyEditor = editor && !isNewChat;
+    
+    if (shouldDestroyEditor) {
       editor.destroy();
     }
   }, [conversationId])

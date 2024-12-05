@@ -75,8 +75,10 @@ export function ChatArea({
         <MessageInput
           message={messageDraft}
           setMessage={(msg) => {
-            if (conversationId && onMessageDraftChange) {
-              onMessageDraftChange(conversationId, msg);
+            if (isNewChat) {
+              onMessageDraftChange?.("new", msg);
+            } else if (conversationId) {
+              onMessageDraftChange?.(conversationId, msg);
             }
           }}
           handleSend={() => {
@@ -84,16 +86,16 @@ export function ChatArea({
             
             if (activeConversation) {
               onSendMessage(messageDraft, activeConversation.id);
-            } else if (isNewChat) {
+            } else if (isNewChat && recipientInput.trim()) {
               const recipientList = recipientInput
                 .split(",")
                 .map((r) => r.trim())
                 .filter((r) => r.length > 0);
-              if (recipientList.length === 0) return;
-              onSendMessage(messageDraft);
+              if (recipientList.length > 0) {
+                onSendMessage(messageDraft);
+              }
             }
           }}
-          disabled={showRecipientInput && !recipientInput.trim()}
           recipients={conversationRecipients}
           isMobileView={isMobileView}
           conversationId={conversationId || undefined}
