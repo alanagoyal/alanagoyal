@@ -175,6 +175,35 @@ export default function App() {
     return temp.textContent || '';
   };
 
+  // Method to create a new conversation with recipients
+  const createNewConversation = (recipientNames: string[]) => {
+    // Create recipients with IDs
+    const recipients = recipientNames.map((name) => ({
+      id: uuidv4(),
+      name,
+    }));
+
+    // Create new conversation object
+    const newConversation: Conversation = {
+      id: uuidv4(),
+      recipients,
+      messages: [],
+      lastMessageTime: new Date().toISOString(),
+      unreadCount: 0
+    };
+
+    // Update state
+    setConversations(prev => {
+      const updatedConversations = [newConversation, ...prev];
+      setActiveConversation(newConversation.id);
+      setIsNewConversation(false);
+      localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
+      return updatedConversations;
+    });
+
+    window.history.pushState({}, "", `?id=${newConversation.id}`);
+  };
+
   // Method to handle message sending
   const handleSendMessage = async (messageHtml: string, conversationId?: string) => {
     const messageText = extractMessageContent(messageHtml);
@@ -544,6 +573,7 @@ export default function App() {
             typingStatus={typingStatus}
             conversationId={activeConversation}
             onUpdateConversationRecipients={updateConversationRecipients}
+            onCreateConversation={createNewConversation}
             messageDraft={isNewConversation ? messageDrafts["new"] || "" : messageDrafts[activeConversation || ""] || ""}
             onMessageDraftChange={handleMessageDraftChange}
           />

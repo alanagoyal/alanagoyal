@@ -12,6 +12,7 @@ interface ChatHeaderProps {
   isMobileView?: boolean;
   activeConversation?: Conversation;
   onUpdateRecipients?: (recipientNames: string[]) => void;
+  onCreateConversation?: (recipientNames: string[]) => void;
 }
 
 export function ChatHeader({
@@ -22,12 +23,14 @@ export function ChatHeader({
   isMobileView,
   activeConversation,
   onUpdateRecipients,
+  onCreateConversation,
 }: ChatHeaderProps) {
 
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showCompactNewChat, setShowCompactNewChat] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,18 +50,33 @@ export function ChatHeader({
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
         setSelectedIndex(-1);
-        if (isEditMode) {
-          setIsEditMode(false);
+        
+        if (isNewChat || isEditMode) {
           const recipientNames = recipientInput.split(',').filter(r => r.trim());
-          onUpdateRecipients?.(recipientNames);
-          setRecipientInput('');
+          if (recipientNames.length > 0) {
+            if (isEditMode) {
+              setIsEditMode(false);
+              onUpdateRecipients?.(recipientNames);
+            } else if (isNewChat) {
+              setShowCompactNewChat(true);
+              onCreateConversation?.(recipientNames);
+            }
+            setSearchValue('');
+          }
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isEditMode, recipientInput, onUpdateRecipients]);
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation]);
+
+  useEffect(() => {
+    if (!isNewChat && !isEditMode) {
+      setRecipientInput('');
+      setSearchValue('');
+    }
+  }, [isNewChat, isEditMode]);
 
   // Reset selected index when search value changes
   useEffect(() => {
@@ -71,12 +89,6 @@ export function ChatHeader({
       inputRef.current?.focus();
     }
   }, [searchValue]);
-
-  useEffect(() => {
-    if (!isNewChat && !isEditMode) {
-      setRecipientInput('');
-    }
-  }, [isNewChat, isEditMode]);
 
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
     const newValue = recipientInput 
@@ -133,6 +145,8 @@ export function ChatHeader({
       setIsEditMode(true);
       const recipients = activeConversation?.recipients.map(r => r.name).join(',') || '';
       setRecipientInput(recipients + ',');
+    } else if (isNewChat && showCompactNewChat) {
+      setShowCompactNewChat(false);
     }
   };
 
@@ -176,13 +190,7 @@ export function ChatHeader({
   return (
     <div 
       className="h-auto flex items-center justify-between p-4 sm:px-4 sm:py-2 border-b dark:border-foreground/20 bg-muted cursor-pointer"
-      onClick={() => {
-        if (!isNewChat && !isEditMode) {
-          setIsEditMode(true);
-          const recipients = activeConversation?.recipients.map(r => r.name).join(',') || '';
-          setRecipientInput(recipients + ',');
-        }
-      }}
+      onClick={handleHeaderClick}
       data-chat-header="true"
     >
       <div className="flex items-center gap-2 flex-1">
@@ -195,7 +203,7 @@ export function ChatHeader({
             <Icons.back />
           </button>
         )}
-        {isNewChat || isEditMode ? (
+        {(isNewChat && !showCompactNewChat) || isEditMode ? (
           <div className="flex-1">
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-base sm:text-sm font-medium text-muted-foreground">
@@ -256,7 +264,7 @@ export function ChatHeader({
             data-chat-header="true"
           >
             <span className="text-sm font-medium text-muted-foreground">
-              {activeConversation?.recipients.map(r => r.name).join(', ')}
+              {isNewChat ? recipientInput.split(',').filter(r => r.trim()).join(', ') : activeConversation?.recipients.map(r => r.name).join(', ')}
             </span>
           </div>
         )}

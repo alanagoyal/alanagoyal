@@ -15,6 +15,7 @@ interface ChatAreaProps {
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
   onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
+  onCreateConversation?: (recipientNames: string[]) => void;
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
 }
@@ -30,6 +31,7 @@ export function ChatArea({
   typingStatus,
   conversationId,
   onUpdateConversationRecipients,
+  onCreateConversation,
   messageDraft = "",
   onMessageDraftChange,
 }: ChatAreaProps) {
@@ -51,14 +53,15 @@ export function ChatArea({
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
-          isMobileView={isMobileView}
           onBack={onBack}
+          isMobileView={isMobileView}
           activeConversation={activeConversation}
-          onUpdateRecipients={(recipientNames) => {
-            if (activeConversation) {
-              onUpdateConversationRecipients?.(activeConversation.id, recipientNames);
+          onUpdateRecipients={(recipients) => {
+            if (conversationId) {
+              onUpdateConversationRecipients?.(conversationId, recipients);
             }
           }}
+          onCreateConversation={onCreateConversation}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
