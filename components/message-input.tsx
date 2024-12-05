@@ -8,6 +8,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Mention from '@tiptap/extension-mention'
 import { SuggestionProps } from '@tiptap/suggestion'
+import Placeholder from '@tiptap/extension-placeholder'
 
 interface MessageInputProps {
   message: string;
@@ -36,6 +37,9 @@ export function MessageInput({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Placeholder.configure({
+        placeholder: 'Type a message...',
+      }),
       Mention.configure({
         HTMLAttributes: {
           class: 'mention-node',

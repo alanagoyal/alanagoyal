@@ -83,3 +83,12 @@ body {
   color: #0A7CFF !important;
   font-weight: 500 !important;
 }
+
+/* Add this with your other ProseMirror styles */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
