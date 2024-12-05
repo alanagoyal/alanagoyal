@@ -161,6 +161,9 @@ export function MessageInput({
         if (event.key === 'Enter' && !event.shiftKey) {
           event.preventDefault();
           handleSend();
+          if (isMobileView) {
+            view.dom.blur();
+          }
           return true;
         }
         return false;
