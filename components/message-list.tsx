@@ -24,13 +24,19 @@ export function MessageList({
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current;
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      });
     }
   }, [messages]);
 
   return (
-    <div ref={scrollAreaRef} className="flex-1 p-4 pb-0 overflow-y-auto">
-      <div className="space-y-4">
+    <div 
+      ref={scrollAreaRef} 
+      className="flex-1 p-4 pb-0 overflow-y-auto flex flex-col-reverse"
+    >
+      <div className="space-y-4 flex-1">
         {messages.map((message, index) => (
           <MessageBubble 
             key={message.id} 
