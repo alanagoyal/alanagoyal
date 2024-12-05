@@ -12,6 +12,7 @@ export default function App() {
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [lastActiveConversation, setLastActiveConversation] = useState<string | null>(null);
   const [messageDrafts, setMessageDrafts] = useState<Record<string, string>>({});
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
@@ -356,6 +357,13 @@ export default function App() {
     }
   }, []);
 
+  // Update lastActiveConversation whenever activeConversation changes
+  useEffect(() => {
+    if (activeConversation) {
+      setLastActiveConversation(activeConversation);
+    }
+  }, [activeConversation]);
+
   // Robust conversation selection method
   const selectConversation = (conversationId: string | null) => {
     // In mobile view, if no conversation is selected, return to sidebar
@@ -461,14 +469,22 @@ export default function App() {
   // Set mobile view
   useEffect(() => {
     const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
+      const newIsMobileView = window.innerWidth < 768;
+      if (isMobileView !== newIsMobileView) {
+        setIsMobileView(newIsMobileView);
+        
+        // When transitioning from mobile to desktop, restore the last active conversation
+        if (!newIsMobileView && !activeConversation && lastActiveConversation) {
+          selectConversation(lastActiveConversation);
+        }
+      }
     };
 
     handleResize();
     setIsLayoutInitialized(true);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [isMobileView, activeConversation, lastActiveConversation]);
 
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
