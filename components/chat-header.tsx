@@ -38,6 +38,22 @@ export function ChatHeader({
     person.name.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  const updateRecipients = () => {
+    if (isNewChat || isEditMode) {
+      const recipientNames = recipientInput.split(',').filter(r => r.trim());
+      if (recipientNames.length > 0) {
+        if (isEditMode) {
+          setIsEditMode(false);
+          onUpdateRecipients?.(recipientNames);
+        } else if (isNewChat) {
+          setShowCompactNewChat(true);
+          onCreateConversation?.(recipientNames);
+        }
+        setSearchValue('');
+      }
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Check if the click was on a close button
@@ -50,20 +66,7 @@ export function ChatHeader({
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
         setSelectedIndex(-1);
-        
-        if (isNewChat || isEditMode) {
-          const recipientNames = recipientInput.split(',').filter(r => r.trim());
-          if (recipientNames.length > 0) {
-            if (isEditMode) {
-              setIsEditMode(false);
-              onUpdateRecipients?.(recipientNames);
-            } else if (isNewChat) {
-              setShowCompactNewChat(true);
-              onCreateConversation?.(recipientNames);
-            }
-            setSearchValue('');
-          }
-        }
+        updateRecipients();
       }
     };
 
@@ -223,6 +226,11 @@ export function ChatHeader({
                       setShowResults(true);
                     }}
                     onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      setShowResults(false);
+                      setSelectedIndex(-1);
+                      updateRecipients();
+                    }}
                     placeholder="Type to find recipients..."
                     className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
                     autoFocus
