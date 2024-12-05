@@ -79,9 +79,40 @@ body {
 }
 
 /* globals.css */
+@keyframes mentionGradientSweep {
+  0% {
+    background-position: -100% 0;
+    opacity: 1;
+  }
+  99% {
+    background-position: 200% 0;
+    opacity: 1;
+  }
+  100% {
+    background-position: 200% 0;
+    opacity: 0;
+  }
+}
+
 .ProseMirror .mention-node {
   color: #0A7CFF !important;
   font-weight: 500 !important;
+  position: relative;
+}
+
+.ProseMirror .mention-node::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 45%,
+    rgba(255, 255, 255, 0.4) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: mentionGradientSweep 0.5s ease-out forwards;
+  pointer-events: none;
 }
 
 /* Add this with your other ProseMirror styles */
