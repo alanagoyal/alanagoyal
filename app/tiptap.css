@@ -1,0 +1,41 @@
+.ProseMirror {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  @apply text-foreground;
+}
+
+.suggestion {
+  color: #6b7280; /* gray-500 */
+}
+
+/* Mention node styling */
+.ProseMirror .mention-node {
+  color: #0A7CFF;
+  font-weight: 500;
+  position: relative;
+  display: inline-block;
+}
+
+.ProseMirror .mention-node::after {
+  display: none;
+}
+
+/* Hide the default prosemirror menu */
+.ProseMirror-menubar {
+  display: none;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
