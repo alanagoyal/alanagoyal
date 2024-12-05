@@ -12,6 +12,8 @@ export default function App() {
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [lastActiveConversation, setLastActiveConversation] = useState<string | null>(null);
+  const [messageDrafts, setMessageDrafts] = useState<Record<string, string>>({});
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
@@ -149,6 +151,160 @@ export default function App() {
     });
   };
 
+  // Method to handle message draft changes
+  const handleMessageDraftChange = (conversationId: string, message: string) => {
+    setMessageDrafts(prev => ({
+      ...prev,
+      [conversationId]: message
+    }));
+  };
+
+  // Method to clear message draft after sending
+  const clearMessageDraft = (conversationId: string) => {
+    setMessageDrafts(prev => {
+      const newDrafts = { ...prev };
+      delete newDrafts[conversationId];
+      return newDrafts;
+    });
+  };
+
+  // Method to extract plain text from HTML content while preserving mentions
+  const extractMessageContent = (htmlContent: string): string => {
+    const temp = document.createElement('div');
+    temp.innerHTML = htmlContent;
+    return temp.textContent || '';
+  };
+
+  // Method to create a new conversation with recipients
+  const createNewConversation = (recipientNames: string[]) => {
+    // Create recipients with IDs
+    const recipients = recipientNames.map((name) => ({
+      id: uuidv4(),
+      name,
+    }));
+
+    // Create new conversation object
+    const newConversation: Conversation = {
+      id: uuidv4(),
+      recipients,
+      messages: [],
+      lastMessageTime: new Date().toISOString(),
+      unreadCount: 0
+    };
+
+    // Update state
+    setConversations(prev => {
+      const updatedConversations = [newConversation, ...prev];
+      setActiveConversation(newConversation.id);
+      setIsNewConversation(false);
+      localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
+      return updatedConversations;
+    });
+
+    window.history.pushState({}, "", `?id=${newConversation.id}`);
+  };
+
+  // Method to handle message sending
+  const handleSendMessage = async (messageHtml: string, conversationId?: string) => {
+    const messageText = extractMessageContent(messageHtml);
+    if (!messageText.trim()) return;
+
+    // Create a new conversation if no conversation ID is provided or in new conversation mode
+    if (!conversationId || isNewConversation) {
+      // Validate recipients
+      const recipients = recipientInput
+        .split(",")
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0)
+        .map((name) => ({
+          id: uuidv4(),
+          name,
+        }));
+
+      // Don't send if no recipients are selected
+      if (recipients.length === 0) return;
+
+      // Create new conversation object
+      const newConversation: Conversation = {
+        id: uuidv4(),
+        recipients,
+        messages: [],
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0
+      };
+
+      // Create message object
+      const message: Message = {
+        id: uuidv4(),
+        content: messageText,
+        htmlContent: messageHtml,  
+        sender: "me",
+        timestamp: new Date().toISOString()
+      };
+
+      // Combine conversation with first message
+      const conversationWithMessage = {
+        ...newConversation,
+        messages: [message],
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0
+      };
+
+      // Update state in a single, synchronous update
+      setConversations(prev => {
+        const updatedConversations = [conversationWithMessage, ...prev];
+        setActiveConversation(newConversation.id);
+        setIsNewConversation(false);
+        setRecipientInput("");
+        clearMessageDraft("new");
+        localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
+        return updatedConversations;
+      });
+
+      window.history.pushState({}, "", `?id=${newConversation.id}`);
+      messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
+      return;
+    }
+
+    // Handle existing conversation
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (!conversation) {
+      console.error(`Conversation with ID ${conversationId} not found. Skipping message.`);
+      return;
+    }
+
+    // Create message object
+    const message: Message = {
+      id: uuidv4(),
+      content: messageText,
+      htmlContent: messageHtml,  
+      sender: "me",
+      timestamp: new Date().toISOString()
+    };
+
+    // Update conversation with user message
+    const updatedConversation = {
+      ...conversation,
+      messages: [...conversation.messages, message],
+      lastMessageTime: new Date().toISOString(),
+      unreadCount: 0
+    };
+
+    setConversations((prev) => {
+      const updatedConversations = prev.map((c) => 
+        c.id === conversationId ? updatedConversation : c
+      );
+      localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
+      return updatedConversations;
+    });
+
+    setActiveConversation(conversationId);
+    setIsNewConversation(false);
+    window.history.pushState({}, "", `?id=${conversationId}`);
+    messageQueue.current.enqueueUserMessage(updatedConversation);
+    clearMessageDraft(conversationId);
+  };
+
   // Get conversations from local storage
   useEffect(() => {
     const saved = localStorage.getItem("dialogueConversations");
@@ -229,6 +385,13 @@ export default function App() {
       setActiveConversation(null);
     }
   }, []);
+
+  // Update lastActiveConversation whenever activeConversation changes
+  useEffect(() => {
+    if (activeConversation) {
+      setLastActiveConversation(activeConversation);
+    }
+  }, [activeConversation]);
 
   // Robust conversation selection method
   const selectConversation = (conversationId: string | null) => {
@@ -335,130 +498,22 @@ export default function App() {
   // Set mobile view
   useEffect(() => {
     const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
+      const newIsMobileView = window.innerWidth < 768;
+      if (isMobileView !== newIsMobileView) {
+        setIsMobileView(newIsMobileView);
+        
+        // When transitioning from mobile to desktop, restore the last active conversation
+        if (!newIsMobileView && !activeConversation && lastActiveConversation) {
+          selectConversation(lastActiveConversation);
+        }
+      }
     };
 
     handleResize();
     setIsLayoutInitialized(true);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Handle sending a message
-  const handleSendMessage = (message: string, conversationId?: string) => {
-    // Validate input
-    if (!message.trim()) return;
-
-    // Create a new conversation if no conversation ID is provided or in new conversation mode
-    if (!conversationId || isNewConversation) {
-      // Validate recipients
-      const recipients = recipientInput
-        .split(",")
-        .map((r) => r.trim())
-        .filter((r) => r.length > 0)
-        .map((name) => ({
-          id: uuidv4(),
-          name,
-        }));
-
-      if (recipients.length === 0) return;
-
-      // Create new conversation object
-      const newConversation: Conversation = {
-        id: uuidv4(),
-        recipients,
-        messages: [],
-        lastMessageTime: new Date().toISOString(),
-        unreadCount: 0
-      };
-
-      // Create user message
-      const userMessage: Message = {
-        id: uuidv4(),
-        content: message,
-        sender: "me",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      // Combine conversation with first message
-      const conversationWithMessage = {
-        ...newConversation,
-        messages: [userMessage],
-        lastMessageTime: new Date().toISOString(),
-        unreadCount: 0  // Explicitly set unread count to 0 for new conversation
-      };
-
-      // Update state in a single, synchronous update
-      setConversations(prev => {
-        const updatedConversations = [conversationWithMessage, ...prev];
-        
-        // Immediately after state update, set active conversation and reset new conversation state
-        setActiveConversation(newConversation.id);
-        setIsNewConversation(false);
-
-        // Persist updated conversations to local storage
-        localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
-
-        return updatedConversations;
-      });
-
-      // Update URL to reflect new conversation
-      window.history.pushState({}, "", `?id=${newConversation.id}`);
-
-      // Queue first AI message
-      messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
-      return;
-    }
-
-    // Handle existing conversation
-    const conversation = conversations.find((c) => c.id === conversationId);
-    if (!conversation) {
-      console.error(`Conversation with ID ${conversationId} not found. Skipping message.`);
-      return;
-    }
-
-    // Create user message
-    const userMessage: Message = {
-      id: uuidv4(),
-      content: message,
-      sender: "me",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    // Update conversation with user message
-    const updatedConversation = {
-      ...conversation,
-      messages: [...conversation.messages, userMessage],
-      lastMessageTime: new Date().toISOString(),
-      unreadCount: 0  // Explicitly set unread count to 0 when sending a message
-    };
-
-    // Update conversations and ensure current conversation is active
-    setConversations((prev) => {
-      const updatedConversations = prev.map((c) => 
-        c.id === conversationId ? updatedConversation : c
-      );
-
-      // Persist updated conversations to local storage
-      localStorage.setItem("dialogueConversations", JSON.stringify(updatedConversations));
-
-      return updatedConversations;
-    });
-
-    // Ensure the current conversation is selected
-    setActiveConversation(conversationId);
-    setIsNewConversation(false);
-    window.history.pushState({}, "", `?id=${conversationId}`);
-
-    // Queue user message response
-    messageQueue.current.enqueueUserMessage(updatedConversation);
-  };
+  }, [isMobileView, activeConversation, lastActiveConversation]);
 
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
@@ -485,9 +540,15 @@ export default function App() {
           >
             <Nav
               onNewChat={() => {
+                // First update the conversation state
                 setIsNewConversation(true);
                 setRecipientInput("");
-                selectConversation(null);
+                setActiveConversation(null);
+                // Clear any existing draft for the new conversation
+                handleMessageDraftChange("new", "");
+                
+                // Update URL
+                window.history.pushState({}, "", "/");
               }}
             />
           </Sidebar>
@@ -512,6 +573,9 @@ export default function App() {
             typingStatus={typingStatus}
             conversationId={activeConversation}
             onUpdateConversationRecipients={updateConversationRecipients}
+            onCreateConversation={createNewConversation}
+            messageDraft={isNewConversation ? messageDrafts["new"] || "" : messageDrafts[activeConversation || ""] || ""}
+            onMessageDraftChange={handleMessageDraftChange}
           />
         </div>
       </div>

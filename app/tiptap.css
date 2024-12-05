@@ -1,0 +1,83 @@
+.ProseMirror {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  @apply text-foreground;
+}
+
+.suggestion {
+  color: #6b7280; /* gray-500 */
+}
+
+/* Mention node styling */
+.ProseMirror .mention-node {
+  color: #0A7CFF;
+  font-weight: 500;
+  position: relative;
+  display: inline-block;
+  background: #0A7CFF -webkit-gradient(linear, 100% 0, 0 0, from(#0A7CFF), color-stop(0.5, #ffffff), to(#0A7CFF));
+  background-position: -4rem top;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 4rem 100%;
+  transform-origin: bottom;
+}
+
+.ProseMirror .mention-node:not(.shimmer-done) {
+  animation: 
+    shimmer 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards,
+    bounce 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation-iteration-count: 1, 1;
+  animation-play-state: running;
+  animation-fill-mode: forwards;
+}
+
+.ProseMirror .mention-node.shimmer-done {
+  animation: none;
+  transform: translateY(0);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -4rem top;
+  }
+  100% {
+    background-position: 12.5rem top;
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-1px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ProseMirror .mention-node::after {
+  display: none;
+}
+
+/* Hide the default prosemirror menu */
+.ProseMirror-menubar {
+  display: none;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

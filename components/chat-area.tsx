@@ -1,5 +1,5 @@
 import { Conversation } from "../types";
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
@@ -15,6 +15,9 @@ interface ChatAreaProps {
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
   onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
+  onCreateConversation?: (recipientNames: string[]) => void;
+  messageDraft?: string;
+  onMessageDraftChange?: (conversationId: string, message: string) => void;
 }
 
 export function ChatArea({
@@ -28,17 +31,11 @@ export function ChatArea({
   typingStatus,
   conversationId,
   onUpdateConversationRecipients,
+  onCreateConversation,
+  messageDraft = "",
+  onMessageDraftChange,
 }: ChatAreaProps) {
-  const [message, setMessage] = useState("");
-  const messageInputRef = useRef<HTMLInputElement>(null);
   const showRecipientInput = isNewChat && !activeConversation;
-
-  useEffect(() => {
-    // Focus input when conversation becomes active, but only on desktop
-    if (activeConversation && messageInputRef.current && !isMobileView) {
-      messageInputRef.current.focus();
-    }
-  }, [activeConversation, isMobileView]);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
@@ -47,26 +44,10 @@ export function ChatArea({
     }
   }, []);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    
-    if (activeConversation) {
-      onSendMessage(message, activeConversation.id);
-    } else if (isNewChat) {
-      const recipientList = recipientInput
-        .split(",")
-        .map((r) => r.trim())
-        .filter((r) => r.length > 0);
-      
-      if (recipientList.length === 0) return;
-      
-      // For new conversations, we don't pass a conversationId
-      onSendMessage(message);
-    }
-    setMessage("");
-  };
-
   const conversationRecipients = activeConversation?.recipients || [];
+
+  // Create a key that changes when recipients change
+  const messageInputKey = conversationRecipients.map(r => r.id).join(',');
 
   return (
     <div className="h-dvh flex flex-col">
@@ -75,14 +56,15 @@ export function ChatArea({
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
-          isMobileView={isMobileView}
           onBack={onBack}
+          isMobileView={isMobileView}
           activeConversation={activeConversation}
-          onUpdateRecipients={(recipientNames) => {
-            if (activeConversation) {
-              onUpdateConversationRecipients?.(activeConversation.id, recipientNames);
+          onUpdateRecipients={(recipients) => {
+            if (conversationId) {
+              onUpdateConversationRecipients?.(conversationId, recipients);
             }
           }}
+          onCreateConversation={onCreateConversation}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
@@ -97,13 +79,34 @@ export function ChatArea({
         marginBottom: 'env(keyboard-inset-height, 0px)'
       }}>
         <MessageInput
-          message={message}
-          setMessage={setMessage}
-          handleSend={handleSend}
-          inputRef={messageInputRef}
-          disabled={!activeConversation && !isNewChat}
+          key={messageInputKey}
+          message={messageDraft}
+          isNewChat={isNewChat}
+          setMessage={(msg) => {
+            if (isNewChat) {
+              onMessageDraftChange?.("new", msg);
+            } else if (conversationId) {
+              onMessageDraftChange?.(conversationId, msg);
+            }
+          }}
+          handleSend={() => {
+            if (!messageDraft.trim()) return;
+            
+            if (activeConversation) {
+              onSendMessage(messageDraft, activeConversation.id);
+            } else if (isNewChat && recipientInput.trim()) {
+              const recipientList = recipientInput
+                .split(",")
+                .map((r) => r.trim())
+                .filter((r) => r.length > 0);
+              if (recipientList.length > 0) {
+                onSendMessage(messageDraft);
+              }
+            }
+          }}
           recipients={conversationRecipients}
           isMobileView={isMobileView}
+          conversationId={conversationId || undefined}
         />
       </div>
     </div>

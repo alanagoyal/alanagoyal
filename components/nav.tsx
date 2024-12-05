@@ -10,8 +10,13 @@ export function Nav({ onNewChat }: NavProps) {
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input or if command/meta key is pressed
-      if (document.activeElement?.tagName === 'INPUT' || e.metaKey) {
+      // Don't trigger if typing in an input, if command/meta key is pressed,
+      // or if the TipTap editor is focused
+      if (
+        document.activeElement?.tagName === 'INPUT' || 
+        e.metaKey ||
+        document.querySelector('.ProseMirror')?.contains(document.activeElement)
+      ) {
         return;
       }
 
