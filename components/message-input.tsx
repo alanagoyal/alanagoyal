@@ -7,6 +7,8 @@ import { useTheme } from "next-themes";
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Mention from '@tiptap/extension-mention'
+import { Editor } from '@tiptap/core'
+import { SuggestionProps } from '@tiptap/suggestion'
 
 interface MessageInputProps {
   message: string;
@@ -88,7 +90,8 @@ export function MessageInput({
             };
 
             return {
-              onStart: () => {
+              onStart: (props: SuggestionProps) => {
+                const { editor } = props;
                 component = {
                   element: document.createElement('div'),
                   update: (props) => {
@@ -99,13 +102,27 @@ export function MessageInput({
                     );
                   
                     if (match) {
-                      props.command({ id: match.id, label: match.label });
+                      const { tr } = editor.state;
+                      const start = tr.selection.from - props.query.length - 1;
+                      const end = tr.selection.from;
+                      
+                      editor
+                        .chain()
+                        .focus()
+                        .deleteRange({ from: start, to: end })
+                        .insertContent([
+                          {
+                            type: 'mention',
+                            attrs: { id: match.id, label: match.label }
+                          }
+                        ])
+                        .run();
                     }
                   }
                 };
                 return component;
               },
-              onUpdate: (props) => {
+              onUpdate: (props: SuggestionProps) => {
                 component?.update(props);
               },
               onExit: () => {
@@ -171,9 +188,7 @@ export function MessageInput({
         if (showEmojiPicker) {
           setShowEmojiPicker(false);
         } else if (editor) {
-          console.log('Attempting to blur editor')
           editor.commands.blur()
-          console.log('Editor focused after blur:', editor.isFocused)
         }
       }
     };
@@ -192,12 +207,6 @@ export function MessageInput({
       editor.commands.setContent(message)
     }
   }, [message, editor])
-
-  useEffect(() => {
-    if (editor) {
-      console.log('Editor mounted:', editor.isFocused)
-    }
-  }, [editor])
 
   useEffect(() => {
     const isNewChat = conversationId === undefined;
