@@ -46,6 +46,9 @@ export function ChatArea({
 
   const conversationRecipients = activeConversation?.recipients || [];
 
+  // Create a key that changes when recipients change
+  const messageInputKey = conversationRecipients.map(r => r.id).join(',');
+
   return (
     <div className="h-dvh flex flex-col">
       <div className="sticky top-0 z-20 bg-background">
@@ -76,6 +79,7 @@ export function ChatArea({
         marginBottom: 'env(keyboard-inset-height, 0px)'
       }}>
         <MessageInput
+          key={messageInputKey}
           message={messageDraft}
           setMessage={(msg) => {
             if (isNewChat) {
