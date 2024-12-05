@@ -26,16 +26,21 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 4rem 100%;
+  transform-origin: bottom;
 }
 
 .ProseMirror .mention-node:not(.shimmer-done) {
-  animation: shimmer 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
-  animation-iteration-count: 1;
+  animation: 
+    shimmer 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards,
+    bounce 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation-iteration-count: 1, 1;
   animation-play-state: running;
+  animation-fill-mode: forwards;
 }
 
 .ProseMirror .mention-node.shimmer-done {
   animation: none;
+  transform: translateY(0);
 }
 
 @keyframes shimmer {
@@ -44,6 +49,18 @@
   }
   100% {
     background-position: 12.5rem top;
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-1px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
   }
 }
 
