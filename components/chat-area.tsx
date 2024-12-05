@@ -81,6 +81,7 @@ export function ChatArea({
         <MessageInput
           key={messageInputKey}
           message={messageDraft}
+          isNewChat={isNewChat}
           setMessage={(msg) => {
             if (isNewChat) {
               onMessageDraftChange?.("new", msg);

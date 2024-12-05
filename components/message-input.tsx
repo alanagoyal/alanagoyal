@@ -18,6 +18,7 @@ interface MessageInputProps {
   recipients: Recipient[];
   isMobileView?: boolean;
   conversationId?: string;
+  isNewChat?: boolean;
 }
 
 export function MessageInput({
@@ -28,6 +29,7 @@ export function MessageInput({
   recipients,
   isMobileView = false,
   conversationId,
+  isNewChat = false,
 }: MessageInputProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -141,7 +143,7 @@ export function MessageInput({
       }),
     ],
     content: message,
-    autofocus: !isMobileView ? 'end' : false,
+    autofocus: !isMobileView && !isNewChat ? 'end' : false,
     onUpdate: ({ editor }) => {
       const content = editor.getHTML();
       if (content !== message) {
@@ -149,7 +151,7 @@ export function MessageInput({
       }
     },
     onCreate: ({ editor }) => {
-      if (!isMobileView) {
+      if (!isMobileView && !isNewChat) {
         editor.commands.focus('end')
       }
     },
@@ -189,10 +191,10 @@ export function MessageInput({
   }, [conversationId])
 
   useEffect(() => {
-    if (editor && conversationId && !isMobileView) {
+    if (editor && conversationId && !isMobileView && !isNewChat) {
       editor.commands.focus('end');
     }
-  }, [editor, conversationId, isMobileView]);
+  }, [editor, conversationId, isMobileView, isNewChat]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

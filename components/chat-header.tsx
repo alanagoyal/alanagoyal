@@ -75,6 +75,8 @@ export function ChatHeader({
     if (!isNewChat && !isEditMode) {
       setRecipientInput('');
       setSearchValue('');
+    } else if (isNewChat) {
+      inputRef.current?.focus();
     }
   }, [isNewChat, isEditMode]);
 
