@@ -7,7 +7,6 @@ import { useTheme } from "next-themes";
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Mention from '@tiptap/extension-mention'
-import { Editor } from '@tiptap/core'
 import { SuggestionProps } from '@tiptap/suggestion'
 
 interface MessageInputProps {
