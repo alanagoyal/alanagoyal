@@ -169,6 +169,21 @@ export function MessageInput({
   })
 
   useEffect(() => {
+    if (editor && message !== editor.getHTML()) {
+      editor.commands.setContent(message)
+    }
+  }, [message, editor, isMobileView, disabled, conversationId]);
+
+  useEffect(() => {
+    const isNewChat = conversationId === undefined;
+    const shouldDestroyEditor = editor && !isNewChat;
+    
+    if (shouldDestroyEditor) {
+      editor.destroy();
+    }
+  }, [conversationId])
+
+  useEffect(() => {
     if (editor && conversationId && !isMobileView) {
       editor.commands.focus('end');
     }
@@ -204,21 +219,6 @@ export function MessageInput({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [showEmojiPicker, editor]);
-
-  useEffect(() => {
-    if (editor && message !== editor.getHTML()) {
-      editor.commands.setContent(message)
-    }
-  }, [message, editor])
-
-  useEffect(() => {
-    const isNewChat = conversationId === undefined;
-    const shouldDestroyEditor = editor && !isNewChat;
-    
-    if (shouldDestroyEditor) {
-      editor.destroy();
-    }
-  }, [conversationId])
 
   return (
     <div className="p-4 bg-background">
