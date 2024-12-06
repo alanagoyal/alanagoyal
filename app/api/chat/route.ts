@@ -1,18 +1,21 @@
 import { OpenAI } from "openai";
 import { Recipient, Message } from "../../../types";
 import { logger } from "../logger";
+import { techPersonalities } from "../../../data/tech-personalities";
 
-const openai = new OpenAI({ 
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
   timeout: 30000, // 30 second timeout
-  maxRetries: 3
+  maxRetries: 3,
 });
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } = body;
+  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
+    body;
 
-  const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
+  const lastMessage =
+    messages?.length > 0 ? messages[messages.length - 1] : null;
   const availableParticipants = recipients.filter(
     (r: Recipient) => r.name !== lastMessage?.sender
   );
@@ -21,26 +24,54 @@ export async function POST(req: Request) {
   const recentMessages = messages?.slice(-3) || [];
   const participantCounts = new Map<string, number>();
   for (const msg of recentMessages) {
-    if (msg.sender !== 'me') {
-      participantCounts.set(msg.sender, (participantCounts.get(msg.sender) || 0) + 1);
+    if (msg.sender !== "me") {
+      participantCounts.set(
+        msg.sender,
+        (participantCounts.get(msg.sender) || 0) + 1
+      );
     }
   }
 
   // Prioritize participants who haven't spoken recently
-  const sortedParticipants = availableParticipants.sort((a: Recipient, b: Recipient) => {
-    const aCount = participantCounts.get(a.name) || 0;
-    const bCount = participantCounts.get(b.name) || 0;
-    return aCount - bCount;
-  });
+  const sortedParticipants = availableParticipants.sort(
+    (a: Recipient, b: Recipient) => {
+      const aCount = participantCounts.get(a.name) || 0;
+      const bCount = participantCounts.get(b.name) || 0;
+      return aCount - bCount;
+    }
+  );
 
   const prompt = `
-    ${isOneOnOne ? `
+    ${
+      isOneOnOne
+        ? `
     You are having a one-on-one conversation with a human user "me".
-    You are ${recipients[0].name}. Respond naturally as yourself.
-    ` : `
-    You are participating in a group chat conversation between a human "me" and other participants: ${recipients.map((r: Recipient) => r.name).join(", ")}.
-    Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}.
-    `}
+    You are ${recipients[0].name}. 
+    ${
+      (recipients[0].name &&
+        techPersonalities.find((p) => p.name === recipients[0].name)?.prompt) ||
+      "Respond naturally as yourself."
+    }
+    `
+        : `
+    You are participating in a group chat conversation between a human "me" and other participants: ${recipients
+      .map((r: Recipient) => r.name)
+      .join(", ")}.
+    Based on the conversation history, generate the NEXT SINGLE message from one of these participants: ${sortedParticipants
+      .map((r: Recipient) => r.name)
+      .join(", ")}.
+
+    Personality Guidelines for each participant:
+    ${sortedParticipants
+      .map((r: Recipient) => {
+        const personality = techPersonalities.find((p) => p.name === r.name);
+        return personality
+          ? `${r.name}: ${personality.prompt}`
+          : `${r.name}: Respond naturally as yourself.`;
+      })
+      .join("\n")}
+    `
+    }
     
     The message should be natural, contextually appropriate, and reflect the style and tone of the person speaking.
     
@@ -50,17 +81,24 @@ export async function POST(req: Request) {
       "sender": "name_of_participant",
       "content": "their_message"
     }
-    2. ${isOneOnOne 
-      ? `The "sender" MUST be "${recipients[0].name}"`
-      : `The "sender" MUST be one of these names: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}`}
+    2. ${
+      isOneOnOne
+        ? `The "sender" MUST be "${recipients[0].name}"`
+        : `The "sender" MUST be one of these names: ${sortedParticipants
+            .map((r: Recipient) => r.name)
+            .join(", ")}`
+    }
     3. Do NOT use "me" as a sender name
     
     Guidelines:
-    ${isOneOnOne ? `
+    ${
+      isOneOnOne
+        ? `
     1. Generate only ONE message in response to the user.
     2. Keep responses personal and directed to the user.
     3. Maintain a natural conversation flow.
-    ` : `
+    `
+        : `
     1. Generate only ONE message.
     2. Choose an appropriate next speaker from the available participants list, preferring those who haven't spoken recently.
     3. If the last message was from "me" (the user), carefully check if the message was directed at a specific participant:
@@ -78,11 +116,20 @@ export async function POST(req: Request) {
     13. Avoid using quotes or special formatting in the content.
     14. If another AI has already responded to the user's message and it wasn't specifically directed at you, start a new conversation thread instead of continuing the existing one.
     15. Never answer questions that were clearly directed at another participant or the user.
-    ${shouldWrapUp ? `
-    16. This should be the last message in the conversation, so wrap up naturally without asking questions.` : ""}
-    ${isFirstMessage ? `
+    ${
+      shouldWrapUp
+        ? `
+    16. This should be the last message in the conversation, so wrap up naturally without asking questions.`
+        : ""
+    }
+    ${
+      isFirstMessage
+        ? `
     16. As this is the first message, warmly initiate the conversation with a friendly and engaging tone.
-    17. Pose a question or make a statement that encourages response from the group.` : ""}`}
+    17. Pose a question or make a statement that encourages response from the group.`
+        : ""
+    }`
+    }
   `;
 
   return await logger.traced(
@@ -139,21 +186,21 @@ export async function POST(req: Request) {
         }
 
         return new Response(JSON.stringify(messageData), {
-          headers: { 
-            "Content-Type": "application/json"
+          headers: {
+            "Content-Type": "application/json",
           },
         });
       } catch (error) {
         console.error("Error:", error);
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Failed to generate message",
-            details: error instanceof Error ? error.message : String(error)
+            details: error instanceof Error ? error.message : String(error),
           }),
           {
             status: 500,
-            headers: { 
-              "Content-Type": "application/json"
+            headers: {
+              "Content-Type": "application/json",
             },
           }
         );
@@ -167,7 +214,7 @@ export async function POST(req: Request) {
           messages,
           shouldWrapUp,
           isFirstMessage,
-          isOneOnOne
+          isOneOnOne,
         },
       },
     }
