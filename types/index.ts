@@ -13,6 +13,7 @@ export interface Conversation {
   messages: Message[];
   lastMessageTime: string;
   unreadCount: number;
+  pinned?: boolean;
 }
 
 export interface Recipient {

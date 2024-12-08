@@ -15,6 +15,7 @@ interface SidebarProps {
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
+  onUpdateConversation: (conversations: Conversation[]) => void;
   isMobileView?: boolean;
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -26,6 +27,7 @@ export function Sidebar({
   activeConversation,
   onSelectConversation,
   onDeleteConversation,
+  onUpdateConversation,
   isMobileView,
   searchTerm,
   onSearchChange
@@ -51,6 +53,11 @@ export function Sidebar({
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
+    // First sort by pinned status
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    
+    // Then sort by timestamp
     const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
     const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
     return timeB - timeA; // Most recent first
@@ -124,7 +131,92 @@ export function Sidebar({
       {children}
       <SearchBar value={searchTerm} onChange={onSearchChange} />
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.map((conversation) => (
+        {/* Pinned Conversations Grid */}
+        {filteredConversations.some(conv => conv.pinned) && (
+          <div className="p-2">
+            <div 
+              className={`flex flex-wrap gap-2 ${
+                filteredConversations.filter(c => c.pinned).length <= 2 
+                  ? 'justify-center' 
+                  : ''
+              }`}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                ...(filteredConversations.filter(c => c.pinned).length <= 2 && {
+                  display: 'flex',
+                  maxWidth: 'fit-content',
+                  margin: '0 auto'
+                })
+              }}
+            >
+              {filteredConversations
+                .filter(conv => conv.pinned)
+                .map((conversation) => (
+                  <div 
+                    key={conversation.id}
+                    className="flex justify-center"
+                  >
+                    <ContextMenu>
+                      <ContextMenuTrigger>
+                        <button
+                          onClick={() => onSelectConversation(conversation.id)}
+                          className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
+                            activeConversation === conversation.id 
+                              ? 'bg-blue-500 text-white' 
+                              : ''
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
+                            {conversation.recipients[0].avatar ? (
+                              <img 
+                                src={conversation.recipients[0].avatar} 
+                                alt="" 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                                {getInitials(conversation.recipients[0].name)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs font-medium truncate w-full text-center">
+                            {conversation.recipients[0].name}
+                          </span>
+                        </button>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem
+                          className="focus:bg-blue-500 focus:text-white"
+                          onClick={() => {
+                            const updatedConversations = conversations.map(conv => 
+                              conv.id === conversation.id 
+                                ? { ...conv, pinned: false }
+                                : conv
+                            );
+                            onUpdateConversation(updatedConversations);
+                          }}
+                        >
+                          Unpin
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          className="focus:bg-blue-500 focus:text-white"
+                          onClick={() => onDeleteConversation(conversation.id)}
+                        >
+                          Delete
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  </div>
+                ))}
+              </div>
+            </div>
+        )}
+
+        {/* Regular Conversation List */}
+        {filteredConversations
+          .filter(conv => !conv.pinned)
+          .map((conversation) => (
           <ContextMenu key={conversation.id}>
             <ContextMenuTrigger className="w-full">
               <button
@@ -185,6 +277,19 @@ export function Sidebar({
               </button>
             </ContextMenuTrigger>
             <ContextMenuContent>
+              <ContextMenuItem
+                className="focus:bg-blue-500 focus:text-white"
+                onClick={() => {
+                  const updatedConversations = conversations.map(conv => 
+                    conv.id === conversation.id 
+                      ? { ...conv, pinned: true }
+                      : conv
+                  );
+                  onUpdateConversation(updatedConversations);
+                }}
+              >
+                Pin
+              </ContextMenuItem>
               <ContextMenuItem
                 className="focus:bg-blue-500 focus:text-white"
                 onClick={() => onDeleteConversation(conversation.id)}

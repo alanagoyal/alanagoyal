@@ -556,6 +556,7 @@ export default function App() {
               selectConversation(id);
             }}
             onDeleteConversation={handleDeleteConversation}
+            onUpdateConversation={setConversations}
             isMobileView={isMobileView}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
