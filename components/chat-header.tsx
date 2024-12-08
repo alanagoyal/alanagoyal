@@ -1,7 +1,7 @@
 import { Icons } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 import { Conversation } from "../types";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
 
 interface ChatHeaderProps {
@@ -33,6 +33,22 @@ export function ChatHeader({
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update the conversation recipients
+  const updateRecipients = useCallback(() => {
+    if (isNewChat || isEditMode) {
+      const recipientNames = recipientInput.split(',').filter(r => r.trim());
+      if (recipientNames.length > 0) {
+        if (isEditMode) {
+          setIsEditMode(false);
+          onUpdateRecipients?.(recipientNames);
+        } else if (isNewChat) {
+          onCreateConversation?.(recipientNames);
+        }
+        setSearchValue('');
+      }
+    }
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation]);
 
   // Effect
   useEffect(() => {
@@ -81,28 +97,12 @@ export function ChatHeader({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, searchValue]);
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, searchValue, setRecipientInput, updateRecipients]);
 
   // Filter the tech personalities based on the search value
   const filteredPeople = techPersonalities.filter((person) =>
     person.name.toLowerCase().includes(searchValue.toLowerCase())
   );
-
-  // Update the conversation recipients
-  const updateRecipients = () => {
-    if (isNewChat || isEditMode) {
-      const recipientNames = recipientInput.split(',').filter(r => r.trim());
-      if (recipientNames.length > 0) {
-        if (isEditMode) {
-          setIsEditMode(false);
-          onUpdateRecipients?.(recipientNames);
-        } else if (isNewChat) {
-          onCreateConversation?.(recipientNames);
-        }
-        setSearchValue('');
-      }
-    }
-  };
 
   // Handle person selection
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
