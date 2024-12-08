@@ -157,6 +157,7 @@ export default function App() {
   useEffect(() => {
     if (activeConversation) {
       setLastActiveConversation(activeConversation);
+      resetUnreadCount(activeConversation);
     }
   }, [activeConversation]);
 
