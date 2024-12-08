@@ -34,10 +34,61 @@ export function ChatHeader({
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Effect
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click was on a close button or its children
+      const isCloseButton = (event.target as Element).closest('button[aria-label^="Remove"]');
+      
+      // Don't do anything if it's a close button click
+      if (isCloseButton) {
+        event.stopPropagation();
+        return;
+      }
+
+      // Only handle click outside if we clicked outside the search area
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+        setSelectedIndex(-1);
+        updateRecipients();
+      }
+    };
+
+    const focusInput = () => {
+      if ((isNewChat || isEditMode) && inputRef.current) {
+        inputRef.current.focus();
+        // Ensure the input is visible
+        setShowResults(true);
+      }
+    };
+
+    const manageInputState = () => {
+      if (isNewChat || isEditMode) {
+        setShowResults(true);
+        setSelectedIndex(-1);
+      } else {
+        setShowResults(false);
+        setRecipientInput('');
+        setSearchValue('');
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    focusInput();
+    manageInputState();
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, searchValue]);
+
+  // Filter the tech personalities based on the search value
   const filteredPeople = techPersonalities.filter((person) =>
     person.name.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  // Update the conversation recipients
   const updateRecipients = () => {
     if (isNewChat || isEditMode) {
       const recipientNames = recipientInput.split(',').filter(r => r.trim());
@@ -46,7 +97,6 @@ export function ChatHeader({
           setIsEditMode(false);
           onUpdateRecipients?.(recipientNames);
         } else if (isNewChat) {
-          setShowCompactNewChat(true);
           onCreateConversation?.(recipientNames);
         }
         setSearchValue('');
@@ -54,47 +104,7 @@ export function ChatHeader({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click was on a close button
-      const isCloseButton = (event.target as Element).closest('button[aria-label^="Remove"]');
-      
-      if (isCloseButton) {
-        return;
-      }
-
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-        setSelectedIndex(-1);
-        updateRecipients();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation]);
-
-  useEffect(() => {
-    if (!isNewChat && !isEditMode) {
-      setRecipientInput('');
-      setSearchValue('');
-    } else if (isNewChat) {
-      inputRef.current?.focus();
-    }
-  }, [isNewChat, isEditMode]);
-
-  // Reset selected index when search value changes
-  useEffect(() => {
-    setSelectedIndex(-1);
-  }, [searchValue]);
-
-  // Add effect to handle focus when searchValue changes
-  useEffect(() => {
-    if (searchValue === '') {
-      inputRef.current?.focus();
-    }
-  }, [searchValue]);
-
+  // Handle person selection
   const handlePersonSelect = (person: typeof techPersonalities[0]) => {
     const newValue = recipientInput 
       ? recipientInput.split(',').filter(r => r.trim()).concat(person.name).join(',')
@@ -105,6 +115,7 @@ export function ChatHeader({
     setSelectedIndex(-1);
   };
 
+  // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent sidebar navigation when dropdown is active
     e.stopPropagation();
@@ -145,6 +156,7 @@ export function ChatHeader({
     }
   };
 
+  // Handle header click
   const handleHeaderClick = () => {
     if (!isNewChat && !isEditMode) {
       setIsEditMode(true);
@@ -155,6 +167,7 @@ export function ChatHeader({
     }
   };
 
+  // Render the recipient pills
   const renderRecipients = () => {
     const recipients = recipientInput.split(',');
     const completeRecipients = recipients.slice(0, -1);
@@ -172,13 +185,18 @@ export function ChatHeader({
             >
               {trimmedRecipient}
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent default button behavior
+                  e.stopPropagation(); // Stop event from bubbling
                   const newRecipients = recipientInput
                     .split(',')
                     .filter(r => r.trim())
                     .filter((_, i) => i !== index)
                     .join(',');
                   setRecipientInput(newRecipients + ',');
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevent blur on the input
                 }}
                 className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
                 aria-label={`Remove ${trimmedRecipient}`}
@@ -195,13 +213,25 @@ export function ChatHeader({
   return (
     <div 
       className="h-auto flex items-center justify-between p-4 sm:px-4 sm:py-2 border-b dark:border-foreground/20 bg-muted cursor-pointer"
-      onClick={handleHeaderClick}
+      onClick={(e) => {
+        // Ignore clicks from recipient pills or dropdown
+        if (
+          !(e.target as Element).closest('[data-chat-header-dropdown="true"]') &&
+          !(e.target as Element).closest('button[aria-label^="Remove"]') &&
+          !(e.target as Element).closest('.bg-blue-100\\/50')
+        ) {
+          handleHeaderClick();
+        }
+      }}
       data-chat-header="true"
     >
       <div className="flex items-center gap-2 flex-1">
         {isMobileView && (
           <button
-            onClick={onBack}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBack?.();
+            }}
             className="rounded-sm"
             aria-label="Back to conversations"
           >
@@ -209,7 +239,7 @@ export function ChatHeader({
           </button>
         )}
         {(isNewChat && !showCompactNewChat) || isEditMode ? (
-          <div className="flex-1">
+          <div className="flex-1" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-base sm:text-sm font-medium text-muted-foreground">
                 To:
@@ -226,10 +256,14 @@ export function ChatHeader({
                       setShowResults(true);
                     }}
                     onKeyDown={handleKeyDown}
-                    onBlur={() => {
-                      setShowResults(false);
-                      setSelectedIndex(-1);
-                      updateRecipients();
+                    onBlur={(e) => {
+                      // Don't handle blur if clicking remove button or dropdown
+                      const isRemoveButton = (e.relatedTarget as Element)?.closest('button[aria-label^="Remove"]');
+                      if (!isRemoveButton && !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')) {
+                        setShowResults(false);
+                        setSelectedIndex(-1);
+                        updateRecipients();
+                      }
                     }}
                     placeholder="Type to find recipients..."
                     className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
@@ -240,18 +274,23 @@ export function ChatHeader({
                     <div 
                       className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
                       data-chat-header-dropdown="true"
+                      tabIndex={-1}
                     >
                       {filteredPeople.length > 0 ? (
                         filteredPeople.map((person, index) => (
                           <div
                             key={person.name}
-                            className={`px-4 py-2 ${
+                            className={`px-4 py-2 cursor-pointer ${
                               selectedIndex === index 
                                 ? "bg-[#0A7CFF]" 
-                                : ""
+                                : "hover:bg-[#0A7CFF]/10"
                             }`}
-                            onClick={() => handlePersonSelect(person)}
+                            onMouseDown={(e) => {
+                              e.preventDefault(); // Prevent input blur
+                              handlePersonSelect(person);
+                            }}
                             onMouseEnter={() => setSelectedIndex(index)}
+                            tabIndex={0}
                           >
                             <div className="flex flex-col">
                               <span className={`text-sm ${selectedIndex === index ? "text-white" : "text-[#0A7CFF]"}`}>{person.name}</span>
