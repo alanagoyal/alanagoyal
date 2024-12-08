@@ -1,6 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message } from "../types";
 import { v4 as uuidv4 } from "uuid";
@@ -31,6 +31,43 @@ export default function App() {
 
   const STORAGE_KEY = "dialogueConversations";
 
+  // Memoized conversation selection method
+  const selectConversation = useCallback((conversationId: string | null) => {
+    // If clearing the selection
+    if (conversationId === null) {
+      setActiveConversation(null);
+      window.history.pushState({}, "", "/");
+      return;
+    }
+
+    // Find the conversation in the list
+    const selectedConversation = conversations.find(
+      conversation => conversation.id === conversationId
+    );
+
+    // If conversation is not found, handle gracefully
+    if (!selectedConversation) {
+      console.error(`Conversation with ID ${conversationId} not found`);
+      
+      // Clear URL and select first available conversation
+      window.history.pushState({}, "", "/");
+      
+      if (conversations.length > 0) {
+        const fallbackConversation = conversations[0];
+        setActiveConversation(fallbackConversation.id);
+        window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
+      } else {
+        setActiveConversation(null);
+      }
+      return;
+    }
+
+    // Successfully select the conversation
+    setActiveConversation(conversationId);
+    setIsNewConversation(false);
+    window.history.pushState({}, "", `?id=${conversationId}`);
+  }, [conversations, setActiveConversation, setIsNewConversation]); // Only recreate when these dependencies change
+
   // Effects
   // Ensure active conversation remains valid
   useEffect(() => {
@@ -53,7 +90,7 @@ export default function App() {
         selectConversation(null);
       }
     }
-  }, [conversations, activeConversation]);
+  }, [conversations, activeConversation, selectConversation]);
 
   // Save user's conversations to local storage
   useEffect(() => {
@@ -80,7 +117,7 @@ export default function App() {
     setIsLayoutInitialized(true);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [isMobileView, activeConversation, lastActiveConversation]);
+  }, [isMobileView, activeConversation, lastActiveConversation, selectConversation]);
 
   // Get conversations from local storage
   useEffect(() => {
@@ -495,43 +532,6 @@ export default function App() {
 
       return newConversations;
     });
-  };
-
-  // Robust conversation selection method
-  const selectConversation = (conversationId: string | null) => {
-    // If clearing the selection
-    if (conversationId === null) {
-      setActiveConversation(null);
-      window.history.pushState({}, "", "/");
-      return;
-    }
-
-    // Find the conversation in the list
-    const selectedConversation = conversations.find(
-      conversation => conversation.id === conversationId
-    );
-
-    // If conversation is not found, handle gracefully
-    if (!selectedConversation) {
-      console.error(`Conversation with ID ${conversationId} not found`);
-      
-      // Clear URL and select first available conversation
-      window.history.pushState({}, "", "/");
-      
-      if (conversations.length > 0) {
-        const fallbackConversation = conversations[0];
-        setActiveConversation(fallbackConversation.id);
-        window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
-      } else {
-        setActiveConversation(null);
-      }
-      return;
-    }
-
-    // Successfully select the conversation
-    setActiveConversation(conversationId);
-    setIsNewConversation(false);
-    window.history.pushState({}, "", `?id=${conversationId}`);
   };
 
   // Don't render until layout is initialized
