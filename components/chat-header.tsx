@@ -212,7 +212,7 @@ export function ChatHeader({
 
   return (
     <div 
-      className="h-auto flex items-center justify-between p-4 sm:px-4 sm:py-2 border-b dark:border-foreground/20 bg-muted cursor-pointer"
+      className="min-h-[60px] flex items-center justify-between p-4 border-b dark:border-foreground/20 bg-muted cursor-pointer"
       onClick={(e) => {
         // Ignore clicks from recipient pills or dropdown
         if (
@@ -318,7 +318,6 @@ export function ChatHeader({
           </div>
         )}
       </div>
-      <ThemeToggle />
     </div>
   );
 }
