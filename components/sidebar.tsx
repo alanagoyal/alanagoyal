@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Conversation } from "../types";
 import { SearchBar } from "./search-bar";
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -8,6 +8,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
+import { ConversationItem } from "./conversation-item";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -217,88 +218,19 @@ export function Sidebar({
         {filteredConversations
           .filter(conv => !conv.pinned)
           .map((conversation) => (
-          <ContextMenu key={conversation.id}>
-            <ContextMenuTrigger className="w-full">
-              <button
-                onClick={() => onSelectConversation(conversation.id)}
-                className={`w-full p-4 pl-6 text-left relative ${
-                  activeConversation === conversation.id 
-                    ? 'bg-blue-500 text-white rounded-sm' 
-                    : ''
-                }`}
-              >
-                <div className="flex items-center">
-                  {conversation.unreadCount > 0 && (
-                    <div className="absolute left-2 w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0" />
-                  )}
-                  <div className="flex items-start gap-2 w-full min-w-0">
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                      {conversation.recipients[0].avatar ? (
-                        <img 
-                          src={conversation.recipients[0].avatar} 
-                          alt="" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-                          {getInitials(conversation.recipients[0].name)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-sm font-medium truncate max-w-[70%]">
-                          {conversation.recipients.map(r => r.name).join(', ')}
-                        </span>
-                        {conversation.lastMessageTime && (
-                          <span className={`text-xs ml-2 flex-shrink-0 ${
-                            activeConversation === conversation.id 
-                              ? 'text-white/80' 
-                              : 'text-muted-foreground'
-                          }`}>
-                            {formatTime(conversation.lastMessageTime)}
-                          </span>
-                        )}
-                      </div>
-                      {conversation.messages.length > 0 && (
-                        <p className={`text-xs truncate ${
-                          activeConversation === conversation.id 
-                            ? 'text-white/80' 
-                            : 'text-muted-foreground'
-                        }`}>
-                          {conversation.messages
-                            .filter(message => message.sender !== 'system')
-                            .slice(-1)[0]?.content || ''}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem
-                className="focus:bg-blue-500 focus:text-white"
-                onClick={() => {
-                  const updatedConversations = conversations.map(conv => 
-                    conv.id === conversation.id 
-                      ? { ...conv, pinned: true }
-                      : conv
-                  );
-                  onUpdateConversation(updatedConversations);
-                }}
-              >
-                Pin
-              </ContextMenuItem>
-              <ContextMenuItem
-                className="focus:bg-blue-500 focus:text-white"
-                onClick={() => onDeleteConversation(conversation.id)}
-              >
-                Delete
-              </ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
-        ))}
+            <ConversationItem
+              key={conversation.id}
+              conversation={conversation}
+              activeConversation={activeConversation}
+              onSelectConversation={onSelectConversation}
+              onDeleteConversation={onDeleteConversation}
+              onUpdateConversation={onUpdateConversation}
+              conversations={conversations}
+              formatTime={formatTime}
+              getInitials={getInitials}
+              isMobileView={isMobileView}
+            />
+          ))}
       </div>
     </div>
   );
