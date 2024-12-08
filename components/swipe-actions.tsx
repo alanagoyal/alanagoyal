@@ -1,20 +1,18 @@
 import React from 'react';
-import { Pin, PinOff, Trash2 } from "lucide-react";
+import { Trash2, Pin } from "lucide-react";
 
 interface SwipeActionsProps {
   isOpen: boolean;
-  onPin: () => void;
   onDelete: () => void;
-  isPinned: boolean;
-  canDelete: boolean;
+  onPin: () => void;
+  isPinned?: boolean;
 }
 
 export function SwipeActions({
   isOpen,
-  onPin,
   onDelete,
-  isPinned,
-  canDelete,
+  onPin,
+  isPinned = false,
 }: SwipeActionsProps) {
   return (
     <div
@@ -26,18 +24,16 @@ export function SwipeActions({
     >
       <button
         onClick={onPin}
-        className="bg-[#3293FC] text-white p-2 h-full w-16 flex items-center justify-center"
+        className="bg-blue-500 text-white p-2 h-full w-16 flex items-center justify-center"
       >
-        {isPinned ? <PinOff size={20} /> : <Pin size={20} />}
+        <Pin size={20} className={isPinned ? "rotate-45" : ""} />
       </button>
-      {canDelete && (
-        <button
-          onClick={onDelete}
-          className="bg-[#FF4539] text-white p-2 h-full w-16 flex items-center justify-center"
-        >
-          <Trash2 size={20} />
-        </button>
-      )}
+      <button
+        onClick={onDelete}
+        className="bg-[#FF4539] text-white p-2 h-full w-16 flex items-center justify-center"
+      >
+        <Trash2 size={20} />
+      </button>
     </div>
   );
 }

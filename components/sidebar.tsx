@@ -9,6 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { ConversationItem } from "./conversation-item";
+import { Pin, Trash } from "lucide-react";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -188,7 +189,7 @@ export function Sidebar({
                       </ContextMenuTrigger>
                       <ContextMenuContent>
                         <ContextMenuItem
-                          className="focus:bg-blue-500 focus:text-white"
+                          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
                           onClick={() => {
                             const updatedConversations = conversations.map(conv => 
                               conv.id === conversation.id 
@@ -198,13 +199,15 @@ export function Sidebar({
                             onUpdateConversation(updatedConversations);
                           }}
                         >
-                          Unpin
+                          <span>Unpin</span>
+                          {isMobileView && <Pin className="h-4 w-4 ml-2" />}
                         </ContextMenuItem>
                         <ContextMenuItem
-                          className="focus:bg-blue-500 focus:text-white"
+                          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
                           onClick={() => onDeleteConversation(conversation.id)}
                         >
-                          Delete
+                          <span>Delete</span>
+                          {isMobileView && <Trash className="h-4 w-4 ml-2" />}
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>

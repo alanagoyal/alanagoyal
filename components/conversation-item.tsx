@@ -8,6 +8,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
+import { Pin, Trash } from "lucide-react";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -118,22 +119,41 @@ export function ConversationItem({
 
   if (isMobileView) {
     return (
-      <div {...handlers} className="relative overflow-hidden">
-        <div
-          className={`transition-transform duration-300 ease-out ${
-            isSwipeOpen ? "transform -translate-x-32" : ""
-          }`}
-        >
-          {ConversationContent}
-        </div>
-        <SwipeActions
-          isOpen={isSwipeOpen}
-          onPin={handlePin}
-          onDelete={handleDelete}
-          isPinned={conversation.pinned ?? false}
-          canDelete={true}
-        />
-      </div>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div {...handlers} className="relative overflow-hidden">
+            <div
+              className={`transition-transform duration-300 ease-out ${
+                isSwipeOpen ? "transform -translate-x-16" : ""
+              }`}
+            >
+              {ConversationContent}
+            </div>
+            <SwipeActions
+              isOpen={isSwipeOpen}
+              onDelete={handleDelete}
+              onPin={handlePin}
+              isPinned={conversation.pinned}
+            />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem
+            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+            onClick={handlePin}
+          >
+            <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
+            {isMobileView && <Pin className="h-4 w-4 ml-2" />}
+          </ContextMenuItem>
+          <ContextMenuItem
+            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+            onClick={() => onDeleteConversation(conversation.id)}
+          >
+            <span>Delete</span>
+            {isMobileView && <Trash className="h-4 w-4 ml-2" />}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     );
   }
 
@@ -144,16 +164,18 @@ export function ConversationItem({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
-          className="focus:bg-blue-500 focus:text-white"
+          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
           onClick={handlePin}
         >
-          {conversation.pinned ? "Unpin" : "Pin"}
+          <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
+          {isMobileView && <Pin className="h-4 w-4 ml-2" />}
         </ContextMenuItem>
         <ContextMenuItem
-          className="focus:bg-blue-500 focus:text-white"
-          onClick={handleDelete}
+          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+          onClick={() => onDeleteConversation(conversation.id)}
         >
-          Delete
+          <span>Delete</span>
+          {isMobileView && <Trash className="h-4 w-4 ml-2" />}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
