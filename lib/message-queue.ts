@@ -41,6 +41,7 @@ export class MessageQueue {
     tasks: [],
   };
   private callbacks: MessageQueueCallbacks;
+  private activeConversation: string | null = null;
 
   //  Initializes the MessageQueue instance with callback functions
   constructor(callbacks: MessageQueueCallbacks) {
@@ -255,5 +256,13 @@ export class MessageQueue {
 
     // Clear typing status
     this.callbacks.onTypingStatusChange(null, null);
+  }
+
+  setActiveConversation(conversationId: string | null) {
+    this.activeConversation = conversationId;
+  }
+
+  getActiveConversation(): string | null {
+    return this.activeConversation;
   }
 }
