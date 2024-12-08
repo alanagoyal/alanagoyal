@@ -1,5 +1,4 @@
 import { Icons } from "./icons";
-import { ThemeToggle } from "./theme-toggle";
 import { Conversation } from "../types";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
