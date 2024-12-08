@@ -181,7 +181,7 @@ export function ChatHeader({
           return (
             <span 
               key={index}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-lg text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
+              className="inline-flex items-center px-1.5 py-0.5 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
             >
               {trimmedRecipient}
               <button
