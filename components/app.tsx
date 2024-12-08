@@ -513,7 +513,6 @@ export default function App() {
       }
 
       setActiveConversation(null);
-      setIsNewConversation(false);
       window.history.pushState({}, "", "/");
       return;
     }
@@ -618,7 +617,9 @@ export default function App() {
           >
             <Nav
               onNewChat={() => {
-                // Use selectConversation to handle the state transition properly
+                // Set new conversation state first
+                setIsNewConversation(true);
+                // Clear active conversation
                 selectConversation(null);
                 // Clear recipient input and message draft
                 setRecipientInput("");
@@ -642,7 +643,10 @@ export default function App() {
             recipientInput={recipientInput}
             setRecipientInput={setRecipientInput}
             isMobileView={isMobileView}
-            onBack={() => selectConversation(null)}
+            onBack={() => {
+              setIsNewConversation(false);
+              selectConversation(null);
+            }}
             onSendMessage={handleSendMessage}
             typingStatus={typingStatus}
             conversationId={activeConversation}
