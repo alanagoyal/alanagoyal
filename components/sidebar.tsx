@@ -124,7 +124,7 @@ export function Sidebar({
       {children}
       <SearchBar value={searchTerm} onChange={onSearchChange} />
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.map((conversation, index) => (
+        {filteredConversations.map((conversation) => (
           <ContextMenu key={conversation.id}>
             <ContextMenuTrigger className="w-full">
               <button
