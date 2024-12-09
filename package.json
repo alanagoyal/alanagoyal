@@ -37,6 +37,7 @@
     "openai": "^4.73.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-swipeable": "^7.0.2",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.3"
