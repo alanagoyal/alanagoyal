@@ -12,7 +12,7 @@ import {
   faHeart,
   faThumbsUp,
   faThumbsDown,
-  faFaceSmile,
+  faFaceLaugh,
   faExclamation,
   faQuestion
 } from "@fortawesome/free-solid-svg-icons";
@@ -24,6 +24,7 @@ interface MessageBubbleProps {
   conversation?: Conversation;      
   isTyping?: boolean;                
   onReaction?: (messageId: string, reaction: Reaction) => void;  
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export function MessageBubble({ 
@@ -32,6 +33,7 @@ export function MessageBubble({
   conversation,
   isTyping,
   onReaction,
+  onOpenChange,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -43,7 +45,7 @@ export function MessageBubble({
     heart: faHeart,
     like: faThumbsUp,
     dislike: faThumbsDown,
-    laugh: faFaceSmile,
+    laugh: faFaceLaugh,
     emphasize: faExclamation,
     question: faQuestion
   };
@@ -61,8 +63,9 @@ export function MessageBubble({
       };
       onReaction(message.id, reaction);
       setIsOpen(false);  // Close the popover after clicking
+      onOpenChange?.(false); // Also notify parent to remove overlay
     }
-  }, [message.id, onReaction]);
+  }, [message.id, onReaction, onOpenChange]);
 
   // Check if a specific reaction type is already active for the current user
   const isReactionActive = (type: ReactionType) => {
@@ -126,7 +129,10 @@ export function MessageBubble({
         )}
       >
         {/* Reaction popup menu */}
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          onOpenChange?.(open);
+        }}>
           <PopoverTrigger asChild>
             <div className="flex flex-col cursor-pointer">
               <div className={cn(
@@ -152,10 +158,10 @@ export function MessageBubble({
           {/* Reaction menu for non-system messages */}
           {!isSystemMessage && !isTyping && (
             <PopoverContent 
-              className="flex p-2 gap-2 min-w-[280px] bg-white dark:bg-zinc-900 rounded-full border border-gray-200 dark:border-gray-800 shadow-lg"
+              className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50"
               align={message.sender === "me" ? "start" : "end"}
               side="top"
-              sideOffset={-10}
+              sideOffset={10}
             >
               {/* Reaction buttons */}
               {Object.entries(reactionIcons).map(([type, icon]) => (
