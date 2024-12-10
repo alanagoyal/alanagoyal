@@ -1,6 +1,7 @@
 import { Message, Conversation, Reaction } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface MessageListProps {
   messages: Message[];
@@ -19,6 +20,7 @@ export function MessageList({
 }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
 
   const isTypingInThisConversation = typingStatus && 
@@ -39,20 +41,26 @@ export function MessageList({
       ref={scrollAreaRef} 
       className="flex-1 p-4 pb-0 overflow-y-auto flex flex-col-reverse relative"
     >
-      {/* Dim overlay */}
-      {isAnyReactionMenuOpen && (
-        <div className="absolute inset-0 bg-black/20 z-40" />
-      )}
       <div className="space-y-4 flex-1">
         {messages.map((message, index) => (
-          <MessageBubble 
+          <div 
             key={message.id} 
-            message={message} 
-            conversation={conversation}
-            isLastUserMessage={index === lastUserMessageIndex}
-            onReaction={onReaction}
-            onOpenChange={(isOpen) => setIsAnyReactionMenuOpen(isOpen)}
-          />
+            className={cn(
+              "transition-opacity",
+              isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
+            )}
+          >
+            <MessageBubble 
+              message={message} 
+              conversation={conversation}
+              isLastUserMessage={index === lastUserMessageIndex}
+              onReaction={onReaction}
+              onOpenChange={(isOpen) => {
+                setIsAnyReactionMenuOpen(isOpen);
+                setActiveMessageId(isOpen ? message.id : null);
+              }}
+            />
+          </div>
         ))}
         {isTypingInThisConversation && (
           <MessageBubble 
