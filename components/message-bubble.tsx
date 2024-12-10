@@ -7,6 +7,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faHeart,
+  faThumbsUp,
+  faThumbsDown,
+  faFaceSmile,
+  faExclamation,
+  faQuestion
+} from "@fortawesome/free-solid-svg-icons";
 
 // Props for the MessageBubble component
 interface MessageBubbleProps {
@@ -29,14 +38,14 @@ export function MessageBubble({
   const showRecipientName = message.sender !== "me" && !isSystemMessage;
   const recipientName = showRecipientName ? message.sender : null;
 
-  // Map of reaction types to their emoji representations
-  const reactionEmojis: Record<ReactionType, string> = {
-    heart: "❤️",
-    like: "👍",
-    dislike: "👎",
-    laugh: "😂",
-    emphasize: "‼️",
-    question: "❓"
+  // Map of reaction types to their Font Awesome icons
+  const reactionIcons = {
+    heart: faHeart,
+    like: faThumbsUp,
+    dislike: faThumbsDown,
+    laugh: faFaceSmile,
+    emphasize: faExclamation,
+    question: faQuestion
   };
 
   // Handler for when a reaction is clicked
@@ -145,20 +154,20 @@ export function MessageBubble({
               sideOffset={-10}
             >
               {/* Reaction buttons */}
-              {Object.entries(reactionEmojis).map(([type, emoji]) => (
+              {Object.entries(reactionIcons).map(([type, icon]) => (
                 <button
                   key={type}
                   onClick={() => {
                     handleReaction(type as ReactionType);
                   }}
                   className={cn(
-                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-colors",
+                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-colors focus:outline-none text-gray-500",
                     isReactionActive(type as ReactionType)
                       ? "bg-[#0A7CFF] text-white"
                       : ""
                   )}
                 >
-                  {emoji}
+                  <FontAwesomeIcon icon={icon} />
                 </button>
               ))}
             </PopoverContent>
@@ -181,7 +190,7 @@ export function MessageBubble({
                     : "bg-[#0A7CFF] text-white"
                 )}
               >
-                {reactionEmojis[reaction.type]}
+                <FontAwesomeIcon icon={reactionIcons[reaction.type]} />
               </div>
             ))}
           </div>
