@@ -5,6 +5,7 @@ export interface Message {
   sender: "me" | "system" | string;
   timestamp: string;
   mentions?: { id: string; name: string; }[];
+  reactions?: Reaction[];
 }
 
 export interface Conversation {
@@ -20,4 +21,12 @@ export interface Recipient {
   id: string;
   name: string;
   avatar?: string;
+}
+
+export type ReactionType = 'heart' | 'like' | 'dislike' | 'laugh' | 'emphasize' | 'question';
+
+export interface Reaction {
+  type: ReactionType;
+  sender: string;
+  timestamp: string;
 }

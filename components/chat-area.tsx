@@ -1,4 +1,4 @@
-import { Conversation } from "../types";
+import { Conversation, Reaction } from "../types";
 import { useEffect } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
@@ -12,6 +12,7 @@ interface ChatAreaProps {
   isMobileView?: boolean;
   onBack?: () => void;
   onSendMessage: (message: string, conversationId?: string) => void;
+  onReaction?: (messageId: string, reaction: Reaction) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
   onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
@@ -28,6 +29,7 @@ export function ChatArea({
   isMobileView,
   onBack,
   onSendMessage,
+  onReaction,
   typingStatus,
   conversationId,
   onUpdateConversationRecipients,
@@ -71,7 +73,8 @@ export function ChatArea({
         <MessageList
           messages={activeConversation?.messages || []}
           conversation={activeConversation}
-          typingStatus={typingStatus}
+          typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
+          onReaction={onReaction}
           conversationId={conversationId}
         />
       </div>

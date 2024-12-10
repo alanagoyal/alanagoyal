@@ -1,4 +1,4 @@
-import { Message, Conversation } from "../types";
+import { Message, Conversation, Reaction } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef } from "react";
 
@@ -7,13 +7,15 @@ interface MessageListProps {
   conversation?: Conversation;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
+  onReaction?: (messageId: string, reaction: Reaction) => void;
 }
 
 export function MessageList({ 
   messages, 
   conversation, 
   typingStatus, 
-  conversationId 
+  conversationId,
+  onReaction
 }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -43,6 +45,7 @@ export function MessageList({
             message={message} 
             conversation={conversation}
             isLastUserMessage={index === lastUserMessageIndex}
+            onReaction={onReaction}
           />
         ))}
         {isTypingInThisConversation && (

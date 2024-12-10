@@ -2,7 +2,7 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message } from "../types";
+import { Conversation, Message, Reaction } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
@@ -534,6 +534,43 @@ export default function App() {
     });
   };
 
+  const handleReaction = useCallback((messageId: string, reaction: Reaction) => {
+    setConversations(prevConversations => {
+      return prevConversations.map(conversation => {
+        const messages = conversation.messages.map(message => {
+          if (message.id === messageId) {
+            // Check if this reaction type from this sender already exists
+            const existingReactionIndex = message.reactions?.findIndex(
+              r => r.type === reaction.type && r.sender === reaction.sender
+            ) ?? -1;
+
+            if (existingReactionIndex === -1) {
+              // Add new reaction
+              return {
+                ...message,
+                reactions: [...(message.reactions || []), reaction]
+              };
+            } else {
+              // Remove existing reaction
+              const newReactions = [...(message.reactions || [])];
+              newReactions.splice(existingReactionIndex, 1);
+              return {
+                ...message,
+                reactions: newReactions
+              };
+            }
+          }
+          return message;
+        });
+        
+        return {
+          ...conversation,
+          messages
+        };
+      });
+    });
+  }, []);
+
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
     return null;
@@ -594,6 +631,7 @@ export default function App() {
               selectConversation(null);
             }}
             onSendMessage={handleSendMessage}
+            onReaction={handleReaction}
             typingStatus={typingStatus}
             conversationId={activeConversation}
             onUpdateConversationRecipients={updateConversationRecipients}
