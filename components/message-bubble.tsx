@@ -142,9 +142,9 @@ export function MessageBubble({
                 {/* Show typing indicator or message content */}
                 {isTyping ? (
                   <span className="typing-indicator">
-                    <span className="dot">•</span>
-                    <span className="dot">•</span>
-                    <span className="dot">•</span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
                   </span>
                 ) : (
                   isSystemMessage 
@@ -218,11 +218,16 @@ export function MessageBubble({
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 20px;
+          height: 24px;
+          padding: 0 4px;
         }
         .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: currentColor;
           animation: typing 1.5s infinite;
-          margin: 0 2px;
+          margin: 0 3px;
           opacity: 0.3;
         }
         .dot:nth-child(2) { animation-delay: 0.2s; }
