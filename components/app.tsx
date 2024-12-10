@@ -597,6 +597,7 @@ export default function App() {
             isMobileView={isMobileView}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            typingStatus={typingStatus}
           >
             <Nav
               onNewChat={() => {

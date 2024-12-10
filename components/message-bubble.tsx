@@ -211,32 +211,6 @@ export function MessageBubble({
       {message.sender === "me" && isLastUserMessage && !isTyping && (
         <div className="text-xs text-gray-500 mt-1 mr-1">Delivered</div>
       )}
-
-      {/* Typing indicator animation styles */}
-      <style jsx>{`
-        .typing-indicator {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 24px;
-          padding: 0 4px;
-        }
-        .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background-color: currentColor;
-          animation: typing 1.5s infinite;
-          margin: 0 3px;
-          opacity: 0.3;
-        }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
