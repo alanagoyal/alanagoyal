@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction } from "../types";
 import { Conversation } from "../types"; 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -48,6 +48,9 @@ export function MessageBubble({
     question: faQuestion
   };
 
+  // State to control the Popover open state
+  const [isOpen, setIsOpen] = useState(false);
+
   // Handler for when a reaction is clicked
   const handleReaction = useCallback((type: ReactionType) => {
     if (onReaction) {
@@ -57,6 +60,7 @@ export function MessageBubble({
         timestamp: new Date().toISOString()
       };
       onReaction(message.id, reaction);
+      setIsOpen(false);  // Close the popover after clicking
     }
   }, [message.id, onReaction]);
 
@@ -122,7 +126,7 @@ export function MessageBubble({
         )}
       >
         {/* Reaction popup menu */}
-        <Popover>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <div className="flex flex-col cursor-pointer">
               <div className={cn(
