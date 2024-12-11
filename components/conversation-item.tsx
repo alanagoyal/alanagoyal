@@ -121,9 +121,30 @@ export function ConversationItem({
                 </div>
               ) : conversation.messages.length > 0 ? (
                 <div className="truncate">
-                  {conversation.messages
-                    .filter((message) => message.sender !== "system")
-                    .slice(-1)[0]?.content || ""}
+                  {(() => {
+                    const lastMessage = conversation.messages
+                      .filter((message) => message.sender !== "system")
+                      .slice(-1)[0];
+                    
+                    if (!lastMessage) return "";
+                    
+                    // Check if the last message has a reaction from the current user
+                    const lastReaction = lastMessage.reactions?.find(r => r.sender === "me");
+                    if (lastReaction) {
+                      const reactionText = {
+                        heart: "loved",
+                        like: "liked",
+                        dislike: "disliked",
+                        laugh: "laughed at",
+                        emphasize: "emphasized",
+                        question: "questioned"
+                      }[lastReaction.type];
+                      
+                      return `You ${reactionText} "${lastMessage.content}"`;
+                    }
+                    
+                    return lastMessage.content;
+                  })()}
                 </div>
               ) : null}
             </div>
