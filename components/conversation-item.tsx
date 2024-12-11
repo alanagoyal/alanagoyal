@@ -112,7 +112,7 @@ export function ConversationItem({
                       ? "bg-blue-400/30 text-blue-100"
                       : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                   }`}>
-                    <span className="typing-indicator scale-[0.6]">
+                    <span className="typing-indicator scale-[0.8]">
                       <span className="dot"></span>
                       <span className="dot"></span>
                       <span className="dot"></span>
