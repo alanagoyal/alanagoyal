@@ -72,3 +72,39 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Typing indicator animation */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 4px;
+}
+
+.typing-indicator .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: typing 1.5s infinite;
+  margin: 0 3px;
+  opacity: 0.3;
+}
+
+.typing-indicator .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}

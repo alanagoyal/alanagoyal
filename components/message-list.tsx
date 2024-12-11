@@ -1,22 +1,27 @@
-import { Message, Conversation } from "../types";
+import { Message, Conversation, Reaction } from "../types";
 import { MessageBubble } from "./message-bubble";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface MessageListProps {
   messages: Message[];
   conversation?: Conversation;
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
+  onReaction?: (messageId: string, reaction: Reaction) => void;
 }
 
 export function MessageList({ 
   messages, 
   conversation, 
   typingStatus, 
-  conversationId 
+  conversationId,
+  onReaction
 }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+  const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
 
   const isTypingInThisConversation = typingStatus && 
     typingStatus.conversationId === conversationId;
@@ -34,16 +39,28 @@ export function MessageList({
   return (
     <div 
       ref={scrollAreaRef} 
-      className="flex-1 p-4 pb-0 overflow-y-auto flex flex-col-reverse"
+      className="flex-1 p-4 pb-0 overflow-y-auto flex flex-col-reverse relative"
     >
       <div className="space-y-4 flex-1">
         {messages.map((message, index) => (
-          <MessageBubble 
+          <div 
             key={message.id} 
-            message={message} 
-            conversation={conversation}
-            isLastUserMessage={index === lastUserMessageIndex}
-          />
+            className={cn(
+              "transition-opacity",
+              isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
+            )}
+          >
+            <MessageBubble 
+              message={message} 
+              conversation={conversation}
+              isLastUserMessage={index === lastUserMessageIndex}
+              onReaction={onReaction}
+              onOpenChange={(isOpen) => {
+                setIsAnyReactionMenuOpen(isOpen);
+                setActiveMessageId(isOpen ? message.id : null);
+              }}
+            />
+          </div>
         ))}
         {isTypingInThisConversation && (
           <MessageBubble 

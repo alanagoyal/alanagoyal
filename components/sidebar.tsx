@@ -21,6 +21,7 @@ interface SidebarProps {
   isMobileView?: boolean;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  typingStatus: { conversationId: string; recipient: string; } | null;
 }
 
 export function Sidebar({ 
@@ -32,7 +33,8 @@ export function Sidebar({
   onUpdateConversation,
   isMobileView,
   searchTerm,
-  onSearchChange
+  onSearchChange,
+  typingStatus
 }: SidebarProps) {
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
@@ -223,7 +225,10 @@ export function Sidebar({
           .map((conversation) => (
             <ConversationItem
               key={conversation.id}
-              conversation={conversation}
+              conversation={{
+                ...conversation,
+                isTyping: typingStatus?.conversationId === conversation.id
+              }}
               activeConversation={activeConversation}
               onSelectConversation={onSelectConversation}
               onDeleteConversation={onDeleteConversation}

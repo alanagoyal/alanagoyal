@@ -98,19 +98,56 @@ export function ConversationItem({
                 </span>
               )}
             </div>
-            {conversation.messages.length > 0 && (
-              <p
-                className={`text-xs truncate ${
-                  activeConversation === conversation.id
-                    ? "text-white/80"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {conversation.messages
-                  .filter((message) => message.sender !== "system")
-                  .slice(-1)[0]?.content || ""}
-              </p>
-            )}
+            <div
+              className={`text-xs h-8 ${
+                activeConversation === conversation.id
+                  ? "text-white/80"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {conversation.isTyping ? (
+                <div className="flex items-center py-2">
+                  <div className={`rounded-[16px] px-2 py-0.5 inline-flex items-center ${
+                    activeConversation === conversation.id
+                      ? "bg-blue-400/30 text-blue-100"
+                      : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                  }`}>
+                    <span className="typing-indicator scale-[0.8]">
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                    </span>
+                  </div>
+                </div>
+              ) : conversation.messages.length > 0 ? (
+                <div className="truncate">
+                  {(() => {
+                    const lastMessage = conversation.messages
+                      .filter((message) => message.sender !== "system")
+                      .slice(-1)[0];
+                    
+                    if (!lastMessage) return "";
+                    
+                    // Check if the last message has a reaction from the current user
+                    const lastReaction = lastMessage.reactions?.find(r => r.sender === "me");
+                    if (lastReaction) {
+                      const reactionText = {
+                        heart: "loved",
+                        like: "liked",
+                        dislike: "disliked",
+                        laugh: "laughed at",
+                        emphasize: "emphasized",
+                        question: "questioned"
+                      }[lastReaction.type];
+                      
+                      return `You ${reactionText} "${lastMessage.content}"`;
+                    }
+                    
+                    return lastMessage.content;
+                  })()}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
