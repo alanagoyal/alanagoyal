@@ -107,7 +107,11 @@ export function ConversationItem({
             >
               {conversation.isTyping ? (
                 <div className="flex items-center py-2">
-                  <div className="bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100 rounded-[16px] px-2 py-0.5 inline-flex items-center">
+                  <div className={`rounded-[16px] px-2 py-0.5 inline-flex items-center ${
+                    activeConversation === conversation.id
+                      ? "bg-blue-400/30 text-blue-100"
+                      : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                  }`}>
                     <span className="typing-indicator scale-[0.6]">
                       <span className="dot"></span>
                       <span className="dot"></span>
