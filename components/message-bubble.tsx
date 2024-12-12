@@ -73,7 +73,7 @@ export function MessageBubble({
   };
 
   // Helper function to highlight recipient names in message content
-  const highlightRecipientNames = (content: string, recipients: Conversation['recipients']) => {
+  const highlightRecipientNames = (content: string, recipients: Conversation['recipients'], sender: string) => {
     if (!recipients) return content;
     
     let highlightedContent = content;
@@ -83,15 +83,17 @@ export function MessageBubble({
       const firstName = recipient.name.split(' ')[0];
       const firstNameRegex = new RegExp(`@?\\b${firstName}\\b`, 'gi');
       
+      const colorClass = sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+      
       // Replace names with highlighted spans
       highlightedContent = highlightedContent
         .replace(fullNameRegex, match => {
           const name = match.startsWith('@') ? match.slice(1) : match;
-          return `<span class="font-medium">${name}</span>`;
+          return `<span class="font-medium ${colorClass}">${name.charAt(0).toUpperCase() + name.slice(1)}</span>`;
         })
         .replace(firstNameRegex, match => {
           const name = match.startsWith('@') ? match.slice(1) : match;
-          return `<span class="font-medium">${name}</span>`;
+          return `<span class="font-medium ${colorClass}">${name.charAt(0).toUpperCase() + name.slice(1)}</span>`;
         });
     });
     
@@ -149,7 +151,7 @@ export function MessageBubble({
                 ) : (
                   isSystemMessage 
                     ? message.content
-                    : highlightRecipientNames(message.content, conversation?.recipients || [])
+                    : highlightRecipientNames(message.content, conversation?.recipients || [], message.sender)
                 )}
               </div>
             </div>
