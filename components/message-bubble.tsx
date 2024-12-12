@@ -209,7 +209,7 @@ export function MessageBubble({
 
       {/* Show "Delivered" for last message from current user */}
       {message.sender === "me" && isLastUserMessage && !isTyping && (
-        <div className="text-xs text-gray-500 mt-1 mr-1">Delivered</div>
+        <div className="text-xs text-gray-500 mt-1 mr-1 animate-scale-in">Delivered</div>
       )}
     </div>
   );
