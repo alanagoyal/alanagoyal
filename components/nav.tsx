@@ -1,5 +1,4 @@
 import NewNote from "./new-note";
-import { ThemeToggle } from "./theme-toggle";
 
 interface NavProps {
   addNewPinnedNote: (slug: string) => void;

@@ -116,7 +116,7 @@ export function NoteItem({
           className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
             (!isMobile && isSearching && isHighlighted) ||
             (!isSearching && item.slug === selectedNoteSlug)
-              ? "text-muted-foreground"
+              ? "text-muted-foreground dark:text-white/80"
               : "text-muted-foreground"
           }`}
         >
