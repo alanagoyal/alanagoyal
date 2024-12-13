@@ -8,7 +8,7 @@ export const Icons = {
   video: (props: IconProps) => <Video className="text-muted-foreground" size={16} {...props} />,
   smile: (props: IconProps) => <Smile className="text-muted-foreground" size={16} {...props} />,
   info: (props: IconProps) => <InfoIcon className="text-muted-foreground" size={16} {...props} />,
-  search: (props: IconProps) => <Search className="text-muted-foreground" size={16} {...props} />,
+  search: (props: IconProps) => <Search className="text-muted-foreground" size={14} {...props} />,
   spinner: (props: IconProps) => (
     <Loader className="animate-spin text-muted-foreground" size={16} {...props} />
   ),
