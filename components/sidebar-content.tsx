@@ -93,6 +93,7 @@ export function SidebarContent({
                         onNoteEdit={handleEdit}
                         openSwipeItemSlug={openSwipeItemSlug}
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+                        showDivider={index < groupedNotes[categoryKey].length - 1}
                       />
                     )
                   )}
@@ -118,6 +119,7 @@ export function SidebarContent({
               onNoteEdit={handleEdit}
               openSwipeItemSlug={openSwipeItemSlug}
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+              showDivider={index < localSearchResults.length - 1}
             />
           ))}
         </ul>
