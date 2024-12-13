@@ -62,8 +62,12 @@ export function MessageBubble({
         timestamp: new Date().toISOString()
       };
       onReaction(message.id, reaction);
-      setIsOpen(false);  // Close the popover after clicking
-      onOpenChange?.(false); // Also notify parent to remove overlay
+      
+      // Add a slight delay before closing the menu to show the animation
+      setTimeout(() => {
+        setIsOpen(false);
+        onOpenChange?.(false);
+      }, 150); // 150ms delay
     }
   }, [message.id, onReaction, onOpenChange]);
 
@@ -160,7 +164,7 @@ export function MessageBubble({
           {/* Reaction menu for non-system messages */}
           {!isSystemMessage && !isTyping && (
             <PopoverContent 
-              className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50"
+              className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
               align={message.sender === "me" ? "start" : "end"}
               side="top"
               sideOffset={10}
@@ -173,13 +177,13 @@ export function MessageBubble({
                     handleReaction(type as ReactionType);
                   }}
                   className={cn(
-                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-colors focus:outline-none text-gray-500",
+                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-110",
                     isReactionActive(type as ReactionType)
-                      ? "bg-[#0A7CFF] text-white"
+                      ? "bg-[#0A7CFF] text-white scale-110"
                       : ""
                   )}
                 >
-                  <FontAwesomeIcon icon={icon} />
+                  <FontAwesomeIcon icon={icon} className="transition-transform duration-200" />
                 </button>
               ))}
             </PopoverContent>
@@ -196,7 +200,7 @@ export function MessageBubble({
               <div
                 key={`${reaction.type}-${index}`}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm",
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm animate-scale-in",
                   message.sender === "me" 
                     ? "bg-gray-100 dark:bg-[#404040]" 
                     : "bg-[#0A7CFF] text-white"

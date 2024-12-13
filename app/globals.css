@@ -16,7 +16,7 @@
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 body {
@@ -122,4 +122,60 @@ body {
   50% {
     opacity: 1;
   }
+}
+
+/* Reaction Animations */
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.reaction-menu {
+  animation: popIn 0.3s ease-out forwards;
+}
+
+.reaction-icon {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.reaction-icon:hover {
+  transform: scale(1.2);
+}
+
+.reaction-bubble {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Remove focus rings from reaction buttons */
+.reaction-menu button {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.reaction-menu button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.reaction-menu button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
