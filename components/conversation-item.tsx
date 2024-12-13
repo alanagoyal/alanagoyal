@@ -64,7 +64,7 @@ export function ConversationItem({
       }`}
     >
       {conversation.unreadCount > 0 && (
-        <div className="absolute left-2 w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0" />
+        <div className="absolute left-0.5 w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0" />
       )}
       <div className="flex items-center gap-2 w-full px-4">
         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
@@ -105,13 +105,13 @@ export function ConversationItem({
             }`}
           >
             {conversation.isTyping ? (
-              <div className="flex items-center py-2">
-                <div className={`rounded-[16px] px-2 py-0.5 inline-flex items-center ${
+              <div className="flex items-center py-0.5">
+                <div className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
                   activeConversation === conversation.id
                     ? "bg-blue-400/30 text-blue-100"
                     : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 }`}>
-                  <span className="typing-indicator scale-[0.8]">
+                  <span className="typing-indicator scale-[0.6]">
                     <span className="dot"></span>
                     <span className="dot"></span>
                     <span className="dot"></span>
