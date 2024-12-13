@@ -8,7 +8,7 @@ export const Icons = {
   video: (props: IconProps) => <Video className="text-muted-foreground" size={16} {...props} />,
   smile: (props: IconProps) => <Smile className="text-muted-foreground" size={16} {...props} />,
   info: (props: IconProps) => <InfoIcon className="text-muted-foreground" size={16} {...props} />,
-  search: (props: IconProps) => <Search className="text-muted-foreground" size={16} {...props} />,
+  search: (props: IconProps) => <Search className="text-muted-foreground" size={14} {...props} />,
   spinner: (props: IconProps) => (
     <Loader className="animate-spin text-muted-foreground" size={16} {...props} />
   ),
@@ -16,5 +16,5 @@ export const Icons = {
   back: (props: IconProps) => <ChevronLeft className="text-[#0A7CFF]" size={32} {...props} />,
   sun: (props: IconProps) => <Sun className="text-muted-foreground" size={16} {...props} />,
   moon: (props: IconProps) => <Moon className="text-muted-foreground" size={16} {...props} />,
-  close: (props: IconProps) => <X className="text-muted-foreground" size={16} {...props} />
+  close: (props: IconProps) => <X className="text-muted-foreground" size={14} {...props} />
 };

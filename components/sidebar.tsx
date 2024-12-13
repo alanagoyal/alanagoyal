@@ -131,114 +131,116 @@ export function Sidebar({
   }, [activeConversation, filteredConversations, onSelectConversation]);
 
   return (
-    <div className={`${isMobileView ? 'w-full' : 'w-80 border-r dark:border-foreground/20'} h-full flex flex-col bg-muted`}>
-      {children}
-      <SearchBar value={searchTerm} onChange={onSearchChange} />
-      <div className="flex-1 overflow-y-auto">
-        {/* Pinned Conversations Grid */}
-        {filteredConversations.some(conv => conv.pinned) && (
-          <div className="p-2">
-            <div 
-              className={`flex flex-wrap gap-2 ${
-                filteredConversations.filter(c => c.pinned).length <= 2 
-                  ? 'justify-center' 
-                  : ''
-              }`}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                ...(filteredConversations.filter(c => c.pinned).length <= 2 && {
-                  display: 'flex',
-                  maxWidth: 'fit-content',
-                  margin: '0 auto'
-                })
-              }}
-            >
-              {filteredConversations
-                .filter(conv => conv.pinned)
-                .map((conversation) => (
-                  <div 
-                    key={conversation.id}
-                    className="flex justify-center"
-                  >
-                    <ContextMenu>
-                      <ContextMenuTrigger>
-                        <button
-                          onClick={() => onSelectConversation(conversation.id)}
-                          className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
-                            activeConversation === conversation.id 
-                              ? 'bg-blue-500 text-white' 
-                              : ''
-                          }`}
-                        >
-                          <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
-                            {conversation.recipients[0].avatar ? (
-                              <img 
-                                src={conversation.recipients[0].avatar} 
-                                alt="" 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-                                {getInitials(conversation.recipients[0].name)}
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-xs font-medium truncate w-full text-center">
-                            {conversation.recipients[0].name}
-                          </span>
-                        </button>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem
-                          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
-                          onClick={() => {
-                            const updatedConversations = conversations.map(conv => 
-                              conv.id === conversation.id 
-                                ? { ...conv, pinned: false }
-                                : conv
-                            );
-                            onUpdateConversation(updatedConversations);
-                          }}
-                        >
-                          <span>Unpin</span>
-                          {isMobileView && <Pin className="h-4 w-4 ml-2" />}
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
-                          onClick={() => onDeleteConversation(conversation.id)}
-                        >
-                          <span>Delete</span>
-                          {isMobileView && <Trash className="h-4 w-4 ml-2" />}
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  </div>
-                ))}
+    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
+      <div className="px-2">
+        {children}
+        <SearchBar value={searchTerm} onChange={onSearchChange} />
+        <div className="space-y-2">
+          {/* Pinned Conversations Grid */}
+          {filteredConversations.some(conv => conv.pinned) && (
+            <div className="p-2">
+              <div 
+                className={`flex flex-wrap gap-2 ${
+                  filteredConversations.filter(c => c.pinned).length <= 2 
+                    ? 'justify-center' 
+                    : ''
+                }`}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  ...(filteredConversations.filter(c => c.pinned).length <= 2 && {
+                    display: 'flex',
+                    maxWidth: 'fit-content',
+                    margin: '0 auto'
+                  })
+                }}
+              >
+                {filteredConversations
+                  .filter(conv => conv.pinned)
+                  .map((conversation) => (
+                    <div 
+                      key={conversation.id}
+                      className="flex justify-center"
+                    >
+                      <ContextMenu>
+                        <ContextMenuTrigger>
+                          <button
+                            onClick={() => onSelectConversation(conversation.id)}
+                            className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
+                              activeConversation === conversation.id 
+                                ? 'bg-blue-500 text-white' 
+                                : ''
+                            }`}
+                          >
+                            <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
+                              {conversation.recipients[0].avatar ? (
+                                <img 
+                                  src={conversation.recipients[0].avatar} 
+                                  alt="" 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                                  {getInitials(conversation.recipients[0].name)}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs font-medium truncate w-full text-center">
+                              {conversation.recipients[0].name}
+                            </span>
+                          </button>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent>
+                          <ContextMenuItem
+                            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+                            onClick={() => {
+                              const updatedConversations = conversations.map(conv => 
+                                conv.id === conversation.id 
+                                  ? { ...conv, pinned: false }
+                                  : conv
+                              );
+                              onUpdateConversation(updatedConversations);
+                            }}
+                          >
+                            <span>Unpin</span>
+                            {isMobileView && <Pin className="h-4 w-4 ml-2" />}
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+                            onClick={() => onDeleteConversation(conversation.id)}
+                          >
+                            <span>Delete</span>
+                            {isMobileView && <Trash className="h-4 w-4 ml-2" />}
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                    </div>
+                  ))}
               </div>
             </div>
-        )}
+          )}
 
-        {/* Regular Conversation List */}
-        {filteredConversations
-          .filter(conv => !conv.pinned)
-          .map((conversation) => (
-            <ConversationItem
-              key={conversation.id}
-              conversation={{
-                ...conversation,
-                isTyping: typingStatus?.conversationId === conversation.id
-              }}
-              activeConversation={activeConversation}
-              onSelectConversation={onSelectConversation}
-              onDeleteConversation={onDeleteConversation}
-              onUpdateConversation={onUpdateConversation}
-              conversations={conversations}
-              formatTime={formatTime}
-              getInitials={getInitials}
-              isMobileView={isMobileView}
-            />
-          ))}
+          {/* Regular Conversation List */}
+          {filteredConversations
+            .filter(conv => !conv.pinned)
+            .map((conversation) => (
+              <ConversationItem
+                key={conversation.id}
+                conversation={{
+                  ...conversation,
+                  isTyping: typingStatus?.conversationId === conversation.id
+                }}
+                activeConversation={activeConversation}
+                onSelectConversation={onSelectConversation}
+                onDeleteConversation={onDeleteConversation}
+                onUpdateConversation={onUpdateConversation}
+                conversations={conversations}
+                formatTime={formatTime}
+                getInitials={getInitials}
+                isMobileView={isMobileView}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );
