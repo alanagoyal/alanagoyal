@@ -1,6 +1,6 @@
 import { RefObject, Dispatch, SetStateAction } from "react";
-import { Search, X } from "lucide-react";
 import { Note } from "@/lib/types";
+import { Icons } from "./icons";
 
 interface SearchBarProps {
   notes: Note[];
@@ -44,7 +44,9 @@ export function SearchBar({
   return (
     <div className="py-2">
       <div className="relative">
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <Icons.search className="size-4 text-gray-400" />
+        </div>
         <input
           id="search"
           type="text"
@@ -58,11 +60,11 @@ export function SearchBar({
         />
         {searchQuery && (
           <button
-            onClick={() => handleSearch("")}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Clear search"
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            onClick={clearSearch}
           >
-            <X className="text-muted-foreground" size={14} />
+            <Icons.close className="size-4 text-gray-400" />
           </button>
         )}
       </div>
