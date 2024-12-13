@@ -100,7 +100,7 @@ export function NoteItem({
 
   const NoteContent = (
     <li
-      className={`min-h-[50px] ${
+      className={`h-[60px] ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
           ? "bg-[#9D7D28] rounded-md"

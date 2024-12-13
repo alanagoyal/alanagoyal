@@ -41,7 +41,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
             className={`${
               isMobile
                 ? "w-full"
-                : "w-64 flex-shrink-0 border-r border-gray-400/20"
+                : "w-80 flex-shrink-0 border-r border-gray-400/20"
             } overflow-y-auto h-dvh`}
           >
             <Sidebar
