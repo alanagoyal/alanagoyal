@@ -20,6 +20,7 @@ interface ConversationItemProps {
   formatTime: (timestamp: string | undefined) => string;
   getInitials: (name: string) => string;
   isMobileView?: boolean;
+  showDivider?: boolean;
 }
 
 export function ConversationItem({
@@ -32,6 +33,7 @@ export function ConversationItem({
   formatTime,
   getInitials,
   isMobileView,
+  showDivider,
 }: ConversationItemProps) {
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
@@ -57,9 +59,13 @@ export function ConversationItem({
   const ConversationContent = (
     <button
       onClick={() => onSelectConversation(conversation.id)}
-      className={`w-full h-[60px] py-2 text-left relative flex items-center ${
+      className={`w-full h-[70px] py-2 text-left relative flex items-center ${
         activeConversation === conversation.id
           ? "bg-blue-500 text-white rounded-md"
+          : ""
+      } ${
+        showDivider
+          ? "after:content-[\"\"] after:absolute after:bottom-0 after:left-[56px] after:right-4 after:border-t after:border-muted-foreground/20"
           : ""
       }`}
     >

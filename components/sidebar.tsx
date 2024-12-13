@@ -223,7 +223,7 @@ export function Sidebar({
           {/* Regular Conversation List */}
           {filteredConversations
             .filter(conv => !conv.pinned)
-            .map((conversation) => (
+            .map((conversation, index, array) => (
               <ConversationItem
                 key={conversation.id}
                 conversation={{
@@ -238,6 +238,7 @@ export function Sidebar({
                 formatTime={formatTime}
                 getInitials={getInitials}
                 isMobileView={isMobileView}
+                showDivider={index !== array.length - 1}
               />
             ))}
         </div>
