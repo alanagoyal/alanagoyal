@@ -1,5 +1,5 @@
 export const siteConfig = {
-    name: "Dialogue",
-    description: "A dialogue between friends",
-    url: "https://dialog.ue",
+    name: "alana goyal | messages",
+    description: "hop into the chat",
+    url: "https://dialogue-delta.vercel.app",
   };
