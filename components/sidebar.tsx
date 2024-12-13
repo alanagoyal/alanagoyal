@@ -14,12 +14,13 @@ import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
-import SearchBar from "./search";
+import { SearchBar } from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
 import { SessionNotesContext } from "@/app/session-notes";
+import { Nav } from "./nav";
 
 const labels = {
   pinned: (
@@ -219,9 +220,9 @@ export default function Sidebar({
 
       try {
         if (noteToDelete.id && sessionId) {
-          await supabase.rpc('delete_note', {
+          await supabase.rpc("delete_note", {
             uuid_arg: noteToDelete.id,
-            session_arg: sessionId
+            session_arg: sessionId,
           });
         }
 
@@ -382,7 +383,13 @@ export default function Sidebar({
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
       />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2">
+        <Nav
+          addNewPinnedNote={handlePinToggle}
+          clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
+          isMobile={isMobile}
+        />
         <SearchBar
           notes={notes}
           onSearchResults={setLocalSearchResults}
@@ -400,7 +407,6 @@ export default function Sidebar({
           sessionId={sessionId}
           handlePinToggle={handlePinToggle}
           pinnedNotes={pinnedNotes}
-          addNewPinnedNote={handlePinToggle}
           localSearchResults={localSearchResults}
           highlightedIndex={highlightedIndex}
           categoryOrder={categoryOrder}
@@ -410,7 +416,6 @@ export default function Sidebar({
           setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
-          isMobile={isMobile}
         />
       </div>
     </div>

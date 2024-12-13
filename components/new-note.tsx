@@ -79,7 +79,7 @@ export default function NewNote({
           <TooltipTrigger
             onClick={handleCreateNote}
             aria-label="Create new note"
-            className={isMobile ? "p-2" : ""}
+            className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${isMobile ? "p-2" : ""}`}
           >
             <Icons.new className={isMobile ? "size-6" : "size-5"} />
           </TooltipTrigger>

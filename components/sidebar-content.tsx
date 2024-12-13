@@ -1,6 +1,5 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import NewNote from "./new-note";
 import { NoteItem } from "./note-item";
 import { Note } from "@/lib/types";
 
@@ -11,7 +10,6 @@ interface SidebarContentProps {
   sessionId: string;
   handlePinToggle: (slug: string) => void;
   pinnedNotes: Set<string>;
-  addNewPinnedNote: (slug: string) => void;
   localSearchResults: Note[] | null;
   highlightedIndex: number;
   categoryOrder: string[];
@@ -21,7 +19,6 @@ interface SidebarContentProps {
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
-  isMobile: boolean;
 }
 
 export function SidebarContent({
@@ -31,7 +28,6 @@ export function SidebarContent({
   sessionId,
   handlePinToggle,
   pinnedNotes,
-  addNewPinnedNote,
   localSearchResults,
   highlightedIndex,
   categoryOrder,
@@ -41,7 +37,6 @@ export function SidebarContent({
   setOpenSwipeItemSlug,
   clearSearch,
   setSelectedNoteSlug,
-  isMobile,
 }: SidebarContentProps) {
   const router = useRouter();
 
@@ -71,16 +66,7 @@ export function SidebarContent({
   );
 
   return (
-    <div className="px-2">
-      <div className="flex py-2 items-center justify-between">
-        <h2 className={`pl-2 font-bold ${isMobile ? 'text-2xl' : 'text-xl'}`}>Notes</h2>
-        <NewNote
-          addNewPinnedNote={addNewPinnedNote}
-          clearSearch={clearSearch}
-          setSelectedNoteSlug={setSelectedNoteSlug}
-          isMobile={isMobile}
-        />
-      </div>
+    <div className="py-2">
       {localSearchResults === null ? (
         <nav>
           {categoryOrder.map((categoryKey) =>
