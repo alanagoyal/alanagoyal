@@ -9,6 +9,7 @@ import { ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { Icons } from "./icons";
 
 export default function NoteHeader({
   note,
@@ -45,7 +46,7 @@ export default function NoteHeader({
       {isMobile && pathname !== "/" && (
         <Link href="/">
           <button className="pt-2 flex items-center">
-            <ChevronLeft className="w-5 h-5 text-[#e2a727]" />
+            <Icons.back />
             <span className="text-[#e2a727] text-base ml-1">Notes</span>
           </button>
         </Link>

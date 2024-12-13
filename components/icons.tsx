@@ -1,4 +1,4 @@
-import { Moon, PenSquare, Search, Sun, X } from "lucide-react";
+import { ChevronLeft, Moon, PenSquare, Search, Sun, X } from "lucide-react";
 
 type IconProps = React.HTMLAttributes<SVGElement>;
 
@@ -18,6 +18,7 @@ export const Icons = {
   moon: (props: IconProps) => (
     <Moon className="text-muted-foreground" size={16} {...props} />
   ),
+  back: (props: IconProps) => <ChevronLeft className="text-[#e2a727]" size={32} {...props} />,
   spinner: (props: IconProps) => (
     <svg
       className="spinner"
