@@ -8,7 +8,7 @@ export default function Error() {
       <div className="text-center">
         <div className="text-6xl mb-4">{emoji}</div>
         <h3 className="text-xl font-bold mb-2">{title}</h3>
-        <p className="text-gray-4000 text-sm">{message}</p>
+        <p className="text-muted-foreground text-sm">{message}</p>
       </div>
     </div>
   );

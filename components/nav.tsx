@@ -1,4 +1,5 @@
 import NewNote from "./new-note";
+import { ThemeToggle } from "./theme-toggle";
 
 interface NavProps {
   addNewPinnedNote: (slug: string) => void;
@@ -14,7 +15,7 @@ export function Nav({
   isMobile,
 }: NavProps) {
   return (
-    <div className="p-2 bg-background flex items-center justify-between">
+    <div className="p-2 flex items-center justify-between">
       <div className="flex items-center gap-1.5">
         <div className="w-3 h-3 rounded-full bg-red-500" />
         <div className="w-3 h-3 rounded-full bg-yellow-500" />

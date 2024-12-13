@@ -73,7 +73,7 @@ export function SidebarContent({
             groupedNotes[categoryKey] &&
             groupedNotes[categoryKey].length > 0 ? (
               <section key={categoryKey}>
-                <h3 className="py-1 text-xs font-bold text-gray-400 ml-2">
+                <h3 className="py-1 text-xs font-bold text-muted-foreground ml-2">
                   {labels[categoryKey as keyof typeof labels]}
                 </h3>
                 <ul className="space-y-2">
@@ -122,7 +122,7 @@ export function SidebarContent({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-gray-400 px-2 mt-4">No results found</p>
+        <p className="text-sm text-muted-foreground px-2 mt-4">No results found</p>
       )}
     </div>
   );

@@ -103,7 +103,7 @@ export function NoteItem({
       className={`h-[60px] ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
-          ? "bg-[#9D7D28] rounded-md"
+          ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
           : ""
       }`}
       onClick={handleNoteClick}
@@ -116,11 +116,11 @@ export function NoteItem({
           className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
             (!isMobile && isSearching && isHighlighted) ||
             (!isSearching && item.slug === selectedNoteSlug)
-              ? "text-gray-300"
-              : "text-gray-400"
+              ? "text-muted-foreground"
+              : "text-muted-foreground"
           }`}
         >
-          <span className="text-white">
+          <span className="text-black dark:text-white">
             {new Date(item.created_at).toLocaleDateString("en-US")}
           </span>{" "}
           {previewContent(item.content)}

@@ -370,7 +370,7 @@ export default function Sidebar({
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-background">
       <SessionId setSessionId={setSessionId} />
       <CommandMenu
         notes={notes}
@@ -383,7 +383,7 @@ export default function Sidebar({
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
       />
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="flex-1 overflow-y-auto px-2 dark:bg-muted">
         <Nav
           addNewPinnedNote={handlePinToggle}
           clearSearch={clearSearch}

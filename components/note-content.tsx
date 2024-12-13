@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -85,7 +85,7 @@ export default function NoteContent({
         <Textarea
           id="note-content"
           value={note.content || ""}
-          className="bg-[#1c1c1c] min-h-dvh focus:outline-none leading-normal"
+          className="min-h-dvh focus:outline-none leading-normal"
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
@@ -93,7 +93,7 @@ export default function NoteContent({
         />
       ) : (
         <div
-          className="bg-[#1c1c1c] h-full text-sm"
+          className="h-full text-sm"
           onClick={(e) => {
             if (canEdit && !note.public) {
               setIsEditing(true);

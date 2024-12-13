@@ -4,12 +4,6 @@ import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import Picker from "@emoji-mart/react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
 import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
@@ -56,9 +50,9 @@ export default function NoteHeader({
           </button>
         </Link>
       )}
-      <div className="px-2 bg-[#1c1c1c] mb-4 relative">
+      <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
-          <p className="text-gray-400 text-xs">{formattedDate}</p>
+          <p className="text-muted-foreground text-xs">{formattedDate}</p>
           {!note.public && (
             <Badge className="text-xs justify-center items-center ml-2">
               <Lock className="w-3 h-3 mr-1" />
@@ -68,19 +62,12 @@ export default function NoteHeader({
         </div>
         <div className="flex items-center relative">
           {canEdit && !note.public && !isMobile ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="cursor-pointer mr-2"
-                >
-                  {note.emoji}
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
-                  Select an emoji
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="cursor-pointer mr-2"
+            >
+              {note.emoji}
+            </button>
           ) : (
             <span className="mr-2">{note.emoji}</span>
           )}
@@ -92,7 +79,7 @@ export default function NoteHeader({
             <Input
               id="title"
               value={note.title}
-              className="placeholder:text-gray-400 text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
+              className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
               onChange={handleTitleChange}
               autoFocus={!note.title}

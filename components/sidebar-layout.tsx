@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { useMobileDetect } from "./mobile-detector";
 import Sidebar from "./sidebar";
@@ -35,13 +35,13 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
 
   return (
     <SessionNotesProvider>
-      <div className="bg-[#1c1c1c] text-white min-h-dvh flex">
+      <div className="dark:text-white min-h-dvh flex">
         {showSidebar && (
           <div
             className={`${
               isMobile
                 ? "w-full"
-                : "w-80 flex-shrink-0 border-r border-gray-400/20"
+                : "w-80 flex-shrink-0 border-r border-muted-foreground/20"
             } overflow-y-auto h-dvh`}
           >
             <Sidebar

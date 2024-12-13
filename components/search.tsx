@@ -45,7 +45,7 @@ export function SearchBar({
     <div className="py-2">
       <div className="relative">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Icons.search className="size-4 text-gray-400" />
+          <Icons.search className="text-muted-foreground" />
         </div>
         <input
           id="search"
@@ -53,7 +53,7 @@ export function SearchBar({
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search"
-          className="w-full pl-8 pr-8 py-0.5 bg-background rounded-lg text-base sm:text-sm placeholder:text-sm focus:outline-none border border-gray-400/20"
+          className="w-full pl-8 pr-8 py-0.5 dark:bg-muted rounded-lg text-base sm:text-sm placeholder:text-sm focus:outline-none border border-muted-foreground/20"
           aria-label="Search notes"
           autoComplete="off"
           ref={inputRef}
@@ -64,7 +64,7 @@ export function SearchBar({
             className="absolute inset-y-0 right-0 flex items-center pr-3"
             onClick={clearSearch}
           >
-            <Icons.close className="size-4 text-gray-400" />
+            <Icons.close className="text-muted-foreground" />
           </button>
         )}
       </div>

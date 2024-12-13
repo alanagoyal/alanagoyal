@@ -19,8 +19,7 @@ import {
 } from "./ui/command";
 import { DialogTitle, DialogDescription } from "./ui/dialog";
 import { useRouter } from "next/navigation";
-import { Icons } from "./icons";
-import { Pin, ArrowUp, ArrowDown, Trash } from "lucide-react";
+import { Pin, ArrowUp, ArrowDown, Trash, PenSquare } from "lucide-react";
 import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
@@ -149,7 +148,7 @@ export const CommandMenu = forwardRef<
     const commands = [
       {
         name: "New note",
-        icon: <Icons.new />,
+        icon: <PenSquare />,
         shortcut: "N",
         action: handleCreateNote,
       },
