@@ -64,7 +64,7 @@ export function ConversationItem({
           ? "bg-blue-500 text-white rounded-md"
           : ""
       } ${
-        showDivider
+        showDivider && activeConversation !== conversation.id
           ? "after:content-[\"\"] after:absolute after:bottom-0 after:left-[56px] after:right-4 after:border-t after:border-muted-foreground/20"
           : ""
       }`}
