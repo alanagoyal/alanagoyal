@@ -112,7 +112,9 @@ export function NoteItem({
     >
       <div
         className={`h-full px-4 ${
-          !isMobile && showDivider
+          !isMobile && showDivider && 
+          !(isSearching && isHighlighted) && 
+          !(item.slug === selectedNoteSlug)
             ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
             : ""
         }`}
