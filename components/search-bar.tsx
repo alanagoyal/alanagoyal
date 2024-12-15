@@ -16,6 +16,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
+              e.preventDefault();
               e.currentTarget.blur();
             }
           }}
