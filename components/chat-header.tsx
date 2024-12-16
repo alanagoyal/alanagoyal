@@ -129,6 +129,14 @@ export function ChatHeader({
       return;
     }
 
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowResults(false);
+      setSelectedIndex(-1);
+      updateRecipients();
+      return;
+    }
+
     if (!showResults || !searchValue) return;
 
     switch (e.key) {
@@ -147,10 +155,6 @@ export function ChatHeader({
         if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
           handlePersonSelect(filteredPeople[selectedIndex]);
         }
-        break;
-      case 'Escape':
-        setShowResults(false);
-        setSelectedIndex(-1);
         break;
     }
   };
