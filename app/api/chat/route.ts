@@ -13,7 +13,7 @@ const client = wrapOpenAI(
   })
 );
 
-export const logger = initLogger({
+initLogger({
   projectName: "dialogue",
   apiKey: process.env.BRAINTRUST_API_KEY,
 });
