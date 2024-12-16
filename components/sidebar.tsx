@@ -18,10 +18,11 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
   onUpdateConversation: (conversations: Conversation[]) => void;
-  isMobileView?: boolean;
+  isMobileView: boolean;
   searchTerm: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (term: string) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
+  isCommandMenuOpen: boolean;
 }
 
 export function Sidebar({ 
@@ -34,7 +35,8 @@ export function Sidebar({
   isMobileView,
   searchTerm,
   onSearchChange,
-  typingStatus
+  typingStatus,
+  isCommandMenuOpen
 }: SidebarProps) {
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
@@ -88,6 +90,9 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle navigation if command menu is open
+      if (isCommandMenuOpen) return;
+
       // Check if the active element is within a chat header input or dropdown
       const activeElement = document.activeElement;
       const isChatHeaderActive = activeElement?.closest('[data-chat-header="true"]') !== null;

@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
+import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 
 export default function App() {
   // State
@@ -30,6 +31,10 @@ export default function App() {
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+
+  // Add command menu ref
+  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
 
   const STORAGE_KEY = "dialogueConversations";
 
@@ -608,75 +613,92 @@ export default function App() {
   }
 
   return (
-    <main className="h-dvh w-full bg-background flex flex-col">
-      <div className="flex-1 flex h-full">
-        <div
-          className={`h-full ${isMobileView ? "w-full" : ""} ${
-            isMobileView && (activeConversation || isNewConversation)
-              ? "hidden"
-              : "block"
-          }`}
-        >
-          <Sidebar
-            conversations={conversations}
-            activeConversation={activeConversation}
-            onSelectConversation={(id) => {
-              selectConversation(id);
-            }}
-            onDeleteConversation={handleDeleteConversation}
-            onUpdateConversation={handleUpdateConversation}
-            isMobileView={isMobileView}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            typingStatus={typingStatus}
+    <div className="flex h-screen">
+      <CommandMenu
+        ref={commandMenuRef}
+        conversations={conversations}
+        activeConversation={activeConversation}
+        onNewChat={() => {
+          setIsNewConversation(true);
+          setActiveConversation(null);
+          window.history.pushState({}, "", "/");
+        }}
+        onSelectConversation={selectConversation}
+        onDeleteConversation={handleDeleteConversation}
+        onUpdateConversation={handleUpdateConversation}
+        onOpenChange={setIsCommandMenuOpen}
+      />
+      <main className="h-dvh w-full bg-background flex flex-col">
+        <div className="flex-1 flex h-full">
+          <div
+            className={`h-full ${isMobileView ? "w-full" : ""} ${
+              isMobileView && (activeConversation || isNewConversation)
+                ? "hidden"
+                : "block"
+            }`}
           >
-            <Nav
-              onNewChat={() => {
-                // Set new conversation state first
-                setIsNewConversation(true);
-                // Clear active conversation
-                selectConversation(null);
-                // Clear recipient input and message draft
-                setRecipientInput("");
-                handleMessageDraftChange("new", "");
+            <Sidebar
+              conversations={conversations}
+              activeConversation={activeConversation}
+              onSelectConversation={(id) => {
+                selectConversation(id);
               }}
+              onDeleteConversation={handleDeleteConversation}
+              onUpdateConversation={handleUpdateConversation}
+              isMobileView={isMobileView}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              typingStatus={typingStatus}
+              isCommandMenuOpen={isCommandMenuOpen}
+            >
+              <Nav
+                onNewChat={() => {
+                  // Set new conversation state first
+                  setIsNewConversation(true);
+                  // Clear active conversation
+                  selectConversation(null);
+                  // Clear recipient input and message draft
+                  setRecipientInput("");
+                  handleMessageDraftChange("new", "");
+                }}
+              />
+            </Sidebar>
+          </div>
+          <div
+            className={`flex-1 h-full ${isMobileView ? "w-full" : ""} ${
+              isMobileView && !activeConversation && !isNewConversation
+                ? "hidden"
+                : "block"
+            }`}
+          >
+            <ChatArea
+              isNewChat={isNewConversation}
+              activeConversation={conversations.find(
+                (c) => c.id === activeConversation
+              )}
+              recipientInput={recipientInput}
+              setRecipientInput={setRecipientInput}
+              isMobileView={isMobileView}
+              onBack={() => {
+                setIsNewConversation(false);
+                selectConversation(null);
+              }}
+              onSendMessage={handleSendMessage}
+              onReaction={handleReaction}
+              typingStatus={typingStatus}
+              conversationId={activeConversation}
+              onUpdateConversationRecipients={updateConversationRecipients}
+              onCreateConversation={createNewConversation}
+              messageDraft={
+                isNewConversation
+                  ? messageDrafts["new"] || ""
+                  : messageDrafts[activeConversation || ""] || ""
+              }
+              onMessageDraftChange={handleMessageDraftChange}
             />
-          </Sidebar>
+          </div>
         </div>
-        <div
-          className={`flex-1 h-full ${isMobileView ? "w-full" : ""} ${
-            isMobileView && !activeConversation && !isNewConversation
-              ? "hidden"
-              : "block"
-          }`}
-        >
-          <ChatArea
-            isNewChat={isNewConversation}
-            activeConversation={conversations.find(
-              (c) => c.id === activeConversation
-            )}
-            recipientInput={recipientInput}
-            setRecipientInput={setRecipientInput}
-            isMobileView={isMobileView}
-            onBack={() => {
-              setIsNewConversation(false);
-              selectConversation(null);
-            }}
-            onSendMessage={handleSendMessage}
-            onReaction={handleReaction}
-            typingStatus={typingStatus}
-            conversationId={activeConversation}
-            onUpdateConversationRecipients={updateConversationRecipients}
-            onCreateConversation={createNewConversation}
-            messageDraft={
-              isNewConversation
-                ? messageDrafts["new"] || ""
-                : messageDrafts[activeConversation || ""] || ""
-            }
-            onMessageDraftChange={handleMessageDraftChange}
-          />
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
