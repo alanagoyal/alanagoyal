@@ -88,7 +88,7 @@ export const CommandMenu = forwardRef<
       };
       document.addEventListener("keydown", down);
       return () => document.removeEventListener("keydown", down);
-    }, [open]);
+    }, [open, handleOpenChange]);
 
     const handleMoveUp = useCallback(() => {
       if (!activeConversation || conversations.length === 0) return;
@@ -115,7 +115,7 @@ export const CommandMenu = forwardRef<
         onSelectConversation(sortedConvos[sortedConvos.length - 1].id);
       }
       handleOpenChange(false);
-    }, [activeConversation, conversations, onSelectConversation]);
+    }, [activeConversation, conversations, onSelectConversation, handleOpenChange]);
 
     const handleMoveDown = useCallback(() => {
       if (!activeConversation || conversations.length === 0) return;
@@ -142,7 +142,7 @@ export const CommandMenu = forwardRef<
         onSelectConversation(sortedConvos[0].id);
       }
       handleOpenChange(false);
-    }, [activeConversation, conversations, onSelectConversation]);
+    }, [activeConversation, conversations, onSelectConversation, handleOpenChange]);
 
     const handleTogglePin = useCallback(() => {
       if (!activeConversation) return;
@@ -154,13 +154,13 @@ export const CommandMenu = forwardRef<
       });
       onUpdateConversation(updatedConversations);
       handleOpenChange(false);
-    }, [activeConversation, conversations, onUpdateConversation]);
+    }, [activeConversation, conversations, onUpdateConversation, handleOpenChange]);
 
     const handleDeleteConversation = useCallback(() => {
       if (!activeConversation) return;
       onDeleteConversation(activeConversation);
       handleOpenChange(false);
-    }, [activeConversation, onDeleteConversation]);
+    }, [activeConversation, onDeleteConversation, handleOpenChange]);
 
     const commands = [
       {
