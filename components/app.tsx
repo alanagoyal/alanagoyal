@@ -6,9 +6,11 @@ import { Conversation, Message, Reaction } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
+import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 
 export default function App() {
   // State
+  const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(
@@ -514,26 +516,55 @@ export default function App() {
   };
 
   // Method to handle conversation deletion
-  const handleDeleteConversation = (id: string) => {
+  const handleDeleteConversation = (id: string) => {    
     setConversations((prevConversations) => {
       const newConversations = prevConversations.filter((conv) => conv.id !== id);
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newConversations));
 
-      // If we're deleting the active conversation, select another one
-      if (id === activeConversation) {
-        if (newConversations.length > 0) {
-          selectConversation(newConversations[0].id);
+      // If we're deleting the active conversation
+      if (id === activeConversation && newConversations.length > 0) {
+        // Find the index of the deleted conversation in the original list
+        const deletedIndex = prevConversations.findIndex(conv => conv.id === id);
+        
+        // If we're deleting the last conversation in the list
+        if (deletedIndex === prevConversations.length - 1) {
+          // Go to the previous conversation
+          selectConversation(newConversations[newConversations.length - 1].id);
         } else {
-          selectConversation(null);
+          // Go to the next conversation (which is now at the same index)
+          selectConversation(newConversations[deletedIndex].id);
         }
+      } else if (newConversations.length === 0) {
+        // If no conversations left, clear the selection
+        selectConversation(null);
       }
 
       return newConversations;
     });
+
+    // Show toast notification
+    toast({
+      description: "Conversation deleted",
+    });
   };
 
+  // Method to handle conversation pin/unpin
+  const handleUpdateConversation = (conversations: Conversation[]) => {    
+    const updatedConversation = conversations.find(conv => conv.id === activeConversation);
+    setConversations(conversations);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+    
+    // Show toast notification
+    if (updatedConversation) {
+      toast({
+        description: updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned",
+      });
+    }
+  };
+
+  // Method to handle reaction
   const handleReaction = useCallback((messageId: string, reaction: Reaction) => {
     setConversations(prevConversations => {
       return prevConversations.map(conversation => {
@@ -593,7 +624,7 @@ export default function App() {
               selectConversation(id);
             }}
             onDeleteConversation={handleDeleteConversation}
-            onUpdateConversation={setConversations}
+            onUpdateConversation={handleUpdateConversation}
             isMobileView={isMobileView}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
