@@ -177,7 +177,7 @@ export function Sidebar({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation]);
+  }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation, isCommandMenuOpen]);
 
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
