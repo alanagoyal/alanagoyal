@@ -1,12 +1,21 @@
 import { OpenAI } from "openai";
 import { Recipient, Message } from "../../../types";
-import { logger } from "../logger";
 import { techPersonalities } from "../../../data/tech-personalities";
+import { wrapOpenAI } from "braintrust";
+import { initLogger } from "braintrust";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-  timeout: 30000, // 30 second timeout
-  maxRetries: 3,
+const client = wrapOpenAI(
+  new OpenAI({
+    baseURL: "https://api.braintrust.dev/v1/proxy",
+    apiKey: process.env.BRAINTRUST_API_KEY!,
+    timeout: 30000, // 30 second timeout
+    maxRetries: 3,
+  })
+);
+
+export const logger = initLogger({
+  projectName: "dialogue",
+  apiKey: process.env.BRAINTRUST_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -132,91 +141,75 @@ export async function POST(req: Request) {
     }
   `;
 
-  return await logger.traced(
-    async () => {
-      try {
-        const openaiMessages = [
-          { role: "system", content: prompt },
-          ...(messages || []).map((msg: Message) => ({
-            role: "user",
-            content: `${msg.sender}: ${msg.content}`,
-          })),
-        ];
+  try {
+    const openaiMessages = [
+      { role: "system", content: prompt },
+      ...(messages || []).map((msg: Message) => ({
+        role: "user",
+        content: `${msg.sender}: ${msg.content}`,
+      })),
+    ];
 
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: openaiMessages,
-          temperature: 0.9,
-          max_tokens: 150,
-        });
+    const response = await client.chat.completions.create({
+      model: "claude-3-5-sonnet-latest",
+      messages: openaiMessages,
+      temperature: 0.9,
+      max_tokens: 150,
+    });
 
-        const content = response.choices[0]?.message?.content;
+    const content = response.choices[0]?.message?.content;
 
-        if (!content) {
-          throw new Error("No response from OpenAI");
-        }
-
-        let messageData;
-        try {
-          messageData = JSON.parse(content);
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-          const match = content.match(/^([^:]+):\s*(.+)$/);
-          if (match) {
-            const [, sender, messageContent] = match;
-            messageData = {
-              sender: sender.trim(),
-              content: messageContent.trim(),
-            };
-          } else {
-            throw new Error("Invalid response format");
-          }
-        }
-
-        // Validate sender
-        if (
-          !sortedParticipants.find(
-            (r: Recipient) =>
-              r.name.toLowerCase() === messageData.sender.toLowerCase()
-          )
-        ) {
-          throw new Error(
-            "Invalid sender: must be one of the available participants"
-          );
-        }
-
-        return new Response(JSON.stringify(messageData), {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } catch (error) {
-        console.error("Error:", error);
-        return new Response(
-          JSON.stringify({
-            error: "Failed to generate message",
-            details: error instanceof Error ? error.message : String(error),
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-    },
-    {
-      name: "dialogue",
-      event: {
-        input: {
-          recipients,
-          messages,
-          shouldWrapUp,
-          isFirstMessage,
-          isOneOnOne,
-        },
-      },
+    if (!content) {
+      throw new Error("No response from OpenAI");
     }
-  );
+
+    let messageData;
+    try {
+      messageData = JSON.parse(content);
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      const match = content.match(/^([^:]+):\s*(.+)$/);
+      if (match) {
+        const [, sender, messageContent] = match;
+        messageData = {
+          sender: sender.trim(),
+          content: messageContent.trim(),
+        };
+      } else {
+        throw new Error("Invalid response format");
+      }
+    }
+
+    // Validate sender
+    if (
+      !sortedParticipants.find(
+        (r: Recipient) =>
+          r.name.toLowerCase() === messageData.sender.toLowerCase()
+      )
+    ) {
+      throw new Error(
+        "Invalid sender: must be one of the available participants"
+      );
+    }
+
+    return new Response(JSON.stringify(messageData), {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate message",
+        details: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
 }
