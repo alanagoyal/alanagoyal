@@ -1,4 +1,4 @@
-import { RefObject, Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction, useEffect } from "react";
 import { Note } from "@/lib/types";
 import { Icons } from "./icons";
 
@@ -23,6 +23,18 @@ export function SearchBar({
   setHighlightedIndex,
   clearSearch,
 }: SearchBarProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle second Escape press to clear search
+      if (e.key === "Escape" && document.activeElement !== inputRef.current && searchQuery) {
+        clearSearch();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [inputRef, searchQuery, clearSearch]);
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() === "") {
