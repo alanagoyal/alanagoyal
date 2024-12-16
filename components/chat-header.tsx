@@ -2,6 +2,7 @@ import { Icons } from "./icons";
 import { Conversation } from "../types";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
+import { useToast } from "@/hooks/use-toast"
 
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -24,6 +25,7 @@ export function ChatHeader({
   onUpdateRecipients,
   onCreateConversation,
 }: ChatHeaderProps) {
+  const { toast } = useToast();
 
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -37,17 +39,21 @@ export function ChatHeader({
   const updateRecipients = useCallback(() => {
     if (isNewChat || isEditMode) {
       const recipientNames = recipientInput.split(',').filter(r => r.trim());
-      if (recipientNames.length > 0) {
-        if (isEditMode) {
-          setIsEditMode(false);
-          onUpdateRecipients?.(recipientNames);
-        } else if (isNewChat) {
-          onCreateConversation?.(recipientNames);
-        }
-        setSearchValue('');
+      if (recipientNames.length === 0) {
+        toast({
+          description: "Oops! You need at least one recipient to save this conversation",
+        });
+        return;
       }
+      if (isEditMode) {
+        setIsEditMode(false);
+        onUpdateRecipients?.(recipientNames);
+      } else if (isNewChat) {
+        onCreateConversation?.(recipientNames);
+      }
+      setSearchValue('');
     }
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation]);
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
 
   // Effect
   useEffect(() => {
@@ -129,6 +135,14 @@ export function ChatHeader({
       return;
     }
 
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowResults(false);
+      setSelectedIndex(-1);
+      updateRecipients();
+      return;
+    }
+
     if (!showResults || !searchValue) return;
 
     switch (e.key) {
@@ -147,10 +161,6 @@ export function ChatHeader({
         if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
           handlePersonSelect(filteredPeople[selectedIndex]);
         }
-        break;
-      case 'Escape':
-        setShowResults(false);
-        setSelectedIndex(-1);
         break;
     }
   };

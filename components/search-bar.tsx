@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Icons } from "./icons";
 
 interface SearchBarProps {
@@ -6,6 +7,23 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
+  const justBlurred = useRef(false);
+
+  useEffect(() => {
+    const handleGlobalEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const searchInput = document.querySelector('input[placeholder="Search"]');
+        if (document.activeElement !== searchInput && value && !justBlurred.current) {
+          onChange("");
+        }
+        justBlurred.current = false;
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalEscape);
+    return () => window.removeEventListener('keydown', handleGlobalEscape);
+  }, [value, onChange]);
+
   return (
     <div className="py-2">
       <div className="relative">
@@ -16,7 +34,14 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
-              e.currentTarget.blur();
+              e.preventDefault();
+              if (document.activeElement === e.currentTarget) {
+                justBlurred.current = true;
+                e.currentTarget.blur();
+                setTimeout(() => {
+                  justBlurred.current = false;
+                }, 0);
+              }
             }
           }}
           placeholder="Search"

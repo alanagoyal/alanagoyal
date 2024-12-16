@@ -18,10 +18,11 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
   onUpdateConversation: (conversations: Conversation[]) => void;
-  isMobileView?: boolean;
+  isMobileView: boolean;
   searchTerm: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (term: string) => void;
   typingStatus: { conversationId: string; recipient: string; } | null;
+  isCommandMenuOpen: boolean;
 }
 
 export function Sidebar({ 
@@ -34,7 +35,8 @@ export function Sidebar({
   isMobileView,
   searchTerm,
   onSearchChange,
-  typingStatus
+  typingStatus,
+  isCommandMenuOpen
 }: SidebarProps) {
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
@@ -88,6 +90,9 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle navigation if command menu is open
+      if (isCommandMenuOpen) return;
+
       // Check if the active element is within a chat header input or dropdown
       const activeElement = document.activeElement;
       const isChatHeaderActive = activeElement?.closest('[data-chat-header="true"]') !== null;
@@ -96,39 +101,83 @@ export function Sidebar({
         return;
       }
 
-      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+      // For letter shortcuts, check if we're in an input or editor
+      if (['j', 'k', 'p', 'd'].includes(e.key)) {
+        if (
+          document.activeElement?.tagName === 'INPUT' || 
+          e.metaKey ||
+          document.querySelector('.ProseMirror')?.contains(document.activeElement)
+        ) {
+          return;
+        }
+      }
+
+      // Focus search on forward slash
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="text"][placeholder="Search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
         return;
       }
 
-      e.preventDefault();
-      
-      const currentIndex = filteredConversations.findIndex(
-        conv => conv.id === activeConversation
-      );
-      
-      if (currentIndex === -1) return;
-      
-      let nextIndex = currentIndex;
-      if (e.key === 'ArrowUp') {
-        nextIndex = currentIndex - 1;
-        if (nextIndex < 0) {
-          nextIndex = filteredConversations.length - 1;
+      // Navigation shortcuts - only navigate through filtered conversations
+      if ((e.key === 'ArrowDown' || e.key === 'j') && filteredConversations.length > 0) {
+        e.preventDefault();
+        const currentIndex = filteredConversations.findIndex(
+          conv => conv.id === activeConversation
+        );
+        
+        // If current conversation is not in filtered results, select the first one
+        if (currentIndex === -1) {
+          onSelectConversation(filteredConversations[0].id);
+          return;
         }
-      } else {
-        nextIndex = currentIndex + 1;
-        if (nextIndex >= filteredConversations.length) {
-          nextIndex = 0;
-        }
-      }
-      
-      if (nextIndex !== currentIndex) {
+        
+        const nextIndex = (currentIndex + 1) % filteredConversations.length;
         onSelectConversation(filteredConversations[nextIndex].id);
+      } 
+      else if ((e.key === 'ArrowUp' || e.key === 'k') && filteredConversations.length > 0) {
+        e.preventDefault();
+        const currentIndex = filteredConversations.findIndex(
+          conv => conv.id === activeConversation
+        );
+        
+        // If current conversation is not in filtered results, select the last one
+        if (currentIndex === -1) {
+          onSelectConversation(filteredConversations[filteredConversations.length - 1].id);
+          return;
+        }
+        
+        const nextIndex = currentIndex - 1 < 0 
+          ? filteredConversations.length - 1 
+          : currentIndex - 1;
+        onSelectConversation(filteredConversations[nextIndex].id);
+      }
+      // Action shortcuts
+      else if (e.key === 'p') {
+        e.preventDefault();
+        if (!activeConversation) return;
+        
+        const updatedConversations = conversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return { ...conv, pinned: !conv.pinned };
+          }
+          return conv;
+        });
+        onUpdateConversation(updatedConversations);
+      }
+      else if (e.key === 'd') {
+        e.preventDefault();
+        if (!activeConversation) return;
+        onDeleteConversation(activeConversation);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeConversation, filteredConversations, onSelectConversation]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation, isCommandMenuOpen]);
 
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>

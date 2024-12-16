@@ -6,9 +6,12 @@ import { Conversation, Message, Reaction } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
+import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
+import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 
 export default function App() {
   // State
+  const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(
@@ -28,6 +31,10 @@ export default function App() {
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+
+  // Add command menu ref
+  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
 
   const STORAGE_KEY = "dialogueConversations";
 
@@ -514,26 +521,55 @@ export default function App() {
   };
 
   // Method to handle conversation deletion
-  const handleDeleteConversation = (id: string) => {
+  const handleDeleteConversation = (id: string) => {    
     setConversations((prevConversations) => {
       const newConversations = prevConversations.filter((conv) => conv.id !== id);
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newConversations));
 
-      // If we're deleting the active conversation, select another one
-      if (id === activeConversation) {
-        if (newConversations.length > 0) {
-          selectConversation(newConversations[0].id);
+      // If we're deleting the active conversation
+      if (id === activeConversation && newConversations.length > 0) {
+        // Find the index of the deleted conversation in the original list
+        const deletedIndex = prevConversations.findIndex(conv => conv.id === id);
+        
+        // If we're deleting the last conversation in the list
+        if (deletedIndex === prevConversations.length - 1) {
+          // Go to the previous conversation
+          selectConversation(newConversations[newConversations.length - 1].id);
         } else {
-          selectConversation(null);
+          // Go to the next conversation (which is now at the same index)
+          selectConversation(newConversations[deletedIndex].id);
         }
+      } else if (newConversations.length === 0) {
+        // If no conversations left, clear the selection
+        selectConversation(null);
       }
 
       return newConversations;
     });
+
+    // Show toast notification
+    toast({
+      description: "Conversation deleted",
+    });
   };
 
+  // Method to handle conversation pin/unpin
+  const handleUpdateConversation = (conversations: Conversation[]) => {    
+    const updatedConversation = conversations.find(conv => conv.id === activeConversation);
+    setConversations(conversations);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+    
+    // Show toast notification
+    if (updatedConversation) {
+      toast({
+        description: updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned",
+      });
+    }
+  };
+
+  // Method to handle reaction
   const handleReaction = useCallback((messageId: string, reaction: Reaction) => {
     setConversations(prevConversations => {
       return prevConversations.map(conversation => {
@@ -577,75 +613,92 @@ export default function App() {
   }
 
   return (
-    <main className="h-dvh w-full bg-background flex flex-col">
-      <div className="flex-1 flex h-full">
-        <div
-          className={`h-full ${isMobileView ? "w-full" : ""} ${
-            isMobileView && (activeConversation || isNewConversation)
-              ? "hidden"
-              : "block"
-          }`}
-        >
-          <Sidebar
-            conversations={conversations}
-            activeConversation={activeConversation}
-            onSelectConversation={(id) => {
-              selectConversation(id);
-            }}
-            onDeleteConversation={handleDeleteConversation}
-            onUpdateConversation={setConversations}
-            isMobileView={isMobileView}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            typingStatus={typingStatus}
+    <div className="flex h-screen">
+      <CommandMenu
+        ref={commandMenuRef}
+        conversations={conversations}
+        activeConversation={activeConversation}
+        onNewChat={() => {
+          setIsNewConversation(true);
+          setActiveConversation(null);
+          window.history.pushState({}, "", "/");
+        }}
+        onSelectConversation={selectConversation}
+        onDeleteConversation={handleDeleteConversation}
+        onUpdateConversation={handleUpdateConversation}
+        onOpenChange={setIsCommandMenuOpen}
+      />
+      <main className="h-dvh w-full bg-background flex flex-col">
+        <div className="flex-1 flex h-full">
+          <div
+            className={`h-full ${isMobileView ? "w-full" : ""} ${
+              isMobileView && (activeConversation || isNewConversation)
+                ? "hidden"
+                : "block"
+            }`}
           >
-            <Nav
-              onNewChat={() => {
-                // Set new conversation state first
-                setIsNewConversation(true);
-                // Clear active conversation
-                selectConversation(null);
-                // Clear recipient input and message draft
-                setRecipientInput("");
-                handleMessageDraftChange("new", "");
+            <Sidebar
+              conversations={conversations}
+              activeConversation={activeConversation}
+              onSelectConversation={(id) => {
+                selectConversation(id);
               }}
+              onDeleteConversation={handleDeleteConversation}
+              onUpdateConversation={handleUpdateConversation}
+              isMobileView={isMobileView}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              typingStatus={typingStatus}
+              isCommandMenuOpen={isCommandMenuOpen}
+            >
+              <Nav
+                onNewChat={() => {
+                  // Set new conversation state first
+                  setIsNewConversation(true);
+                  // Clear active conversation
+                  selectConversation(null);
+                  // Clear recipient input and message draft
+                  setRecipientInput("");
+                  handleMessageDraftChange("new", "");
+                }}
+              />
+            </Sidebar>
+          </div>
+          <div
+            className={`flex-1 h-full ${isMobileView ? "w-full" : ""} ${
+              isMobileView && !activeConversation && !isNewConversation
+                ? "hidden"
+                : "block"
+            }`}
+          >
+            <ChatArea
+              isNewChat={isNewConversation}
+              activeConversation={conversations.find(
+                (c) => c.id === activeConversation
+              )}
+              recipientInput={recipientInput}
+              setRecipientInput={setRecipientInput}
+              isMobileView={isMobileView}
+              onBack={() => {
+                setIsNewConversation(false);
+                selectConversation(null);
+              }}
+              onSendMessage={handleSendMessage}
+              onReaction={handleReaction}
+              typingStatus={typingStatus}
+              conversationId={activeConversation}
+              onUpdateConversationRecipients={updateConversationRecipients}
+              onCreateConversation={createNewConversation}
+              messageDraft={
+                isNewConversation
+                  ? messageDrafts["new"] || ""
+                  : messageDrafts[activeConversation || ""] || ""
+              }
+              onMessageDraftChange={handleMessageDraftChange}
             />
-          </Sidebar>
+          </div>
         </div>
-        <div
-          className={`flex-1 h-full ${isMobileView ? "w-full" : ""} ${
-            isMobileView && !activeConversation && !isNewConversation
-              ? "hidden"
-              : "block"
-          }`}
-        >
-          <ChatArea
-            isNewChat={isNewConversation}
-            activeConversation={conversations.find(
-              (c) => c.id === activeConversation
-            )}
-            recipientInput={recipientInput}
-            setRecipientInput={setRecipientInput}
-            isMobileView={isMobileView}
-            onBack={() => {
-              setIsNewConversation(false);
-              selectConversation(null);
-            }}
-            onSendMessage={handleSendMessage}
-            onReaction={handleReaction}
-            typingStatus={typingStatus}
-            conversationId={activeConversation}
-            onUpdateConversationRecipients={updateConversationRecipients}
-            onCreateConversation={createNewConversation}
-            messageDraft={
-              isNewConversation
-                ? messageDrafts["new"] || ""
-                : messageDrafts[activeConversation || ""] || ""
-            }
-            onMessageDraftChange={handleMessageDraftChange}
-          />
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

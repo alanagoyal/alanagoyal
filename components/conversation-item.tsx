@@ -188,7 +188,7 @@ export function ConversationItem({
           </ContextMenuItem>
           <ContextMenuItem
             className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
-            onClick={() => onDeleteConversation(conversation.id)}
+            onClick={handleDelete}
           >
             <span>Delete</span>
             {isMobileView && <Trash className="h-4 w-4 ml-2" />}
@@ -213,7 +213,7 @@ export function ConversationItem({
         </ContextMenuItem>
         <ContextMenuItem
           className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
-          onClick={() => onDeleteConversation(conversation.id)}
+          onClick={handleDelete}
         >
           <span>Delete</span>
           {isMobileView && <Trash className="h-4 w-4 ml-2" />}
