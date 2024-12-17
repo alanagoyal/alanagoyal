@@ -202,10 +202,7 @@ export function MessageBubble({
               <div
                 key={`${reaction.type}-${index}`}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm animate-scale-in",
-                  message.sender === "me" 
-                    ? "bg-gray-100 dark:bg-[#404040]" 
-                    : "bg-[#0A7CFF] text-white"
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm animate-scale-in bg-[#0A7CFF] text-white border border-background"
                 )}
               >
                 <FontAwesomeIcon icon={reactionIcons[reaction.type]} />
