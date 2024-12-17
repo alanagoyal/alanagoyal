@@ -25,6 +25,7 @@ interface MessageBubbleProps {
   isTyping?: boolean;                
   onReaction?: (messageId: string, reaction: Reaction) => void;  
   onOpenChange?: (isOpen: boolean) => void;
+  justSent?: boolean;
 }
 
 export function MessageBubble({ 
@@ -34,6 +35,7 @@ export function MessageBubble({
   isTyping,
   onReaction,
   onOpenChange,
+  justSent = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -215,7 +217,12 @@ export function MessageBubble({
 
       {/* Show "Delivered" for last message from current user */}
       {message.sender === "me" && isLastUserMessage && !isTyping && (
-        <div className="text-xs text-gray-500 mt-1 mr-1 animate-scale-in">Delivered</div>
+        <div className={cn(
+          "text-xs text-gray-500 mt-1 mr-1",
+          justSent && "animate-scale-in"
+        )}>
+          Delivered
+        </div>
       )}
     </div>
   );

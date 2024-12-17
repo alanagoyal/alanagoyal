@@ -22,6 +22,7 @@ export function MessageList({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
+  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
 
   const isTypingInThisConversation = typingStatus && 
     typingStatus.conversationId === conversationId;
@@ -33,6 +34,21 @@ export function MessageList({
       requestAnimationFrame(() => {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       });
+    }
+  }, [messages]);
+
+  // Update lastSentMessageId when a new message is added
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === "me") {
+        setLastSentMessageId(lastMessage.id);
+        // Clear the lastSentMessageId after animation duration
+        const timer = setTimeout(() => {
+          setLastSentMessageId(null);
+        }, 1000); // Adjust this timing to match your animation duration
+        return () => clearTimeout(timer);
+      }
     }
   }, [messages]);
 
@@ -50,15 +66,17 @@ export function MessageList({
               isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
             )}
           >
-            <MessageBubble 
-              message={message} 
-              conversation={conversation}
+            <MessageBubble
+              message={message}
               isLastUserMessage={index === lastUserMessageIndex}
+              conversation={conversation}
+              isTyping={false}
               onReaction={onReaction}
               onOpenChange={(isOpen) => {
-                setIsAnyReactionMenuOpen(isOpen);
                 setActiveMessageId(isOpen ? message.id : null);
+                setIsAnyReactionMenuOpen(isOpen);
               }}
+              justSent={message.id === lastSentMessageId}
             />
           </div>
         ))}
