@@ -21,6 +21,7 @@ import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
 import { SessionNotesContext } from "@/app/session-notes";
 import { Nav } from "./nav";
+import { useTheme } from "next-themes";
 
 const labels = {
   pinned: (
@@ -282,6 +283,8 @@ export default function Sidebar({
     }
   }, [localSearchResults, highlightedIndex, router, clearSearch]);
 
+  const { setTheme, theme } = useTheme();
+
   useEffect(() => {
     const shortcuts = {
       j: () => navigateNotes("down"),
@@ -292,6 +295,7 @@ export default function Sidebar({
       d: () => highlightedNote && handleNoteDelete(highlightedNote),
       "/": () => searchInputRef.current?.focus(),
       Escape: () => (document.activeElement as HTMLElement)?.blur(),
+      t: () => setTheme(theme === "dark" ? "light" : "dark"),
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -356,6 +360,7 @@ export default function Sidebar({
     handleNoteDelete,
     commandMenuRef,
     goToHighlightedNote,
+    theme,
   ]);
 
   const handleNoteSelect = useCallback(

@@ -24,6 +24,8 @@ import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
 import { SessionNotesContext } from "@/app/session-notes";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 
 export interface CommandMenuProps {
   notes: Note[];
@@ -59,6 +61,7 @@ export const CommandMenu = forwardRef<
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const router = useRouter();
+    const { setTheme, theme } = useTheme();
 
     useImperativeHandle(ref, () => ({
       setOpen: (newOpen: boolean) => {
@@ -175,6 +178,15 @@ export const CommandMenu = forwardRef<
         icon: <Trash />,
         shortcut: "D",
         action: handleDeleteNote,
+      },
+      {
+        name: "Toggle theme",
+        icon: theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />,
+        shortcut: "T",
+        action: () => {
+          setTheme(theme === "light" ? "dark" : "light");
+          setOpen(false);
+        },
       },
     ];
 
