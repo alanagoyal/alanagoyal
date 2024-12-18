@@ -10,6 +10,7 @@ import {
 } from "./ui/context-menu";
 import { ConversationItem } from "./conversation-item";
 import { Pin, Trash } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -38,6 +39,7 @@ export function Sidebar({
   typingStatus,
   isCommandMenuOpen
 }: SidebarProps) {
+  const { theme, setTheme } = useTheme();
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
     
@@ -102,7 +104,7 @@ export function Sidebar({
       }
 
       // For letter shortcuts, check if we're in an input or editor
-      if (['j', 'k', 'p', 'd'].includes(e.key)) {
+      if (['j', 'k', 'p', 'd', 't'].includes(e.key)) {
         if (
           document.activeElement?.tagName === 'INPUT' || 
           e.metaKey ||
@@ -110,6 +112,13 @@ export function Sidebar({
         ) {
           return;
         }
+      }
+
+      // Theme toggle shortcut
+      if (e.key === 't') {
+        e.preventDefault();
+        setTheme(theme === "light" ? "dark" : "light");
+        return;
       }
 
       // Focus search on forward slash
@@ -177,7 +186,7 @@ export function Sidebar({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation, isCommandMenuOpen]);
+  }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation, isCommandMenuOpen, theme]);
 
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
