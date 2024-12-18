@@ -17,8 +17,9 @@ import {
   CommandShortcut,
 } from "./ui/command";
 import { DialogTitle, DialogDescription } from "./ui/dialog";
-import { Pin, ArrowUp, ArrowDown, Trash, PenSquare } from "lucide-react";
+import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon } from "lucide-react";
 import { Conversation } from "@/types";
+import { useTheme } from "next-themes";
 
 export interface CommandMenuProps {
   conversations: Conversation[];
@@ -49,6 +50,7 @@ export const CommandMenu = forwardRef<
   ) => {
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const { setTheme, theme } = useTheme();
 
     const handleOpenChange = (newOpen: boolean) => {
       setOpen(newOpen);
@@ -195,6 +197,15 @@ export const CommandMenu = forwardRef<
         icon: <Trash className="mr-2 h-4 w-4" />,
         shortcut: "D",
         action: handleDeleteConversation,
+      },
+      {
+        name: "Toggle theme",
+        icon: theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />,
+        shortcut: "T",
+        action: () => {
+          setTheme(theme === "light" ? "dark" : "light");
+          handleOpenChange(false);
+        },
       },
     ];
 
