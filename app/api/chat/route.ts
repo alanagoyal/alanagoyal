@@ -180,7 +180,7 @@ export async function POST(req: Request) {
     try {
       messageData = JSON.parse(content);
     } catch (error) {
-      console.error("Failed to parse JSON response. Content:", content);
+      console.error("Failed to parse JSON response:", error, "Content:", content);
       throw new Error("Invalid JSON response from API");
     }
 
