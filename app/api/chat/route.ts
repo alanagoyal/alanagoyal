@@ -20,17 +20,31 @@ initLogger({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
-    body;
+  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } = body;
 
-  const lastMessage =
-    messages?.length > 0 ? messages[messages.length - 1] : null;
+  const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
+  const lastAiMessage = messages?.slice().reverse().find((m: Message) => m.sender !== "me");
+  
+  // Find consecutive user messages
+  let consecutiveUserMessages = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].sender === "me") {
+      consecutiveUserMessages++;
+    } else {
+      break;
+    }
+  }
+
+  const wasInterrupted =
+    consecutiveUserMessages > 0 && lastAiMessage && 
+    messages.indexOf(lastAiMessage) === messages.length - (consecutiveUserMessages + 1);
+
   const availableParticipants = recipients.filter(
     (r: Recipient) => r.name !== lastMessage?.sender
   );
 
   // Count consecutive messages from each participant
-  const recentMessages = messages?.slice(-3) || [];
+  const recentMessages = messages?.slice(-4) || [];
   const participantCounts = new Map<string, number>();
   for (const msg of recentMessages) {
     if (msg.sender !== "me") {
@@ -70,6 +84,13 @@ export async function POST(req: Request) {
       .map((r: Recipient) => r.name)
       .join(", ")}.
 
+    ${wasInterrupted ? `
+    IMPORTANT: The user has sent ${consecutiveUserMessages > 1 ? 'multiple messages' : 'a message'} that interrupted the previous flow. Your response should:
+    1. Acknowledge this interruption naturally
+    2. Address ${consecutiveUserMessages > 1 ? 'all of the user\'s recent messages' : 'the user\'s message'} directly
+    3. Keep the conversation flowing in the new direction
+    ` : ""}
+    
     Personality Guidelines for each participant:
     ${sortedParticipants
       .map((r: Recipient) => {
@@ -151,7 +172,7 @@ export async function POST(req: Request) {
     ];
 
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "claude-3-5-sonnet-latest",
       messages: openaiMessages,
       temperature: 0.9,
       max_tokens: 150,

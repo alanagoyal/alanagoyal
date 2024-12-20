@@ -10,6 +10,7 @@ type MessageTask = {
   timestamp: number;
   abortController: AbortController;
   consecutiveAiMessages: number;
+  conversationVersion: number; // Add version tracking
 };
 
 // Represents the current state of the message queue
@@ -42,6 +43,9 @@ export class MessageQueue {
   };
   private callbacks: MessageQueueCallbacks;
   private activeConversation: string | null = null;
+  private conversationVersion: number = 0; // Add version counter
+  private userMessageDebounceTimeout: NodeJS.Timeout | null = null;
+  private pendingUserMessages: Conversation | null = null;
 
   //  Initializes the MessageQueue instance with callback functions
   constructor(callbacks: MessageQueueCallbacks) {
@@ -53,19 +57,35 @@ export class MessageQueue {
   public enqueueUserMessage(conversation: Conversation) {
     // Cancel all pending AI messages when user sends a message
     this.cancelAllTasks();
+    
+    // Clear any existing debounce timeout
+    if (this.userMessageDebounceTimeout) {
+      clearTimeout(this.userMessageDebounceTimeout);
+    }
 
-    // Create a new task for responding to user message
-    const task: MessageTask = {
-      id: crypto.randomUUID(),
-      conversation,
-      isFirstMessage: false,
-      priority: 100, // Highest priority for user messages
-      timestamp: Date.now(),
-      abortController: new AbortController(),
-      consecutiveAiMessages: 0, // Reset counter for user messages
-    };
+    // Store or update pending messages
+    this.pendingUserMessages = conversation;
 
-    this.addTask(task);
+    // Debounce user messages to wait for potential follow-up messages
+    this.userMessageDebounceTimeout = setTimeout(() => {
+      if (this.pendingUserMessages) {
+        this.conversationVersion++;
+        
+        const task: MessageTask = {
+          id: crypto.randomUUID(),
+          conversation: this.pendingUserMessages,
+          isFirstMessage: false,
+          priority: 100,
+          timestamp: Date.now(),
+          abortController: new AbortController(),
+          consecutiveAiMessages: 0,
+          conversationVersion: this.conversationVersion,
+        };
+
+        this.pendingUserMessages = null;
+        this.addTask(task);
+      }
+    }, 500); // Wait 500ms for potential follow-up messages
   }
 
   // Adds an AI message to the queue with normal priority
@@ -97,6 +117,7 @@ export class MessageQueue {
       timestamp: Date.now(),
       abortController: new AbortController(),
       consecutiveAiMessages,
+      conversationVersion: this.conversationVersion, // Use current version
     };
 
     this.addTask(task);
@@ -131,6 +152,14 @@ export class MessageQueue {
     this.state.currentTask = task;
 
     try {
+      // Check if this task belongs to an outdated conversation version
+      if (task.conversationVersion < this.conversationVersion) {
+        // Skip processing outdated tasks
+        this.state.status = "idle";
+        this.processNextTask();
+        return;
+      }
+
       // Start typing indicator
       this.callbacks.onTypingStatusChange(task.conversation.id, null);
 
@@ -155,7 +184,7 @@ export class MessageQueue {
       const data = await response.json();
 
       // Simulate typing delay
-      const typingDelay = task.priority === 100 ? 3000 : 4000; // Faster for user responses
+      const typingDelay = task.priority === 100 ? 3000 : 5000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
         setTimeout(resolve, typingDelay + Math.random() * 2000)
@@ -192,8 +221,8 @@ export class MessageQueue {
         // Add a small delay before the next AI message
         await new Promise((resolve) => setTimeout(resolve, 750));
 
-        if (!task.abortController.signal.aborted) {
-          // Only queue next AI message in group chats
+        // Only queue next AI message if we're still on the same conversation version
+        if (!task.abortController.signal.aborted && task.conversationVersion === this.conversationVersion) {
           if (task.conversation.recipients.length > 1) {
             const lastAiSender = data.sender;
             const otherRecipients = task.conversation.recipients.filter(
