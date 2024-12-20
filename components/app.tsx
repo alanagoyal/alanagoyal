@@ -613,7 +613,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
