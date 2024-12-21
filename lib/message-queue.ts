@@ -184,7 +184,7 @@ export class MessageQueue {
       const data = await response.json();
 
       // Simulate typing delay
-      const typingDelay = task.priority === 100 ? 3000 : 5000; // Faster for user responses
+      const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
         setTimeout(resolve, typingDelay + Math.random() * 2000)
