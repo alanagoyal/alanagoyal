@@ -219,7 +219,7 @@ export class MessageQueue {
         };
 
         // Add a small delay before the next AI message
-        await new Promise((resolve) => setTimeout(resolve, 750));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Only queue next AI message if we're still on the same conversation version
         if (!task.abortController.signal.aborted && task.conversationVersion === this.conversationVersion) {

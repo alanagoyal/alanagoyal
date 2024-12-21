@@ -20,11 +20,16 @@ initLogger({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } = body;
+  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
+    body;
 
-  const lastMessage = messages?.length > 0 ? messages[messages.length - 1] : null;
-  const lastAiMessage = messages?.slice().reverse().find((m: Message) => m.sender !== "me");
-  
+  const lastMessage =
+    messages?.length > 0 ? messages[messages.length - 1] : null;
+  const lastAiMessage = messages
+    ?.slice()
+    .reverse()
+    .find((m: Message) => m.sender !== "me");
+
   // Find consecutive user messages
   let consecutiveUserMessages = 0;
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -36,8 +41,10 @@ export async function POST(req: Request) {
   }
 
   const wasInterrupted =
-    consecutiveUserMessages > 0 && lastAiMessage && 
-    messages.indexOf(lastAiMessage) === messages.length - (consecutiveUserMessages + 1);
+    consecutiveUserMessages > 0 &&
+    lastAiMessage &&
+    messages.indexOf(lastAiMessage) ===
+      messages.length - (consecutiveUserMessages + 1);
 
   const availableParticipants = recipients.filter(
     (r: Recipient) => r.name !== lastMessage?.sender
@@ -76,15 +83,25 @@ export async function POST(req: Request) {
     }
     `
         : `
-    You're in a group chat with "me" and: ${recipients.map((r: Recipient) => r.name).join(", ")}.
-    You'll be one of these people for your next msg: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}.
+    You're in a group chat with "me" and: ${recipients
+      .map((r: Recipient) => r.name)
+      .join(", ")}.
+    You'll be one of these people for your next msg: ${sortedParticipants
+      .map((r: Recipient) => r.name)
+      .join(", ")}.
 
-    ${wasInterrupted ? `
-    Heads up: The user ${consecutiveUserMessages > 1 ? 'sent some messages' : 'jumped in'} with something new. Make sure to:
+    ${
+      wasInterrupted
+        ? `
+    Heads up: The user ${
+      consecutiveUserMessages > 1 ? "sent some messages" : "jumped in"
+    } with something new. Make sure to:
     - Acknowledge it naturally
     - Address what they said
     - Go with the new flow
-    ` : ""}
+    `
+        : ""
+    }
     
     Quick personality notes:
     ${sortedParticipants
@@ -109,7 +126,9 @@ export async function POST(req: Request) {
     2. ${
       isOneOnOne
         ? `You have to be "${recipients[0].name}"`
-        : `Pick from these names: ${sortedParticipants.map((r: Recipient) => r.name).join(", ")}`
+        : `Pick from these names: ${sortedParticipants
+            .map((r: Recipient) => r.name)
+            .join(", ")}`
     }
     3. Don't use "me" as sender
     
@@ -127,7 +146,7 @@ export async function POST(req: Request) {
     - If user tagged someone specific, only reply if you're them
     - Match your character's style
     - Keep it short and chatty
-    - Your response should be at most 50 words
+    - Your response should be at most 20 words
     - Skip the emojis
     - Only use names when it feels right
     - Make it personal if replying to user
@@ -140,13 +159,14 @@ export async function POST(req: Request) {
     ${
       shouldWrapUp
         ? `
-    - This is the last message, so wrap it up nicely.`
+    - This is the last message. 
+    - Don't ask a question to another recipient unless it's to "me" the user.`
         : ""
     }
     ${
       isFirstMessage
         ? `
-    - This is the first message, so start the conversation with a friendly tone.
+    - This is the first message in the group chat.
     - Ask a question or make a statement that gets the group talking.`
         : ""
     }`
@@ -167,7 +187,7 @@ export async function POST(req: Request) {
       messages: openaiMessages,
       temperature: 0.9,
       max_tokens: 150,
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const content = response.choices[0]?.message?.content;
@@ -180,7 +200,12 @@ export async function POST(req: Request) {
     try {
       messageData = JSON.parse(content);
     } catch (error) {
-      console.error("Failed to parse JSON response:", error, "Content:", content);
+      console.error(
+        "Failed to parse JSON response:",
+        error,
+        "Content:",
+        content
+      );
       throw new Error("Invalid JSON response from API");
     }
 
@@ -191,7 +216,10 @@ export async function POST(req: Request) {
           r.name.toLowerCase() === messageData.sender.toLowerCase()
       )
     ) {
-      console.error("Available participants:", sortedParticipants.map((r: Recipient) => r.name));
+      console.error(
+        "Available participants:",
+        sortedParticipants.map((r: Recipient) => r.name)
+      );
       console.error("Received sender:", messageData.sender);
       throw new Error(
         "Invalid sender: must be one of the available participants"
