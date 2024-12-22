@@ -27,7 +27,7 @@ export type MessageInputHandle = {
 };
 
 // Forward ref component to expose focus method to parent
-export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProps, 'ref'>>(({
+export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProps, 'ref'>>(function MessageInput({
   message,
   setMessage,
   handleSend,
@@ -36,7 +36,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   isMobileView = false,
   conversationId,
   isNewChat = false,
-}, ref) => {
+}, ref) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
