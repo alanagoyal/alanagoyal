@@ -122,7 +122,9 @@ export function Sidebar({
       }
 
       // Focus search on forward slash
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && 
+          document.activeElement?.tagName !== 'INPUT' && 
+          !document.activeElement?.closest('.ProseMirror')) {
         e.preventDefault();
         const searchInput = document.querySelector('input[type="text"][placeholder="Search"]') as HTMLInputElement;
         if (searchInput) {
