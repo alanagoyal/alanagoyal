@@ -61,16 +61,16 @@ export function ConversationItem({
       onClick={() => onSelectConversation(conversation.id)}
       className={`w-full h-[70px] py-2 text-left relative flex items-center ${
         activeConversation === conversation.id
-          ? "bg-blue-500 text-white rounded-md"
+          ? "bg-[#0A7CFF] text-white rounded-md"
           : ""
       } ${
-        showDivider && activeConversation !== conversation.id
+        showDivider
           ? "after:content-[\"\"] after:absolute after:bottom-0 after:left-[56px] after:right-4 after:border-t after:border-muted-foreground/20"
           : ""
       }`}
     >
       {conversation.unreadCount > 0 && (
-        <div className="absolute left-0.3 w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0" />
+        <div className="absolute left-0.3 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
       )}
       <div className="flex items-center gap-2 w-full px-4">
         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
@@ -182,14 +182,14 @@ export function ConversationItem({
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
-            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
             onClick={handlePin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
             {isMobileView && <Pin className="h-4 w-4 ml-2" />}
           </ContextMenuItem>
           <ContextMenuItem
-            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
             onClick={handleDelete}
           >
             <span>Delete</span>
@@ -207,14 +207,14 @@ export function ConversationItem({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
-          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+          className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
           onClick={handlePin}
         >
           <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
           {isMobileView && <Pin className="h-4 w-4 ml-2" />}
         </ContextMenuItem>
         <ContextMenuItem
-          className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+          className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
           onClick={handleDelete}
         >
           <span>Delete</span>

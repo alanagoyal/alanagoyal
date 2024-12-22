@@ -228,7 +228,7 @@ export function Sidebar({
                             onClick={() => onSelectConversation(conversation.id)}
                             className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
                               activeConversation === conversation.id 
-                                ? 'bg-blue-500 text-white' 
+                                ? 'bg-[#0A7CFF] text-white' 
                                 : ''
                             }`}
                           >
@@ -252,7 +252,7 @@ export function Sidebar({
                         </ContextMenuTrigger>
                         <ContextMenuContent>
                           <ContextMenuItem
-                            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+                            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
                             onClick={() => {
                               const updatedConversations = conversations.map(conv => 
                                 conv.id === conversation.id 
@@ -266,7 +266,7 @@ export function Sidebar({
                             {isMobileView && <Pin className="h-4 w-4 ml-2" />}
                           </ContextMenuItem>
                           <ContextMenuItem
-                            className={`focus:bg-blue-500 focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+                            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
                             onClick={() => onDeleteConversation(conversation.id)}
                           >
                             <span>Delete</span>
@@ -283,24 +283,30 @@ export function Sidebar({
           {/* Regular Conversation List */}
           {filteredConversations
             .filter(conv => !conv.pinned)
-            .map((conversation, index, array) => (
-              <ConversationItem
-                key={conversation.id}
-                conversation={{
-                  ...conversation,
-                  isTyping: typingStatus?.conversationId === conversation.id
-                }}
-                activeConversation={activeConversation}
-                onSelectConversation={onSelectConversation}
-                onDeleteConversation={onDeleteConversation}
-                onUpdateConversation={onUpdateConversation}
-                conversations={conversations}
-                formatTime={formatTime}
-                getInitials={getInitials}
-                isMobileView={isMobileView}
-                showDivider={index !== array.length - 1}
-              />
-            ))}
+            .map((conversation, index, array) => {
+              const isActive = conversation.id === activeConversation;
+              const nextConversation = array[index + 1];
+              const isNextActive = nextConversation?.id === activeConversation;
+              
+              return (
+                <ConversationItem
+                  key={conversation.id}
+                  conversation={{
+                    ...conversation,
+                    isTyping: typingStatus?.conversationId === conversation.id
+                  }}
+                  activeConversation={activeConversation}
+                  onSelectConversation={onSelectConversation}
+                  onDeleteConversation={onDeleteConversation}
+                  onUpdateConversation={onUpdateConversation}
+                  conversations={conversations}
+                  formatTime={formatTime}
+                  getInitials={getInitials}
+                  isMobileView={isMobileView}
+                  showDivider={!isActive && !isNextActive && index !== array.length - 1}
+                />
+              );
+            })}
         </div>
       </div>
     </div>

@@ -292,7 +292,7 @@ export function ChatHeader({
                             className={`px-4 py-2 cursor-pointer ${
                               selectedIndex === index 
                                 ? "bg-[#0A7CFF]" 
-                                : "hover:bg-[#0A7CFF]/10"
+                                : ""
                             }`}
                             onMouseDown={(e) => {
                               e.preventDefault(); // Prevent input blur
