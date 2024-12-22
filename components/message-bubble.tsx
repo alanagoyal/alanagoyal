@@ -25,6 +25,8 @@ interface MessageBubbleProps {
   isTyping?: boolean;                
   onReaction?: (messageId: string, reaction: Reaction) => void;  
   onOpenChange?: (isOpen: boolean) => void;
+  // Callback to focus message input after reaction completes
+  onReactionComplete?: () => void;
   justSent?: boolean;
 }
 
@@ -35,6 +37,7 @@ export function MessageBubble({
   isTyping,
   onReaction,
   onOpenChange,
+  onReactionComplete,
   justSent = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
@@ -59,29 +62,32 @@ export function MessageBubble({
   // Handler for when a reaction is clicked
   const handleReaction = useCallback((type: ReactionType) => {
     if (onReaction) {
+      // Create reaction with current timestamp
       const reaction: Reaction = {
         type,
         sender: "me",
         timestamp: new Date().toISOString()
       };
       
-      // Set the just added reaction type to trigger animation
+      // Start reaction animation
       setJustAddedReactionType(type);
       
-      // Clear the animation state after animation completes
+      // Clear animation after completion
       setTimeout(() => {
         setJustAddedReactionType(null);
       }, 300);
 
+      // Send reaction to parent
       onReaction(message.id, reaction);
       
-      // Add a slight delay before closing the menu to show the animation
+      // Close menu and focus input with delay for animation
       setTimeout(() => {
         setIsOpen(false);
         onOpenChange?.(false);
-      }, 150); // 150ms delay
+        onReactionComplete?.();
+      }, 150);
     }
-  }, [message.id, onReaction, onOpenChange]);
+  }, [message.id, onReaction, onOpenChange, onReactionComplete]);
 
   // Check if a specific reaction type is already active for the current user
   const isReactionActive = (type: ReactionType) => {

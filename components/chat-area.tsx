@@ -1,5 +1,5 @@
 import { Conversation, Reaction } from "../types";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
@@ -38,6 +38,7 @@ export function ChatArea({
   onMessageDraftChange,
 }: ChatAreaProps) {
   const showRecipientInput = isNewChat && !activeConversation;
+    const messageInputRef = useRef<{ focus: () => void }>(null);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
@@ -76,6 +77,7 @@ export function ChatArea({
           typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
           onReaction={onReaction}
           conversationId={conversationId}
+          messageInputRef={messageInputRef}
         />
       </div>
       <div className="sticky bottom-0 bg-background z-20" style={{
@@ -83,6 +85,7 @@ export function ChatArea({
       }}>
         <MessageInput
           key={messageInputKey}
+          ref={messageInputRef}
           message={messageDraft}
           isNewChat={isNewChat}
           setMessage={(msg) => {

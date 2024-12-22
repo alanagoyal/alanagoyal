@@ -1,5 +1,5 @@
 import { Recipient } from "@/types";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { Smile } from "lucide-react";
@@ -21,7 +21,13 @@ interface MessageInputProps {
   isNewChat?: boolean;
 }
 
-export function MessageInput({
+// Export type for message input's focus method
+export type MessageInputHandle = {
+  focus: () => void;
+};
+
+// Forward ref component to expose focus method to parent
+export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProps, 'ref'>>(({
   message,
   setMessage,
   handleSend,
@@ -30,7 +36,7 @@ export function MessageInput({
   isMobileView = false,
   conversationId,
   isNewChat = false,
-}: MessageInputProps) {
+}, ref) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -175,6 +181,16 @@ export function MessageInput({
     immediatelyRender: false,
   })
 
+  // Expose focus method to parent through ref
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      // Focus editor at end of content
+      if (editor) {
+        editor.commands.focus('end');
+      }
+    }
+  }), [editor]);
+
   useEffect(() => {
     if (editor && message !== editor.getHTML()) {
       editor.commands.setContent(message)
@@ -265,4 +281,4 @@ export function MessageInput({
       </div>
     </div>
   );
-}
+});

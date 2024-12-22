@@ -9,6 +9,7 @@ interface MessageListProps {
   typingStatus: { conversationId: string; recipient: string; } | null;
   conversationId: string | null;
   onReaction?: (messageId: string, reaction: Reaction) => void;
+  messageInputRef?: React.RefObject<{ focus: () => void }>;
 }
 
 export function MessageList({ 
@@ -16,7 +17,8 @@ export function MessageList({
   conversation, 
   typingStatus, 
   conversationId,
-  onReaction
+  onReaction,
+  messageInputRef
 }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -73,8 +75,13 @@ export function MessageList({
               isTyping={false}
               onReaction={onReaction}
               onOpenChange={(isOpen) => {
+                // Track active reaction menu to dim other messages
                 setActiveMessageId(isOpen ? message.id : null);
                 setIsAnyReactionMenuOpen(isOpen);
+              }}
+              onReactionComplete={() => {
+                // Focus input after reaction for smooth typing flow
+                messageInputRef?.current?.focus();
               }}
               justSent={message.id === lastSentMessageId}
             />
