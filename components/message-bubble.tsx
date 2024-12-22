@@ -136,7 +136,7 @@ export function MessageBubble({
     >
       {/* Show recipient name for messages from others */}
       {recipientName && (
-        <div className="text-xs text-muted-foreground ml-4 mb-1">{recipientName}</div>
+        <div className="text-[10px] text-muted-foreground ml-4 mb-1">{recipientName}</div>
       )}
 
       {/* Message bubble container */}
