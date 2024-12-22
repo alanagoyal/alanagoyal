@@ -1,4 +1,4 @@
-import { Conversation } from '../types';
+import { Conversation } from "../types";
 
 // Helper function to create a timestamp for a specific time ago
 const getTimeAgo = (minutes: number) => {
@@ -12,504 +12,743 @@ export const initialConversations: Conversation[] = [
   {
     id: "initial-convo-1",
     recipients: [
-      { id: "jobs-id", name: "Steve Jobs" },
-      { id: "ellison-id", name: "Larry Ellison" }
+      { id: "wearstler-id", name: "Kelly Wearstler" },
+      { id: "abloh-id", name: "Virgil Abloh" },
     ],
     messages: [
       {
-        id: "msg-1-1",
-        content: "Hey guys, have you thought about what computing will look like in 2030?",
-        sender: "Steve Jobs",
-        timestamp: "10:00 AM"
-      },
-      {
-        id: "msg-1-2",
-        content: "Hey Steve! Yeah, it's wild to imagine. I think cloud computing will be even more integrated into everything.",
-        sender: "Larry Ellison",
-        timestamp: "10:02 AM"
-      },
-      {
-        id: "msg-1-3",
-        content: "Jumping in—do you think we'll still be using smartphones by then?",
+        id: "msg-3-1",
+        content: "How do you get inspired?",
         sender: "me",
-        timestamp: "10:03 AM"
+        timestamp: getTimeAgo(5),
       },
       {
-        id: "msg-1-4",
-        content: "Maybe not as we know them. I can see us moving towards wearables or even devices integrated into our clothes.",
-        sender: "Steve Jobs",
-        timestamp: "10:05 AM"
+        id: "msg-3-2",
+        content:
+          "Nature's textures, vintage finds, travel discoveries - I collect these little moments that spark something in my creative process.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:30 PM",
       },
       {
-        id: "msg-1-5",
-        content: "Or maybe devices become so small and efficient they're almost invisible.",
-        sender: "Larry Ellison",
-        timestamp: "10:06 AM"
+        id: "msg-3-3",
+        content:
+          "I remix culture, take what exists and shift it 3 percent. Street style, art galleries, architecture - it's all inspiration.",
+        sender: "Virgil Abloh",
+        timestamp: "12:30 PM",
       },
       {
-        id: "msg-1-6",
-        content: "Like smart contact lenses or something?",
+        id: "msg-3-4",
+        content:
+          "Art history books are my secret weapon. Lately I'm obsessed with brutalist architecture and its raw, powerful forms.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:30 PM",
+      },
+      {
+        id: "msg-3-5",
+        content: "Oo love that",
         sender: "me",
-        timestamp: "10:07 AM"
+        timestamp: getTimeAgo(4),
       },
       {
-        id: "msg-1-7",
-        content: "Exactly! Augmented reality could be huge.",
-        sender: "Steve Jobs",
-        timestamp: "10:08 AM"
+        id: "msg-3-6",
+        content:
+          "That's the beauty of design - everything can inspire. A color combination in nature, a random street sign could spark the next big idea.",
+        sender: "Virgil Abloh",
+        timestamp: "12:30 PM",
       },
       {
-        id: "msg-1-8",
-        content: "AR has a lot of potential, especially for business and education.",
-        sender: "Larry Ellison",
-        timestamp: "10:09 AM"
-      },
-      {
-        id: "msg-1-9",
-        content: "How about AI? What's your take on where that'll be?",
+        id: "msg-3-7",
+        content: "How do you force yourself to be present?",
         sender: "me",
-        timestamp: "10:10 AM"
+        timestamp: getTimeAgo(4),
       },
       {
-        id: "msg-1-10",
-        content: "AI will probably be embedded in everything, from home appliances to healthcare.",
-        sender: "Steve Jobs",
-        timestamp: "10:11 AM"
-      },
-      {
-        id: "msg-1-11",
-        content: "Agreed. But with that comes the need for better data security.",
-        sender: "Larry Ellison",
-        timestamp: "10:12 AM"
-      },
-      {
-        id: "msg-1-12",
-        content: "Speaking of security, do you think quantum computing will make current encryption obsolete?",
+        id: "msg-3-8",
+        content: "Like to notice these things",
         sender: "me",
-        timestamp: "10:13 AM"
+        timestamp: getTimeAgo(4),
       },
       {
-        id: "msg-1-13",
-        content: "Quantum computing could disrupt a lot of current systems, but it'll also pave the way for new encryption methods.",
-        sender: "Larry Ellison",
-        timestamp: "10:14 AM"
+        id: "msg-3-9",
+        content:
+          "I schedule daily walks without my phone. Just observing textures, shadows, and forms helps ground my creative mind.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:31 PM",
       },
       {
-        id: "msg-1-14",
-        content: "But I think quantum computing will mostly impact specialized fields at first.",
-        sender: "Steve Jobs",
-        timestamp: "10:15 AM"
+        id: "msg-3-10",
+        content:
+          "Put your phone down, hit the streets. Real inspiration comes from just moving through spaces, absorbing life raw.",
+        sender: "Virgil Abloh",
+        timestamp: "12:31 PM",
       },
       {
-        id: "msg-1-15",
-        content: "Do you guys worry about AI taking over jobs?",
+        id: "msg-3-11",
+        content: "I can't leave my pone",
         sender: "me",
-        timestamp: "10:16 AM"
+        timestamp: getTimeAgo(3),
       },
       {
-        id: "msg-1-16",
-        content: "Some jobs might become automated, but new opportunities will arise.",
-        sender: "Steve Jobs",
-        timestamp: "10:17 AM"
+        id: "msg-3-12",
+        content:
+          "Start small. Take 5-minute phone breaks. It's like training a muscle - you build that present-moment strength gradually.",
+        sender: "Virgil Abloh",
+        timestamp: "12:31 PM",
       },
       {
-        id: "msg-1-17",
-        content: "It's more about evolution than replacement. Skills will need to adapt.",
-        sender: "Larry Ellison",
-        timestamp: "10:18 AM"
+        id: "msg-3-13",
+        content:
+          "Try using your phone just for capturing beauty - make it a creative tool, not a distraction.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:31 PM",
       },
       {
-        id: "msg-1-18",
-        content: "What skills do you think will be important?",
+        id: "msg-3-14",
+        content:
+          "Use your phone to document inspiration, then review later. You're still present but building your visual library.",
+        sender: "Virgil Abloh",
+        timestamp: "12:31 PM",
+      },
+      {
+        id: "msg-3-15",
+        content: "What are your favorite places to get inspo?",
         sender: "me",
-        timestamp: "10:19 AM"
+        timestamp: getTimeAgo(3),
       },
       {
-        id: "msg-1-19",
-        content: "Data literacy, for sure. Understanding how to interpret and use data effectively.",
-        sender: "Larry Ellison",
-        timestamp: "10:20 AM"
+        id: "msg-3-16",
+        content:
+          "The Schindler House in LA - raw concrete meets intimate spaces. It's a masterclass in modernist design thinking.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:32 PM",
       },
       {
-        id: "msg-1-20",
-        content: "Creative problem-solving. Machines can process data, but humans bring creativity.",
-        sender: "Steve Jobs",
-        timestamp: "10:21 AM"
-      },
-      {
-        id: "msg-1-21",
-        content: "Makes sense. How do you see computing affecting healthcare?",
+        id: "msg-3-17",
+        content: "Ooo never been",
         sender: "me",
-        timestamp: "10:22 AM"
+        timestamp: getTimeAgo(3),
       },
       {
-        id: "msg-1-22",
-        content: "Personalized medicine will be a game-changer. Real-time health monitoring could save lives.",
-        sender: "Steve Jobs",
-        timestamp: "10:23 AM"
+        id: "msg-3-18",
+        content:
+          "Check out the MCA Chicago. That place shaped my whole perspective on mixing art forms and breaking boundaries.",
+        sender: "Virgil Abloh",
+        timestamp: "12:32 PM",
       },
       {
-        id: "msg-1-23",
-        content: "And big data can help predict health trends and outbreaks.",
-        sender: "Larry Ellison",
-        timestamp: "10:24 AM"
-      },
-      {
-        id: "msg-1-24",
-        content: "Any concerns about privacy with all that health data floating around?",
+        id: "msg-3-19",
+        content: "Nice",
         sender: "me",
-        timestamp: "10:25 AM"
+        timestamp: getTimeAgo(2),
       },
       {
-        id: "msg-1-25",
-        content: "Definitely. We need strong privacy protections.",
-        sender: "Steve Jobs",
-        timestamp: "10:26 AM"
+        id: "msg-3-20",
+        content:
+          "The way materials interact with light and shadow - that's pure magic. Each piece needs to create a dialogue with its environment.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:32 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(2),
+          },
+        ],
       },
       {
-        id: "msg-1-26",
-        content: "Security protocols will have to keep up with technological advances.",
-        sender: "Larry Ellison",
-        timestamp: "10:27 AM"
-      },
-      {
-        id: "msg-1-27",
-        content: "What about education? Think tech will make learning different?",
+        id: "msg-3-21",
+        content: "What are some of your favorite pieces you've created?",
         sender: "me",
-        timestamp: "10:28 AM"
+        timestamp: getTimeAgo(2),
       },
       {
-        id: "msg-1-28",
-        content: "Learning could become more personalized and accessible worldwide.",
-        sender: "Steve Jobs",
-        timestamp: "10:29 AM"
+        id: "msg-3-22",
+        content:
+          "The Off-White Jordan 1s. They challenged what luxury could be, merged street culture with high fashion.",
+        sender: "Virgil Abloh",
+        timestamp: "12:32 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(2),
+          },
+        ],
       },
       {
-        id: "msg-1-29",
-        content: "Virtual classrooms and AI tutors might become the norm.",
-        sender: "Larry Ellison",
-        timestamp: "10:30 AM"
-      },
-      {
-        id: "msg-1-30",
-        content: "Do you think traditional desktops and laptops will still be around?",
+        id: "msg-3-23",
+        content: "Soo good",
         sender: "me",
-        timestamp: "10:31 AM"
+        timestamp: getTimeAgo(2),
       },
       {
-        id: "msg-1-31",
-        content: "Maybe for specialized tasks, but the average user might move to more portable devices.",
-        sender: "Steve Jobs",
-        timestamp: "10:32 AM"
+        id: "msg-3-24",
+        content:
+          "My Proper Peek collection - those fractured mirrors transformed into functional art pieces still excite me.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:32 PM",
       },
       {
-        id: "msg-1-32",
-        content: "Cloud-based solutions will make device hardware less important.",
-        sender: "Larry Ellison",
-        timestamp: "10:33 AM"
+        id: "msg-3-25",
+        content:
+          "Thanks! What really got me was making the IKEA collection. Bringing that street energy into everyday homes was revolutionary.",
+        sender: "Virgil Abloh",
+        timestamp: "12:33 PM",
       },
       {
-        id: "msg-1-33",
-        content: "Are you guys excited or worried about these changes?",
+        id: "msg-3-26",
+        content: "Walk me through the creation process for that",
         sender: "me",
-        timestamp: "10:34 AM"
+        timestamp: getTimeAgo(2),
       },
       {
-        id: "msg-1-34",
-        content: "A bit of both. Change brings opportunities and challenges.",
-        sender: "Steve Jobs",
-        timestamp: "10:35 AM"
+        id: "msg-3-27",
+        content:
+          "Started with deconstructing basic IKEA items. Added quotes, changed proportions - made everyday furniture feel exclusive yet accessible.",
+        sender: "Virgil Abloh",
+        timestamp: "12:33 PM",
       },
       {
-        id: "msg-1-35",
-        content: "Same here. It's important to guide tech development responsibly.",
-        sender: "Larry Ellison",
-        timestamp: "10:36 AM"
-      },
-      {
-        id: "msg-1-36",
-        content: "Do you think ethics will play a bigger role in tech?",
+        id: "msg-3-28",
+        content: "Did you ever hit a standstill?",
         sender: "me",
-        timestamp: "10:37 AM"
+        timestamp: getTimeAgo(1),
       },
       {
-        id: "msg-1-37",
-        content: "It has to. With great power comes great responsibility, right?",
-        sender: "Steve Jobs",
-        timestamp: "10:38 AM"
+        id: "msg-3-29",
+        content:
+          "Always. The IKEA rug design blocked me for weeks. Sometimes you gotta step back and let ideas breathe.",
+        sender: "Virgil Abloh",
+        timestamp: "12:33 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
       },
       {
-        id: "msg-1-38",
-        content: "Companies will need to prioritize ethical considerations to maintain public trust.",
-        sender: "Larry Ellison",
-        timestamp: "10:39 AM"
+        id: "msg-3-30",
+        content:
+          "Creative blocks are inevitable. I refresh by traveling or rearranging my space - new environments always unlocks something new in my mind.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:33 PM",
       },
       {
-        id: "msg-1-39",
-        content: "Any advice for people getting into tech now?",
+        id: "msg-3-31",
+        content: "Which designers inspire you the most?",
         sender: "me",
-        timestamp: "10:40 AM"
+        timestamp: getTimeAgo(0),
       },
       {
-        id: "msg-1-40",
-        content: "Stay curious and focus on how tech can improve lives.",
-        sender: "Steve Jobs",
-        timestamp: "10:41 AM"
+        id: "msg-3-32",
+        content:
+          "Carlo Scarpa's architectural details and Jean Michel Frank's minimalism deeply influenced my approach to materials and form.",
+        sender: "Kelly Wearstler",
+        timestamp: "12:35 PM",
       },
       {
-        id: "msg-1-41",
-        content: "Be adaptable and keep learning new skills.",
-        sender: "Larry Ellison",
-        timestamp: "10:42 AM"
+        id: "msg-3-33",
+        content:
+          "Rei Kawakubo's fearless innovation and Rem Koolhaas's architectural thinking changed my whole design approach.",
+        sender: "Virgil Abloh",
+        timestamp: "12:35 PM",
       },
-      {
-        id: "msg-1-42",
-        content: "What's one thing you hope to see by 2030?",
-        sender: "me",
-        timestamp: "10:43 AM"
-      },
-      {
-        id: "msg-1-43",
-        content: "Tech that genuinely enhances human connections.",
-        sender: "Steve Jobs",
-        timestamp: "10:44 AM"
-      },
-      {
-        id: "msg-1-44",
-        content: "Solutions that address global challenges like climate change.",
-        sender: "Larry Ellison",
-        timestamp: "10:45 AM"
-      },
-      {
-        id: "msg-1-45",
-        content: "Big goals! Think we'll get there?",
-        sender: "me",
-        timestamp: "10:46 AM"
-      },
-      {
-        id: "msg-1-46",
-        content: "I believe so, if we work together.",
-        sender: "Steve Jobs",
-        timestamp: "10:47 AM"
-      },
-      {
-        id: "msg-1-47",
-        content: "Agreed. Collaboration will be key.",
-        sender: "Larry Ellison",
-        timestamp: "10:48 AM"
-      },
-      {
-        id: "msg-1-48",
-        content: "Well, this has been a great chat. Thanks for sharing your thoughts!",
-        sender: "me",
-        timestamp: "10:49 AM"
-      },
-      {
-        id: "msg-1-49",
-        content: "Anytime! Let's keep the conversation going.",
-        sender: "Steve Jobs",
-        timestamp: "10:50 AM"
-      },
-      {
-        id: "msg-1-50",
-        content: "Definitely. Looking forward to seeing how the future unfolds.",
-        sender: "Larry Ellison",
-        timestamp: "10:51 AM"
-      },
-      {
-        id: "msg-1-51",
-        content: "Me too. Catch up soon!",
-        sender: "me",
-        timestamp: "10:52 AM"
-      },
-      {
-        id: "msg-1-52",
-        content: "Sounds good.",
-        sender: "Steve Jobs",
-        timestamp: "10:53 AM"
-      },
-      {
-        id: "msg-1-53",
-        content: "Talk later!",
-        sender: "Larry Ellison",
-        timestamp: "10:54 AM"
-      }
     ],
-    lastMessageTime: getTimeAgo(5),
-    unreadCount: 0
+    lastMessageTime: getTimeAgo(0),
+    unreadCount: 0,
   },
   {
     id: "initial-convo-2",
     recipients: [
-      { id: "green-id", name: "Draymond Green" },
-      { id: "curry-id", name: "Steph Curry" },
-      { id: "smith-id", name: "Stephen A Smith" }
+      { id: "walton-id", name: "Sam Walton" },
+      { id: "coulombe-id", name: "Joe Coulombe" },
     ],
     messages: [
       {
-        id: "msg-2-1",
-        content: "I think we need to focus on our defensive strategies if we want to make a deeper run this season. What do you think, Steph?",
-        sender: "Draymond Green",
-        timestamp: "11:00 AM"
-      },
-      {
-        id: "msg-2-2",
-        content: "I completely agree, Draymond. Defense wins championships, and we've got to tighten up in that area. We need to communicate better and trust each other out there.",
-        sender: "Steph Curry",
-        timestamp: "11:02 AM"
-      },
-      {
-        id: "msg-2-3",
-        content: "Absolutely, Steph. It's all about that chemistry on the court. If we can get everyone on the same page defensively, it'll make a huge difference in our overall game.",
-        sender: "Draymond Green",
-        timestamp: "11:04 AM"
-      },
-      {
-        id: "msg-2-4",
-        content: "You both are hitting the nail on the head. It's not just about individual skill; it's about how well you can work together. That chemistry is key, especially when the pressure is on in the playoffs.",
-        sender: "Stephen A Smith",
-        timestamp: "11:06 AM"
-      },
-      {
-        id: "msg-2-5",
-        content: "For sure, Stephen A. When we're in sync defensively, it opens up so many opportunities on offense too. It's all connected, and we have to feed off each other's energy.",
-        sender: "Steph Curry",
-        timestamp: "11:08 AM"
-      },
-      {
-        id: "msg-2-6",
-        content: "How do you feel now that Klay is gone?",
+        id: "msg-4-1",
+        content: "What's up boys",
         sender: "me",
-        timestamp: "11:10 AM"
+        timestamp: "01:12 PM",
       },
       {
-        id: "msg-2-7",
-        content: "Exactly, Steph. When we elevate our defense, it not only sparks our offense but also sets the tone for the entire game. I'm excited to see how we can build on this and really push ourselves this season.",
-        sender: "Draymond Green",
-        timestamp: "11:12 AM"
+        id: "msg-4-2",
+        content:
+          "Just finished walking the aisles of store #4, checking on those everyday low prices. How about y'all?",
+        sender: "Sam Walton",
+        timestamp: "01:12 PM",
       },
       {
-        id: "msg-2-8",
-        content: "It's definitely a big adjustment for all of us. Klay brings so much to the table, not just as a player but as a leader. We have to rally together and fill that void as best as we can.",
-        sender: "Draymond Green",
-        timestamp: "11:14 AM"
+        id: "msg-4-3",
+        content:
+          "Sampling new wine imports for our shelves. These California vintages keep surprising me with fantastic value propositions.",
+        sender: "Joe Coulombe",
+        timestamp: "01:12 PM",
       },
       {
-        id: "msg-2-9",
-        content: "Absolutely, Draymond. Klay's presence is irreplaceable, but it gives us a chance to step up our game and grow as a team. We need to come together and honor his legacy by pushing ourselves even harder.",
-        sender: "Steph Curry",
-        timestamp: "11:16 AM"
-      },
-      {
-        id: "msg-2-10",
-        content: "You both are right on the money. This is a pivotal moment for the team. It's about resilience now, stepping up in Klay's absence, and using this as a learning experience to become even stronger as a unit.",
-        sender: "Stephen A Smith",
-        timestamp: "11:18 AM"
-      },
-      {
-        id: "msg-2-11",
-        content: "Exactly, Stephen A. It's a chance for the younger guys to really show what they can do and for us veterans to lead by example. We'll find a way to keep our competitive spirit alive.",
-        sender: "Draymond Green",
-        timestamp: "11:20 AM"
-      },
-      {
-        id: "msg-2-12",
-        content: "Definitely, Draymond. This is their moment to shine, and we need to support them every step of the way. Leadership is crucial, and I believe we can rise to the occasion together.",
-        sender: "Steph Curry",
-        timestamp: "11:22 AM"
-      },
-      {
-        id: "msg-2-13",
-        content: "I feel like he's past his prime a bit...",
+        id: "msg-4-4",
+        content: "Love that",
         sender: "me",
-        timestamp: "11:24 AM"
+        timestamp: "01:12 PM",
       },
       {
-        id: "msg-2-14",
-        content: "It's inspiring to hear that level of commitment from both of you. With your leadership and the young talent stepping up, I have no doubt the team will adapt and keep pushing forward. Exciting times ahead for the Warriors.",
-        sender: "Stephen A Smith",
-        timestamp: "11:26 AM"
-      },
-      {
-        id: "msg-2-15",
-        content: "That's a fair point, but I think Klay still has a lot to contribute when he's healthy. Experience and skill don't just fade away overnight. It's about how he can adapt and still find ways to impact the game.",
-        sender: "Stephen A Smith",
-        timestamp: "11:28 AM"
-      },
-      {
-        id: "msg-2-16",
-        content: "I agree, Stephen A. Klay's experience is invaluable, and he knows how to make the right plays. He may not be the same player, but his basketball IQ and leadership never go away. We just have to help him find new ways to be effective.",
-        sender: "Draymond Green",
-        timestamp: "11:30 AM"
-      },
-      {
-        id: "msg-2-17",
-        content: "Exactly, Draymond. Klay has that knack for making big shots when it matters most, and his presence on the court alone can shift the dynamics of a game. We just need to unlock that potential in a different way.",
-        sender: "Steph Curry",
-        timestamp: "11:32 AM"
-      },
-      {
-        id: "msg-2-18",
-        content: "And that's what makes great players great, adapting to the circumstances. Klay has the talent to still be a game-changer, and with the right support, he can definitely make an impact, especially when it matters in the playoffs.",
-        sender: "Stephen A Smith",
-        timestamp: "11:34 AM"
-      },
-      {
-        id: "msg-2-19",
-        content: "How long do you think it will take to rebuild the team?",
+        id: "msg-4-5",
+        content: "TJs has the best wine",
         sender: "me",
-        timestamp: "11:36 AM"
+        timestamp: "01:12 PM",
       },
       {
-        id: "msg-2-20",
-        content: "Right, Stephen A. It's all about finding ways to utilize his strengths and making adjustments. If we can play to Klay's abilities, he can still be a critical piece for us, especially in crucial moments.",
-        sender: "Draymond Green",
-        timestamp: "11:38 AM"
+        id: "msg-4-6",
+        content:
+          "Thanks! Our wine buyers know their stuff. We focus on unique, high-quality wines without the fancy markup.",
+        sender: "Joe Coulombe",
+        timestamp: "01:13 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
       },
       {
-        id: "msg-2-21",
-        content: "Rebuilding isn't just about time; it's about the steps we take. We have a solid foundation, and with the right focus on development and chemistry, it can happen quicker than people think. It's all about making the right adjustments now.",
-        sender: "Draymond Green",
-        timestamp: "11:40 AM"
+        id: "msg-4-7",
+        content:
+          "Joe's got good wine, but nothing beats our $2.97 price point. Always keeping those prices down for hardworking folks.",
+        sender: "Sam Walton",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-22",
-        content: "Absolutely, Draymond. We just have to keep believing in him and create situations where he can thrive. With the right mindset and teamwork, I have no doubt he'll still be a key contributor for us.",
-        sender: "Steph Curry",
-        timestamp: "11:42 AM"
+        id: "msg-4-8",
+        content:
+          "Quality wine shouldn't empty your wallet. Just found a fantastic Chianti that'll hit shelves next month at $5.99.",
+        sender: "Joe Coulombe",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-23",
-        content: "That's a great point, Draymond. If we can harness the energy of our young players and blend that with our veteran experience, we can accelerate the process. It's about nurturing that talent and creating a winning environment.",
-        sender: "Steph Curry",
-        timestamp: "11:44 AM"
+        id: "msg-4-9",
+        content: "If you guys weren't in retail, what would you be doing?",
+        sender: "me",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-24",
-        content: "Absolutely, Steph. It's crucial to foster that young talent while maintaining the winning culture you both have established. With everyone on the same page, the rebuild can be more of a retooling, and that could lead to success sooner than later.",
-        sender: "Stephen A Smith",
-        timestamp: "11:46 AM"
+        id: "msg-4-10",
+        content:
+          "Probably a professor of economics or anthropology. Always fascinated by how culture shapes consumer behavior.",
+        sender: "Joe Coulombe",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-25",
-        content: "Exactly, Stephen A. It's all about staying competitive while we develop the new guys. If we can keep pushing each other and hold ourselves accountable, there's no telling how quickly we can get back to where we want to be.",
-        sender: "Draymond Green",
-        timestamp: "11:48 AM"
+        id: "msg-4-11",
+        content:
+          "I'd be a bush pilot. Love flying low over small towns, scouting out new locations. Did it plenty while building Walmart.",
+        sender: "Sam Walton",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-26",
-        content: "For sure, Draymond. Accountability is key, and we have to embrace that pressure. If we all commit to getting better every day, we can make that transition smooth and keep our championship aspirations alive.",
-        sender: "Steph Curry",
-        timestamp: "11:50 AM"
+        id: "msg-4-12",
+        content:
+          "Actually, I might have opened a wine bar in Berkeley. Economics would work too, but retail's in my blood now.",
+        sender: "Joe Coulombe",
+        timestamp: "01:13 PM",
       },
       {
-        id: "msg-2-27",
-        content: "I love the energy and commitment you both are expressing. If anyone can navigate this transition effectively, it's the Warriors with your leadership. It'll be exciting to see how this season unfolds for you all.",
-        sender: "Stephen A Smith",
-        timestamp: "11:52 AM"
-      }
+        id: "msg-4-13",
+        content: "Ooo",
+        sender: "me",
+        timestamp: "01:13 PM",
+      },
+      {
+        id: "msg-4-14",
+        content: "Sounds cool",
+        sender: "me",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-15",
+        content:
+          "Flying's my real passion after retail. Used to spot new store locations from my little plane. Those were exciting days.",
+        sender: "Sam Walton",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-16",
+        content: "Oh yeah",
+        sender: "me",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-17",
+        content: "What experiences have shaped you the most?",
+        sender: "me",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-18",
+        content:
+          "My Stanford years and working at Rexall taught me a lot about market gaps. That's when I realized convenience stores needed reinvention.",
+        sender: "Joe Coulombe",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-19",
+        content:
+          "Running Ben Franklin's store in Newport, Arkansas. Lost the lease after 5 years, but learned more from those mistakes than any success.",
+        sender: "Sam Walton",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-20",
+        content:
+          "Living in Germany after college opened my eyes to European food retail. That's what inspired TJ's unique approach.",
+        sender: "Joe Coulombe",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-21",
+        content: "What's your biggest failure?",
+        sender: "me",
+        timestamp: "01:14 PM",
+      },
+
+      {
+        id: "msg-4-22",
+        content:
+          "The 1965 Pronto Markets almost bankrupted me. Had to completely reinvent everything to survive - that's how TJ's was born.",
+        sender: "Joe Coulombe",
+        timestamp: "01:14 PM",
+      },
+      {
+        id: "msg-4-23",
+        content:
+          "Lost my first store lease in Newport. Taught me to never sign a lease without renewal terms. Best mistake I ever made.",
+        sender: "Sam Walton",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-24",
+        content:
+          "Miss my old 7-Eleven competitor days. They pushed us to innovate something totally different with TJ's.",
+        sender: "Joe Coulombe",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-25",
+        content: "How did you reorient around growth?",
+        sender: "me",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-26",
+        content: "From failure",
+        sender: "me",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-27",
+        content:
+          "Losing my first Ben Franklin store taught me more than any success. Had to rebuild from scratch with a better vision.",
+        sender: "Sam Walton",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-28",
+        content:
+          "Focused on small towns everyone ignored. If Newport taught me anything, it's that there's gold in places others overlook.",
+        sender: "Sam Walton",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-29",
+        content:
+          "I realized competing head-on with big chains was suicide. We needed our own niche - that's when our private label strategy clicked.",
+        sender: "Joe Coulombe",
+        timestamp: "01:15 PM",
+      },
+      {
+        id: "msg-4-30",
+        content:
+          "You learn quick or you die slow in retail. After Newport, I doubled down on what customers really wanted - lower prices.",
+        sender: "Sam Walton",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-31",
+        content:
+          "I zeroed in on educated customers who wanted value but appreciated uniqueness. Changed everything - our products, pricing, even store design.",
+        sender: "Joe Coulombe",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-32",
+        content:
+          "Growth isn't always about getting bigger - it's about getting better. We focused on serving folks better than anyone else could.",
+        sender: "Sam Walton",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-33",
+        content:
+          "Do you think TJs and Walmart or competitors or two totally different markets?",
+        sender: "me",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-34",
+        content:
+          "Different markets entirely. Walmart serves everyone, we focus on educated consumers seeking unique products. Both valid approaches!",
+        sender: "Joe Coulombe",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-35",
+        content:
+          "Different markets, different folks. But we both know retail success comes down to understanding your customer and serving them right.",
+        sender: "Sam Walton",
+        timestamp: "01:16 PM",
+      },
+      {
+        id: "msg-4-36",
+        content:
+          "Exactly right - there's room for everyone. We carved out our niche with food enthusiasts while Sam serves the broader market.",
+        sender: "Joe Coulombe",
+        timestamp: "01:17 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Sam Walton",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
     ],
-    lastMessageTime: getTimeAgo(10),
-    unreadCount: 0
-  }
+    lastMessageTime: getTimeAgo(3),
+    unreadCount: 0,
+  },
+  {
+    id: "initial-convo-3",
+    recipients: [
+      {
+        id: "steph-curry-id",
+        name: "Steph Curry",
+      },
+      {
+        id: "draymond-green-id",
+        name: "Draymond Green",
+      },
+    ],
+    messages: [
+      {
+        id: "msg-1",
+        content:
+          "Hey",
+        sender: "me",
+        timestamp: "08:30 PM",
+      },
+      {
+        id: "msg-2",
+        content:
+          "Hey hey",
+        sender: "Steph Curry",
+        timestamp: "08:31 PM",
+      },
+      {
+        id: "msg-3",
+        content: "What's good",
+        sender: "Draymond Green",
+        timestamp: "08:31 PM",
+      },
+      {
+        id: "msg-4",
+        content:
+          "What's the most underrated part of building a championship mindset?",
+        sender: "me",
+        timestamp: "08:31 PM",
+      },
+      {
+        id: "msg-5",
+        content:
+          "The boring days. Everyone sees the rings, nobody sees the Tuesday morning practices when you're tired but still gotta perfect that footwork",
+        sender: "Steph Curry",
+        timestamp: "08:32 PM",
+      },
+      {
+        id: "msg-6",
+        content: "Facts. And studying film when everyone else watching Netflix",
+        sender: "Draymond Green",
+        timestamp: "08:32 PM",
+      },
+      {
+        id: "msg-7",
+        content: "Says the guy who was watching Love Is Blind during film session last week 😂",
+        sender: "Steph Curry",
+        timestamp: "08:32 PM",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
+      {
+        id: "msg-8",
+        content: "I was multitasking 💀",
+        sender: "Draymond Green",
+        timestamp: "08:33 PM",
+      },
+      {
+        id: "msg-9",
+        content: "Who's the toughest defender you've faced, Steph?",
+        sender: "me",
+        timestamp: "08:33 PM",
+      },
+      {
+        id: "msg-10",
+        content: "Dray in practice",
+        sender: "Steph Curry",
+        timestamp: "08:34 PM",
+      },
+      {
+        id: "msg-11",
+        content: "Man doesn't care if we teammates, he coming for blood",
+        sender: "Steph Curry",
+        timestamp: "08:34 PM",
+      },
+      {
+        id: "msg-12",
+        content: "Iron sharpens iron! That's why we got 4 rings",
+        sender: "Draymond Green",
+        timestamp: "08:34 PM",
+      },
+      {
+        id: "msg-13",
+        content: "That and my shooting 😏",
+        sender: "Steph Curry",
+        timestamp: "08:34 PM",
+      },
+      {
+        id: "msg-14",
+        content: "Man gonna act like my screens don't get him open 🙄",
+        sender: "Draymond Green",
+        timestamp: "08:35 PM",
+      },
+      {
+        id: "msg-15",
+        content:
+          "Your chemistry is unreal. How long did it take to develop that?",
+        sender: "me",
+        timestamp: "08:35 PM",
+      },
+      {
+        id: "msg-16",
+        content:
+          "Years of trust. Sometimes I know where Steph going before he does",
+        sender: "Draymond Green",
+        timestamp: "08:36 PM",
+      },
+      {
+        id: "msg-17",
+        content: "Cap. You still get surprised when I pull up from half court",
+        sender: "Steph Curry",
+        timestamp: "08:36 PM",
+      },
+      {
+        id: "msg-18",
+        content: "BECAUSE NORMAL PEOPLE DON'T DO THAT",
+        sender: "Draymond Green",
+        timestamp: "08:36 PM",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
+      {
+        id: "msg-19",
+        content: "What's your pregame routine like?",
+        sender: "me",
+        timestamp: "08:37 PM",
+      },
+      {
+        id: "msg-20",
+        content: "Bible study, shot routine, same playlist since rookie year",
+        sender: "Steph Curry",
+        timestamp: "08:37 PM",
+      },
+      {
+        id: "msg-21",
+        content: "Meditation and visualizing who I'm gonna trash talk first 😤",
+        sender: "Draymond Green",
+        timestamp: "08:38 PM",
+      },
+      {
+        id: "msg-22",
+        content: "That's why you keep getting ejected",
+        sender: "Steph Curry",
+        timestamp: "08:38 PM",
+      },
+      {
+        id: "msg-23",
+        content: "Technical fouls are just passion points",
+        sender: "Draymond Green",
+        timestamp: "08:38 PM",
+      },
+      {
+        id: "msg-24",
+        content: "What's the biggest lesson in your career so far?",
+        sender: "me",
+        timestamp: "08:39 PM",
+      },
+      {
+        id: "msg-25",
+        content:
+          "Stay humble, trust the work. Success ain't linear but the work gotta be consistent",
+        sender: "Steph Curry",
+        timestamp: "08:39 PM",
+      },
+      {
+        id: "msg-26",
+        content: "Learning to channel energy the right way. Still working on that one 😅",
+        sender: "Draymond Green",
+        timestamp: "08:40 PM",
+      },
+      {
+        id: "msg-27",
+        content: "We noticed 💀",
+        sender: "Steph Curry",
+        timestamp: "08:40 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
+      {
+        id: "msg-28",
+        content: "Any advice for aspiring athletes?",
+        sender: "me",
+        timestamp: "08:41 PM",
+      },
+      {
+        id: "msg-29",
+        content: "Find your role and perfect it. Not everyone needs to be Steph. World needs elite defenders too.",
+        sender: "Draymond Green",
+        timestamp: "08:42 PM",
+      },
+      {
+        id: "msg-30",
+        content: "And podcasters apparently",
+        sender: "Steph Curry",
+        timestamp: "08:42 PM",
+      },
+    ],
+    lastMessageTime: getTimeAgo(3),
+    unreadCount: 0,
+  },
 ];
