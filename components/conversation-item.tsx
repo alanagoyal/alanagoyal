@@ -133,8 +133,8 @@ export function ConversationItem({
                   
                   if (!lastMessage) return "";
                   
-                  // Check if the last message has a reaction from the current user
-                  const lastReaction = lastMessage.reactions?.find(r => r.sender === "me");
+                  // Check if the last message has any reaction
+                  const lastReaction = lastMessage.reactions?.[0];
                   if (lastReaction) {
                     const reactionText = {
                       heart: "loved",
@@ -145,7 +145,9 @@ export function ConversationItem({
                       question: "questioned"
                     }[lastReaction.type];
                     
-                    return `You ${reactionText} "${lastMessage.content}"`;
+                    return lastReaction.sender === "me" 
+                      ? `You ${reactionText} "${lastMessage.content}"`
+                      : `${lastReaction.sender.split(' ')[0]} ${reactionText} "${lastMessage.content}"`;
                   }
                   
                   return lastMessage.content;
