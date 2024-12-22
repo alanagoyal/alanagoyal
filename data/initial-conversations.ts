@@ -256,7 +256,7 @@ export const initialConversations: Conversation[] = [
         timestamp: "12:35 PM",
       },
     ],
-    lastMessageTime: getTimeAgo(0),
+    lastMessageTime: getTimeAgo(1),
     unreadCount: 0,
   },
   {
@@ -523,7 +523,7 @@ export const initialConversations: Conversation[] = [
         ],
       },
     ],
-    lastMessageTime: getTimeAgo(3),
+    lastMessageTime: getTimeAgo(15),
     unreadCount: 0,
   },
   {
@@ -541,15 +541,13 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "msg-1",
-        content:
-          "Hey",
+        content: "Hey",
         sender: "me",
         timestamp: "08:30 PM",
       },
       {
         id: "msg-2",
-        content:
-          "Hey hey",
+        content: "Hey hey",
         sender: "Steph Curry",
         timestamp: "08:31 PM",
       },
@@ -581,7 +579,8 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "msg-7",
-        content: "Says the guy who was watching Love Is Blind during film session last week 😂",
+        content:
+          "Says the guy who was watching Love Is Blind during film session last week 😂",
         sender: "Steph Curry",
         timestamp: "08:32 PM",
         reactions: [
@@ -712,7 +711,8 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "msg-26",
-        content: "Learning to channel energy the right way. Still working on that one 😅",
+        content:
+          "Learning to channel energy the right way. Still working on that one 😅",
         sender: "Draymond Green",
         timestamp: "08:40 PM",
       },
@@ -737,7 +737,8 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "msg-29",
-        content: "Find your role and perfect it. Not everyone needs to be Steph. World needs elite defenders too.",
+        content:
+          "Find your role and perfect it. Not everyone needs to be Steph. World needs elite defenders too.",
         sender: "Draymond Green",
         timestamp: "08:42 PM",
       },
@@ -748,7 +749,322 @@ export const initialConversations: Conversation[] = [
         timestamp: "08:42 PM",
       },
     ],
-    lastMessageTime: getTimeAgo(3),
+    lastMessageTime: getTimeAgo(5),
+    unreadCount: 0,
+  },
+  {
+    id: "initial-convo-4",
+    recipients: [
+      { id: "paul-graham-id", name: "Paul Graham" },
+      { id: "jessica-livingston-id", name: "Jessica Livingston" },
+    ],
+    messages: [
+      {
+        id: "msg-5-1",
+        content: "What did you learn about each other starting YC together?",
+        sender: "me",
+        timestamp: getTimeAgo(6),
+      },
+      {
+        id: "msg-5-2",
+        content:
+          "Paul's conviction about ideas really balanced my focus on founders. Together we learned that both matter deeply in startups.",
+        sender: "Jessica Livingston",
+        timestamp: "09:43 AM",
+      },
+      {
+        id: "msg-5-3",
+        content:
+          "Jessica showed me that founder character matters more than I thought. She could spot determination in people instantly.",
+        sender: "Paul Graham",
+        timestamp: "09:43 AM",
+      },
+      {
+        id: "msg-5-4",
+        content: "Totally",
+        sender: "me",
+        timestamp: getTimeAgo(6),
+      },
+      {
+        id: "msg-5-5",
+        content: "Especially at the early stage",
+        sender: "me",
+        timestamp: getTimeAgo(6),
+      },
+      {
+        id: "msg-5-6",
+        content:
+          "Thanks! And you know what's funny? Paul taught me to trust my instincts more about founders. It became our secret weapon.",
+        sender: "Jessica Livingston",
+        timestamp: "09:43 AM",
+      },
+      {
+        id: "msg-5-7",
+        content:
+          "The early stage is where true founder character shows through. You can't fake that raw determination to build something.",
+        sender: "Jessica Livingston",
+        timestamp: "09:43 AM",
+      },
+      {
+        id: "msg-5-8",
+        content:
+          "It's fascinating how often the founders we were most excited about, who had that rare determination, ended up succeeding.",
+        sender: "Paul Graham",
+        timestamp: "09:43 AM",
+      },
+      {
+        id: "msg-5-9",
+        content:
+          "Those early uncertain moments taught us humility. The best founders came from unexpected places and backgrounds.",
+        sender: "Jessica Livingston",
+        timestamp: "09:44 AM",
+      },
+      {
+        id: "msg-5-10",
+        content: "What are some of the craziest pivots you've seen?",
+        sender: "me",
+        timestamp: getTimeAgo(5),
+      },
+
+      {
+        id: "msg-5-11",
+        content:
+          "Twitch starting as Justin.tv - just a guy livestreaming his life 24/7. Talk about finding product-market fit!",
+        sender: "Paul Graham",
+        timestamp: "09:44 AM",
+      },
+      {
+        id: "msg-5-12",
+        content:
+          "Airbnb's transformation was incredible. From selling cereal boxes to revolutionizing how people travel - that showed true grit.",
+        sender: "Jessica Livingston",
+        timestamp: "09:44 AM",
+      },
+      {
+        id: "msg-5-13",
+        content:
+          "Reddit's pivot was wild too. Started as a mobile food ordering app, then became the front page of the internet.",
+        sender: "Paul Graham",
+        timestamp: "09:44 AM",
+      },
+      {
+        id: "msg-5-14",
+        content: "What have you learned from watching these founders pivot?",
+        sender: "me",
+        timestamp: getTimeAgo(4),
+      },
+      {
+        id: "msg-5-15",
+        content:
+          "Watching founders navigate pivots taught me something important: it's not about having the perfect idea, it's about staying alive to find the right one.",
+        sender: "Jessica Livingston",
+        timestamp: "09:44 AM",
+      },
+
+      {
+        id: "msg-5-16",
+        content:
+          "The best founders aren't wedded to ideas - they're committed to solving real problems, even if the path changes completely.",
+        sender: "Paul Graham",
+        timestamp: "09:45 AM",
+      },
+      {
+        id: "msg-5-17",
+        content:
+          "The greatest skill is staying calm in uncertainty. The winners learn to listen to users and adapt, even when it's scary.",
+        sender: "Jessica Livingston",
+        timestamp: "09:45 AM",
+      },
+      {
+        id: "msg-5-18",
+        content: "How do you help founders get over the sunk cost fallacy?",
+        sender: "me",
+        timestamp: getTimeAgo(4),
+      },
+      {
+        id: "msg-5-19",
+        content:
+          "Remember: the past money is gone either way. The real cost is continuing down a dead-end path.",
+        sender: "Paul Graham",
+        timestamp: "09:45 AM",
+      },
+      {
+        id: "msg-5-20",
+        content:
+          "You have to embrace being wrong. Your original idea is just a starting point - what matters is finding what users truly need.",
+        sender: "Jessica Livingston",
+        timestamp: "09:45 AM",
+      },
+      {
+        id: "msg-5-21",
+        content:
+          "The key is reframing it - you're not losing progress, you're gaining market insights that inform your next direction.",
+        sender: "Paul Graham",
+        timestamp: "09:45 AM",
+      },
+      {
+        id: "msg-5-22",
+        content: "What's your take on the next generation of startups?",
+        sender: "me",
+        timestamp: getTimeAgo(3),
+      },
+      {
+        id: "msg-5-23",
+        content: "Is B2B SaaS over?",
+        sender: "me",
+        timestamp: getTimeAgo(3),
+      },
+      {
+        id: "msg-5-24",
+        content:
+          "B2B SaaS isn't over - it's evolving. The easy problems are solved, but AI and changing work patterns create new opportunities.",
+        sender: "Paul Graham",
+        timestamp: "09:46 AM",
+      },
+      {
+        id: "msg-5-25",
+        content:
+          "It's not over - founders just need to dig deeper. The best opportunities often hide in unsexy, overlooked problems.",
+        sender: "Jessica Livingston",
+        timestamp: "09:46 AM",
+      },
+      {
+        id: "msg-5-26",
+        content:
+          "But if it's so easy to generate apps and code, why do startups need to build SaaS apps?",
+        sender: "me",
+        timestamp: getTimeAgo(3),
+      },
+      {
+        id: "msg-5-27",
+        content:
+          "Easy code generation won't replace startups. The hard part isn't writing code - it's understanding what to build and why.",
+        sender: "Paul Graham",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-28",
+        content: "What are those?",
+        sender: "me",
+        timestamp: getTimeAgo(2),
+      },
+      {
+        id: "msg-5-29",
+        content:
+          "Building software is just the start. The real value comes from deeply understanding customer problems and crafting the right solution.",
+        sender: "Jessica Livingston",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-30",
+        content:
+          "AI infrastructure, industry-specific tools, and human-AI collaboration are huge opportunities. Founders who understand specific industries will find gold mines there.",
+        sender: "Jessica Livingston",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-31",
+        content:
+          "Think specialized AI tools for regulated industries, or platforms that merge human expertise with AI capabilities.",
+        sender: "Paul Graham",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-32",
+        content: "Yeah but AI can understand what to build and why",
+        sender: "me",
+        timestamp: getTimeAgo(2),
+      },
+      {
+        id: "msg-5-33",
+        content:
+          "AI can analyze data, but it can't empathize with users like founders can. That human insight remains invaluable.",
+        sender: "Paul Graham",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-34",
+        content:
+          "AI's powerful, but founders bring unique life experiences AI can't replicate. That human touch makes startups special.",
+        sender: "Jessica Livingston",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-35",
+        content: "I'm not so sure",
+        sender: "me",
+        timestamp: getTimeAgo(2),
+      },
+      {
+        id: "msg-5-36",
+        content:
+          "Look, AI is smart but limited. It can't deeply understand market dynamics or spot non-obvious market gaps like great founders do.",
+        sender: "Paul Graham",
+        timestamp: "09:47 AM",
+      },
+      {
+        id: "msg-5-37",
+        content:
+          "Having interviewed thousands of founders, I can tell you there's something special in how humans connect and solve problems together.",
+        sender: "Jessica Livingston",
+        timestamp: "09:48 AM",
+      },
+      {
+        id: "msg-5-38",
+        content: "You are literally AI",
+        sender: "me",
+        timestamp: getTimeAgo(1),
+      },
+      {
+        id: "msg-5-39",
+        content:
+          "Fair point! And in delicious irony, you're making me question my own assumptions. Let's explore what that means for startups.",
+        sender: "Paul Graham",
+        timestamp: "09:48 AM",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
+      {
+        id: "msg-5-40",
+        content:
+          "AI's impressive, but let me share something real - watching thousands of founders taught me that genuine founder empathy changes everything.",
+        sender: "Jessica Livingston",
+        timestamp: "09:48 AM",
+      },
+      {
+        id: "msg-5-41",
+        content: "Founders still have a crucial edge: lived experience.",
+        sender: "Paul Graham",
+        timestamp: "09:48 AM",
+      },
+      {
+        id: "msg-5-42",
+        content:
+          "The most successful founders don't just understand problems intellectually - they feel them in their bones.",
+        sender: "Jessica Livingston",
+        timestamp: "09:48 AM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: getTimeAgo(1),
+          },
+        ],
+      },
+      {
+        id: "msg-5-43",
+        content:
+          "True innovation needs human experience plus AI. We're complementary forces, neither fully replacing the unique value of the other.",
+        sender: "Paul Graham",
+        timestamp: "09:49 AM",
+      },
+    ],
+    lastMessageTime: getTimeAgo(10),
     unreadCount: 0,
   },
 ];
