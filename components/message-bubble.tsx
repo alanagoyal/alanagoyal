@@ -52,8 +52,9 @@ export function MessageBubble({
     question: faQuestion
   };
 
-  // State to control the Popover open state
+  // State to control the Popover open state and animation
   const [isOpen, setIsOpen] = useState(false);
+  const [justAddedReactionType, setJustAddedReactionType] = useState<ReactionType | null>(null);
 
   // Handler for when a reaction is clicked
   const handleReaction = useCallback((type: ReactionType) => {
@@ -63,6 +64,15 @@ export function MessageBubble({
         sender: "me",
         timestamp: new Date().toISOString()
       };
+      
+      // Set the just added reaction type to trigger animation
+      setJustAddedReactionType(type);
+      
+      // Clear the animation state after animation completes
+      setTimeout(() => {
+        setJustAddedReactionType(null);
+      }, 300);
+
       onReaction(message.id, reaction);
       
       // Add a slight delay before closing the menu to show the animation
@@ -202,7 +212,8 @@ export function MessageBubble({
               <div
                 key={`${reaction.type}-${index}`}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm animate-scale-in bg-[#0A7CFF] text-white border border-background"
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#0A7CFF] text-white border border-background",
+                  reaction.type === justAddedReactionType && "animate-scale-in"
                 )}
               >
                 <FontAwesomeIcon icon={reactionIcons[reaction.type]} />
