@@ -86,7 +86,7 @@ export function ConversationItem({
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0 pt-2">
+        <div className="flex-1 min-w-0 py-2">
           <div className="flex justify-between items-baseline">
             <span className="text-sm font-medium truncate max-w-[70%]">
               {conversation.recipients.map((r) => r.name).join(", ")}
@@ -125,7 +125,7 @@ export function ConversationItem({
                 </div>
               </div>
             ) : conversation.messages.length > 0 ? (
-              <div className="truncate">
+              <div className="line-clamp-2">
                 {(() => {
                   const lastMessage = conversation.messages
                     .filter((message) => message.sender !== "system")
