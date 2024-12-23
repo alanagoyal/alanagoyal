@@ -244,7 +244,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   }, [showEmojiPicker, editor]);
 
   return (
-    <div className="p-4 bg-background">
+    <div className="sticky bottom-0 z-10 w-full bg-background/80 backdrop-blur-md p-4">
       <div className="flex gap-2 items-center relative">
         <EditorContent 
           editor={editor}

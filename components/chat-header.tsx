@@ -220,112 +220,114 @@ export function ChatHeader({
   };
 
   return (
-    <div 
-      className="min-h-[60px] flex items-center justify-between p-4 border-b dark:border-foreground/20 bg-muted cursor-pointer"
-      onClick={(e) => {
-        // Ignore clicks from recipient pills or dropdown
-        if (
-          !(e.target as Element).closest('[data-chat-header-dropdown="true"]') &&
-          !(e.target as Element).closest('button[aria-label^="Remove"]') &&
-          !(e.target as Element).closest('.bg-blue-100\\/50')
-        ) {
-          handleHeaderClick();
-        }
-      }}
-      data-chat-header="true"
-    >
-      <div className="flex items-center gap-2 flex-1">
-        {isMobileView && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onBack?.();
-            }}
-            className="rounded-sm"
-            aria-label="Back to conversations"
-          >
-            <Icons.back />
-          </button>
-        )}
-        {(isNewChat && !showCompactNewChat) || isEditMode ? (
-          <div className="flex-1" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-1 flex-wrap">
-              <span className="text-base sm:text-sm font-medium text-muted-foreground">
-                To:
-              </span>
-              <div className="flex flex-wrap gap-1 flex-1 items-center">
-                {renderRecipients()}
-                <div ref={searchRef} className="relative flex-1" data-chat-header="true">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => {
-                      setSearchValue(e.target.value);
-                      setShowResults(true);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    onBlur={(e) => {
-                      // Don't handle blur if clicking remove button or dropdown
-                      const isRemoveButton = (e.relatedTarget as Element)?.closest('button[aria-label^="Remove"]');
-                      if (!isRemoveButton && !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')) {
-                        setShowResults(false);
-                        setSelectedIndex(-1);
-                        updateRecipients();
-                      }
-                    }}
-                    placeholder="Type to find recipients..."
-                    className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-                    autoFocus
-                    data-chat-header="true"
-                  />
-                  {showResults && searchValue && (
-                    <div 
-                      className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
-                      data-chat-header-dropdown="true"
-                      tabIndex={-1}
-                    >
-                      {filteredPeople.length > 0 ? (
-                        filteredPeople.map((person, index) => (
-                          <div
-                            key={person.name}
-                            className={`px-4 py-2 cursor-pointer ${
-                              selectedIndex === index 
-                                ? "bg-[#0A7CFF]" 
-                                : ""
-                            }`}
-                            onMouseDown={(e) => {
-                              e.preventDefault(); // Prevent input blur
-                              handlePersonSelect(person);
-                            }}
-                            onMouseEnter={() => setSelectedIndex(index)}
-                            tabIndex={0}
-                          >
-                            <div className="flex flex-col">
-                              <span className={`text-sm ${selectedIndex === index ? "text-white" : "text-[#0A7CFF]"}`}>{person.name}</span>
+    <div className="sticky top-0 z-10 flex flex-col w-full bg-background/80 backdrop-blur-md border-b">
+      <div 
+        className="min-h-[60px] flex items-center justify-between p-4"
+        onClick={(e) => {
+          // Ignore clicks from recipient pills or dropdown
+          if (
+            !(e.target as Element).closest('[data-chat-header-dropdown="true"]') &&
+            !(e.target as Element).closest('button[aria-label^="Remove"]') &&
+            !(e.target as Element).closest('.bg-blue-100\\/50')
+          ) {
+            handleHeaderClick();
+          }
+        }}
+        data-chat-header="true"
+      >
+        <div className="flex items-center gap-2 flex-1">
+          {isMobileView && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onBack?.();
+              }}
+              className="rounded-sm"
+              aria-label="Back to conversations"
+            >
+              <Icons.back />
+            </button>
+          )}
+          {(isNewChat && !showCompactNewChat) || isEditMode ? (
+            <div className="flex-1" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-base sm:text-sm font-medium text-muted-foreground">
+                  To:
+                </span>
+                <div className="flex flex-wrap gap-1 flex-1 items-center">
+                  {renderRecipients()}
+                  <div ref={searchRef} className="relative flex-1" data-chat-header="true">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={searchValue}
+                      onChange={(e) => {
+                        setSearchValue(e.target.value);
+                        setShowResults(true);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      onBlur={(e) => {
+                        // Don't handle blur if clicking remove button or dropdown
+                        const isRemoveButton = (e.relatedTarget as Element)?.closest('button[aria-label^="Remove"]');
+                        if (!isRemoveButton && !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')) {
+                          setShowResults(false);
+                          setSelectedIndex(-1);
+                          updateRecipients();
+                        }
+                      }}
+                      placeholder="Type to find recipients..."
+                      className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+                      autoFocus
+                      data-chat-header="true"
+                    />
+                    {showResults && searchValue && (
+                      <div 
+                        className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
+                        data-chat-header-dropdown="true"
+                        tabIndex={-1}
+                      >
+                        {filteredPeople.length > 0 ? (
+                          filteredPeople.map((person, index) => (
+                            <div
+                              key={person.name}
+                              className={`px-4 py-2 cursor-pointer ${
+                                selectedIndex === index 
+                                  ? "bg-[#0A7CFF]" 
+                                  : ""
+                              }`}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent input blur
+                                handlePersonSelect(person);
+                              }}
+                              onMouseEnter={() => setSelectedIndex(index)}
+                              tabIndex={0}
+                            >
+                              <div className="flex flex-col">
+                                <span className={`text-sm ${selectedIndex === index ? "text-white" : "text-[#0A7CFF]"}`}>{person.name}</span>
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-2 text-sm text-gray-500">No results found</div>
-                      )}
-                    </div>
-                  )}
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-gray-500">No results found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div 
-            className="flex items-center gap-2" 
-            onClick={handleHeaderClick}
-            data-chat-header="true"
-          >
-            <span className="text-sm font-medium text-muted-foreground">
-              {isNewChat ? recipientInput.split(',').filter(r => r.trim()).join(', ') : activeConversation?.recipients.map(r => r.name).join(', ')}
-            </span>
-          </div>
-        )}
+          ) : (
+            <div 
+              className="flex items-center gap-2" 
+              onClick={handleHeaderClick}
+              data-chat-header="true"
+            >
+              <span className="text-sm font-medium text-muted-foreground">
+                {isNewChat ? recipientInput.split(',').filter(r => r.trim()).join(', ') : activeConversation?.recipients.map(r => r.name).join(', ')}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
