@@ -195,7 +195,7 @@ export function MessageBubble({
                     handleReaction(type as ReactionType);
                   }}
                   className={cn(
-                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-110",
+                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
                     isReactionActive(type as ReactionType)
                       ? "bg-[#0A7CFF] text-white scale-110"
                       : ""
@@ -211,18 +211,33 @@ export function MessageBubble({
         {/* Display existing reactions */}
         {message.reactions && message.reactions.length > 0 && (
           <div className={cn(
-            "absolute -top-4 flex gap-0.5",
+            "absolute -top-4 flex",
             message.sender === "me" ? "-left-4" : "-right-4"
           )}>
-            {message.reactions.map((reaction, index) => (
+            {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
+            {[...message.reactions]
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .map((reaction, index, array) => (
               <div
                 key={`${reaction.type}-${index}`}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#0A7CFF] text-white border border-background",
-                  reaction.type === justAddedReactionType && "animate-scale-in"
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
+                  reaction.sender === "me" 
+                    ? "bg-[#0A7CFF]" 
+                    : "bg-gray-100 dark:bg-[#404040]",
+                  reaction.type === justAddedReactionType && "animate-scale-in",
+                  index !== array.length - 1 && "-mr-7",
+                  index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
                 )}
               >
-                <FontAwesomeIcon icon={reactionIcons[reaction.type]} />
+                <FontAwesomeIcon 
+                  icon={reactionIcons[reaction.type]} 
+                  className={cn(
+                    reaction.sender === "me"
+                      ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
+                      : "text-muted-foreground"
+                  )}
+                />
               </div>
             ))}
           </div>
