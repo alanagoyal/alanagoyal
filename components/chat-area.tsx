@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface ChatAreaProps {
   isNewChat: boolean;
@@ -53,18 +54,20 @@ export function ChatArea({
   const messageInputKey = conversationRecipients.map(r => r.id).join(',');
 
   return (
-    <div className="h-dvh relative">
-      <div className="absolute inset-0 overflow-y-auto chat-area-messages">
-        <div className="py-16">
-          <MessageList
-            messages={activeConversation?.messages || []}
-            conversation={activeConversation}
-            typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
-            onReaction={onReaction}
-            conversationId={conversationId}
-            messageInputRef={messageInputRef}
-          />
-        </div>
+    <div className="h-dvh relative flex flex-col">
+      <div className="absolute inset-0">
+        <ScrollArea className="h-full">
+          <div className="pt-16 pb-16">
+            <MessageList
+              messages={activeConversation?.messages || []}
+              conversation={activeConversation}
+              typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
+              onReaction={onReaction}
+              conversationId={conversationId}
+              messageInputRef={messageInputRef}
+            />
+          </div>
+        </ScrollArea>
       </div>
       <div className="absolute top-0 left-0 right-0 z-[100]">
         <ChatHeader
