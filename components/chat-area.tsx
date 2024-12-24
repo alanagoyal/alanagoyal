@@ -54,8 +54,8 @@ export function ChatArea({
 
   return (
     <div className="h-dvh relative">
-      <div className="absolute inset-0 overflow-y-auto">
-        <div className="py-[60px]">
+      <div className="absolute inset-0 overflow-y-auto chat-area-messages">
+        <div className="py-16">
           <MessageList
             messages={activeConversation?.messages || []}
             conversation={activeConversation}

@@ -222,7 +222,7 @@ export function ChatHeader({
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/80 backdrop-blur-md border-b">
       <div 
-        className="min-h-[60px] flex items-center justify-between p-4"
+        className="h-16 flex items-center justify-between p-4"
         onClick={(e) => {
           // Ignore clicks from recipient pills or dropdown
           if (
