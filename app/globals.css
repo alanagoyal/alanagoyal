@@ -220,6 +220,17 @@ body {
 }
 
 /* Chat area specific scrollbar padding */
+/* iOS-specific styling */
+@supports (-webkit-touch-callout: none) {
+  .chat-area-messages {
+    padding-top: 64px;
+    padding-bottom: 64px;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Desktop scrollbar styling */
 .chat-area-messages::-webkit-scrollbar-track {
   margin: 64px 0;
 }
