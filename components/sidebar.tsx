@@ -192,7 +192,7 @@ export function Sidebar({
 
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
-      <div className="px-2">
+      <div className="pl-2">
         {children}
         <SearchBar value={searchTerm} onChange={onSearchChange} />
         <div className="space-y-2">
