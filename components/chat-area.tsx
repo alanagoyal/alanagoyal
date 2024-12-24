@@ -38,7 +38,7 @@ export function ChatArea({
   onMessageDraftChange,
 }: ChatAreaProps) {
   const showRecipientInput = isNewChat && !activeConversation;
-    const messageInputRef = useRef<{ focus: () => void }>(null);
+  const messageInputRef = useRef<{ focus: () => void }>(null);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
@@ -53,8 +53,20 @@ export function ChatArea({
   const messageInputKey = conversationRecipients.map(r => r.id).join(',');
 
   return (
-    <div className="h-dvh flex flex-col">
-      <div className="sticky top-0 z-20 bg-background">
+    <div className="h-dvh relative">
+      <div className="absolute inset-0 overflow-y-auto chat-area-messages">
+        <div className="py-16">
+          <MessageList
+            messages={activeConversation?.messages || []}
+            conversation={activeConversation}
+            typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
+            onReaction={onReaction}
+            conversationId={conversationId}
+            messageInputRef={messageInputRef}
+          />
+        </div>
+      </div>
+      <div className="absolute top-0 left-0 right-0 z-[100]">
         <ChatHeader
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
@@ -70,17 +82,7 @@ export function ChatArea({
           onCreateConversation={onCreateConversation}
         />
       </div>
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-        <MessageList
-          messages={activeConversation?.messages || []}
-          conversation={activeConversation}
-          typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
-          onReaction={onReaction}
-          conversationId={conversationId}
-          messageInputRef={messageInputRef}
-        />
-      </div>
-      <div className="sticky bottom-0 bg-background z-20" style={{
+      <div className="absolute bottom-0 left-0 right-0 z-[100]" style={{
         marginBottom: 'env(keyboard-inset-height, 0px)'
       }}>
         <MessageInput
