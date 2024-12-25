@@ -388,7 +388,8 @@ export default function Sidebar({
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
       />
-      <div className="flex-1 overflow-y-auto px-2 dark:bg-muted">
+      {/* Padding to account for the scrollbar */}
+      <div className="flex-1 overflow-y-auto pl-3.5 dark:bg-muted">
         <Nav
           addNewPinnedNote={handlePinToggle}
           clearSearch={clearSearch}
