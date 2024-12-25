@@ -25,7 +25,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
   }, [value, onChange]);
 
   return (
-    <div className="py-2 pl-2">
+    <div className="py-2">
       <div className="relative">
         <Icons.search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
         <input
