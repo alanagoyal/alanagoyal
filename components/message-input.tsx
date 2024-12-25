@@ -254,10 +254,10 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
           {isMobileView && editor?.getText().trim() && (
             <button
               onClick={handleSend}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 rounded-full p-1 text-white transition-colors"
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 rounded-full p-1 text-white transition-colors"
               disabled={disabled}
             >
-              <ArrowUp className="h-3 w-3" />
+              <ArrowUp className="h-4 w-4" />
             </button>
           )}
         </div>
