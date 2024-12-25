@@ -193,7 +193,7 @@ export function Sidebar({
   return (
     <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
       {/* Padding to account for the scrollbar */}
-      <div className="pl-3.5">
+      <div className="px-2 sm:pl-3.5 sm:pr-0">
         {children}
         <SearchBar value={searchTerm} onChange={onSearchChange} />
         <div className="space-y-2">
