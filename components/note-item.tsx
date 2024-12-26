@@ -162,7 +162,7 @@ export function NoteItem({
 
   if (isMobile) {
     return (
-      <div {...handlers} className="relative w-full">
+      <div {...handlers} className="relative overflow-hidden">
         <div
           className={`transition-transform duration-300 ease-out w-full ${
             isSwipeOpen ? "transform -translate-x-24" : ""
