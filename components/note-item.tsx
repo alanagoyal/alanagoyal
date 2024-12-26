@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSwipeable } from "react-swipeable";
 import { useMobileDetect } from "@/components/mobile-detector";
@@ -102,7 +102,7 @@ export function NoteItem({
 
   const NoteContent = (
     <li
-      className={`h-[70px] ${
+      className={`h-[70px] w-full ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
           ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
@@ -111,9 +111,10 @@ export function NoteItem({
       onClick={handleNoteClick}
     >
       <div
-        className={`h-full px-4 ${
-          !isMobile && showDivider && 
-          !(isSearching && isHighlighted) && 
+        className={`h-full w-full px-4 ${
+          !isMobile &&
+          showDivider &&
+          !(isSearching && isHighlighted) &&
           !(item.slug === selectedNoteSlug)
             ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
             : ""
@@ -122,13 +123,13 @@ export function NoteItem({
         <Link
           href={`/${item.slug || ""}`}
           prefetch={true}
-          className="block py-2 h-full flex flex-col justify-center"
+          className="block py-2 h-full w-full flex flex-col justify-center"
         >
-          <h2 className="text-sm font-bold px-2 break-words">
+          <h2 className="text-sm font-bold px-2 break-words line-clamp-1">
             {item.emoji} {item.title}
           </h2>
           <p
-            className={`text-xs px-2 overflow-hidden text-ellipsis whitespace-nowrap ${
+            className={`text-xs pl-2 break-words line-clamp-1 ${
               (!isMobile && isSearching && isHighlighted) ||
               (!isSearching && item.slug === selectedNoteSlug)
                 ? "text-muted-foreground dark:text-white/80"
@@ -161,9 +162,9 @@ export function NoteItem({
 
   if (isMobile) {
     return (
-      <div {...handlers} className="relative overflow-hidden">
+      <div {...handlers} className="relative w-full">
         <div
-          className={`transition-transform duration-300 ease-out ${
+          className={`transition-transform duration-300 ease-out w-full ${
             isSwipeOpen ? "transform -translate-x-24" : ""
           } ${
             showDivider

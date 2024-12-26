@@ -375,7 +375,7 @@ export default function Sidebar({
   );
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col">
       <SessionId setSessionId={setSessionId} />
       <CommandMenu
         notes={notes}
@@ -388,41 +388,42 @@ export default function Sidebar({
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
       />
-      {/* Padding to account for the scrollbar */}
-      <div className="flex-1 overflow-y-auto sm:pl-3.5 sm:pr-0 px-2 dark:bg-muted">
+      <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
         <Nav
           addNewPinnedNote={handlePinToggle}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
         />
-        <SearchBar
-          notes={notes}
-          onSearchResults={setLocalSearchResults}
-          sessionId={sessionId}
-          inputRef={searchInputRef}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          setHighlightedIndex={setHighlightedIndex}
-          clearSearch={clearSearch}
-        />
-        <SidebarContent
-          groupedNotes={groupedNotes}
-          selectedNoteSlug={selectedNoteSlug}
-          onNoteSelect={handleNoteSelect}
-          sessionId={sessionId}
-          handlePinToggle={handlePinToggle}
-          pinnedNotes={pinnedNotes}
-          localSearchResults={localSearchResults}
-          highlightedIndex={highlightedIndex}
-          categoryOrder={categoryOrder}
-          labels={labels}
-          handleNoteDelete={handleNoteDelete}
-          openSwipeItemSlug={openSwipeItemSlug}
-          setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-          clearSearch={clearSearch}
-          setSelectedNoteSlug={setSelectedNoteSlug}
-        />
+        <div>
+          <SearchBar
+            notes={notes}
+            onSearchResults={setLocalSearchResults}
+            sessionId={sessionId}
+            inputRef={searchInputRef}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            setHighlightedIndex={setHighlightedIndex}
+            clearSearch={clearSearch}
+          />
+          <SidebarContent
+            groupedNotes={groupedNotes}
+            selectedNoteSlug={selectedNoteSlug}
+            onNoteSelect={handleNoteSelect}
+            sessionId={sessionId}
+            handlePinToggle={handlePinToggle}
+            pinnedNotes={pinnedNotes}
+            localSearchResults={localSearchResults}
+            highlightedIndex={highlightedIndex}
+            categoryOrder={categoryOrder}
+            labels={labels}
+            handleNoteDelete={handleNoteDelete}
+            openSwipeItemSlug={openSwipeItemSlug}
+            setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+            clearSearch={clearSearch}
+            setSelectedNoteSlug={setSelectedNoteSlug}
+          />
+        </div>
       </div>
     </div>
   );
