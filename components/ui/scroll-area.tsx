@@ -14,8 +14,10 @@ import { cn } from "@/lib/utils"
  */
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
+    withVerticalMargins?: boolean
+  }
+>(({ className, children, withVerticalMargins = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
@@ -24,31 +26,29 @@ const ScrollArea = React.forwardRef<
     <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar />
+    <ScrollBar withVerticalMargins={withVerticalMargins} />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
 
-/**
- * Custom ScrollBar component that matches the native scrollbar design
- * Styled to be minimal and consistent with the system scrollbar:
- * - 14px total width
- * - 4px transparent border using bg-clip-padding
- * - 20% opacity for normal state, 30% for hover
- * - Maintains theme consistency (black in light mode, white in dark mode)
- */
+// Add vertical margins to for chat area component
 const ScrollBar = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>
->(({ className, orientation = "vertical", ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> & {
+    withVerticalMargins?: boolean
+  }
+>(({ className, orientation = "vertical", withVerticalMargins = false, ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar
     ref={ref}
     orientation={orientation}
     className={cn(
       "flex touch-none select-none transition-colors",
       orientation === "vertical" &&
-        "h-[calc(100%-8rem)] w-[14px] my-16",
+        cn(
+          "w-[14px]",
+          withVerticalMargins ? "h-[calc(100%-8rem)] my-16" : "h-full"
+        ),
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
       className
