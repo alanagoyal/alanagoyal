@@ -24,7 +24,7 @@ export function SwipeActions({
     >
       <button
         onClick={onPin}
-        className="bg-blue-500 text-white p-2 h-full w-16 flex items-center justify-center"
+        className="bg-[#3293FC] text-white p-2 h-full w-16 flex items-center justify-center"
       >
         <Pin size={20} className={isPinned ? "rotate-45" : ""} />
       </button>
