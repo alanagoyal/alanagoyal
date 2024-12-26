@@ -11,6 +11,7 @@ import {
 import { ConversationItem } from "./conversation-item";
 import { Pin, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -191,12 +192,12 @@ export function Sidebar({
   }, [activeConversation, filteredConversations, conversations, onSelectConversation, onUpdateConversation, onDeleteConversation, isCommandMenuOpen, theme]);
 
   return (
-    <div className={`${isMobileView ? 'w-full' : 'w-80'} h-dvh border-r dark:border-foreground/20 overflow-y-auto bg-muted`}>
-      {/* Padding to account for the scrollbar */}
-      <div className="px-2 sm:pl-3.5 sm:pr-0">
+ 
+      <ScrollArea className="h-dvh flex flex-col border-r dark:border-foreground/20 bg-muted">
+        <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
         {children}
         <SearchBar value={searchTerm} onChange={onSearchChange} />
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           {/* Pinned Conversations Grid */}
           {filteredConversations.some(conv => conv.pinned) && (
             <div className="p-2">
@@ -310,6 +311,6 @@ export function Sidebar({
             })}
         </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }

@@ -631,7 +631,7 @@ export default function App() {
       <main className="h-dvh w-full bg-background flex flex-col">
         <div className="flex-1 flex h-full">
           <div
-            className={`h-full ${isMobileView ? "w-full" : ""} ${
+            className={`h-full ${
               isMobileView && (activeConversation || isNewConversation)
                 ? "hidden"
                 : "block"
@@ -665,7 +665,7 @@ export default function App() {
             </Sidebar>
           </div>
           <div
-            className={`flex-1 h-full ${isMobileView ? "w-full" : ""} ${
+            className={`flex-1 h-full ${
               isMobileView && !activeConversation && !isNewConversation
                 ? "hidden"
                 : "block"
