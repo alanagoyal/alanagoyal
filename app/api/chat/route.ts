@@ -23,7 +23,10 @@ interface ChatResponse {
   content: string;
 }
 
-function findMatchingParticipant(partialName: string, participants: Recipient[]): string | null {
+function findMatchingParticipant(
+  partialName: string,
+  participants: Recipient[]
+): string | null {
   // First try exact match (case insensitive)
   const exactMatch = participants.find(
     (p) => p.name.toLowerCase() === partialName.toLowerCase()
@@ -32,8 +35,9 @@ function findMatchingParticipant(partialName: string, participants: Recipient[])
 
   // Then try partial match (case insensitive)
   const partialMatch = participants.find(
-    (p) => p.name.toLowerCase().includes(partialName.toLowerCase()) ||
-           partialName.toLowerCase().includes(p.name.toLowerCase())
+    (p) =>
+      p.name.toLowerCase().includes(partialName.toLowerCase()) ||
+      partialName.toLowerCase().includes(p.name.toLowerCase())
   );
   if (partialMatch) return partialMatch.name;
 
@@ -210,8 +214,9 @@ export async function POST(req: Request) {
         ...openaiMessages,
         {
           role: "system",
-          content:
-            'You must respond with valid JSON in the following format ONLY:\n{"sender": "<name>", "content": "<message>"}',
+          content: `You must respond with valid JSON in the following format ONLY:\n{"sender": "<n>", "content": "<message>"}\nThe sender MUST be one of these exact names: ${sortedParticipants
+            .map((r: Recipient) => `"${r.name}"`)
+            .join(", ")}`,
         },
       ],
       temperature: 0.9,
@@ -228,7 +233,7 @@ export async function POST(req: Request) {
     try {
       // Parse the JSON response
       messageData = JSON.parse(content.trim()) as ChatResponse;
-      
+
       if (!messageData.sender || !messageData.content) {
         throw new Error("Response missing required fields");
       }
@@ -247,9 +252,15 @@ export async function POST(req: Request) {
       throw error;
     }
 
+    // Get the first available participant if sender is "me"
+    if (messageData.sender === "me" && sortedParticipants.length > 0) {
+      messageData.sender = sortedParticipants[0].name;
+    }
+
     // Validate sender
-    const matchedParticipant = findMatchingParticipant(messageData.sender, sortedParticipants);
-    if (!matchedParticipant) {
+    if (
+      !sortedParticipants.find((r: Recipient) => r.name === messageData.sender)
+    ) {
       console.error(
         "Available participants:",
         sortedParticipants.map((r: Recipient) => r.name)
@@ -259,9 +270,6 @@ export async function POST(req: Request) {
         "Invalid sender: must be one of the available participants"
       );
     }
-    
-    // Update the sender to use the full matched name
-    messageData.sender = matchedParticipant;
 
     return new Response(JSON.stringify(messageData), {
       headers: {
