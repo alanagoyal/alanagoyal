@@ -23,27 +23,6 @@ interface ChatResponse {
   content: string;
 }
 
-function findMatchingParticipant(
-  partialName: string,
-  participants: Recipient[]
-): string | null {
-  // First try exact match (case insensitive)
-  const exactMatch = participants.find(
-    (p) => p.name.toLowerCase() === partialName.toLowerCase()
-  );
-  if (exactMatch) return exactMatch.name;
-
-  // Then try partial match (case insensitive)
-  const partialMatch = participants.find(
-    (p) =>
-      p.name.toLowerCase().includes(partialName.toLowerCase()) ||
-      partialName.toLowerCase().includes(p.name.toLowerCase())
-  );
-  if (partialMatch) return partialMatch.name;
-
-  return null;
-}
-
 export async function POST(req: Request) {
   const body = await req.json();
   const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
