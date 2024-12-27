@@ -18,6 +18,11 @@ initLogger({
   apiKey: process.env.BRAINTRUST_API_KEY,
 });
 
+interface ChatResponse {
+  sender: string;
+  content: string;
+}
+
 export async function POST(req: Request) {
   const body = await req.json();
   const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
@@ -184,10 +189,17 @@ export async function POST(req: Request) {
 
     const response = await client.chat.completions.create({
       model: "claude-3-5-sonnet-latest",
-      messages: openaiMessages,
+      messages: [
+        ...openaiMessages,
+        {
+          role: "system",
+          content: `You must respond with valid JSON in the following format ONLY:\n{"sender": "<n>", "content": "<message>"}\nThe sender MUST be one of these exact names: ${sortedParticipants
+            .map((r: Recipient) => `"${r.name}"`)
+            .join(", ")}`,
+        },
+      ],
       temperature: 0.9,
-      max_tokens: 150,
-      response_format: { type: "json_object" },
+      max_tokens: 1000, // Increased to prevent truncation
     });
 
     const content = response.choices[0]?.message?.content;
@@ -196,25 +208,37 @@ export async function POST(req: Request) {
       throw new Error("No response from OpenAI");
     }
 
-    let messageData;
+    let messageData: ChatResponse;
     try {
-      messageData = JSON.parse(content);
+      // Parse the JSON response
+      messageData = JSON.parse(content.trim()) as ChatResponse;
+
+      if (!messageData.sender || !messageData.content) {
+        throw new Error("Response missing required fields");
+      }
     } catch (error) {
-      console.error(
-        "Failed to parse JSON response:",
-        error,
-        "Content:",
-        content
-      );
-      throw new Error("Invalid JSON response from API");
+      if (error instanceof SyntaxError) {
+        console.error(
+          "Failed to parse JSON response:",
+          error,
+          "\nContent preview:",
+          content.slice(0, 200),
+          "\nContent length:",
+          content.length
+        );
+        throw new Error("Invalid JSON format in API response");
+      }
+      throw error;
+    }
+
+    // Get the first available participant if sender is "me"
+    if (messageData.sender === "me" && sortedParticipants.length > 0) {
+      messageData.sender = sortedParticipants[0].name;
     }
 
     // Validate sender
     if (
-      !sortedParticipants.find(
-        (r: Recipient) =>
-          r.name.toLowerCase() === messageData.sender.toLowerCase()
-      )
+      !sortedParticipants.find((r: Recipient) => r.name === messageData.sender)
     ) {
       console.error(
         "Available participants:",
