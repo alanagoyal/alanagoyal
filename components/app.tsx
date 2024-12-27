@@ -648,7 +648,7 @@ export default function App() {
             className={`h-full ${
               isMobileView && (activeConversation || isNewConversation)
                 ? "hidden"
-                : "block border-r dark:border-foreground/20"
+                : "block sm:border-r dark:border-foreground/20"
             }`}
           >
             <Sidebar
