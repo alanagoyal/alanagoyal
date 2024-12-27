@@ -21,23 +21,25 @@ export function MessageList({
   messageInputRef
 }: MessageListProps) {
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const typingRef = useRef<HTMLDivElement>(null);
 
   const isTypingInThisConversation = typingStatus && 
     typingStatus.conversationId === conversationId;
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current;
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      });
+    // If someone is typing, scroll to typing indicator
+    if (isTypingInThisConversation && typingRef.current) {
+      typingRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+    // Otherwise if there are messages, scroll to last message
+    else if (messages.length > 0 && lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTypingInThisConversation]);
 
   // Update lastSentMessageId when a new message is added
   useEffect(() => {
@@ -56,38 +58,39 @@ export function MessageList({
 
   return (
     <div 
-      ref={scrollAreaRef} 
-      className="flex-1 p-4 pb-0 overflow-y-auto flex flex-col-reverse relative"
+      className="flex-1 p-4 pb-0 flex flex-col-reverse relative"
     >
-      <div className="space-y-4 flex-1">
-        {messages.map((message, index) => (
-          <div 
-            key={message.id} 
-            className={cn(
-              "transition-opacity",
-              isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
-            )}
-          >
-            <MessageBubble
-              message={message}
-              isLastUserMessage={index === lastUserMessageIndex}
-              conversation={conversation}
-              isTyping={false}
-              onReaction={onReaction}
-              onOpenChange={(isOpen) => {
-                // Track active reaction menu to dim other messages
-                setActiveMessageId(isOpen ? message.id : null);
-                setIsAnyReactionMenuOpen(isOpen);
-              }}
-              onReactionComplete={() => {
-                // Focus input after reaction for smooth typing flow
-                messageInputRef?.current?.focus();
-              }}
-              justSent={message.id === lastSentMessageId}
-            />
-          </div>
-        ))}
-        {isTypingInThisConversation && (
+    <div className="space-y-4 flex-1">
+      {messages.map((message, index, array) => (
+        <div 
+          key={message.id} 
+          ref={index === array.length - 1 ? lastMessageRef : null}
+          className={cn(
+            "transition-opacity",
+            isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
+          )}
+        >
+          <MessageBubble
+            message={message}
+            isLastUserMessage={index === lastUserMessageIndex}
+            conversation={conversation}
+            isTyping={false}
+            onReaction={onReaction}
+            onOpenChange={(isOpen) => {
+              // Track active reaction menu to dim other messages
+              setActiveMessageId(isOpen ? message.id : null);
+              setIsAnyReactionMenuOpen(isOpen);
+            }}
+            onReactionComplete={() => {
+              // Focus input after reaction for smooth typing flow
+              messageInputRef?.current?.focus();
+            }}
+            justSent={message.id === lastSentMessageId}
+          />
+        </div>
+      ))}
+      {isTypingInThisConversation && (
+        <div ref={typingRef}>
           <MessageBubble 
             message={{
               id: 'typing',
@@ -98,7 +101,8 @@ export function MessageList({
             isTyping={true}
             conversation={conversation}
           />
-        )}
+        </div>
+      )}
       </div>
     </div>
   );
