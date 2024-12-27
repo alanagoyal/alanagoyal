@@ -23,13 +23,21 @@ interface ChatResponse {
   content: string;
 }
 
-function validateChatResponse(data: unknown): data is ChatResponse {
-  const response = data as any;
-  return (
-    response?.sender?.length > 0 &&
-    response?.content?.length > 0 &&
-    response?.content?.length < 10000
+function findMatchingParticipant(partialName: string, participants: Recipient[]): string | null {
+  // First try exact match (case insensitive)
+  const exactMatch = participants.find(
+    (p) => p.name.toLowerCase() === partialName.toLowerCase()
   );
+  if (exactMatch) return exactMatch.name;
+
+  // Then try partial match (case insensitive)
+  const partialMatch = participants.find(
+    (p) => p.name.toLowerCase().includes(partialName.toLowerCase()) ||
+           partialName.toLowerCase().includes(p.name.toLowerCase())
+  );
+  if (partialMatch) return partialMatch.name;
+
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -218,21 +226,12 @@ export async function POST(req: Request) {
 
     let messageData: ChatResponse;
     try {
-      // Try parsing the JSON first
-      const parsedData = JSON.parse(content.trim());
-
-      if (!validateChatResponse(parsedData)) {
-        console.error(
-          "Invalid response structure:",
-          "\nReceived data:",
-          JSON.stringify(parsedData, null, 2)
-        );
-        throw new Error(
-          "Response missing required fields or has invalid data types"
-        );
+      // Parse the JSON response
+      messageData = JSON.parse(content.trim()) as ChatResponse;
+      
+      if (!messageData.sender || !messageData.content) {
+        throw new Error("Response missing required fields");
       }
-
-      messageData = parsedData;
     } catch (error) {
       if (error instanceof SyntaxError) {
         console.error(
@@ -249,12 +248,8 @@ export async function POST(req: Request) {
     }
 
     // Validate sender
-    if (
-      !sortedParticipants.find(
-        (r: Recipient) =>
-          r.name.toLowerCase() === messageData.sender.toLowerCase()
-      )
-    ) {
+    const matchedParticipant = findMatchingParticipant(messageData.sender, sortedParticipants);
+    if (!matchedParticipant) {
       console.error(
         "Available participants:",
         sortedParticipants.map((r: Recipient) => r.name)
@@ -264,6 +259,9 @@ export async function POST(req: Request) {
         "Invalid sender: must be one of the available participants"
       );
     }
+    
+    // Update the sender to use the full matched name
+    messageData.sender = matchedParticipant;
 
     return new Response(JSON.stringify(messageData), {
       headers: {
