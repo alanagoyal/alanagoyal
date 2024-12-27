@@ -76,7 +76,7 @@ export function SidebarContent({
                 <h3 className="py-1 text-xs font-bold text-muted-foreground ml-2">
                   {labels[categoryKey as keyof typeof labels]}
                 </h3>
-                <ul className="space-y-2">
+                <ul>
                   {groupedNotes[categoryKey].map(
                     (item: Note, index: number) => (
                       <NoteItem
