@@ -23,15 +23,12 @@ interface ChatResponse {
   content: string;
 }
 
-function validateChatResponse(data: any): data is ChatResponse {
+function validateChatResponse(data: unknown): data is ChatResponse {
+  const response = data as any;
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    typeof data.sender === 'string' &&
-    typeof data.content === 'string' &&
-    data.sender.length > 0 &&
-    data.content.length > 0 &&
-    data.content.length < 10000 // Reasonable max length
+    response?.sender?.length > 0 &&
+    response?.content?.length > 0 &&
+    response?.content?.length < 10000
   );
 }
 
@@ -205,8 +202,9 @@ export async function POST(req: Request) {
         ...openaiMessages,
         {
           role: "system",
-          content: "You must respond with valid JSON in the following format ONLY:\n{\"sender\": \"<name>\", \"content\": \"<message>\"}"
-        }
+          content:
+            'You must respond with valid JSON in the following format ONLY:\n{"sender": "<name>", "content": "<message>"}',
+        },
       ],
       temperature: 0.9,
       max_tokens: 1000, // Increased to prevent truncation
@@ -222,16 +220,18 @@ export async function POST(req: Request) {
     try {
       // Try parsing the JSON first
       const parsedData = JSON.parse(content.trim());
-      
+
       if (!validateChatResponse(parsedData)) {
         console.error(
           "Invalid response structure:",
           "\nReceived data:",
           JSON.stringify(parsedData, null, 2)
         );
-        throw new Error("Response missing required fields or has invalid data types");
+        throw new Error(
+          "Response missing required fields or has invalid data types"
+        );
       }
-      
+
       messageData = parsedData;
     } catch (error) {
       if (error instanceof SyntaxError) {
