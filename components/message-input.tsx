@@ -2,7 +2,7 @@ import { Recipient } from "@/types";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { Smile } from "lucide-react";
+import { Smile, ArrowUp } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -246,10 +246,21 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   return (
     <div className="h-16 sticky bottom-0 z-10 w-full bg-background/80 backdrop-blur-md p-4">
       <div className="flex gap-2 items-center relative">
-        <EditorContent 
-          editor={editor}
-          className="w-full"
-        />
+        <div className="relative w-full">
+          <EditorContent 
+            editor={editor}
+            className="w-full"
+          />
+          {isMobileView && editor?.getText().trim() && (
+            <button
+              onClick={handleSend}
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 rounded-full p-1 text-white transition-colors"
+              disabled={disabled}
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         {!isMobileView && (
           <button
             ref={buttonRef}

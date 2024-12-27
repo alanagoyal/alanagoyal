@@ -59,13 +59,15 @@ export function ConversationItem({
   const ConversationContent = (
     <button
       onClick={() => onSelectConversation(conversation.id)}
+      aria-label={`Conversation with ${conversation.recipients.map((r) => r.name).join(", ")}`}
+      aria-current={activeConversation === conversation.id ? 'true' : undefined}
       className={`w-full h-[70px] py-2 text-left relative flex items-center ${
         activeConversation === conversation.id
           ? "bg-[#0A7CFF] text-white rounded-md"
           : ""
       } ${
         showDivider
-          ? "after:content-[\"\"] after:absolute after:bottom-0 after:left-[56px] after:right-4 after:border-t after:border-muted-foreground/20"
+          ? 'after:content-[""] after:absolute after:bottom-0 after:left-[56px] after:right-4 after:border-t after:border-muted-foreground/20'
           : ""
       }`}
     >
@@ -112,11 +114,13 @@ export function ConversationItem({
           >
             {conversation.isTyping ? (
               <div className="flex items-center py-0.5">
-                <div className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
-                  activeConversation === conversation.id
-                    ? "bg-blue-400/30 text-blue-100"
-                    : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                }`}>
+                <div
+                  className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
+                    activeConversation === conversation.id
+                      ? "bg-blue-400/30 text-blue-100"
+                      : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                  }`}
+                >
                   <span className="typing-indicator scale-[0.6]">
                     <span className="dot"></span>
                     <span className="dot"></span>
@@ -130,9 +134,9 @@ export function ConversationItem({
                   const lastMessage = conversation.messages
                     .filter((message) => message.sender !== "system")
                     .slice(-1)[0];
-                  
+
                   if (!lastMessage) return "";
-                  
+
                   // Check if the last message has any reaction
                   const lastReaction = lastMessage.reactions?.[0];
                   if (lastReaction) {
@@ -142,14 +146,16 @@ export function ConversationItem({
                       dislike: "disliked",
                       laugh: "laughed at",
                       emphasize: "emphasized",
-                      question: "questioned"
+                      question: "questioned",
                     }[lastReaction.type];
-                    
-                    return lastReaction.sender === "me" 
+
+                    return lastReaction.sender === "me"
                       ? `You ${reactionText} "${lastMessage.content}"`
-                      : `${lastReaction.sender.split(' ')[0]} ${reactionText} "${lastMessage.content}"`;
+                      : `${
+                          lastReaction.sender.split(" ")[0]
+                        } ${reactionText} "${lastMessage.content}"`;
                   }
-                  
+
                   return lastMessage.content;
                 })()}
               </div>
@@ -163,7 +169,7 @@ export function ConversationItem({
   if (isMobileView) {
     return (
       <ContextMenu>
-        <ContextMenuTrigger>
+        <ContextMenuTrigger asChild>
           <div {...handlers} className="relative overflow-hidden">
             <div
               className={`transition-transform duration-300 ease-out ${
@@ -177,19 +183,24 @@ export function ConversationItem({
               onDelete={handleDelete}
               onPin={handlePin}
               isPinned={conversation.pinned}
+              aria-hidden={!isSwipeOpen}
             />
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+            className={`focus:bg-[#0A7CFF] focus:text-white ${
+              isMobileView ? "flex items-center justify-between" : ""
+            }`}
             onClick={handlePin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
             {isMobileView && <Pin className="h-4 w-4 ml-2" />}
           </ContextMenuItem>
           <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+            className={`focus:bg-[#0A7CFF] focus:text-white ${
+              isMobileView ? "flex items-center justify-between" : ""
+            } text-red-600`}
             onClick={handleDelete}
           >
             <span>Delete</span>
@@ -207,18 +218,16 @@ export function ConversationItem({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
-          className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''}`}
+          className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
           onClick={handlePin}
         >
           <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
-          {isMobileView && <Pin className="h-4 w-4 ml-2" />}
         </ContextMenuItem>
         <ContextMenuItem
-          className={`focus:bg-[#0A7CFF] focus:text-white ${isMobileView ? 'flex items-center justify-between' : ''} text-red-600`}
+          className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}
           onClick={handleDelete}
         >
           <span>Delete</span>
-          {isMobileView && <Trash className="h-4 w-4 ml-2" />}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
