@@ -646,13 +646,9 @@ export default function App() {
         <div className="flex-1 flex h-full">
           <div
             className={`h-full ${
-              isMobileView
-                ? "w-full"
-                : "w-[320px]  border-r dark:border-foreground/20"
-            } ${
-              isMobileView && !activeConversation && !isNewConversation
+              isMobileView && (activeConversation || isNewConversation)
                 ? "hidden"
-                : "block"
+                : "block border-r dark:border-foreground/20"
             }`}
           >
             <Sidebar
