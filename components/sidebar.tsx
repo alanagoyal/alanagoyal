@@ -222,7 +222,7 @@ export function Sidebar({
         className={`${
           isMobileView
             ? "w-full"
-            : "w-[320px] border-r dark:border-foreground/20 "
+            : "w-[320px]"
         } px-2`}
       >
         {children}

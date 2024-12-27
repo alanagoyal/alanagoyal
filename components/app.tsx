@@ -39,41 +39,44 @@ export default function App() {
   const STORAGE_KEY = "dialogueConversations";
 
   // Memoized conversation selection method
-  const selectConversation = useCallback((conversationId: string | null) => {
-    // If clearing the selection
-    if (conversationId === null) {
-      setActiveConversation(null);
-      window.history.pushState({}, "", "/");
-      return;
-    }
-
-    // Find the conversation in the list
-    const selectedConversation = conversations.find(
-      conversation => conversation.id === conversationId
-    );
-
-    // If conversation is not found, handle gracefully
-    if (!selectedConversation) {
-      console.error(`Conversation with ID ${conversationId} not found`);
-      
-      // Clear URL and select first available conversation
-      window.history.pushState({}, "", "/");
-      
-      if (conversations.length > 0) {
-        const fallbackConversation = conversations[0];
-        setActiveConversation(fallbackConversation.id);
-        window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
-      } else {
+  const selectConversation = useCallback(
+    (conversationId: string | null) => {
+      // If clearing the selection
+      if (conversationId === null) {
         setActiveConversation(null);
+        window.history.pushState({}, "", "/");
+        return;
       }
-      return;
-    }
 
-    // Successfully select the conversation
-    setActiveConversation(conversationId);
-    setIsNewConversation(false);
-    window.history.pushState({}, "", `?id=${conversationId}`);
-  }, [conversations, setActiveConversation, setIsNewConversation]); // Only recreate when these dependencies change
+      // Find the conversation in the list
+      const selectedConversation = conversations.find(
+        (conversation) => conversation.id === conversationId
+      );
+
+      // If conversation is not found, handle gracefully
+      if (!selectedConversation) {
+        console.error(`Conversation with ID ${conversationId} not found`);
+
+        // Clear URL and select first available conversation
+        window.history.pushState({}, "", "/");
+
+        if (conversations.length > 0) {
+          const fallbackConversation = conversations[0];
+          setActiveConversation(fallbackConversation.id);
+          window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
+        } else {
+          setActiveConversation(null);
+        }
+        return;
+      }
+
+      // Successfully select the conversation
+      setActiveConversation(conversationId);
+      setIsNewConversation(false);
+      window.history.pushState({}, "", `?id=${conversationId}`);
+    },
+    [conversations, setActiveConversation, setIsNewConversation]
+  ); // Only recreate when these dependencies change
 
   // Effects
   // Ensure active conversation remains valid
@@ -124,7 +127,12 @@ export default function App() {
     setIsLayoutInitialized(true);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [isMobileView, activeConversation, lastActiveConversation, selectConversation]);
+  }, [
+    isMobileView,
+    activeConversation,
+    lastActiveConversation,
+    selectConversation,
+  ]);
 
   // Get conversations from local storage
   useEffect(() => {
@@ -146,7 +154,7 @@ export default function App() {
         }
 
         // Create a map of initial conversation IDs for faster lookup
-        const initialIds = new Set(initialConversations.map(conv => conv.id));
+        const initialIds = new Set(initialConversations.map((conv) => conv.id));
 
         // Separate user-created and modified initial conversations
         const userConversations = [];
@@ -161,9 +169,9 @@ export default function App() {
         }
 
         // Update initial conversations with saved changes
-        allConversations = allConversations.map(conv => 
-          modifiedInitialConversations.has(conv.id) 
-            ? modifiedInitialConversations.get(conv.id) 
+        allConversations = allConversations.map((conv) =>
+          modifiedInitialConversations.has(conv.id)
+            ? modifiedInitialConversations.get(conv.id)
             : conv
         );
 
@@ -180,7 +188,9 @@ export default function App() {
     // Handle conversation selection after setting conversations
     if (urlConversationId) {
       // Check if the URL conversation exists
-      const conversationExists = allConversations.some(c => c.id === urlConversationId);
+      const conversationExists = allConversations.some(
+        (c) => c.id === urlConversationId
+      );
       if (conversationExists) {
         // If it exists, select it
         setActiveConversation(urlConversationId);
@@ -398,10 +408,7 @@ export default function App() {
       const updatedConversations = [newConversation, ...prev];
       setActiveConversation(newConversation.id);
       setIsNewConversation(false);
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(updatedConversations)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConversations));
       return updatedConversations;
     });
 
@@ -464,10 +471,7 @@ export default function App() {
         setIsNewConversation(false);
         setRecipientInput("");
         clearMessageDraft("new");
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(updatedConversations)
-        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConversations));
         return updatedConversations;
       });
 
@@ -506,10 +510,7 @@ export default function App() {
       const updatedConversations = prev.map((c) =>
         c.id === conversationId ? updatedConversation : c
       );
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(updatedConversations)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConversations));
       return updatedConversations;
     });
 
@@ -521,9 +522,11 @@ export default function App() {
   };
 
   // Method to handle conversation deletion
-  const handleDeleteConversation = (id: string) => {    
+  const handleDeleteConversation = (id: string) => {
     setConversations((prevConversations) => {
-      const newConversations = prevConversations.filter((conv) => conv.id !== id);
+      const newConversations = prevConversations.filter(
+        (conv) => conv.id !== id
+      );
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newConversations));
@@ -531,8 +534,10 @@ export default function App() {
       // If we're deleting the active conversation
       if (id === activeConversation && newConversations.length > 0) {
         // Find the index of the deleted conversation in the original list
-        const deletedIndex = prevConversations.findIndex(conv => conv.id === id);
-        
+        const deletedIndex = prevConversations.findIndex(
+          (conv) => conv.id === id
+        );
+
         // If we're deleting the last conversation in the list
         if (deletedIndex === prevConversations.length - 1) {
           // Go to the previous conversation
@@ -556,56 +561,65 @@ export default function App() {
   };
 
   // Method to handle conversation pin/unpin
-  const handleUpdateConversation = (conversations: Conversation[]) => {    
-    const updatedConversation = conversations.find(conv => conv.id === activeConversation);
+  const handleUpdateConversation = (conversations: Conversation[]) => {
+    const updatedConversation = conversations.find(
+      (conv) => conv.id === activeConversation
+    );
     setConversations(conversations);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-    
+
     // Show toast notification
     if (updatedConversation) {
       toast({
-        description: updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned",
+        description: updatedConversation.pinned
+          ? "Conversation pinned"
+          : "Conversation unpinned",
       });
     }
   };
 
   // Method to handle reaction
-  const handleReaction = useCallback((messageId: string, reaction: Reaction) => {
-    setConversations(prevConversations => {
-      return prevConversations.map(conversation => {
-        const messages = conversation.messages.map(message => {
-          if (message.id === messageId) {
-            // Check if this reaction type from this sender already exists
-            const existingReactionIndex = message.reactions?.findIndex(
-              r => r.type === reaction.type && r.sender === reaction.sender
-            ) ?? -1;
+  const handleReaction = useCallback(
+    (messageId: string, reaction: Reaction) => {
+      setConversations((prevConversations) => {
+        return prevConversations.map((conversation) => {
+          const messages = conversation.messages.map((message) => {
+            if (message.id === messageId) {
+              // Check if this reaction type from this sender already exists
+              const existingReactionIndex =
+                message.reactions?.findIndex(
+                  (r) =>
+                    r.type === reaction.type && r.sender === reaction.sender
+                ) ?? -1;
 
-            if (existingReactionIndex === -1) {
-              // Add new reaction
-              return {
-                ...message,
-                reactions: [...(message.reactions || []), reaction]
-              };
-            } else {
-              // Remove existing reaction
-              const newReactions = [...(message.reactions || [])];
-              newReactions.splice(existingReactionIndex, 1);
-              return {
-                ...message,
-                reactions: newReactions
-              };
+              if (existingReactionIndex === -1) {
+                // Add new reaction
+                return {
+                  ...message,
+                  reactions: [...(message.reactions || []), reaction],
+                };
+              } else {
+                // Remove existing reaction
+                const newReactions = [...(message.reactions || [])];
+                newReactions.splice(existingReactionIndex, 1);
+                return {
+                  ...message,
+                  reactions: newReactions,
+                };
+              }
             }
-          }
-          return message;
+            return message;
+          });
+
+          return {
+            ...conversation,
+            messages,
+          };
         });
-        
-        return {
-          ...conversation,
-          messages
-        };
       });
-    });
-  }, []);
+    },
+    []
+  );
 
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
@@ -632,7 +646,11 @@ export default function App() {
         <div className="flex-1 flex h-full">
           <div
             className={`h-full ${
-              isMobileView && (activeConversation || isNewConversation)
+              isMobileView
+                ? "w-full"
+                : "w-[320px]  border-r dark:border-foreground/20"
+            } ${
+              isMobileView && !activeConversation && !isNewConversation
                 ? "hidden"
                 : "block"
             }`}
