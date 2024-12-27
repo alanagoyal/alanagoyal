@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Conversation } from "../types";
 import { SearchBar } from "./search-bar";
 import { formatDistanceToNow, parseISO } from "date-fns";
@@ -41,6 +41,7 @@ export function Sidebar({
   isCommandMenuOpen,
 }: SidebarProps) {
   const { theme, setTheme } = useTheme();
+  const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return "";
 
@@ -227,7 +228,7 @@ export function Sidebar({
       >
         {children}
         <SearchBar value={searchTerm} onChange={onSearchChange} />
-        <div className="space-y-2 w-full">
+        <div className="w-full">
           {/* Pinned Conversations Grid */}
           {filteredConversations.some((conv) => conv.pinned) && (
             <div className="p-2">
@@ -351,6 +352,8 @@ export function Sidebar({
                   showDivider={
                     !isActive && !isNextActive && index !== array.length - 1
                   }
+                  openSwipedConvo={openSwipedConvo}
+                  setOpenSwipedConvo={setOpenSwipedConvo}
                 />
               );
             })}
