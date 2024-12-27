@@ -18,6 +18,23 @@ initLogger({
   apiKey: process.env.BRAINTRUST_API_KEY,
 });
 
+interface ChatResponse {
+  sender: string;
+  content: string;
+}
+
+function validateChatResponse(data: any): data is ChatResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof data.sender === 'string' &&
+    typeof data.content === 'string' &&
+    data.sender.length > 0 &&
+    data.content.length > 0 &&
+    data.content.length < 10000 // Reasonable max length
+  );
+}
+
 export async function POST(req: Request) {
   const body = await req.json();
   const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
@@ -184,10 +201,15 @@ export async function POST(req: Request) {
 
     const response = await client.chat.completions.create({
       model: "claude-3-5-sonnet-latest",
-      messages: openaiMessages,
+      messages: [
+        ...openaiMessages,
+        {
+          role: "system",
+          content: "You must respond with valid JSON in the following format ONLY:\n{\"sender\": \"<name>\", \"content\": \"<message>\"}"
+        }
+      ],
       temperature: 0.9,
-      max_tokens: 150,
-      response_format: { type: "json_object" },
+      max_tokens: 1000, // Increased to prevent truncation
     });
 
     const content = response.choices[0]?.message?.content;
@@ -196,17 +218,34 @@ export async function POST(req: Request) {
       throw new Error("No response from OpenAI");
     }
 
-    let messageData;
+    let messageData: ChatResponse;
     try {
-      messageData = JSON.parse(content);
+      // Try parsing the JSON first
+      const parsedData = JSON.parse(content.trim());
+      
+      if (!validateChatResponse(parsedData)) {
+        console.error(
+          "Invalid response structure:",
+          "\nReceived data:",
+          JSON.stringify(parsedData, null, 2)
+        );
+        throw new Error("Response missing required fields or has invalid data types");
+      }
+      
+      messageData = parsedData;
     } catch (error) {
-      console.error(
-        "Failed to parse JSON response:",
-        error,
-        "Content:",
-        content
-      );
-      throw new Error("Invalid JSON response from API");
+      if (error instanceof SyntaxError) {
+        console.error(
+          "Failed to parse JSON response:",
+          error,
+          "\nContent preview:",
+          content.slice(0, 200),
+          "\nContent length:",
+          content.length
+        );
+        throw new Error("Invalid JSON format in API response");
+      }
+      throw error;
     }
 
     // Validate sender
