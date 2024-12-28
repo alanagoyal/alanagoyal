@@ -2,7 +2,7 @@ import { Icons } from "./icons";
 import { Conversation } from "../types";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -39,20 +39,20 @@ export function ChatHeader({
   // Update the conversation recipients
   const updateRecipients = useCallback(() => {
     if (isNewChat || isEditMode) {
-      const recipientNames = recipientInput.split(',').filter(r => r.trim());
-      
+      const recipientNames = recipientInput.split(",").filter((r) => r.trim());
+
       // Handle editing mode validation
       if (isEditMode && recipientNames.length === 0) {
         toast({
-          description: "You need at least one recipient"
+          description: "You need at least one recipient",
         });
         return;
       }
-      
+
       // Only show toast for new conversations on desktop
       if (isNewChat && !isMobileView && recipientNames.length === 0) {
         toast({
-          description: "Please add at least one recipient"
+          description: "Please add at least one recipient",
         });
         return;
       }
@@ -64,24 +64,53 @@ export function ChatHeader({
       } else if (isNewChat && (!isMobileView || recipientNames.length > 0)) {
         onCreateConversation?.(recipientNames);
       }
-      setSearchValue('');
+      setSearchValue("");
     }
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, toast, isMobileView]);
+  }, [
+    isNewChat,
+    isEditMode,
+    recipientInput,
+    onUpdateRecipients,
+    onCreateConversation,
+    toast,
+    isMobileView,
+  ]);
+
+  // Handle header click
+  const handleHeaderClick = () => {
+    if (!isNewChat && !isEditMode && !isMobileView) {
+      setIsEditMode(true);
+      const recipients =
+        activeConversation?.recipients.map((r) => r.name).join(",") || "";
+      setRecipientInput(recipients + ",");
+    } else if (isNewChat && showCompactNewChat) {
+      setShowCompactNewChat(false);
+    }
+  };
 
   // Effect
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click was on a close button or its children
-      const isCloseButton = (event.target as Element).closest('button[aria-label^="Remove"]');
-      
-      // Don't do anything if it's a close button click
-      if (isCloseButton) {
-        event.stopPropagation();
+      const target = event.target as Element;
+      const isDropdownClick = target.closest(
+        '[data-chat-header-dropdown="true"]'
+      );
+      const isRemoveButton = target.closest('button[aria-label^="Remove"]');
+      const isHeaderClick = target.closest('[data-chat-header="true"]');
+
+      // Don't do anything if clicking dropdown or remove button
+      if (isDropdownClick || isRemoveButton) {
         return;
       }
 
-      // Only handle click outside if we clicked outside the search area
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      // If clicking inside header, handle header click
+      if (isHeaderClick) {
+        handleHeaderClick();
+        return;
+      }
+
+      // Handle click outside
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setShowResults(false);
         setSelectedIndex(-1);
         updateRecipients();
@@ -102,20 +131,30 @@ export function ChatHeader({
         setSelectedIndex(-1);
       } else {
         setShowResults(false);
-        setRecipientInput('');
-        setSearchValue('');
+        setRecipientInput("");
+        setSearchValue("");
         setSelectedIndex(-1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     focusInput();
     manageInputState();
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, searchValue, setRecipientInput, updateRecipients]);
+  }, [
+    isNewChat,
+    isEditMode,
+    recipientInput,
+    onUpdateRecipients,
+    onCreateConversation,
+    searchValue,
+    setRecipientInput,
+    updateRecipients,
+    handleHeaderClick,
+  ]);
 
   // Filter the tech personalities based on the search value
   const filteredPeople = techPersonalities.filter((person) =>
@@ -123,12 +162,16 @@ export function ChatHeader({
   );
 
   // Handle person selection
-  const handlePersonSelect = (person: typeof techPersonalities[0]) => {
-    const newValue = recipientInput 
-      ? recipientInput.split(',').filter(r => r.trim()).concat(person.name).join(',')
+  const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
+    const newValue = recipientInput
+      ? recipientInput
+          .split(",")
+          .filter((r) => r.trim())
+          .concat(person.name)
+          .join(",")
       : person.name;
-    setRecipientInput(newValue + ',');
-    setSearchValue('');
+    setRecipientInput(newValue + ",");
+    setSearchValue("");
     setShowResults(false);
     setSelectedIndex(-1);
   };
@@ -138,17 +181,17 @@ export function ChatHeader({
     // Prevent sidebar navigation when dropdown is active
     e.stopPropagation();
 
-    if (e.key === 'Backspace' && !searchValue) {
+    if (e.key === "Backspace" && !searchValue) {
       e.preventDefault();
-      const recipients = recipientInput.split(',').filter(r => r.trim());
+      const recipients = recipientInput.split(",").filter((r) => r.trim());
       if (recipients.length > 0) {
-        const newRecipients = recipients.slice(0, -1).join(',');
-        setRecipientInput(newRecipients + (newRecipients ? ',' : ''));
+        const newRecipients = recipients.slice(0, -1).join(",");
+        setRecipientInput(newRecipients + (newRecipients ? "," : ""));
       }
       return;
     }
 
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       e.preventDefault();
       setShowResults(false);
       setSelectedIndex(-1);
@@ -159,17 +202,17 @@ export function ChatHeader({
     if (!showResults || !searchValue) return;
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex((prev) =>
           prev < filteredPeople.length - 1 ? prev + 1 : prev
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex(prev => prev > -1 ? prev - 1 : -1);
+        setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
           handlePersonSelect(filteredPeople[selectedIndex]);
@@ -178,30 +221,19 @@ export function ChatHeader({
     }
   };
 
-  // Handle header click
-  const handleHeaderClick = () => {
-    if (!isNewChat && !isEditMode) {
-      setIsEditMode(true);
-      const recipients = activeConversation?.recipients.map(r => r.name).join(',') || '';
-      setRecipientInput(recipients + ',');
-    } else if (isNewChat && showCompactNewChat) {
-      setShowCompactNewChat(false);
-    }
-  };
-
   // Render the recipient pills
   const renderRecipients = () => {
-    const recipients = recipientInput.split(',');
+    const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
-    
+
     return (
       <>
         {completeRecipients.map((recipient, index) => {
           const trimmedRecipient = recipient.trim();
           if (!trimmedRecipient) return null;
-          
+
           return (
-            <span 
+            <span
               key={index}
               className="inline-flex items-center px-1.5 py-0.5 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
             >
@@ -211,11 +243,11 @@ export function ChatHeader({
                   e.preventDefault(); // Prevent default button behavior
                   e.stopPropagation(); // Stop event from bubbling
                   const newRecipients = recipientInput
-                    .split(',')
-                    .filter(r => r.trim())
+                    .split(",")
+                    .filter((r) => r.trim())
                     .filter((_, i) => i !== index)
-                    .join(',');
-                  setRecipientInput(newRecipients + ',');
+                    .join(",");
+                  setRecipientInput(newRecipients + ",");
                 }}
                 onMouseDown={(e) => {
                   e.preventDefault(); // Prevent blur on the input
@@ -234,50 +266,33 @@ export function ChatHeader({
 
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/80 backdrop-blur-md border-b">
-      <div 
+      <div
         className="h-16 flex items-center justify-between p-4"
-        onClick={(e) => {
-          // Ignore clicks from recipient pills or dropdown
-          if (
-            !(e.target as Element).closest('[data-chat-header-dropdown="true"]') &&
-            !(e.target as Element).closest('button[aria-label^="Remove"]') &&
-            !(e.target as Element).closest('.bg-blue-100\\/50')
-          ) {
-            handleHeaderClick();
-          }
+        onClick={() => {
+          handleHeaderClick();
         }}
         data-chat-header="true"
       >
         <div className="flex items-center gap-2 flex-1">
           {isMobileView && (
-            <div className="flex items-center">
+            <div className="flex items-center -ml-2 w-[56px]">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isEditMode) {
-                    // Check for empty recipients in edit mode
-                    const recipientNames = recipientInput.split(',').filter(r => r.trim());
-                    if (recipientNames.length === 0) {
-                      toast({
-                        description: "You need at least one recipient"
-                      });
-                      return;
-                    }
-                  }
                   // For new chat, just clear and go back
                   if (isNewChat) {
-                    setRecipientInput('');
-                    setSearchValue('');
+                    setRecipientInput("");
+                    setSearchValue("");
                     setShowResults(false);
                   }
                   onBack?.();
                 }}
-                className="rounded-sm relative"
+                className="rounded-sm relative flex items-center gap-2"
                 aria-label="Back to conversations"
               >
                 <Icons.back />
                 {unreadCount ? (
-                  <div className="absolute -top-2 -right-2 bg-[#0A7CFF] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                  <div className="bg-[#0A7CFF] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium -ml-3">
                     {unreadCount}
                   </div>
                 ) : null}
@@ -285,14 +300,18 @@ export function ChatHeader({
             </div>
           )}
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
-            <div className="flex-1" onClick={e => e.stopPropagation()}>
+            <div className="flex-1" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-base sm:text-sm font-medium text-muted-foreground">
                   To:
                 </span>
                 <div className="flex flex-wrap gap-1 flex-1 items-center">
                   {renderRecipients()}
-                  <div ref={searchRef} className="relative flex-1" data-chat-header="true">
+                  <div
+                    ref={searchRef}
+                    className="relative flex-1"
+                    data-chat-header="true"
+                  >
                     <input
                       ref={inputRef}
                       type="text"
@@ -304,20 +323,27 @@ export function ChatHeader({
                       onKeyDown={handleKeyDown}
                       onBlur={(e) => {
                         // Don't handle blur if clicking remove button or dropdown
-                        const isRemoveButton = (e.relatedTarget as Element)?.closest('button[aria-label^="Remove"]');
-                        if (!isRemoveButton && !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')) {
+                        const isRemoveButton = (
+                          e.relatedTarget as Element
+                        )?.closest('button[aria-label^="Remove"]');
+                        if (
+                          !isRemoveButton &&
+                          !e.relatedTarget?.closest(
+                            '[data-chat-header-dropdown="true"]'
+                          )
+                        ) {
                           setShowResults(false);
                           setSelectedIndex(-1);
                           updateRecipients();
                         }
                       }}
-                      placeholder="Type to find recipients..."
+                      placeholder="Type to add recipients..."
                       className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
                       autoFocus
                       data-chat-header="true"
                     />
                     {showResults && searchValue && (
-                      <div 
+                      <div
                         className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
                         data-chat-header-dropdown="true"
                         tabIndex={-1}
@@ -327,9 +353,7 @@ export function ChatHeader({
                             <div
                               key={person.name}
                               className={`px-4 py-2 cursor-pointer ${
-                                selectedIndex === index 
-                                  ? "bg-[#0A7CFF]" 
-                                  : ""
+                                selectedIndex === index ? "bg-[#0A7CFF]" : ""
                               }`}
                               onMouseDown={(e) => {
                                 e.preventDefault(); // Prevent input blur
@@ -339,12 +363,22 @@ export function ChatHeader({
                               tabIndex={0}
                             >
                               <div className="flex flex-col">
-                                <span className={`text-sm ${selectedIndex === index ? "text-white" : "text-[#0A7CFF]"}`}>{person.name}</span>
+                                <span
+                                  className={`text-sm ${
+                                    selectedIndex === index
+                                      ? "text-white"
+                                      : "text-[#0A7CFF]"
+                                  }`}
+                                >
+                                  {person.name}
+                                </span>
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-2 text-sm text-gray-500">No results found</div>
+                          <div className="px-4 py-2 text-sm text-gray-500">
+                            No results found
+                          </div>
                         )}
                       </div>
                     )}
@@ -353,13 +387,24 @@ export function ChatHeader({
               </div>
             </div>
           ) : (
-            <div 
-              className="flex items-center gap-2" 
+            <div
+              className={`flex items-center ${
+                isMobileView
+                  ? "absolute left-1/2 -translate-x-1/2 transform"
+                  : ""
+              }`}
               onClick={handleHeaderClick}
               data-chat-header="true"
             >
-              <span className="text-sm font-medium text-muted-foreground">
-                {isNewChat ? recipientInput.split(',').filter(r => r.trim()).join(', ') : activeConversation?.recipients.map(r => r.name).join(', ')}
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                {isNewChat
+                  ? recipientInput
+                      .split(",")
+                      .filter((r) => r.trim())
+                      .join(", ")
+                  : activeConversation?.recipients
+                      .map((r) => r.name)
+                      .join(", ")}
               </span>
             </div>
           )}
