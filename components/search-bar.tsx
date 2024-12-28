@@ -11,17 +11,23 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
 
   useEffect(() => {
     const handleGlobalEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        const searchInput = document.querySelector('input[placeholder="Search"]');
-        if (document.activeElement !== searchInput && value && !justBlurred.current) {
+      if (e.key === "Escape") {
+        const searchInput = document.querySelector(
+          'input[placeholder="Search"]'
+        );
+        if (
+          document.activeElement !== searchInput &&
+          value &&
+          !justBlurred.current
+        ) {
           onChange("");
         }
         justBlurred.current = false;
       }
     };
 
-    window.addEventListener('keydown', handleGlobalEscape);
-    return () => window.removeEventListener('keydown', handleGlobalEscape);
+    window.addEventListener("keydown", handleGlobalEscape);
+    return () => window.removeEventListener("keydown", handleGlobalEscape);
   }, [value, onChange]);
 
   return (
@@ -33,7 +39,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
               e.preventDefault();
               if (document.activeElement === e.currentTarget) {
                 justBlurred.current = true;
