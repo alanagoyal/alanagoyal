@@ -72,11 +72,11 @@ export function SearchBar({
         />
         {searchQuery && (
           <button
-            type="button"
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
-            onClick={clearSearch}
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
           >
-            <Icons.close className="text-muted-foreground" />
+            <Icons.close className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
       </div>
