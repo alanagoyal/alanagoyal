@@ -42,21 +42,33 @@ export function ChatHeader({
   const updateRecipients = useCallback(() => {
     if (isNewChat || isEditMode) {
       const recipientNames = recipientInput.split(',').filter(r => r.trim());
-      if (recipientNames.length === 0) {
+      
+      // Handle editing mode validation
+      if (isEditMode && recipientNames.length === 0) {
         toast({
-          description: "Oops! You need at least one recipient to save this conversation",
+          description: "You need at least one recipient"
         });
         return;
       }
-      if (isEditMode) {
+      
+      // Only show toast for new conversations on desktop
+      if (isNewChat && !isMobileView && recipientNames.length === 0) {
+        toast({
+          description: "Please add at least one recipient"
+        });
+        return;
+      }
+
+      // Only proceed with updates if we have recipients or we're going back on mobile
+      if (isEditMode && recipientNames.length > 0) {
         setIsEditMode(false);
         onUpdateRecipients?.(recipientNames);
-      } else if (isNewChat) {
+      } else if (isNewChat && (!isMobileView || recipientNames.length > 0)) {
         onCreateConversation?.(recipientNames);
       }
       setSearchValue('');
     }
-  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
+  }, [isNewChat, isEditMode, recipientInput, onUpdateRecipients, onCreateConversation, toast, isMobileView]);
 
   // Effect
   useEffect(() => {
@@ -244,6 +256,22 @@ export function ChatHeader({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isEditMode) {
+                    // Check for empty recipients in edit mode
+                    const recipientNames = recipientInput.split(',').filter(r => r.trim());
+                    if (recipientNames.length === 0) {
+                      toast({
+                        description: "You need at least one recipient"
+                      });
+                      return;
+                    }
+                  }
+                  // For new chat, just clear and go back
+                  if (isNewChat) {
+                    setRecipientInput('');
+                    setSearchValue('');
+                    setShowResults(false);
+                  }
                   onBack?.();
                 }}
                 className="rounded-sm relative"
