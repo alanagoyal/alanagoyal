@@ -675,6 +675,7 @@ export default function App() {
                   setRecipientInput("");
                   handleMessageDraftChange("new", "");
                 }}
+                isMobileView={isMobileView}
               />
             </Sidebar>
           </div>
