@@ -43,7 +43,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
               isMobile
                 ? "w-full max-w-full"
                 : "w-[320px] border-r border-muted-foreground/20"
-            } h-dvh flex flex-col`}
+            } h-dvh flex flex-col dark:bg-muted`}
           >
             <ScrollArea className="h-full flex-1">
               <div className="flex flex-col w-full">
