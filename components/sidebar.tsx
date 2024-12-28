@@ -375,7 +375,7 @@ export default function Sidebar({
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col dark:bg-muted">
       <SessionId setSessionId={setSessionId} />
       <CommandMenu
         notes={notes}
