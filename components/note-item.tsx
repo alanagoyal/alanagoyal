@@ -88,12 +88,6 @@ export function NoteItem({
 
   const canEditOrDelete = item.session_id === sessionId;
 
-  const handleNoteClick = () => {
-    if (onNoteSelect) {
-      onNoteSelect(item);
-    }
-  };
-
   const handleSwipeAction = (action: () => void) => {
     if (isSwipeOpen) {
       action();
@@ -109,23 +103,13 @@ export function NoteItem({
           ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
           : ""
       } ${
-        showDivider &&
-        !(isSearching && isHighlighted) &&
-        !(item.slug === selectedNoteSlug)
+        !isMobile && showDivider &&
+        (isSearching ? !isHighlighted : item.slug !== selectedNoteSlug)
           ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
           : ""
       }`}
     >
-      <div
-        className={`h-full w-full px-4 ${
-          !isMobile &&
-          showDivider &&
-          !(isSearching && isHighlighted) &&
-          !(item.slug === selectedNoteSlug)
-            ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
-            : ""
-        }`}
-      >
+      <div className={`h-full w-full px-4`}>
         <Link
           href={`/${item.slug || ""}`}
           prefetch={true}
