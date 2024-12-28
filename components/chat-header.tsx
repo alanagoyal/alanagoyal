@@ -13,6 +13,7 @@ interface ChatHeaderProps {
   activeConversation?: Conversation;
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
+  unreadCount?: number;
 }
 
 export function ChatHeader({
@@ -24,7 +25,9 @@ export function ChatHeader({
   activeConversation,
   onUpdateRecipients,
   onCreateConversation,
+  unreadCount,
 }: ChatHeaderProps) {
+  console.log('Unread count in ChatHeader:', unreadCount);
   const { toast } = useToast();
 
   const [searchValue, setSearchValue] = useState("");
@@ -237,16 +240,23 @@ export function ChatHeader({
       >
         <div className="flex items-center gap-2 flex-1">
           {isMobileView && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onBack?.();
-              }}
-              className="rounded-sm"
-              aria-label="Back to conversations"
-            >
-              <Icons.back />
-            </button>
+            <div className="flex items-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBack?.();
+                }}
+                className="rounded-sm relative"
+                aria-label="Back to conversations"
+              >
+                <Icons.back />
+                {unreadCount ? (
+                  <div className="absolute -top-2 -right-2 bg-[#0A7CFF] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                    {unreadCount}
+                  </div>
+                ) : null}
+              </button>
+            </div>
           )}
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
             <div className="flex-1" onClick={e => e.stopPropagation()}>

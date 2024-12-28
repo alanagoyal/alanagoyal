@@ -20,6 +20,7 @@ interface ChatAreaProps {
   onCreateConversation?: (recipientNames: string[]) => void;
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
+  unreadCount?: number;
 }
 
 export function ChatArea({
@@ -37,6 +38,7 @@ export function ChatArea({
   onCreateConversation,
   messageDraft = "",
   onMessageDraftChange,
+  unreadCount = 0,
 }: ChatAreaProps) {
   const showRecipientInput = isNewChat && !activeConversation;
   const messageInputRef = useRef<{ focus: () => void }>(null);
@@ -53,6 +55,7 @@ export function ChatArea({
   // Create a key that changes when recipients change
   const messageInputKey = conversationRecipients.map(r => r.id).join(',');
 
+  console.log('Unread count in ChatArea:', unreadCount);
   return (
     <div className="h-dvh relative flex flex-col">
       <div className="absolute inset-0">
@@ -83,6 +86,7 @@ export function ChatArea({
             }
           }}
           onCreateConversation={onCreateConversation}
+          unreadCount={unreadCount}
         />
       </div>
       <div className="absolute bottom-0 left-0 right-0 z-[100]" style={{
