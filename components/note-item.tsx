@@ -102,13 +102,19 @@ export function NoteItem({
 
   const NoteContent = (
     <li
+      tabIndex={0}
       className={`h-[70px] w-full ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
           ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
           : ""
+      } ${
+        showDivider &&
+        !(isSearching && isHighlighted) &&
+        !(item.slug === selectedNoteSlug)
+          ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
+          : ""
       }`}
-      onClick={handleNoteClick}
     >
       <div
         className={`h-full w-full px-4 ${
@@ -123,6 +129,7 @@ export function NoteItem({
         <Link
           href={`/${item.slug || ""}`}
           prefetch={true}
+          tabIndex={-1}
           className="block py-2 h-full w-full flex flex-col justify-center"
         >
           <h2 className="text-sm font-bold px-2 break-words line-clamp-1">
