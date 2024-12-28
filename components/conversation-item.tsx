@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Conversation } from "../types";
 import { SwipeActions } from "./swipe-actions";
@@ -21,6 +21,8 @@ interface ConversationItemProps {
   getInitials: (name: string) => string;
   isMobileView?: boolean;
   showDivider?: boolean;
+  openSwipedConvo: string | null;
+  setOpenSwipedConvo: (id: string | null) => void;
 }
 
 export function ConversationItem({
@@ -34,26 +36,53 @@ export function ConversationItem({
   getInitials,
   isMobileView,
   showDivider,
+  openSwipedConvo,
+  setOpenSwipedConvo,
 }: ConversationItemProps) {
-  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const isSwipeOpen = openSwipedConvo === conversation.id;
+
+  useEffect(() => {
+    const preventDefault = (e: TouchEvent) => {
+      if (isSwiping) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchmove", preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", preventDefault);
+    };
+  }, [isSwiping]);
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setIsSwipeOpen(true),
-    onSwipedRight: () => setIsSwipeOpen(false),
+    onSwipeStart: () => setIsSwiping(true),
+    onSwiped: () => setIsSwiping(false),
+    onSwipedLeft: () => {
+      setOpenSwipedConvo(conversation.id);
+      setIsSwiping(false);
+    },
+    onSwipedRight: () => {
+      setOpenSwipedConvo(null);
+      setIsSwiping(false);
+    },
     trackMouse: true,
   });
 
   const handlePin = () => {
+    if (!isSwipeOpen) return;
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
     );
     onUpdateConversation(updatedConversations);
-    setIsSwipeOpen(false);
+    setOpenSwipedConvo(null);
   };
 
   const handleDelete = () => {
+    if (!isSwipeOpen) return;
     onDeleteConversation(conversation.id);
-    setIsSwipeOpen(false);
+    setOpenSwipedConvo(null);
   };
 
   const ConversationContent = (
@@ -172,16 +201,16 @@ export function ConversationItem({
         <ContextMenuTrigger asChild>
           <div {...handlers} className="relative overflow-hidden">
             <div
-              className={`transition-transform duration-300 ease-out ${
-                isSwipeOpen ? "transform -translate-x-16" : ""
+              className={`transition-transform duration-300 ease-out w-full ${
+                isSwipeOpen ? "transform -translate-x-24" : ""
               }`}
             >
               {ConversationContent}
             </div>
             <SwipeActions
               isOpen={isSwipeOpen}
-              onDelete={handleDelete}
               onPin={handlePin}
+              onDelete={handleDelete}
               isPinned={conversation.pinned}
               aria-hidden={!isSwipeOpen}
             />
@@ -209,27 +238,27 @@ export function ConversationItem({
         </ContextMenuContent>
       </ContextMenu>
     );
+  } else {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger className="w-full">
+          {ConversationContent}
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem
+            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
+            onClick={handlePin}
+          >
+            <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
+          </ContextMenuItem>
+          <ContextMenuItem
+            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}
+            onClick={handleDelete}
+          >
+            <span>Delete</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
   }
-
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger className="w-full">
-        {ConversationContent}
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem
-          className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
-          onClick={handlePin}
-        >
-          <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
-        </ContextMenuItem>
-        <ContextMenuItem
-          className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}
-          onClick={handleDelete}
-        >
-          <span>Delete</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  );
 }
