@@ -55,7 +55,6 @@ export function ChatArea({
   // Create a key that changes when recipients change
   const messageInputKey = conversationRecipients.map(r => r.id).join(',');
 
-  console.log('Unread count in ChatArea:', unreadCount);
   return (
     <div className="h-dvh relative flex flex-col">
       <div className="absolute inset-0">

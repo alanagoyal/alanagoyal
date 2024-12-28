@@ -27,9 +27,7 @@ export function ChatHeader({
   onCreateConversation,
   unreadCount,
 }: ChatHeaderProps) {
-  console.log('Unread count in ChatHeader:', unreadCount);
   const { toast } = useToast();
-
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);

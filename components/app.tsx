@@ -623,10 +623,8 @@ export default function App() {
 
   // Calculate total unread count
   const totalUnreadCount = conversations.reduce((total, conv) => {
-    console.log(`Conversation ${conv.id} unread count:`, conv.unreadCount);
     return total + (conv.unreadCount || 0);
   }, 0);
-  console.log('Total unread count in App:', totalUnreadCount);
 
   // Don't render until layout is initialized
   if (!isLayoutInitialized) {
