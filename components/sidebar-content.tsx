@@ -103,7 +103,7 @@ export function SidebarContent({
           )}
         </nav>
       ) : localSearchResults.length > 0 ? (
-        <ul className="space-y-2">
+        <ul>
           {localSearchResults.map((item: Note, index: number) => (
             <NoteItem
               key={item.id}
