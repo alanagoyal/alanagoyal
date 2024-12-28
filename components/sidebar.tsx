@@ -219,144 +219,157 @@ export function Sidebar({
 
   return (
     <ScrollArea className="h-dvh flex flex-col bg-muted">
-      <div
-        className={`${
-          isMobileView
-            ? "w-full"
-            : "w-[320px]"
-        } px-2`}
-      >
+      <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
         {children}
         <SearchBar value={searchTerm} onChange={onSearchChange} />
         <div className="w-full">
-          {/* Pinned Conversations Grid */}
-          {filteredConversations.some((conv) => conv.pinned) && (
-            <div className="p-2">
-              <div
-                className={`flex flex-wrap gap-2 ${
-                  filteredConversations.filter((c) => c.pinned).length <= 2
-                    ? "justify-center"
-                    : ""
-                }`}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  ...(filteredConversations.filter((c) => c.pinned).length <=
-                    2 && {
-                    display: "flex",
-                    maxWidth: "fit-content",
-                    margin: "0 auto",
-                  }),
-                }}
-              >
-                {filteredConversations
-                  .filter((conv) => conv.pinned)
-                  .map((conversation) => (
-                    <div key={conversation.id} className="flex justify-center">
-                      <ContextMenu>
-                        <ContextMenuTrigger>
-                          <button
-                            onClick={() =>
-                              onSelectConversation(conversation.id)
-                            }
-                            className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
-                              activeConversation === conversation.id
-                                ? "bg-[#0A7CFF] text-white"
-                                : ""
-                            }`}
-                          >
-                            <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
-                              {conversation.recipients[0].avatar ? (
-                                <img
-                                  src={conversation.recipients[0].avatar}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-                                  {getInitials(conversation.recipients[0].name)}
-                                </div>
-                              )}
-                            </div>
-                            <span className="text-xs font-medium truncate w-full text-center">
-                              {conversation.recipients[0].name}
-                            </span>
-                          </button>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent>
-                          <ContextMenuItem
-                            className={`focus:bg-[#0A7CFF] focus:text-white ${
-                              isMobileView
-                                ? "flex items-center justify-between"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              const updatedConversations = conversations.map(
-                                (conv) =>
-                                  conv.id === conversation.id
-                                    ? { ...conv, pinned: false }
-                                    : conv
-                              );
-                              onUpdateConversation(updatedConversations);
-                            }}
-                          >
-                            <span>Unpin</span>
-                            {isMobileView && (
-                              <PinOff className="h-4 w-4 ml-2" />
-                            )}
-                          </ContextMenuItem>
-                          <ContextMenuItem
-                            className={`focus:bg-[#0A7CFF] focus:text-white ${
-                              isMobileView
-                                ? "flex items-center justify-between"
-                                : ""
-                            } text-red-600`}
-                            onClick={() =>
-                              onDeleteConversation(conversation.id)
-                            }
-                          >
-                            <span>Delete</span>
-                            {isMobileView && <Trash className="h-4 w-4 ml-2" />}
-                          </ContextMenuItem>
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    </div>
-                  ))}
-              </div>
+          {filteredConversations.length === 0 && searchTerm ? (
+            <div className="py-2">
+              <p className="text-sm text-muted-foreground px-2 mt-4">
+                No results found
+              </p>
             </div>
+          ) : (
+            <>
+              {/* Pinned Conversations Grid */}
+              {filteredConversations.some((conv) => conv.pinned) && (
+                <div className="p-2">
+                  <div
+                    className={`flex flex-wrap gap-2 ${
+                      filteredConversations.filter((c) => c.pinned).length <= 2
+                        ? "justify-center"
+                        : ""
+                    }`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      ...(filteredConversations.filter((c) => c.pinned)
+                        .length <= 2 && {
+                        display: "flex",
+                        maxWidth: "fit-content",
+                        margin: "0 auto",
+                      }),
+                    }}
+                  >
+                    {filteredConversations
+                      .filter((conv) => conv.pinned)
+                      .map((conversation) => (
+                        <div
+                          key={conversation.id}
+                          className="flex justify-center"
+                        >
+                          <ContextMenu>
+                            <ContextMenuTrigger>
+                              <button
+                                onClick={() =>
+                                  onSelectConversation(conversation.id)
+                                }
+                                className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
+                                  activeConversation === conversation.id
+                                    ? "bg-[#0A7CFF] text-white"
+                                    : ""
+                                }`}
+                              >
+                                <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
+                                  {conversation.recipients[0].avatar ? (
+                                    <img
+                                      src={conversation.recipients[0].avatar}
+                                      alt=""
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
+                                      {getInitials(
+                                        conversation.recipients[0].name
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-xs font-medium truncate w-full text-center">
+                                  {conversation.recipients[0].name}
+                                </span>
+                              </button>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent>
+                              <ContextMenuItem
+                                className={`focus:bg-[#0A7CFF] focus:text-white ${
+                                  isMobileView
+                                    ? "flex items-center justify-between"
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  const updatedConversations =
+                                    conversations.map((conv) =>
+                                      conv.id === conversation.id
+                                        ? { ...conv, pinned: false }
+                                        : conv
+                                    );
+                                  onUpdateConversation(updatedConversations);
+                                }}
+                              >
+                                <span>Unpin</span>
+                                {isMobileView && (
+                                  <PinOff className="h-4 w-4 ml-2" />
+                                )}
+                              </ContextMenuItem>
+                              <ContextMenuItem
+                                className={`focus:bg-[#0A7CFF] focus:text-white ${
+                                  isMobileView
+                                    ? "flex items-center justify-between"
+                                    : ""
+                                } text-red-600`}
+                                onClick={() =>
+                                  onDeleteConversation(conversation.id)
+                                }
+                              >
+                                <span>Delete</span>
+                                {isMobileView && (
+                                  <Trash className="h-4 w-4 ml-2" />
+                                )}
+                              </ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Regular Conversation List */}
+              {filteredConversations
+                .filter((conv) => !conv.pinned)
+                .map((conversation, index, array) => {
+                  const isActive = conversation.id === activeConversation;
+                  const nextConversation = array[index + 1];
+                  const isNextActive =
+                    nextConversation?.id === activeConversation;
+
+                  return (
+                    <ConversationItem
+                      key={conversation.id}
+                      conversation={{
+                        ...conversation,
+                        isTyping:
+                          typingStatus?.conversationId === conversation.id,
+                      }}
+                      activeConversation={activeConversation}
+                      onSelectConversation={onSelectConversation}
+                      onDeleteConversation={onDeleteConversation}
+                      onUpdateConversation={onUpdateConversation}
+                      conversations={conversations}
+                      formatTime={formatTime}
+                      getInitials={getInitials}
+                      isMobileView={isMobileView}
+                      showDivider={
+                        !isActive && !isNextActive && index !== array.length - 1
+                      }
+                      openSwipedConvo={openSwipedConvo}
+                      setOpenSwipedConvo={setOpenSwipedConvo}
+                    />
+                  );
+                })}
+            </>
           )}
-
-          {/* Regular Conversation List */}
-          {filteredConversations
-            .filter((conv) => !conv.pinned)
-            .map((conversation, index, array) => {
-              const isActive = conversation.id === activeConversation;
-              const nextConversation = array[index + 1];
-              const isNextActive = nextConversation?.id === activeConversation;
-
-              return (
-                <ConversationItem
-                  key={conversation.id}
-                  conversation={{
-                    ...conversation,
-                    isTyping: typingStatus?.conversationId === conversation.id,
-                  }}
-                  activeConversation={activeConversation}
-                  onSelectConversation={onSelectConversation}
-                  onDeleteConversation={onDeleteConversation}
-                  onUpdateConversation={onUpdateConversation}
-                  conversations={conversations}
-                  formatTime={formatTime}
-                  getInitials={getInitials}
-                  isMobileView={isMobileView}
-                  showDivider={
-                    !isActive && !isNextActive && index !== array.length - 1
-                  }
-                  openSwipedConvo={openSwipedConvo}
-                  setOpenSwipedConvo={setOpenSwipedConvo}
-                />
-              );
-            })}
         </div>
       </div>
     </ScrollArea>

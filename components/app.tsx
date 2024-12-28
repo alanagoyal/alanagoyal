@@ -645,7 +645,7 @@ export default function App() {
       <main className="h-dvh w-full bg-background flex flex-col">
         <div className="flex-1 flex h-full">
           <div
-            className={`h-full ${
+            className={`h-full w-full sm:w-[320px] flex-shrink-0 ${
               isMobileView && (activeConversation || isNewConversation)
                 ? "hidden"
                 : "block sm:border-r dark:border-foreground/20"
