@@ -264,12 +264,27 @@ export function Sidebar({
                                 onClick={() =>
                                   onSelectConversation(conversation.id)
                                 }
-                                className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 ${
+                                className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 relative ${
                                   activeConversation === conversation.id
                                     ? "bg-[#0A7CFF] text-white"
                                     : ""
                                 }`}
                               >
+                                {typingStatus?.conversationId === conversation.id && (
+                                  <div className="absolute -top-1 -right-1">
+                                    <div className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
+                                      activeConversation === conversation.id
+                                        ? "bg-blue-400/30 text-blue-100"
+                                        : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                                    }`}>
+                                      <span className="typing-indicator scale-[0.6]">
+                                        <span className="dot"></span>
+                                        <span className="dot"></span>
+                                        <span className="dot"></span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
                                   {conversation.recipients[0].avatar ? (
                                     <img
@@ -285,9 +300,14 @@ export function Sidebar({
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-xs font-medium truncate w-full text-center">
-                                  {conversation.recipients[0].name}
-                                </span>
+                                <div className="relative w-full flex items-center justify-center gap-1">
+                                  {conversation.unreadCount > 0 && (
+                                    <div className="w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
+                                  )}
+                                  <span className="text-xs font-medium truncate text-center">
+                                    {conversation.recipients[0].name}
+                                  </span>
+                                </div>
                               </button>
                             </ContextMenuTrigger>
                             <ContextMenuContent>
