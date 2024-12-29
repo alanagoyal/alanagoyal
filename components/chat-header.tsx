@@ -148,13 +148,30 @@ export function ChatHeader({
     updateRecipients,
   ]);
 
-  // Filter the tech personalities based on the search value
-  const filteredPeople = techPersonalities.filter((person) =>
-    person.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  // Filter the tech personalities based on the search value and exclude already selected recipients
+  const filteredPeople = techPersonalities.filter((person) => {
+    const currentRecipients = recipientInput
+      .split(",")
+      .map(r => r.trim())
+      .filter(Boolean);
+    return (
+      person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+      !currentRecipients.includes(person.name)
+    );
+  });
 
   // Handle person selection
   const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
+    const currentRecipients = recipientInput
+      .split(",")
+      .map(r => r.trim())
+      .filter(Boolean);
+
+    // Check if person is already selected
+    if (currentRecipients.includes(person.name)) {
+      return;
+    }
+
     const newValue = recipientInput
       ? recipientInput
           .split(",")
