@@ -91,26 +91,19 @@ export function ChatHeader({
   // Effect
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      const isDropdownClick = target.closest(
-        '[data-chat-header-dropdown="true"]'
+      // Check if the click was on a close button or its children
+      const isCloseButton = (event.target as Element).closest(
+        'button[aria-label^="Remove"]'
       );
-      const isRemoveButton = target.closest('button[aria-label^="Remove"]');
-      const isHeaderClick = target.closest('[data-chat-header="true"]');
 
-      // Don't do anything if clicking dropdown or remove button
-      if (isDropdownClick || isRemoveButton) {
+      // Don't do anything if it's a close button click
+      if (isCloseButton) {
+        event.stopPropagation();
         return;
       }
 
-      // If clicking inside header, handle header click
-      if (isHeaderClick) {
-        handleHeaderClick();
-        return;
-      }
-
-      // Handle click outside
-      if (searchRef.current && !searchRef.current.contains(target)) {
+      // Only handle click outside if we clicked outside the search area
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
         setSelectedIndex(-1);
         updateRecipients();
@@ -153,7 +146,6 @@ export function ChatHeader({
     searchValue,
     setRecipientInput,
     updateRecipients,
-    handleHeaderClick,
   ]);
 
   // Filter the tech personalities based on the search value
@@ -199,7 +191,7 @@ export function ChatHeader({
       return;
     }
 
-    if (!showResults || !searchValue) return;
+    if (!showResults) return;
 
     switch (e.key) {
       case "ArrowDown":
@@ -342,44 +334,38 @@ export function ChatHeader({
                       autoFocus
                       data-chat-header="true"
                     />
-                    {showResults && searchValue && (
+                    {showResults && (
                       <div
                         className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
                         data-chat-header-dropdown="true"
                         tabIndex={-1}
                       >
-                        {filteredPeople.length > 0 ? (
-                          filteredPeople.map((person, index) => (
-                            <div
-                              key={person.name}
-                              className={`px-4 py-2 cursor-pointer ${
-                                selectedIndex === index ? "bg-[#0A7CFF]" : ""
-                              }`}
-                              onMouseDown={(e) => {
-                                e.preventDefault(); // Prevent input blur
-                                handlePersonSelect(person);
-                              }}
-                              onMouseEnter={() => setSelectedIndex(index)}
-                              tabIndex={0}
-                            >
-                              <div className="flex flex-col">
-                                <span
-                                  className={`text-sm ${
-                                    selectedIndex === index
-                                      ? "text-white"
-                                      : "text-[#0A7CFF]"
-                                  }`}
-                                >
-                                  {person.name}
-                                </span>
-                              </div>
+                        {filteredPeople.map((person, index) => (
+                          <div
+                            key={person.name}
+                            className={`px-4 py-2 cursor-pointer ${
+                              selectedIndex === index ? "bg-[#0A7CFF]" : ""
+                            }`}
+                            onMouseDown={(e) => {
+                              e.preventDefault(); // Prevent input blur
+                              handlePersonSelect(person);
+                            }}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            tabIndex={0}
+                          >
+                            <div className="flex flex-col">
+                              <span
+                                className={`text-sm ${
+                                  selectedIndex === index
+                                    ? "text-white"
+                                    : "text-[#0A7CFF]"
+                                }`}
+                              >
+                                {person.name}
+                              </span>
                             </div>
-                          ))
-                        ) : (
-                          <div className="px-4 py-2 text-sm text-gray-500">
-                            No results found
                           </div>
-                        )}
+                        ))}
                       </div>
                     )}
                   </div>
