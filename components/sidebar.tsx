@@ -12,6 +12,16 @@ import { ConversationItem } from "./conversation-item";
 import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faHeart,
+  faThumbsUp,
+  faThumbsDown,
+  faFaceLaugh,
+  faExclamation,
+  faQuestion
+} from "@fortawesome/free-solid-svg-icons";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -270,7 +280,7 @@ export function Sidebar({
                                     : ""
                                 }`}
                               >
-                                {typingStatus?.conversationId === conversation.id && (
+                                {typingStatus?.conversationId === conversation.id ? (
                                   <div className="absolute -top-1 -right-1">
                                     <div className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
                                       activeConversation === conversation.id
@@ -284,8 +294,72 @@ export function Sidebar({
                                       </span>
                                     </div>
                                   </div>
+                                ) : (() => {
+                                  const lastMessage = conversation.messages
+                                    .filter((message) => message.sender !== "system")
+                                    .slice(-1)[0];
+                                  
+                                  if (conversation.unreadCount > 0 && lastMessage?.reactions && lastMessage.reactions.length > 0 && lastMessage.sender !== "me") {
+                                    const reactionIcons = {
+                                      heart: faHeart,
+                                      like: faThumbsUp,
+                                      dislike: faThumbsDown,
+                                      laugh: faFaceLaugh,
+                                      emphasize: faExclamation,
+                                      question: faQuestion
+                                    };
+                                    
+                                    return (
+                                      <div className="absolute -top-1 -right-1 flex">
+                                        {[...lastMessage.reactions]
+                                          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                                          .slice(0, 2) // Only show up to 2 reactions in pinned view
+                                          .map((reaction, index, array) => (
+                                            <div
+                                              key={`${reaction.type}-${index}`}
+                                              className={cn(
+                                                "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+                                                reaction.sender === "me" 
+                                                  ? "bg-[#0A7CFF]" 
+                                                  : "bg-gray-100 dark:bg-[#404040]",
+                                                index !== array.length - 1 && "-mr-2",
+                                                index === 0 ? "z-30" : "z-20"
+                                              )}
+                                            >
+                                              <FontAwesomeIcon 
+                                                icon={reactionIcons[reaction.type]} 
+                                                className={cn(
+                                                  reaction.sender === "me"
+                                                    ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
+                                                    : "text-muted-foreground"
+                                                )}
+                                              />
+                                            </div>
+                                          ))}
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                                {conversation.unreadCount > 0 && conversation.messages.length > 0 && (
+                                  <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                                    <div className={`rounded-[16px] px-2 py-1 ${
+                                      activeConversation === conversation.id
+                                        ? "bg-blue-400/30 text-blue-100"
+                                        : "bg-gray-200/90 dark:bg-[#404040]/90 text-gray-900 dark:text-gray-100"
+                                    }`}>
+                                      <div className="text-[10px] line-clamp-2 w-[80px] text-center">
+                                        {(() => {
+                                          const lastMessage = conversation.messages
+                                            .filter((message) => message.sender !== "system")
+                                            .slice(-1)[0];
+                                          return lastMessage?.content || "";
+                                        })()}
+                                      </div>
+                                    </div>
+                                  </div>
                                 )}
-                                <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
+                                <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
                                   {conversation.recipients[0].avatar ? (
                                     <img
                                       src={conversation.recipients[0].avatar}
@@ -301,12 +375,12 @@ export function Sidebar({
                                   )}
                                 </div>
                                 <div className="relative w-full flex items-center justify-center gap-1">
-                                  {conversation.unreadCount > 0 && (
-                                    <div className="w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
-                                  )}
-                                  <span className="text-xs font-medium truncate text-center">
-                                    {conversation.recipients[0].name}
-                                  </span>
+                                    {conversation.unreadCount > 0 && (
+                                      <div className="w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
+                                    )}
+                                    <span className="text-xs font-medium truncate text-center">
+                                      {conversation.recipients[0].name}
+                                    </span>
                                 </div>
                               </button>
                             </ContextMenuTrigger>
