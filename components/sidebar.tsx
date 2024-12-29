@@ -280,13 +280,10 @@ export function Sidebar({
                                     : ""
                                 }`}
                               >
-                                {typingStatus?.conversationId === conversation.id ? (
+                                {typingStatus?.conversationId === conversation.id && 
+                                 activeConversation !== conversation.id ? (
                                   <div className="absolute -top-1 -right-1">
-                                    <div className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
-                                      activeConversation === conversation.id
-                                        ? "bg-blue-400/30 text-blue-100"
-                                        : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                                    }`}>
+                                    <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100">
                                       <span className="typing-indicator scale-[0.6]">
                                         <span className="dot"></span>
                                         <span className="dot"></span>
