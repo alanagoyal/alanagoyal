@@ -345,7 +345,7 @@ export function Sidebar({
                                         ? "bg-blue-400/30 text-blue-100"
                                         : "bg-gray-200/90 dark:bg-[#404040]/90 text-gray-900 dark:text-gray-100"
                                     }`}>
-                                      <div className="text-[10px] line-clamp-2 w-[80px] text-center">
+                                      <div className="text-[10px] line-clamp-2 w-[70px] text-center">
                                         {(() => {
                                           const lastMessage = conversation.messages
                                             .filter((message) => message.sender !== "system")
@@ -371,13 +371,15 @@ export function Sidebar({
                                     </div>
                                   )}
                                 </div>
-                                <div className="relative w-full flex items-center justify-center gap-1">
+                                <div className="w-full text-center">
+                                  <div className="relative max-w-full inline-flex justify-center">
                                     {conversation.unreadCount > 0 && (
-                                      <div className="w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
+                                      <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0A7CFF] rounded-full" />
                                     )}
-                                    <span className="text-xs font-medium truncate text-center">
+                                    <span className="text-xs truncate max-w-full">
                                       {conversation.recipients[0].name}
                                     </span>
+                                  </div>
                                 </div>
                               </button>
                             </ContextMenuTrigger>
