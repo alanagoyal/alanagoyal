@@ -172,6 +172,14 @@ export function ChatHeader({
       return;
     }
 
+    // Check if adding another recipient would exceed the limit
+    if (currentRecipients.length >= 4) {
+      toast({
+        description: "You can add up to four recipients",
+      });
+      return;
+    }
+
     const newValue = recipientInput
       ? recipientInput
           .split(",")
@@ -401,13 +409,22 @@ export function ChatHeader({
             >
               <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                 {isNewChat
-                  ? recipientInput
-                      .split(",")
-                      .filter((r) => r.trim())
-                      .join(", ")
-                  : activeConversation?.recipients
-                      .map((r) => r.name)
-                      .join(", ")}
+                  ? (() => {
+                      const recipients = recipientInput
+                        .split(",")
+                        .filter((r) => r.trim());
+                      if (recipients.length <= 2) {
+                        return recipients.join(", ");
+                      }
+                      return `${recipients.slice(0, 2).join(", ")} +${recipients.length - 2}`;
+                    })()
+                  : (() => {
+                      const recipients = activeConversation?.recipients.map((r) => r.name) || [];
+                      if (recipients.length <= 2) {
+                        return recipients.join(", ");
+                      }
+                      return `${recipients.slice(0, 2).join(", ")} +${recipients.length - 2}`;
+                    })()}
               </span>
             </div>
           )}
