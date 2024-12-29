@@ -140,47 +140,48 @@ export function MessageBubble({
       )}
 
       {/* Message bubble container */}
-      <div
-        className={cn(
-          "rounded-[20px] px-4 py-2 max-w-[80%] relative group",
-          // Style message based on sender type
-          isSystemMessage
-            ? "text-xs text-muted-foreground"
-            : message.sender === "me"
+      {isSystemMessage ? (
+        <div
+          className={cn(
+            "rounded-[20px] px-4 py-2 max-w-[80%] relative",
+            "text-xs text-muted-foreground text-center whitespace-pre-line"
+          )}
+        >
+          {message.content}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "rounded-[20px] px-4 py-2 max-w-[80%] relative group",
+            message.sender === "me"
               ? "bg-[#0A7CFF] text-white"
               : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
-          isTyping && "min-h-[32px] min-w-[60px]"
-        )}
-      >
-        {/* Reaction popup menu */}
-        <Popover open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          onOpenChange?.(open);
-        }}>
-          <PopoverTrigger asChild>
-            <div className="flex flex-col cursor-pointer">
-              <div className={cn(
-                "text-sm",
-                isSystemMessage && "text-center text-xs whitespace-pre-line"
-              )}>
-                {/* Show typing indicator or message content */}
-                {isTyping ? (
-                  <span className="typing-indicator">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                  </span>
-                ) : (
-                  isSystemMessage 
-                    ? message.content
-                    : highlightRecipientNames(message.content, conversation?.recipients || [], message.sender)
-                )}
+            isTyping && "min-h-[32px] min-w-[60px]"
+          )}
+        >
+          {/* Reaction popup menu */}
+          <Popover open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            onOpenChange?.(open);
+          }}>
+            <PopoverTrigger asChild>
+              <div className="flex flex-col cursor-pointer">
+                <div className="text-sm">
+                  {/* Show typing indicator or message content */}
+                  {isTyping ? (
+                    <span className="typing-indicator">
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                      <span className="dot"></span>
+                    </span>
+                  ) : (
+                    highlightRecipientNames(message.content, conversation?.recipients || [], message.sender)
+                  )}
+                </div>
               </div>
-            </div>
-          </PopoverTrigger>
+            </PopoverTrigger>
 
-          {/* Reaction menu for non-system messages */}
-          {!isSystemMessage && !isTyping && (
+            {/* Reaction menu */}
             <PopoverContent 
               className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
               align={message.sender === "me" ? "start" : "end"}
@@ -205,44 +206,44 @@ export function MessageBubble({
                 </button>
               ))}
             </PopoverContent>
-          )}
-        </Popover>
+          </Popover>
 
-        {/* Display existing reactions */}
-        {message.reactions && message.reactions.length > 0 && (
-          <div className={cn(
-            "absolute -top-4 flex",
-            message.sender === "me" ? "-left-4" : "-right-4"
-          )}>
-            {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
-            {[...message.reactions]
-              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-              .map((reaction, index, array) => (
-              <div
-                key={`${reaction.type}-${index}`}
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
-                  reaction.sender === "me" 
-                    ? "bg-[#0A7CFF]" 
-                    : "bg-gray-100 dark:bg-[#404040]",
-                  reaction.type === justAddedReactionType && "animate-scale-in",
-                  index !== array.length - 1 && "-mr-7",
-                  index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
-                )}
-              >
-                <FontAwesomeIcon 
-                  icon={reactionIcons[reaction.type]} 
+          {/* Display existing reactions */}
+          {message.reactions && message.reactions.length > 0 && (
+            <div className={cn(
+              "absolute -top-4 flex",
+              message.sender === "me" ? "-left-4" : "-right-4"
+            )}>
+              {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
+              {[...message.reactions]
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                .map((reaction, index, array) => (
+                <div
+                  key={`${reaction.type}-${index}`}
                   className={cn(
-                    reaction.sender === "me"
-                      ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
-                      : "text-muted-foreground"
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
+                    reaction.sender === "me" 
+                      ? "bg-[#0A7CFF]" 
+                      : "bg-gray-100 dark:bg-[#404040]",
+                    reaction.type === justAddedReactionType && "animate-scale-in",
+                    index !== array.length - 1 && "-mr-7",
+                    index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
                   )}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                >
+                  <FontAwesomeIcon 
+                    icon={reactionIcons[reaction.type]} 
+                    className={cn(
+                      reaction.sender === "me"
+                        ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
+                        : "text-muted-foreground"
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Show "Delivered" for last message from current user */}
       {message.sender === "me" && isLastUserMessage && !isTyping && (
