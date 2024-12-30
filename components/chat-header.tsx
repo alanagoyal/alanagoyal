@@ -433,7 +433,7 @@ export function ChatHeader({
             >
               {isMobileView ? (
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center -space-x-1.5">
+                  <div className="flex items-center py-2">
                     {(() => {
                       const recipients = isNewChat
                         ? recipientInput
@@ -442,12 +442,26 @@ export function ChatHeader({
                             .map((name) => ({ name, avatar: undefined }))
                         : activeConversation?.recipients || [];
 
+                      const getOffset = (index: number, total: number) => {
+                        if (total === 1) return {};
+                        
+                        // Different Y offsets for each position
+                        const yOffsets = [-4, 2, -2, 0];
+                        
+                        return {
+                          marginLeft: index === 0 ? '0px' : '-8px',
+                          transform: `translateY(${yOffsets[index]}px)`,
+                          zIndex: total - index
+                        };
+                      };
+
                       return (
                         <>
-                          {recipients.map((recipient, index) => (
+                          {recipients.slice(0, 4).map((recipient, index) => (
                             <div
                               key={index}
-                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white dark:border-gray-900"
+                              style={getOffset(index, recipients.length)}
                             >
                               {recipient.avatar ? (
                                 <img
@@ -472,7 +486,7 @@ export function ChatHeader({
                       );
                     })()}
                   </div>
-                  <span className="text-xs mt-2">
+                  <span className="text-xs">
                     {(() => {
                       const recipients = isNewChat
                         ? recipientInput.split(",").filter((r) => r.trim())
