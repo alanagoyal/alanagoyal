@@ -251,31 +251,32 @@ export function ChatHeader({
           if (!trimmedRecipient) return null;
 
           return (
-            <span
-              key={index}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
-            >
-              {trimmedRecipient}
-              <button
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default button behavior
-                  e.stopPropagation(); // Stop event from bubbling
-                  const newRecipients = recipientInput
-                    .split(",")
-                    .filter((r) => r.trim())
-                    .filter((_, i) => i !== index)
-                    .join(",");
-                  setRecipientInput(newRecipients + ",");
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault(); // Prevent blur on the input
-                }}
-                className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
-                aria-label={`Remove ${trimmedRecipient}`}
+            <div key={index} className={cn("sm:inline", isMobileView && "w-full")}>
+              <span
+                className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
               >
-                <Icons.close className="h-3 w-3" />
-              </button>
-            </span>
+                {trimmedRecipient}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent default button behavior
+                    e.stopPropagation(); // Stop event from bubbling
+                    const newRecipients = recipientInput
+                      .split(",")
+                      .filter((r) => r.trim())
+                      .filter((_, i) => i !== index)
+                      .join(",");
+                    setRecipientInput(newRecipients + ",");
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent blur on the input
+                  }}
+                  className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
+                  aria-label={`Remove ${trimmedRecipient}`}
+                >
+                  <Icons.close className="h-3 w-3" />
+                </button>
+              </span>
+            </div>
           );
         })}
       </>
@@ -287,7 +288,7 @@ export function ChatHeader({
       <div
         className={cn(
           "flex items-center justify-between px-4",
-          isMobileView ? "h-24" : "h-16",
+          isMobileView ? "min-h-24 py-2" : "h-16",
         )}
         onClick={() => {
           handleHeaderClick();
@@ -328,82 +329,84 @@ export function ChatHeader({
                 </span>
                 <div className="flex flex-wrap gap-1 flex-1 items-center">
                   {renderRecipients()}
-                  <div
-                    ref={searchRef}
-                    className="relative flex-1"
-                    data-chat-header="true"
-                  >
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={searchValue}
-                      onChange={(e) => {
-                        setSearchValue(e.target.value);
-                        setShowResults(true);
-                      }}
-                      onKeyDown={handleKeyDown}
-                      onBlur={(e) => {
-                        // Don't handle blur if clicking remove button or dropdown
-                        const isRemoveButton = (
-                          e.relatedTarget as Element
-                        )?.closest('button[aria-label^="Remove"]');
-                        if (
-                          !isRemoveButton &&
-                          !e.relatedTarget?.closest(
-                            '[data-chat-header-dropdown="true"]'
-                          )
-                        ) {
-                          setShowResults(false);
-                          setSelectedIndex(-1);
-                          updateRecipients();
-                        }
-                      }}
-                      placeholder="Type to add recipients..."
-                      className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-                      autoFocus
+                  {recipientInput.split(",").filter(r => r.trim()).length < 4 && (
+                    <div
+                      ref={searchRef}
+                      className={cn("relative", isMobileView ? "w-full" : "flex-1")}
                       data-chat-header="true"
-                    />
-                    {showResults && (
-                      <div
-                        className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
-                        data-chat-header-dropdown="true"
-                        tabIndex={-1}
-                      >
-                        {filteredPeople.map((person, index) => (
-                          <div
-                            key={person.name}
-                            className={`px-4 py-2 cursor-pointer ${
-                              selectedIndex === index ? "bg-[#0A7CFF]" : ""
-                            }`}
-                            onMouseDown={(e) => {
-                              e.preventDefault(); // Prevent input blur
-                              handlePersonSelect(person);
-                            }}
-                            onMouseEnter={() => setSelectedIndex(index)}
-                            tabIndex={0}
-                          >
-                            <div className="flex flex-col">
-                              <span
-                                className={`text-sm ${
-                                  selectedIndex === index
-                                    ? "text-white"
-                                    : "text-[#0A7CFF]"
-                                }`}
-                              >
-                                {person.name}
-                              </span>
+                    >
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={searchValue}
+                        onChange={(e) => {
+                          setSearchValue(e.target.value);
+                          setShowResults(true);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onBlur={(e) => {
+                          // Don't handle blur if clicking remove button or dropdown
+                          const isRemoveButton = (
+                            e.relatedTarget as Element
+                          )?.closest('button[aria-label^="Remove"]');
+                          if (
+                            !isRemoveButton &&
+                            !e.relatedTarget?.closest(
+                              '[data-chat-header-dropdown="true"]'
+                            )
+                          ) {
+                            setShowResults(false);
+                            setSelectedIndex(-1);
+                            updateRecipients();
+                          }
+                        }}
+                        placeholder="Type to add recipients..."
+                        className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+                        autoFocus
+                        data-chat-header="true"
+                      />
+                      {showResults && (
+                        <div
+                          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
+                          data-chat-header-dropdown="true"
+                          tabIndex={-1}
+                        >
+                          {filteredPeople.map((person, index) => (
+                            <div
+                              key={person.name}
+                              className={`px-4 py-2 cursor-pointer ${
+                                selectedIndex === index ? "bg-[#0A7CFF]" : ""
+                              }`}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent input blur
+                                handlePersonSelect(person);
+                              }}
+                              onMouseEnter={() => setSelectedIndex(index)}
+                              tabIndex={0}
+                            >
+                              <div className="flex flex-col">
+                                <span
+                                  className={`text-sm ${
+                                    selectedIndex === index
+                                      ? "text-white"
+                                      : "text-[#0A7CFF]"
+                                  }`}
+                                >
+                                  {person.name}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             <div
-              className={`flex items-center ${
+              className={`flex ${
                 isMobileView
                   ? "absolute left-1/2 -translate-x-1/2 transform"
                   : ""
