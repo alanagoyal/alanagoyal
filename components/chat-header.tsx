@@ -15,7 +15,6 @@ interface ChatHeaderProps {
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   unreadCount?: number;
-  getInitials?: (name: string) => string;
 }
 
 export function ChatHeader({
@@ -28,7 +27,6 @@ export function ChatHeader({
   onUpdateRecipients,
   onCreateConversation,
   unreadCount,
-  getInitials,
 }: ChatHeaderProps) {
   const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
