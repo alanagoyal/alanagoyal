@@ -104,7 +104,10 @@ export function ChatHeader({
       }
 
       // Only handle click outside if we clicked outside the search area
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
         setSelectedIndex(-1);
         updateRecipients();
@@ -153,7 +156,7 @@ export function ChatHeader({
   const filteredPeople = techPersonalities.filter((person) => {
     const currentRecipients = recipientInput
       .split(",")
-      .map(r => r.trim())
+      .map((r) => r.trim())
       .filter(Boolean);
     return (
       person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
@@ -165,7 +168,7 @@ export function ChatHeader({
   const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
     const currentRecipients = recipientInput
       .split(",")
-      .map(r => r.trim())
+      .map((r) => r.trim())
       .filter(Boolean);
 
     // Check if person is already selected
@@ -251,10 +254,11 @@ export function ChatHeader({
           if (!trimmedRecipient) return null;
 
           return (
-            <div key={index} className={cn("sm:inline", isMobileView && "w-full")}>
-              <span
-                className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100"
-              >
+            <div
+              key={index}
+              className={cn("sm:inline", isMobileView && "w-full")}
+            >
+              <span className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
                 {trimmedRecipient}
                 <button
                   onClick={(e) => {
@@ -288,7 +292,7 @@ export function ChatHeader({
       <div
         className={cn(
           "flex items-center justify-between px-4",
-          isMobileView ? "min-h-24 py-2" : "h-16",
+          isMobileView ? "min-h-24 py-2" : "h-16"
         )}
         onClick={() => {
           handleHeaderClick();
@@ -329,10 +333,14 @@ export function ChatHeader({
                 </span>
                 <div className="flex flex-wrap gap-1 flex-1 items-center">
                   {renderRecipients()}
-                  {recipientInput.split(",").filter(r => r.trim()).length < 4 && (
+                  {recipientInput.split(",").filter((r) => r.trim()).length <
+                    4 && (
                     <div
                       ref={searchRef}
-                      className={cn("relative", isMobileView ? "w-full" : "flex-1")}
+                      className={cn(
+                        "relative",
+                        isMobileView ? "w-full" : "flex-1"
+                      )}
                       data-chat-header="true"
                     >
                       <input
@@ -418,15 +426,18 @@ export function ChatHeader({
                 <div className="flex flex-col items-center">
                   <div className="flex items-center -space-x-1.5">
                     {(() => {
-                      const recipients = isNewChat 
-                        ? recipientInput.split(",").filter(r => r.trim()).map(name => ({ name, avatar: undefined }))
+                      const recipients = isNewChat
+                        ? recipientInput
+                            .split(",")
+                            .filter((r) => r.trim())
+                            .map((name) => ({ name, avatar: undefined }))
                         : activeConversation?.recipients || [];
-                      
+
                       return (
                         <>
                           {recipients.map((recipient, index) => (
-                            <div 
-                              key={index} 
+                            <div
+                              key={index}
                               className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
                             >
                               {recipient.avatar ? (
@@ -439,7 +450,10 @@ export function ChatHeader({
                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
                                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
                                   <span className="relative text-white text-base font-medium">
-                                    {recipient.name.split(' ').map(n => n[0]).join('')}
+                                    {recipient.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
                                   </span>
                                 </div>
                               )}
@@ -451,31 +465,39 @@ export function ChatHeader({
                   </div>
                   <span className="text-xs mt-2">
                     {(() => {
-                      const recipients = isNewChat 
-                        ? recipientInput.split(",").filter(r => r.trim())
-                        : activeConversation?.recipients.map(r => r.name) || [];
-                      return recipients.length === 1 
-                        ? recipients[0] 
+                      const recipients = isNewChat
+                        ? recipientInput.split(",").filter((r) => r.trim())
+                        : activeConversation?.recipients.map((r) => r.name) ||
+                          [];
+                      return recipients.length === 1
+                        ? recipients[0]
                         : `${recipients.length} people`;
                     })()}
                   </span>
                 </div>
               ) : (
-                <span className="text-sm font-medium text-muted-foreground">
+                <span className="text-sm">
+                  <span className="text-muted-foreground">To: </span>
                   {isNewChat
                     ? (() => {
                         const recipients = recipientInput
                           .split(",")
                           .filter((r) => r.trim());
-                        return recipients.length <= 2 
-                          ? recipients.join(", ")
-                          : `${recipients[0]}, ${recipients[1]} +${recipients.length - 2}`;
-                      })()
-                    : (() => {
-                        const recipients = activeConversation?.recipients.map((r) => r.name) || [];
                         return recipients.length <= 2
                           ? recipients.join(", ")
-                          : `${recipients[0]}, ${recipients[1]} +${recipients.length - 2}`;
+                          : `${recipients[0]}, ${recipients[1]} +${
+                              recipients.length - 2
+                            }`;
+                      })()
+                    : (() => {
+                        const recipients =
+                          activeConversation?.recipients.map((r) => r.name) ||
+                          [];
+                        return recipients.length <= 2
+                          ? recipients.join(", ")
+                          : `${recipients[0]}, ${recipients[1]} +${
+                              recipients.length - 2
+                            }`;
                       })()}
                 </span>
               )}
