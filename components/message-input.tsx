@@ -163,7 +163,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     },
     editorProps: {
       attributes: {
-        class: 'w-full bg-transparent border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose whitespace-nowrap overflow-x-auto flex items-center',
+        class: 'w-full bg-background/80 border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose whitespace-nowrap overflow-x-auto flex items-center',
         enterKeyHint: 'send',
         style: 'height: 32px; overflow-y: hidden; line-height: 32px;'
       },
@@ -245,7 +245,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   }, [showEmojiPicker, editor]);
 
   return (
-    <div className="h-16 sticky bottom-0 z-10 w-full bg-background/80 backdrop-blur-md p-4">
+    <div className="h-16 sticky bottom-0 z-10 w-full bg-background/50 backdrop-blur-md p-4">
       <div className="flex gap-2 items-center relative">
         <div className="relative w-full">
           <EditorContent 
