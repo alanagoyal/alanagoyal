@@ -163,7 +163,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     },
     editorProps: {
       attributes: {
-        class: 'w-full bg-background/80 border border-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose whitespace-nowrap overflow-x-auto flex items-center',
+        class: 'w-full bg-background/80 border border-muted-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose whitespace-nowrap overflow-x-auto flex items-center',
         enterKeyHint: 'send',
         style: 'height: 32px; overflow-y: hidden; line-height: 32px;'
       },
