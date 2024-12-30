@@ -5,6 +5,7 @@ import { techPersonalities } from "../data/tech-personalities";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+// Types
 interface ChatHeaderProps {
   isNewChat: boolean;
   recipientInput: string;
@@ -17,6 +18,190 @@ interface ChatHeaderProps {
   unreadCount?: number;
 }
 
+interface RecipientPillProps {
+  recipient: string;
+  index: number;
+  onRemove: (index: number) => void;
+  isMobileView?: boolean;
+}
+
+interface RecipientSearchProps {
+  searchValue: string;
+  setSearchValue: (value: string) => void;
+  showResults: boolean;
+  selectedIndex: number;
+  filteredPeople: typeof techPersonalities;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  handlePersonSelect: (person: (typeof techPersonalities)[0]) => void;
+  setSelectedIndex: (index: number) => void;
+  setShowResults: (show: boolean) => void;
+  updateRecipients: () => void;
+  isMobileView?: boolean;
+}
+
+// Sub-components
+function RecipientPill({
+  recipient,
+  index,
+  onRemove,
+  isMobileView,
+}: RecipientPillProps) {
+  const trimmedRecipient = recipient.trim();
+  if (!trimmedRecipient) return null;
+
+  return (
+    <div className={cn("sm:inline", isMobileView && "w-full")}>
+      <span className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
+        {trimmedRecipient}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove(index);
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+          className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
+          aria-label={`Remove ${trimmedRecipient}`}
+        >
+          <Icons.close className="h-3 w-3" />
+        </button>
+      </span>
+    </div>
+  );
+}
+
+function RecipientSearch({
+  searchValue,
+  setSearchValue,
+  showResults,
+  selectedIndex,
+  filteredPeople,
+  handleKeyDown,
+  handlePersonSelect,
+  setSelectedIndex,
+  setShowResults,
+  updateRecipients,
+  isMobileView,
+}: RecipientSearchProps) {
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div
+      ref={searchRef}
+      className={cn("relative", isMobileView ? "w-full" : "flex-1")}
+      data-chat-header="true"
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        value={searchValue}
+        onChange={(e) => {
+          setSearchValue(e.target.value);
+          setShowResults(true);
+        }}
+        onKeyDown={handleKeyDown}
+        onBlur={(e) => {
+          const isRemoveButton = (e.relatedTarget as Element)?.closest(
+            'button[aria-label^="Remove"]'
+          );
+          if (
+            !isRemoveButton &&
+            !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')
+          ) {
+            setShowResults(false);
+            setSelectedIndex(-1);
+            updateRecipients();
+          }
+        }}
+        placeholder="Type to add recipients..."
+        className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+        autoFocus
+        data-chat-header="true"
+      />
+      {showResults && (
+        <div
+          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
+          data-chat-header-dropdown="true"
+          tabIndex={-1}
+        >
+          {filteredPeople.map((person, index) => (
+            <div
+              key={person.name}
+              className={`px-4 py-2 cursor-pointer ${
+                selectedIndex === index ? "bg-[#0A7CFF]" : ""
+              }`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handlePersonSelect(person);
+              }}
+              onMouseEnter={() => setSelectedIndex(index)}
+              tabIndex={0}
+            >
+              <div className="flex flex-col">
+                <span
+                  className={`text-sm ${
+                    selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
+                  }`}
+                >
+                  {person.name}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileAvatars({
+  recipients,
+}: {
+  recipients: Array<{ name: string; avatar?: string }>;
+}) {
+  const getOffset = (index: number, total: number) => {
+    if (total === 1) return {};
+    const yOffsets = [-4, 2, -2, 0];
+    return {
+      marginLeft: index === 0 ? "0px" : "-8px",
+      transform: `translateY(${yOffsets[index]}px)`,
+      zIndex: total - index,
+    };
+  };
+
+  return (
+    <>
+      {recipients.slice(0, 4).map((recipient, index) => (
+        <div
+          key={index}
+          className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+          style={getOffset(index, recipients.length)}
+        >
+          {recipient.avatar ? (
+            <img
+              src={recipient.avatar}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
+              <span className="relative text-white text-base font-medium">
+                {recipient.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Main component
 export function ChatHeader({
   isNewChat,
   recipientInput,
@@ -34,31 +219,34 @@ export function ChatHeader({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update the conversation recipients
+  // Computed values
+  const filteredPeople = techPersonalities.filter((person) => {
+    const currentRecipients = recipientInput
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+    return (
+      person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+      !currentRecipients.includes(person.name)
+    );
+  });
+
+  // Handlers
   const updateRecipients = useCallback(() => {
     if (isNewChat || isEditMode) {
       const recipientNames = recipientInput.split(",").filter((r) => r.trim());
 
-      // Handle editing mode validation
       if (isEditMode && recipientNames.length === 0) {
-        toast({
-          description: "You need at least one recipient",
-        });
+        toast({ description: "You need at least one recipient" });
         return;
       }
 
-      // Only show toast for new conversations on desktop
       if (isNewChat && !isMobileView && recipientNames.length === 0) {
-        toast({
-          description: "Please add at least one recipient",
-        });
+        toast({ description: "Please add at least one recipient" });
         return;
       }
 
-      // Only proceed with updates if we have recipients or we're going back on mobile
       if (isEditMode && recipientNames.length > 0) {
         setIsEditMode(false);
         onUpdateRecipients?.(recipientNames);
@@ -77,7 +265,6 @@ export function ChatHeader({
     isMobileView,
   ]);
 
-  // Handle header click
   const handleHeaderClick = () => {
     if (!isNewChat && !isEditMode && !isMobileView) {
       setIsEditMode(true);
@@ -89,107 +276,16 @@ export function ChatHeader({
     }
   };
 
-  // Effect
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click was on a close button or its children
-      const isCloseButton = (event.target as Element).closest(
-        'button[aria-label^="Remove"]'
-      );
-
-      // Don't do anything if it's a close button click
-      if (isCloseButton) {
-        event.stopPropagation();
-        return;
-      }
-
-      // Only handle click outside if we clicked outside the search area
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setShowResults(false);
-        setSelectedIndex(-1);
-        
-        // Exit edit mode or handle new chat when clicking outside
-        if (isEditMode) {
-          setIsEditMode(false);
-        } else if (isNewChat && !isMobileView) {
-          setShowCompactNewChat(true);
-        }
-        
-        // Always try to update recipients when clicking outside
-        updateRecipients();
-      }
-    };
-
-    const focusInput = () => {
-      if ((isNewChat || isEditMode) && inputRef.current) {
-        inputRef.current.focus();
-        // Ensure the input is visible
-        setShowResults(true);
-      }
-    };
-
-    const manageInputState = () => {
-      if (isNewChat || isEditMode) {
-        setShowResults(true);
-        setSelectedIndex(-1);
-      } else {
-        setShowResults(false);
-        setRecipientInput("");
-        setSearchValue("");
-        setSelectedIndex(-1);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    focusInput();
-    manageInputState();
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [
-    isNewChat,
-    isEditMode,
-    recipientInput,
-    onUpdateRecipients,
-    onCreateConversation,
-    searchValue,
-    setRecipientInput,
-    updateRecipients,
-  ]);
-
-  // Filter the tech personalities based on the search value and exclude already selected recipients
-  const filteredPeople = techPersonalities.filter((person) => {
-    const currentRecipients = recipientInput
-      .split(",")
-      .map((r) => r.trim())
-      .filter(Boolean);
-    return (
-      person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
-      !currentRecipients.includes(person.name)
-    );
-  });
-
-  // Handle person selection
   const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
       .filter(Boolean);
 
-    // Check if person is already selected
-    if (currentRecipients.includes(person.name)) {
-      return;
-    }
+    if (currentRecipients.includes(person.name)) return;
 
-    // Check if adding another recipient would exceed the limit
     if (currentRecipients.length >= 4) {
-      toast({
-        description: "You can add up to four recipients",
-      });
+      toast({ description: "You can add up to four recipients" });
       return;
     }
 
@@ -206,9 +302,7 @@ export function ChatHeader({
     setSelectedIndex(-1);
   };
 
-  // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Prevent sidebar navigation when dropdown is active
     e.stopPropagation();
 
     if (e.key === "Backspace" && !searchValue) {
@@ -251,47 +345,62 @@ export function ChatHeader({
     }
   };
 
-  // Render the recipient pills
+  // Effects
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const isCloseButton = (event.target as Element).closest(
+        'button[aria-label^="Remove"]'
+      );
+
+      if (isCloseButton) {
+        event.stopPropagation();
+        return;
+      }
+
+      if (
+        !event.target ||
+        !(event.target as Element).closest('[data-chat-header="true"]')
+      ) {
+        setShowResults(false);
+        setSelectedIndex(-1);
+
+        if (isEditMode) {
+          setIsEditMode(false);
+        } else if (isNewChat && !isMobileView) {
+          setShowCompactNewChat(true);
+        }
+
+        updateRecipients();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isNewChat, isEditMode, isMobileView, updateRecipients]);
+
+  // Render helpers
   const renderRecipients = () => {
     const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
 
     return (
       <>
-        {completeRecipients.map((recipient, index) => {
-          const trimmedRecipient = recipient.trim();
-          if (!trimmedRecipient) return null;
-
-          return (
-            <div
-              key={index}
-              className={cn("sm:inline", isMobileView && "w-full")}
-            >
-              <span className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
-                {trimmedRecipient}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault(); // Prevent default button behavior
-                    e.stopPropagation(); // Stop event from bubbling
-                    const newRecipients = recipientInput
-                      .split(",")
-                      .filter((r) => r.trim())
-                      .filter((_, i) => i !== index)
-                      .join(",");
-                    setRecipientInput(newRecipients + ",");
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // Prevent blur on the input
-                  }}
-                  className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
-                  aria-label={`Remove ${trimmedRecipient}`}
-                >
-                  <Icons.close className="h-3 w-3" />
-                </button>
-              </span>
-            </div>
-          );
-        })}
+        {completeRecipients.map((recipient, index) => (
+          <RecipientPill
+            key={index}
+            recipient={recipient}
+            index={index}
+            onRemove={(index) => {
+              const newRecipients = recipientInput
+                .split(",")
+                .filter((r) => r.trim())
+                .filter((_, i) => i !== index)
+                .join(",");
+              setRecipientInput(newRecipients + ",");
+            }}
+            isMobileView={isMobileView}
+          />
+        ))}
       </>
     );
   };
@@ -303,9 +412,7 @@ export function ChatHeader({
           "flex items-center justify-between px-4",
           isMobileView ? "min-h-24 py-2" : "h-16"
         )}
-        onClick={() => {
-          handleHeaderClick();
-        }}
+        onClick={handleHeaderClick}
         data-chat-header="true"
       >
         <div className="flex items-center gap-2 flex-1">
@@ -314,7 +421,6 @@ export function ChatHeader({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // For new chat, just clear and go back
                   if (isNewChat) {
                     setRecipientInput("");
                     setSearchValue("");
@@ -334,6 +440,7 @@ export function ChatHeader({
               </button>
             </div>
           )}
+
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
             <div className="flex-1" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-1 flex-wrap">
@@ -344,79 +451,19 @@ export function ChatHeader({
                   {renderRecipients()}
                   {recipientInput.split(",").filter((r) => r.trim()).length <
                     4 && (
-                    <div
-                      ref={searchRef}
-                      className={cn(
-                        "relative",
-                        isMobileView ? "w-full" : "flex-1"
-                      )}
-                      data-chat-header="true"
-                    >
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={searchValue}
-                        onChange={(e) => {
-                          setSearchValue(e.target.value);
-                          setShowResults(true);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onBlur={(e) => {
-                          // Don't handle blur if clicking remove button or dropdown
-                          const isRemoveButton = (
-                            e.relatedTarget as Element
-                          )?.closest('button[aria-label^="Remove"]');
-                          if (
-                            !isRemoveButton &&
-                            !e.relatedTarget?.closest(
-                              '[data-chat-header-dropdown="true"]'
-                            )
-                          ) {
-                            setShowResults(false);
-                            setSelectedIndex(-1);
-                            updateRecipients();
-                          }
-                        }}
-                        placeholder="Type to add recipients..."
-                        className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-                        autoFocus
-                        data-chat-header="true"
-                      />
-                      {showResults && (
-                        <div
-                          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50"
-                          data-chat-header-dropdown="true"
-                          tabIndex={-1}
-                        >
-                          {filteredPeople.map((person, index) => (
-                            <div
-                              key={person.name}
-                              className={`px-4 py-2 cursor-pointer ${
-                                selectedIndex === index ? "bg-[#0A7CFF]" : ""
-                              }`}
-                              onMouseDown={(e) => {
-                                e.preventDefault(); // Prevent input blur
-                                handlePersonSelect(person);
-                              }}
-                              onMouseEnter={() => setSelectedIndex(index)}
-                              tabIndex={0}
-                            >
-                              <div className="flex flex-col">
-                                <span
-                                  className={`text-sm ${
-                                    selectedIndex === index
-                                      ? "text-white"
-                                      : "text-[#0A7CFF]"
-                                  }`}
-                                >
-                                  {person.name}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <RecipientSearch
+                      searchValue={searchValue}
+                      setSearchValue={setSearchValue}
+                      showResults={showResults}
+                      selectedIndex={selectedIndex}
+                      filteredPeople={filteredPeople}
+                      handleKeyDown={handleKeyDown}
+                      handlePersonSelect={handlePersonSelect}
+                      setSelectedIndex={setSelectedIndex}
+                      setShowResults={setShowResults}
+                      updateRecipients={updateRecipients}
+                      isMobileView={isMobileView}
+                    />
                   )}
                 </div>
               </div>
@@ -434,57 +481,16 @@ export function ChatHeader({
               {isMobileView ? (
                 <div className="flex flex-col items-center">
                   <div className="flex items-center py-2">
-                    {(() => {
-                      const recipients = isNewChat
-                        ? recipientInput
-                            .split(",")
-                            .filter((r) => r.trim())
-                            .map((name) => ({ name, avatar: undefined }))
-                        : activeConversation?.recipients || [];
-
-                      const getOffset = (index: number, total: number) => {
-                        if (total === 1) return {};
-                        
-                        // Different Y offsets for each position
-                        const yOffsets = [-4, 2, -2, 0];
-                        
-                        return {
-                          marginLeft: index === 0 ? '0px' : '-8px',
-                          transform: `translateY(${yOffsets[index]}px)`,
-                          zIndex: total - index
-                        };
-                      };
-
-                      return (
-                        <>
-                          {recipients.slice(0, 4).map((recipient, index) => (
-                            <div
-                              key={index}
-                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
-                              style={getOffset(index, recipients.length)}
-                            >
-                              {recipient.avatar ? (
-                                <img
-                                  src={recipient.avatar}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
-                                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
-                                  <span className="relative text-white text-base font-medium">
-                                    {recipient.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </>
-                      );
-                    })()}
+                    <MobileAvatars
+                      recipients={
+                        isNewChat
+                          ? recipientInput
+                              .split(",")
+                              .filter((r) => r.trim())
+                              .map((name) => ({ name }))
+                          : activeConversation?.recipients || []
+                      }
+                    />
                   </div>
                   <span className="text-xs">
                     {(() => {
@@ -504,10 +510,10 @@ export function ChatHeader({
                   {(() => {
                     const recipients =
                       activeConversation?.recipients.map((r) => r.name) || [];
-                    return recipients.length <= 2
+                    return recipients.length <= 3
                       ? recipients.join(", ")
-                      : `${recipients[0]}, ${recipients[1]} +${
-                          recipients.length - 2
+                      : `${recipients[0]}, ${recipients[1]}, ${recipients[2]} +${
+                          recipients.length - 3
                         }`;
                   })()}
                 </span>
