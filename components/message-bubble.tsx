@@ -125,7 +125,7 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex w-full mb-2 flex-col",
+        "flex w-full mb-1 flex-col",
         // Align messages based on sender
         isSystemMessage 
           ? "items-center" 
@@ -136,15 +136,15 @@ export function MessageBubble({
     >
       {/* Show recipient name for messages from others */}
       {recipientName && (
-        <div className="text-[10px] text-muted-foreground ml-4 mb-1">{recipientName}</div>
+        <div className="text-[10px] text-muted-foreground ml-4 mb-0.5">{recipientName}</div>
       )}
 
       {/* Message bubble container */}
       {isSystemMessage ? (
         <div
           className={cn(
-            "rounded-[20px] px-4 py-2 max-w-[80%] relative",
-            "text-xs text-muted-foreground text-center whitespace-pre-line"
+            "rounded-[18px] py-2 px-3 max-w-[80%] relative",
+            "text-[12px] text-muted-foreground text-center whitespace-pre-line"
           )}
         >
           {message.content}
@@ -152,7 +152,7 @@ export function MessageBubble({
       ) : (
         <div
           className={cn(
-            "rounded-[20px] px-4 py-2 max-w-[80%] relative group",
+            "rounded-[18px] py-2 px-3 max-w-[80%] relative group",
             message.sender === "me"
               ? "bg-[#0A7CFF] text-white"
               : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",

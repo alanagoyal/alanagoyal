@@ -60,7 +60,7 @@ export function MessageList({
     <div 
       className="flex-1 p-4 pb-0 flex flex-col-reverse relative"
     >
-    <div className="space-y-4 flex-1">
+    <div className="space-y-2 flex-1">
       {messages.map((message, index, array) => (
         <div 
           key={message.id} 
