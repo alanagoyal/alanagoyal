@@ -110,6 +110,15 @@ export function ChatHeader({
       ) {
         setShowResults(false);
         setSelectedIndex(-1);
+        
+        // Exit edit mode or handle new chat when clicking outside
+        if (isEditMode) {
+          setIsEditMode(false);
+        } else if (isNewChat && !isMobileView) {
+          setShowCompactNewChat(true);
+        }
+        
+        // Always try to update recipients when clicking outside
         updateRecipients();
       }
     };
@@ -478,27 +487,15 @@ export function ChatHeader({
               ) : (
                 <span className="text-sm">
                   <span className="text-muted-foreground">To: </span>
-                  {isNewChat
-                    ? (() => {
-                        const recipients = recipientInput
-                          .split(",")
-                          .filter((r) => r.trim());
-                        return recipients.length <= 2
-                          ? recipients.join(", ")
-                          : `${recipients[0]}, ${recipients[1]} +${
-                              recipients.length - 2
-                            }`;
-                      })()
-                    : (() => {
-                        const recipients =
-                          activeConversation?.recipients.map((r) => r.name) ||
-                          [];
-                        return recipients.length <= 2
-                          ? recipients.join(", ")
-                          : `${recipients[0]}, ${recipients[1]} +${
-                              recipients.length - 2
-                            }`;
-                      })()}
+                  {(() => {
+                    const recipients =
+                      activeConversation?.recipients.map((r) => r.name) || [];
+                    return recipients.length <= 2
+                      ? recipients.join(", ")
+                      : `${recipients[0]}, ${recipients[1]} +${
+                          recipients.length - 2
+                        }`;
+                  })()}
                 </span>
               )}
             </div>
