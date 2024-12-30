@@ -3,6 +3,7 @@ import { Conversation } from "../types";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -14,6 +15,7 @@ interface ChatHeaderProps {
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   unreadCount?: number;
+  getInitials?: (name: string) => string;
 }
 
 export function ChatHeader({
@@ -26,6 +28,7 @@ export function ChatHeader({
   onUpdateRecipients,
   onCreateConversation,
   unreadCount,
+  getInitials,
 }: ChatHeaderProps) {
   const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
@@ -284,7 +287,10 @@ export function ChatHeader({
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
       <div
-        className="h-16 flex items-center justify-between p-4"
+        className={cn(
+          "flex items-center justify-between px-4",
+          isMobileView ? "h-24" : "h-16",
+        )}
         onClick={() => {
           handleHeaderClick();
         }}
@@ -407,25 +413,71 @@ export function ChatHeader({
               onClick={handleHeaderClick}
               data-chat-header="true"
             >
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                {isNewChat
-                  ? (() => {
-                      const recipients = recipientInput
-                        .split(",")
-                        .filter((r) => r.trim());
-                      if (recipients.length <= 2) {
-                        return recipients.join(", ");
-                      }
-                      return `${recipients.slice(0, 2).join(", ")} +${recipients.length - 2}`;
-                    })()
-                  : (() => {
-                      const recipients = activeConversation?.recipients.map((r) => r.name) || [];
-                      if (recipients.length <= 2) {
-                        return recipients.join(", ");
-                      }
-                      return `${recipients.slice(0, 2).join(", ")} +${recipients.length - 2}`;
+              {isMobileView ? (
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center -space-x-1.5">
+                    {(() => {
+                      const recipients = isNewChat 
+                        ? recipientInput.split(",").filter(r => r.trim()).map(name => ({ name, avatar: undefined }))
+                        : activeConversation?.recipients || [];
+                      
+                      return (
+                        <>
+                          {recipients.map((recipient, index) => (
+                            <div 
+                              key={index} 
+                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+                            >
+                              {recipient.avatar ? (
+                                <img
+                                  src={recipient.avatar}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
+                                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
+                                  <span className="relative text-white text-base font-medium">
+                                    {recipient.name.split(' ').map(n => n[0]).join('')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </>
+                      );
                     })()}
-              </span>
+                  </div>
+                  <span className="text-xs mt-2">
+                    {(() => {
+                      const recipients = isNewChat 
+                        ? recipientInput.split(",").filter(r => r.trim())
+                        : activeConversation?.recipients.map(r => r.name) || [];
+                      return recipients.length === 1 
+                        ? recipients[0] 
+                        : `${recipients.length} people`;
+                    })()}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-sm font-medium text-muted-foreground">
+                  {isNewChat
+                    ? (() => {
+                        const recipients = recipientInput
+                          .split(",")
+                          .filter((r) => r.trim());
+                        return recipients.length <= 2 
+                          ? recipients.join(", ")
+                          : `${recipients[0]}, ${recipients[1]} +${recipients.length - 2}`;
+                      })()
+                    : (() => {
+                        const recipients = activeConversation?.recipients.map((r) => r.name) || [];
+                        return recipients.length <= 2
+                          ? recipients.join(", ")
+                          : `${recipients[0]}, ${recipients[1]} +${recipients.length - 2}`;
+                      })()}
+                </span>
+              )}
             </div>
           )}
         </div>
