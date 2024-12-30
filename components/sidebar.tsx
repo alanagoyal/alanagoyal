@@ -13,13 +13,13 @@ import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
+import {
   faHeart,
   faThumbsUp,
   faThumbsDown,
   faFaceLaugh,
   faExclamation,
-  faQuestion
+  faQuestion,
 } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
 
@@ -281,8 +281,9 @@ export function Sidebar({
                                 }`}
                               >
                                 <div className="relative">
-                                  {typingStatus?.conversationId === conversation.id && 
-                                   activeConversation !== conversation.id ? (
+                                  {typingStatus?.conversationId ===
+                                    conversation.id &&
+                                  activeConversation !== conversation.id ? (
                                     <div className="absolute -top-4 -right-4 z-30">
                                       <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100">
                                         <span className="typing-indicator scale-[0.6]">
@@ -292,67 +293,100 @@ export function Sidebar({
                                         </span>
                                       </div>
                                     </div>
-                                  ) : conversation.unreadCount > 0 ? (() => {
-                                    const lastMessage = conversation.messages
-                                      .filter((message) => message.sender !== "system")
-                                      .slice(-1)[0];
+                                  ) : conversation.unreadCount > 0 ? (
+                                    (() => {
+                                      const lastMessage = conversation.messages
+                                        .filter(
+                                          (message) =>
+                                            message.sender !== "system"
+                                        )
+                                        .slice(-1)[0];
 
-                                    if (lastMessage?.reactions && lastMessage.reactions.length > 0 && lastMessage.sender !== "me") {
-                                      const reactionIcons = {
-                                        heart: faHeart,
-                                        like: faThumbsUp,
-                                        dislike: faThumbsDown,
-                                        laugh: faFaceLaugh,
-                                        emphasize: faExclamation,
-                                        question: faQuestion
-                                      };
-                                      
-                                      return (
-                                        <div className="absolute -top-1 right-0 flex z-30">
-                                          {[...lastMessage.reactions]
-                                            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                                            .slice(0, 2)
-                                            .map((reaction, index, array) => (
-                                              <div
-                                                key={`${reaction.type}-${index}`}
-                                                className={cn(
-                                                  "w-10 h-10 rounded-full flex items-center justify-center text-xs",
-                                                  reaction.sender === "me" 
-                                                    ? "bg-[#0A7CFF]" 
-                                                    : "bg-gray-100 dark:bg-[#404040]",
-                                                  index !== array.length - 1 && "-mr-2",
-                                                  index === 0 ? "z-30" : "z-20"
-                                                )}
-                                              >
-                                                <FontAwesomeIcon 
-                                                  icon={reactionIcons[reaction.type]} 
+                                      if (
+                                        lastMessage?.reactions &&
+                                        lastMessage.reactions.length > 0 &&
+                                        lastMessage.sender !== "me"
+                                      ) {
+                                        const reactionIcons = {
+                                          heart: faHeart,
+                                          like: faThumbsUp,
+                                          dislike: faThumbsDown,
+                                          laugh: faFaceLaugh,
+                                          emphasize: faExclamation,
+                                          question: faQuestion,
+                                        };
+
+                                        return (
+                                          <div className="absolute -top-4 -right-4 flex z-30">
+                                            {[...lastMessage.reactions]
+                                              .sort(
+                                                (a, b) =>
+                                                  new Date(
+                                                    b.timestamp
+                                                  ).getTime() -
+                                                  new Date(
+                                                    a.timestamp
+                                                  ).getTime()
+                                              )
+                                              .slice(0, 2)
+                                              .map((reaction, index, array) => (
+                                                <div
+                                                  key={`${reaction.type}-${index}`}
                                                   className={cn(
+                                                    "w-10 h-10 rounded-full flex items-center justify-center text-base",
                                                     reaction.sender === "me"
-                                                      ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
-                                                      : "text-muted-foreground"
+                                                      ? "bg-[#0A7CFF]"
+                                                      : "bg-gray-100 dark:bg-[#404040]",
+                                                    index !==
+                                                      array.length - 1 &&
+                                                      "-mr-2",
+                                                    index === 0
+                                                      ? "z-30"
+                                                      : "z-20"
                                                   )}
-                                                />
+                                                >
+                                                  <FontAwesomeIcon
+                                                    icon={
+                                                      reactionIcons[
+                                                        reaction.type
+                                                      ]
+                                                    }
+                                                    className={cn(
+                                                      reaction.sender === "me"
+                                                        ? reaction.type ===
+                                                          "heart"
+                                                          ? "text-[#FF69B4]"
+                                                          : "text-white"
+                                                        : "text-muted-foreground"
+                                                    )}
+                                                  />
+                                                </div>
+                                              ))}
+                                          </div>
+                                        );
+                                      } else if (
+                                        conversation.messages.length > 0
+                                      ) {
+                                        return (
+                                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30">
+                                            <div
+                                              className={`rounded-[10px] py-1 px-1.5 ${
+                                                activeConversation ===
+                                                conversation.id
+                                                  ? "bg-blue-400/30 text-blue-100"
+                                                  : "bg-gray-200/90 dark:bg-[#404040]/90 text-gray-900 dark:text-gray-100"
+                                              }`}
+                                            >
+                                              <div className="text-[10px] line-clamp-2 w-[100px] sm:w-[76px] text-center">
+                                                {lastMessage?.content || ""}
                                               </div>
-                                            ))}
-                                        </div>
-                                      );
-                                    } else if (conversation.messages.length > 0) {
-                                      return (
-                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30">
-                                          <div className={`rounded-[10px] py-1 px-1.5 ${
-                                            activeConversation === conversation.id
-                                              ? "bg-blue-400/30 text-blue-100"
-                                              : "bg-gray-200/90 dark:bg-[#404040]/90 text-gray-900 dark:text-gray-100"
-                                          }`}>
-                                            <div className="text-[10px] line-clamp-2 w-[100px] sm:w-[76px] text-center">
-                                              {lastMessage?.content || ""}
                                             </div>
                                           </div>
-                                        </div>
-                                      );
-                                    }
-                                    return null;
-                                  })() : null}
+                                        );
+                                      }
+                                      return null;
+                                    })()
+                                  ) : null}
                                   <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
                                     {conversation.recipients[0].avatar ? (
                                       <img
@@ -364,7 +398,9 @@ export function Sidebar({
                                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
                                         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
                                         <span className="relative text-white text-base font-medium">
-                                          {getInitials(conversation.recipients[0].name)}
+                                          {getInitials(
+                                            conversation.recipients[0].name
+                                          )}
                                         </span>
                                       </div>
                                     )}
