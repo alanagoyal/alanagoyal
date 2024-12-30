@@ -460,7 +460,7 @@ export function ChatHeader({
                           {recipients.slice(0, 4).map((recipient, index) => (
                             <div
                               key={index}
-                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white dark:border-gray-900"
+                              className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
                               style={getOffset(index, recipients.length)}
                             >
                               {recipient.avatar ? (
