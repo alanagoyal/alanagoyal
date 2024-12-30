@@ -327,7 +327,7 @@ export function ChatHeader({
               >
                 <Icons.back />
                 {unreadCount ? (
-                  <div className="bg-[#0A7CFF] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium -ml-3">
+                  <div className="bg-[#0A7CFF] text-white rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-medium -ml-4">
                     {unreadCount}
                   </div>
                 ) : null}
