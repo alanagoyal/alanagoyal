@@ -20,10 +20,10 @@ export function MessageList({
   onReaction,
   messageInputRef
 }: MessageListProps) {
-  const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
+  const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +76,6 @@ export function MessageList({
             conversation={conversation}
             isTyping={false}
             onReaction={onReaction}
-            activeMessageId={activeMessageId}
             onOpenChange={(isOpen) => {
               setActiveMessageId(isOpen ? message.id : null);
               setIsAnyReactionMenuOpen(isOpen);

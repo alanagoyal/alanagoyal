@@ -25,8 +25,6 @@ interface MessageBubbleProps {
   isTyping?: boolean;                
   onReaction?: (messageId: string, reaction: Reaction) => void;  
   onOpenChange?: (isOpen: boolean) => void;
-  activeMessageId?: string | null;
-  // Callback to focus message input after reaction completes
   onReactionComplete?: () => void;
   justSent?: boolean;
 }
@@ -38,7 +36,6 @@ export function MessageBubble({
   isTyping,
   onReaction,
   onOpenChange,
-  activeMessageId,
   onReactionComplete,
   justSent = false,
 }: MessageBubbleProps) {
