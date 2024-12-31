@@ -70,7 +70,7 @@ export function ConversationItem({
     trackMouse: true,
   });
 
-  const handlePin = () => {
+  const handleSwipePin = () => {
     if (!isSwipeOpen) return;
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
@@ -79,10 +79,21 @@ export function ConversationItem({
     setOpenSwipedConvo(null);
   };
 
-  const handleDelete = () => {
+  const handleSwipeDelete = () => {
     if (!isSwipeOpen) return;
     onDeleteConversation(conversation.id);
     setOpenSwipedConvo(null);
+  };
+
+  const handleContextMenuPin = () => {
+    const updatedConversations = conversations.map((conv) =>
+      conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
+    );
+    onUpdateConversation(updatedConversations);
+  };
+
+  const handleContextMenuDelete = () => {
+    onDeleteConversation(conversation.id);
   };
 
   const ConversationContent = (
@@ -212,8 +223,8 @@ export function ConversationItem({
             </div>
             <SwipeActions
               isOpen={isSwipeOpen}
-              onPin={handlePin}
-              onDelete={handleDelete}
+              onPin={handleSwipePin}
+              onDelete={handleSwipeDelete}
               isPinned={conversation.pinned}
               aria-hidden={!isSwipeOpen}
             />
@@ -224,7 +235,7 @@ export function ConversationItem({
             className={`focus:bg-[#0A7CFF] focus:text-white ${
               isMobileView ? "flex items-center justify-between" : ""
             }`}
-            onClick={handlePin}
+            onClick={handleContextMenuPin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
             {isMobileView && <Pin className="h-4 w-4 ml-2" />}
@@ -233,7 +244,7 @@ export function ConversationItem({
             className={`focus:bg-[#0A7CFF] focus:text-white ${
               isMobileView ? "flex items-center justify-between" : ""
             } text-red-600`}
-            onClick={handleDelete}
+            onClick={handleContextMenuDelete}
           >
             <span>Delete</span>
             {isMobileView && <Trash className="h-4 w-4 ml-2" />}
@@ -250,13 +261,13 @@ export function ConversationItem({
         <ContextMenuContent>
           <ContextMenuItem
             className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
-            onClick={handlePin}
+            onClick={handleContextMenuPin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
           </ContextMenuItem>
           <ContextMenuItem
             className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}
-            onClick={handleDelete}
+            onClick={handleContextMenuDelete}
           >
             <span>Delete</span>
           </ContextMenuItem>
