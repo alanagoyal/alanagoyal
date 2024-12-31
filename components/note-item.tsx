@@ -109,7 +109,10 @@ export function NoteItem({
           : ""
       }`}
     >
-      <div className={`h-full w-full px-4`}>
+      <div 
+        data-note-slug={item.slug}
+        className={`h-full w-full px-4`}
+      >
         <Link
           href={`/${item.slug || ""}`}
           prefetch={true}
@@ -155,6 +158,7 @@ export function NoteItem({
     return (
       <div {...handlers} className="relative overflow-hidden">
         <div
+          data-note-slug={item.slug}
           className={`transition-transform duration-300 ease-out w-full ${
             isSwipeOpen ? "transform -translate-x-24" : ""
           } ${

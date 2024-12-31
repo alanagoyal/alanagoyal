@@ -72,6 +72,31 @@ export default function Sidebar({
     null
   );
 
+  const selectedNoteRef = useRef<HTMLDivElement>(null);
+
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedNoteSlug && scrollViewportRef.current) {
+      const selectedElement = scrollViewportRef.current.querySelector(`[data-note-slug="${selectedNoteSlug}"]`);
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    }
+  }, [selectedNoteSlug]);
+
+  useEffect(() => {
+    if (selectedNoteRef.current) {
+      selectedNoteRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [selectedNoteSlug, highlightedIndex]);
+
   const {
     notes: sessionNotes,
     sessionId,
@@ -162,8 +187,8 @@ export default function Sidebar({
         const currentIndex = flattened.findIndex(
           (note) => note.slug === selectedNoteSlug
         );
+        
         let nextIndex;
-
         if (direction === "up") {
           nextIndex =
             currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
@@ -173,8 +198,16 @@ export default function Sidebar({
         }
 
         const nextNote = flattened[nextIndex];
+        
         if (nextNote) {
           router.push(`/${nextNote.slug}`);
+          // Wait for router navigation and React re-render
+          setTimeout(() => {
+            const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
+            if (selectedElement) {
+              selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 100);
         }
       }
     },
@@ -281,6 +314,10 @@ export default function Sidebar({
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
       router.push(`/${selectedNote.slug}`);
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
+        selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 0);
       clearSearch();
     }
   }, [localSearchResults, highlightedIndex, router, clearSearch]);
@@ -393,16 +430,19 @@ export default function Sidebar({
           isScrolled={isScrolled}
         />
       </div>
-      <ScrollArea className="flex-1"   onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
-            const viewport = e.currentTarget.querySelector(
-              '[data-radix-scroll-area-viewport]'
-            );
-            if (viewport) {
-              const scrolled = viewport.scrollTop > 0;
-              setIsScrolled(scrolled);
-            }
-          }}>
-        <div className="flex flex-col w-full">
+      <ScrollArea 
+        className="flex-1" 
+        onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
+          const viewport = e.currentTarget.querySelector(
+            '[data-radix-scroll-area-viewport]'
+          );
+          if (viewport) {
+            const scrolled = viewport.scrollTop > 0;
+            setIsScrolled(scrolled);
+          }
+        }}
+      >
+        <div ref={scrollViewportRef} className="flex flex-col w-full">
           <SessionId setSessionId={setSessionId} />
           <CommandMenu
             notes={notes}
