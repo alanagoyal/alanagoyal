@@ -16,6 +16,8 @@ interface ChatHeaderProps {
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   unreadCount?: number;
+  showCompactNewChat?: boolean;
+  setShowCompactNewChat?: (show: boolean) => void;
 }
 
 interface RecipientPillProps {
@@ -88,6 +90,13 @@ function RecipientSearch({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
 
+  // Focus on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   // Keep selected item in view
   useEffect(() => {
     if (selectedItemRef.current) {
@@ -125,7 +134,6 @@ function RecipientSearch({
         }}
         placeholder="Type to add recipients..."
         className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-        autoFocus
         data-chat-header="true"
       />
       {showResults && (
@@ -223,13 +231,14 @@ export function ChatHeader({
   onUpdateRecipients,
   onCreateConversation,
   unreadCount,
+  showCompactNewChat = false,
+  setShowCompactNewChat = () => {},
 }: ChatHeaderProps) {
   const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [showCompactNewChat, setShowCompactNewChat] = useState(false);
 
   // Computed values
   const filteredPeople = techPersonalities.filter((person) => {
@@ -283,7 +292,13 @@ export function ChatHeader({
         activeConversation?.recipients.map((r) => r.name).join(",") || "";
       setRecipientInput(recipients + ",");
     } else if (isNewChat && showCompactNewChat) {
-      setShowCompactNewChat(false);
+      setShowCompactNewChat?.(false);
+      setShowResults(true);
+      setSearchValue("");
+      setSelectedIndex(-1);
+      if (!recipientInput.split(",").filter(r => r.trim()).length) {
+        setRecipientInput("");
+      }
     }
   };
 
@@ -321,7 +336,7 @@ export function ChatHeader({
       const recipients = recipientInput.split(",").filter((r) => r.trim());
       if (recipients.length > 0) {
         const newRecipients = recipients.slice(0, -1).join(",");
-        setRecipientInput(newRecipients + (newRecipients ? "," : ""));
+        setRecipientInput(newRecipients + ",");
       }
       return;
     }
@@ -358,6 +373,12 @@ export function ChatHeader({
 
   // Effects
   useEffect(() => {
+    if (isNewChat) {
+      setShowResults(true);
+    }
+  }, [isNewChat]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const isCloseButton = (event.target as Element).closest(
         'button[aria-label^="Remove"]'
@@ -372,15 +393,16 @@ export function ChatHeader({
         !event.target ||
         !(event.target as Element).closest('[data-chat-header="true"]')
       ) {
-        setShowResults(false);
-        setSelectedIndex(-1);
-
         if (isEditMode) {
           setIsEditMode(false);
         } else if (isNewChat && !isMobileView) {
-          setShowCompactNewChat(true);
+          setShowCompactNewChat?.(true);
         }
-
+        
+        // Clear search state after setting compact mode
+        setShowResults(false);
+        setSearchValue("");
+        setSelectedIndex(-1);
         updateRecipients();
       }
     };
