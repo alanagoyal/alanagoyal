@@ -531,20 +531,28 @@ export default function App() {
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newConversations));
 
-      // If we're deleting the active conversation
+      // If we're deleting the active conversation and there are conversations left
       if (id === activeConversation && newConversations.length > 0) {
-        // Find the index of the deleted conversation in the original list
-        const deletedIndex = prevConversations.findIndex(
-          (conv) => conv.id === id
-        );
+        const deletedConvo = prevConversations.find(conv => conv.id === id);
+        
+        // Sort conversations the same way as in the sidebar
+        const sortedConvos = [...prevConversations].sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+          const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+          return timeB - timeA;
+        });
 
-        // If we're deleting the last conversation in the list
-        if (deletedIndex === prevConversations.length - 1) {
-          // Go to the previous conversation
-          selectConversation(newConversations[newConversations.length - 1].id);
+        // Find the index of the deleted conversation in the sorted list
+        const deletedIndex = sortedConvos.findIndex(conv => conv.id === id);
+        
+        if (deletedIndex === sortedConvos.length - 1) {
+          // If deleting the last conversation, go to the previous one
+          selectConversation(sortedConvos[deletedIndex - 1].id);
         } else {
-          // Go to the next conversation (which is now at the same index)
-          selectConversation(newConversations[deletedIndex].id);
+          // Otherwise go to the next conversation
+          selectConversation(sortedConvos[deletedIndex + 1].id);
         }
       } else if (newConversations.length === 0) {
         // If no conversations left, clear the selection
