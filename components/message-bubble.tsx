@@ -184,10 +184,7 @@ export function MessageBubble({
           <Popover 
             open={isOpen} 
             modal={true}
-            onOpenChange={(open) => {
-              setIsOpen(open);
-              onOpenChange?.(open);
-            }}
+            onOpenChange={handleOpenChange}
           >
             <PopoverTrigger asChild>
               <div className="flex flex-col cursor-pointer">
