@@ -44,8 +44,17 @@ export function ConversationItem({
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
-      if (isSwiping) {
-        e.preventDefault();
+      if (isSwiping && e.cancelable) {
+        // Only prevent default if the touch movement is more horizontal than vertical
+        const touch = e.touches[0];
+        const prevTouch = e.targetTouches[0];
+        if (prevTouch) {
+          const xDiff = Math.abs(touch.clientX - prevTouch.clientX);
+          const yDiff = Math.abs(touch.clientY - prevTouch.clientY);
+          if (xDiff > yDiff) {
+            e.preventDefault();
+          }
+        }
       }
     };
 
