@@ -32,6 +32,7 @@ export default function App() {
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Add command menu ref
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
@@ -675,18 +676,17 @@ export default function App() {
               onSearchChange={setSearchTerm}
               typingStatus={typingStatus}
               isCommandMenuOpen={isCommandMenuOpen}
+              onScroll={setIsScrolled}
             >
               <Nav
                 onNewChat={() => {
-                  // Set new conversation state first
                   setIsNewConversation(true);
-                  // Clear active conversation
                   selectConversation(null);
-                  // Clear recipient input and message draft
                   setRecipientInput("");
                   handleMessageDraftChange("new", "");
                 }}
                 isMobileView={isMobileView}
+                isScrolled={isScrolled}
               />
             </Sidebar>
           </div>

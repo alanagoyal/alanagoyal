@@ -35,6 +35,7 @@ interface SidebarProps {
   onSearchChange: (term: string) => void;
   typingStatus: { conversationId: string; recipient: string } | null;
   isCommandMenuOpen: boolean;
+  onScroll?: (isScrolled: boolean) => void;
 }
 
 export function Sidebar({
@@ -49,6 +50,7 @@ export function Sidebar({
   onSearchChange,
   typingStatus,
   isCommandMenuOpen,
+  onScroll,
 }: SidebarProps) {
   const { theme, setTheme } = useTheme();
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
@@ -243,7 +245,17 @@ export function Sidebar({
     <div className="flex flex-col h-full bg-muted">
       {children}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
+        <ScrollArea
+          className="h-full"
+          onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
+            const viewport = e.currentTarget.querySelector(
+              '[data-radix-scroll-area-viewport]'
+            );
+            if (viewport) {
+              onScroll?.(viewport.scrollTop > 0);
+            }
+          }}
+        >
           <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
             <SearchBar value={searchTerm} onChange={onSearchChange} />
             <div className="w-full">
