@@ -1,12 +1,14 @@
 import { Icons } from "./icons";
 import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface NavProps {
   onNewChat: () => void;
   isMobileView: boolean;
+  isScrolled?: boolean;
 }
 
-export function Nav({ onNewChat, isMobileView }: NavProps) {
+export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -32,8 +34,11 @@ export function Nav({ onNewChat, isMobileView }: NavProps) {
 
   return (
     <>
-      <div className="py-2 px-2 bg-background flex items-center justify-between bg-muted">
-        <div className="flex items-center gap-1.5">
+      <div className={cn(
+        "px-4 py-2 bg-background flex items-center justify-between bg-muted sticky top-0 z-[1]",
+        isScrolled && "border-b border-border/40 shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1)]"
+      )}>
+        <div className="flex items-center gap-1.5 p-2">
           <div className="w-3 h-3 rounded-full bg-red-500" />
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <div className="w-3 h-3 rounded-full bg-green-500" />
