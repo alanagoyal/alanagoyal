@@ -104,7 +104,7 @@ export function ConversationItem({
         <div className="absolute left-0.5 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
       )}
       <div className="flex items-center gap-2 w-full px-4">
-        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
           {conversation.recipients[0].avatar ? (
             <img
               src={conversation.recipients[0].avatar}
@@ -112,8 +112,11 @@ export function ConversationItem({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-medium">
-              {getInitials(conversation.recipients[0].name)}
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
+              <span className="relative text-white text-base font-medium">
+                {getInitials(conversation.recipients[0].name)}
+              </span>
             </div>
           )}
         </div>
