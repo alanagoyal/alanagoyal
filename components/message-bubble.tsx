@@ -209,10 +209,11 @@ export function MessageBubble({
             {/* Reaction menu */}
             <PopoverContent 
               className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
-              align={message.sender === "me" ? "start" : "end"}
+              align={message.sender === "me" ? "end" : "start"}
+              alignOffset={-8}
               side="top"
               sideOffset={10}
-            >
+            > 
               {/* Reaction buttons */}
               {Object.entries(reactionIcons).map(([type, icon]) => (
                 <button
