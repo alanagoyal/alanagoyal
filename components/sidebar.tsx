@@ -167,11 +167,17 @@ export function Sidebar({
         // If current conversation is not in filtered results, select the first one
         if (currentIndex === -1) {
           onSelectConversation(filteredConversations[0].id);
+          const firstConvoButton = document.querySelector(`button[aria-current="true"]`);
+          firstConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           return;
         }
 
         const nextIndex = (currentIndex + 1) % filteredConversations.length;
         onSelectConversation(filteredConversations[nextIndex].id);
+        setTimeout(() => {
+          const nextConvoButton = document.querySelector(`button[aria-current="true"]`);
+          nextConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 0);
       } else if (
         (e.key === "ArrowUp" || e.key === "k") &&
         filteredConversations.length > 0
@@ -186,6 +192,8 @@ export function Sidebar({
           onSelectConversation(
             filteredConversations[filteredConversations.length - 1].id
           );
+          const lastConvoButton = document.querySelector(`button[aria-current="true"]`);
+          lastConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           return;
         }
 
@@ -194,6 +202,10 @@ export function Sidebar({
             ? filteredConversations.length - 1
             : currentIndex - 1;
         onSelectConversation(filteredConversations[nextIndex].id);
+        setTimeout(() => {
+          const prevConvoButton = document.querySelector(`button[aria-current="true"]`);
+          prevConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 0);
       }
       // Action shortcuts
       else if (e.key === "p") {
@@ -266,6 +278,7 @@ export function Sidebar({
                       .map((conversation) => (
                         <div
                           key={conversation.id}
+                          data-conversation-id={conversation.id}
                           className="flex justify-center"
                         >
                           <ContextMenu>
@@ -475,6 +488,7 @@ export function Sidebar({
                   return (
                     <ConversationItem
                       key={conversation.id}
+                      data-conversation-id={conversation.id}
                       conversation={{
                         ...conversation,
                         isTyping:
