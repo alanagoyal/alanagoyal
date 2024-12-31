@@ -46,7 +46,7 @@
 
 .markdown-body a {
   color: #e2a727; 
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .markdown-body a:hover {
