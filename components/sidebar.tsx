@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Conversation } from "../types";
 import { SearchBar } from "./search-bar";
-import { formatDistanceToNow, parseISO } from "date-fns";
+import { format, isToday, isYesterday, isThisWeek, parseISO } from "date-fns";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -59,7 +59,20 @@ export function Sidebar({
 
     try {
       const date = parseISO(timestamp);
-      return formatDistanceToNow(date, { addSuffix: true });
+      
+      if (isToday(date)) {
+        return format(date, "h:mm a"); // e.g. "12:40 AM"
+      }
+      
+      if (isYesterday(date)) {
+        return "Yesterday";
+      }
+      
+      if (isThisWeek(date)) {
+        return format(date, "EEEE"); // e.g. "Sunday"
+      }
+      
+      return format(date, "M/d/yy"); // e.g. "12/21/24"
     } catch (error) {
       console.error("Error formatting time:", error, timestamp);
       return "Just now";
