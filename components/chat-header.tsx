@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { techPersonalities } from "../data/tech-personalities";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types
 interface ChatHeaderProps {
@@ -139,35 +140,39 @@ function RecipientSearch({
       {showResults && (
         <div
           ref={dropdownRef}
-          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg max-h-[300px] overflow-auto z-50 scroll-smooth"
+          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
           data-chat-header-dropdown="true"
           tabIndex={-1}
         >
-          {filteredPeople.map((person, index) => (
-            <div
-              key={person.name}
-              ref={selectedIndex === index ? selectedItemRef : null}
-              className={`px-4 py-2 cursor-pointer ${
-                selectedIndex === index ? "bg-[#0A7CFF]" : ""
-              }`}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handlePersonSelect(person);
-              }}
-              onMouseEnter={() => setSelectedIndex(index)}
-              tabIndex={0}
-            >
-              <div className="flex flex-col">
-                <span
-                  className={`text-sm ${
-                    selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
+          <ScrollArea className="h-[300px]">
+            <div className="p-0">
+              {filteredPeople.map((person, index) => (
+                <div
+                  key={person.name}
+                  ref={selectedIndex === index ? selectedItemRef : null}
+                  className={`px-4 py-2 cursor-pointer rounded-md ${
+                    selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
                   }`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handlePersonSelect(person);
+                  }}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  tabIndex={0}
                 >
-                  {person.name}
-                </span>
-              </div>
+                  <div className="flex flex-col">
+                    <span
+                      className={`text-sm ${
+                        selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
+                      }`}
+                    >
+                      {person.name}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </ScrollArea>
         </div>
       )}
     </div>
