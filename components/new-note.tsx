@@ -2,12 +2,6 @@
 
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
 import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
@@ -74,20 +68,13 @@ export default function NewNote({
   return (
     <div className="flex flex-col items-center justify-center">
       <SessionId setSessionId={setSessionId} />
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger
-            onClick={handleCreateNote}
-            aria-label="Create new note"
-            className={isMobile ? "p-2" : ""}
-          >
-            <Icons.new className={isMobile ? "size-6" : "size-5"} />
-          </TooltipTrigger>
-          <TooltipContent className="bg-[#1c1c1c] text-gray-400 border-none">
-            Create a note
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <button
+        onClick={handleCreateNote}
+        aria-label="Create new note"
+        className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${isMobile ? "p-2" : ""}`}
+      >
+        <Icons.new />
+      </button>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
-import Sidebar from "./sidebar";
 import { useRouter, usePathname } from "next/navigation";
 import { SessionNotesProvider } from "@/app/session-notes";
+import Sidebar from "./sidebar";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -35,24 +36,20 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
 
   return (
     <SessionNotesProvider>
-      <div className="bg-[#1c1c1c] text-white min-h-dvh flex">
+      <div className="dark:text-white h-dvh flex">
         {showSidebar && (
-          <div
-            className={`${
-              isMobile
-                ? "w-full"
-                : "w-64 flex-shrink-0 border-r border-gray-400/20"
-            } overflow-y-auto h-dvh`}
-          >
-            <Sidebar
-              notes={notes}
-              onNoteSelect={isMobile ? handleNoteSelect : () => {}}
-              isMobile={isMobile}
-            />
-          </div>
+          <Sidebar
+            notes={notes}
+            onNoteSelect={isMobile ? handleNoteSelect : () => {}}
+            isMobile={isMobile}
+          />
         )}
         {(!isMobile || !showSidebar) && (
-          <div className="flex-grow overflow-y-auto h-dvh">{children}</div>
+          <div className="flex-grow h-dvh">
+            <ScrollArea className="h-full" isMobile={isMobile}>
+              {children}
+            </ScrollArea>
+          </div>
         )}
         <Toaster />
       </div>

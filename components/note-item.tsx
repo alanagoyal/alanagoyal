@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSwipeable } from "react-swipeable";
 import { useMobileDetect } from "@/components/mobile-detector";
@@ -9,16 +9,16 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { Note } from '@/lib/types';
+import { Note } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {
   return content
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-    .replace(/\[[ x]\]/g, '') 
-    .replace(/[#*_~`>+\-]/g, '')
-    .replace(/\n+/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/\[[ x]\]/g, "")
+    .replace(/[#*_~`>+\-]/g, "")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -35,6 +35,7 @@ interface NoteItemProps {
   handleNoteDelete: (note: Note) => Promise<void>;
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
+  showDivider?: boolean;
 }
 
 export function NoteItem({
@@ -50,6 +51,7 @@ export function NoteItem({
   handleNoteDelete,
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
+  showDivider = false,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
@@ -86,12 +88,6 @@ export function NoteItem({
 
   const canEditOrDelete = item.session_id === sessionId;
 
-  const handleNoteClick = () => {
-    if (onNoteSelect) {
-      onNoteSelect(item);
-    }
-  };
-
   const handleSwipeAction = (action: () => void) => {
     if (isSwipeOpen) {
       action();
@@ -100,32 +96,47 @@ export function NoteItem({
 
   const NoteContent = (
     <li
-      className={`min-h-[50px] ${
+      tabIndex={0}
+      className={`h-[70px] w-full ${
         (!isMobile && isSearching && isHighlighted) ||
         (!isSearching && item.slug === selectedNoteSlug)
-          ? "bg-[#9D7D28] rounded-md"
+          ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
+          : ""
+      } ${
+        !isMobile && showDivider &&
+        (isSearching ? !isHighlighted : item.slug !== selectedNoteSlug)
+          ? 'after:content-[""] after:block after:mx-2 after:border-t after:border-muted-foreground/20'
           : ""
       }`}
-      onClick={handleNoteClick}
     >
-      <Link href={`/${item.slug || ""}`} prefetch={true} className="block py-2">
-        <h2 className="text-sm font-bold pl-4 pr-4 break-words">
-          {item.emoji} {item.title}
-        </h2>
-        <p
-          className={`text-xs pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap ${
-            (!isMobile && isSearching && isHighlighted) ||
-            (!isSearching && item.slug === selectedNoteSlug)
-              ? "text-gray-300"
-              : "text-gray-400"
-          }`}
+      <div 
+        data-note-slug={item.slug}
+        className={`h-full w-full px-4`}
+      >
+        <Link
+          href={`/${item.slug || ""}`}
+          prefetch={true}
+          tabIndex={-1}
+          className="block py-2 h-full w-full flex flex-col justify-center"
         >
-          <span className="text-white">
-            {new Date(item.created_at).toLocaleDateString("en-US")}
-          </span>{" "}
-          {previewContent(item.content)}
-        </p>
-      </Link>
+          <h2 className="text-sm font-bold px-2 break-words line-clamp-1">
+            {item.emoji} {item.title}
+          </h2>
+          <p
+            className={`text-xs pl-2 break-words line-clamp-1 ${
+              (!isMobile && isSearching && isHighlighted) ||
+              (!isSearching && item.slug === selectedNoteSlug)
+                ? "text-muted-foreground dark:text-white/80"
+                : "text-muted-foreground"
+            }`}
+          >
+            <span className="text-black dark:text-white">
+              {new Date(item.created_at).toLocaleDateString("en-US")}
+            </span>{" "}
+            {previewContent(item.content)}
+          </p>
+        </Link>
+      </div>
     </li>
   );
 
@@ -147,8 +158,13 @@ export function NoteItem({
     return (
       <div {...handlers} className="relative overflow-hidden">
         <div
-          className={`transition-transform duration-300 ease-out ${
+          data-note-slug={item.slug}
+          className={`transition-transform duration-300 ease-out w-full ${
             isSwipeOpen ? "transform -translate-x-24" : ""
+          } ${
+            showDivider
+              ? 'after:content-[""] after:block after:mx-6 after:border-t after:border-muted-foreground/20'
+              : ""
           }`}
         >
           {NoteContent}

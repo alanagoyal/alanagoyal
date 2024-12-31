@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
-import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,7 +33,7 @@ export default async function RootLayout({
     .eq("public", true);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <title>{siteConfig.title}</title>
         <meta property="twitter:card" content="summary_large_image"></meta>
@@ -49,10 +50,17 @@ export default async function RootLayout({
       <body
         className={cn("min-h-dvh font-sans antialiased", fontSans.variable)}
       >
-        <SidebarLayout notes={notes}>
-          <Analytics />
-          {children}
-        </SidebarLayout>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarLayout notes={notes}>
+            <Analytics />
+            {children}
+          </SidebarLayout>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -14,12 +14,15 @@ import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
-import SearchBar from "./search";
+import { SearchBar } from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
 import { SessionNotesContext } from "@/app/session-notes";
+import { Nav } from "./nav";
+import { useTheme } from "next-themes";
+import { ScrollArea } from "./ui/scroll-area";
 
 const labels = {
   pinned: (
@@ -48,6 +51,7 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
 
+  const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
@@ -67,6 +71,31 @@ export default function Sidebar({
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
   );
+
+  const selectedNoteRef = useRef<HTMLDivElement>(null);
+
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedNoteSlug && scrollViewportRef.current) {
+      const selectedElement = scrollViewportRef.current.querySelector(`[data-note-slug="${selectedNoteSlug}"]`);
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    }
+  }, [selectedNoteSlug]);
+
+  useEffect(() => {
+    if (selectedNoteRef.current) {
+      selectedNoteRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [selectedNoteSlug, highlightedIndex]);
 
   const {
     notes: sessionNotes,
@@ -158,8 +187,8 @@ export default function Sidebar({
         const currentIndex = flattened.findIndex(
           (note) => note.slug === selectedNoteSlug
         );
+        
         let nextIndex;
-
         if (direction === "up") {
           nextIndex =
             currentIndex > 0 ? currentIndex - 1 : flattened.length - 1;
@@ -169,8 +198,16 @@ export default function Sidebar({
         }
 
         const nextNote = flattened[nextIndex];
+        
         if (nextNote) {
           router.push(`/${nextNote.slug}`);
+          // Wait for router navigation and React re-render
+          setTimeout(() => {
+            const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
+            if (selectedElement) {
+              selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 100);
         }
       }
     },
@@ -219,9 +256,9 @@ export default function Sidebar({
 
       try {
         if (noteToDelete.id && sessionId) {
-          await supabase.rpc('delete_note', {
+          await supabase.rpc("delete_note", {
             uuid_arg: noteToDelete.id,
-            session_arg: sessionId
+            session_arg: sessionId,
           });
         }
 
@@ -277,9 +314,15 @@ export default function Sidebar({
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
       router.push(`/${selectedNote.slug}`);
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
+        selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 0);
       clearSearch();
     }
   }, [localSearchResults, highlightedIndex, router, clearSearch]);
+
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     const shortcuts = {
@@ -291,6 +334,7 @@ export default function Sidebar({
       d: () => highlightedNote && handleNoteDelete(highlightedNote),
       "/": () => searchInputRef.current?.focus(),
       Escape: () => (document.activeElement as HTMLElement)?.blur(),
+      t: () => setTheme(theme === "dark" ? "light" : "dark"),
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -355,6 +399,7 @@ export default function Sidebar({
     handleNoteDelete,
     commandMenuRef,
     goToHighlightedNote,
+    theme,
   ]);
 
   const handleNoteSelect = useCallback(
@@ -369,50 +414,79 @@ export default function Sidebar({
   );
 
   return (
-    <div className="h-full flex flex-col">
-      <SessionId setSessionId={setSessionId} />
-      <CommandMenu
-        notes={notes}
-        sessionId={sessionId}
-        addNewPinnedNote={handlePinToggle}
-        navigateNotes={navigateNotes}
-        togglePinned={handlePinToggle}
-        deleteNote={handleNoteDelete}
-        highlightedNote={highlightedNote}
-        setSelectedNoteSlug={setSelectedNoteSlug}
-        isMobile={isMobile}
-      />
-      <div className="flex-1 overflow-y-auto">
-        <SearchBar
-          notes={notes}
-          onSearchResults={setLocalSearchResults}
-          sessionId={sessionId}
-          inputRef={searchInputRef}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          setHighlightedIndex={setHighlightedIndex}
-          clearSearch={clearSearch}
-        />
-        <SidebarContent
-          groupedNotes={groupedNotes}
-          selectedNoteSlug={selectedNoteSlug}
-          onNoteSelect={handleNoteSelect}
-          sessionId={sessionId}
-          handlePinToggle={handlePinToggle}
-          pinnedNotes={pinnedNotes}
+    <div
+      className={`${
+        isMobile
+          ? "w-full max-w-full"
+          : "w-[320px] border-r border-muted-foreground/20"
+      } h-dvh flex flex-col dark:bg-muted`}
+    >
+      <div className={`${isMobile ? "w-full" : "w-[320px]"}`}>
+        <Nav
           addNewPinnedNote={handlePinToggle}
-          localSearchResults={localSearchResults}
-          highlightedIndex={highlightedIndex}
-          categoryOrder={categoryOrder}
-          labels={labels}
-          handleNoteDelete={handleNoteDelete}
-          openSwipeItemSlug={openSwipeItemSlug}
-          setOpenSwipeItemSlug={setOpenSwipeItemSlug}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
+          isScrolled={isScrolled}
         />
       </div>
+      <ScrollArea 
+        className="flex-1" 
+        onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
+          const viewport = e.currentTarget.querySelector(
+            '[data-radix-scroll-area-viewport]'
+          );
+          if (viewport) {
+            const scrolled = viewport.scrollTop > 0;
+            setIsScrolled(scrolled);
+          }
+        }}
+        isMobile={isMobile}
+      >
+        <div ref={scrollViewportRef} className="flex flex-col w-full">
+          <SessionId setSessionId={setSessionId} />
+          <CommandMenu
+            notes={notes}
+            sessionId={sessionId}
+            addNewPinnedNote={handlePinToggle}
+            navigateNotes={navigateNotes}
+            togglePinned={handlePinToggle}
+            deleteNote={handleNoteDelete}
+            highlightedNote={highlightedNote}
+            setSelectedNoteSlug={setSelectedNoteSlug}
+            isMobile={isMobile}
+          />
+          <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
+            <SearchBar
+              notes={notes}
+              onSearchResults={setLocalSearchResults}
+              sessionId={sessionId}
+              inputRef={searchInputRef}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              setHighlightedIndex={setHighlightedIndex}
+              clearSearch={clearSearch}
+            />
+            <SidebarContent
+              groupedNotes={groupedNotes}
+              selectedNoteSlug={selectedNoteSlug}
+              onNoteSelect={handleNoteSelect}
+              sessionId={sessionId}
+              handlePinToggle={handlePinToggle}
+              pinnedNotes={pinnedNotes}
+              localSearchResults={localSearchResults}
+              highlightedIndex={highlightedIndex}
+              categoryOrder={categoryOrder}
+              labels={labels}
+              handleNoteDelete={handleNoteDelete}
+              openSwipeItemSlug={openSwipeItemSlug}
+              setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+              clearSearch={clearSearch}
+              setSelectedNoteSlug={setSelectedNoteSlug}
+            />
+          </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

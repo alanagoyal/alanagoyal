@@ -19,7 +19,7 @@ export async function GET(request: Request) {
           width: "100%",
           height: "100%",
           position: "relative",
-          fontFamily: "sans-serif",
+          fontFamily: "-apple-system, SF Pro Display, SF Pro Text",
           backgroundColor: "black",
         }}
       >

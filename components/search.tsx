@@ -1,7 +1,6 @@
-import { RefObject, Dispatch, SetStateAction } from "react";
-import { Input } from "./ui/input";
-import { Search } from "lucide-react";
+import { RefObject, Dispatch, SetStateAction, useEffect } from "react";
 import { Note } from "@/lib/types";
+import { Icons } from "./icons";
 
 interface SearchBarProps {
   notes: Note[];
@@ -14,7 +13,7 @@ interface SearchBarProps {
   clearSearch: () => void;
 }
 
-export default function SearchBar({
+export function SearchBar({
   notes,
   onSearchResults,
   sessionId,
@@ -24,6 +23,18 @@ export default function SearchBar({
   setHighlightedIndex,
   clearSearch,
 }: SearchBarProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle second Escape press to clear search
+      if (e.key === "Escape" && document.activeElement !== inputRef.current && searchQuery) {
+        clearSearch();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [inputRef, searchQuery, clearSearch]);
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() === "") {
@@ -43,20 +54,31 @@ export default function SearchBar({
   };
 
   return (
-    <div className="pt-2 px-2">
+    <div className="p-2">
       <div className="relative">
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-4000 h-4 w-4" />
-        <Input
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <Icons.search className="text-muted-foreground" />
+        </div>
+        <input
           id="search"
           type="text"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search"
-          className="w-full pl-8 pr-2 rounded-md text-base sm:text-sm placeholder:text-gray-400"
+          className="w-full pl-8 pr-8 py-0.5 rounded-lg text-base sm:text-sm placeholder:text-sm focus:outline-none border border-muted-foreground/20 dark:border-none dark:bg-[#353533]"
           aria-label="Search notes"
           autoComplete="off"
           ref={inputRef}
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <Icons.close className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
     </div>
   );
