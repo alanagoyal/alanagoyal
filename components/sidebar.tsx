@@ -268,6 +268,7 @@ export function Sidebar({
               onScroll?.(viewport.scrollTop > 0);
             }
           }}
+          isMobile={isMobileView}
         >
           <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
             <SearchBar value={searchTerm} onChange={onSearchChange} />

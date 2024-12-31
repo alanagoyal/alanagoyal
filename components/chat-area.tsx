@@ -67,7 +67,12 @@ export function ChatArea({
   return (
     <div className="h-dvh relative flex flex-col">
       <div className="absolute inset-0">
-        <ScrollArea className="h-full" withVerticalMargins mobileHeaderHeight={isMobileView}>
+        <ScrollArea
+          className="h-full"
+          isMobile={isMobileView}
+          withVerticalMargins
+          mobileHeaderHeight={isMobileView}
+        >
           <div className={cn("pb-16", isMobileView ? "pt-24" : "pt-16")}>
             <MessageList
               messages={activeConversation?.messages || []}

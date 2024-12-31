@@ -17,8 +17,9 @@ const ScrollArea = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
+    isMobile?: boolean
   }
->(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, ...props }, ref) => (
+>(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
@@ -27,7 +28,7 @@ const ScrollArea = React.forwardRef<
     <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar withVerticalMargins={withVerticalMargins} mobileHeaderHeight={mobileHeaderHeight} />
+    <ScrollBar withVerticalMargins={withVerticalMargins} mobileHeaderHeight={mobileHeaderHeight} isMobile={isMobile} />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
@@ -39,8 +40,9 @@ const ScrollBar = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> & {
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
+    isMobile?: boolean
   }
->(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, ...props }, ref) => (
+>(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar
     ref={ref}
     orientation={orientation}
@@ -50,7 +52,7 @@ const ScrollBar = React.forwardRef<
       "bg-transparent hover:border-l hover:border-gray-200 dark:hover:border-gray-700",
       orientation === "vertical" &&
         cn(
-          "w-[10px] hover:w-[14px]",
+          isMobile ? "w-[8px]" : "w-[10px] hover:w-[14px]",
           withVerticalMargins && mobileHeaderHeight
             ? "mt-24 mb-16"
             : withVerticalMargins
