@@ -377,7 +377,7 @@ export function Sidebar({
                                                   : "bg-gray-200/90 dark:bg-[#404040]/90 text-gray-900 dark:text-gray-100"
                                               }`}
                                             >
-                                              <div className="text-[10px] line-clamp-2 w-[100px] sm:w-[76px] text-center">
+                                              <div className="text-[10px] line-clamp-2 w-[72px] text-center">
                                                 {lastMessage?.content || ""}
                                               </div>
                                             </div>
