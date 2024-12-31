@@ -22,6 +22,7 @@ import { toast } from "./ui/use-toast";
 import { SessionNotesContext } from "@/app/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
+import { ScrollArea } from "./ui/scroll-area";
 
 const labels = {
   pinned: (
@@ -375,56 +376,66 @@ export default function Sidebar({
   );
 
   return (
-    <div className="h-full flex flex-col">
-      <SessionId setSessionId={setSessionId} />
-      <CommandMenu
-        notes={notes}
-        sessionId={sessionId}
-        addNewPinnedNote={handlePinToggle}
-        navigateNotes={navigateNotes}
-        togglePinned={handlePinToggle}
-        deleteNote={handleNoteDelete}
-        highlightedNote={highlightedNote}
-        setSelectedNoteSlug={setSelectedNoteSlug}
-        isMobile={isMobile}
-      />
-      <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
+    <div
+      className={`${
+        isMobile
+          ? "w-full max-w-full"
+          : "w-[320px] border-r border-muted-foreground/20"
+      } h-dvh flex flex-col dark:bg-muted`}
+    >
+      <div className={`${isMobile ? "w-full" : "w-[320px]"}`}>
         <Nav
           addNewPinnedNote={handlePinToggle}
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
         />
-        <div>
-          <SearchBar
-            notes={notes}
-            onSearchResults={setLocalSearchResults}
-            sessionId={sessionId}
-            inputRef={searchInputRef}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            setHighlightedIndex={setHighlightedIndex}
-            clearSearch={clearSearch}
-          />
-          <SidebarContent
-            groupedNotes={groupedNotes}
-            selectedNoteSlug={selectedNoteSlug}
-            onNoteSelect={handleNoteSelect}
-            sessionId={sessionId}
-            handlePinToggle={handlePinToggle}
-            pinnedNotes={pinnedNotes}
-            localSearchResults={localSearchResults}
-            highlightedIndex={highlightedIndex}
-            categoryOrder={categoryOrder}
-            labels={labels}
-            handleNoteDelete={handleNoteDelete}
-            openSwipeItemSlug={openSwipeItemSlug}
-            setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-            clearSearch={clearSearch}
-            setSelectedNoteSlug={setSelectedNoteSlug}
-          />
-        </div>
       </div>
+      <ScrollArea className="flex-1">
+        <div className="flex flex-col w-full">
+          <SessionId setSessionId={setSessionId} />
+          <CommandMenu
+            notes={notes}
+            sessionId={sessionId}
+            addNewPinnedNote={handlePinToggle}
+            navigateNotes={navigateNotes}
+            togglePinned={handlePinToggle}
+            deleteNote={handleNoteDelete}
+            highlightedNote={highlightedNote}
+            setSelectedNoteSlug={setSelectedNoteSlug}
+            isMobile={isMobile}
+          />
+          <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
+            <SearchBar
+              notes={notes}
+              onSearchResults={setLocalSearchResults}
+              sessionId={sessionId}
+              inputRef={searchInputRef}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              setHighlightedIndex={setHighlightedIndex}
+              clearSearch={clearSearch}
+            />
+            <SidebarContent
+              groupedNotes={groupedNotes}
+              selectedNoteSlug={selectedNoteSlug}
+              onNoteSelect={handleNoteSelect}
+              sessionId={sessionId}
+              handlePinToggle={handlePinToggle}
+              pinnedNotes={pinnedNotes}
+              localSearchResults={localSearchResults}
+              highlightedIndex={highlightedIndex}
+              categoryOrder={categoryOrder}
+              labels={labels}
+              handleNoteDelete={handleNoteDelete}
+              openSwipeItemSlug={openSwipeItemSlug}
+              setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+              clearSearch={clearSearch}
+              setSelectedNoteSlug={setSelectedNoteSlug}
+            />
+          </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 }
