@@ -19,7 +19,7 @@ export function Nav({
     <div
       className={`px-4 py-2 flex items-center justify-between ${
         isScrolled
-          ? "border-b border-border/40 shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1)]"
+          ? "border-b border-border/40 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]"
           : ""
       }`}
     >
