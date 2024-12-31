@@ -373,10 +373,10 @@ export function ChatHeader({
 
   // Effects
   useEffect(() => {
-    if (isNewChat && !isMobileView) {
+    if (isNewChat) {
       setShowResults(true);
     }
-  }, [isNewChat, isMobileView]);
+  }, [isNewChat]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
