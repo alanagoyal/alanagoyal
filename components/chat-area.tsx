@@ -1,5 +1,5 @@
 import { Conversation, Reaction } from "../types";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
@@ -41,6 +41,14 @@ export function ChatArea({
   onMessageDraftChange,
   unreadCount = 0,
 }: ChatAreaProps) {
+  const [showCompactNewChat, setShowCompactNewChat] = useState(false);
+
+  useEffect(() => {
+    if (isNewChat) {
+      setShowCompactNewChat(false);
+    }
+  }, [isNewChat]);
+
   const showRecipientInput = isNewChat && !activeConversation;
   const messageInputRef = useRef<{ focus: () => void }>(null);
 
@@ -86,6 +94,8 @@ export function ChatArea({
             }
           }}
           onCreateConversation={onCreateConversation}
+          showCompactNewChat={showCompactNewChat}
+          setShowCompactNewChat={setShowCompactNewChat}
           unreadCount={unreadCount}
         />
       </div>
