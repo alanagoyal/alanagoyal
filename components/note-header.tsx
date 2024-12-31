@@ -54,12 +54,14 @@ export default function NoteHeader({
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
           <p className="text-muted-foreground text-xs">{formattedDate}</p>
-          {!note.public && (
-            <Badge className="text-xs justify-center items-center ml-2">
-              <Lock className="w-3 h-3 mr-1" />
-              Private
-            </Badge>
-          )}
+          <div className="ml-2 h-6 flex items-center">
+            {!note.public && (
+              <Badge className="text-xs justify-center items-center">
+                <Lock className="w-3 h-3 mr-1" />
+                Private
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex items-center relative">
           {canEdit && !note.public && !isMobile ? (
