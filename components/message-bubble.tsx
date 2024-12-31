@@ -183,23 +183,14 @@ export function MessageBubble({
           {/* Reaction popup menu */}
           <Popover 
             open={isOpen} 
+            modal={true}
             onOpenChange={(open) => {
               setIsOpen(open);
               onOpenChange?.(open);
             }}
           >
             <PopoverTrigger asChild>
-              <div 
-                className="flex flex-col cursor-pointer"
-                onClick={(e) => {
-                  // If another menu is open, prevent this click from opening a new menu
-                  if (activeMessageId && activeMessageId !== message.id) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                  }
-                }}
-              >
+              <div className="flex flex-col cursor-pointer">
                 <div className="text-sm">
                   {/* Show typing indicator or message content */}
                   {isTyping ? (
