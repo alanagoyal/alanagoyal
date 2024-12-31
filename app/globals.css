@@ -4,6 +4,14 @@
 
 @import "./styles/github-markdown.css";
 
+/* Enable SF Pro font smoothing */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
