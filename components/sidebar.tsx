@@ -51,6 +51,7 @@ export default function Sidebar({
   const router = useRouter();
   const supabase = createClient();
 
+  const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
@@ -389,9 +390,18 @@ export default function Sidebar({
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
+          isScrolled={isScrolled}
         />
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1"   onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
+            const viewport = e.currentTarget.querySelector(
+              '[data-radix-scroll-area-viewport]'
+            );
+            if (viewport) {
+              const scrolled = viewport.scrollTop > 0;
+              setIsScrolled(scrolled);
+            }
+          }}>
         <div className="flex flex-col w-full">
           <SessionId setSessionId={setSessionId} />
           <CommandMenu
