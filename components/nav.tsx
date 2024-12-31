@@ -36,7 +36,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
     <>
       <div className={cn(
         "px-4 py-2 bg-background flex items-center justify-between bg-muted sticky top-0 z-[1]",
-        isScrolled && "border-b border-border/40 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]"
+        isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]"
       )}>
         <div className="flex items-center gap-1.5 p-2">
           <div className="w-3 h-3 rounded-full bg-red-500" />
