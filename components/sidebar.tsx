@@ -441,6 +441,7 @@ export default function Sidebar({
             setIsScrolled(scrolled);
           }
         }}
+        isMobile={isMobile}
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
           <SessionId setSessionId={setSessionId} />
