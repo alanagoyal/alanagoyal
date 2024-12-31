@@ -144,7 +144,10 @@ function RecipientSearch({
           data-chat-header-dropdown="true"
           tabIndex={-1}
         >
-          <ScrollArea className="h-[300px]">
+          <ScrollArea
+            className="h-[200px] w-full rounded-md border border-input bg-background px-3"
+            isMobile={isMobileView}
+          >
             <div className="p-0">
               {filteredPeople.map((person, index) => (
                 <div
