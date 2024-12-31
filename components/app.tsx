@@ -533,8 +533,6 @@ export default function App() {
 
       // If we're deleting the active conversation and there are conversations left
       if (id === activeConversation && newConversations.length > 0) {
-        const deletedConvo = prevConversations.find(conv => conv.id === id);
-        
         // Sort conversations the same way as in the sidebar
         const sortedConvos = [...prevConversations].sort((a, b) => {
           if (a.pinned && !b.pinned) return -1;
