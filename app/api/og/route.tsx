@@ -13,7 +13,7 @@ export async function GET() {
           width: "100%",
           height: "100%",
           position: "relative",
-          fontFamily: "sans-serif",
+          fontFamily: "SF Pro Text",
           backgroundColor: "black",
         }}
       >
