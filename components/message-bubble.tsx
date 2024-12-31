@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction } from "../types";
 import { Conversation } from "../types"; 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +25,7 @@ interface MessageBubbleProps {
   isTyping?: boolean;                
   onReaction?: (messageId: string, reaction: Reaction) => void;  
   onOpenChange?: (isOpen: boolean) => void;
+  activeMessageId?: string | null;
   // Callback to focus message input after reaction completes
   onReactionComplete?: () => void;
   justSent?: boolean;
@@ -37,6 +38,7 @@ export function MessageBubble({
   isTyping,
   onReaction,
   onOpenChange,
+  activeMessageId,
   onReactionComplete,
   justSent = false,
 }: MessageBubbleProps) {
@@ -58,6 +60,25 @@ export function MessageBubble({
   // State to control the Popover open state and animation
   const [isOpen, setIsOpen] = useState(false);
   const [justAddedReactionType, setJustAddedReactionType] = useState<ReactionType | null>(null);
+  const openTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handler for menu state changes
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      // Menu is closing
+      setIsOpen(false);
+      onOpenChange?.(false);
+    } else {
+      // Only open if we're not in a closing state
+      if (openTimeoutRef.current) {
+        clearTimeout(openTimeoutRef.current);
+      }
+      openTimeoutRef.current = setTimeout(() => {
+        setIsOpen(true);
+        onOpenChange?.(true);
+      }, 10);
+    }
+  }, [onOpenChange]);
 
   // Handler for when a reaction is clicked
   const handleReaction = useCallback((type: ReactionType) => {
@@ -160,12 +181,25 @@ export function MessageBubble({
           )}
         >
           {/* Reaction popup menu */}
-          <Popover open={isOpen} onOpenChange={(open) => {
-            setIsOpen(open);
-            onOpenChange?.(open);
-          }}>
+          <Popover 
+            open={isOpen} 
+            onOpenChange={(open) => {
+              setIsOpen(open);
+              onOpenChange?.(open);
+            }}
+          >
             <PopoverTrigger asChild>
-              <div className="flex flex-col cursor-pointer">
+              <div 
+                className="flex flex-col cursor-pointer"
+                onClick={(e) => {
+                  // If another menu is open, prevent this click from opening a new menu
+                  if (activeMessageId && activeMessageId !== message.id) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                }}
+              >
                 <div className="text-sm">
                   {/* Show typing indicator or message content */}
                   {isTyping ? (

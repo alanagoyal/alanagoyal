@@ -76,8 +76,8 @@ export function MessageList({
             conversation={conversation}
             isTyping={false}
             onReaction={onReaction}
+            activeMessageId={activeMessageId}
             onOpenChange={(isOpen) => {
-              // Track active reaction menu to dim other messages
               setActiveMessageId(isOpen ? message.id : null);
               setIsAnyReactionMenuOpen(isOpen);
             }}
