@@ -52,7 +52,7 @@ const ScrollBar = React.forwardRef<
       "bg-transparent hover:border-l hover:border-gray-200 dark:hover:border-gray-700",
       orientation === "vertical" &&
         cn(
-          isMobile ? "w-[6px]" : "w-[10px] hover:w-[14px]",
+          isMobile ? "w-[8px]" : "w-[10px] hover:w-[14px]",
           withVerticalMargins && mobileHeaderHeight
             ? "mt-24 mb-16"
             : withVerticalMargins
