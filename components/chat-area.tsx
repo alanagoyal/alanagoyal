@@ -70,6 +70,8 @@ export function ChatArea({
         <ScrollArea
           className="h-full"
           isMobile={isMobileView}
+          withVerticalMargins
+          mobileHeaderHeight={isMobileView}
         >
           <div className={cn("pb-16", isMobileView ? "pt-24" : "pt-16")}>
             <MessageList
