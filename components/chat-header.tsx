@@ -453,7 +453,7 @@ export function ChatHeader({
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
       <div
         className={cn(
-          "flex items-center justify-between px-4",
+          "flex items-center justify-between px-4 relative",
           isMobileView ? "min-h-24 py-2" : "h-16"
         )}
         onClick={handleHeaderClick}
@@ -461,7 +461,7 @@ export function ChatHeader({
       >
         <div className="flex items-center gap-2 flex-1">
           {isMobileView && (
-            <div className="flex items-center -ml-2 w-[56px]">
+            <div className="absolute left-2 top-8 w-12">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -486,12 +486,20 @@ export function ChatHeader({
           )}
 
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
-            <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+            <div className={cn("flex-1", isMobileView && "pl-16")} onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-1 flex-wrap py-2">
-                <span className="text-base sm:text-sm font-medium text-muted-foreground">
-                  To:
-                </span>
-                <div className="flex flex-wrap gap-1 flex-1 items-center">
+                {isMobileView ? (
+                  <div className="absolute left-16 top-9">
+                    <span className="text-base sm:text-sm font-medium text-muted-foreground">
+                      To:
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-base sm:text-sm font-medium text-muted-foreground">
+                    To:
+                  </span>
+                )}
+                <div className={cn("flex flex-wrap gap-1 flex-1 items-center", isMobileView && "pl-4")}>
                   {renderRecipients()}
                   {recipientInput.split(",").filter((r) => r.trim()).length <
                     4 && (
