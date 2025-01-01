@@ -184,7 +184,7 @@ export const MessageInput = forwardRef<
     editorProps: {
       attributes: {
         class:
-          "w-full bg-background/80 border border-muted-foreground/20 rounded-[18px] pl-4 pr-8 py-2 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose flex items-center",
+          "w-full bg-background/80 border border-muted-foreground/20 rounded-[18px] pl-4 pr-8 py-1 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose flex items-center",
         enterKeyHint: "send",
         style: "min-height: 32px; max-height: 200px; overflow-y: hidden;",
       },
