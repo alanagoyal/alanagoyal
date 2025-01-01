@@ -239,13 +239,13 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     
     // Update height on window resize
     window.addEventListener('resize', updateHeight);
-    
+
     // Initial height calculation
     updateHeight();
 
     return () => {
-      editor?.off('update', updateHeight);
       window.removeEventListener('resize', updateHeight);
+      editor?.off('update', updateHeight);
     };
   }, [editor]);
 
@@ -279,6 +279,17 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
       document.removeEventListener("keydown", handleEscape);
     };
   }, [showEmojiPicker, editor]);
+
+  // Reset editor height when message is cleared (e.g. after sending)
+  useEffect(() => {
+    if (message === '') {
+      const element = editor?.view.dom as HTMLElement;
+      if (element) {
+        element.style.height = '32px';
+        document.documentElement.style.setProperty('--dynamic-height', '64px');
+      }
+    }
+  }, [message, editor]);
 
   return (
     <div className="w-full bg-background/50 backdrop-blur-md" style={{ height: 'var(--dynamic-height, 64px)' }}>
