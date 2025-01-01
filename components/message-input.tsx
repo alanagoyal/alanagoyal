@@ -218,6 +218,12 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     const updateHeight = () => {
       if (editor) {
         const element = editor.view.dom as HTMLElement;
+        // Reset height when switching to mobile view
+        if (isMobileView) {
+          element.style.height = '32px';
+          document.documentElement.style.setProperty('--dynamic-height', '64px');
+          return;
+        }
         // Force reflow to get accurate scrollHeight
         element.style.height = 'auto';
         // Get the scroll height including all content
@@ -237,7 +243,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     // Update height on editor changes
     editor?.on('update', updateHeight);
     
-    // Update height on window resize
+    // Update height on window resize and mobile view changes
     window.addEventListener('resize', updateHeight);
 
     // Initial height calculation
@@ -247,7 +253,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
       window.removeEventListener('resize', updateHeight);
       editor?.off('update', updateHeight);
     };
-  }, [editor]);
+  }, [editor, isMobileView]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
