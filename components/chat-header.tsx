@@ -487,7 +487,7 @@ export function ChatHeader({
 
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
             <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center gap-1 flex-wrap">
+              <div className="flex items-center gap-1 flex-wrap py-2">
                 <span className="text-base sm:text-sm font-medium text-muted-foreground">
                   To:
                 </span>
