@@ -218,12 +218,6 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     const updateHeight = () => {
       if (editor) {
         const element = editor.view.dom as HTMLElement;
-        // Reset height when switching to mobile view
-        if (isMobileView) {
-          element.style.height = '32px';
-          document.documentElement.style.setProperty('--dynamic-height', '64px');
-          return;
-        }
         // Force reflow to get accurate scrollHeight
         element.style.height = 'auto';
         // Get the scroll height including all content
@@ -232,10 +226,9 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
         const height = Math.min(200, Math.max(32, contentHeight));
         const containerHeight = height + 32;
         
-        // Only show scrollbar if we've hit the max height
-        element.style.overflowY = height >= 200 ? 'auto' : 'hidden';
-        // Set both the editor height and container height
+        // Handle height for both mobile and desktop
         element.style.height = `${height}px`;
+        element.style.overflowY = height >= 200 ? 'auto' : 'hidden';
         document.documentElement.style.setProperty('--dynamic-height', `${containerHeight}px`);
       }
     };
@@ -243,7 +236,7 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     // Update height on editor changes
     editor?.on('update', updateHeight);
     
-    // Update height on window resize and mobile view changes
+    // Update height on window resize
     window.addEventListener('resize', updateHeight);
 
     // Initial height calculation
