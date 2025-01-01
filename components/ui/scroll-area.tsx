@@ -18,8 +18,9 @@ const ScrollArea = React.forwardRef<
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
     isMobile?: boolean
+    bottomMargin?: string
   }
->(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
+>(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
@@ -28,7 +29,12 @@ const ScrollArea = React.forwardRef<
     <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar withVerticalMargins={withVerticalMargins} mobileHeaderHeight={mobileHeaderHeight} isMobile={isMobile} />
+    <ScrollBar 
+      withVerticalMargins={withVerticalMargins} 
+      mobileHeaderHeight={mobileHeaderHeight} 
+      isMobile={isMobile}
+      bottomMargin={bottomMargin}
+    />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
@@ -41,8 +47,9 @@ const ScrollBar = React.forwardRef<
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
     isMobile?: boolean
+    bottomMargin?: string
   }
->(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
+>(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar
     ref={ref}
     orientation={orientation}
@@ -54,15 +61,16 @@ const ScrollBar = React.forwardRef<
         cn(
           isMobile ? "w-[8px]" : "w-[10px] hover:w-[14px]",
           withVerticalMargins && mobileHeaderHeight
-            ? "mt-24 mb-16"
+            ? "mt-24"
             : withVerticalMargins
-            ? "my-16"
+            ? "mt-16"
             : ""
         ),
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
       className
     )}
+    style={bottomMargin ? { marginBottom: bottomMargin } : { marginBottom: '64px' }}
     {...props}
   >
     <ScrollAreaPrimitive.ScrollAreaThumb 
