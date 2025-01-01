@@ -164,9 +164,9 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     },
     editorProps: {
       attributes: {
-        class: 'w-full bg-background/80 border border-muted-foreground/20 rounded-[18px] py-1 pl-4 pr-8 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose overflow-y-auto',
+        class: 'w-full bg-background/80 border border-muted-foreground/20 rounded-[18px] py-1 pl-4 pr-8 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose',
         enterKeyHint: 'send',
-        style: 'min-height: 32px; max-height: 200px;'
+        style: 'min-height: 32px; max-height: 200px; overflow-y: hidden;'
       },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -215,20 +215,38 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   }, [editor, conversationId, isMobileView, isNewChat]);
 
   useEffect(() => {
-    if (editor) {
-      const updateHeight = () => {
-        const height = editor.view.dom.offsetHeight + 32; // Add padding
-        document.documentElement.style.setProperty('--dynamic-height', `${height}px`);
-        console.log('Input height updated:', height);
-      };
+    const updateHeight = () => {
+      if (editor) {
+        const element = editor.view.dom as HTMLElement;
+        // Force reflow to get accurate scrollHeight
+        element.style.height = 'auto';
+        // Get the scroll height including all content
+        const contentHeight = element.scrollHeight;
+        // Set the height considering padding and ensuring we don't exceed max height
+        const height = Math.min(200, Math.max(32, contentHeight));
+        const containerHeight = height + 32;
+        
+        // Only show scrollbar if we've hit the max height
+        element.style.overflowY = height >= 200 ? 'auto' : 'hidden';
+        // Set both the editor height and container height
+        element.style.height = `${height}px`;
+        document.documentElement.style.setProperty('--dynamic-height', `${containerHeight}px`);
+      }
+    };
 
-      editor.on('update', updateHeight);
-      updateHeight();
+    // Update height on editor changes
+    editor?.on('update', updateHeight);
+    
+    // Update height on window resize
+    window.addEventListener('resize', updateHeight);
+    
+    // Initial height calculation
+    updateHeight();
 
-      return () => {
-        editor.off('update', updateHeight);
-      };
-    }
+    return () => {
+      editor?.off('update', updateHeight);
+      window.removeEventListener('resize', updateHeight);
+    };
   }, [editor]);
 
   useEffect(() => {
