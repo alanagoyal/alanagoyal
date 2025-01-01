@@ -26,6 +26,7 @@ export function MessageList({
   const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   const isTypingInThisConversation = typingStatus && 
     typingStatus.conversationId === conversationId;
@@ -40,6 +41,20 @@ export function MessageList({
       lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isTypingInThisConversation]);
+
+  useEffect(() => {
+    const messageListElement = messageListRef.current;
+    if (messageListElement) {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          console.log('Message list height:', entry.contentRect.height);
+        }
+      });
+
+      observer.observe(messageListElement);
+      return () => observer.disconnect();
+    }
+  }, []);
 
   // Update lastSentMessageId when a new message is added
   useEffect(() => {
@@ -58,6 +73,7 @@ export function MessageList({
 
   return (
     <div 
+      ref={messageListRef}
       className="flex-1 p-4 pb-0 flex flex-col-reverse relative"
     >
     <div className="space-y-2 flex-1">

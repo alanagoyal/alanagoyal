@@ -151,10 +151,11 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     content: message,
     autofocus: !isMobileView && !isNewChat ? 'end' : false,
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      if (content !== message) {
-        setMessage(content);
-      }
+      const element = editor.view.dom as HTMLElement;
+      const height = Math.min(200, Math.max(32, element.scrollHeight));
+      const containerHeight = height + 32; // Add padding (16px top + 16px bottom)
+      document.documentElement.style.setProperty('--dynamic-height', `${containerHeight}px`);
+      setMessage(editor.getHTML());
     },
     onCreate: ({ editor }) => {
       if (!isMobileView && !isNewChat) {
@@ -163,9 +164,9 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
     },
     editorProps: {
       attributes: {
-        class: 'w-full bg-background/80 border border-muted-foreground/20 rounded-full py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose whitespace-nowrap overflow-x-auto flex items-center',
+        class: 'w-full bg-background/80 border border-muted-foreground/20 rounded-[18px] py-1 px-4 text-base sm:text-sm focus:outline-none disabled:opacity-50 prose-sm prose-neutral dark:prose-invert prose overflow-y-auto',
         enterKeyHint: 'send',
-        style: 'height: 32px; overflow-y: hidden; line-height: 32px;'
+        style: 'min-height: 32px; max-height: 200px;'
       },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -214,6 +215,23 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   }, [editor, conversationId, isMobileView, isNewChat]);
 
   useEffect(() => {
+    if (editor) {
+      const updateHeight = () => {
+        const height = editor.view.dom.offsetHeight + 32; // Add padding
+        document.documentElement.style.setProperty('--dynamic-height', `${height}px`);
+        console.log('Input height updated:', height);
+      };
+
+      editor.on('update', updateHeight);
+      updateHeight();
+
+      return () => {
+        editor.off('update', updateHeight);
+      };
+    }
+  }, [editor]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         pickerRef.current &&
@@ -245,8 +263,8 @@ export const MessageInput = forwardRef<MessageInputHandle, Omit<MessageInputProp
   }, [showEmojiPicker, editor]);
 
   return (
-    <div className="h-16 sticky bottom-0 z-10 w-full bg-background/50 backdrop-blur-md p-4">
-      <div className="flex gap-2 items-center relative">
+    <div className="w-full bg-background/50 backdrop-blur-md" style={{ height: 'var(--dynamic-height, 64px)' }}>
+      <div className="flex gap-2 p-4 h-full">
         <div className="relative w-full">
           <EditorContent 
             editor={editor}
