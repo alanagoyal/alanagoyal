@@ -144,38 +144,41 @@ function RecipientSearch({
           data-chat-header-dropdown="true"
           tabIndex={-1}
         >
-          <ScrollArea
-            className="h-[200px] w-full rounded-md border border-input bg-background px-3"
-            isMobile={isMobileView}
-          >
-            <div className="p-0">
-              {filteredPeople.map((person, index) => (
-                <div
-                  key={person.name}
-                  ref={selectedIndex === index ? selectedItemRef : null}
-                  className={`px-4 py-2 cursor-pointer rounded-md ${
-                    selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
-                  }`}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handlePersonSelect(person);
-                  }}
-                  onMouseEnter={() => setSelectedIndex(index)}
-                  tabIndex={0}
-                >
-                  <div className="flex flex-col">
-                    <span
-                      className={`text-sm ${
-                        selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
-                      }`}
-                    >
-                      {person.name}
-                    </span>
+          {filteredPeople.length > 0 && (
+            <ScrollArea
+              style={{ height: `${Math.min(filteredPeople.length * 36 + 16, 376)}px` }}
+              className="w-full rounded-md border border-input bg-background p-2"
+              isMobile={isMobileView}
+            >
+              <div className="p-0">
+                {filteredPeople.map((person, index) => (
+                  <div
+                    key={person.name}
+                    ref={selectedIndex === index ? selectedItemRef : null}
+                    className={`p-2 cursor-pointer rounded-md ${
+                      selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
+                    }`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handlePersonSelect(person);
+                    }}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                    tabIndex={0}
+                  >
+                    <div className="flex flex-col">
+                      <span
+                        className={`text-sm ${
+                          selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
+                        }`}
+                      >
+                        {person.name}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       )}
     </div>
