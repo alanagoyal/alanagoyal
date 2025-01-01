@@ -42,20 +42,6 @@ export function MessageList({
     }
   }, [messages, isTypingInThisConversation]);
 
-  useEffect(() => {
-    const messageListElement = messageListRef.current;
-    if (messageListElement) {
-      const observer = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          console.log('Message list height:', entry.contentRect.height);
-        }
-      });
-
-      observer.observe(messageListElement);
-      return () => observer.disconnect();
-    }
-  }, []);
-
   // Update lastSentMessageId when a new message is added
   useEffect(() => {
     if (messages.length > 0) {
