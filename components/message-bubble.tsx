@@ -190,10 +190,12 @@ export function MessageBubble({
         {isSystemMessage ? (
           <div
             className={cn(
-              "rounded-[18px] py-2 px-3 max-w-[80%] relative bg-background",
-              "text-[12px] text-muted-foreground text-center whitespace-pre-line"
+              "w-full flex justify-center py-2 px-3",
+              isSystemMessage && "bg-background"
             )}>
-            {message.content}
+            <div className="text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]">
+              {message.content}
+            </div>
           </div>
         ) : (
           <div
@@ -202,7 +204,7 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px]"
+                ? "border-[20px] border-solid border-r-[27.7px] text-white"
                 : "border-[20px] border-solid border-l-[27.7px] bg-[#E5E6EA]",
               justSent && "animate-pop-in"
             )}
@@ -276,8 +278,8 @@ export function MessageBubble({
               {message.reactions && message.reactions.length > 0 && (
                 <div
                   className={cn(
-                    "absolute -top-4 flex",
-                    isMe ? "-left-4" : "-right-4"
+                    "absolute -top-8 flex",
+                    isMe ? "-left-8" : "-right-8"
                   )}>
                   {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
                   {[...message.reactions]
