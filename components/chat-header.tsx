@@ -451,17 +451,15 @@ export function ChatHeader({
 
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
-      <div
-        className={cn(
-          "flex items-center justify-between px-4",
-          isMobileView ? "min-h-24 py-2" : "h-16"
-        )}
-        onClick={handleHeaderClick}
-        data-chat-header="true"
-      >
-        <div className="flex items-center gap-2 flex-1">
-          {isMobileView && (
-            <div className="flex items-center -ml-2 w-[56px]">
+      {isMobileView ? (
+        // Mobile View
+        <div
+          className="flex items-center justify-between px-4 relative min-h-24 py-2"
+          onClick={handleHeaderClick}
+          data-chat-header="true"
+        >
+          <div className="flex items-center gap-2 flex-1">
+            <div className="absolute left-2 top-8 w-12">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -483,46 +481,41 @@ export function ChatHeader({
                 ) : null}
               </button>
             </div>
-          )}
 
-          {(isNewChat && !showCompactNewChat) || isEditMode ? (
-            <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center gap-1 flex-wrap py-2">
-                <span className="text-base sm:text-sm font-medium text-muted-foreground">
-                  To:
-                </span>
-                <div className="flex flex-wrap gap-1 flex-1 items-center">
-                  {renderRecipients()}
-                  {recipientInput.split(",").filter((r) => r.trim()).length <
-                    4 && (
-                    <RecipientSearch
-                      searchValue={searchValue}
-                      setSearchValue={setSearchValue}
-                      showResults={showResults}
-                      selectedIndex={selectedIndex}
-                      filteredPeople={filteredPeople}
-                      handleKeyDown={handleKeyDown}
-                      handlePersonSelect={handlePersonSelect}
-                      setSelectedIndex={setSelectedIndex}
-                      setShowResults={setShowResults}
-                      updateRecipients={updateRecipients}
-                      isMobileView={isMobileView}
-                    />
-                  )}
+            {(isNewChat && !showCompactNewChat) || isEditMode ? (
+              <div className="flex-1 pl-16" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-1 flex-wrap py-6">
+                  <div className="absolute left-16 top-9">
+                    <span className="text-base sm:text-sm text-muted-foreground">
+                      To:
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 flex-1 items-center pl-4">
+                    {renderRecipients()}
+                    {recipientInput.split(",").filter((r) => r.trim()).length < 4 && (
+                      <RecipientSearch
+                        searchValue={searchValue}
+                        setSearchValue={setSearchValue}
+                        showResults={showResults}
+                        selectedIndex={selectedIndex}
+                        filteredPeople={filteredPeople}
+                        handleKeyDown={handleKeyDown}
+                        handlePersonSelect={handlePersonSelect}
+                        setSelectedIndex={setSelectedIndex}
+                        setShowResults={setShowResults}
+                        updateRecipients={updateRecipients}
+                        isMobileView={isMobileView}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div
-              className={`flex ${
-                isMobileView
-                  ? "absolute left-1/2 -translate-x-1/2 transform"
-                  : ""
-              }`}
-              onClick={handleHeaderClick}
-              data-chat-header="true"
-            >
-              {isMobileView ? (
+            ) : (
+              <div
+                className="flex absolute left-1/2 -translate-x-1/2 transform"
+                onClick={handleHeaderClick}
+                data-chat-header="true"
+              >
                 <div className="flex flex-col items-center">
                   <div className="flex items-center py-2">
                     <MobileAvatars
@@ -540,15 +533,57 @@ export function ChatHeader({
                     {(() => {
                       const recipients = isNewChat
                         ? recipientInput.split(",").filter((r) => r.trim())
-                        : activeConversation?.recipients.map((r) => r.name) ||
-                          [];
+                        : activeConversation?.recipients.map((r) => r.name) || [];
                       return recipients.length === 1
                         ? recipients[0]
                         : `${recipients.length} people`;
                     })()}
                   </span>
                 </div>
-              ) : (
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        // Desktop View
+        <div
+          className="flex items-center justify-between px-4 relative h-16"
+          onClick={handleHeaderClick}
+          data-chat-header="true"
+        >
+          <div className="flex items-center gap-2 flex-1">
+            {(isNewChat && !showCompactNewChat) || isEditMode ? (
+              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-1 flex-wrap py-6">
+                  <span className="text-base sm:text-sm text-muted-foreground">
+                    To:
+                  </span>
+                  <div className="flex flex-wrap gap-1 flex-1 items-center">
+                    {renderRecipients()}
+                    {recipientInput.split(",").filter((r) => r.trim()).length < 4 && (
+                      <RecipientSearch
+                        searchValue={searchValue}
+                        setSearchValue={setSearchValue}
+                        showResults={showResults}
+                        selectedIndex={selectedIndex}
+                        filteredPeople={filteredPeople}
+                        handleKeyDown={handleKeyDown}
+                        handlePersonSelect={handlePersonSelect}
+                        setSelectedIndex={setSelectedIndex}
+                        setShowResults={setShowResults}
+                        updateRecipients={updateRecipients}
+                        isMobileView={isMobileView}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="flex"
+                onClick={handleHeaderClick}
+                data-chat-header="true"
+              >
                 <span className="text-sm">
                   <span className="text-muted-foreground">To: </span>
                   {(() => {
@@ -561,11 +596,11 @@ export function ChatHeader({
                         }`;
                   })()}
                 </span>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
