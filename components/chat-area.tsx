@@ -160,7 +160,6 @@ export function ChatArea({
               className="absolute inset-0"
               style={{ background: "linear-gradient(#43cdf6,#0087fe)" }}
             />
-
             <div className="relative h-full">
               <MessageList
                 messages={activeConversation?.messages || []}
@@ -178,8 +177,6 @@ export function ChatArea({
           </div>
         </div>
       </ScrollArea>
-      <div className="absolute inset-x-0 inset-y-[64px] bg-gradient-to-b from-[#43cdf6] to-[#0087fe]" />
-
       <div
         className="absolute bottom-0 left-0 right-0 z-50"
         style={{
