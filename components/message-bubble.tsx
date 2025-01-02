@@ -39,6 +39,8 @@ export function MessageBubble({
   onReactionComplete,
   justSent = false,
 }: MessageBubbleProps) {
+  console.log('MessageBubble rendering:', { sender: message.sender, content: message.content });
+
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
   const showRecipientName = message.sender !== "me" && !isSystemMessage;
@@ -140,6 +142,10 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
+  const rightBubbleSvg = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxzdmcgdmVyc2lvbj0iMS4xIg0KCSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczphPSJodHRwOi8vbnMuYWRvYmUuY29tL0Fkb2JlU1ZHVmlld2VyRXh0ZW5zaW9ucy8zLjAvIg0KCSB4PSIwcHgiIHk9IjBweCIgd2lkdGg9Ijk0cHgiIGhlaWdodD0iNjhweCIgdmlld0JveD0iMCAwIDk0IDY4IiBvdmVyZmxvdz0idmlzaWJsZSIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOTQgNjgiDQoJIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGRlZnM+DQo8L2RlZnM+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMzEuNzMzLDBIMHYzMS43MzNDMCwxNC4yMDgsMTQuMjA4LDAsMzEuNzMzLDB6Ii8+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMCAwMzYuMjN2NjhjMCwxNC4yMDgsMTQuMjA4LDI4LjQzOCwyOC40MzgsMjguNDM4aDI4LjQzOEM2OCw2OCw1My43OTIsNjUuMjAzLDQ5Ljg2Nyw2OHoiLz4NCjxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik04OS44NjcsNjhIOTMuNWMtMTQuNjY3LDAtMjEuNDI2LTUuNjE1LTIzLjIzMS03LjQzNEM2NC43NTIsNjUuMjAzLDU3LjYzNyw2OCw0OS44NjcsNjh6Ii8+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNNDkuODY3LDBDNjcuMzkzLDAsMTMuOSwxNC4yMDgsMTMuOSwzMS43MzN2NC41MzNDMTMuOSw2NSw1LjUsNjgsMCw2OHoiLz4KPC9zdmc+DQo=`;
+
+  const leftBubbleSvg = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE1LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI5My41cHgiCgkgaGVpZ2h0PSI2OHB4IiB2aWV3Qm94PSIwIDAgOTMuNSA2OCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOTMuNSA2OCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnIGlkPSJMYXllcl8zIj4KCTxyZWN0IHg9Ii04LjY2NyIgeT0iLTguNDkzIiBmaWxsPSIjRkZGRkZGIiB3aWR0aD0iMTEyIiBoZWlnaHQ9Ijg5LjMzMyIvPgo8L2c+CjxnIGlkPSJMYXllcl8yIj4KPC9nPgo8ZyBpZD0iTGF5ZXJfMSI+Cgk8cGF0aCBmaWxsPSIjRTVFNkVBIiBkPSJNNjEuNzY3LDBINDMuNjMzQzI2LjEwNywwLDExLjksMTQuMjA4LDExLjksMzEuNzMzdjQuNTMzQzExLjksNjUsMi41LDY4LDAsNjgKCQljMTQuNjY3LDAsMjEuNDI2LTUuNjE1LDIzLjIzMS03LjQzNEMyOC43NDgsNjUuMjAzLDM1Ljg2Myw2OCw0My42MzMsNjhoMTguMTMzQzc5LjI5Miw2OCw5My41LDUzLjc5Miw5My41LDM2LjI2N3YtNC41MzMKCQlDOTMuNSwxNC4yMDgsNzkuMjkyLDAsNjEuNzY3LDB6Ii8+CjwvZz4KPC9zdmc+Cg==`;
+
   return (
     <div
       className={cn(
@@ -170,98 +176,115 @@ export function MessageBubble({
       ) : (
         <div
           className={cn(
-            "rounded-[18px] py-2 px-3 max-w-[80%] relative group",
-            message.sender === "me"
-              ? "text-white bg-transparent"
-              : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
-            isTyping && "min-h-[32px] min-w-[60px]"
+            "group relative max-w-[75%] break-words",
+            message.sender === "me" ? "ml-auto" : "mr-auto",
+            isSystemMessage && "mx-auto max-w-[90%] text-center"
           )}
         >
-          {/* Reaction popup menu */}
-          <Popover 
-            open={isOpen} 
-            modal={true}
-            onOpenChange={handleOpenChange}
+          {/* Message bubble */}
+          <div
+            className={cn(
+              "relative",
+              message.sender === "me" ? "ml-auto" : "mr-auto",
+              isSystemMessage ? "bg-muted/50 rounded-lg" :
+              message.sender === "me" ? 
+                "border-[20px] border-solid border-r-[27.7px] bg-transparent" :
+                "border-[20px] border-solid border-l-[27.7px] bg-[#E5E6EA]",
+              justSent && "animate-pop-in"
+            )}
+            style={!isSystemMessage ? {
+              borderImageSlice: message.sender === "me" ? "31 43 31 31" : "31 31 31 43",
+              borderImageSource: `url('${message.sender === "me" ? rightBubbleSvg : leftBubbleSvg}')`
+            } : undefined}
           >
-            <PopoverTrigger asChild>
-              <div className="flex flex-col cursor-pointer">
-                <div className="text-sm">
-                  {/* Show typing indicator or message content */}
-                  {isTyping ? (
-                    <span className="typing-indicator">
-                      <span className="dot"></span>
-                      <span className="dot"></span>
-                      <span className="dot"></span>
-                    </span>
-                  ) : (
-                    highlightRecipientNames(message.content, conversation?.recipients || [], message.sender)
-                  )}
-                </div>
-              </div>
-            </PopoverTrigger>
+            <div className="-m-2">
+              {/* Reaction popup menu */}
+              <Popover 
+                open={isOpen} 
+                modal={true}
+                onOpenChange={handleOpenChange}
+              >
+                <PopoverTrigger asChild>
+                  <div className="flex flex-col cursor-pointer">
+                    <div className="text-sm">
+                      {/* Show typing indicator or message content */}
+                      {isTyping ? (
+                        <span className="typing-indicator">
+                          <span className="dot"></span>
+                          <span className="dot"></span>
+                          <span className="dot"></span>
+                        </span>
+                      ) : (
+                        highlightRecipientNames(message.content, conversation?.recipients || [], message.sender)
+                      )}
+                    </div>
+                  </div>
+                </PopoverTrigger>
 
-            {/* Reaction menu */}
-            <PopoverContent 
-              className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
-              align={message.sender === "me" ? "end" : "start"}
-              alignOffset={-8}
-              side="top"
-              sideOffset={10}
-            > 
-              {/* Reaction buttons */}
-              {Object.entries(reactionIcons).map(([type, icon]) => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    handleReaction(type as ReactionType);
-                  }}
-                  className={cn(
-                    "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
-                    isReactionActive(type as ReactionType)
-                      ? "bg-[#0A7CFF] text-white scale-110"
-                      : ""
-                  )}
-                >
-                  <FontAwesomeIcon icon={icon} className="transition-transform duration-200" />
-                </button>
-              ))}
-            </PopoverContent>
-          </Popover>
+                {/* Reaction menu */}
+                <PopoverContent 
+                  className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
+                  align={message.sender === "me" ? "end" : "start"}
+                  alignOffset={-8}
+                  side="top"
+                  sideOffset={10}
+                > 
+                  {/* Reaction buttons */}
+                  {Object.entries(reactionIcons).map(([type, icon]) => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        handleReaction(type as ReactionType);
+                      }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
+                        isReactionActive(type as ReactionType)
+                          ? "bg-[#0A7CFF] text-white scale-110"
+                          : ""
+                      )}
+                    >
+                      <FontAwesomeIcon icon={icon} className="transition-transform duration-200" />
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
 
-          {/* Display existing reactions */}
-          {message.reactions && message.reactions.length > 0 && (
-            <div className={cn(
-              "absolute -top-4 flex",
-              message.sender === "me" ? "-left-4" : "-right-4"
-            )}>
-              {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
-              {[...message.reactions]
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .map((reaction, index, array) => (
-                <div
-                  key={`${reaction.type}-${index}`}
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
-                    reaction.sender === "me" 
-                      ? "bg-[#0A7CFF]" 
-                      : "bg-gray-100 dark:bg-[#404040]",
-                    reaction.type === justAddedReactionType && "animate-scale-in",
-                    index !== array.length - 1 && "-mr-7",
-                    index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
-                  )}
-                >
-                  <FontAwesomeIcon 
-                    icon={reactionIcons[reaction.type]} 
-                    className={cn(
-                      reaction.sender === "me"
-                        ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
-                        : "text-muted-foreground"
-                    )}
-                  />
+              {/* Display existing reactions */}
+              {message.reactions && message.reactions.length > 0 && (
+                <div className={cn(
+                  "absolute -top-4 flex",
+                  message.sender === "me" ? "-left-4" : "-right-4"
+                )}>
+                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
+                  {[...message.reactions]
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    .map((reaction, index, array) => (
+                    <div
+                      key={`${reaction.type}-${index}`}
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
+                        reaction.sender === "me" 
+                          ? "bg-[#0A7CFF]" 
+                          : "bg-gray-100 dark:bg-[#404040]",
+                        reaction.type === justAddedReactionType && "animate-scale-in",
+                        index !== array.length - 1 && "-mr-7",
+                        index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
+                      )}
+                    >
+                      <FontAwesomeIcon 
+                        icon={reactionIcons[reaction.type]} 
+                        className={cn(
+                          reaction.sender === "me"
+                            ? reaction.type === "heart" ? "text-[#FF69B4]" : "text-white"
+                            : "text-muted-foreground"
+                        )}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 

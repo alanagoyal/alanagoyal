@@ -148,14 +148,25 @@ export function ChatArea({
             paddingBottom: 'calc(var(--dynamic-height, 64px)'
           }}
         >
-          <MessageList
-            messages={activeConversation?.messages || []}
-            conversation={activeConversation}
-            typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
-            onReaction={onReaction}
-            conversationId={conversationId}
-            messageInputRef={messageInputRef}
-          />
+          <div className="flex-1 relative">
+            {/* Gradient background */}
+            <div 
+              className="absolute inset-0" 
+              style={{ background: "linear-gradient(#43cdf6,#0087fe)" }} 
+            />
+            
+            {/* Message list with white background */}
+            <div className="relative h-full bg-background">
+              <MessageList
+                messages={activeConversation?.messages || []}
+                conversation={activeConversation}
+                typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
+                onReaction={onReaction}
+                conversationId={conversationId}
+                messageInputRef={messageInputRef}
+              />
+            </div>
+          </div>
         </div>
       </ScrollArea>
 
