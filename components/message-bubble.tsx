@@ -206,8 +206,8 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] text-white"
-                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
+                ? "border-[20px] border-solid border-r-[27.7px] -mr-[0.5px] text-white"
+                : "border-[20px] border-solid border-l-[27.7px] -ml-[0.5px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
               justSent && "animate-pop-in"
             )}
             style={
@@ -320,7 +320,6 @@ export function MessageBubble({
         )}
         {!isSystemMessage && !isMe && <div className="flex-1 bg-background" />}
       </div>
-
       {/* Show "Delivered" for last message from current user */}
       {isMe && isLastUserMessage && !isTyping && (
         <div
