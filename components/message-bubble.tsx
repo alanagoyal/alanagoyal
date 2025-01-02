@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction } from "../types";
 import { Conversation } from "../types";
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
   Popover,
   PopoverContent,
