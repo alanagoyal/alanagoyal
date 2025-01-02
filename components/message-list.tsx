@@ -61,17 +61,17 @@ export function MessageList({
   return (
     <div 
       ref={messageListRef}
-      className="flex-1 flex flex-col-reverse overflow-y-auto bg-background"
+      className="flex-1 flex flex-col-reverse bg-gradient-to-b from-[#43cdf6] to-[#0087fe]"
     >
       {/* Messages layer */}
-      <div className="space-y-2 flex-1 p-4 pb-0">
-        <div className="space-y-4">
+      <div className="flex-1">
+        <div className="">
           {messages.map((message, index, array) => (
             <div 
               key={message.id} 
               ref={index === array.length - 1 ? lastMessageRef : null}
               className={cn(
-                "transition-opacity p-2 bg-background",
+                "transition-opacity",
                 isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
               )}
             >
