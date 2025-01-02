@@ -20,10 +20,6 @@ export function MessageList({
   onReaction,
   messageInputRef,
 }: MessageListProps) {
-  console.log(
-    "MessageList rendering:",
-    messages.map((m) => ({ id: m.id, sender: m.sender }))
-  );
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(

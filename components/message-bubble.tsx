@@ -40,11 +40,6 @@ export function MessageBubble({
   onReactionComplete,
   justSent = false,
 }: MessageBubbleProps) {
-  console.log("MessageBubble rendering:", {
-    sender: message.sender,
-    content: message.content,
-  });
-
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
   const isMe = message.sender === "me";
