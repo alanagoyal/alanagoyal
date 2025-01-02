@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction } from "../types";
 import { Conversation } from "../types";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
@@ -16,6 +16,7 @@ import {
   faExclamation,
   faQuestion,
 } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from "next-themes";
 
 // Props for the MessageBubble component
 interface MessageBubbleProps {
@@ -165,9 +166,10 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxzdmcgdmVyc2lvbj0iMS4xIg0KCSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczphPSJodHRwOi8vbnMuYWRvYmUuY29tL0Fkb2JlU1ZHVmlld2VyRXh0ZW5zaW9ucy8zLjAvIg0KCSB4PSIwcHgiIHk9IjBweCIgd2lkdGg9Ijk0cHgiIGhlaWdodD0iNjhweCIgdmlld0JveD0iMCAwIDk0IDY4IiBvdmVyZmxvdz0idmlzaWJsZSIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOTQgNjgiDQoJIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGRlZnM+DQo8L2RlZnM+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMzEuNzMzLDBIMHYzMS43MzNDMCwxNC4yMDgsMTQuMjA4LDAsMzEuNzMzLDB6Ii8+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMCwzNi4yNjdWNjhoMzEuNzMzQzE0LjIwOCw2OCwwLDUzLjc5MiwwLDM2LjI2N3oiLz4NCjxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik00OS44NjcsNjhIOTMuNWMtMTQuNjY3LDAtMjEuNDI2LTUuNjE1LTIzLjIzMS03LjQzNEM2NC43NTIsNjUuMjAzLDU3LjYzNyw2OCw0OS44NjcsNjh6Ii8+DQo8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNNDkuODY3LDBDNjcuMzkzLDAsODEuNiwxNC4yMDgsODEuNiwzMS43MzN2NC41MzNDODEuNiw2NSw5MSw2OCw5My41LDY4VjBINDkuODY3eiIvPg0KPC9zdmc+DQo=`;
+  const { theme } = useTheme();
 
-  const leftBubbleSvg = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE1LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI5My41cHgiCgkgaGVpZ2h0PSI2OHB4IiB2aWV3Qm94PSIwIDAgOTMuNSA2OCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOTMuNSA2OCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnIGlkPSJMYXllcl8zIj4KCTxyZWN0IHg9Ii04LjY2NyIgeT0iLTguNDkzIiBmaWxsPSIjRkZGRkZGIiB3aWR0aD0iMTEyIiBoZWlnaHQ9Ijg5LjMzMyIvPgo8L2c+CjxnIGlkPSJMYXllcl8yIj4KPC9nPgo8ZyBpZD0iTGF5ZXJfMSI+Cgk8cGF0aCBmaWxsPSIjRTVFNkVBIiBkPSJNNjEuNzY3LDBINDMuNjMzQzI2LjEwNywwLDExLjksMTQuMjA4LDExLjksMzEuNzMzdjQuNTMzQzExLjksNjUsMi41LDY4LDAsNjgKCQljMTQuNjY3LDAsMjEuNDI2LTUuNjE1LDIzLjIzMS03LjQzNEMyOC43NDgsNjUuMjAzLDM1Ljg2Myw2OCw0My42MzMsNjhoMTguMTMzQzc5LjI5Miw2OCw5My41LDUzLjc5Miw5My41LDM2LjI2N3YtNC41MzMKCQlDOTMuNSwxNC4yMDgsNzkuMjkyLDAsNjEuNzY3LDB6Ii8+CjwvZz4KPC9zdmc+Cg==`;
+  const rightBubbleSvg = theme === 'dark' ? '/right-bubble-dark.svg' : '/right-bubble-light.svg';
+  const leftBubbleSvg = theme === 'dark' ? '/left-bubble-dark.svg' : '/left-bubble-light.svg';
 
   return (
     <div
@@ -205,16 +207,14 @@ export function MessageBubble({
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
                 ? "border-[20px] border-solid border-r-[27.7px] text-white"
-                : "border-[20px] border-solid border-l-[27.7px] bg-[#E5E6EA]",
+                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
               justSent && "animate-pop-in"
             )}
             style={
               !isSystemMessage
                 ? {
                     borderImageSlice: isMe ? "31 43 31 31" : "31 31 31 43",
-                    borderImageSource: `url('${
-                      isMe ? rightBubbleSvg : leftBubbleSvg
-                    }')`,
+                    borderImageSource: `url('${isMe ? rightBubbleSvg : leftBubbleSvg}')`,
                   }
                 : undefined
             }>
