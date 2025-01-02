@@ -60,50 +60,81 @@ export function MessageList({
   return (
     <div 
       ref={messageListRef}
-      className="flex-1 p-4 pb-0 flex flex-col-reverse relative"
+      className="flex-1 flex flex-col-reverse relative overflow-hidden"
     >
-    <div className="space-y-2 flex-1">
-      {messages.map((message, index, array) => (
-        <div 
-          key={message.id} 
-          ref={index === array.length - 1 ? lastMessageRef : null}
-          className={cn(
-            "transition-opacity",
-            isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
+      {/* Gradient background */}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(#43cdf6,#0087fe)" }} />
+      
+      {/* Messages container */}
+      <div className="flex-1 p-4 pb-0 relative">
+        {/* White background segments */}
+        <div className="absolute inset-0 -m-4 mb-0">
+          {messages.map((message, index) => (
+            <div 
+              key={`bg-${message.id}`}
+              className={cn(
+                "absolute bg-background",
+                message.sender === "me" ? "right-0 left-0 -mr-4" : "right-0 left-0 -ml-4"
+              )}
+              style={{
+                top: `${index * 40}px`, // Adjust based on message height
+                height: "40px", // Adjust based on message height
+                clipPath: message.sender === "me" 
+                  ? `polygon(0 0, calc(100% - 150px) 0, calc(100% - 150px) 100%, 0 100%)`
+                  : `polygon(150px 0, 100% 0, 100% 100%, 150px 100%)`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Messages */}
+        <div className="space-y-2 relative">
+          {messages.map((message, index, array) => (
+            <div 
+              key={message.id} 
+              ref={index === array.length - 1 ? lastMessageRef : null}
+              className={cn(
+                "flex",
+                message.sender === "me" ? "justify-end" : "justify-start",
+                isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
+              )}
+            >
+              <MessageBubble
+                message={message}
+                isLastUserMessage={index === lastUserMessageIndex}
+                conversation={conversation}
+                isTyping={false}
+                onReaction={onReaction}
+                onOpenChange={(isOpen) => {
+                  setActiveMessageId(isOpen ? message.id : null);
+                  setIsAnyReactionMenuOpen(isOpen);
+                }}
+                onReactionComplete={() => {
+                  messageInputRef?.current?.focus();
+                }}
+                justSent={message.id === lastSentMessageId}
+              />
+            </div>
+          ))}
+          {isTypingInThisConversation && (
+            <div ref={typingRef} className="flex relative mb-2">
+              <div className={cn(
+                "absolute inset-y-0 bg-background",
+                "left-[20%] right-0"
+              )} />
+              <MessageBubble 
+                message={{
+                  id: 'typing',
+                  content: '',
+                  sender: typingStatus.recipient,
+                  timestamp: new Date().toLocaleTimeString()
+                }}
+                isTyping={true}
+                conversation={conversation}
+              />
+            </div>
           )}
-        >
-          <MessageBubble
-            message={message}
-            isLastUserMessage={index === lastUserMessageIndex}
-            conversation={conversation}
-            isTyping={false}
-            onReaction={onReaction}
-            onOpenChange={(isOpen) => {
-              setActiveMessageId(isOpen ? message.id : null);
-              setIsAnyReactionMenuOpen(isOpen);
-            }}
-            onReactionComplete={() => {
-              // Focus input after reaction for smooth typing flow
-              messageInputRef?.current?.focus();
-            }}
-            justSent={message.id === lastSentMessageId}
-          />
         </div>
-      ))}
-      {isTypingInThisConversation && (
-        <div ref={typingRef}>
-          <MessageBubble 
-            message={{
-              id: 'typing',
-              content: '',
-              sender: typingStatus.recipient,
-              timestamp: new Date().toLocaleTimeString()
-            }}
-            isTyping={true}
-            conversation={conversation}
-          />
-        </div>
-      )}
       </div>
     </div>
   );

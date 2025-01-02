@@ -172,7 +172,7 @@ export function MessageBubble({
           className={cn(
             "rounded-[18px] py-2 px-3 max-w-[80%] relative group",
             message.sender === "me"
-              ? "bg-[#0A7CFF] text-white"
+              ? "text-white bg-transparent"
               : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
             isTyping && "min-h-[32px] min-w-[60px]"
           )}
