@@ -68,34 +68,35 @@ export function MessageList({
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
       {/* Messages layer */}
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {messages.map((message, index, array) => (
           <div
             key={message.id}
             ref={index === array.length - 1 ? lastMessageRef : null}
-            className={cn(
-              "transition-opacity",
-              isAnyReactionMenuOpen &&
-                message.id !== activeMessageId &&
-                "opacity-40"
-            )}
+            className="relative"
           >
-            <MessageBubble
-              message={message}
-              isLastUserMessage={index === lastUserMessageIndex}
-              conversation={conversation}
-              isTyping={false}
-              onReaction={onReaction}
-              onOpenChange={(isOpen) => {
-                setActiveMessageId(isOpen ? message.id : null);
-                setIsAnyReactionMenuOpen(isOpen);
-              }}
-              onReactionComplete={() => {
-                // Focus input after reaction for smooth typing flow
-                messageInputRef?.current?.focus();
-              }}
-              justSent={message.id === lastSentMessageId}
-            />
+            {/* Overlay for non-active messages */}
+            {isAnyReactionMenuOpen && message.id !== activeMessageId && (
+              <div className="absolute inset-0 bg-white/60 dark:bg-black/60 pointer-events-none z-20" />
+            )}
+            <div className={cn(message.id === activeMessageId && "z-30")}>
+              <MessageBubble
+                message={message}
+                isLastUserMessage={index === lastUserMessageIndex}
+                conversation={conversation}
+                isTyping={false}
+                onReaction={onReaction}
+                onOpenChange={(isOpen) => {
+                  setActiveMessageId(isOpen ? message.id : null);
+                  setIsAnyReactionMenuOpen(isOpen);
+                }}
+                onReactionComplete={() => {
+                  // Focus input after reaction for smooth typing flow
+                  messageInputRef?.current?.focus();
+                }}
+                justSent={message.id === lastSentMessageId}
+              />
+            </div>
           </div>
         ))}
         {isTypingInThisConversation && (
