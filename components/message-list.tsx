@@ -6,31 +6,38 @@ import { cn } from "@/lib/utils";
 interface MessageListProps {
   messages: Message[];
   conversation?: Conversation;
-  typingStatus: { conversationId: string; recipient: string; } | null;
+  typingStatus: { conversationId: string; recipient: string } | null;
   conversationId: string | null;
   onReaction?: (messageId: string, reaction: Reaction) => void;
   messageInputRef?: React.RefObject<{ focus: () => void }>;
 }
 
-export function MessageList({ 
-  messages, 
-  conversation, 
-  typingStatus, 
+export function MessageList({
+  messages,
+  conversation,
+  typingStatus,
   conversationId,
   onReaction,
-  messageInputRef
+  messageInputRef,
 }: MessageListProps) {
-  console.log('MessageList rendering:', messages.map(m => ({ id: m.id, sender: m.sender })));
+  console.log(
+    "MessageList rendering:",
+    messages.map((m) => ({ id: m.id, sender: m.sender }))
+  );
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
-  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const lastUserMessageIndex = messages.findLastIndex(msg => msg.sender === "me");
+  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(
+    null
+  );
+  const lastUserMessageIndex = messages.findLastIndex(
+    (msg) => msg.sender === "me"
+  );
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<HTMLDivElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
 
-  const isTypingInThisConversation = typingStatus && 
-    typingStatus.conversationId === conversationId;
+  const isTypingInThisConversation =
+    typingStatus && typingStatus.conversationId === conversationId;
 
   useEffect(() => {
     // If someone is typing, scroll to typing indicator
@@ -59,22 +66,20 @@ export function MessageList({
   }, [messages]);
 
   return (
-    <div 
-      ref={messageListRef}
-      className="flex-1 flex flex-col-reverse bg-gradient-to-b from-[#43cdf6] to-[#0087fe]"
-    >
+    <div ref={messageListRef} className="flex-1 flex flex-col-reverse">
       {/* Messages layer */}
       <div className="flex-1">
         <div className="">
           {messages.map((message, index, array) => (
-            <div 
-              key={message.id} 
+            <div
+              key={message.id}
               ref={index === array.length - 1 ? lastMessageRef : null}
               className={cn(
                 "transition-opacity",
-                isAnyReactionMenuOpen && message.id !== activeMessageId && "opacity-40"
-              )}
-            >
+                isAnyReactionMenuOpen &&
+                  message.id !== activeMessageId &&
+                  "opacity-40"
+              )}>
               <MessageBubble
                 message={message}
                 isLastUserMessage={index === lastUserMessageIndex}
@@ -95,12 +100,12 @@ export function MessageList({
           ))}
           {isTypingInThisConversation && (
             <div ref={typingRef}>
-              <MessageBubble 
+              <MessageBubble
                 message={{
-                  id: 'typing',
-                  content: '',
+                  id: "typing",
+                  content: "",
                   sender: typingStatus.recipient,
-                  timestamp: new Date().toLocaleTimeString()
+                  timestamp: new Date().toLocaleTimeString(),
                 }}
                 isTyping={true}
                 conversation={conversation}

@@ -46,7 +46,8 @@ export function MessageBubble({
 
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
-  const showRecipientName = message.sender !== "me" && !isSystemMessage;
+  const isMe = message.sender === "me";
+  const showRecipientName = !isMe && !isSystemMessage;
   const recipientName = showRecipientName ? message.sender : null;
 
   // Map of reaction types to their Font Awesome icons
@@ -171,48 +172,36 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex w-full flex-col",
+        "flex w-full flex-col relative z-10"
         // Align messages based on sender
-        isSystemMessage
-          ? "items-center"
-          : message.sender === "me"
-          ? "items-end"
-          : "items-start"
-      )}
-    >
+      )}>
+      <div className="h-3 bg-background" />
+
       {/* Show recipient name for messages from others */}
       {recipientName && (
-        <div className="text-[10px] text-muted-foreground ml-4 mb-0.5 bg-background">
+        <div className="text-[10px] text-muted-foreground pl-4 pb-0.5 bg-background">
           {recipientName}
         </div>
       )}
 
-      {/* Message bubble container */}
-      {isSystemMessage ? (
-        <div
-          className={cn(
-            "rounded-[18px] py-2 px-3 max-w-[80%] relative",
-            "text-[12px] text-muted-foreground text-center whitespace-pre-line"
-          )}
-        >
-          {message.content}
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "group relative max-w-[75%] break-words",
-            message.sender === "me" ? "ml-auto" : "mr-auto",
-            isSystemMessage && "mx-auto max-w-[90%] text-center"
-          )}
-        >
-          {/* Message bubble */}
+      <div className="flex">
+        {isMe && <div className="flex-1 bg-background" />}
+        {/* Message bubble container */}
+        {isSystemMessage ? (
           <div
             className={cn(
-              "relative",
-              message.sender === "me" ? "ml-auto" : "mr-auto",
+              "rounded-[18px] py-2 px-3 max-w-[80%] relative bg-background",
+              "text-[12px] text-muted-foreground text-center whitespace-pre-line"
+            )}>
+            {message.content}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "group relative max-w-[75%] break-words flex-none",
               isSystemMessage
-                ? "bg-muted/50 rounded-lg"
-                : message.sender === "me"
+                ? "bg-muted/50 rounded-lg text-center"
+                : isMe
                 ? "border-[20px] border-solid border-r-[27.7px]"
                 : "border-[20px] border-solid border-l-[27.7px] bg-[#E5E6EA]",
               justSent && "animate-pop-in"
@@ -220,22 +209,19 @@ export function MessageBubble({
             style={
               !isSystemMessage
                 ? {
-                    borderImageSlice:
-                      message.sender === "me" ? "31 43 31 31" : "31 31 31 43",
+                    borderImageSlice: isMe ? "31 43 31 31" : "31 31 31 43",
                     borderImageSource: `url('${
-                      message.sender === "me" ? rightBubbleSvg : leftBubbleSvg
+                      isMe ? rightBubbleSvg : leftBubbleSvg
                     }')`,
                   }
                 : undefined
-            }
-          >
+            }>
             <div className="-m-2">
               {/* Reaction popup menu */}
               <Popover
                 open={isOpen}
                 modal={true}
-                onOpenChange={handleOpenChange}
-              >
+                onOpenChange={handleOpenChange}>
                 <PopoverTrigger asChild>
                   <div className="flex flex-col cursor-pointer">
                     <div className="text-sm">
@@ -260,11 +246,10 @@ export function MessageBubble({
                 {/* Reaction menu */}
                 <PopoverContent
                   className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
-                  align={message.sender === "me" ? "end" : "start"}
+                  align={isMe ? "end" : "start"}
                   alignOffset={-8}
                   side="top"
-                  sideOffset={10}
-                >
+                  sideOffset={10}>
                   {/* Reaction buttons */}
                   {Object.entries(reactionIcons).map(([type, icon]) => (
                     <button
@@ -277,8 +262,7 @@ export function MessageBubble({
                         isReactionActive(type as ReactionType)
                           ? "bg-[#0A7CFF] text-white scale-110"
                           : ""
-                      )}
-                    >
+                      )}>
                       <FontAwesomeIcon
                         icon={icon}
                         className="transition-transform duration-200"
@@ -293,9 +277,8 @@ export function MessageBubble({
                 <div
                   className={cn(
                     "absolute -top-4 flex",
-                    message.sender === "me" ? "-left-4" : "-right-4"
-                  )}
-                >
+                    isMe ? "-left-4" : "-right-4"
+                  )}>
                   {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
                   {[...message.reactions]
                     .sort(
@@ -315,8 +298,7 @@ export function MessageBubble({
                             "animate-scale-in",
                           index !== array.length - 1 && "-mr-7",
                           index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
-                        )}
-                      >
+                        )}>
                         <FontAwesomeIcon
                           icon={reactionIcons[reaction.type]}
                           className={cn(
@@ -333,20 +315,21 @@ export function MessageBubble({
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+        {!isSystemMessage && !isMe && <div className="flex-1 bg-background" />}
+      </div>
 
       {/* Show "Delivered" for last message from current user */}
-      {message.sender === "me" && isLastUserMessage && !isTyping && (
+      {isMe && isLastUserMessage && !isTyping && (
         <div
           className={cn(
-            "text-xs text-gray-500 mt-1 mr-1 bg-background",
+            "text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right",
             justSent && "animate-scale-in"
-          )}
-        >
+          )}>
           Delivered
         </div>
       )}
+      <div className="h-3 bg-background" />
     </div>
   );
 }
