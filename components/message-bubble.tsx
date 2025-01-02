@@ -295,7 +295,7 @@ export function MessageBubble({
                           "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
                           reaction.sender === "me"
                             ? "bg-[#0A7CFF]"
-                            : "bg-gray-100 dark:bg-[#404040]",
+                            : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
                           reaction.type === justAddedReactionType &&
                             "animate-scale-in",
                           index !== array.length - 1 && "-mr-7",

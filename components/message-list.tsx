@@ -66,53 +66,52 @@ export function MessageList({
   }, [messages]);
 
   return (
-    <div ref={messageListRef} className="flex-1 flex flex-col-reverse">
+    <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
       {/* Messages layer */}
       <div className="flex-1">
-        <div className="">
-          {messages.map((message, index, array) => (
-            <div
-              key={message.id}
-              ref={index === array.length - 1 ? lastMessageRef : null}
-              className={cn(
-                "transition-opacity",
-                isAnyReactionMenuOpen &&
-                  message.id !== activeMessageId &&
-                  "opacity-40"
-              )}>
-              <MessageBubble
-                message={message}
-                isLastUserMessage={index === lastUserMessageIndex}
-                conversation={conversation}
-                isTyping={false}
-                onReaction={onReaction}
-                onOpenChange={(isOpen) => {
-                  setActiveMessageId(isOpen ? message.id : null);
-                  setIsAnyReactionMenuOpen(isOpen);
-                }}
-                onReactionComplete={() => {
-                  // Focus input after reaction for smooth typing flow
-                  messageInputRef?.current?.focus();
-                }}
-                justSent={message.id === lastSentMessageId}
-              />
-            </div>
-          ))}
-          {isTypingInThisConversation && (
-            <div ref={typingRef}>
-              <MessageBubble
-                message={{
-                  id: "typing",
-                  content: "",
-                  sender: typingStatus.recipient,
-                  timestamp: new Date().toLocaleTimeString(),
-                }}
-                isTyping={true}
-                conversation={conversation}
-              />
-            </div>
-          )}
-        </div>
+        {messages.map((message, index, array) => (
+          <div
+            key={message.id}
+            ref={index === array.length - 1 ? lastMessageRef : null}
+            className={cn(
+              "transition-opacity",
+              isAnyReactionMenuOpen &&
+                message.id !== activeMessageId &&
+                "opacity-40"
+            )}
+          >
+            <MessageBubble
+              message={message}
+              isLastUserMessage={index === lastUserMessageIndex}
+              conversation={conversation}
+              isTyping={false}
+              onReaction={onReaction}
+              onOpenChange={(isOpen) => {
+                setActiveMessageId(isOpen ? message.id : null);
+                setIsAnyReactionMenuOpen(isOpen);
+              }}
+              onReactionComplete={() => {
+                // Focus input after reaction for smooth typing flow
+                messageInputRef?.current?.focus();
+              }}
+              justSent={message.id === lastSentMessageId}
+            />
+          </div>
+        ))}
+        {isTypingInThisConversation && (
+          <div ref={typingRef}>
+            <MessageBubble
+              message={{
+                id: "typing",
+                content: "",
+                sender: typingStatus.recipient,
+                timestamp: new Date().toLocaleTimeString(),
+              }}
+              isTyping={true}
+              conversation={conversation}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
