@@ -42,8 +42,8 @@ export function ConversationItem({
 }: ConversationItemProps) {
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipedConvo === conversation.id;
-  const { theme } = useTheme();
-  const effectiveTheme = theme === 'system' ? 'light' : theme;
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {

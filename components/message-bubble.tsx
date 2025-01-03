@@ -47,8 +47,8 @@ export function MessageBubble({
   const recipientName = showRecipientName ? message.sender : null;
 
   // Map of reaction types to their SVG paths for the menu
-  const { theme } = useTheme();
-  const effectiveTheme = theme === 'system' ? 'light' : theme;
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
     heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",

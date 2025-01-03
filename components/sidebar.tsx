@@ -44,8 +44,8 @@ export function Sidebar({
   isCommandMenuOpen,
   onScroll,
 }: SidebarProps) {
-  const { theme, setTheme } = useTheme();
-  const effectiveTheme = theme === 'system' ? 'light' : theme;
+  const { theme, systemTheme, setTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
@@ -156,7 +156,7 @@ export function Sidebar({
       // Theme toggle shortcut
       if (e.key === "t") {
         e.preventDefault();
-        setTheme(theme === "light" ? "dark" : "light");
+        setTheme(effectiveTheme === "light" ? "dark" : "light");
         return;
       }
 
@@ -360,7 +360,7 @@ export function Sidebar({
                                           <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center relative">
                                             <Image
                                               src={
-                                                theme === "dark"
+                                                effectiveTheme === "dark"
                                                   ? "/typing-dark.svg"
                                                   : "/typing-light.svg"
                                               }
@@ -434,7 +434,7 @@ export function Sidebar({
                                                             reaction.type,
                                                             reaction.sender ===
                                                               "me",
-                                                            theme
+                                                            effectiveTheme
                                                           )}')`,
                                                           backgroundSize:
                                                             "contain",
