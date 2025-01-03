@@ -170,17 +170,22 @@ export function MessageBubble({
   };
 
   const rightBubbleSvg =
-    effectiveTheme === "dark" ? "/right-bubble-dark.svg" : "/right-bubble-light.svg";
+    effectiveTheme === "dark"
+      ? "/right-bubble-dark.svg"
+      : "/right-bubble-light.svg";
   const leftBubbleSvg =
-    effectiveTheme === "dark" ? "/left-bubble-dark.svg" : "/left-bubble-light.svg";
+    effectiveTheme === "dark"
+      ? "/left-bubble-dark.svg"
+      : "/left-bubble-light.svg";
   const typingIndicatorSvg =
-    effectiveTheme === "dark" ? "/chat-typing-dark.svg" : "/chat-typing-light.svg";
+    effectiveTheme === "dark"
+      ? "/chat-typing-dark.svg"
+      : "/chat-typing-light.svg";
 
   const getReactionIconSvg = (
     messageFromMe: boolean,
     reactionType: ReactionType,
-    reactionFromMe: boolean,
-    theme: string | undefined
+    reactionFromMe: boolean
   ) => {
     const orientation = messageFromMe ? "left" : "right";
     const variant = reactionFromMe
@@ -364,8 +369,7 @@ export function MessageBubble({
                           backgroundImage: `url('${getReactionIconSvg(
                             isMe,
                             reaction.type,
-                            reaction.sender === "me",
-                            undefined
+                            reaction.sender === "me"
                           )}')`,
                           backgroundSize: "contain",
                           backgroundRepeat: "no-repeat",

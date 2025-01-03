@@ -84,8 +84,7 @@ export function Sidebar({
   const getReactionIconSvg = (
     messageFromMe: boolean,
     reactionType: string,
-    reactionFromMe: boolean,
-    theme: string | undefined
+    reactionFromMe: boolean
   ) => {
     const orientation = messageFromMe ? "left" : "right";
     const variant = reactionFromMe
@@ -370,15 +369,9 @@ export function Sidebar({
                                               className="scale-[1.2]"
                                             />
                                             <div className="absolute top-[42%] left-[36%] flex gap-[2px]">
-                                              <div
-                                                className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"
-                                              ></div>
-                                              <div
-                                                className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"
-                                              ></div>
-                                              <div
-                                                className="w-1 h-1 bg-current rounded-full animate-bounce"
-                                              ></div>
+                                              <div className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                              <div className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                              <div className="w-1 h-1 bg-current rounded-full animate-bounce"></div>
                                             </div>
                                           </div>
                                         </div>
@@ -433,8 +426,7 @@ export function Sidebar({
                                                               "me",
                                                             reaction.type,
                                                             reaction.sender ===
-                                                              "me",
-                                                            effectiveTheme
+                                                              "me"
                                                           )}')`,
                                                           backgroundSize:
                                                             "contain",
