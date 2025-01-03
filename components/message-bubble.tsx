@@ -7,16 +7,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHeart,
-  faThumbsUp,
-  faThumbsDown,
-  faFaceLaugh,
-  faExclamation,
-  faQuestion,
-} from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 
 // Props for the MessageBubble component
 interface MessageBubbleProps {
@@ -46,14 +38,25 @@ export function MessageBubble({
   const showRecipientName = !isMe && !isSystemMessage;
   const recipientName = showRecipientName ? message.sender : null;
 
-  // Map of reaction types to their Font Awesome icons
+  // Map of reaction types to their SVG paths for the menu
+  const { theme } = useTheme();
+  const menuReactionIcons = {
+    heart: theme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
+    like: theme === "light" ? "/like-gray.svg" : "/like-white.svg",
+    dislike: theme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
+    laugh: theme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
+    emphasize: theme === "light" ? "/emphasize-gray.svg" : "/emphasize-white.svg",
+    question: theme === "light" ? "/question-gray.svg" : "/question-white.svg",
+  };
+
+  // Map of reaction types to their SVG paths for displayed reactions
   const reactionIcons = {
-    heart: faHeart,
-    like: faThumbsUp,
-    dislike: faThumbsDown,
-    laugh: faFaceLaugh,
-    emphasize: faExclamation,
-    question: faQuestion,
+    heart: "/heart-pink.svg",
+    like: "/like-white.svg",
+    dislike: "/dislike-white.svg",
+    laugh: "/laugh-white.svg",
+    emphasize: "/emphasize-white.svg",
+    question: "/question-white.svg",
   };
 
   // State to control the Popover open state and animation
@@ -161,10 +164,9 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const { theme } = useTheme();
-
   const rightBubbleSvg = theme === 'dark' ? '/right-bubble-dark.svg' : '/right-bubble-light.svg';
   const leftBubbleSvg = theme === 'dark' ? '/left-bubble-dark.svg' : '/left-bubble-light.svg';
+  const leftReactionSvg = theme === 'dark' ? '/right-reaction-dark.svg' : '/right-reaction-light.svg';
 
   return (
     <div
@@ -246,9 +248,9 @@ export function MessageBubble({
                   align={isMe ? "end" : "start"}
                   alignOffset={-8}
                   side="top"
-                  sideOffset={10}>
+                  sideOffset={20}>
                   {/* Reaction buttons */}
-                  {Object.entries(reactionIcons).map(([type, icon]) => (
+                  {Object.entries(menuReactionIcons).map(([type, icon]) => (
                     <button
                       key={type}
                       onClick={() => {
@@ -257,12 +259,15 @@ export function MessageBubble({
                       className={cn(
                         "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
                         isReactionActive(type as ReactionType)
-                          ? "bg-[#0A7CFF] text-white scale-110"
+                          ? "bg-gradient-to-b from-[#43AEF6] to-[#0087fe] text-white scale-110"
                           : ""
                       )}>
-                      <FontAwesomeIcon
-                        icon={icon}
-                        className="transition-transform duration-200"
+                      <Image 
+                        src={isReactionActive(type as ReactionType) ? icon.replace("-gray", "-white").replace("-dark", "-white") : icon} 
+                        width={16} 
+                        height={16} 
+                        alt={`${type} reaction`}
+                        style={type === 'emphasize' || type === 'question' ? { transform: 'scale(0.7)' } : undefined} 
                       />
                     </button>
                   ))}
@@ -287,25 +292,27 @@ export function MessageBubble({
                       <div
                         key={`${reaction.type}-${index}`}
                         className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-sm border border-background",
-                          reaction.sender === "me"
-                            ? "bg-[#0A7CFF]"
-                            : "bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
+                          "w-8 h-8 flex items-center justify-center text-sm relative",
                           reaction.type === justAddedReactionType &&
                             "animate-scale-in",
                           index !== array.length - 1 && "-mr-7",
                           index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
-                        )}>
-                        <FontAwesomeIcon
-                          icon={reactionIcons[reaction.type]}
-                          className={cn(
-                            reaction.sender === "me"
-                              ? reaction.type === "heart"
-                                ? "text-[#FF69B4]"
-                                : "text-white"
-                              : "text-muted-foreground"
-                          )}
-                        />
+                        )}
+                        style={{
+                          backgroundImage: `url('${reaction.sender === "me" ? '/right-reaction.svg' : leftReactionSvg}')`,
+                          backgroundSize: 'contain',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'center'
+                        }}>
+                        <div className="absolute relative -top-0.5 -left-0.5">
+                          <Image 
+                            src={reactionIcons[reaction.type]} 
+                            width={12} 
+                            height={12} 
+                            alt={`${reaction.type} reaction`}
+                            style={reaction.type === 'emphasize' || reaction.type === 'question' ? { transform: 'scale(0.7)' } : undefined} 
+                          />
+                        </div>
                       </div>
                     ))}
                 </div>
