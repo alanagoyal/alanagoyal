@@ -43,6 +43,7 @@ export function ConversationItem({
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipedConvo === conversation.id;
   const { theme } = useTheme();
+  const effectiveTheme = theme === 'system' ? 'light' : theme;
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -175,7 +176,7 @@ export function ConversationItem({
                     src={
                       activeConversation === conversation.id
                         ? "/typing-blue.svg"
-                        : theme === "dark"
+                        : effectiveTheme === "dark"
                         ? "/typing-dark.svg"
                         : "/typing-light.svg"
                     }

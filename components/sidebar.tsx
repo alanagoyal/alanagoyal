@@ -45,6 +45,7 @@ export function Sidebar({
   onScroll,
 }: SidebarProps) {
   const { theme, setTheme } = useTheme();
+  const effectiveTheme = theme === 'system' ? 'light' : theme;
 
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
@@ -89,7 +90,7 @@ export function Sidebar({
     const orientation = messageFromMe ? "left" : "right";
     const variant = reactionFromMe
       ? "blue"
-      : theme === "dark"
+      : effectiveTheme === "dark"
       ? "dark"
       : "light";
     return `/${orientation}-${variant}-${reactionType}.svg`;
