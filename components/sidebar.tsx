@@ -12,15 +12,7 @@ import { ConversationItem } from "./conversation-item";
 import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHeart,
-  faThumbsUp,
-  faThumbsDown,
-  faFaceLaugh,
-  faExclamation,
-  faQuestion,
-} from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -52,26 +44,36 @@ export function Sidebar({
   isCommandMenuOpen,
   onScroll,
 }: SidebarProps) {
-  const { theme, setTheme } = useTheme();
+  const { theme, systemTheme, setTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
+  const rightReactionSvg =
+    effectiveTheme === "dark"
+      ? "/right-reaction-dark.svg"
+      : "/right-reaction-light.svg";
+  const leftReactionSvg =
+    effectiveTheme === "dark"
+      ? "/left-reaction-light.svg"
+      : "/left-reaction-light.svg";
+
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return "";
 
     try {
       const date = parseISO(timestamp);
-      
+
       if (isToday(date)) {
         return format(date, "h:mm a"); // e.g. "12:40 AM"
       }
-      
+
       if (isYesterday(date)) {
         return "Yesterday";
       }
-      
+
       if (isThisWeek(date)) {
         return format(date, "EEEE"); // e.g. "Sunday"
       }
-      
+
       return format(date, "M/d/yy"); // e.g. "12/21/24"
     } catch (error) {
       console.error("Error formatting time:", error, timestamp);
@@ -182,16 +184,26 @@ export function Sidebar({
         // If current conversation is not in filtered results, select the first one
         if (currentIndex === -1) {
           onSelectConversation(filteredConversations[0].id);
-          const firstConvoButton = document.querySelector(`button[aria-current="true"]`);
-          firstConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const firstConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          firstConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
           return;
         }
 
         const nextIndex = (currentIndex + 1) % filteredConversations.length;
         onSelectConversation(filteredConversations[nextIndex].id);
         setTimeout(() => {
-          const nextConvoButton = document.querySelector(`button[aria-current="true"]`);
-          nextConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const nextConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          nextConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
         }, 0);
       } else if (
         (e.key === "ArrowUp" || e.key === "k") &&
@@ -207,8 +219,13 @@ export function Sidebar({
           onSelectConversation(
             filteredConversations[filteredConversations.length - 1].id
           );
-          const lastConvoButton = document.querySelector(`button[aria-current="true"]`);
-          lastConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const lastConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          lastConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
           return;
         }
 
@@ -218,8 +235,13 @@ export function Sidebar({
             : currentIndex - 1;
         onSelectConversation(filteredConversations[nextIndex].id);
         setTimeout(() => {
-          const prevConvoButton = document.querySelector(`button[aria-current="true"]`);
-          prevConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const prevConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          prevConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
         }, 0);
       }
       // Action shortcuts
@@ -254,6 +276,15 @@ export function Sidebar({
     theme,
   ]);
 
+  const reactionIcons = {
+    heart: "/heart-pink.svg",
+    like: "/like-white.svg",
+    dislike: "/dislike-white.svg",
+    laugh: "/laugh-white.svg",
+    emphasize: "/emphasize-white.svg",
+    question: "/question-white.svg",
+  };
+
   return (
     <div className="flex flex-col h-full bg-muted">
       {children}
@@ -262,7 +293,7 @@ export function Sidebar({
           className="h-full"
           onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
             const viewport = e.currentTarget.querySelector(
-              '[data-radix-scroll-area-viewport]'
+              "[data-radix-scroll-area-viewport]"
             );
             if (viewport) {
               onScroll?.(viewport.scrollTop > 0);
@@ -288,7 +319,8 @@ export function Sidebar({
                     <div className="p-2">
                       <div
                         className={`flex flex-wrap gap-2 ${
-                          filteredConversations.filter((c) => c.pinned).length <= 2
+                          filteredConversations.filter((c) => c.pinned)
+                            .length <= 2
                             ? "justify-center"
                             : ""
                         }`}
@@ -338,27 +370,19 @@ export function Sidebar({
                                         </div>
                                       ) : conversation.unreadCount > 0 ? (
                                         (() => {
-                                          const lastMessage = conversation.messages
-                                            .filter(
-                                              (message) =>
-                                                message.sender !== "system"
-                                            )
-                                            .slice(-1)[0];
+                                          const lastMessage =
+                                            conversation.messages
+                                              .filter(
+                                                (message) =>
+                                                  message.sender !== "system"
+                                              )
+                                              .slice(-1)[0];
 
                                           if (
                                             lastMessage?.reactions &&
                                             lastMessage.reactions.length > 0 &&
                                             lastMessage.sender !== "me"
                                           ) {
-                                            const reactionIcons = {
-                                              heart: faHeart,
-                                              like: faThumbsUp,
-                                              dislike: faThumbsDown,
-                                              laugh: faFaceLaugh,
-                                              emphasize: faExclamation,
-                                              question: faQuestion,
-                                            };
-
                                             return (
                                               <div className="absolute -top-4 -right-4 flex z-30">
                                                 {[...lastMessage.reactions]
@@ -372,39 +396,64 @@ export function Sidebar({
                                                       ).getTime()
                                                   )
                                                   .slice(0, 2)
-                                                  .map((reaction, index, array) => (
-                                                    <div
-                                                      key={`${reaction.type}-${index}`}
-                                                      className={cn(
-                                                        "w-10 h-10 rounded-full flex items-center justify-center text-base",
-                                                        reaction.sender === "me"
-                                                          ? "bg-[#0A7CFF]"
-                                                          : "bg-gray-100 dark:bg-[#404040]",
-                                                        index !==
-                                                          array.length - 1 &&
-                                                          "-mr-2",
-                                                        index === 0
-                                                          ? "z-30"
-                                                          : "z-20"
-                                                      )}
-                                                    >
-                                                      <FontAwesomeIcon
-                                                        icon={
-                                                          reactionIcons[
-                                                            reaction.type
-                                                          ]
-                                                        }
+                                                  .map(
+                                                    (
+                                                      reaction,
+                                                      index,
+                                                      array
+                                                    ) => (
+                                                      <div
+                                                        key={`${reaction.type}-${index}`}
                                                         className={cn(
-                                                          reaction.sender === "me"
-                                                            ? reaction.type ===
-                                                              "heart"
-                                                              ? "text-[#FF69B4]"
-                                                              : "text-white"
-                                                            : "text-muted-foreground"
+                                                          "w-10 h-10 flex items-center justify-center text-base relative",
+                                                          index !==
+                                                            array.length - 1 &&
+                                                            "-mr-2",
+                                                          index === 0
+                                                            ? "z-30"
+                                                            : "z-20"
                                                         )}
-                                                      />
-                                                    </div>
-                                                  ))}
+                                                        style={{
+                                                          backgroundImage: `url('${
+                                                            reaction.sender ===
+                                                            "me"
+                                                              ? "/right-reaction.svg"
+                                                              : leftReactionSvg
+                                                          }')`,
+                                                          backgroundSize:
+                                                            "contain",
+                                                          backgroundRepeat:
+                                                            "no-repeat",
+                                                          backgroundPosition:
+                                                            "center",
+                                                        }}
+                                                      >
+                                                        <div className="absolute relative -top-1 -left-1">
+                                                          <Image
+                                                            src={
+                                                              reactionIcons[
+                                                                reaction.type
+                                                              ]
+                                                            }
+                                                            alt={reaction.type}
+                                                            width={16}
+                                                            height={16}
+                                                            style={
+                                                              reaction.type ===
+                                                                "emphasize" ||
+                                                              reaction.type ===
+                                                                "question"
+                                                                ? {
+                                                                    transform:
+                                                                      "scale(0.7)",
+                                                                  }
+                                                                : undefined
+                                                            }
+                                                          />
+                                                        </div>
+                                                      </div>
+                                                    )
+                                                  )}
                                               </div>
                                             );
                                           } else if (
@@ -433,7 +482,9 @@ export function Sidebar({
                                       <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
                                         {conversation.recipients[0].avatar ? (
                                           <img
-                                            src={conversation.recipients[0].avatar}
+                                            src={
+                                              conversation.recipients[0].avatar
+                                            }
                                             alt=""
                                             className="w-full h-full object-cover"
                                           />
@@ -475,7 +526,9 @@ export function Sidebar({
                                             ? { ...conv, pinned: false }
                                             : conv
                                         );
-                                      onUpdateConversation(updatedConversations);
+                                      onUpdateConversation(
+                                        updatedConversations
+                                      );
                                     }}
                                   >
                                     <span>Unpin</span>
@@ -533,7 +586,9 @@ export function Sidebar({
                           getInitials={getInitials}
                           isMobileView={isMobileView}
                           showDivider={
-                            !isActive && !isNextActive && index !== array.length - 1
+                            !isActive &&
+                            !isNextActive &&
+                            index !== array.length - 1
                           }
                           openSwipedConvo={openSwipedConvo}
                           setOpenSwipedConvo={setOpenSwipedConvo}
