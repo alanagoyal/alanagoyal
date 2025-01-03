@@ -47,19 +47,20 @@ export function MessageBubble({
   const recipientName = showRecipientName ? message.sender : null;
 
   // Map of reaction types to their SVG paths for the menu
-  const { theme } = useTheme();
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
   const menuReactionIcons = {
-    heart: theme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
-    like: theme === "light" ? "/like-gray.svg" : "/like-white.svg",
+    heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
+    like: effectiveTheme === "light" ? "/like-gray.svg" : "/like-white.svg",
     dislike:
-      theme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
-    laugh: theme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
+      effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
+    laugh: effectiveTheme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
     emphasize:
-      theme === "light"
+      effectiveTheme === "light"
         ? "/emphasize-gray.svg"
         : "/emphasize-white.svg",
     question:
-      theme === "light" ? "/question-gray.svg" : "/question-white.svg",
+      effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
   };
 
   // State to control the Popover open state and animation
@@ -167,9 +168,12 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg = theme === "dark" ? "/right-bubble-dark.svg" : "/right-bubble-light.svg";
-  const leftBubbleSvg = theme === "dark" ? "/left-bubble-dark.svg" : "/left-bubble-light.svg";
-  const typingIndicatorSvg = theme === "dark" ? "/chat-typing-dark.svg" : "/chat-typing-light.svg";
+  const rightBubbleSvg =
+    effectiveTheme === "dark" ? "/right-bubble-dark.svg" : "/right-bubble-light.svg";
+  const leftBubbleSvg =
+    effectiveTheme === "dark" ? "/left-bubble-dark.svg" : "/left-bubble-light.svg";
+  const typingIndicatorSvg =
+    effectiveTheme === "dark" ? "/chat-typing-dark.svg" : "/chat-typing-light.svg";
 
   const getReactionIconSvg = (
     messageFromMe: boolean,
@@ -177,8 +181,12 @@ export function MessageBubble({
     reactionFromMe: boolean,
     theme: string | undefined
   ) => {
-    const orientation = messageFromMe ? 'left' : 'right';
-    const variant = reactionFromMe ? 'blue' : (theme === 'dark' ? 'dark' : 'light');
+    const orientation = messageFromMe ? "left" : "right";
+    const variant = reactionFromMe
+      ? "blue"
+      : effectiveTheme === "dark"
+      ? "dark"
+      : "light";
     return `/${orientation}-${variant}-${reactionType}.svg`;
   };
 
@@ -362,9 +370,7 @@ export function MessageBubble({
                           backgroundRepeat: "no-repeat",
                           backgroundPosition: "center",
                         }}
-                      >
-                  
-                      </div>
+                      ></div>
                     ))}
                 </div>
               )}
