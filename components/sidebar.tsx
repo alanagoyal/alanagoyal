@@ -13,6 +13,7 @@ import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -355,12 +356,29 @@ export function Sidebar({
                                         conversation.id &&
                                       activeConversation !== conversation.id ? (
                                         <div className="absolute -top-4 -right-4 z-30">
-                                          <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100">
-                                            <span className="typing-indicator scale-[0.6]">
-                                              <span className="dot"></span>
-                                              <span className="dot"></span>
-                                              <span className="dot"></span>
-                                            </span>
+                                          <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center relative">
+                                            <Image
+                                              src={
+                                                theme === "dark"
+                                                  ? "/typing-dark.svg"
+                                                  : "/typing-light.svg"
+                                              }
+                                              alt="Typing indicator"
+                                              width={32}
+                                              height={8}
+                                              className="scale-[1.2]"
+                                            />
+                                            <div className="absolute top-[42%] left-[36%] flex gap-[2px]">
+                                              <div
+                                                className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"
+                                              ></div>
+                                              <div
+                                                className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"
+                                              ></div>
+                                              <div
+                                                className="w-1 h-1 bg-current rounded-full animate-bounce"
+                                              ></div>
+                                            </div>
                                           </div>
                                         </div>
                                       ) : conversation.unreadCount > 0 ? (
