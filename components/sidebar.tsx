@@ -12,7 +12,6 @@ import { ConversationItem } from "./conversation-item";
 import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -44,12 +43,7 @@ export function Sidebar({
   isCommandMenuOpen,
   onScroll,
 }: SidebarProps) {
-  const { theme, systemTheme, setTheme } = useTheme();
-  const effectiveTheme = theme === "system" ? systemTheme : theme;
-  const leftReactionSvg =
-    effectiveTheme === "dark"
-      ? "/left-reaction-light.svg"
-      : "/left-reaction-light.svg";
+  const { theme, setTheme } = useTheme();
 
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
@@ -83,6 +77,21 @@ export function Sidebar({
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
     return name[0].toUpperCase();
+  };
+
+  const getReactionIconSvg = (
+    messageFromMe: boolean,
+    reactionType: string,
+    reactionFromMe: boolean,
+    theme: string | undefined
+  ) => {
+    const orientation = messageFromMe ? "left" : "right";
+    const variant = reactionFromMe
+      ? "blue"
+      : theme === "dark"
+      ? "dark"
+      : "light";
+    return `/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -269,17 +278,7 @@ export function Sidebar({
     onUpdateConversation,
     onDeleteConversation,
     isCommandMenuOpen,
-    theme,
   ]);
-
-  const reactionIcons = {
-    heart: "/heart-pink.svg",
-    like: "/like-white.svg",
-    dislike: "/dislike-white.svg",
-    laugh: "/laugh-white.svg",
-    emphasize: "/emphasize-white.svg",
-    question: "/question-white.svg",
-  };
 
   return (
     <div className="flex flex-col h-full bg-muted">
@@ -380,7 +379,7 @@ export function Sidebar({
                                             lastMessage.sender !== "me"
                                           ) {
                                             return (
-                                              <div className="absolute -top-4 -right-4 flex z-30">
+                                              <div className="absolute -top-3 -right-3 flex z-30">
                                                 {[...lastMessage.reactions]
                                                   .sort(
                                                     (a, b) =>
@@ -401,7 +400,7 @@ export function Sidebar({
                                                       <div
                                                         key={`${reaction.type}-${index}`}
                                                         className={cn(
-                                                          "w-10 h-10 flex items-center justify-center text-base relative",
+                                                          "w-8 h-8 flex items-center justify-center text-base relative",
                                                           index !==
                                                             array.length - 1 &&
                                                             "-mr-2",
@@ -410,12 +409,14 @@ export function Sidebar({
                                                             : "z-20"
                                                         )}
                                                         style={{
-                                                          backgroundImage: `url('${
+                                                          backgroundImage: `url('${getReactionIconSvg(
+                                                            lastMessage.sender ===
+                                                              "me",
+                                                            reaction.type,
                                                             reaction.sender ===
-                                                            "me"
-                                                              ? "/right-reaction.svg"
-                                                              : leftReactionSvg
-                                                          }')`,
+                                                              "me",
+                                                            theme
+                                                          )}')`,
                                                           backgroundSize:
                                                             "contain",
                                                           backgroundRepeat:
@@ -423,31 +424,7 @@ export function Sidebar({
                                                           backgroundPosition:
                                                             "center",
                                                         }}
-                                                      >
-                                                        <div className="absolute relative -top-1 -left-1">
-                                                          <Image
-                                                            src={
-                                                              reactionIcons[
-                                                                reaction.type
-                                                              ]
-                                                            }
-                                                            alt={reaction.type}
-                                                            width={16}
-                                                            height={16}
-                                                            style={
-                                                              reaction.type ===
-                                                                "emphasize" ||
-                                                              reaction.type ===
-                                                                "question"
-                                                                ? {
-                                                                    transform:
-                                                                      "scale(0.7)",
-                                                                  }
-                                                                : undefined
-                                                            }
-                                                          />
-                                                        </div>
-                                                      </div>
+                                                      ></div>
                                                     )
                                                   )}
                                               </div>

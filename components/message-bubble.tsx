@@ -47,30 +47,19 @@ export function MessageBubble({
   const recipientName = showRecipientName ? message.sender : null;
 
   // Map of reaction types to their SVG paths for the menu
-  const { theme, systemTheme } = useTheme();
-  const effectiveTheme = theme === "system" ? systemTheme : theme;
+  const { theme } = useTheme();
   const menuReactionIcons = {
-    heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
-    like: effectiveTheme === "light" ? "/like-gray.svg" : "/like-white.svg",
+    heart: theme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
+    like: theme === "light" ? "/like-gray.svg" : "/like-white.svg",
     dislike:
-      effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
-    laugh: effectiveTheme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
+      theme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
+    laugh: theme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
     emphasize:
-      effectiveTheme === "light"
+      theme === "light"
         ? "/emphasize-gray.svg"
         : "/emphasize-white.svg",
     question:
-      effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
-  };
-
-  // Map of reaction types to their SVG paths for displayed reactions
-  const reactionIcons = {
-    heart: "/heart-pink.svg",
-    like: "/like-white.svg",
-    dislike: "/dislike-white.svg",
-    laugh: "/laugh-white.svg",
-    emphasize: "/emphasize-white.svg",
-    question: "/question-white.svg",
+      theme === "light" ? "/question-gray.svg" : "/question-white.svg",
   };
 
   // State to control the Popover open state and animation
@@ -178,20 +167,21 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg =
-    effectiveTheme === "dark"
-      ? "/right-bubble-dark.svg"
-      : "/right-bubble-light.svg";
-  const leftBubbleSvg =
-    effectiveTheme === "dark"
-      ? "/left-bubble-dark.svg"
-      : "/left-bubble-light.svg";
-  const leftReactionSvg =
-    effectiveTheme === "dark"
-      ? "/right-reaction-dark.svg"
-      : "/right-reaction-light.svg";
-  const typingIndicatorSvg =
-    effectiveTheme === "dark" ? "/typing-dark.svg" : "/typing-light.svg";
+  const rightBubbleSvg = theme === "dark" ? "/right-bubble-dark.svg" : "/right-bubble-light.svg";
+  const leftBubbleSvg = theme === "dark" ? "/left-bubble-dark.svg" : "/left-bubble-light.svg";
+  const leftReactionSvg = theme === "dark" ? "/right-reaction-dark.svg" : "/right-reaction-light.svg";
+  const typingIndicatorSvg = theme === "dark" ? "/typing-dark.svg" : "/typing-light.svg";
+
+  const getReactionIconSvg = (
+    messageFromMe: boolean,
+    reactionType: ReactionType,
+    reactionFromMe: boolean,
+    theme: string | undefined
+  ) => {
+    const orientation = messageFromMe ? 'left' : 'right';
+    const variant = reactionFromMe ? 'blue' : (theme === 'dark' ? 'dark' : 'light');
+    return `/${orientation}-${variant}-${reactionType}.svg`;
+  };
 
   return (
     <div
@@ -311,7 +301,7 @@ export function MessageBubble({
                       className={cn(
                         "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
                         isReactionActive(type as ReactionType)
-                          ? "bg-gradient-to-b from-[#43AEF6] to-[#0087fe] text-white scale-110"
+                          ? "bg-[#0087fe] text-white scale-110"
                           : ""
                       )}
                     >
@@ -363,30 +353,18 @@ export function MessageBubble({
                           index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
                         )}
                         style={{
-                          backgroundImage: `url('${
-                            reaction.sender === "me"
-                              ? "/right-reaction.svg"
-                              : leftReactionSvg
-                          }')`,
+                          backgroundImage: `url('${getReactionIconSvg(
+                            isMe,
+                            reaction.type,
+                            reaction.sender === "me",
+                            theme
+                          )}')`,
                           backgroundSize: "contain",
                           backgroundRepeat: "no-repeat",
                           backgroundPosition: "center",
                         }}
                       >
-                        <div className="absolute relative -top-0.5 -left-0.5">
-                          <Image
-                            src={reactionIcons[reaction.type]}
-                            width={12}
-                            height={12}
-                            alt={`${reaction.type} reaction`}
-                            style={
-                              reaction.type === "emphasize" ||
-                              reaction.type === "question"
-                                ? { transform: "scale(0.7)" }
-                                : undefined
-                            }
-                          />
-                        </div>
+                  
                       </div>
                     ))}
                 </div>
