@@ -325,11 +325,11 @@ export function MessageBubble({
       {/* Show "Delivered" for last message from current user */}
       {isMe && isLastUserMessage && !isTyping && (
         <div
-          className={cn(
-            "text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right",
-            justSent && "animate-scale-in"
-          )}>
-          Delivered
+          className="text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right"
+        >
+          <span className={cn(justSent && "animate-scale-in")}>
+            Delivered
+          </span>
         </div>
       )}
       <div className="h-3 bg-background" />
