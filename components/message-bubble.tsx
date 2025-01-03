@@ -22,6 +22,14 @@ interface MessageBubbleProps {
   justSent?: boolean;
 }
 
+const typingAnimation = `
+@keyframes blink {
+  0% { opacity: 0.3; }
+  20% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+`;
+
 export function MessageBubble({
   message,
   isLastUserMessage,
@@ -44,10 +52,15 @@ export function MessageBubble({
   const menuReactionIcons = {
     heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
     like: effectiveTheme === "light" ? "/like-gray.svg" : "/like-white.svg",
-    dislike: effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
+    dislike:
+      effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
     laugh: effectiveTheme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
-    emphasize: effectiveTheme === "light" ? "/emphasize-gray.svg" : "/emphasize-white.svg",
-    question: effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
+    emphasize:
+      effectiveTheme === "light"
+        ? "/emphasize-gray.svg"
+        : "/emphasize-white.svg",
+    question:
+      effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
   };
 
   // Map of reaction types to their SVG paths for displayed reactions
@@ -165,16 +178,28 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg = effectiveTheme === 'dark' ? '/right-bubble-dark.svg' : '/right-bubble-light.svg';
-  const leftBubbleSvg = effectiveTheme === 'dark' ? '/left-bubble-dark.svg' : '/left-bubble-light.svg';
-  const leftReactionSvg = effectiveTheme === 'dark' ? '/right-reaction-dark.svg' : '/right-reaction-light.svg';
+  const rightBubbleSvg =
+    effectiveTheme === "dark"
+      ? "/right-bubble-dark.svg"
+      : "/right-bubble-light.svg";
+  const leftBubbleSvg =
+    effectiveTheme === "dark"
+      ? "/left-bubble-dark.svg"
+      : "/left-bubble-light.svg";
+  const leftReactionSvg =
+    effectiveTheme === "dark"
+      ? "/right-reaction-dark.svg"
+      : "/right-reaction-light.svg";
+  const typingIndicatorSvg =
+    effectiveTheme === "dark" ? "/typing-dark.svg" : "/typing-light.svg";
 
   return (
     <div
       className={cn(
         "flex w-full flex-col relative z-10"
         // Align messages based on sender
-      )}>
+      )}
+    >
       <div className="h-3 bg-background" />
 
       {/* Show recipient name for messages from others */}
@@ -192,7 +217,8 @@ export function MessageBubble({
             className={cn(
               "w-full flex justify-center py-2 px-3",
               isSystemMessage && "bg-background"
-            )}>
+            )}
+          >
             <div className="text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]">
               {message.content}
             </div>
@@ -204,34 +230,58 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] -mr-[0.5px] text-white"
-                : "border-[20px] border-solid border-l-[27.7px] -ml-[0.5px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
+                ? "border-[20px] border-solid border-r-[27.7px] text-white"
+                : isTyping
+                ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
               justSent && "animate-pop-in"
             )}
             style={
               !isSystemMessage
                 ? {
                     borderImageSlice: isMe ? "31 43 31 31" : "31 31 31 43",
-                    borderImageSource: `url('${isMe ? rightBubbleSvg : leftBubbleSvg}')`,
+                    borderImageSource: `url('${
+                      isMe
+                        ? rightBubbleSvg
+                        : isTyping
+                        ? typingIndicatorSvg
+                        : leftBubbleSvg
+                    }')`,
                   }
                 : undefined
-            }>
+            }
+          >
             <div className="-m-2">
               {/* Reaction popup menu */}
               <Popover
                 open={isOpen}
                 modal={true}
-                onOpenChange={handleOpenChange}>
+                onOpenChange={handleOpenChange}
+              >
                 <PopoverTrigger asChild>
                   <div className="flex flex-col cursor-pointer">
                     <div className="text-sm">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
-                        <span className="typing-indicator">
-                          <span className="dot"></span>
-                          <span className="dot"></span>
-                          <span className="dot"></span>
-                        </span>
+                        <div className="w-12 h-4 flex items-center justify-center gap-1">
+                          <style>{typingAnimation}</style>
+                          <div
+                            className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
+                            style={{ animation: "blink 1.4s infinite linear" }}
+                          />
+                          <div
+                            className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
+                            style={{
+                              animation: "blink 1.4s infinite linear 0.2s",
+                            }}
+                          />
+                          <div
+                            className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
+                            style={{
+                              animation: "blink 1.4s infinite linear 0.4s",
+                            }}
+                          />
+                        </div>
                       ) : (
                         highlightRecipientNames(
                           message.content,
@@ -249,7 +299,8 @@ export function MessageBubble({
                   align={isMe ? "end" : "start"}
                   alignOffset={-8}
                   side="top"
-                  sideOffset={20}>
+                  sideOffset={20}
+                >
                   {/* Reaction buttons */}
                   {Object.entries(menuReactionIcons).map(([type, icon]) => (
                     <button
@@ -262,13 +313,24 @@ export function MessageBubble({
                         isReactionActive(type as ReactionType)
                           ? "bg-gradient-to-b from-[#43AEF6] to-[#0087fe] text-white scale-110"
                           : ""
-                      )}>
-                      <Image 
-                        src={isReactionActive(type as ReactionType) ? icon.replace("-gray", "-white").replace("-dark", "-white") : icon} 
-                        width={16} 
-                        height={16} 
+                      )}
+                    >
+                      <Image
+                        src={
+                          isReactionActive(type as ReactionType)
+                            ? icon
+                                .replace("-gray", "-white")
+                                .replace("-dark", "-white")
+                            : icon
+                        }
+                        width={16}
+                        height={16}
                         alt={`${type} reaction`}
-                        style={type === 'emphasize' || type === 'question' ? { transform: 'scale(0.7)' } : undefined} 
+                        style={
+                          type === "emphasize" || type === "question"
+                            ? { transform: "scale(0.7)" }
+                            : undefined
+                        }
                       />
                     </button>
                   ))}
@@ -281,7 +343,8 @@ export function MessageBubble({
                   className={cn(
                     "absolute -top-8 flex",
                     isMe ? "-left-8" : "-right-8"
-                  )}>
+                  )}
+                >
                   {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
                   {[...message.reactions]
                     .sort(
@@ -300,18 +363,28 @@ export function MessageBubble({
                           index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
                         )}
                         style={{
-                          backgroundImage: `url('${reaction.sender === "me" ? '/right-reaction.svg' : leftReactionSvg}')`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center'
-                        }}>
+                          backgroundImage: `url('${
+                            reaction.sender === "me"
+                              ? "/right-reaction.svg"
+                              : leftReactionSvg
+                          }')`,
+                          backgroundSize: "contain",
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "center",
+                        }}
+                      >
                         <div className="absolute relative -top-0.5 -left-0.5">
-                          <Image 
-                            src={reactionIcons[reaction.type]} 
-                            width={12} 
-                            height={12} 
+                          <Image
+                            src={reactionIcons[reaction.type]}
+                            width={12}
+                            height={12}
                             alt={`${reaction.type} reaction`}
-                            style={reaction.type === 'emphasize' || reaction.type === 'question' ? { transform: 'scale(0.7)' } : undefined} 
+                            style={
+                              reaction.type === "emphasize" ||
+                              reaction.type === "question"
+                                ? { transform: "scale(0.7)" }
+                                : undefined
+                            }
                           />
                         </div>
                       </div>
@@ -325,12 +398,8 @@ export function MessageBubble({
       </div>
       {/* Show "Delivered" for last message from current user */}
       {isMe && isLastUserMessage && !isTyping && (
-        <div
-          className="text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right"
-        >
-          <span className={cn(justSent && "animate-scale-in")}>
-            Delivered
-          </span>
+        <div className="text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right">
+          <span className={cn(justSent && "animate-scale-in")}>Delivered</span>
         </div>
       )}
       <div className="h-3 bg-background" />
