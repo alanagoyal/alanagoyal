@@ -39,14 +39,15 @@ export function MessageBubble({
   const recipientName = showRecipientName ? message.sender : null;
 
   // Map of reaction types to their SVG paths for the menu
-  const { theme } = useTheme();
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
   const menuReactionIcons = {
-    heart: theme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
-    like: theme === "light" ? "/like-gray.svg" : "/like-white.svg",
-    dislike: theme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
-    laugh: theme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
-    emphasize: theme === "light" ? "/emphasize-gray.svg" : "/emphasize-white.svg",
-    question: theme === "light" ? "/question-gray.svg" : "/question-white.svg",
+    heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
+    like: effectiveTheme === "light" ? "/like-gray.svg" : "/like-white.svg",
+    dislike: effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
+    laugh: effectiveTheme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
+    emphasize: effectiveTheme === "light" ? "/emphasize-gray.svg" : "/emphasize-white.svg",
+    question: effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
   };
 
   // Map of reaction types to their SVG paths for displayed reactions
@@ -164,9 +165,9 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg = theme === 'dark' ? '/right-bubble-dark.svg' : '/right-bubble-light.svg';
-  const leftBubbleSvg = theme === 'dark' ? '/left-bubble-dark.svg' : '/left-bubble-light.svg';
-  const leftReactionSvg = theme === 'dark' ? '/right-reaction-dark.svg' : '/right-reaction-light.svg';
+  const rightBubbleSvg = effectiveTheme === 'dark' ? '/right-bubble-dark.svg' : '/right-bubble-light.svg';
+  const leftBubbleSvg = effectiveTheme === 'dark' ? '/left-bubble-dark.svg' : '/left-bubble-light.svg';
+  const leftReactionSvg = effectiveTheme === 'dark' ? '/right-reaction-dark.svg' : '/right-reaction-light.svg';
 
   return (
     <div
