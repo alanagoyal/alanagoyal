@@ -169,7 +169,6 @@ export function MessageBubble({
 
   const rightBubbleSvg = theme === "dark" ? "/right-bubble-dark.svg" : "/right-bubble-light.svg";
   const leftBubbleSvg = theme === "dark" ? "/left-bubble-dark.svg" : "/left-bubble-light.svg";
-  const leftReactionSvg = theme === "dark" ? "/right-reaction-dark.svg" : "/right-reaction-light.svg";
   const typingIndicatorSvg = theme === "dark" ? "/typing-dark.svg" : "/typing-light.svg";
 
   const getReactionIconSvg = (
