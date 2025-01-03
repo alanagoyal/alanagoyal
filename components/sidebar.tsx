@@ -46,10 +46,6 @@ export function Sidebar({
 }: SidebarProps) {
   const { theme, systemTheme, setTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
-  const rightReactionSvg =
-    effectiveTheme === "dark"
-      ? "/right-reaction-dark.svg"
-      : "/right-reaction-light.svg";
   const leftReactionSvg =
     effectiveTheme === "dark"
       ? "/left-reaction-light.svg"
