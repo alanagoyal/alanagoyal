@@ -158,7 +158,7 @@ export function ChatArea({
             {/* Gradient background */}
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(#43cdf6,#0087fe)" }}
+              style={{ background: "linear-gradient(#43CDF6,#0A7CFF)" }}
             />
             <div className="relative h-full flex">
               <div className="w-2 bg-background" />

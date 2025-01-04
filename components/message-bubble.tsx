@@ -51,17 +51,12 @@ export function MessageBubble({
   const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
-    heart: effectiveTheme === "light" ? "/heart-gray.svg" : "/heart-white.svg",
-    like: effectiveTheme === "light" ? "/like-gray.svg" : "/like-white.svg",
-    dislike:
-      effectiveTheme === "light" ? "/dislike-gray.svg" : "/dislike-white.svg",
-    laugh: effectiveTheme === "light" ? "/laugh-gray.svg" : "/laugh-white.svg",
-    emphasize:
-      effectiveTheme === "light"
-        ? "/emphasize-gray.svg"
-        : "/emphasize-white.svg",
-    question:
-      effectiveTheme === "light" ? "/question-gray.svg" : "/question-white.svg",
+    heart: "/heart-gray.svg",
+    like: "/like-gray.svg",
+    dislike: "/dislike-gray.svg",
+    laugh: "/laugh-gray.svg",
+    emphasize: "/emphasize-gray.svg",
+    question: "/question-gray.svg",
   };
 
   // State to control the Popover open state and animation
@@ -300,7 +295,7 @@ export function MessageBubble({
 
                 {/* Reaction menu */}
                 <PopoverContent
-                  className="flex p-2 gap-2 min-w-[280px] rounded-full dark:bg-[#404040] shadow-lg z-50 reaction-menu"
+                  className="flex p-2 gap-2 min-w-[280px] rounded-full bg-gray-100 dark:bg-[#404040] z-50 reaction-menu"
                   align={isMe ? "end" : "start"}
                   alignOffset={-8}
                   side="top"
@@ -316,7 +311,7 @@ export function MessageBubble({
                       className={cn(
                         "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
                         isReactionActive(type as ReactionType)
-                          ? "bg-[#0087fe] text-white scale-110"
+                          ? "bg-[#0A7CFF] text-white scale-110"
                           : ""
                       )}
                     >
@@ -332,8 +327,10 @@ export function MessageBubble({
                         height={16}
                         alt={`${type} reaction`}
                         style={
-                          type === "emphasize" || type === "question"
-                            ? { transform: "scale(0.7)" }
+                          type === "emphasize" 
+                            ? { transform: "scale(0.75)" }
+                            : type === "question"
+                            ? { transform: "scale(0.6)" }
                             : undefined
                         }
                       />
