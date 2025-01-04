@@ -97,6 +97,15 @@ body {
   padding: 0 4px;
 }
 
+@keyframes blink {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .typing-indicator .dot {
   width: 4px;
   height: 4px;
