@@ -371,9 +371,27 @@ export function Sidebar({
                                               className="scale-[1.2]"
                                             />
                                             <div className="absolute top-[42%] left-[36%] flex gap-[2px]">
-                                              <div className="w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                              <div className="w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                              <div className="w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full animate-bounce"></div>
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear 0.2s",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear 0.4s",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
                                             </div>
                                           </div>
                                         </div>

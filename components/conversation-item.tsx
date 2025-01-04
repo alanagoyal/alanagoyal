@@ -185,25 +185,28 @@ export function ConversationItem({
                   />
                   <div className="absolute top-[42%] left-[38%] flex gap-[2px]">
                     <div
+                      style={{ animation: "blink 1.4s infinite linear" }}
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
                           : "bg-gray-500 dark:bg-gray-300"
-                      } rounded-full animate-bounce [animation-delay:-0.3s]`}
+                      } rounded-full`}
                     ></div>
                     <div
+                      style={{ animation: "blink 1.4s infinite linear 0.2s" }}
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
                           : "bg-gray-500 dark:bg-gray-300"
-                      } rounded-full animate-bounce [animation-delay:-0.15s]`}
+                      } rounded-full`}
                     ></div>
                     <div
+                      style={{ animation: "blink 1.4s infinite linear 0.4s" }}
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
                           : "bg-gray-500 dark:bg-gray-300"
-                      } rounded-full animate-bounce`}
+                      } rounded-full`}
                     ></div>
                   </div>
                 </div>
