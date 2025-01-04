@@ -160,7 +160,8 @@ export function ChatArea({
               className="absolute inset-0"
               style={{ background: "linear-gradient(#43cdf6,#0087fe)" }}
             />
-            <div className="relative h-full">
+            <div className="relative h-full flex">
+              <div className="w-2 bg-background" />
               <MessageList
                 messages={activeConversation?.messages || []}
                 conversation={activeConversation}
@@ -173,6 +174,7 @@ export function ChatArea({
                 conversationId={conversationId}
                 messageInputRef={messageInputRef}
               />
+              <div className="w-2 bg-background" />
             </div>
           </div>
         </div>
