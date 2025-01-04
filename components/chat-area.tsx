@@ -15,9 +15,12 @@ interface ChatAreaProps {
   onBack?: () => void;
   onSendMessage: (message: string, conversationId?: string) => void;
   onReaction?: (messageId: string, reaction: Reaction) => void;
-  typingStatus: { conversationId: string; recipient: string; } | null;
+  typingStatus: { conversationId: string; recipient: string } | null;
   conversationId: string | null;
-  onUpdateConversationRecipients?: (conversationId: string, recipients: string[]) => void;
+  onUpdateConversationRecipients?: (
+    conversationId: string,
+    recipients: string[]
+  ) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
@@ -56,9 +59,14 @@ export function ChatArea({
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "style"
+        ) {
           // Get the current scroll viewport
-          const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+          const viewport = scrollAreaRef.current?.querySelector(
+            "[data-radix-scroll-area-viewport]"
+          );
           if (viewport) {
             // Scroll to bottom with smooth animation
             viewport.scrollTop = viewport.scrollHeight;
@@ -70,7 +78,7 @@ export function ChatArea({
     // Watch for style changes on document root (where we store the CSS variable)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['style']
+      attributeFilter: ["style"],
     });
 
     return () => observer.disconnect();
@@ -86,7 +94,7 @@ export function ChatArea({
   const conversationRecipients = activeConversation?.recipients || [];
 
   // Create a key that changes when recipients change
-  const messageInputKey = conversationRecipients.map(r => r.id).join(',');
+  const messageInputKey = conversationRecipients.map((r) => r.id).join(",");
 
   const handleMessageChange = (msg: string) => {
     if (isNewChat) {
@@ -98,7 +106,7 @@ export function ChatArea({
 
   const handleSend = () => {
     if (!messageDraft.trim()) return;
-    
+
     if (activeConversation) {
       onSendMessage(messageDraft, activeConversation.id);
     } else if (isNewChat && recipientInput.trim()) {
@@ -133,35 +141,49 @@ export function ChatArea({
           unreadCount={unreadCount}
         />
       </div>
-      
-      <ScrollArea 
+
+      <ScrollArea
         ref={scrollAreaRef}
         className="h-full"
         isMobile={isMobileView}
         withVerticalMargins
         mobileHeaderHeight={isMobileView}
-        bottomMargin="calc(var(--dynamic-height, 64px))"
-      >
-        <div 
+        bottomMargin="calc(var(--dynamic-height, 64px))">
+        <div
           className={cn(isMobileView ? "pt-24" : "pt-16")}
-          style={{ 
-            paddingBottom: 'calc(var(--dynamic-height, 64px)'
-          }}
-        >
-          <MessageList
-            messages={activeConversation?.messages || []}
-            conversation={activeConversation}
-            typingStatus={typingStatus?.conversationId === conversationId ? typingStatus : null}
-            onReaction={onReaction}
-            conversationId={conversationId}
-            messageInputRef={messageInputRef}
-          />
+          style={{
+            paddingBottom: "calc(var(--dynamic-height, 64px)",
+          }}>
+          <div className="flex-1 relative">
+            {/* Gradient background */}
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(#43CDF6,#0A7CFF)" }}
+            />
+            <div className="relative h-full flex">
+              <div className="w-3 bg-background" />
+              <MessageList
+                messages={activeConversation?.messages || []}
+                conversation={activeConversation}
+                typingStatus={
+                  typingStatus?.conversationId === conversationId
+                    ? typingStatus
+                    : null
+                }
+                onReaction={onReaction}
+                conversationId={conversationId}
+                messageInputRef={messageInputRef}
+              />
+              <div className="w-3 bg-background" />
+            </div>
+          </div>
         </div>
       </ScrollArea>
-
-      <div className="absolute bottom-0 left-0 right-0 z-50" style={{
-        marginBottom: 'env(keyboard-inset-height, 0px)'
-      }}>
+      <div
+        className="absolute bottom-0 left-0 right-0 z-50"
+        style={{
+          marginBottom: "env(keyboard-inset-height, 0px)",
+        }}>
         <MessageInput
           key={messageInputKey}
           ref={messageInputRef}

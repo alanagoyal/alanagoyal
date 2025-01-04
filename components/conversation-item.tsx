@@ -9,6 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { Pin, Trash } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -41,6 +42,8 @@ export function ConversationItem({
 }: ConversationItemProps) {
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipedConvo === conversation.id;
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -108,8 +111,10 @@ export function ConversationItem({
   const ConversationContent = (
     <button
       onClick={() => onSelectConversation(conversation.id)}
-      aria-label={`Conversation with ${conversation.recipients.map((r) => r.name).join(", ")}`}
-      aria-current={activeConversation === conversation.id ? 'true' : undefined}
+      aria-label={`Conversation with ${conversation.recipients
+        .map((r) => r.name)
+        .join(", ")}`}
+      aria-current={activeConversation === conversation.id ? "true" : undefined}
       className={`w-full h-[70px] py-2 text-left relative flex items-center ${
         activeConversation === conversation.id
           ? "bg-[#0A7CFF] text-white rounded-md"
@@ -164,20 +169,46 @@ export function ConversationItem({
                 : "text-muted-foreground"
             }`}
           >
-            {conversation.isTyping ? (
+            {(conversation.isTyping) ? (
               <div className="flex items-center py-0.5">
-                <div
-                  className={`rounded-[16px] px-1.5 py-0 inline-flex items-center ${
-                    activeConversation === conversation.id
-                      ? "bg-blue-400/30 text-blue-100"
-                      : "bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                  }`}
-                >
-                  <span className="typing-indicator scale-[0.6]">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                  </span>
+                <div className="relative">
+                  <img
+                    src={
+                      activeConversation === conversation.id
+                        ? "/typing-blue.svg"
+                        : effectiveTheme === "dark"
+                        ? "/typing-dark.svg"
+                        : "/typing-light.svg"
+                    }
+                    alt="typing"
+                    className="w-[45px] h-auto"
+                  />
+                  <div className="absolute top-[40%] left-[35%] flex gap-[2px]">
+                    <div
+                      style={{ animation: "blink 1.4s infinite linear" }}
+                      className={`w-1 h-1 ${
+                        activeConversation === conversation.id
+                          ? "bg-blue-100"
+                          : "bg-gray-500 dark:bg-gray-300"
+                      } rounded-full`}
+                    ></div>
+                    <div
+                      style={{ animation: "blink 1.4s infinite linear 0.2s" }}
+                      className={`w-1 h-1 ${
+                        activeConversation === conversation.id
+                          ? "bg-blue-100"
+                          : "bg-gray-500 dark:bg-gray-300"
+                      } rounded-full`}
+                    ></div>
+                    <div
+                      style={{ animation: "blink 1.4s infinite linear 0.4s" }}
+                      className={`w-1 h-1 ${
+                        activeConversation === conversation.id
+                          ? "bg-blue-100"
+                          : "bg-gray-500 dark:bg-gray-300"
+                      } rounded-full`}
+                    ></div>
+                  </div>
                 </div>
               </div>
             ) : conversation.messages.length > 0 ? (

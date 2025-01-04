@@ -12,16 +12,8 @@ import { ConversationItem } from "./conversation-item";
 import { PinOff, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHeart,
-  faThumbsUp,
-  faThumbsDown,
-  faFaceLaugh,
-  faExclamation,
-  faQuestion,
-} from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -52,26 +44,28 @@ export function Sidebar({
   isCommandMenuOpen,
   onScroll,
 }: SidebarProps) {
-  const { theme, setTheme } = useTheme();
+  const { theme, systemTheme, setTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
+
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return "";
 
     try {
       const date = parseISO(timestamp);
-      
+
       if (isToday(date)) {
         return format(date, "h:mm a"); // e.g. "12:40 AM"
       }
-      
+
       if (isYesterday(date)) {
         return "Yesterday";
       }
-      
+
       if (isThisWeek(date)) {
         return format(date, "EEEE"); // e.g. "Sunday"
       }
-      
+
       return format(date, "M/d/yy"); // e.g. "12/21/24"
     } catch (error) {
       console.error("Error formatting time:", error, timestamp);
@@ -85,6 +79,22 @@ export function Sidebar({
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
     return name[0].toUpperCase();
+  };
+
+  const getReactionIconSvg = (
+    messageFromMe: boolean,
+    reactionType: string,
+    reactionFromMe: boolean
+  ) => {
+    const orientation = messageFromMe ? "left" : "right";
+    const variant = reactionFromMe
+      ? effectiveTheme === "dark"
+        ? "dark-blue"
+        : "light-blue"
+      : effectiveTheme === "dark"
+      ? "dark"
+      : "light";
+    return `/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -147,7 +157,7 @@ export function Sidebar({
       // Theme toggle shortcut
       if (e.key === "t") {
         e.preventDefault();
-        setTheme(theme === "light" ? "dark" : "light");
+        setTheme(effectiveTheme === "light" ? "dark" : "light");
         return;
       }
 
@@ -182,16 +192,26 @@ export function Sidebar({
         // If current conversation is not in filtered results, select the first one
         if (currentIndex === -1) {
           onSelectConversation(filteredConversations[0].id);
-          const firstConvoButton = document.querySelector(`button[aria-current="true"]`);
-          firstConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const firstConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          firstConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
           return;
         }
 
         const nextIndex = (currentIndex + 1) % filteredConversations.length;
         onSelectConversation(filteredConversations[nextIndex].id);
         setTimeout(() => {
-          const nextConvoButton = document.querySelector(`button[aria-current="true"]`);
-          nextConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const nextConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          nextConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
         }, 0);
       } else if (
         (e.key === "ArrowUp" || e.key === "k") &&
@@ -207,8 +227,13 @@ export function Sidebar({
           onSelectConversation(
             filteredConversations[filteredConversations.length - 1].id
           );
-          const lastConvoButton = document.querySelector(`button[aria-current="true"]`);
-          lastConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const lastConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          lastConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
           return;
         }
 
@@ -218,8 +243,13 @@ export function Sidebar({
             : currentIndex - 1;
         onSelectConversation(filteredConversations[nextIndex].id);
         setTimeout(() => {
-          const prevConvoButton = document.querySelector(`button[aria-current="true"]`);
-          prevConvoButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const prevConvoButton = document.querySelector(
+            `button[aria-current="true"]`
+          );
+          prevConvoButton?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
         }, 0);
       }
       // Action shortcuts
@@ -251,7 +281,6 @@ export function Sidebar({
     onUpdateConversation,
     onDeleteConversation,
     isCommandMenuOpen,
-    theme,
   ]);
 
   return (
@@ -262,7 +291,7 @@ export function Sidebar({
           className="h-full"
           onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
             const viewport = e.currentTarget.querySelector(
-              '[data-radix-scroll-area-viewport]'
+              "[data-radix-scroll-area-viewport]"
             );
             if (viewport) {
               onScroll?.(viewport.scrollTop > 0);
@@ -288,7 +317,8 @@ export function Sidebar({
                     <div className="p-2">
                       <div
                         className={`flex flex-wrap gap-2 ${
-                          filteredConversations.filter((c) => c.pinned).length <= 2
+                          filteredConversations.filter((c) => c.pinned)
+                            .length <= 2
                             ? "justify-center"
                             : ""
                         }`}
@@ -328,39 +358,60 @@ export function Sidebar({
                                         conversation.id &&
                                       activeConversation !== conversation.id ? (
                                         <div className="absolute -top-4 -right-4 z-30">
-                                          <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center bg-gray-200 dark:bg-[#404040] text-gray-900 dark:text-gray-100">
-                                            <span className="typing-indicator scale-[0.6]">
-                                              <span className="dot"></span>
-                                              <span className="dot"></span>
-                                              <span className="dot"></span>
-                                            </span>
+                                          <div className="rounded-[16px] px-1.5 py-0 inline-flex items-center relative">
+                                            <Image
+                                              src={
+                                                effectiveTheme === "dark"
+                                                  ? "/typing-dark.svg"
+                                                  : "/typing-light.svg"
+                                              }
+                                              alt="Typing indicator"
+                                              width={32}
+                                              height={8}
+                                              className="scale-[1.2]"
+                                            />
+                                            <div className="absolute top-[40%] left-[35%] flex gap-[2px]">
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear 0.2s",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
+                                              <div
+                                                style={{
+                                                  animation:
+                                                    "blink 1.4s infinite linear 0.4s",
+                                                }}
+                                                className={`w-1 h-1 bg-gray-500 dark:bg-gray-300 rounded-full`}
+                                              ></div>
+                                            </div>
                                           </div>
                                         </div>
                                       ) : conversation.unreadCount > 0 ? (
                                         (() => {
-                                          const lastMessage = conversation.messages
-                                            .filter(
-                                              (message) =>
-                                                message.sender !== "system"
-                                            )
-                                            .slice(-1)[0];
+                                          const lastMessage =
+                                            conversation.messages
+                                              .filter(
+                                                (message) =>
+                                                  message.sender !== "system"
+                                              )
+                                              .slice(-1)[0];
 
                                           if (
                                             lastMessage?.reactions &&
                                             lastMessage.reactions.length > 0 &&
                                             lastMessage.sender !== "me"
                                           ) {
-                                            const reactionIcons = {
-                                              heart: faHeart,
-                                              like: faThumbsUp,
-                                              dislike: faThumbsDown,
-                                              laugh: faFaceLaugh,
-                                              emphasize: faExclamation,
-                                              question: faQuestion,
-                                            };
-
                                             return (
-                                              <div className="absolute -top-4 -right-4 flex z-30">
+                                              <div className="absolute -top-3 -right-3 flex z-30">
                                                 {[...lastMessage.reactions]
                                                   .sort(
                                                     (a, b) =>
@@ -372,39 +423,41 @@ export function Sidebar({
                                                       ).getTime()
                                                   )
                                                   .slice(0, 2)
-                                                  .map((reaction, index, array) => (
-                                                    <div
-                                                      key={`${reaction.type}-${index}`}
-                                                      className={cn(
-                                                        "w-10 h-10 rounded-full flex items-center justify-center text-base",
-                                                        reaction.sender === "me"
-                                                          ? "bg-[#0A7CFF]"
-                                                          : "bg-gray-100 dark:bg-[#404040]",
-                                                        index !==
-                                                          array.length - 1 &&
-                                                          "-mr-2",
-                                                        index === 0
-                                                          ? "z-30"
-                                                          : "z-20"
-                                                      )}
-                                                    >
-                                                      <FontAwesomeIcon
-                                                        icon={
-                                                          reactionIcons[
-                                                            reaction.type
-                                                          ]
-                                                        }
+                                                  .map(
+                                                    (
+                                                      reaction,
+                                                      index,
+                                                      array
+                                                    ) => (
+                                                      <div
+                                                        key={`${reaction.type}-${index}`}
                                                         className={cn(
-                                                          reaction.sender === "me"
-                                                            ? reaction.type ===
-                                                              "heart"
-                                                              ? "text-[#FF69B4]"
-                                                              : "text-white"
-                                                            : "text-muted-foreground"
+                                                          "w-8 h-8 flex items-center justify-center text-base relative",
+                                                          index !==
+                                                            array.length - 1 &&
+                                                            "-mr-2",
+                                                          index === 0
+                                                            ? "z-30"
+                                                            : "z-20"
                                                         )}
-                                                      />
-                                                    </div>
-                                                  ))}
+                                                        style={{
+                                                          backgroundImage: `url('${getReactionIconSvg(
+                                                            lastMessage.sender ===
+                                                              "me",
+                                                            reaction.type,
+                                                            reaction.sender ===
+                                                              "me"
+                                                          )}')`,
+                                                          backgroundSize:
+                                                            "contain",
+                                                          backgroundRepeat:
+                                                            "no-repeat",
+                                                          backgroundPosition:
+                                                            "center",
+                                                        }}
+                                                      ></div>
+                                                    )
+                                                  )}
                                               </div>
                                             );
                                           } else if (
@@ -433,7 +486,9 @@ export function Sidebar({
                                       <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
                                         {conversation.recipients[0].avatar ? (
                                           <img
-                                            src={conversation.recipients[0].avatar}
+                                            src={
+                                              conversation.recipients[0].avatar
+                                            }
                                             alt=""
                                             className="w-full h-full object-cover"
                                           />
@@ -475,7 +530,9 @@ export function Sidebar({
                                             ? { ...conv, pinned: false }
                                             : conv
                                         );
-                                      onUpdateConversation(updatedConversations);
+                                      onUpdateConversation(
+                                        updatedConversations
+                                      );
                                     }}
                                   >
                                     <span>Unpin</span>
@@ -533,7 +590,9 @@ export function Sidebar({
                           getInitials={getInitials}
                           isMobileView={isMobileView}
                           showDivider={
-                            !isActive && !isNextActive && index !== array.length - 1
+                            !isActive &&
+                            !isNextActive &&
+                            index !== array.length - 1
                           }
                           openSwipedConvo={openSwipedConvo}
                           setOpenSwipedConvo={setOpenSwipedConvo}

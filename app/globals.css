@@ -97,6 +97,15 @@ body {
   padding: 0 4px;
 }
 
+@keyframes blink {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .typing-indicator .dot {
   width: 4px;
   height: 4px;
@@ -150,6 +159,8 @@ body {
 
 .reaction-menu {
   animation: popIn 0.3s ease-out forwards;
+  box-shadow: none;
+  border: none;
 }
 
 .reaction-icon {
@@ -167,17 +178,14 @@ body {
 /* Remove focus rings from reaction buttons */
 .reaction-menu button {
   outline: none !important;
-  box-shadow: none !important;
 }
 
 .reaction-menu button:focus {
   outline: none !important;
-  box-shadow: none !important;
 }
 
 .reaction-menu button:focus-visible {
   outline: none !important;
-  box-shadow: none !important;
 }
 
 /* Custom scrollbar styling */
