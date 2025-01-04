@@ -188,21 +188,21 @@ export function ConversationItem({
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
-                          : "bg-current"
+                          : "bg-gray-500 dark:bg-gray-300"
                       } rounded-full animate-bounce [animation-delay:-0.3s]`}
                     ></div>
                     <div
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
-                          : "bg-current"
+                          : "bg-gray-500 dark:bg-gray-300"
                       } rounded-full animate-bounce [animation-delay:-0.15s]`}
                     ></div>
                     <div
                       className={`w-1 h-1 ${
                         activeConversation === conversation.id
                           ? "bg-blue-100"
-                          : "bg-current"
+                          : "bg-gray-500 dark:bg-gray-300"
                       } rounded-full animate-bounce`}
                     ></div>
                   </div>
