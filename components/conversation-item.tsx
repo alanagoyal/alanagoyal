@@ -169,7 +169,7 @@ export function ConversationItem({
                 : "text-muted-foreground"
             }`}
           >
-            {conversation.isTyping ? (
+            {(conversation.isTyping) ? (
               <div className="flex items-center py-0.5">
                 <div className="relative">
                   <img
@@ -183,7 +183,7 @@ export function ConversationItem({
                     alt="typing"
                     className="w-[45px] h-auto"
                   />
-                  <div className="absolute top-[42%] left-[38%] flex gap-[2px]">
+                  <div className="absolute top-[40%] left-[35%] flex gap-[2px]">
                     <div
                       style={{ animation: "blink 1.4s infinite linear" }}
                       className={`w-1 h-1 ${
