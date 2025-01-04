@@ -198,11 +198,31 @@ export async function POST(req: Request) {
             .join(", ")}`,
         },
       ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "chat",
+            description: "returns the next message in the conversation",
+            parameters: {
+              type: "object",
+              properties: {
+                sender: {
+                  type: "string",
+                  enum: sortedParticipants.map((r: Recipient) => r.name),
+                },
+                content: { type: "string" },
+              },
+              required: ["sender", "content"],
+            },
+          },
+        },
+      ],
       temperature: 0.9,
       max_tokens: 1000, // Increased to prevent truncation
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
 
     if (!content) {
       throw new Error("No response from OpenAI");
@@ -210,44 +230,15 @@ export async function POST(req: Request) {
 
     let messageData: ChatResponse;
     try {
-      // Parse the JSON response
       messageData = JSON.parse(content.trim()) as ChatResponse;
-
-      if (!messageData.sender || !messageData.content) {
-        throw new Error("Response missing required fields");
-      }
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        console.error(
-          "Failed to parse JSON response:",
-          error,
-          "\nContent preview:",
-          content.slice(0, 200),
-          "\nContent length:",
-          content.length
-        );
-        throw new Error("Invalid JSON format in API response");
-      }
-      throw error;
+      console.error("Failed to parse JSON response:", error);
+      throw new Error("Invalid JSON format in API response");
     }
 
-    // Get the first available participant if sender is "me"
+    // Handle special case for "me" sender
     if (messageData.sender === "me" && sortedParticipants.length > 0) {
       messageData.sender = sortedParticipants[0].name;
-    }
-
-    // Validate sender
-    if (
-      !sortedParticipants.find((r: Recipient) => r.name === messageData.sender)
-    ) {
-      console.error(
-        "Available participants:",
-        sortedParticipants.map((r: Recipient) => r.name)
-      );
-      console.error("Received sender:", messageData.sender);
-      throw new Error(
-        "Invalid sender: must be one of the available participants"
-      );
     }
 
     return new Response(JSON.stringify(messageData), {

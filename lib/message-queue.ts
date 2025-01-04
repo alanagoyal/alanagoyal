@@ -183,6 +183,8 @@ export class MessageQueue {
 
       const data = await response.json();
 
+      console.log("Response from AI:", data);
+
       // Simulate typing delay
       const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
