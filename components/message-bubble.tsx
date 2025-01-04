@@ -200,7 +200,7 @@ export function MessageBubble({
         // Align messages based on sender
       )}
     >
-      <div className="h-2 bg-background" />
+      <div className="h-3 bg-background" />
 
       {/* Show recipient name for messages from others */}
       {recipientName && (
@@ -389,7 +389,7 @@ export function MessageBubble({
           <span className={cn(justSent && "animate-scale-in")}>Delivered</span>
         </div>
       )}
-      <div className="h-2 bg-background" />
+      <div className="h-3 bg-background" />
     </div>
   );
 }
