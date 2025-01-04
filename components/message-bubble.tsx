@@ -230,7 +230,7 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] text-white"
+                ? "border-[20px] border-solid border-r-[27.7px] text-white -mr-[0.5px]"
                 : isTyping
                 ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
