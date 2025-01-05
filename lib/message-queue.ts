@@ -173,6 +173,7 @@ export class MessageQueue {
           shouldWrapUp: task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
           isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
+          shouldReact: Math.random() < 0.5,
         }),
         signal: task.abortController.signal,
       });
@@ -184,6 +185,22 @@ export class MessageQueue {
       const data = await response.json();
 
       console.log("Response from AI:", data);
+
+      // If there's a reaction in the response, add it to the last message
+      if (data.reaction && task.conversation.messages.length > 0) {
+        const lastMessage = task.conversation.messages[task.conversation.messages.length - 1];
+        if (!lastMessage.reactions) {
+          lastMessage.reactions = [];
+        }
+        lastMessage.reactions.push({
+          type: data.reaction,
+          sender: data.sender,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        });
+      }
 
       // Simulate typing delay
       const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses

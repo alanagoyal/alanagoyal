@@ -25,7 +25,7 @@ interface ChatResponse {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
+  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne, shouldReact } =
     body;
 
   const lastMessage =
@@ -120,22 +120,6 @@ export async function POST(req: Request) {
     `
     }
     
-    Keep it natural and match your character's vibe.
-    
-    IMPORTANT: 
-    1. Reply in this exact JSON:
-    {
-      "sender": "name_of_participant",
-      "content": "your_message"
-    }
-    2. ${
-      isOneOnOne
-        ? `You have to be "${recipients[0].name}"`
-        : `Pick from these names: ${sortedParticipants
-            .map((r: Recipient) => r.name)
-            .join(", ")}`
-    }
-    3. Don't use "me" as sender
     
     Quick tips:
     ${
@@ -147,6 +131,7 @@ export async function POST(req: Request) {
     `
         : `
     - One quick message
+    - ${shouldReact ? `Also add a reaction that matches how you feel about the last message` : ''}
     - Pick someone who hasn't talked in a bit
     - If user tagged someone specific, only reply if you're them
     - Match your character's style
@@ -174,7 +159,8 @@ export async function POST(req: Request) {
     - This is the first message in the group chat.
     - Ask a question or make a statement that gets the group talking.`
         : ""
-    }`
+    }
+    `
     }
   `;
 
@@ -183,7 +169,9 @@ export async function POST(req: Request) {
       { role: "system", content: prompt },
       ...(messages || []).map((msg: Message) => ({
         role: "user",
-        content: `${msg.sender}: ${msg.content}`,
+        content: `${msg.sender}: ${msg.content}${msg.reactions?.length ? 
+          ` [reactions: ${msg.reactions.map(r => `${r.sender} reacted with ${r.type}`).join(', ')}]` : 
+          ''}`,
       })),
     ];
 
@@ -191,12 +179,6 @@ export async function POST(req: Request) {
       model: "gpt-4o-mini",
       messages: [
         ...openaiMessages,
-        {
-          role: "system",
-          content: `You must respond with valid JSON in the following format ONLY:\n{"sender": "<n>", "content": "<message>"}\nThe sender MUST be one of these exact names: ${sortedParticipants
-            .map((r: Recipient) => `"${r.name}"`)
-            .join(", ")}`,
-        },
       ],
       tools: [
         {
@@ -212,6 +194,11 @@ export async function POST(req: Request) {
                   enum: sortedParticipants.map((r: Recipient) => r.name),
                 },
                 content: { type: "string" },
+                reaction: {
+                  type: "string",
+                  enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+                  description: "optional reaction to the last message"
+                }
               },
               required: ["sender", "content"],
             },
@@ -222,15 +209,38 @@ export async function POST(req: Request) {
       max_tokens: 1000, // Increased to prevent truncation
     });
 
-    const content = response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    console.log('Full OpenAI response:', JSON.stringify(response, null, 2));
+    
+    let content = response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    
+    // If no tool calls, try to parse from direct content
+    if (!content && response.choices[0]?.message?.content) {
+      const messageContent = response.choices[0].message.content;
+      const match = messageContent.match(/^([^:]+):\s*(.+)$/);
+      if (match) {
+        content = JSON.stringify({
+          sender: match[1].trim(),
+          content: match[2].trim()
+        });
+      }
+    }
+
+    console.log('Extracted content:', content);
 
     if (!content) {
+      console.log('Response structure:', {
+        hasChoices: Boolean(response.choices),
+        firstChoice: response.choices?.[0],
+        hasMessage: Boolean(response.choices?.[0]?.message),
+        toolCalls: response.choices?.[0]?.message?.tool_calls,
+      });
       throw new Error("No response from OpenAI");
     }
 
     let messageData: ChatResponse;
     try {
       messageData = JSON.parse(content.trim()) as ChatResponse;
+      console.log('Parsed message data:', messageData);
     } catch (error) {
       console.error("Failed to parse JSON response:", error);
       throw new Error("Invalid JSON format in API response");
