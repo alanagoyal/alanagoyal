@@ -86,7 +86,7 @@ export function Sidebar({
     reactionType: string,
     reactionFromMe: boolean
   ) => {
-    const orientation = messageFromMe ? "left" : "right";
+    const orientation = messageFromMe ? "right" : "left";
     const variant = reactionFromMe
       ? effectiveTheme === "dark"
         ? "dark-blue"
