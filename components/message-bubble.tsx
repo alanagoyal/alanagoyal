@@ -230,7 +230,7 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] text-white -mr-[0.5px]"
+                ? "border-[20px] border-solid border-r-[27.7px] text-white"
                 : isTyping
                 ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
@@ -260,6 +260,13 @@ export function MessageBubble({
               >
                 <PopoverTrigger asChild>
                   <div className="flex flex-col cursor-pointer">
+                    <div
+                      className={cn(
+                        "absolute border-r-[0.5px] border-background",
+                        !isMe || isTyping ? "inset-[-20px]" : "inset-[-27.7px]"
+                      )}
+                    />
+
                     <div className="text-sm">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
@@ -327,7 +334,7 @@ export function MessageBubble({
                         height={16}
                         alt={`${type} reaction`}
                         style={
-                          type === "emphasize" 
+                          type === "emphasize"
                             ? { transform: "scale(0.75)" }
                             : type === "question"
                             ? { transform: "scale(0.6)" }
@@ -344,10 +351,11 @@ export function MessageBubble({
                 <div
                   className={cn(
                     "absolute -top-8 flex",
-                    isMe ? "-left-8" : "-right-8"
+                    isMe ? "-left-8" : "-right-8",
+                    isMe ? "flex-row" : "flex-row-reverse"
                   )}
                 >
-                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
+                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on top) */}
                   {[...message.reactions]
                     .sort(
                       (a, b) =>
@@ -361,8 +369,9 @@ export function MessageBubble({
                           "w-8 h-8 flex items-center justify-center text-sm relative",
                           reaction.type === justAddedReactionType &&
                             "animate-scale-in",
-                          index !== array.length - 1 && "-mr-7",
-                          index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
+                          index !== array.length - 1 &&
+                            (isMe ? "-mr-7" : "-ml-7"),
+                          `z-[${30 - index}]`
                         )}
                         style={{
                           backgroundImage: `url('${getReactionIconSvg(
