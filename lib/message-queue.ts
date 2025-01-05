@@ -28,6 +28,7 @@ type MessageQueueCallbacks = {
     recipient: string | null
   ) => void;
   onError: (error: Error) => void;
+  onMessageUpdated?: (conversationId: string, messageId: string, updates: Partial<Message>) => void;
 };
 
 // Maximum number of consecutive AI messages allowed to prevent infinite loops
@@ -160,9 +161,6 @@ export class MessageQueue {
         return;
       }
 
-      // Start typing indicator
-      this.callbacks.onTypingStatusChange(task.conversation.id, null);
-
       // Make API request
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -184,8 +182,6 @@ export class MessageQueue {
 
       const data = await response.json();
 
-      console.log("Response from AI:", data);
-
       // If there's a reaction in the response, add it to the last message
       if (data.reaction && task.conversation.messages.length > 0) {
         const lastMessage = task.conversation.messages[task.conversation.messages.length - 1];
@@ -200,9 +196,20 @@ export class MessageQueue {
             minute: "2-digit",
           })
         });
+        
+        // Use onMessageUpdated callback to update just the reactions
+        if (this.callbacks.onMessageUpdated) {
+          this.callbacks.onMessageUpdated(task.conversation.id, lastMessage.id, {
+            reactions: lastMessage.reactions
+          });
+        }
+        
+        // Delay to show reaction before typing animation
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("Reaction timeout cleared");
       }
 
-      // Simulate typing delay
+      // Start typing animation and delay for the content
       const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
