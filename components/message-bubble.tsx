@@ -344,10 +344,11 @@ export function MessageBubble({
                 <div
                   className={cn(
                     "absolute -top-8 flex",
-                    isMe ? "-left-8" : "-right-8"
+                    isMe ? "-left-8" : "-right-8",
+                    isMe ? "flex-row" : "flex-row-reverse"
                   )}
                 >
-                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on left) */}
+                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on top) */}
                   {[...message.reactions]
                     .sort(
                       (a, b) =>
@@ -361,8 +362,8 @@ export function MessageBubble({
                           "w-8 h-8 flex items-center justify-center text-sm relative",
                           reaction.type === justAddedReactionType &&
                             "animate-scale-in",
-                          index !== array.length - 1 && "-mr-7",
-                          index === 0 ? "z-30" : index === 1 ? "z-20" : "z-10"
+                          index !== array.length - 1 && (isMe ? "-mr-7" : "-ml-7"),
+                          `z-[${30 - index}]`
                         )}
                         style={{
                           backgroundImage: `url('${getReactionIconSvg(
