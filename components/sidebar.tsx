@@ -316,7 +316,7 @@ export function Sidebar({
                   {filteredConversations.some((conv) => conv.pinned) && (
                     <div className="p-2">
                       <div
-                        className={`flex flex-wrap gap-2 ${
+                        className={`flex flex-wrap gap-1 ${
                           filteredConversations.filter((c) => c.pinned)
                             .length <= 2
                             ? "justify-center"
@@ -324,6 +324,7 @@ export function Sidebar({
                         }`}
                         style={{
                           display: "grid",
+                          gap: "1rem",
                           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                           ...(filteredConversations.filter((c) => c.pinned)
                             .length <= 2 && {
