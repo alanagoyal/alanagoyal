@@ -335,10 +335,10 @@ export const MessageInput = forwardRef<
           {isMobileView && editor?.getText().trim() && (
             <button
               onClick={handleSend}
-              className="absolute right-1 bottom-1 bg-[#0A7CFF] rounded-full p-1 text-white transition-colors"
+              className="absolute right-1 bottom-1 bg-[#0A7CFF] rounded-full p-1 text-white font-bold transition-colors"
               disabled={disabled}
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-4 w-4" strokeWidth={3} />
             </button>
           )}
         </div>

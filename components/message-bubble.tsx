@@ -194,13 +194,13 @@ export function MessageBubble({
   };
 
   return (
-    <div
-      className={cn(
-        "flex w-full flex-col relative z-10"
-        // Align messages based on sender
+    <div className="flex w-full flex-col relative z-10">
+      {/* Spacer before messages */}
+      <div className="h-1 bg-background" />
+      {/* Extra space between messages with reactions */}
+      {message.reactions && message.reactions.length > 0 && (
+        <div className="h-2 bg-background" />
       )}
-    >
-      <div className="h-3 bg-background" />
 
       {/* Show recipient name for messages from others */}
       {recipientName && (
@@ -210,6 +210,7 @@ export function MessageBubble({
       )}
 
       <div className="flex">
+        {/* Left spacer for blue messages */}
         {isMe && <div className="flex-1 bg-background" />}
         {/* Message bubble container */}
         {isSystemMessage ? (
@@ -260,13 +261,13 @@ export function MessageBubble({
               >
                 <PopoverTrigger asChild>
                   <div className="flex flex-col cursor-pointer">
+                    {/* Add this to cover up the right border */}
                     <div
                       className={cn(
                         "absolute border-r-[0.5px] border-background",
                         !isMe || isTyping ? "inset-[-20px]" : "inset-[-27.7px]"
                       )}
                     />
-
                     <div className="text-sm">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
@@ -390,15 +391,18 @@ export function MessageBubble({
             </div>
           </div>
         )}
+        {/* Right spacer for gray messages */}
         {!isSystemMessage && !isMe && <div className="flex-1 bg-background" />}
       </div>
+
       {/* Show "Delivered" for last message from current user */}
       {isMe && isLastUserMessage && !isTyping && (
         <div className="text-[10px] text-gray-500 pt-1 pr-1 bg-background text-right">
           <span className={cn(justSent && "animate-scale-in")}>Delivered</span>
         </div>
       )}
-      <div className="h-3 bg-background" />
+      {/* Spacer after messages */}
+      <div className="h-1 bg-background" />
     </div>
   );
 }
