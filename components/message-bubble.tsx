@@ -127,8 +127,8 @@ export function MessageBubble({
     );
   };
 
-  // Helper function to highlight recipient names in message content
-  const highlightRecipientNames = (
+  // Helper function to prepare message content by highlighting recipient names
+  const prepareContent = (
     content: string,
     recipients: Conversation["recipients"],
     sender: string
@@ -299,7 +299,7 @@ export function MessageBubble({
                           />
                         </div>
                       ) : (
-                        highlightRecipientNames(
+                        prepareContent(
                           message.content,
                           conversation?.recipients || [],
                           message.sender
