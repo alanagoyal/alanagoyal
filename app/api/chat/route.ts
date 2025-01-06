@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { Recipient, Message } from "../../../types";
+import { Recipient, Message, ReactionType } from "../../../types";
 import { techPersonalities } from "../../../data/tech-personalities";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
@@ -8,7 +8,7 @@ const client = wrapOpenAI(
   new OpenAI({
     baseURL: "https://api.braintrust.dev/v1/proxy",
     apiKey: process.env.BRAINTRUST_API_KEY!,
-    timeout: 30000, // 30 second timeout
+    timeout: 30000,
     maxRetries: 3,
   })
 );
@@ -21,12 +21,19 @@ initLogger({
 interface ChatResponse {
   sender: string;
   content: string;
+  reaction?: ReactionType
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne, shouldReact } =
-    body;
+  const {
+    recipients,
+    messages,
+    shouldWrapUp,
+    isFirstMessage,
+    isOneOnOne,
+    shouldReact,
+  } = body;
 
   const lastMessage =
     messages?.length > 0 ? messages[messages.length - 1] : null;
@@ -131,7 +138,11 @@ export async function POST(req: Request) {
     `
         : `
     - One quick message
-    - ${shouldReact ? `Also add a reaction that matches how you feel about the last message` : ''}
+    ${
+      shouldReact
+        ? `- You must react with a "heart", "like", "dislike", "laugh", "emphasize", or "question" the last message, depending on the context`
+        : ""
+    }
     - Pick someone who hasn't talked in a bit
     - If user tagged someone specific, only reply if you're them
     - Match your character's style
@@ -169,17 +180,20 @@ export async function POST(req: Request) {
       { role: "system", content: prompt },
       ...(messages || []).map((msg: Message) => ({
         role: "user",
-        content: `${msg.sender}: ${msg.content}${msg.reactions?.length ? 
-          ` [reactions: ${msg.reactions.map(r => `${r.sender} reacted with ${r.type}`).join(', ')}]` : 
-          ''}`,
+        content: `${msg.sender}: ${msg.content}${
+          msg.reactions?.length
+            ? ` [reactions: ${msg.reactions
+                .map((r) => `${r.sender} reacted with ${r.type}`)
+                .join(", ")}]`
+            : ""
+        }`,
       })),
     ];
 
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        ...openaiMessages,
-      ],
+      messages: [...openaiMessages],
+      tool_choice: "required",
       tools: [
         {
           type: "function",
@@ -196,23 +210,31 @@ export async function POST(req: Request) {
                 content: { type: "string" },
                 reaction: {
                   type: "string",
-                  enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
-                  description: "optional reaction to the last message"
-                }
+                  enum: [
+                    "heart",
+                    "like",
+                    "dislike",
+                    "laugh",
+                    "emphasize",
+                    "question",
+                  ],
+                  description: "optional reaction to the last message",
+                },
               },
               required: ["sender", "content"],
             },
           },
         },
       ],
-      temperature: 0.9,
-      max_tokens: 1000, // Increased to prevent truncation
+      temperature: 0.5,
+      max_tokens: 1000,
     });
 
-    console.log('Full OpenAI response:', JSON.stringify(response, null, 2));
-    
-    let content = response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    
+    console.log("Full OpenAI response:", JSON.stringify(response, null, 2));
+
+    let content =
+      response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+
     // If no tool calls, try to parse from direct content
     if (!content && response.choices[0]?.message?.content) {
       const messageContent = response.choices[0].message.content;
@@ -220,15 +242,15 @@ export async function POST(req: Request) {
       if (match) {
         content = JSON.stringify({
           sender: match[1].trim(),
-          content: match[2].trim()
+          content: match[2].trim(),
         });
       }
     }
 
-    console.log('Extracted content:', content);
+    console.log("Extracted content:", content);
 
     if (!content) {
-      console.log('Response structure:', {
+      console.log("Response structure:", {
         hasChoices: Boolean(response.choices),
         firstChoice: response.choices?.[0],
         hasMessage: Boolean(response.choices?.[0]?.message),
@@ -240,7 +262,7 @@ export async function POST(req: Request) {
     let messageData: ChatResponse;
     try {
       messageData = JSON.parse(content.trim()) as ChatResponse;
-      console.log('Parsed message data:', messageData);
+      console.log("Parsed message data:", messageData);
     } catch (error) {
       console.error("Failed to parse JSON response:", error);
       throw new Error("Invalid JSON format in API response");
