@@ -260,13 +260,13 @@ export function MessageBubble({
               >
                 <PopoverTrigger asChild>
                   <div className="flex flex-col cursor-pointer">
+                    {/* Add this to cover up the right border */}
                     <div
                       className={cn(
                         "absolute border-r-[0.5px] border-background",
                         !isMe || isTyping ? "inset-[-20px]" : "inset-[-27.7px]"
                       )}
                     />
-
                     <div className="text-sm">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
