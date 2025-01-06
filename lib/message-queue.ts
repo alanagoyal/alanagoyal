@@ -28,7 +28,11 @@ type MessageQueueCallbacks = {
     recipient: string | null
   ) => void;
   onError: (error: Error) => void;
-  onMessageUpdated?: (conversationId: string, messageId: string, updates: Partial<Message>) => void;
+  onMessageUpdated?: (
+    conversationId: string,
+    messageId: string,
+    updates: Partial<Message>
+  ) => void;
 };
 
 // Maximum number of consecutive AI messages allowed to prevent infinite loops
@@ -58,7 +62,7 @@ export class MessageQueue {
   public enqueueUserMessage(conversation: Conversation) {
     // Cancel all pending AI messages when user sends a message
     this.cancelAllTasks();
-    
+
     // Clear any existing debounce timeout
     if (this.userMessageDebounceTimeout) {
       clearTimeout(this.userMessageDebounceTimeout);
@@ -71,7 +75,7 @@ export class MessageQueue {
     this.userMessageDebounceTimeout = setTimeout(() => {
       if (this.pendingUserMessages) {
         this.conversationVersion++;
-        
+
         const task: MessageTask = {
           id: crypto.randomUUID(),
           conversation: this.pendingUserMessages,
@@ -168,7 +172,8 @@ export class MessageQueue {
         body: JSON.stringify({
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
-          shouldWrapUp: task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
+          shouldWrapUp:
+            task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
           isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
           shouldReact: Math.random() < 0.5,
@@ -184,7 +189,8 @@ export class MessageQueue {
 
       // If there's a reaction in the response, add it to the last message
       if (data.reaction && task.conversation.messages.length > 0) {
-        const lastMessage = task.conversation.messages[task.conversation.messages.length - 1];
+        const lastMessage =
+          task.conversation.messages[task.conversation.messages.length - 1];
         if (!lastMessage.reactions) {
           lastMessage.reactions = [];
         }
@@ -194,19 +200,22 @@ export class MessageQueue {
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
-          })
+          }),
         });
-        
+
         // Use onMessageUpdated callback to update just the reactions
         if (this.callbacks.onMessageUpdated) {
-          this.callbacks.onMessageUpdated(task.conversation.id, lastMessage.id, {
-            reactions: lastMessage.reactions
-          });
+          this.callbacks.onMessageUpdated(
+            task.conversation.id,
+            lastMessage.id,
+            {
+              reactions: lastMessage.reactions,
+            }
+          );
         }
-        
+
         // Delay to show reaction before typing animation
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log("Reaction timeout cleared");
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
       // Start typing animation and delay for the content
@@ -248,20 +257,18 @@ export class MessageQueue {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Only queue next AI message if we're still on the same conversation version
-        if (!task.abortController.signal.aborted && task.conversationVersion === this.conversationVersion) {
+        if (
+          !task.abortController.signal.aborted &&
+          task.conversationVersion === this.conversationVersion
+        ) {
           if (task.conversation.recipients.length > 1) {
             const lastAiSender = data.sender;
             const otherRecipients = task.conversation.recipients.filter(
               (r) => r !== lastAiSender
             );
-
-            const lastMessageContent = data.content.toLowerCase();
-            const hasQuestion = lastMessageContent.includes("?") || 
-              /\b(what|who|when|where|why|how|which|whose|whom)\b/i.test(lastMessageContent);
-
             if (
               task.priority === 100 ||
-              (otherRecipients.length > 0 && (hasQuestion || Math.random() > 0.25))
+              (otherRecipients.length > 0 && Math.random() > 0.25)
             ) {
               const updatedConversationWithNextSender = {
                 ...updatedConversation,

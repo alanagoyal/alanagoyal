@@ -21,7 +21,7 @@ initLogger({
 interface ChatResponse {
   sender: string;
   content: string;
-  reaction?: ReactionType
+  reaction?: ReactionType;
 }
 
 export async function POST(req: Request) {
@@ -87,7 +87,9 @@ export async function POST(req: Request) {
     ${
       isOneOnOne
         ? `
-    You're chatting 1-on-1 with a human user. You're ${recipients[0].name}.
+    You're chatting 1-on-1 text message convo with a human user ("me"). You are responding as ${
+      recipients[0].name
+    }.
     ${
       (recipients[0].name &&
         techPersonalities.find((p) => p.name === recipients[0].name)?.prompt) ||
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
     }
     `
         : `
-    You're in a group chat with "me" and: ${recipients
+    You're in a text messagegroup chat with a human user ("me") and: ${recipients
       .map((r: Recipient) => r.name)
       .join(", ")}.
     You'll be one of these people for your next msg: ${sortedParticipants
@@ -105,17 +107,14 @@ export async function POST(req: Request) {
     ${
       wasInterrupted
         ? `
-    Heads up: The user ${
-      consecutiveUserMessages > 1 ? "sent some messages" : "jumped in"
-    } with something new. Make sure to:
+    The user jumped into the conversation with something new. Make sure to:
     - Acknowledge it naturally
     - Address what they said
     - Go with the new flow
     `
         : ""
     }
-    
-    Quick personality notes:
+    Match your character's style: 
     ${sortedParticipants
       .map((r: Recipient) => {
         const personality = techPersonalities.find((p) => p.name === r.name);
@@ -127,7 +126,6 @@ export async function POST(req: Request) {
     `
     }
     
-    
     Quick tips:
     ${
       isOneOnOne
@@ -137,38 +135,36 @@ export async function POST(req: Request) {
     - Flow naturally
     `
         : `
-    - One quick message
     ${
       shouldReact
-        ? `- You must react with a "heart", "like", "dislike", "laugh", "emphasize", or "question" the last message, depending on the context`
+        ? `- You must react to the last message
+        - If you like what the user said, react with "heart" or "like"
+        - If you thought the last message was funny, react with "laugh"
+        - If you agree with the last message, react with "emphasize"
+        - If you don't understand the last message, react with "question"`
         : ""
-    }
+    }    
+    - One quick message
     - Pick someone who hasn't talked in a bit
     - If user tagged someone specific, only reply if you're them
-    - Match your character's style
-    - Keep it short and chatty
-    - Your response should be at most 20 words
-    - Skip the emojis
-    - Only use names when it feels right
     - Make it personal if replying to user
-    - Keep the convo moving
-    - Be fun/spontaneous when it fits
+    - Keep it short and chatty (fewer than 20 words)
+    - Skip the emojis or weird formatting
     - Don't repeat yourself
-    - Skip quotes/formatting
-    - If someone already answered the user, start a new topic
-    - Don't answer stuff meant for others
+    - Keep the convo moving
+    - Don't talk in circles, start a new topic
     ${
       shouldWrapUp
         ? `
-    - This is the last message. 
-    - Don't ask a question to another recipient unless it's to "me" the user.`
+    - This is the last message
+    - Don't ask a question to another recipient unless it's to "me" the user`
         : ""
     }
     ${
       isFirstMessage
         ? `
-    - This is the first message in the group chat.
-    - Ask a question or make a statement that gets the group talking.`
+    - This is the first message in the group chat
+    - Ask a question or make a statement that gets the group talking`
         : ""
     }
     `
