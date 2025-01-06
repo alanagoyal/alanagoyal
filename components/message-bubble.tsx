@@ -137,13 +137,21 @@ export function MessageBubble({
 
     let highlightedContent = content;
     recipients.forEach((recipient) => {
-      // Check for full name and first name, with optional @ prefix
-      const fullNameRegex = new RegExp(`@?\\b${recipient.name}\\b`, "gi");
-      const firstName = recipient.name.split(" ")[0];
-      const firstNameRegex = new RegExp(`@?\\b${firstName}\\b`, "gi");
+      // Special case for I. M. Pei - only highlight when seeing full initials or last name
+      if (recipient.name === "I. M. Pei") {
+        const imPeiRegex = new RegExp(`\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`, "gu");
+        highlightedContent = highlightedContent.replace(imPeiRegex, (match) => {
+          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+        });
+        return; // Skip regular name highlighting for I. M. Pei
+      }
 
-      const colorClass =
-        sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+      // Regular case for all other names
+      const fullNameRegex = new RegExp(`@?\\b${recipient.name}(?=\\s|$|\\p{P})`, "giu");
+      const firstName = recipient.name.split(" ")[0];
+      const firstNameRegex = new RegExp(`@?\\b${firstName}(?=\\s|$|\\p{P})`, "giu");
+
+      const colorClass = sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
 
       // Replace names with highlighted spans
       highlightedContent = highlightedContent
