@@ -6,6 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+// Helper to check if we can add more recipients
+const hasReachedMaxRecipients = (recipients: string) => {
+  const currentRecipients = recipients.split(",").filter(r => r.trim());
+  return currentRecipients.length >= 4;
+};
+
 // Types
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -40,6 +46,7 @@ interface RecipientSearchProps {
   setShowResults: (show: boolean) => void;
   updateRecipients: () => void;
   isMobileView?: boolean;
+  recipientInput: string;
 }
 
 // Sub-components
@@ -85,6 +92,7 @@ function RecipientSearch({
   setShowResults,
   updateRecipients,
   isMobileView,
+  recipientInput,
 }: RecipientSearchProps) {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -124,13 +132,15 @@ function RecipientSearch({
           const isRemoveButton = (e.relatedTarget as Element)?.closest(
             'button[aria-label^="Remove"]'
           );
-          if (
-            !isRemoveButton &&
-            !e.relatedTarget?.closest('[data-chat-header-dropdown="true"]')
-          ) {
-            setShowResults(false);
-            setSelectedIndex(-1);
+          const isDropdown = e.relatedTarget?.closest('[data-chat-header-dropdown="true"]');
+          
+          if (!isRemoveButton && !isDropdown) {
             updateRecipients();
+          }
+        }}
+        onFocus={() => {
+          if (!hasReachedMaxRecipients(recipientInput)) {
+            setShowResults(true);
           }
         }}
         placeholder="Type to add recipients..."
@@ -321,7 +331,7 @@ export function ChatHeader({
 
     if (currentRecipients.includes(person.name)) return;
 
-    if (currentRecipients.length >= 4) {
+    if (hasReachedMaxRecipients(recipientInput)) {
       toast({ description: "You can add up to four recipients" });
       return;
     }
@@ -335,7 +345,7 @@ export function ChatHeader({
       : person.name;
     setRecipientInput(newValue + ",");
     setSearchValue("");
-    setShowResults(false);
+    setShowResults(!hasReachedMaxRecipients(newValue));
     setSelectedIndex(-1);
   };
 
@@ -410,7 +420,6 @@ export function ChatHeader({
           setShowCompactNewChat?.(true);
         }
         
-        // Clear search state after setting compact mode
         setShowResults(false);
         setSearchValue("");
         setSelectedIndex(-1);
@@ -505,6 +514,7 @@ export function ChatHeader({
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
+                        recipientInput={recipientInput}
                       />
                     )}
                   </div>
@@ -573,6 +583,7 @@ export function ChatHeader({
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
+                        recipientInput={recipientInput}
                       />
                     )}
                   </div>
