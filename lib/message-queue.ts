@@ -165,6 +165,12 @@ export class MessageQueue {
         return;
       }
 
+      // Decide if this should be the last message
+      const isGroupChat = task.conversation.recipients.length > 1;
+      const shouldWrapUp =
+        task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1 || // hit max messages
+        (isGroupChat && task.priority !== 100 && Math.random() <= 0.25); // 25% chance to end group chats naturally
+
       // Make API request
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -172,8 +178,7 @@ export class MessageQueue {
         body: JSON.stringify({
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
-          shouldWrapUp:
-            task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
+          shouldWrapUp,
           isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
           shouldReact: Math.random() < 0.5,
@@ -246,8 +251,8 @@ export class MessageQueue {
       // Clear typing status
       this.callbacks.onTypingStatusChange(null, null);
 
-      // Modify the AI message queueing logic
-      if (task.consecutiveAiMessages < MAX_CONSECUTIVE_AI_MESSAGES - 1) {
+      // Only continue if we didn't signal this as the last message
+      if (!shouldWrapUp) {
         const updatedConversation = {
           ...task.conversation,
           messages: [...task.conversation.messages, newMessage],
@@ -259,26 +264,19 @@ export class MessageQueue {
         // Only queue next AI message if we're still on the same conversation version
         if (
           !task.abortController.signal.aborted &&
-          task.conversationVersion === this.conversationVersion
+          task.conversationVersion === this.conversationVersion &&
+          isGroupChat
         ) {
-          if (task.conversation.recipients.length > 1) {
-            const lastAiSender = data.sender;
-            const otherRecipients = task.conversation.recipients.filter(
-              (r) => r !== lastAiSender
-            );
-            if (
-              task.priority === 100 ||
-              (otherRecipients.length > 0 && Math.random() > 0.25)
-            ) {
-              const updatedConversationWithNextSender = {
-                ...updatedConversation,
-                recipients:
-                  task.priority === 100
-                    ? task.conversation.recipients
-                    : otherRecipients,
-              };
-              this.enqueueAIMessage(updatedConversationWithNextSender);
-            }
+          const lastAiSender = data.sender;
+          const otherRecipients = task.conversation.recipients.filter(
+            (r) => r !== lastAiSender
+          );
+          if (otherRecipients.length > 0) {
+            const updatedConversationWithNextSender = {
+              ...updatedConversation,
+              recipients: otherRecipients,
+            };
+            this.enqueueAIMessage(updatedConversationWithNextSender);
           }
         }
       }
