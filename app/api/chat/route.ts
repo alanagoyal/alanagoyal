@@ -140,8 +140,7 @@ export async function POST(req: Request) {
         ? `- You must react to the last message
         - If you like what the user said, react with "heart" or "like"
         - If you thought the last message was funny, react with "laugh"
-        - If you agree with the last message, react with "emphasize"
-        - If you don't understand the last message, react with "question"`
+        - If you agree with the last message, react with "emphasize"`
         : ""
     }    
     - One quick message
@@ -212,7 +211,6 @@ export async function POST(req: Request) {
                     "dislike",
                     "laugh",
                     "emphasize",
-                    "question",
                   ],
                   description: "optional reaction to the last message",
                 },
