@@ -145,13 +145,12 @@ export async function POST(req: Request) {
     }    
     - One quick message
     - Pick someone who hasn't talked in a bit
-    - If user tagged someone specific, only reply if you're them
-    - Make it personal if replying to user
-    - Keep it short and chatty (fewer than 20 words)
-    - Skip the emojis or weird formatting
-    - Don't repeat yourself
-    - Keep the convo moving
-    - Don't talk in circles, start a new topic
+    - If someone specific was tagged or asked a question, reply as them
+    - Review the previous messages in the conversation
+    - Don't repeat or contradict yourself
+    - Keep messages short (fewer than 20 words)
+    - No emojis or weird formatting
+
     ${
       shouldWrapUp
         ? `
@@ -205,13 +204,7 @@ export async function POST(req: Request) {
                 content: { type: "string" },
                 reaction: {
                   type: "string",
-                  enum: [
-                    "heart",
-                    "like",
-                    "dislike",
-                    "laugh",
-                    "emphasize",
-                  ],
+                  enum: ["heart", "like", "dislike", "laugh", "emphasize"],
                   description: "optional reaction to the last message",
                 },
               },
@@ -223,8 +216,6 @@ export async function POST(req: Request) {
       temperature: 0.5,
       max_tokens: 1000,
     });
-
-    console.log("Full OpenAI response:", JSON.stringify(response, null, 2));
 
     let content =
       response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
@@ -241,22 +232,13 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log("Extracted content:", content);
-
     if (!content) {
-      console.log("Response structure:", {
-        hasChoices: Boolean(response.choices),
-        firstChoice: response.choices?.[0],
-        hasMessage: Boolean(response.choices?.[0]?.message),
-        toolCalls: response.choices?.[0]?.message?.tool_calls,
-      });
       throw new Error("No response from OpenAI");
     }
 
     let messageData: ChatResponse;
     try {
       messageData = JSON.parse(content.trim()) as ChatResponse;
-      console.log("Parsed message data:", messageData);
     } catch (error) {
       console.error("Failed to parse JSON response:", error);
       throw new Error("Invalid JSON format in API response");
