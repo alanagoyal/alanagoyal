@@ -9,8 +9,8 @@ class SoundEffectPlayer {
   private constructor() {
     if (typeof window !== 'undefined') {
       this.sentSound = new Audio('/sound-effects/sent.m4a');
-      this.receivedSound = new Audio('/sound-effects/received-in-chat.m4a');
-      this.unreadSound = new Audio('/sound-effects/received.m4a');
+      this.receivedSound = new Audio('/sound-effects/received.m4a');
+      this.unreadSound = new Audio('/sound-effects/unread.m4a');
       this.reactionSound = new Audio('/sound-effects/reaction.m4a');
     }
   }
