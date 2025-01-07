@@ -81,20 +81,9 @@ export function Sidebar({
     return name[0].toUpperCase();
   };
 
-  const getReactionIconSvg = (
-    messageFromMe: boolean,
-    reactionType: string,
-    reactionFromMe: boolean
-  ) => {
-    const orientation = messageFromMe ? "left" : "right";
-    const variant = reactionFromMe
-      ? effectiveTheme === "dark"
-        ? "dark-blue"
-        : "light-blue"
-      : effectiveTheme === "dark"
-      ? "dark"
-      : "light";
-    return `/${orientation}-${variant}-${reactionType}.svg`;
+  const getReactionIconSvg = (reactionType: string) => {
+    const variant = effectiveTheme === "dark" ? "dark" : "pinned-light";
+    return `/reactions/right-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -363,8 +352,8 @@ export function Sidebar({
                                             <Image
                                               src={
                                                 effectiveTheme === "dark"
-                                                  ? "/typing-dark.svg"
-                                                  : "/typing-light.svg"
+                                                  ? "/typing-bubbles/typing-dark.svg"
+                                                  : "/typing-bubbles/typing-light.svg"
                                               }
                                               alt="Typing indicator"
                                               width={32}
@@ -443,11 +432,7 @@ export function Sidebar({
                                                         )}
                                                         style={{
                                                           backgroundImage: `url('${getReactionIconSvg(
-                                                            lastMessage.sender ===
-                                                              "me",
-                                                            reaction.type,
-                                                            reaction.sender ===
-                                                              "me"
+                                                            reaction.type
                                                           )}')`,
                                                           backgroundSize:
                                                             "contain",

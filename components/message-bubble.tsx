@@ -51,12 +51,12 @@ export function MessageBubble({
   const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
-    heart: "/heart-gray.svg",
-    like: "/like-gray.svg",
-    dislike: "/dislike-gray.svg",
-    laugh: "/laugh-gray.svg",
-    emphasize: "/emphasize-gray.svg",
-    question: "/question-gray.svg",
+    heart: "/reactions/heart-gray.svg",
+    like: "/reactions/like-gray.svg",
+    dislike: "/reactions/dislike-gray.svg",
+    laugh: "/reactions/laugh-gray.svg",
+    emphasize: "/reactions/emphasize-gray.svg",
+    question: "/reactions/question-gray.svg",
   };
 
   // State to control the Popover open state and animation
@@ -127,8 +127,8 @@ export function MessageBubble({
     );
   };
 
-  // Helper function to highlight recipient names in message content
-  const highlightRecipientNames = (
+  // Helper function to prepare message content by highlighting recipient names
+  const prepareContent = (
     content: string,
     recipients: Conversation["recipients"],
     sender: string
@@ -137,13 +137,30 @@ export function MessageBubble({
 
     let highlightedContent = content;
     recipients.forEach((recipient) => {
-      // Check for full name and first name, with optional @ prefix
-      const fullNameRegex = new RegExp(`@?\\b${recipient.name}\\b`, "gi");
-      const firstName = recipient.name.split(" ")[0];
-      const firstNameRegex = new RegExp(`@?\\b${firstName}\\b`, "gi");
+      // Special case for I. M. Pei - only highlight when seeing full initials or last name
+      if (recipient.name === "I. M. Pei") {
+        const imPeiRegex = new RegExp(`\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`, "gu");
+        highlightedContent = highlightedContent.replace(imPeiRegex, (match) => {
+          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+        });
+        return; // Skip regular name highlighting for I. M. Pei
+      }
 
-      const colorClass =
-        sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+      // Special case for Trader Joe's - don't highlight Joe when it's part of "Trader Joe's"
+      if (recipient.name === "Joe") {
+        const joeRegex = new RegExp(`(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`, "gu");
+        highlightedContent = highlightedContent.replace(joeRegex, (match) => {
+          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+        });
+        return; // Skip regular name highlighting for Joe
+      }
+
+      // Regular case for all other names
+      const fullNameRegex = new RegExp(`@?\\b${recipient.name}(?=\\s|$|\\p{P})`, "giu");
+      const firstName = recipient.name.split(" ")[0];
+      const firstNameRegex = new RegExp(`@?\\b${firstName}(?=\\s|$|\\p{P})`, "giu");
+
+      const colorClass = sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
 
       // Replace names with highlighted spans
       highlightedContent = highlightedContent
@@ -166,16 +183,16 @@ export function MessageBubble({
 
   const rightBubbleSvg =
     effectiveTheme === "dark"
-      ? "/right-bubble-dark.svg"
-      : "/right-bubble-light.svg";
+      ? "/message-bubbles/right-bubble-dark.svg"
+      : "/message-bubbles/right-bubble-light.svg";
   const leftBubbleSvg =
     effectiveTheme === "dark"
-      ? "/left-bubble-dark.svg"
-      : "/left-bubble-light.svg";
+      ? "/message-bubbles/left-bubble-dark.svg"
+      : "/message-bubbles/left-bubble-light.svg";
   const typingIndicatorSvg =
     effectiveTheme === "dark"
-      ? "/chat-typing-dark.svg"
-      : "/chat-typing-light.svg";
+      ? "/typing-bubbles/chat-typing-dark.svg"
+      : "/typing-bubbles/chat-typing-light.svg";
 
   const getReactionIconSvg = (
     messageFromMe: boolean,
@@ -190,7 +207,7 @@ export function MessageBubble({
       : effectiveTheme === "dark"
       ? "dark"
       : "light";
-    return `/${orientation}-${variant}-${reactionType}.svg`;
+    return `/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   return (
@@ -291,7 +308,7 @@ export function MessageBubble({
                           />
                         </div>
                       ) : (
-                        highlightRecipientNames(
+                        prepareContent(
                           message.content,
                           conversation?.recipients || [],
                           message.sender

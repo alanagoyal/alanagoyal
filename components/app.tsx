@@ -257,6 +257,22 @@ export default function App() {
           );
         });
       },
+      onMessageUpdated: (conversationId: string, messageId: string, updates: Partial<Message>) => {
+        setConversations((prev) => {
+          return prev.map((conv) =>
+            conv.id === conversationId
+              ? {
+                  ...conv,
+                  messages: conv.messages.map((msg) =>
+                    msg.id === messageId
+                      ? { ...msg, ...updates }
+                      : msg
+                  ),
+                }
+              : conv
+          );
+        });
+      },
       onTypingStatusChange: (
         conversationId: string | null,
         recipient: string | null

@@ -28,6 +28,11 @@ type MessageQueueCallbacks = {
     recipient: string | null
   ) => void;
   onError: (error: Error) => void;
+  onMessageUpdated?: (
+    conversationId: string,
+    messageId: string,
+    updates: Partial<Message>
+  ) => void;
 };
 
 // Maximum number of consecutive AI messages allowed to prevent infinite loops
@@ -57,7 +62,7 @@ export class MessageQueue {
   public enqueueUserMessage(conversation: Conversation) {
     // Cancel all pending AI messages when user sends a message
     this.cancelAllTasks();
-    
+
     // Clear any existing debounce timeout
     if (this.userMessageDebounceTimeout) {
       clearTimeout(this.userMessageDebounceTimeout);
@@ -70,7 +75,7 @@ export class MessageQueue {
     this.userMessageDebounceTimeout = setTimeout(() => {
       if (this.pendingUserMessages) {
         this.conversationVersion++;
-        
+
         const task: MessageTask = {
           id: crypto.randomUUID(),
           conversation: this.pendingUserMessages,
@@ -160,9 +165,10 @@ export class MessageQueue {
         return;
       }
 
-      // Start typing indicator
-      this.callbacks.onTypingStatusChange(task.conversation.id, null);
-
+      // Decide if this should be the last message
+      const isGroupChat = task.conversation.recipients.length > 1;
+      const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1; 
+      
       // Make API request
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -170,9 +176,10 @@ export class MessageQueue {
         body: JSON.stringify({
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
-          shouldWrapUp: task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1,
+          shouldWrapUp,
           isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
+          shouldReact: Math.random() < 0.5,
         }),
         signal: task.abortController.signal,
       });
@@ -183,7 +190,38 @@ export class MessageQueue {
 
       const data = await response.json();
 
-      // Simulate typing delay
+      // If there's a reaction in the response, add it to the last message
+      if (data.reaction && task.conversation.messages.length > 0) {
+        const lastMessage =
+          task.conversation.messages[task.conversation.messages.length - 1];
+        if (!lastMessage.reactions) {
+          lastMessage.reactions = [];
+        }
+        lastMessage.reactions.push({
+          type: data.reaction,
+          sender: data.sender,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        });
+
+        // Use onMessageUpdated callback to update just the reactions
+        if (this.callbacks.onMessageUpdated) {
+          this.callbacks.onMessageUpdated(
+            task.conversation.id,
+            lastMessage.id,
+            {
+              reactions: lastMessage.reactions,
+            }
+          );
+        }
+
+        // Delay to show reaction before typing animation
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      // Start typing animation and delay for the content
       const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
@@ -211,8 +249,8 @@ export class MessageQueue {
       // Clear typing status
       this.callbacks.onTypingStatusChange(null, null);
 
-      // Modify the AI message queueing logic
-      if (task.consecutiveAiMessages < MAX_CONSECUTIVE_AI_MESSAGES - 1) {
+      // Only continue if we didn't signal this as the last message
+      if (!shouldWrapUp) {
         const updatedConversation = {
           ...task.conversation,
           messages: [...task.conversation.messages, newMessage],
@@ -222,30 +260,21 @@ export class MessageQueue {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Only queue next AI message if we're still on the same conversation version
-        if (!task.abortController.signal.aborted && task.conversationVersion === this.conversationVersion) {
-          if (task.conversation.recipients.length > 1) {
-            const lastAiSender = data.sender;
-            const otherRecipients = task.conversation.recipients.filter(
-              (r) => r !== lastAiSender
-            );
-
-            const lastMessageContent = data.content.toLowerCase();
-            const hasQuestion = lastMessageContent.includes("?") || 
-              /\b(what|who|when|where|why|how|which|whose|whom)\b/i.test(lastMessageContent);
-
-            if (
-              task.priority === 100 ||
-              (otherRecipients.length > 0 && (hasQuestion || Math.random() > 0.25))
-            ) {
-              const updatedConversationWithNextSender = {
-                ...updatedConversation,
-                recipients:
-                  task.priority === 100
-                    ? task.conversation.recipients
-                    : otherRecipients,
-              };
-              this.enqueueAIMessage(updatedConversationWithNextSender);
-            }
+        if (
+          !task.abortController.signal.aborted &&
+          task.conversationVersion === this.conversationVersion &&
+          isGroupChat
+        ) {
+          const lastAiSender = data.sender;
+          const otherRecipients = task.conversation.recipients.filter(
+            (r) => r !== lastAiSender
+          );
+          if (otherRecipients.length > 0) {
+            const updatedConversationWithNextSender = {
+              ...updatedConversation,
+              recipients: otherRecipients,
+            };
+            this.enqueueAIMessage(updatedConversationWithNextSender);
           }
         }
       }

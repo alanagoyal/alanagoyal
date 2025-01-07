@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { Recipient, Message } from "../../../types";
+import { Recipient, Message, ReactionType } from "../../../types";
 import { techPersonalities } from "../../../data/tech-personalities";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
@@ -8,7 +8,7 @@ const client = wrapOpenAI(
   new OpenAI({
     baseURL: "https://api.braintrust.dev/v1/proxy",
     apiKey: process.env.BRAINTRUST_API_KEY!,
-    timeout: 30000, // 30 second timeout
+    timeout: 30000,
     maxRetries: 3,
   })
 );
@@ -21,12 +21,19 @@ initLogger({
 interface ChatResponse {
   sender: string;
   content: string;
+  reaction?: ReactionType;
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { recipients, messages, shouldWrapUp, isFirstMessage, isOneOnOne } =
-    body;
+  const {
+    recipients,
+    messages,
+    shouldWrapUp,
+    isFirstMessage,
+    isOneOnOne,
+    shouldReact,
+  } = body;
 
   const lastMessage =
     messages?.length > 0 ? messages[messages.length - 1] : null;
@@ -80,7 +87,9 @@ export async function POST(req: Request) {
     ${
       isOneOnOne
         ? `
-    You're chatting 1-on-1 with a human user. You're ${recipients[0].name}.
+    You're chatting 1-on-1 text message convo with a human user ("me"). You are responding as ${
+      recipients[0].name
+    }.
     ${
       (recipients[0].name &&
         techPersonalities.find((p) => p.name === recipients[0].name)?.prompt) ||
@@ -88,7 +97,7 @@ export async function POST(req: Request) {
     }
     `
         : `
-    You're in a group chat with "me" and: ${recipients
+    You're in a text messagegroup chat with a human user ("me") and: ${recipients
       .map((r: Recipient) => r.name)
       .join(", ")}.
     You'll be one of these people for your next msg: ${sortedParticipants
@@ -98,17 +107,14 @@ export async function POST(req: Request) {
     ${
       wasInterrupted
         ? `
-    Heads up: The user ${
-      consecutiveUserMessages > 1 ? "sent some messages" : "jumped in"
-    } with something new. Make sure to:
+    The user jumped into the conversation with something new. Make sure to:
     - Acknowledge it naturally
     - Address what they said
     - Go with the new flow
     `
         : ""
     }
-    
-    Quick personality notes:
+    Match your character's style: 
     ${sortedParticipants
       .map((r: Recipient) => {
         const personality = techPersonalities.find((p) => p.name === r.name);
@@ -120,23 +126,6 @@ export async function POST(req: Request) {
     `
     }
     
-    Keep it natural and match your character's vibe.
-    
-    IMPORTANT: 
-    1. Reply in this exact JSON:
-    {
-      "sender": "name_of_participant",
-      "content": "your_message"
-    }
-    2. ${
-      isOneOnOne
-        ? `You have to be "${recipients[0].name}"`
-        : `Pick from these names: ${sortedParticipants
-            .map((r: Recipient) => r.name)
-            .join(", ")}`
-    }
-    3. Don't use "me" as sender
-    
     Quick tips:
     ${
       isOneOnOne
@@ -146,35 +135,38 @@ export async function POST(req: Request) {
     - Flow naturally
     `
         : `
+    ${
+      shouldReact
+        ? `- You must react to the last message
+        - If you love the last message, react with "heart" 
+        - If you like the last message, react with "like"
+        - If the last message was funny, react with "laugh"
+        - If you strongly agree with the last message, react with "emphasize"`
+        : ""
+    }    
     - One quick message
     - Pick someone who hasn't talked in a bit
-    - If user tagged someone specific, only reply if you're them
-    - Match your character's style
-    - Keep it short and chatty
-    - Your response should be at most 20 words
-    - Skip the emojis
-    - Only use names when it feels right
-    - Make it personal if replying to user
-    - Keep the convo moving
-    - Be fun/spontaneous when it fits
-    - Don't repeat yourself
-    - Skip quotes/formatting
-    - If someone already answered the user, start a new topic
-    - Don't answer stuff meant for others
+    - If someone specific was tagged or asked a question, reply as them
+    - Review the previous messages in the conversation
+    - Don't repeat or contradict yourself
+    - Keep messages short (fewer than 20 words)
+    - No emojis or weird formatting
+
     ${
       shouldWrapUp
         ? `
-    - This is the last message. 
-    - Don't ask a question to another recipient unless it's to "me" the user.`
+    - This is the last message
+    - Don't ask a question to another recipient unless it's to "me" the user`
         : ""
     }
     ${
       isFirstMessage
         ? `
-    - This is the first message in the group chat.
-    - Ask a question or make a statement that gets the group talking.`
+    - This is the first message in the group chat
+    - Ask a question or make a statement that gets the group talking`
         : ""
-    }`
+    }
+    `
     }
   `;
 
@@ -183,26 +175,63 @@ export async function POST(req: Request) {
       { role: "system", content: prompt },
       ...(messages || []).map((msg: Message) => ({
         role: "user",
-        content: `${msg.sender}: ${msg.content}`,
+        content: `${msg.sender}: ${msg.content}${
+          msg.reactions?.length
+            ? ` [reactions: ${msg.reactions
+                .map((r) => `${r.sender} reacted with ${r.type}`)
+                .join(", ")}]`
+            : ""
+        }`,
       })),
     ];
 
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        ...openaiMessages,
+      messages: [...openaiMessages],
+      tool_choice: "required",
+      tools: [
         {
-          role: "system",
-          content: `You must respond with valid JSON in the following format ONLY:\n{"sender": "<n>", "content": "<message>"}\nThe sender MUST be one of these exact names: ${sortedParticipants
-            .map((r: Recipient) => `"${r.name}"`)
-            .join(", ")}`,
+          type: "function",
+          function: {
+            name: "chat",
+            description: "returns the next message in the conversation",
+            parameters: {
+              type: "object",
+              properties: {
+                sender: {
+                  type: "string",
+                  enum: sortedParticipants.map((r: Recipient) => r.name),
+                },
+                content: { type: "string" },
+                reaction: {
+                  type: "string",
+                  enum: ["heart", "like", "dislike", "laugh", "emphasize"],
+                  description: "optional reaction to the last message",
+                },
+              },
+              required: ["sender", "content"],
+            },
+          },
         },
       ],
-      temperature: 0.9,
-      max_tokens: 1000, // Increased to prevent truncation
+      temperature: 0.5,
+      max_tokens: 1000,
     });
 
-    const content = response.choices[0]?.message?.content;
+    let content =
+      response.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+
+    // If no tool calls, try to parse from direct content
+    if (!content && response.choices[0]?.message?.content) {
+      const messageContent = response.choices[0].message.content;
+      const match = messageContent.match(/^([^:]+):\s*(.+)$/);
+      if (match) {
+        content = JSON.stringify({
+          sender: match[1].trim(),
+          content: match[2].trim(),
+        });
+      }
+    }
 
     if (!content) {
       throw new Error("No response from OpenAI");
@@ -210,44 +239,15 @@ export async function POST(req: Request) {
 
     let messageData: ChatResponse;
     try {
-      // Parse the JSON response
       messageData = JSON.parse(content.trim()) as ChatResponse;
-
-      if (!messageData.sender || !messageData.content) {
-        throw new Error("Response missing required fields");
-      }
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        console.error(
-          "Failed to parse JSON response:",
-          error,
-          "\nContent preview:",
-          content.slice(0, 200),
-          "\nContent length:",
-          content.length
-        );
-        throw new Error("Invalid JSON format in API response");
-      }
-      throw error;
+      console.error("Failed to parse JSON response:", error);
+      throw new Error("Invalid JSON format in API response");
     }
 
-    // Get the first available participant if sender is "me"
+    // Handle special case for "me" sender
     if (messageData.sender === "me" && sortedParticipants.length > 0) {
       messageData.sender = sortedParticipants[0].name;
-    }
-
-    // Validate sender
-    if (
-      !sortedParticipants.find((r: Recipient) => r.name === messageData.sender)
-    ) {
-      console.error(
-        "Available participants:",
-        sortedParticipants.map((r: Recipient) => r.name)
-      );
-      console.error("Received sender:", messageData.sender);
-      throw new Error(
-        "Invalid sender: must be one of the available participants"
-      );
     }
 
     return new Response(JSON.stringify(messageData), {
