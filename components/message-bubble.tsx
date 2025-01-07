@@ -139,28 +139,45 @@ export function MessageBubble({
     recipients.forEach((recipient) => {
       // Special case for I. M. Pei - only highlight when seeing full initials or last name
       if (recipient.name === "I. M. Pei") {
-        const imPeiRegex = new RegExp(`\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`, "gu");
+        const imPeiRegex = new RegExp(
+          `\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`,
+          "gu"
+        );
         highlightedContent = highlightedContent.replace(imPeiRegex, (match) => {
-          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+          return `<span class="font-medium ${
+            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
+          }">${match}</span>`;
         });
         return; // Skip regular name highlighting for I. M. Pei
       }
 
       // Special case for Trader Joe's - don't highlight Joe when it's part of "Trader Joe's"
       if (recipient.name === "Joe") {
-        const joeRegex = new RegExp(`(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`, "gu");
+        const joeRegex = new RegExp(
+          `(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`,
+          "gu"
+        );
         highlightedContent = highlightedContent.replace(joeRegex, (match) => {
-          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+          return `<span class="font-medium ${
+            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
+          }">${match}</span>`;
         });
         return; // Skip regular name highlighting for Joe
       }
 
       // Regular case for all other names
-      const fullNameRegex = new RegExp(`@?\\b${recipient.name}(?=\\s|$|\\p{P})`, "giu");
+      const fullNameRegex = new RegExp(
+        `@?\\b${recipient.name}(?=\\s|$|\\p{P})`,
+        "giu"
+      );
       const firstName = recipient.name.split(" ")[0];
-      const firstNameRegex = new RegExp(`@?\\b${firstName}(?=\\s|$|\\p{P})`, "giu");
+      const firstNameRegex = new RegExp(
+        `@?\\b${firstName}(?=\\s|$|\\p{P})`,
+        "giu"
+      );
 
-      const colorClass = sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+      const colorClass =
+        sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
 
       // Replace names with highlighted spans
       highlightedContent = highlightedContent
@@ -251,8 +268,7 @@ export function MessageBubble({
                 ? "border-[20px] border-solid border-r-[27.7px] text-white"
                 : isTyping
                 ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
-              justSent && "animate-pop-in"
+                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
               !isSystemMessage
