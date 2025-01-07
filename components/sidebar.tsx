@@ -28,7 +28,6 @@ interface SidebarProps {
   typingStatus: { conversationId: string; recipient: string } | null;
   isCommandMenuOpen: boolean;
   onScroll?: (isScrolled: boolean) => void;
-  soundEnabled: boolean;
   onSoundToggle: () => void;
 }
 
@@ -45,7 +44,6 @@ export function Sidebar({
   typingStatus,
   isCommandMenuOpen,
   onScroll,
-  soundEnabled,
   onSoundToggle,
 }: SidebarProps) {
   const { theme, systemTheme, setTheme } = useTheme();

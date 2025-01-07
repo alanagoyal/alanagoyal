@@ -706,7 +706,6 @@ export default function App() {
               typingStatus={typingStatus}
               isCommandMenuOpen={isCommandMenuOpen}
               onScroll={setIsScrolled}
-              soundEnabled={soundEnabled}
               onSoundToggle={handleSoundToggle}
             >
               <Nav
