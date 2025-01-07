@@ -62,8 +62,6 @@ export function MessageBubble({
 
   // State to control the Popover open state and animation
   const [isOpen, setIsOpen] = useState(false);
-  const [justAddedReactionType, setJustAddedReactionType] =
-    useState<ReactionType | null>(null);
   const openTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handler for menu state changes
@@ -91,6 +89,11 @@ export function MessageBubble({
   const handleReaction = useCallback(
     (type: ReactionType) => {
       if (onReaction) {
+        // Check if this reaction type already exists
+        const isExistingReaction = message.reactions?.some(
+          (r) => r.type === type && r.sender === "me"
+        );
+
         // Create reaction with current timestamp
         const reaction: Reaction = {
           type,
@@ -98,27 +101,23 @@ export function MessageBubble({
           timestamp: new Date().toISOString(),
         };
 
-        // Start reaction animation
-        setJustAddedReactionType(type);
-        soundEffects.playReactionSound();
-
-        // Clear animation after completion
-        setTimeout(() => {
-          setJustAddedReactionType(null);
-        }, 300);
+        // Only play sound if adding a new reaction
+        if (!isExistingReaction) {
+          soundEffects.playReactionSound();
+        }
 
         // Send reaction to parent
         onReaction(message.id, reaction);
 
-        // Close menu and focus input with delay for animation
+        // Close menu and focus input with delay
         setTimeout(() => {
           setIsOpen(false);
           onOpenChange?.(false);
           onReactionComplete?.();
-        }, 150);
+        }, 500);
       }
     },
-    [message.id, onReaction, onOpenChange, onReactionComplete]
+    [message.id, message.reactions, onReaction, onOpenChange, onReactionComplete]
   );
 
   // Check if a specific reaction type is already active for the current user
@@ -234,9 +233,11 @@ export function MessageBubble({
       {/* Spacer before messages */}
       <div className="h-1 bg-background" />
       {/* Extra space between messages with reactions */}
-      {message.reactions && message.reactions.length > 0 && (
-        <div className="h-2 bg-background" />
-      )}
+      <div 
+        className={`overflow-hidden transition-[height] duration-500 ease-in-out ${
+          message.reactions && message.reactions.length > 0 ? 'h-2' : 'h-0'
+        } bg-background`}
+      />
 
       {/* Show recipient name for messages from others */}
       {recipientName && (
@@ -403,8 +404,7 @@ export function MessageBubble({
                         key={`${reaction.type}-${index}`}
                         className={cn(
                           "w-8 h-8 flex items-center justify-center text-sm relative",
-                          reaction.type === justAddedReactionType &&
-                            "animate-scale-in",
+
                           index !== array.length - 1 &&
                             (isMe ? "-mr-7" : "-ml-7"),
                           `z-[${30 - index}]`
