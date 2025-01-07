@@ -2,13 +2,15 @@ class SoundEffectPlayer {
   private static instance: SoundEffectPlayer;
   private sentSound: HTMLAudioElement | null = null;
   private receivedSound: HTMLAudioElement | null = null;
+  private unreadSound: HTMLAudioElement | null = null;
   private reactionSound: HTMLAudioElement | null = null;
   private enabled: boolean = true;
 
   private constructor() {
     if (typeof window !== 'undefined') {
-      this.sentSound = new Audio('/sound-effects/sent.wav');
-      this.receivedSound = new Audio('/sound-effects/received.m4a');
+      this.sentSound = new Audio('/sound-effects/sent.m4a');
+      this.receivedSound = new Audio('/sound-effects/received-in-chat.m4a');
+      this.unreadSound = new Audio('/sound-effects/received.m4a');
       this.reactionSound = new Audio('/sound-effects/reaction.m4a');
     }
   }
@@ -24,6 +26,15 @@ class SoundEffectPlayer {
     if (this.enabled && typeof window !== 'undefined' && this.sentSound) {
       this.sentSound.currentTime = 0;
       this.sentSound.play().catch(() => {
+        // Silently handle autoplay restrictions
+      });
+    }
+  }
+
+  public playUnreadSound() {
+    if (this.enabled && typeof window !== 'undefined' && this.unreadSound) {
+      this.unreadSound.currentTime = 0;
+      this.unreadSound.play().catch(() => {
         // Silently handle autoplay restrictions
       });
     }

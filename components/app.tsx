@@ -245,6 +245,11 @@ export default function App() {
             conversationId !== currentActiveConversation &&
             message.sender !== "me";
 
+          // Play received sound if message is in inactive conversation and not from us
+          if (shouldIncrementUnread) {
+            soundEffects.playUnreadSound();
+          }
+
           return prev.map((conv) =>
             conv.id === conversationId
               ? {
