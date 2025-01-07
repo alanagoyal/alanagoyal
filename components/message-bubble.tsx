@@ -146,6 +146,15 @@ export function MessageBubble({
         return; // Skip regular name highlighting for I. M. Pei
       }
 
+      // Special case for Trader Joe's - don't highlight Joe when it's part of "Trader Joe's"
+      if (recipient.name === "Joe") {
+        const joeRegex = new RegExp(`(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`, "gu");
+        highlightedContent = highlightedContent.replace(joeRegex, (match) => {
+          return `<span class="font-medium ${sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"}">${match}</span>`;
+        });
+        return; // Skip regular name highlighting for Joe
+      }
+
       // Regular case for all other names
       const fullNameRegex = new RegExp(`@?\\b${recipient.name}(?=\\s|$|\\p{P})`, "giu");
       const firstName = recipient.name.split(" ")[0];
