@@ -20,7 +20,6 @@ import { DialogTitle, DialogDescription } from "./ui/dialog";
 import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon, Volume2, VolumeX } from "lucide-react";
 import { Conversation } from "@/types";
 import { useTheme } from "next-themes";
-import { soundEffects } from "@/lib/sound-effects";
 
 export interface CommandMenuProps {
   conversations: Conversation[];

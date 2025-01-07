@@ -14,7 +14,6 @@ import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { soundEffects } from "@/lib/sound-effects";
 
 interface SidebarProps {
   children: React.ReactNode;
