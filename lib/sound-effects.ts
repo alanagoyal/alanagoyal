@@ -2,12 +2,14 @@ class SoundEffectPlayer {
   private static instance: SoundEffectPlayer;
   private sentSound: HTMLAudioElement | null = null;
   private receivedSound: HTMLAudioElement | null = null;
+  private reactionSound: HTMLAudioElement | null = null;
   private enabled: boolean = true;
 
   private constructor() {
     if (typeof window !== 'undefined') {
       this.sentSound = new Audio('/sound-effects/sent.wav');
-      this.receivedSound = new Audio('/sound-effects/received.mp3');
+      this.receivedSound = new Audio('/sound-effects/received.m4a');
+      this.reactionSound = new Audio('/sound-effects/reaction.m4a');
     }
   }
 
@@ -31,6 +33,15 @@ class SoundEffectPlayer {
     if (this.enabled && typeof window !== 'undefined' && this.receivedSound) {
       this.receivedSound.currentTime = 0;
       this.receivedSound.play().catch(() => {
+        // Silently handle autoplay restrictions
+      });
+    }
+  }
+
+  public playReactionSound() {
+    if (this.enabled && typeof window !== 'undefined' && this.reactionSound) {
+      this.reactionSound.currentTime = 0;
+      this.reactionSound.play().catch(() => {
         // Silently handle autoplay restrictions
       });
     }

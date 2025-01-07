@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import { soundEffects } from "@/lib/sound-effects";
 
 // Props for the MessageBubble component
 interface MessageBubbleProps {
@@ -99,6 +100,7 @@ export function MessageBubble({
 
         // Start reaction animation
         setJustAddedReactionType(type);
+        soundEffects.playReactionSound();
 
         // Clear animation after completion
         setTimeout(() => {
