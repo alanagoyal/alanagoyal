@@ -175,10 +175,10 @@ export function ConversationItem({
                   <img
                     src={
                       activeConversation === conversation.id
-                        ? "/typing-blue.svg"
+                        ? "/typing-bubbles/typing-blue.svg"
                         : effectiveTheme === "dark"
-                        ? "/typing-dark.svg"
-                        : "/typing-light.svg"
+                        ? "/typing-bubbles/typing-dark.svg"
+                        : "/typing-bubbles/typing-light.svg"
                     }
                     alt="typing"
                     className="w-[45px] h-auto"

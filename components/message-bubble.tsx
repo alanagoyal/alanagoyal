@@ -51,12 +51,12 @@ export function MessageBubble({
   const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
-    heart: "/heart-gray.svg",
-    like: "/like-gray.svg",
-    dislike: "/dislike-gray.svg",
-    laugh: "/laugh-gray.svg",
-    emphasize: "/emphasize-gray.svg",
-    question: "/question-gray.svg",
+    heart: "/reactions/heart-gray.svg",
+    like: "/reactions/like-gray.svg",
+    dislike: "/reactions/dislike-gray.svg",
+    laugh: "/reactions/laugh-gray.svg",
+    emphasize: "/reactions/emphasize-gray.svg",
+    question: "/reactions/question-gray.svg",
   };
 
   // State to control the Popover open state and animation
@@ -183,16 +183,16 @@ export function MessageBubble({
 
   const rightBubbleSvg =
     effectiveTheme === "dark"
-      ? "/right-bubble-dark.svg"
-      : "/right-bubble-light.svg";
+      ? "/message-bubbles/right-bubble-dark.svg"
+      : "/message-bubbles/right-bubble-light.svg";
   const leftBubbleSvg =
     effectiveTheme === "dark"
-      ? "/left-bubble-dark.svg"
-      : "/left-bubble-light.svg";
+      ? "/message-bubbles/left-bubble-dark.svg"
+      : "/message-bubbles/left-bubble-light.svg";
   const typingIndicatorSvg =
     effectiveTheme === "dark"
-      ? "/chat-typing-dark.svg"
-      : "/chat-typing-light.svg";
+      ? "/typing-bubbles/chat-typing-dark.svg"
+      : "/typing-bubbles/chat-typing-light.svg";
 
   const getReactionIconSvg = (
     messageFromMe: boolean,
@@ -207,7 +207,7 @@ export function MessageBubble({
       : effectiveTheme === "dark"
       ? "dark"
       : "light";
-    return `/${orientation}-${variant}-${reactionType}.svg`;
+    return `/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   return (

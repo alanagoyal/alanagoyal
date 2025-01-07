@@ -83,7 +83,7 @@ export function Sidebar({
 
   const getReactionIconSvg = (reactionType: string) => {
     const variant = effectiveTheme === "dark" ? "dark" : "pinned-light";
-    return `/right-${variant}-${reactionType}.svg`;
+    return `/reactions/right-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -352,8 +352,8 @@ export function Sidebar({
                                             <Image
                                               src={
                                                 effectiveTheme === "dark"
-                                                  ? "/typing-dark.svg"
-                                                  : "/typing-light.svg"
+                                                  ? "/typing-bubbles/typing-dark.svg"
+                                                  : "/typing-bubbles/typing-light.svg"
                                               }
                                               alt="Typing indicator"
                                               width={32}
