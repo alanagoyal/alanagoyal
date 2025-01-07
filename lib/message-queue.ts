@@ -13,17 +13,11 @@ type MessageTask = {
   conversationVersion: number; // Add version tracking
 };
 
-// Represents the current state of a conversation queue
-type ConversationQueueState = {
+// Represents the current state of the message queue
+type MessageQueueState = {
   status: "idle" | "processing";
   currentTask: MessageTask | null;
   tasks: MessageTask[];
-  version: number;
-};
-
-// Represents the current state of the message queue
-type MessageQueueState = {
-  conversationQueues: Map<string, ConversationQueueState>;
 };
 
 // Callback functions for handling various queue events
@@ -48,133 +42,134 @@ const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 //  It ensures messages are processed in order and handles both user and AI messages
 export class MessageQueue {
   private state: MessageQueueState = {
-    conversationQueues: new Map(),
+    status: "idle",
+    currentTask: null,
+    tasks: [],
   };
   private callbacks: MessageQueueCallbacks;
-  private activeConversationId: string | null = null;
+  private activeConversation: string | null = null;
+  private conversationVersion: number = 0; // Add version counter
+  private userMessageDebounceTimeout: NodeJS.Timeout | null = null;
+  private pendingUserMessages: Conversation | null = null;
 
+  //  Initializes the MessageQueue instance with callback functions
   constructor(callbacks: MessageQueueCallbacks) {
     this.callbacks = callbacks;
   }
 
-  private getOrCreateConversationQueue(
-    conversationId: string
-  ): ConversationQueueState {
-    if (!this.state.conversationQueues.has(conversationId)) {
-      this.state.conversationQueues.set(conversationId, {
-        status: "idle",
-        currentTask: null,
-        tasks: [],
-        version: 0,
-      });
-    }
-    return this.state.conversationQueues.get(conversationId)!;
-  }
-
-  // Adds a user message to the queue with highest priority
+  //  Adds a user message to the queue with highest priority
+  //  Cancels all pending AI messages when a user sends a message
   public enqueueUserMessage(conversation: Conversation) {
-    const conversationQueue = this.getOrCreateConversationQueue(
-      conversation.id
-    );
+    // Cancel all pending AI messages when user sends a message
+    this.cancelAllTasks();
 
-    // Increment version to cancel outdated tasks
-    conversationQueue.version++;
-
-    // Cancel any pending tasks for this conversation
-    conversationQueue.tasks = [];
-    if (conversationQueue.currentTask) {
-      conversationQueue.currentTask.abortController.abort();
-      conversationQueue.currentTask = null;
-      conversationQueue.status = "idle";
+    // Clear any existing debounce timeout
+    if (this.userMessageDebounceTimeout) {
+      clearTimeout(this.userMessageDebounceTimeout);
     }
 
-    const task: MessageTask = {
-      id: Math.random().toString(),
-      conversation,
-      isFirstMessage: false,
-      priority: 1,
-      timestamp: Date.now(),
-      abortController: new AbortController(),
-      consecutiveAiMessages: 0,
-      conversationVersion: conversationQueue.version,
-    };
+    // Store or update pending messages
+    this.pendingUserMessages = conversation;
 
-    this.addTask(task);
+    // Debounce user messages to wait for potential follow-up messages
+    this.userMessageDebounceTimeout = setTimeout(() => {
+      if (this.pendingUserMessages) {
+        this.conversationVersion++;
+
+        const task: MessageTask = {
+          id: crypto.randomUUID(),
+          conversation: this.pendingUserMessages,
+          isFirstMessage: false,
+          priority: 100,
+          timestamp: Date.now(),
+          abortController: new AbortController(),
+          consecutiveAiMessages: 0,
+          conversationVersion: this.conversationVersion,
+        };
+
+        this.pendingUserMessages = null;
+        this.addTask(task);
+      }
+    }, 500); // Wait 500ms for potential follow-up messages
   }
 
   // Adds an AI message to the queue with normal priority
+  // Tracks and limits consecutive AI messages to prevent infinite loops
   public enqueueAIMessage(
     conversation: Conversation,
     isFirstMessage: boolean = false
   ) {
-    const conversationQueue = this.getOrCreateConversationQueue(
-      conversation.id
-    );
+    // Count consecutive AI messages
+    let consecutiveAiMessages = 0;
+    for (let i = conversation.messages.length - 1; i >= 0; i--) {
+      if (conversation.messages[i].sender !== "me") {
+        consecutiveAiMessages++;
+      } else {
+        break;
+      }
+    }
 
-    // Check if we've reached the maximum consecutive AI messages
-    const currentConsecutiveMessages =
-      conversationQueue.currentTask?.consecutiveAiMessages ?? 0;
-    if (currentConsecutiveMessages >= MAX_CONSECUTIVE_AI_MESSAGES) {
+    // Don't add more AI messages if we've reached the limit
+    if (consecutiveAiMessages >= MAX_CONSECUTIVE_AI_MESSAGES) {
       return;
     }
 
     const task: MessageTask = {
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       conversation,
       isFirstMessage,
-      priority: 0,
+      priority: 50, // Normal priority for AI messages
       timestamp: Date.now(),
       abortController: new AbortController(),
-      consecutiveAiMessages: currentConsecutiveMessages + 1,
-      conversationVersion: conversationQueue.version,
+      consecutiveAiMessages,
+      conversationVersion: this.conversationVersion, // Use current version
     };
 
     this.addTask(task);
   }
 
   // Adds a new task to the queue and sorts tasks by priority and timestamp
+  // Triggers processing if the queue is idle
   private addTask(task: MessageTask) {
-    const conversationQueue = this.getOrCreateConversationQueue(
-      task.conversation.id
-    );
-    conversationQueue.tasks.push(task);
-    conversationQueue.tasks.sort(
-      (a, b) => b.priority - a.priority || a.timestamp - b.timestamp
-    );
+    this.state.tasks.push(task);
+    this.state.tasks.sort((a, b) => {
+      // Sort by priority first, then by timestamp
+      if (a.priority !== b.priority) {
+        return b.priority - a.priority;
+      }
+      return a.timestamp - b.timestamp;
+    });
 
-    this.processNextTask(task.conversation.id);
+    if (this.state.status === "idle") {
+      this.processNextTask();
+    }
   }
 
-  // Processes the next task in the queue for a specific conversation
-  private async processNextTask(conversationId: string) {
-    const conversationQueue = this.getOrCreateConversationQueue(conversationId);
-
-    if (
-      conversationQueue.status === "processing" ||
-      conversationQueue.tasks.length === 0
-    ) {
+  // Processes the next task in the queue
+  // Handles API calls, typing indicators, and message generation
+  private async processNextTask() {
+    if (this.state.status === "processing" || this.state.tasks.length === 0) {
       return;
     }
 
-    conversationQueue.status = "processing";
-    const task = conversationQueue.tasks.shift()!;
-    conversationQueue.currentTask = task;
+    this.state.status = "processing";
+    const task = this.state.tasks.shift()!;
+    this.state.currentTask = task;
 
     try {
       // Check if this task belongs to an outdated conversation version
-      if (task.conversationVersion < conversationQueue.version) {
+      if (task.conversationVersion < this.conversationVersion) {
         // Skip processing outdated tasks
-        conversationQueue.status = "idle";
-        this.processNextTask(conversationId);
+        this.state.status = "idle";
+        this.processNextTask();
         return;
       }
 
       // Decide if this should be the last message
       const isGroupChat = task.conversation.recipients.length > 1;
-      const shouldWrapUp =
-        task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1;
-
-      // Make API request without showing typing indicator yet
+      const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1; 
+      
+      // Make API request
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -195,7 +190,7 @@ export class MessageQueue {
 
       const data = await response.json();
 
-      // Handle reactions first if any
+      // If there's a reaction in the response, add it to the last message
       if (data.reaction && task.conversation.messages.length > 0) {
         const lastMessage =
           task.conversation.messages[task.conversation.messages.length - 1];
@@ -205,8 +200,13 @@ export class MessageQueue {
         lastMessage.reactions.push({
           type: data.reaction,
           sender: data.sender,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         });
+
+        // Use onMessageUpdated callback to update just the reactions
         if (this.callbacks.onMessageUpdated) {
           this.callbacks.onMessageUpdated(
             task.conversation.id,
@@ -218,19 +218,23 @@ export class MessageQueue {
         }
 
         // Delay to show reaction before typing animation
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
-      // Now that we have the sender from the API response, start the typing animation
-      const typingDelay = task.priority === 1 ? 4000 : 7000; // Faster for user responses
-      this.callbacks.onTypingStatusChange(conversationId, data.sender);
+      // Start typing animation and delay for the content
+      const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
+      this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
       await new Promise((resolve) =>
         setTimeout(resolve, typingDelay + Math.random() * 2000)
       );
 
-      // Create and send the message
+      if (task.abortController.signal.aborted) {
+        return;
+      }
+
+      // Create new message
       const newMessage: Message = {
-        id: Math.random().toString(),
+        id: crypto.randomUUID(),
         content: data.content,
         sender: data.sender,
         timestamp: new Date().toLocaleTimeString([], {
@@ -240,7 +244,7 @@ export class MessageQueue {
       };
 
       // Notify of new message
-      this.callbacks.onMessageGenerated(conversationId, newMessage);
+      this.callbacks.onMessageGenerated(task.conversation.id, newMessage);
 
       // Clear typing status
       this.callbacks.onTypingStatusChange(null, null);
@@ -258,7 +262,7 @@ export class MessageQueue {
         // Only queue next AI message if we're still on the same conversation version
         if (
           !task.abortController.signal.aborted &&
-          task.conversationVersion === conversationQueue.version &&
+          task.conversationVersion === this.conversationVersion &&
           isGroupChat
         ) {
           const lastAiSender = data.sender;
@@ -285,39 +289,38 @@ export class MessageQueue {
         }
       }
     } finally {
-      conversationQueue.status = "idle";
-      conversationQueue.currentTask = null;
-      this.processNextTask(conversationId); // Process next task if available
+      this.state.status = "idle";
+      this.state.currentTask = null;
+      this.processNextTask(); // Process next task if available
     }
   }
 
   // Cancels all tasks in the queue and resets the queue state
-  public cancelAllTasks(conversationId: string) {
+  public cancelAllTasks() {
     // Cancel current task if exists
-    const conversationQueue = this.getOrCreateConversationQueue(conversationId);
-    if (conversationQueue.currentTask) {
-      conversationQueue.currentTask.abortController.abort();
+    if (this.state.currentTask) {
+      this.state.currentTask.abortController.abort();
     }
 
     // Cancel all pending tasks
-    for (const task of conversationQueue.tasks) {
+    for (const task of this.state.tasks) {
       task.abortController.abort();
     }
 
     // Clear the queue
-    conversationQueue.tasks = [];
-    conversationQueue.status = "idle";
-    conversationQueue.currentTask = null;
+    this.state.tasks = [];
+    this.state.status = "idle";
+    this.state.currentTask = null;
 
     // Clear typing status
     this.callbacks.onTypingStatusChange(null, null);
   }
 
   setActiveConversation(conversationId: string | null) {
-    this.activeConversationId = conversationId;
+    this.activeConversation = conversationId;
   }
 
   getActiveConversation(): string | null {
-    return this.activeConversationId;
+    return this.activeConversation;
   }
 }
