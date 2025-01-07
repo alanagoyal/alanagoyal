@@ -342,7 +342,7 @@ export const MessageInput = forwardRef<
             <button
               onClick={handleSubmit}
               disabled={disabled || !message.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/80 hover:text-foreground disabled:opacity-50"
+              className="absolute right-1 bottom-1 bg-[#0A7CFF] rounded-full p-1 text-white font-bold transition-colors"
               aria-label="Send message"
             >
               <ArrowUp className="h-4 w-4" strokeWidth={3} />
