@@ -167,10 +167,8 @@ export class MessageQueue {
 
       // Decide if this should be the last message
       const isGroupChat = task.conversation.recipients.length > 1;
-      const shouldWrapUp =
-        task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1 || // hit max messages
-        (isGroupChat && task.priority !== 100 && Math.random() <= 0.25); // 25% chance to end group chats naturally
-
+      const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1; 
+      
       // Make API request
       const response = await fetch("/api/chat", {
         method: "POST",
