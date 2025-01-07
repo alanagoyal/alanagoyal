@@ -81,20 +81,9 @@ export function Sidebar({
     return name[0].toUpperCase();
   };
 
-  const getReactionIconSvg = (
-    messageFromMe: boolean,
-    reactionType: string,
-    reactionFromMe: boolean
-  ) => {
-    const orientation = messageFromMe ? "right" : "left";
-    const variant = reactionFromMe
-      ? effectiveTheme === "dark"
-        ? "dark-blue"
-        : "light-blue"
-      : effectiveTheme === "dark"
-      ? "dark"
-      : "light";
-    return `/${orientation}-${variant}-${reactionType}.svg`;
+  const getReactionIconSvg = (reactionType: string) => {
+    const variant = effectiveTheme === "dark" ? "dark" : "pinned-light";
+    return `/right-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -443,11 +432,7 @@ export function Sidebar({
                                                         )}
                                                         style={{
                                                           backgroundImage: `url('${getReactionIconSvg(
-                                                            lastMessage.sender ===
-                                                              "me",
-                                                            reaction.type,
-                                                            reaction.sender ===
-                                                              "me"
+                                                            reaction.type
                                                           )}')`,
                                                           backgroundSize:
                                                             "contain",
