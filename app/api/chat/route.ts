@@ -138,9 +138,10 @@ export async function POST(req: Request) {
     ${
       shouldReact
         ? `- You must react to the last message
-        - If you like what the user said, react with "heart" or "like"
-        - If you thought the last message was funny, react with "laugh"
-        - If you agree with the last message, react with "emphasize"`
+        - If you love the last message, react with "heart" 
+        - If you like the last message, react with "like"
+        - If the last message was funny, react with "laugh"
+        - If you strongly agree with the last message, react with "emphasize"`
         : ""
     }    
     - One quick message
