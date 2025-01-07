@@ -110,6 +110,7 @@ export function MessageList({
           </div>
         )}
       </div>
+      <div className="h-2 bg-background" />
     </div>
   );
 }
