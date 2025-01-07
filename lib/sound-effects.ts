@@ -5,9 +5,15 @@ class SoundEffectPlayer {
   private unreadSound: HTMLAudioElement | null = null;
   private reactionSound: HTMLAudioElement | null = null;
   private enabled: boolean = true;
+  private isMobile: boolean = false;
 
   private constructor() {
     if (typeof window !== 'undefined') {
+      // Check if device is mobile
+      this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      // Disable sound on mobile
+      this.enabled = !this.isMobile;
+      
       this.sentSound = new Audio('/sound-effects/sent.m4a');
       this.receivedSound = new Audio('/sound-effects/received.m4a');
       this.unreadSound = new Audio('/sound-effects/unread.m4a');
