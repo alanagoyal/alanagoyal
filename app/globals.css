@@ -5,18 +5,23 @@
 @tailwind utilities;
 
 @keyframes scaleIn {
-  from {
+  0% {
     opacity: 0;
-    transform: scale(0);
+    transform: scaleX(0) translateX(50%);
   }
-  to {
+  20% {
     opacity: 1;
-    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1) translateX(0);
   }
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  display: inline-block;
+  animation: scaleIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  transform-origin: center;
 }
 
 body {
