@@ -2,6 +2,7 @@ import { Message, Conversation, Reaction } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { soundEffects } from "@/lib/sound-effects";
 
 interface MessageListProps {
   messages: Message[];
@@ -50,6 +51,9 @@ export function MessageList({
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender !== "me") {
+        soundEffects.playReceivedSound();
+      }
       if (lastMessage.sender === "me") {
         setLastSentMessageId(lastMessage.id);
         // Clear the lastSentMessageId after animation duration
