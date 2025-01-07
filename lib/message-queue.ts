@@ -1,4 +1,5 @@
 import { Conversation, Message } from "../types";
+import { soundEffects } from "./sound-effects";
 
 // Represents a task in the message queue
 // Each task corresponds to a message that needs to be processed
@@ -205,6 +206,9 @@ export class MessageQueue {
             minute: "2-digit",
           }),
         });
+
+        // Play reaction sound effect when AI adds a reaction
+        soundEffects.playReactionSound();
 
         // Use onMessageUpdated callback to update just the reactions
         if (this.callbacks.onMessageUpdated) {
