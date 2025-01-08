@@ -34,7 +34,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(soundEffects.isEnabled());
 
   // Add command menu ref
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
@@ -300,6 +300,11 @@ export default function App() {
       },
     })
   );
+
+  // Update sound enabled state when it changes in soundEffects
+  useEffect(() => {
+    setSoundEnabled(soundEffects.isEnabled());
+  }, []);
 
   // Method to reset unread count when conversation is selected
   const resetUnreadCount = (conversationId: string) => {
@@ -657,11 +662,8 @@ export default function App() {
 
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
-    setSoundEnabled((prev) => {
-      const newState = !prev;
-      soundEffects.setEnabled(newState);
-      return newState;
-    });
+    soundEffects.toggleSound();
+    setSoundEnabled(soundEffects.isEnabled());
   }, []);
 
   // Calculate total unread count
