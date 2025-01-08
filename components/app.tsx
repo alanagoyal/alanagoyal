@@ -265,15 +265,18 @@ export default function App() {
         });
       },
       onMessageUpdated: (conversationId: string, messageId: string, updates: Partial<Message>) => {
-        // Store the active conversation at the time the reaction is received
-        const wasActive = conversationId === activeConversation;
-        
         setConversations((prev) => {
+          // Get the current active conversation from MessageQueue's internal state
+          // This ensures we always have the latest value, not a stale closure
+          const currentActiveConversation = messageQueue.current.getActiveConversation();
+          
           return prev.map((conv) =>
             conv.id === conversationId
               ? {
                   ...conv,
-                  unreadCount: wasActive ? conv.unreadCount : (conv.unreadCount || 0) + 1,
+                  unreadCount: conversationId === currentActiveConversation 
+                    ? conv.unreadCount 
+                    : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) =>
                     msg.id === messageId
                       ? { ...msg, ...updates }
