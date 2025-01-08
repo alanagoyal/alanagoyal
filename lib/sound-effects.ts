@@ -11,8 +11,10 @@ class SoundEffectPlayer {
     if (typeof window !== 'undefined') {
       // Check if device is mobile
       this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      // Disable sound on mobile
-      this.enabled = !this.isMobile;
+      
+      // Get sound preference from localStorage, default to !isMobile if not set
+      const storedEnabled = localStorage.getItem('soundEnabled');
+      this.enabled = storedEnabled !== null ? storedEnabled === 'true' : !this.isMobile;
       
       this.sentSound = new Audio('/sound-effects/sent.m4a');
       this.receivedSound = new Audio('/sound-effects/received.m4a');
@@ -62,6 +64,17 @@ class SoundEffectPlayer {
         // Silently handle autoplay restrictions
       });
     }
+  }
+
+  public toggleSound() {
+    this.enabled = !this.enabled;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soundEnabled', this.enabled.toString());
+    }
+  }
+
+  public isEnabled(): boolean {
+    return this.enabled;
   }
 
   public setEnabled(enabled: boolean) {
