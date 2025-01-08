@@ -307,7 +307,7 @@ export function MessageBubble({
                     <div className="text-[14px] flex items-center min-h-[20px]">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
-                        <div className="w-12 h-4 flex items-center justify-center gap-1">
+                        <div className="w-8 h-auto flex items-center justify-center gap-[4px] -ml-0.5">
                           <style>{typingAnimation}</style>
                           <div
                             className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
