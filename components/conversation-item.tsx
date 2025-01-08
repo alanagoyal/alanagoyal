@@ -169,7 +169,7 @@ export function ConversationItem({
                 : "text-muted-foreground"
             }`}
           >
-            {(conversation.isTyping) ? (
+            {conversation.isTyping ? (
               <div className="flex items-center py-0.5">
                 <div className="relative">
                   <img
