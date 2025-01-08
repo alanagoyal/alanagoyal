@@ -369,7 +369,7 @@ export function Sidebar({
                                               height={8}
                                               className="scale-[1.2]"
                                             />
-                                            <div className="absolute top-[40%] left-[35%] flex gap-[2px]">
+                                            <div className="absolute top-[35%] left-[35%] flex gap-[2px]">
                                               <div
                                                 style={{
                                                   animation:
