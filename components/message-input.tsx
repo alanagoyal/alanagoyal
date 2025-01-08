@@ -15,6 +15,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Mention from "@tiptap/extension-mention";
 import { SuggestionProps } from "@tiptap/suggestion";
 import Placeholder from "@tiptap/extension-placeholder";
+import { soundEffects } from "@/lib/sound-effects";
 
 interface MessageInputProps {
   message: string;
@@ -191,7 +192,7 @@ export const MessageInput = forwardRef<
       handleKeyDown: (view, event) => {
         if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
-          handleSend();
+          handleSubmit();
           if (isMobileView) {
             view.dom.blur();
           }
@@ -202,6 +203,11 @@ export const MessageInput = forwardRef<
     },
     immediatelyRender: false,
   });
+
+  const handleSubmit = () => {
+    handleSend();
+    soundEffects.playSentSound();
+  };
 
   // Expose focus method to parent through ref
   useImperativeHandle(
@@ -334,9 +340,10 @@ export const MessageInput = forwardRef<
           {/* Show send button for mobile when there's text */}
           {isMobileView && editor?.getText().trim() && (
             <button
-              onClick={handleSend}
+              onClick={handleSubmit}
+              disabled={disabled || !message.trim()}
               className="absolute right-1 bottom-1 bg-[#0A7CFF] rounded-full p-1 text-white font-bold transition-colors"
-              disabled={disabled}
+              aria-label="Send message"
             >
               <ArrowUp className="h-4 w-4" strokeWidth={3} />
             </button>

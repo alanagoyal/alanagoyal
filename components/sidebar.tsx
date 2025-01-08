@@ -28,6 +28,7 @@ interface SidebarProps {
   typingStatus: { conversationId: string; recipient: string } | null;
   isCommandMenuOpen: boolean;
   onScroll?: (isScrolled: boolean) => void;
+  onSoundToggle: () => void;
 }
 
 export function Sidebar({
@@ -43,6 +44,7 @@ export function Sidebar({
   typingStatus,
   isCommandMenuOpen,
   onScroll,
+  onSoundToggle,
 }: SidebarProps) {
   const { theme, systemTheme, setTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
@@ -131,7 +133,7 @@ export function Sidebar({
       }
 
       // For letter shortcuts, check if we're in an input or editor
-      if (["j", "k", "p", "d", "t"].includes(e.key)) {
+      if (["j", "k", "p", "d", "t", "s"].includes(e.key)) {
         if (
           document.activeElement?.tagName === "INPUT" ||
           e.metaKey ||
@@ -147,6 +149,13 @@ export function Sidebar({
       if (e.key === "t") {
         e.preventDefault();
         setTheme(effectiveTheme === "light" ? "dark" : "light");
+        return;
+      }
+
+      // Sound toggle shortcut
+      if (e.key === "s") {
+        e.preventDefault();
+        onSoundToggle();
         return;
       }
 

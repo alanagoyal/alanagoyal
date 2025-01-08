@@ -8,6 +8,7 @@ import { initialConversations } from "../data/initial-conversations";
 import { MessageQueue } from "../lib/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
+import { soundEffects } from "@/lib/sound-effects";
 
 export default function App() {
   // State
@@ -33,6 +34,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Add command menu ref
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
@@ -242,6 +244,11 @@ export default function App() {
           const shouldIncrementUnread =
             conversationId !== currentActiveConversation &&
             message.sender !== "me";
+
+          // Play received sound if message is in inactive conversation and not from us
+          if (shouldIncrementUnread) {
+            soundEffects.playUnreadSound();
+          }
 
           return prev.map((conv) =>
             conv.id === conversationId
@@ -644,6 +651,15 @@ export default function App() {
     []
   );
 
+  // Handle sound toggle
+  const handleSoundToggle = useCallback(() => {
+    setSoundEnabled((prev) => {
+      const newState = !prev;
+      soundEffects.setEnabled(newState);
+      return newState;
+    });
+  }, []);
+
   // Calculate total unread count
   const totalUnreadCount = conversations.reduce((total, conv) => {
     return total + (conv.unreadCount || 0);
@@ -669,6 +685,8 @@ export default function App() {
         onDeleteConversation={handleDeleteConversation}
         onUpdateConversation={handleUpdateConversation}
         onOpenChange={setIsCommandMenuOpen}
+        soundEnabled={soundEnabled}
+        onSoundToggle={handleSoundToggle}
       />
       <main className="h-dvh w-full bg-background flex flex-col">
         <div className="flex-1 flex h-full">
@@ -693,6 +711,7 @@ export default function App() {
               typingStatus={typingStatus}
               isCommandMenuOpen={isCommandMenuOpen}
               onScroll={setIsScrolled}
+              onSoundToggle={handleSoundToggle}
             >
               <Nav
                 onNewChat={() => {

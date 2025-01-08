@@ -17,7 +17,7 @@ import {
   CommandShortcut,
 } from "./ui/command";
 import { DialogTitle, DialogDescription } from "./ui/dialog";
-import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon } from "lucide-react";
+import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon, Volume2, VolumeX } from "lucide-react";
 import { Conversation } from "@/types";
 import { useTheme } from "next-themes";
 
@@ -30,6 +30,8 @@ export interface CommandMenuProps {
   onUpdateConversation: (conversations: Conversation[]) => void;
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
   onOpenChange?: (open: boolean) => void;
+  soundEnabled: boolean;
+  onSoundToggle: () => void;
 }
 
 export const CommandMenu = forwardRef<
@@ -45,6 +47,8 @@ export const CommandMenu = forwardRef<
       onDeleteConversation,
       onUpdateConversation,
       onOpenChange,
+      soundEnabled,
+      onSoundToggle,
     },
     ref
   ) => {
@@ -52,10 +56,13 @@ export const CommandMenu = forwardRef<
     const [searchTerm, setSearchTerm] = useState("");
     const { setTheme, theme } = useTheme();
 
-    const handleOpenChange = (newOpen: boolean) => {
-      setOpen(newOpen);
-      onOpenChange?.(newOpen);
-    };
+    const handleOpenChange = useCallback(
+      (newOpen: boolean) => {
+        setOpen(newOpen);
+        onOpenChange?.(newOpen);
+      },
+      [onOpenChange]
+    );
 
     useImperativeHandle(ref, () => ({
       setOpen: (newOpen: boolean) => {
@@ -199,11 +206,28 @@ export const CommandMenu = forwardRef<
         action: handleDeleteConversation,
       },
       {
-        name: "Toggle theme",
-        icon: theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />,
+        name: theme === "light" ? "Dark mode" : "Light mode",
+        icon:
+          theme === "light" ? (
+            <Moon className="mr-2 h-4 w-4" />
+          ) : (
+            <Sun className="mr-2 h-4 w-4" />
+          ),
         shortcut: "T",
         action: () => {
           setTheme(theme === "light" ? "dark" : "light");
+        },
+      },
+      {
+        name: soundEnabled ? "Sound off" : "Sound on",
+        icon: soundEnabled ? (
+          <VolumeX className="mr-2 h-4 w-4" />
+        ) : (
+          <Volume2 className="mr-2 h-4 w-4" />
+        ),
+        shortcut: "S",
+        action: () => {
+          onSoundToggle();
           handleOpenChange(false);
         },
       },

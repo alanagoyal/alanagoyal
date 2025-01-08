@@ -2,6 +2,7 @@ import { Message, Conversation, Reaction } from "../types";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { soundEffects } from "@/lib/sound-effects";
 
 interface MessageListProps {
   messages: Message[];
@@ -22,9 +23,9 @@ export function MessageList({
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
-  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(
-    null
-  );
+  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
+  const [prevConversationId, setPrevConversationId] = useState<string | null>(null);
+  const [prevMessageCount, setPrevMessageCount] = useState(0);
   const lastUserMessageIndex = messages.findLastIndex(
     (msg) => msg.sender === "me"
   );
@@ -50,16 +51,26 @@ export function MessageList({
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === "me") {
-        setLastSentMessageId(lastMessage.id);
-        // Clear the lastSentMessageId after animation duration
-        const timer = setTimeout(() => {
-          setLastSentMessageId(null);
-        }, 1000); // Adjust this timing to match your animation duration
-        return () => clearTimeout(timer);
+      // Only play sound if this is a new message in the same conversation
+      if (conversationId === prevConversationId && messages.length > prevMessageCount) {
+        if (lastMessage.sender !== "me" && lastMessage.sender !== "system") {
+          soundEffects.playReceivedSound();
+        }
+        if (lastMessage.sender === "me") {
+          setLastSentMessageId(lastMessage.id);
+          // Clear the lastSentMessageId after animation duration
+          const timer = setTimeout(() => {
+            setLastSentMessageId(null);
+          }, 1000); // Adjust this timing to match your animation duration
+          return () => clearTimeout(timer);
+        }
       }
+      
+      // Update previous state
+      setPrevConversationId(conversationId);
+      setPrevMessageCount(messages.length);
     }
-  }, [messages]);
+  }, [messages, conversationId]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
