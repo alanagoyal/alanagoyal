@@ -268,10 +268,10 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] text-white"
+                ? "border-[16px] border-solid border-r-[25.7px] text-white"
                 : isTyping
-                ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                ? "border-[16px] border-solid border-l-[25.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                : "border-[16px] border-solid border-l-[25.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
               !isSystemMessage
@@ -288,7 +288,7 @@ export function MessageBubble({
                 : undefined
             }
           >
-            <div className="-m-2">
+            <div className="-my-2.5 -mx-1">
               {/* Reaction popup menu */}
               <Popover
                 open={isOpen}
@@ -301,10 +301,10 @@ export function MessageBubble({
                     <div
                       className={cn(
                         "absolute border-r-[0.5px] border-background",
-                        !isMe || isTyping ? "inset-[-20px]" : "inset-[-27.7px]"
+                        !isMe || isTyping ? "inset-[-16px]" : "inset-[-25.7px]"
                       )}
                     />
-                    <div className="text-sm">
+                    <div className="text-[12px] flex items-center min-h-[20px]">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
                         <div className="w-12 h-4 flex items-center justify-center gap-1">
