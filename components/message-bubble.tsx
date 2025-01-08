@@ -117,7 +117,13 @@ export function MessageBubble({
         }, 500);
       }
     },
-    [message.id, message.reactions, onReaction, onOpenChange, onReactionComplete]
+    [
+      message.id,
+      message.reactions,
+      onReaction,
+      onOpenChange,
+      onReactionComplete,
+    ]
   );
 
   // Check if a specific reaction type is already active for the current user
@@ -233,9 +239,9 @@ export function MessageBubble({
       {/* Spacer before messages */}
       <div className="h-1 bg-background" />
       {/* Extra space between messages with reactions */}
-      <div 
+      <div
         className={`overflow-hidden transition-[height] duration-500 ease-in-out ${
-          message.reactions && message.reactions.length > 0 ? 'h-2' : 'h-0'
+          message.reactions && message.reactions.length > 0 ? "h-2" : "h-0"
         } bg-background`}
       />
 
@@ -267,11 +273,11 @@ export function MessageBubble({
               "group relative max-w-[75%] break-words flex-none",
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
-                : isMe
-                ? "border-[20px] border-solid border-r-[27.7px] text-white"
                 : isTyping
-                ? "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
-                : "border-[20px] border-solid border-l-[27.7px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                ? "border-[15px] border-solid border-l-[20px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                : isMe
+                ? "border-[15px] border-solid border-r-[20px] text-white"
+                : "border-[15px] border-solid border-l-[20px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
               !isSystemMessage
@@ -301,7 +307,7 @@ export function MessageBubble({
                     <div
                       className={cn(
                         "absolute border-r-[0.5px] border-background",
-                        !isMe || isTyping ? "inset-[-20px]" : "inset-[-27.7px]"
+                        !isMe || isTyping ? "inset-[-15px]" : "inset-[-20px]"
                       )}
                     />
                     <div className="text-[14px] flex items-center">
