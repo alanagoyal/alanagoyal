@@ -304,7 +304,7 @@ export function MessageBubble({
                         !isMe || isTyping ? "inset-[-16px]" : "inset-[-25.7px]"
                       )}
                     />
-                    <div className="text-[12px] flex items-center min-h-[20px]">
+                    <div className="text-[14px] flex items-center min-h-[20px]">
                       {/* Show typing indicator or message content */}
                       {isTyping ? (
                         <div className="w-12 h-4 flex items-center justify-center gap-1">
