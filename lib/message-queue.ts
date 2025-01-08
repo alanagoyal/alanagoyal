@@ -14,11 +14,21 @@ type MessageTask = {
   conversationVersion: number; // Add version tracking
 };
 
-// Represents the current state of the message queue
-type MessageQueueState = {
+// Represents the state of a specific conversation
+type ConversationState = {
+  consecutiveAiMessages: number;
+  version: number;
   status: "idle" | "processing";
   currentTask: MessageTask | null;
   tasks: MessageTask[];
+  userMessageDebounceTimeout: NodeJS.Timeout | null;
+  pendingUserMessages: Conversation | null;
+  lastActivity: number; // Track when this conversation was last active
+};
+
+// Represents the current state of the message queue
+type MessageQueueState = {
+  conversations: Map<string, ConversationState>;
 };
 
 // Callback functions for handling various queue events
@@ -43,55 +53,113 @@ const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 //  It ensures messages are processed in order and handles both user and AI messages
 export class MessageQueue {
   private state: MessageQueueState = {
-    status: "idle",
-    currentTask: null,
-    tasks: [],
+    conversations: new Map(),
   };
   private callbacks: MessageQueueCallbacks;
   private activeConversation: string | null = null;
-  private conversationVersion: number = 0; // Add version counter
-  private userMessageDebounceTimeout: NodeJS.Timeout | null = null;
-  private pendingUserMessages: Conversation | null = null;
+  private cleanupInterval: NodeJS.Timeout;
+  private static CLEANUP_INTERVAL = 1000 * 60 * 30; // 30 minutes
+  private static CONVERSATION_TTL = 1000 * 60 * 60 * 24; // 24 hours
 
-  //  Initializes the MessageQueue instance with callback functions
   constructor(callbacks: MessageQueueCallbacks) {
     this.callbacks = callbacks;
+    // Periodically clean up old conversations
+    this.cleanupInterval = setInterval(() => this.cleanupOldConversations(), MessageQueue.CLEANUP_INTERVAL);
   }
 
-  //  Adds a user message to the queue with highest priority
-  //  Cancels all pending AI messages when a user sends a message
+  private cleanupOldConversations() {
+    const now = Date.now();
+    for (const [conversationId, state] of this.state.conversations.entries()) {
+      if (now - state.lastActivity > MessageQueue.CONVERSATION_TTL) {
+        this.cleanupConversation(conversationId);
+      }
+    }
+  }
+
+  private cleanupConversation(conversationId: string) {
+    const state = this.state.conversations.get(conversationId);
+    if (state) {
+      // Clear any pending timeouts
+      if (state.userMessageDebounceTimeout) {
+        clearTimeout(state.userMessageDebounceTimeout);
+      }
+      
+      // Cancel any ongoing tasks
+      this.cancelConversationTasks(conversationId);
+      
+      // Remove the conversation state
+      this.state.conversations.delete(conversationId);
+      
+      // Clear typing status if this was the last active conversation
+      if (this.activeConversation === conversationId) {
+        this.callbacks.onTypingStatusChange(null, null);
+        this.activeConversation = null;
+      }
+    }
+  }
+
+  private getOrCreateConversationState(conversationId: string): ConversationState {
+    let conversationState = this.state.conversations.get(conversationId);
+    if (!conversationState) {
+      conversationState = {
+        consecutiveAiMessages: 0,
+        version: 0,
+        status: "idle",
+        currentTask: null,
+        tasks: [],
+        userMessageDebounceTimeout: null,
+        pendingUserMessages: null,
+        lastActivity: Date.now(),
+      };
+      this.state.conversations.set(conversationId, conversationState);
+    } else {
+      // Update last activity timestamp
+      conversationState.lastActivity = Date.now();
+    }
+    return conversationState;
+  }
+
+  // Adds a user message to the queue with highest priority
+  // Cancels all pending AI messages when a user sends a message
   public enqueueUserMessage(conversation: Conversation) {
-    // Cancel all pending AI messages when user sends a message
-    this.cancelAllTasks();
+    const conversationState = this.getOrCreateConversationState(conversation.id);
+    
+    // Cancel all pending AI messages for this conversation
+    this.cancelConversationTasks(conversation.id);
 
     // Clear any existing debounce timeout
-    if (this.userMessageDebounceTimeout) {
-      clearTimeout(this.userMessageDebounceTimeout);
+    if (conversationState.userMessageDebounceTimeout) {
+      clearTimeout(conversationState.userMessageDebounceTimeout);
+      conversationState.userMessageDebounceTimeout = null;
     }
 
     // Store or update pending messages
-    this.pendingUserMessages = conversation;
+    conversationState.pendingUserMessages = conversation;
 
     // Debounce user messages to wait for potential follow-up messages
-    this.userMessageDebounceTimeout = setTimeout(() => {
-      if (this.pendingUserMessages) {
-        this.conversationVersion++;
-
+    const timeoutId = setTimeout(() => {
+      const currentState = this.state.conversations.get(conversation.id);
+      if (currentState && currentState.pendingUserMessages) {
+        currentState.version++;
+        
         const task: MessageTask = {
           id: crypto.randomUUID(),
-          conversation: this.pendingUserMessages,
+          conversation: currentState.pendingUserMessages,
           isFirstMessage: false,
           priority: 100,
           timestamp: Date.now(),
           abortController: new AbortController(),
           consecutiveAiMessages: 0,
-          conversationVersion: this.conversationVersion,
+          conversationVersion: currentState.version,
         };
 
-        this.pendingUserMessages = null;
-        this.addTask(task);
+        currentState.pendingUserMessages = null;
+        currentState.userMessageDebounceTimeout = null;
+        this.addTask(conversation.id, task);
       }
-    }, 500); // Wait 500ms for potential follow-up messages
+    }, 500);
+
+    conversationState.userMessageDebounceTimeout = timeoutId;
   }
 
   // Adds an AI message to the queue with normal priority
@@ -100,7 +168,9 @@ export class MessageQueue {
     conversation: Conversation,
     isFirstMessage: boolean = false
   ) {
-    // Count consecutive AI messages
+    const conversationState = this.getOrCreateConversationState(conversation.id);
+    
+    // Count consecutive AI messages for this conversation
     let consecutiveAiMessages = 0;
     for (let i = conversation.messages.length - 1; i >= 0; i--) {
       if (conversation.messages[i].sender !== "me") {
@@ -119,21 +189,23 @@ export class MessageQueue {
       id: crypto.randomUUID(),
       conversation,
       isFirstMessage,
-      priority: 50, // Normal priority for AI messages
+      priority: 50,
       timestamp: Date.now(),
       abortController: new AbortController(),
       consecutiveAiMessages,
-      conversationVersion: this.conversationVersion, // Use current version
+      conversationVersion: conversationState.version,
     };
 
-    this.addTask(task);
+    this.addTask(conversation.id, task);
   }
 
   // Adds a new task to the queue and sorts tasks by priority and timestamp
   // Triggers processing if the queue is idle
-  private addTask(task: MessageTask) {
-    this.state.tasks.push(task);
-    this.state.tasks.sort((a, b) => {
+  private addTask(conversationId: string, task: MessageTask) {
+    const conversationState = this.getOrCreateConversationState(conversationId);
+    
+    conversationState.tasks.push(task);
+    conversationState.tasks.sort((a, b) => {
       // Sort by priority first, then by timestamp
       if (a.priority !== b.priority) {
         return b.priority - a.priority;
@@ -141,34 +213,34 @@ export class MessageQueue {
       return a.timestamp - b.timestamp;
     });
 
-    if (this.state.status === "idle") {
-      this.processNextTask();
+    if (conversationState.status === "idle") {
+      this.processNextTask(conversationId);
     }
   }
 
   // Processes the next task in the queue
   // Handles API calls, typing indicators, and message generation
-  private async processNextTask() {
-    if (this.state.status === "processing" || this.state.tasks.length === 0) {
+  private async processNextTask(conversationId: string) {
+    const conversationState = this.getOrCreateConversationState(conversationId);
+    
+    if (conversationState.status === "processing" || conversationState.tasks.length === 0) {
       return;
     }
 
-    this.state.status = "processing";
-    const task = this.state.tasks.shift()!;
-    this.state.currentTask = task;
+    conversationState.status = "processing";
+    const task = conversationState.tasks.shift()!;
+    conversationState.currentTask = task;
 
     try {
       // Check if this task belongs to an outdated conversation version
-      if (task.conversationVersion < this.conversationVersion) {
-        // Skip processing outdated tasks
-        this.state.status = "idle";
-        this.processNextTask();
+      if (task.conversationVersion < conversationState.version) {
+        conversationState.status = "idle";
+        this.processNextTask(conversationId);
         return;
       }
 
-      // Decide if this should be the last message
       const isGroupChat = task.conversation.recipients.length > 1;
-      const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1; 
+      const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1;
       
       // Make API request
       const response = await fetch("/api/chat", {
@@ -266,7 +338,7 @@ export class MessageQueue {
         // Only queue next AI message if we're still on the same conversation version
         if (
           !task.abortController.signal.aborted &&
-          task.conversationVersion === this.conversationVersion &&
+          task.conversationVersion === conversationState.version &&
           isGroupChat
         ) {
           const lastAiSender = data.sender;
@@ -293,38 +365,64 @@ export class MessageQueue {
         }
       }
     } finally {
-      this.state.status = "idle";
-      this.state.currentTask = null;
-      this.processNextTask(); // Process next task if available
+      conversationState.status = "idle";
+      conversationState.currentTask = null;
+      this.processNextTask(conversationId); // Process next task if available
     }
   }
 
   // Cancels all tasks in the queue and resets the queue state
-  public cancelAllTasks() {
-    // Cancel current task if exists
-    if (this.state.currentTask) {
-      this.state.currentTask.abortController.abort();
+  public cancelConversationTasks(conversationId: string) {
+    const conversationState = this.getOrCreateConversationState(conversationId);
+    
+    if (conversationState.currentTask) {
+      conversationState.currentTask.abortController.abort();
     }
 
-    // Cancel all pending tasks
-    for (const task of this.state.tasks) {
+    for (const task of conversationState.tasks) {
       task.abortController.abort();
     }
 
-    // Clear the queue
-    this.state.tasks = [];
-    this.state.status = "idle";
-    this.state.currentTask = null;
+    conversationState.tasks = [];
+    conversationState.status = "idle";
+    conversationState.currentTask = null;
 
     // Clear typing status
     this.callbacks.onTypingStatusChange(null, null);
   }
 
-  setActiveConversation(conversationId: string | null) {
+  public cancelAllTasks() {
+    for (const [conversationId] of this.state.conversations) {
+      this.cancelConversationTasks(conversationId);
+    }
+  }
+
+  public setActiveConversation(conversationId: string | null) {
+    // Clear typing status of previous conversation if it exists
+    if (this.activeConversation && this.activeConversation !== conversationId) {
+      const prevState = this.state.conversations.get(this.activeConversation);
+      if (prevState && prevState.status === "processing") {
+        this.callbacks.onTypingStatusChange(null, null);
+      }
+    }
+    
     this.activeConversation = conversationId;
   }
 
-  getActiveConversation(): string | null {
+  public getActiveConversation(): string | null {
     return this.activeConversation;
+  }
+
+  public dispose() {
+    // Clean up the cleanup interval
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    
+    // Cancel all tasks and clean up all conversations
+    this.cancelAllTasks();
+    for (const [conversationId] of this.state.conversations) {
+      this.cleanupConversation(conversationId);
+    }
   }
 }
