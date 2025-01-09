@@ -274,10 +274,10 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isTyping
-                ? "border-[15px] border-solid border-l-[20px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : isMe
-                ? "border-[15px] border-solid border-r-[20px] text-white"
-                : "border-[15px] border-solid border-l-[20px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                ? "border-[17px] border-solid border-r-[22px] text-white"
+                : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
               !isSystemMessage
@@ -307,7 +307,7 @@ export function MessageBubble({
                     <div
                       className={cn(
                         "absolute border-r-[0.5px] border-background",
-                        !isMe || isTyping ? "inset-[-15px]" : "inset-[-20px]"
+                        !isMe || isTyping ? "inset-[-17px]" : "inset-[-22px]"
                       )}
                     />
                     <div className="text-[14px] flex items-center">
