@@ -6,10 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: siteConfig.name,
-  description: siteConfig.description,
   openGraph: {
     title: siteConfig.name,
-    description: siteConfig.description,
     siteName: siteConfig.name,
     url: siteConfig.url,
     images: [
@@ -23,7 +21,6 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
-    description: siteConfig.description,
     images: ["/api/og"],
   },
 };
