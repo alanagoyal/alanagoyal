@@ -51,8 +51,6 @@ export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
           </button>
           <a 
             href="https://alanaos.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
             aria-label="Visit alanaos.com"
             className="group relative"
           >
@@ -61,11 +59,16 @@ export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
               <span className="text-background">−</span>
             </span>
           </a>
-          <div className="w-3 h-3 rounded-full bg-green-500 group relative">
+          <button 
+            onClick={() => window.location.reload()}
+            className="group relative"
+            aria-label="Refresh page"
+          >
+            <div className="w-3 h-3 rounded-full bg-green-500 group-hover:opacity-80" />
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none text-xs">
               <span className="text-background">+</span>
             </span>
-          </div>
+          </button>
         </div>
         <button
           className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${
