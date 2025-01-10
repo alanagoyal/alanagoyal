@@ -85,7 +85,7 @@ export function Sidebar({
 
   const getReactionIconSvg = (reactionType: string) => {
     const variant = effectiveTheme === "dark" ? "dark" : "pinned-light";
-    return `/reactions/right-${variant}-${reactionType}.svg`;
+    return `/reactions/left-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
