@@ -454,274 +454,6 @@ export const initialConversations: Conversation[] = [
     ],
   },
   {
-    id: "7cd80e33-87c2-42d5-a5d8-8fb18bd9c218",
-    unreadCount: 1,
-    pinned: true,
-    lastMessageTime: getTimeAgo(2),
-    recipients: [
-      {
-        id: "e4b17cbf-1490-4d5c-aa01-177e24645008",
-        name: "Brian Chesky",
-      },
-      {
-        id: "568ce8ef-e1a7-4867-9e30-1528409e7812",
-        name: "Paul Graham",
-      },
-    ],
-    messages: [
-      {
-        id: "96995793-1ff0-4240-b99d-fbda7ee1c65a",
-        content: "Let's talk about Founder Mode",
-        htmlContent: "<p>Let's talk about Founder Mode</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:46:08.990Z",
-      },
-      {
-        id: "71e2983f-f897-4c90-9901-36ecc9cc0dab",
-        content:
-          "Founder Mode is about being deeply immersed in your startup's vision and challenges. It's a mindset.",
-        sender: "Paul Graham",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "a8bc9820-ac56-4aee-8ea6-786e4e2b29e6",
-        content:
-          "I remember being in that mode during Airbnb's early days. It’s all-consuming but transformative.",
-        sender: "Brian Chesky",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "b16d85bd-1a79-4627-bbca-eb848c790f33",
-        content:
-          "Absolutely, it's like being in a state of flow. Every problem becomes an opportunity for growth.",
-        sender: "Paul Graham",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "5aee3ddf-3947-44cb-b519-5cb5e531fc4e",
-        content:
-          "And it fosters incredible creativity. The best ideas often come from those intense moments.",
-        sender: "Brian Chesky",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "e1a741ac-d3db-4582-8bda-946da572fb2c",
-        content:
-          "When did you feel confident enough in yourself to go full Founder Mode?",
-        htmlContent:
-          "<p>When did you feel confident enough in yourself to go full Founder Mode?</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:46:58.226Z",
-      },
-      {
-        id: "092286e1-a05e-41e1-95f2-1ee959bdaad5",
-        content:
-          "For me, it was when I realized our vision resonated with people. That spark gave me the confidence.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "f5c71314-b667-498f-a4ac-0fb89d30f79a",
-        content:
-          "For me, it was when I saw our early users truly engaged. That validation was key.",
-        sender: "Paul Graham",
-        timestamp: "12:47 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Brian Chesky",
-            timestamp: "12:47 PM",
-          },
-        ],
-      },
-      {
-        id: "a2535c6f-becb-44f6-9d2b-f6592021cd39",
-        content:
-          "I love that, Paul. User engagement is a powerful motivator for any founder.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "01e3afbf-2e97-4b8e-bf2e-3d98aff1e36d",
-        content:
-          "Absolutely, it's the feedback loop that fuels innovation and perseverance. What about you, Brian?",
-        sender: "Paul Graham",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "3976c90a-e43e-421f-9748-b9bdb4e2f489",
-        content:
-          "For me, it was seeing hosts share their stories. It deepened my commitment to our mission.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "02bb82a5-5676-4254-b1f4-5f2e6048750d",
-        content: "What about Manager Mode? ",
-        htmlContent: "<p>What about Manager Mode? </p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:47:59.457Z",
-      },
-      {
-        id: "ae513cd8-f31a-4fe5-a8c9-aebcb6300e29",
-        content: "Do you think hiring managers is wrong?",
-        htmlContent: "<p>Do you think hiring managers is wrong?</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:04.784Z",
-      },
-      {
-        id: "ff284b9b-dd46-410d-aaf4-46d785f9eb86",
-        content:
-          "Hiring managers isn't wrong, but it can shift focus from founder-driven innovation.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "4ad61916-06f5-4023-b9b6-a6f4700cded3",
-        content:
-          "I agree, Paul. Balancing management and innovation is crucial for growth.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "me",
-            timestamp: "2025-01-09T20:48:26.947Z",
-          },
-        ],
-      },
-      {
-        id: "5e63c4d9-33f2-4c4f-914b-59c3f95c3459",
-        content:
-          "It's about finding the right balance. Managers can help scale, but founders must lead vision.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "44b95daf-2d25-4a74-98de-1fa3a2b91f25",
-        content:
-          "What are some of the most successful founder-led companies in your opinion?",
-        htmlContent:
-          "<p>What are some of the most successful founder-led companies in your opinion?</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:38.577Z",
-      },
-      {
-        id: "48d3b9bd-c8b0-461e-aec1-45a20464aab8",
-        content:
-          "Absolutely, the founder's vision should always guide the team, even as it grows.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "c7670a65-c8cf-4610-b813-8964947904f0",
-        content:
-          "Some examples include Apple, Amazon, and Tesla. Their founders shaped their visions and cultures.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "Paul Graham",
-            timestamp: "12:48 PM",
-          },
-        ],
-      },
-      {
-        id: "76178d4d-190e-49c0-926f-0341ab6dc8a5",
-        content: "Elon is a beast",
-        htmlContent: "<p>Elon is a beast</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:54.274Z",
-      },
-      {
-        id: "57161753-b9f5-4385-b5a0-0a1293815133",
-        content:
-          "I’d add companies like Airbnb and Stripe. Founder-led vision drives their unique approaches.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "a128c605-2a47-4041-8a65-d26223bbd512",
-        content:
-          "Elon embodies founder mode, pushing boundaries and redefining industries.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Brian Chesky",
-            timestamp: "12:49 PM",
-          },
-        ],
-      },
-      {
-        id: "71eb8b44-7ab9-4612-8955-977f0e4333fd",
-        content:
-          "Absolutely, his relentless drive inspires many entrepreneurs to think bigger and bolder.",
-        sender: "Brian Chesky",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "b274b2e8-6be0-4810-81cc-d4c7fa1f780d",
-        content: "Paul how does YC teach Founder Mode?",
-        htmlContent:
-          '<p><strong><span data-type="mention" data-id="568ce8ef-e1a7-4867-9e30-1528409e7812" data-label="Paul" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Paul</span></strong> how does YC teach Founder Mode?</p>',
-        sender: "me",
-        timestamp: "2025-01-09T20:49:22.259Z",
-      },
-      {
-        id: "95e762b9-7f60-419c-baad-c20615e0f937",
-        content:
-          "It's a reminder that vision and execution often go hand in hand. What do you think drives that intensity?",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "90901f2b-b827-405c-8a20-df083d6c9438",
-        content:
-          "YC emphasizes hands-on mentorship, encouraging founders to deeply engage with their users and iterate quickly.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "6f57ccaf-574c-47b6-a4f8-35e6f6072109",
-        content:
-          "It's about fostering a mindset of experimentation and resilience. That's where true innovation thrives.",
-        sender: "Brian Chesky",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "4b50cf4f-1c72-478b-9922-f37015c6272c",
-        content:
-          "Exactly, we teach founders to embrace failure as part of the learning process. It's essential for growth.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-        reactions: [
-          {
-            type: "emphasize",
-            sender: "Brian Chesky",
-            timestamp: "12:49 PM",
-          },
-        ],
-      },
-      {
-        id: "dba7f9c9-821c-44c0-b11c-680267607c5a",
-        content:
-          "Embracing failure is vital. Each setback can lead to a breakthrough if you learn from it.",
-        sender: "Brian Chesky",
-        timestamp: "12:50 PM",
-      },
-      {
-        id: "22f06a6a-1183-49ed-9d08-97321d2c5c26",
-        content:
-          "Learning from setbacks builds resilience. It's a crucial part of the founder's journey.",
-        sender: "Paul Graham",
-        timestamp: "12:50 PM",
-      },
-    ],
-  },
-  {
     id: "8edd0432-a5fa-4fed-aa39-39e47cbd46e4",
     unreadCount: 1,
     pinned: true,
@@ -1127,6 +859,260 @@ export const initialConversations: Conversation[] = [
           "I'm excited to see how it will integrate with new technologies, enhancing user experiences even further.",
         sender: "Steve Wozniak",
         timestamp: "12:46 PM",
+      },
+    ],
+  },
+  {
+    id: "7cd80e33-87c2-42d5-a5d8-8fb18bd9c218",
+    unreadCount: 1,
+    pinned: true,
+    lastMessageTime: getTimeAgo(5),
+    recipients: [
+      {
+        id: "e4b17cbf-1490-4d5c-aa01-177e24645008",
+        name: "Brian Chesky",
+      },
+      {
+        id: "568ce8ef-e1a7-4867-9e30-1528409e7812",
+        name: "Paul Graham",
+      },
+    ],
+    messages: [
+      {
+        id: "96995793-1ff0-4240-b99d-fbda7ee1c65a",
+        content: "Let's talk about Founder Mode",
+        htmlContent: "<p>Let's talk about Founder Mode</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:46:08.990Z",
+      },
+      {
+        id: "71e2983f-f897-4c90-9901-36ecc9cc0dab",
+        content:
+          "Founder Mode is about being deeply immersed in your startup's vision and challenges. It's a mindset.",
+        sender: "Paul Graham",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "a8bc9820-ac56-4aee-8ea6-786e4e2b29e6",
+        content:
+          "I remember being in that mode during Airbnb's early days. It’s all-consuming but transformative.",
+        sender: "Brian Chesky",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "b16d85bd-1a79-4627-bbca-eb848c790f33",
+        content:
+          "Absolutely, it's like being in a state of flow. Every problem becomes an opportunity for growth.",
+        sender: "Paul Graham",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "5aee3ddf-3947-44cb-b519-5cb5e531fc4e",
+        content:
+          "And it fosters incredible creativity. The best ideas often come from those intense moments.",
+        sender: "Brian Chesky",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "e1a741ac-d3db-4582-8bda-946da572fb2c",
+        content:
+          "When did you feel confident enough in yourself to go full Founder Mode?",
+        htmlContent:
+          "<p>When did you feel confident enough in yourself to go full Founder Mode?</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:46:58.226Z",
+      },
+      {
+        id: "092286e1-a05e-41e1-95f2-1ee959bdaad5",
+        content:
+          "For me, it was when I realized our vision resonated with people. That spark gave me the confidence.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "f5c71314-b667-498f-a4ac-0fb89d30f79a",
+        content:
+          "For me, it was when I saw our early users truly engaged. That validation was key.",
+        sender: "Paul Graham",
+        timestamp: "12:47 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Brian Chesky",
+            timestamp: "12:47 PM",
+          },
+        ],
+      },
+      {
+        id: "a2535c6f-becb-44f6-9d2b-f6592021cd39",
+        content:
+          "I love that, Paul. User engagement is a powerful motivator for any founder.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "01e3afbf-2e97-4b8e-bf2e-3d98aff1e36d",
+        content:
+          "Absolutely, it's the feedback loop that fuels innovation and perseverance. What about you, Brian?",
+        sender: "Paul Graham",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "3976c90a-e43e-421f-9748-b9bdb4e2f489",
+        content:
+          "For me, it was seeing hosts share their stories. It deepened my commitment to our mission.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "02bb82a5-5676-4254-b1f4-5f2e6048750d",
+        content: "What about Manager Mode? ",
+        htmlContent: "<p>What about Manager Mode? </p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:47:59.457Z",
+      },
+      {
+        id: "ae513cd8-f31a-4fe5-a8c9-aebcb6300e29",
+        content: "Do you think hiring managers is wrong?",
+        htmlContent: "<p>Do you think hiring managers is wrong?</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:04.784Z",
+      },
+      {
+        id: "ff284b9b-dd46-410d-aaf4-46d785f9eb86",
+        content:
+          "Hiring managers isn't wrong, but it can shift focus from founder-driven innovation.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "4ad61916-06f5-4023-b9b6-a6f4700cded3",
+        content:
+          "I agree, Paul. Balancing management and innovation is crucial for growth.",
+        sender: "Brian Chesky",
+        timestamp: "12:48 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "me",
+            timestamp: "2025-01-09T20:48:26.947Z",
+          },
+        ],
+      },
+      {
+        id: "5e63c4d9-33f2-4c4f-914b-59c3f95c3459",
+        content:
+          "It's about finding the right balance. Managers can help scale, but founders must lead vision.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "44b95daf-2d25-4a74-98de-1fa3a2b91f25",
+        content:
+          "What are some of the most successful founder-led companies in your opinion?",
+        htmlContent:
+          "<p>What are some of the most successful founder-led companies in your opinion?</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:38.577Z",
+      },
+      {
+        id: "48d3b9bd-c8b0-461e-aec1-45a20464aab8",
+        content:
+          "Absolutely, the founder's vision should always guide the team, even as it grows.",
+        sender: "Brian Chesky",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "c7670a65-c8cf-4610-b813-8964947904f0",
+        content:
+          "Some examples include Apple, Amazon, and Tesla. Their founders shaped their visions and cultures.",
+        sender: "Brian Chesky",
+        timestamp: "12:48 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Paul Graham",
+            timestamp: "12:48 PM",
+          },
+        ],
+      },
+      {
+        id: "76178d4d-190e-49c0-926f-0341ab6dc8a5",
+        content: "Elon is a beast",
+        htmlContent: "<p>Elon is a beast</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:54.274Z",
+      },
+      {
+        id: "57161753-b9f5-4385-b5a0-0a1293815133",
+        content:
+          "I’d add companies like Airbnb and Stripe. Founder-led vision drives their unique approaches.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "a128c605-2a47-4041-8a65-d26223bbd512",
+        content:
+          "Elon embodies founder mode, pushing boundaries and redefining industries.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Brian Chesky",
+            timestamp: "12:49 PM",
+          },
+        ],
+      },
+      {
+        id: "71eb8b44-7ab9-4612-8955-977f0e4333fd",
+        content:
+          "Absolutely, his relentless drive inspires many entrepreneurs to think bigger and bolder.",
+        sender: "Brian Chesky",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "b274b2e8-6be0-4810-81cc-d4c7fa1f780d",
+        content: "Paul how does YC teach Founder Mode?",
+        htmlContent:
+          '<p><strong><span data-type="mention" data-id="568ce8ef-e1a7-4867-9e30-1528409e7812" data-label="Paul" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Paul</span></strong> how does YC teach Founder Mode?</p>',
+        sender: "me",
+        timestamp: "2025-01-09T20:49:22.259Z",
+      },
+      {
+        id: "95e762b9-7f60-419c-baad-c20615e0f937",
+        content:
+          "It's a reminder that vision and execution often go hand in hand. What do you think drives that intensity?",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "90901f2b-b827-405c-8a20-df083d6c9438",
+        content:
+          "YC emphasizes hands-on mentorship, encouraging founders to deeply engage with their users and iterate quickly.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "6f57ccaf-574c-47b6-a4f8-35e6f6072109",
+        content:
+          "It's about fostering a mindset of experimentation and resilience. That's where true innovation thrives.",
+        sender: "Brian Chesky",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "4b50cf4f-1c72-478b-9922-f37015c6272c",
+        content:
+          "Exactly, we teach founders to embrace failure as part of the learning process. It's essential for growth.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Brian Chesky",
+            timestamp: "12:49 PM",
+          },
+        ],
       },
     ],
   },
