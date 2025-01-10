@@ -241,7 +241,11 @@ export function MessageBubble({
       {/* Extra space between messages with reactions */}
       <div
         className={`overflow-hidden transition-[height] duration-500 ease-in-out ${
-          message.reactions && message.reactions.length > 0 ? "h-2" : "h-0"
+          message.reactions && message.reactions.length > 0
+            ? message.sender === "me"
+              ? "h-4"
+              : "h-2"
+            : "h-0"
         } bg-background`}
       />
 
