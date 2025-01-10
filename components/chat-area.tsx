@@ -150,16 +150,13 @@ export function ChatArea({
         mobileHeaderHeight={isMobileView}
         bottomMargin="calc(var(--dynamic-height, 64px))">
         <div
-          className={cn(isMobileView ? "pt-24" : "pt-16")}
-          style={{
-            paddingBottom: "calc(var(--dynamic-height, 64px)",
-          }}>
+          className={cn(
+            isMobileView ? "pt-24" : "pt-16",
+            "pb-[var(--dynamic-height,64px)]"
+          )}>
           <div className="flex-1 relative">
             {/* Gradient background */}
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(#43CDF6,#0A7CFF)" }}
-            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
             <div className="relative h-full flex">
               <div className="w-3 bg-background" />
               <MessageList
@@ -180,10 +177,8 @@ export function ChatArea({
         </div>
       </ScrollArea>
       <div
-        className="absolute bottom-0 left-0 right-0 z-50"
-        style={{
-          marginBottom: "env(keyboard-inset-height, 0px)",
-        }}>
+        className="absolute bottom-0 left-0 right-0 z-50 mb-[env(keyboard-inset-height,0px)]"
+      >
         <MessageInput
           key={messageInputKey}
           ref={messageInputRef}
