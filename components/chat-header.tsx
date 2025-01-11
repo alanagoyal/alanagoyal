@@ -41,7 +41,6 @@ interface RecipientSearchProps {
   setSearchValue: (value: string) => void;
   showResults: boolean;
   selectedIndex: number;
-  filteredPeople: typeof techPersonalities;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   handlePersonSelect: (person: (typeof techPersonalities)[0]) => void;
   setSelectedIndex: (index: number) => void;
@@ -87,7 +86,6 @@ function RecipientSearch({
   setSearchValue,
   showResults,
   selectedIndex,
-  filteredPeople,
   handleKeyDown,
   handlePersonSelect,
   setSelectedIndex,
@@ -125,23 +123,32 @@ function RecipientSearch({
     }
   };
 
-  // Combine tech personalities and user contacts for the dropdown
-  const allPeople = useMemo(() => {
+  // Filter people based on search value
+  const displayPeople = useMemo(() => {
+    const currentRecipients = recipientInput
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+
     const combined = [...techPersonalities];
+    const userContacts = getUserContacts();
+    
+    // Add user contacts, avoiding duplicates
     userContacts.forEach(contact => {
       if (!combined.some(p => p.name.toLowerCase() === contact.name.toLowerCase())) {
         combined.push(contact);
       }
     });
-    return combined;
-  }, [userContacts]);
 
-  // Filter people based on search value
-  const displayPeople = useMemo(() => {
-    return allPeople.filter(person =>
-      person.name.toLowerCase().includes(searchValue.toLowerCase())
-    );
-  }, [allPeople, searchValue]);
+    // Filter out current recipients and by search value
+    const filtered = combined.filter(person => {
+      const matchesSearch = !searchValue || person.name.toLowerCase().includes(searchValue.toLowerCase());
+      const notSelected = !currentRecipients.includes(person.name);
+      return matchesSearch && notSelected;
+    });
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [searchValue, recipientInput]);
 
   return (
     <div
@@ -304,17 +311,30 @@ export function ChatHeader({
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Computed values
-  const filteredPeople = useMemo(() => {
+  const displayPeople = useMemo(() => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
       .filter(Boolean);
-    return techPersonalities.filter((person) => {
-      return (
-        person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
-        !currentRecipients.includes(person.name)
-      );
+
+    const combined = [...techPersonalities];
+    const userContacts = getUserContacts();
+    
+    // Add user contacts, avoiding duplicates
+    userContacts.forEach(contact => {
+      if (!combined.some(p => p.name.toLowerCase() === contact.name.toLowerCase())) {
+        combined.push(contact);
+      }
     });
+
+    // Filter out current recipients and by search value
+    const filtered = combined.filter(person => {
+      const matchesSearch = !searchValue || person.name.toLowerCase().includes(searchValue.toLowerCase());
+      const notSelected = !currentRecipients.includes(person.name);
+      return matchesSearch && notSelected;
+    });
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
   }, [searchValue, recipientInput]);
 
   // Handlers
@@ -423,7 +443,7 @@ export function ChatHeader({
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < filteredPeople.length - 1 ? prev + 1 : prev
+          prev < displayPeople.length - 1 ? prev + 1 : prev
         );
         break;
       case "ArrowUp":
@@ -432,8 +452,8 @@ export function ChatHeader({
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
-          handlePersonSelect(filteredPeople[selectedIndex]);
+        if (selectedIndex >= 0 && selectedIndex < displayPeople.length) {
+          handlePersonSelect(displayPeople[selectedIndex]);
         }
         break;
     }
@@ -554,7 +574,6 @@ export function ChatHeader({
                         setSearchValue={setSearchValue}
                         showResults={showResults}
                         selectedIndex={selectedIndex}
-                        filteredPeople={filteredPeople}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
                         setSelectedIndex={setSelectedIndex}
@@ -636,7 +655,6 @@ export function ChatHeader({
                         setSearchValue={setSearchValue}
                         showResults={showResults}
                         selectedIndex={selectedIndex}
-                        filteredPeople={filteredPeople}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
                         setSelectedIndex={setSelectedIndex}
