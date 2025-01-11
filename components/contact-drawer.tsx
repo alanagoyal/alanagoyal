@@ -7,6 +7,7 @@ import {
   DrawerHeader,
   DrawerTrigger,
   DrawerDescription,
+  DrawerTitle,
 } from "@/components/ui/drawer"
 import { ChevronRight } from "lucide-react"
 import { Recipient } from "@/types"
@@ -47,6 +48,9 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
       </DrawerTrigger>
       <DrawerContent className="h-[90vh] focus:outline-none">
         <div className="mx-auto w-full">
+          <DrawerTitle className="sr-only">
+            Contact Information for {recipientNames}
+          </DrawerTitle>
           <DrawerHeader className="flex justify-end items-center">
             <DrawerClose asChild>
               <Button 
