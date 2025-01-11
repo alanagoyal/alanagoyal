@@ -135,6 +135,13 @@ function RecipientSearch({
     return combined;
   }, [userContacts]);
 
+  // Filter people based on search value
+  const displayPeople = useMemo(() => {
+    return allPeople.filter(person =>
+      person.name.toLowerCase().includes(searchValue.toLowerCase())
+    );
+  }, [allPeople, searchValue]);
+
   return (
     <div
       ref={searchRef}
@@ -174,7 +181,7 @@ function RecipientSearch({
           onClick={handleAddContact}
           className={cn(
             "flex items-center justify-center w-8 h-8",
-            searchValue && filteredPeople.length === 0
+            searchValue && displayPeople.length === 0
               ? "text-muted-foreground hover:text-foreground"
               : "invisible"
           )}
@@ -182,7 +189,8 @@ function RecipientSearch({
           <Icons.plus className="h-5 w-5" />
         </button>
       </div>
-      {showResults && filteredPeople.length > 0 && (
+
+      {showResults && displayPeople.length > 0 && (
         <div
           ref={dropdownRef}
           className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
@@ -190,12 +198,12 @@ function RecipientSearch({
           tabIndex={-1}
         >
           <ScrollArea
-            style={{ height: `${Math.min(filteredPeople.length * 36 + 16, 376)}px` }}
+            style={{ height: `${Math.min(displayPeople.length * 36 + 16, 376)}px` }}
             className="w-full rounded-md border border-input bg-background p-2"
             isMobile={isMobileView}
           >
             <div className="p-0">
-              {filteredPeople.map((person, index) => (
+              {displayPeople.map((person, index) => (
                 <div
                   key={person.name}
                   ref={selectedIndex === index ? selectedItemRef : null}
