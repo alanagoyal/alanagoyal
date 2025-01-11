@@ -47,16 +47,12 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
         </Button>
       </DrawerTrigger>
       <DrawerContent className="h-[98vh] focus:outline-none">
-        <div className="mx-auto w-full max-w-sm">
-          <DrawerHeader className="flex justify-between items-center px-4">
-            <div className="w-16"></div>
-            <DrawerTitle className="text-lg font-normal">
-              {recipients.length} {recipients.length === 1 ? "Person" : "People"}
-            </DrawerTitle>
+        <div className="mx-auto w-full">
+          <DrawerHeader className="flex justify-end items-center">
             <DrawerClose asChild>
               <Button 
                 variant="ghost" 
-                className="text-blue-500 hover:text-blue-600 hover:bg-transparent"
+                className="text-blue-500 text-lg font-medium hover:text-blue-600 hover:bg-transparent"
                 onClick={onClose}
               >
                 Done
@@ -68,7 +64,7 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
             Contact information and details for {recipientNames}
           </DrawerDescription>
 
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center mb-4 p-4">
             <div className="flex px-4 mb-2">
               {recipients.slice(0, 4).map((recipient, index) => (
                 <div
@@ -96,10 +92,10 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
                 </div>
               ))}
             </div>
-            <h2 className="text-xl text-center font-semibold mb-4">{recipientNames}</h2>
+            <h2 className="text-2xl text-center font-semibold py-4 max-w-sm">{recipientNames}</h2>
           </div>
 
-          <div className="px-4">
+          <div className="px-8">
             {recipients.map((recipient) => (
               <Fragment key={recipient.name}>
                 <div 
