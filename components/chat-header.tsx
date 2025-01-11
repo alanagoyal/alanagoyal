@@ -400,6 +400,9 @@ export function ChatHeader({
       return;
     }
 
+    // Save the person as a contact for future use
+    addUserContact(person.name);
+
     const newValue = recipientInput
       ? recipientInput
           .split(",")
