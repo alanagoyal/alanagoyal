@@ -98,7 +98,6 @@ function RecipientSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
-  const [userContacts, setUserContacts] = useState(() => getUserContacts());
 
   // Focus on mount
   useEffect(() => {
@@ -116,8 +115,6 @@ function RecipientSearch({
 
   const handleAddContact = () => {
     if (searchValue.trim()) {
-      const updatedContacts = addUserContact(searchValue.trim());
-      setUserContacts(updatedContacts);
       handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
       setShowResults(true); // Keep the dropdown open for more selections
     }
