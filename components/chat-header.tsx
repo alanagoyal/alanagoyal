@@ -1,10 +1,11 @@
 import { Icons } from "./icons";
 import { Conversation } from "../types";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { techPersonalities } from "../data/tech-personalities";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getUserContacts, addUserContact } from "@/lib/contacts";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
@@ -98,6 +99,7 @@ function RecipientSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
+  const [userContacts, setUserContacts] = useState(() => getUserContacts());
 
   // Focus on mount
   useEffect(() => {
@@ -113,82 +115,113 @@ function RecipientSearch({
     }
   }, [selectedIndex]);
 
+  const handleAddContact = () => {
+    if (searchValue.trim()) {
+      const updatedContacts = addUserContact(searchValue.trim());
+      setUserContacts(updatedContacts);
+      handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
+      setShowResults(true); // Keep the dropdown open for more selections
+    }
+  };
+
+  // Combine tech personalities and user contacts for the dropdown
+  const allPeople = useMemo(() => {
+    const combined = [...techPersonalities];
+    userContacts.forEach(contact => {
+      if (!combined.some(p => p.name.toLowerCase() === contact.name.toLowerCase())) {
+        combined.push(contact);
+      }
+    });
+    return combined;
+  }, [userContacts]);
+
   return (
     <div
       ref={searchRef}
       className={cn("relative", isMobileView ? "w-full" : "flex-1")}
       data-chat-header="true"
     >
-      <input
-        ref={inputRef}
-        type="text"
-        value={searchValue}
-        onChange={(e) => {
-          setSearchValue(e.target.value);
-          setShowResults(true);
-        }}
-        onKeyDown={handleKeyDown}
-        onBlur={(e) => {
-          const isRemoveButton = (e.relatedTarget as Element)?.closest(
-            'button[aria-label^="Remove"]'
-          );
-          const isDropdown = e.relatedTarget?.closest('[data-chat-header-dropdown="true"]');
-          
-          if (!isRemoveButton && !isDropdown) {
-            updateRecipients();
-          }
-        }}
-        onFocus={() => {
-          if (!hasReachedMaxRecipients(recipientInput)) {
+      <div className="flex items-center w-full">
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchValue}
+          onChange={(e) => {
+            setSearchValue(e.target.value);
             setShowResults(true);
-          }
-        }}
-        placeholder="Type to add recipients..."
-        className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-        data-chat-header="true"
-      />
-      {showResults && (
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={(e) => {
+            const isRemoveButton = (e.relatedTarget as Element)?.closest(
+              'button[aria-label^="Remove"]'
+            );
+            const isDropdown = e.relatedTarget?.closest('[data-chat-header-dropdown="true"]');
+            
+            if (!isRemoveButton && !isDropdown) {
+              updateRecipients();
+            }
+          }}
+          onFocus={() => {
+            if (!hasReachedMaxRecipients(recipientInput)) {
+              setShowResults(true);
+            }
+          }}
+          placeholder="Type to add recipients..."
+          className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+          data-chat-header="true"
+        />
+        <button
+          onClick={handleAddContact}
+          className={cn(
+            "flex items-center justify-center w-8 h-8",
+            searchValue && filteredPeople.length === 0
+              ? "text-muted-foreground hover:text-foreground"
+              : "invisible"
+          )}
+        >
+          <Icons.plus className="h-5 w-5" />
+        </button>
+      </div>
+      {showResults && filteredPeople.length > 0 && (
         <div
           ref={dropdownRef}
           className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
           data-chat-header-dropdown="true"
           tabIndex={-1}
         >
-          {filteredPeople.length > 0 && (
-            <ScrollArea
-              style={{ height: `${Math.min(filteredPeople.length * 36 + 16, 376)}px` }}
-              className="w-full rounded-md border border-input bg-background p-2"
-              isMobile={isMobileView}
-            >
-              <div className="p-0">
-                {filteredPeople.map((person, index) => (
-                  <div
-                    key={person.name}
-                    ref={selectedIndex === index ? selectedItemRef : null}
-                    className={`p-2 cursor-pointer rounded-md ${
-                      selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
-                    }`}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handlePersonSelect(person);
-                    }}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    tabIndex={0}
-                  >
-                    <div className="flex flex-col">
-                      <span
-                        className={`text-sm ${
-                          selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
-                        }`}
-                      >
-                        {person.name}
-                      </span>
-                    </div>
+          <ScrollArea
+            style={{ height: `${Math.min(filteredPeople.length * 36 + 16, 376)}px` }}
+            className="w-full rounded-md border border-input bg-background p-2"
+            isMobile={isMobileView}
+          >
+            <div className="p-0">
+              {filteredPeople.map((person, index) => (
+                <div
+                  key={person.name}
+                  ref={selectedIndex === index ? selectedItemRef : null}
+                  className={`p-2 cursor-pointer rounded-md ${
+                    selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
+                  }`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handlePersonSelect(person);
+                  }}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  tabIndex={0}
+                >
+                  <div className="flex flex-col">
+                    <span
+                      className={`text-sm ${
+                        selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
+                      }`}
+                    >
+                      {person.name}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
     </div>
@@ -262,16 +295,18 @@ export function ChatHeader({
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Computed values
-  const filteredPeople = techPersonalities.filter((person) => {
+  const filteredPeople = useMemo(() => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
       .filter(Boolean);
-    return (
-      person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
-      !currentRecipients.includes(person.name)
-    );
-  });
+    return techPersonalities.filter((person) => {
+      return (
+        person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+        !currentRecipients.includes(person.name)
+      );
+    });
+  }, [searchValue, recipientInput]);
 
   // Handlers
   const updateRecipients = useCallback(() => {
@@ -288,13 +323,15 @@ export function ChatHeader({
         return;
       }
 
-      if (isEditMode && recipientNames.length > 0) {
+      if (isEditMode && recipientNames.length > 0 && !searchValue) {
         setIsEditMode(false);
         onUpdateRecipients?.(recipientNames);
-      } else if (isNewChat && (!isMobileView || recipientNames.length > 0)) {
+      } else if (isNewChat && (!isMobileView || recipientNames.length > 0) && !searchValue) {
         onCreateConversation?.(recipientNames);
       }
-      setSearchValue("");
+      if (!searchValue) {
+        setSearchValue("");
+      }
     }
   }, [
     isNewChat,
@@ -304,6 +341,7 @@ export function ChatHeader({
     onCreateConversation,
     toast,
     isMobileView,
+    searchValue,
   ]);
 
   const handleHeaderClick = () => {
