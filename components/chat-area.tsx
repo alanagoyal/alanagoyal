@@ -54,6 +54,7 @@ export function ChatArea({
     }
   }, [isNewChat]);
 
+  const showRecipientInput = isNewChat && !activeConversation;
   const messageInputRef = useRef<{ focus: () => void }>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -125,7 +126,7 @@ export function ChatArea({
     <div className="h-dvh relative">
       <div className="absolute top-0 left-0 right-0 z-50">
         <ChatHeader
-          isNewChat={isNewChat}
+          isNewChat={showRecipientInput}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
           onBack={onBack}
