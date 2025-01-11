@@ -20,6 +20,7 @@ interface ContactDrawerProps {
 
 export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
   const [open, setOpen] = useState(false)
+  const [expandedUser, setExpandedUser] = useState<string | null>(null)
   
   const recipientNames = recipients.map(r => r.name).join(", ")
 
@@ -67,7 +68,7 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
             Contact information and details for {recipientNames}
           </DrawerDescription>
 
-          <div className="flex flex-col items-center mb-8">
+          <div className="flex flex-col items-center mb-4">
             <div className="flex px-4 mb-2">
               {recipients.slice(0, 4).map((recipient, index) => (
                 <div
@@ -95,30 +96,57 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
                 </div>
               ))}
             </div>
-            <h2 className="p-4 text-xl text-center font-semibold">{recipientNames}</h2>
-            <div className="p-4 w-full">
-              {recipients.map((recipient) => (
-                <Fragment key={recipient.name}>
-                  {(recipient.bio || recipient.title) && (
-                    <div 
-                      className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4"
-                      tabIndex={0}
-                    >
-                      {recipient.title && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                          {recipient.title}
-                        </p>
-                      )}
-                      {recipient.bio && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {recipient.bio}
-                        </p>
+            <h2 className="text-xl text-center font-semibold mb-4">{recipientNames}</h2>
+          </div>
+
+          <div className="px-4">
+            {recipients.map((recipient) => (
+              <Fragment key={recipient.name}>
+                <div 
+                  className="flex items-center justify-between py-4 border-t first:border-t-0 cursor-pointer"
+                  onClick={() => recipient.bio && setExpandedUser(expandedUser === recipient.name ? null : recipient.name)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                      {recipient.avatar ? (
+                        <img
+                          src={recipient.avatar}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300">
+                          <span className="text-white text-sm font-medium">
+                            {recipient.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </span>
+                        </div>
                       )}
                     </div>
+                    <div>
+                      <div className="font-medium">{recipient.name}</div>
+                      {recipient.title && (
+                        <div className="text-sm text-gray-500">{recipient.title}</div>
+                      )}
+                    </div>
+                  </div>
+                  {recipient.bio && (
+                    <ChevronRight 
+                      className={`w-5 h-5 text-gray-400 transition-transform ${
+                        expandedUser === recipient.name ? "rotate-90" : ""
+                      }`}
+                    />
                   )}
-                </Fragment>
-              ))}
-            </div>
+                </div>
+                {expandedUser === recipient.name && recipient.bio && (
+                  <div className="pl-13 pr-4 pb-4 text-sm text-gray-600">
+                    {recipient.bio}
+                  </div>
+                )}
+              </Fragment>
+            ))}
           </div>
         </div>
       </DrawerContent>
