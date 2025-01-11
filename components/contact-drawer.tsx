@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -8,21 +8,43 @@ import {
   DrawerTrigger,
   DrawerDescription,
   DrawerTitle,
-} from "@/components/ui/drawer"
-import { ChevronRight } from "lucide-react"
-import { Recipient } from "@/types"
-import { Fragment } from "react"
+} from "@/components/ui/drawer";
+import { ChevronRight } from "lucide-react";
+import { Recipient } from "@/types";
+import { Fragment } from "react";
 
 interface ContactDrawerProps {
-  recipients: Array<Omit<Recipient, 'id'>>
-  onClose?: () => void
+  recipients: Array<Omit<Recipient, "id">>;
+  onClose?: () => void;
+  onUpdateName?: (name: string) => void;
+  conversationName?: string;
 }
 
-export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
-  const [open, setOpen] = useState(false)
-  const [expandedUser, setExpandedUser] = useState<string | null>(null)
-  
-  const recipientNames = recipients.map(r => r.name).join(", ")
+export function ContactDrawer({
+  recipients,
+  onClose,
+  onUpdateName,
+  conversationName,
+}: ContactDrawerProps) {
+  const [open, setOpen] = useState(false);
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [chatName, setChatName] = useState(
+    conversationName || recipients.map((r) => r.name).join(", ")
+  );
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setChatName(e.target.value);
+  };
+
+  const handleNameSave = () => {
+    if (onUpdateName) {
+      onUpdateName(chatName);
+    }
+    setIsEditing(false);
+  };
+
+  const recipientNames = recipients.map((r) => r.name).join(", ");
 
   const getOffset = (index: number, total: number) => {
     if (total === 1) return {};
@@ -37,9 +59,9 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="h-6 w-6"
           aria-label="View contact details"
         >
@@ -53,8 +75,8 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
           </DrawerTitle>
           <DrawerHeader className="flex justify-end items-center">
             <DrawerClose asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="text-blue-500 text-lg font-medium hover:text-blue-600 hover:bg-transparent"
                 onClick={onClose}
               >
@@ -62,12 +84,12 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          
+
           <DrawerDescription className="sr-only">
             Contact information and details for {recipientNames}
           </DrawerDescription>
 
-          <div className="flex flex-col items-center mb-4 p-4">
+          <div className="flex flex-col items-center mb-2 p-4">
             <div className="flex px-4 mb-2">
               {recipients.slice(0, 4).map((recipient, index) => (
                 <div
@@ -95,15 +117,42 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
                 </div>
               ))}
             </div>
-            <h2 className="text-2xl text-center font-semibold py-4 max-w-sm">{recipientNames}</h2>
+            <div className="flex flex-col items-center">
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={chatName}
+                  onChange={handleNameChange}
+                  className="text-2xl text-center font-semibold py-2 max-w-sm border-b border-gray-200 focus:outline-none focus:border-blue-500"
+                  autoFocus
+                  onBlur={handleNameSave}
+                  onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
+                />
+              ) : (
+                <h2 className="text-2xl text-center font-semibold py-2 max-w-sm min-h-[40px] flex items-center justify-center border-b border-transparent">
+                  {chatName}
+                </h2>
+              )}
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-blue-500 text-sm font-medium hover:text-blue-600 mt-2"
+              >
+                Change Name
+              </button>
+            </div>
           </div>
 
           <div className="px-8">
             {recipients.map((recipient) => (
               <Fragment key={recipient.name}>
-                <div 
+                <div
                   className="flex items-center justify-between py-4 border-t first:border-t-0 cursor-pointer"
-                  onClick={() => recipient.bio && setExpandedUser(expandedUser === recipient.name ? null : recipient.name)}
+                  onClick={() =>
+                    recipient.bio &&
+                    setExpandedUser(
+                      expandedUser === recipient.name ? null : recipient.name
+                    )
+                  }
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
@@ -127,12 +176,14 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
                     <div>
                       <div className="font-medium">{recipient.name}</div>
                       {recipient.title && (
-                        <div className="text-sm text-gray-500">{recipient.title}</div>
+                        <div className="text-sm text-gray-500">
+                          {recipient.title}
+                        </div>
                       )}
                     </div>
                   </div>
                   {recipient.bio && (
-                    <ChevronRight 
+                    <ChevronRight
                       className={`w-5 h-5 text-gray-400 transition-transform ${
                         expandedUser === recipient.name ? "rotate-90" : ""
                       }`}
@@ -150,5 +201,5 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
         </div>
       </DrawerContent>
     </Drawer>
-  )
+  );
 }

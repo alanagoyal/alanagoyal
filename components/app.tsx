@@ -663,6 +663,17 @@ export default function App() {
     []
   );
 
+  // Method to update conversation name
+  const handleUpdateConversationName = useCallback((name: string) => {
+    setConversations((prevConversations) => {
+      return prevConversations.map((conv) =>
+        conv.id === activeConversation
+          ? { ...conv, name }
+          : conv
+      );
+    });
+  }, [activeConversation]);
+
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
     soundEffects.toggleSound();
@@ -743,9 +754,11 @@ export default function App() {
           >
             <ChatArea
               isNewChat={isNewConversation}
-              activeConversation={conversations.find(
-                (c) => c.id === activeConversation
-              )}
+              activeConversation={
+                activeConversation
+                  ? conversations.find((c) => c.id === activeConversation)
+                  : undefined
+              }
               recipientInput={recipientInput}
               setRecipientInput={setRecipientInput}
               isMobileView={isMobileView}
@@ -756,9 +769,10 @@ export default function App() {
               onSendMessage={handleSendMessage}
               onReaction={handleReaction}
               typingStatus={typingStatus}
-              conversationId={activeConversation}
+              conversationId={activeConversation || ""}
               onUpdateConversationRecipients={updateConversationRecipients}
               onCreateConversation={createNewConversation}
+              onUpdateConversationName={handleUpdateConversationName}
               messageDraft={
                 isNewConversation
                   ? messageDrafts["new"] || ""

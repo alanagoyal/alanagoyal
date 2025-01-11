@@ -22,6 +22,7 @@ interface ChatAreaProps {
     recipients: string[]
   ) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
+  onUpdateConversationName?: (name: string) => void;
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
   unreadCount?: number;
@@ -40,6 +41,7 @@ export function ChatArea({
   conversationId,
   onUpdateConversationRecipients,
   onCreateConversation,
+  onUpdateConversationName,
   messageDraft = "",
   onMessageDraftChange,
   unreadCount = 0,
@@ -124,21 +126,23 @@ export function ChatArea({
     <div className="h-dvh relative">
       <div className="absolute top-0 left-0 right-0 z-50">
         <ChatHeader
-          isNewChat={showRecipientInput}
-          activeConversation={activeConversation}
+          isNewChat={isNewChat}
           recipientInput={recipientInput}
           setRecipientInput={setRecipientInput}
-          isMobileView={isMobileView}
           onBack={onBack}
+          isMobileView={isMobileView}
+          activeConversation={activeConversation}
+          onUpdateRecipients={
+            onUpdateConversationRecipients
+              ? (recipients) =>
+                  onUpdateConversationRecipients(conversationId!, recipients)
+              : undefined
+          }
+          onCreateConversation={onCreateConversation}
+          onUpdateConversationName={onUpdateConversationName}
+          unreadCount={unreadCount}
           showCompactNewChat={showCompactNewChat}
           setShowCompactNewChat={setShowCompactNewChat}
-          onUpdateRecipients={(recipients) => {
-            if (conversationId) {
-              onUpdateConversationRecipients?.(conversationId, recipients);
-            }
-          }}
-          onCreateConversation={onCreateConversation}
-          unreadCount={unreadCount}
         />
       </div>
 

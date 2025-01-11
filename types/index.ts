@@ -10,6 +10,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
+  name?: string;
   recipients: Recipient[];
   messages: Message[];
   lastMessageTime: string;

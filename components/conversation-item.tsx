@@ -148,7 +148,7 @@ export function ConversationItem({
         <div className="flex-1 min-w-0 py-2">
           <div className="flex justify-between items-baseline">
             <span className="text-sm font-medium line-clamp-1 max-w-[70%]">
-              {conversation.recipients.map((r) => r.name).join(", ")}
+              {conversation.name || conversation.recipients.map((r) => r.name).join(", ")}
             </span>
             {conversation.lastMessageTime && (
               <span

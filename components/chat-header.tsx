@@ -24,6 +24,7 @@ interface ChatHeaderProps {
   activeConversation?: Conversation;
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
+  onUpdateConversationName?: (name: string) => void;
   unreadCount?: number;
   showCompactNewChat?: boolean;
   setShowCompactNewChat?: (show: boolean) => void;
@@ -298,6 +299,7 @@ export function ChatHeader({
   activeConversation,
   onUpdateRecipients,
   onCreateConversation,
+  onUpdateConversationName,
   unreadCount,
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
@@ -608,6 +610,9 @@ export function ChatHeader({
                   </div>
                   <span className="text-xs flex items-center">
                     {(() => {
+                      if (!isNewChat && activeConversation?.name) {
+                        return activeConversation.name;
+                      }
                       const recipients = isNewChat
                         ? recipientInput.split(",").filter((r) => r.trim())
                         : activeConversation?.recipients.map((r) => r.name) || [];
@@ -626,6 +631,8 @@ export function ChatHeader({
                             title: personality?.title
                           };
                         }) || []} 
+                        conversationName={activeConversation?.name}
+                        onUpdateName={onUpdateConversationName}
                       />
                     )}
                   </span>
@@ -677,6 +684,9 @@ export function ChatHeader({
                 <span className="text-sm">
                   <span className="text-muted-foreground">To: </span>
                   {(() => {
+                    if (!isNewChat && activeConversation?.name) {
+                      return activeConversation.name;
+                    }
                     const recipients =
                       activeConversation?.recipients.map((r) => r.name) || [];
                     return recipients.length <= 3
