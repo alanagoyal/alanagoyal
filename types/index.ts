@@ -22,6 +22,8 @@ export interface Recipient {
   id: string;
   name: string;
   avatar?: string;
+  bio?: string;
+  title?: string;
 }
 
 export type ReactionType = 'heart' | 'like' | 'dislike' | 'laugh' | 'emphasize' | 'question';

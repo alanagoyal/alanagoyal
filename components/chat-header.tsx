@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUserContacts, addUserContact } from "@/lib/contacts";
+import { ContactDrawer } from "./contact-drawer";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
@@ -585,7 +586,7 @@ export function ChatHeader({
                       }
                     />
                   </div>
-                  <span className="text-xs">
+                  <span className="text-xs flex items-center">
                     {(() => {
                       const recipients = isNewChat
                         ? recipientInput.split(",").filter((r) => r.trim())
@@ -594,6 +595,19 @@ export function ChatHeader({
                         ? recipients[0]
                         : `${recipients.length} people`;
                     })()}
+                    {isMobileView && !isNewChat && activeConversation && (
+                      <ContactDrawer 
+                        recipients={activeConversation?.recipients.map(recipient => {
+                          const personality = techPersonalities.find(p => p.name === recipient.name);
+                          return {
+                            name: recipient.name,
+                            avatar: recipient.avatar,
+                            bio: personality?.bio,
+                            title: personality?.title
+                          };
+                        }) || []} 
+                      />
+                    )}
                   </span>
                 </div>
               </div>
