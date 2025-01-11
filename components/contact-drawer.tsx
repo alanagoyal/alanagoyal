@@ -45,7 +45,7 @@ export function ContactDrawer({ recipients, onClose }: ContactDrawerProps) {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-[80vh] focus:outline-none">
+      <DrawerContent className="h-[90vh] focus:outline-none">
         <div className="mx-auto w-full">
           <DrawerHeader className="flex justify-end items-center">
             <DrawerClose asChild>
