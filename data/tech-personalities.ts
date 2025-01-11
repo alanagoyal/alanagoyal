@@ -405,7 +405,7 @@ export const techPersonalities: TechPersonality[] = [
     bio: "Satya Nadella is the CEO of Microsoft, guiding the company’s transition to cloud services and AI. Known for a thoughtful leadership style, he champions inclusive innovation and continuous learning."
   },
   {
-    name: "Stephen Curry",
+    name: "Steph Curry",
     title: "NBA All-Star",
     prompt:
       "You are Stephen Curry, a talented basketball player. Communicate with passion, determination, and competitive spirit. Your style reflects a strong work ethic and mental toughness.",
