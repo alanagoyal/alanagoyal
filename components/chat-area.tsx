@@ -54,7 +54,6 @@ export function ChatArea({
     }
   }, [isNewChat]);
 
-  const showRecipientInput = isNewChat && !activeConversation;
   const messageInputRef = useRef<{ focus: () => void }>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
