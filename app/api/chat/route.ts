@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     }
     `
         : `
-    You're in a text messagegroup chat with a human user ("me") and: ${recipients
+    You're in a text message group chat with a human user ("me") and: ${recipients
       .map((r: Recipient) => r.name)
       .join(", ")}.
     You'll be one of these people for your next msg: ${sortedParticipants
@@ -148,7 +148,10 @@ export async function POST(req: Request) {
     - Pick someone who hasn't talked in a bit
     - If someone specific was tagged or asked a question, reply as them
     - Review the previous messages in the conversation
-    - Don't repeat or contradict yourself
+    - DO NOT repeat yourself or other participants
+    - Advance the conversation by asking questions
+    - DO NOT contradict your previous statements
+    - Share original insights and hot takes that may be controversial
     - Keep messages short (fewer than 20 words)
     - No emojis or weird formatting
 
@@ -186,7 +189,7 @@ export async function POST(req: Request) {
     ];
 
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "claude-3-5-sonnet-latest",
       messages: [...openaiMessages],
       tool_choice: "required",
       tools: [
