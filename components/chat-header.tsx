@@ -103,8 +103,6 @@ function RecipientSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-
   // Focus on mount
   useEffect(() => {
     if (inputRef.current) {
@@ -444,7 +442,7 @@ export function ChatHeader({
         
         handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
         setShowResults(true); // Keep the dropdown open for more selections
-      } catch (error) {
+      } catch {
         toast({
           description: "Failed to validate contact name",
         });

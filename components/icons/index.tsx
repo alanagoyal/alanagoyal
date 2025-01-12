@@ -1,4 +1,4 @@
-import { InfoIcon, PenSquare, Phone, Video, Smile, Loader, Search, ChevronLeft, Sun, Moon, X, PlusCircle } from "lucide-react";
+import { InfoIcon, PenSquare, Phone, Video, Smile, Search, ChevronLeft, Sun, Moon, X, PlusCircle } from "lucide-react";
 
 type IconProps = React.HTMLAttributes<SVGElement>
 
