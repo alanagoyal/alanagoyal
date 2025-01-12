@@ -44,11 +44,13 @@ interface RecipientSearchProps {
   selectedIndex: number;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   handlePersonSelect: (person: (typeof techPersonalities)[0]) => void;
+  handleAddContact: () => Promise<void>;
   setSelectedIndex: (index: number) => void;
   setShowResults: (show: boolean) => void;
   updateRecipients: () => void;
   isMobileView?: boolean;
   recipientInput: string;
+  isValidating: boolean;
 }
 
 // Sub-components
@@ -89,18 +91,20 @@ function RecipientSearch({
   selectedIndex,
   handleKeyDown,
   handlePersonSelect,
+  handleAddContact,
   setSelectedIndex,
   setShowResults,
   updateRecipients,
   isMobileView,
   recipientInput,
+  isValidating,
 }: RecipientSearchProps) {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [isValidating, setIsValidating] = useState(false);
+
   // Focus on mount
   useEffect(() => {
     if (inputRef.current) {
@@ -114,38 +118,6 @@ function RecipientSearch({
       selectedItemRef.current.scrollIntoView({ block: 'nearest' });
     }
   }, [selectedIndex]);
-
-  const handleAddContact = async () => {
-    if (searchValue.trim()) {
-      try {
-        setIsValidating(true);
-        const response = await fetch('/api/validate-contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name: searchValue.trim() }),
-        });
-        const data = await response.json();
-        
-        if (data.validation === false) {
-          toast({
-            description: "Please enter a valid contact name",
-          });
-          return;
-        }
-        
-        handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
-        setShowResults(true); // Keep the dropdown open for more selections
-      } catch (error) {
-        toast({
-          description: "Failed to validate contact name",
-        });
-      } finally {
-        setIsValidating(false);
-      }
-    }
-  };
 
   // Filter people based on search value
   const displayPeople = useMemo(() => {
@@ -339,6 +311,7 @@ export function ChatHeader({
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   // Computed values
   const displayPeople = useMemo(() => {
@@ -449,6 +422,38 @@ export function ChatHeader({
     setSelectedIndex(-1);
   };
 
+  const handleAddContact = async () => {
+    if (searchValue.trim()) {
+      try {
+        setIsValidating(true);
+        const response = await fetch('/api/validate-contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: searchValue.trim() }),
+        });
+        const data = await response.json();
+        
+        if (data.validation === false) {
+          toast({
+            description: "Please enter a valid contact name",
+          });
+          return;
+        }
+        
+        handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
+        setShowResults(true); // Keep the dropdown open for more selections
+      } catch (error) {
+        toast({
+          description: "Failed to validate contact name",
+        });
+      } finally {
+        setIsValidating(false);
+      }
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
 
@@ -473,6 +478,17 @@ export function ChatHeader({
     if (!showResults) return;
 
     switch (e.key) {
+      case "Enter": {
+        e.preventDefault();
+        if (displayPeople.length === 0 && searchValue.trim()) {
+          handleAddContact();
+          return;
+        }
+        if (selectedIndex >= 0 && selectedIndex < displayPeople.length) {
+          handlePersonSelect(displayPeople[selectedIndex]);
+        }
+        break;
+      }
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
@@ -482,12 +498,6 @@ export function ChatHeader({
       case "ArrowUp":
         e.preventDefault();
         setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < displayPeople.length) {
-          handlePersonSelect(displayPeople[selectedIndex]);
-        }
         break;
     }
   };
@@ -609,11 +619,13 @@ export function ChatHeader({
                         selectedIndex={selectedIndex}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
+                        handleAddContact={handleAddContact}
                         setSelectedIndex={setSelectedIndex}
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
                         recipientInput={recipientInput}
+                        isValidating={isValidating}
                       />
                     )}
                   </div>
@@ -695,11 +707,13 @@ export function ChatHeader({
                         selectedIndex={selectedIndex}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
+                        handleAddContact={handleAddContact}
                         setSelectedIndex={setSelectedIndex}
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
                         recipientInput={recipientInput}
+                        isValidating={isValidating}
                       />
                     )}
                   </div>
