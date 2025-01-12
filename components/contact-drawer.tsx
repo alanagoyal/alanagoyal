@@ -18,6 +18,7 @@ interface ContactDrawerProps {
   onClose?: () => void;
   onUpdateName?: (name: string) => void;
   conversationName?: string;
+  onAddContact?: () => void;
 }
 
 export function ContactDrawer({
@@ -25,6 +26,7 @@ export function ContactDrawer({
   onClose,
   onUpdateName,
   conversationName,
+  onAddContact,
 }: ContactDrawerProps) {
   const [open, setOpen] = useState(false);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
@@ -197,6 +199,24 @@ export function ContactDrawer({
                 )}
               </Fragment>
             ))}
+            
+            {/* Add Contact Button */}
+            <div className="py-4 border-t">
+              <button 
+                className="w-full flex items-center gap-3 text-blue-500 hover:bg-transparent hover:text-blue-600 justify-start"
+                onClick={() => {
+                  setOpen(false);
+                  if (onAddContact) {
+                    onAddContact();
+                  }
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-2xl text-blue-500">+</span>
+                </div>
+                <span className="font-medium text-base">Add Contact</span>
+              </button>
+            </div>
           </div>
         </div>
       </DrawerContent>

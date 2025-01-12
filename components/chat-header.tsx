@@ -311,6 +311,12 @@ export function ChatHeader({
   const [isEditMode, setIsEditMode] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
+  useEffect(() => {
+    if (isEditMode && activeConversation?.recipients) {
+      setRecipientInput(activeConversation.recipients.map(r => r.name).join(",") + ",");
+    }
+  }, [isEditMode, activeConversation]);
+
   // Computed values
   const displayPeople = useMemo(() => {
     const currentRecipients = recipientInput
@@ -440,7 +446,7 @@ export function ChatHeader({
           return;
         }
         
-        handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
+        handlePersonSelect({ name: searchValue.trim(), title: "Personal Contact" });
         setShowResults(true); // Keep the dropdown open for more selections
       } catch {
         toast({
@@ -541,35 +547,34 @@ export function ChatHeader({
 
   // Render helpers
   const renderRecipients = () => {
+    console.log("in renderRecipients");
     const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
 
-    return (
-      <>
-        {completeRecipients.map((recipient, index) => (
-          <RecipientPill
-            key={index}
-            recipient={recipient}
-            index={index}
-            onRemove={(index) => {
-              const newRecipients = recipientInput
-                .split(",")
-                .filter((r) => r.trim())
-                .filter((_, i) => i !== index)
-                .join(",");
-              setRecipientInput(newRecipients + ",");
-            }}
-            isMobileView={isMobileView}
-          />
-        ))}
-      </>
-    );
+    return completeRecipients.map((recipient, index) => (
+      <RecipientPill
+        key={`${recipient}-${index}`}
+        recipient={recipient}
+        index={index}
+        onRemove={(index) => {
+          const newRecipients = recipientInput
+            .split(",")
+            .filter((r) => r.trim())
+            .filter((_, i) => i !== index)
+            .join(",");
+          setRecipientInput(newRecipients + ",");
+          if (isEditMode && onUpdateRecipients) {
+            onUpdateRecipients(newRecipients.split(",").filter(r => r.trim()));
+          }
+        }}
+        isMobileView={isMobileView}
+      />
+    ));
   };
 
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
       {isMobileView ? (
-        // Mobile View
         <div
           className="flex items-center justify-between px-4 relative min-h-24 py-2"
           onClick={handleHeaderClick}
@@ -673,6 +678,9 @@ export function ChatHeader({
                         }) || []} 
                         conversationName={activeConversation?.name}
                         onUpdateName={onUpdateConversationName}
+                        onAddContact={() => {
+                          setIsEditMode(true);
+                        }}
                       />
                     )}
                   </span>
