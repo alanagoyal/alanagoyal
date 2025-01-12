@@ -133,7 +133,7 @@ export function Sidebar({
       }
 
       // For letter shortcuts, check if we're in an input or editor
-      if (["j", "k", "p", "d", "t", "s"].includes(e.key)) {
+      if (["j", "k", "p", "d", "t", "s", "h"].includes(e.key)) {
         if (
           document.activeElement?.tagName === "INPUT" ||
           e.metaKey ||
@@ -156,6 +156,18 @@ export function Sidebar({
       if (e.key === "s") {
         e.preventDefault();
         onSoundToggle();
+        return;
+      }
+
+      // Hide/Show alerts shortcut
+      if (e.key === "h" && activeConversation) {
+        e.preventDefault();
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === activeConversation
+            ? { ...conv, hideAlerts: !conv.hideAlerts }
+            : conv
+        );
+        onUpdateConversation(updatedConversations);
         return;
       }
 
