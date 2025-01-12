@@ -99,7 +99,8 @@ function RecipientSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
-
+  const { toast } = useToast();
+  const [isValidating, setIsValidating] = useState(false);
   // Focus on mount
   useEffect(() => {
     if (inputRef.current) {
@@ -114,10 +115,35 @@ function RecipientSearch({
     }
   }, [selectedIndex]);
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (searchValue.trim()) {
-      handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
-      setShowResults(true); // Keep the dropdown open for more selections
+      try {
+        setIsValidating(true);
+        const response = await fetch('/api/validate-contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: searchValue.trim() }),
+        });
+        const data = await response.json();
+        
+        if (data.validation === false) {
+          toast({
+            description: "Please enter a valid contact name",
+          });
+          return;
+        }
+        
+        handlePersonSelect({ name: searchValue.trim(), title: "Custom Contact" });
+        setShowResults(true); // Keep the dropdown open for more selections
+      } catch (error) {
+        toast({
+          description: "Failed to validate contact name",
+        });
+      } finally {
+        setIsValidating(false);
+      }
     }
   };
 
@@ -192,7 +218,11 @@ function RecipientSearch({
               : "invisible"
           )}
         >
-          <Icons.plus className="h-5 w-5" />
+          {isValidating ? (
+            <Icons.spinner className="h-5 w-5 animate-spin" />
+          ) : (
+            <Icons.plus className="h-5 w-5 text-[#404040] dark:text-white" />
+          )}
         </button>
       </div>
 
