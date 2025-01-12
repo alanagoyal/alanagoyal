@@ -1,4 +1,4 @@
-import { InfoIcon, PenSquare, Phone, Video, Smile, Search, ChevronLeft, Sun, Moon, X, PlusCircle } from "lucide-react";
+import { InfoIcon, PenSquare, Phone, Video, Smile, Search, ChevronLeft, Sun, Moon, X, PlusCircle, BellOff, Bell } from "lucide-react";
 
 type IconProps = React.HTMLAttributes<SVGElement>
 
@@ -15,6 +15,8 @@ export const Icons = {
   moon: (props: IconProps) => <Moon className="text-muted-foreground" size={16} {...props} />,
   close: (props: IconProps) => <X className="text-muted-foreground" size={14} {...props} />,
   plus: (props: IconProps) => <PlusCircle className="text-muted-foreground" size={16} {...props} />,
+  silent: (props: IconProps) => <BellOff className="text-muted-foreground" size={12} {...props} />,
+  alert: (props: IconProps) => <Bell className="text-muted-foreground" size={12} {...props} />,
   spinner: (props: IconProps) => (
     <svg
       className="spinner"

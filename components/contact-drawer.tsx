@@ -10,6 +10,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ChevronRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Recipient } from "@/types";
 import { Fragment } from "react";
 
@@ -19,6 +20,8 @@ interface ContactDrawerProps {
   onUpdateName?: (name: string) => void;
   conversationName?: string;
   onAddContact?: () => void;
+  onHideAlertsChange?: (hide: boolean) => void;
+  hideAlerts?: boolean;
 }
 
 export function ContactDrawer({
@@ -27,6 +30,8 @@ export function ContactDrawer({
   onUpdateName,
   conversationName,
   onAddContact,
+  onHideAlertsChange,
+  hideAlerts: initialHideAlerts = false,
 }: ContactDrawerProps) {
   const [open, setOpen] = useState(false);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
@@ -34,6 +39,7 @@ export function ContactDrawer({
   const [chatName, setChatName] = useState(
     conversationName || recipients.map((r) => r.name).join(", ")
   );
+  const [hideAlerts, setHideAlerts] = useState(initialHideAlerts);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setChatName(e.target.value);
@@ -58,6 +64,11 @@ export function ContactDrawer({
     };
   };
 
+  const handleHideAlertsChange = (checked: boolean) => {
+    setHideAlerts(checked);
+    onHideAlertsChange?.(checked);
+  };
+
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
@@ -70,7 +81,7 @@ export function ContactDrawer({
           <ChevronRight className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-[90vh] focus:outline-none">
+      <DrawerContent className="h-[90vh] focus:outline-none bg-muted">
         <div className="mx-auto w-full">
           <DrawerTitle className="sr-only">
             Contact Information for {recipientNames}
@@ -144,7 +155,7 @@ export function ContactDrawer({
             </div>
           </div>
 
-          <div className="px-8">
+          <div className="px-8 bg-background rounded-lg mx-4">
             {recipients.map((recipient) => (
               <Fragment key={recipient.name}>
                 <div
@@ -216,6 +227,25 @@ export function ContactDrawer({
                 </div>
                 <span className="font-medium text-base">Add Contact</span>
               </button>
+            </div>
+          </div>
+
+          {/* Share My Location Button */}
+          <div className="px-4 mt-4">
+            <button className="w-full py-3 px-4 text-blue-500 hover:text-blue-600 bg-background rounded-lg text-left">
+              Share My Location
+            </button>
+          </div>
+
+          {/* Hide Alerts Toggle */}
+          <div className="px-4 mt-4">
+            <div className="w-full py-3 px-4 bg-background rounded-lg flex justify-between items-center">
+              <span className="text-foreground">Hide Alerts</span>
+              <Switch
+                checked={hideAlerts}
+                onCheckedChange={handleHideAlertsChange}
+                aria-label="Toggle alerts"
+              />
             </div>
           </div>
         </div>

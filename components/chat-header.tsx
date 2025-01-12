@@ -25,6 +25,7 @@ interface ChatHeaderProps {
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   onUpdateConversationName?: (name: string) => void;
+  onHideAlertsChange?: (hide: boolean) => void;
   unreadCount?: number;
   showCompactNewChat?: boolean;
   setShowCompactNewChat?: (show: boolean) => void;
@@ -300,6 +301,7 @@ export function ChatHeader({
   onUpdateRecipients,
   onCreateConversation,
   onUpdateConversationName,
+  onHideAlertsChange,
   unreadCount,
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
@@ -667,20 +669,15 @@ export function ChatHeader({
                     })()}
                     {isMobileView && !isNewChat && activeConversation && (
                       <ContactDrawer 
-                        recipients={activeConversation?.recipients.map(recipient => {
-                          const personality = techPersonalities.find(p => p.name === recipient.name);
-                          return {
-                            name: recipient.name,
-                            avatar: recipient.avatar,
-                            bio: personality?.bio,
-                            title: personality?.title
-                          };
-                        }) || []} 
-                        conversationName={activeConversation?.name}
+                        recipients={activeConversation.recipients}
+                        onClose={onBack}
                         onUpdateName={onUpdateConversationName}
+                        conversationName={activeConversation.name}
                         onAddContact={() => {
                           setIsEditMode(true);
                         }}
+                        onHideAlertsChange={onHideAlertsChange}
+                        hideAlerts={activeConversation.hideAlerts}
                       />
                     )}
                   </span>

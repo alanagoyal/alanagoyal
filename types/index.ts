@@ -17,6 +17,7 @@ export interface Conversation {
   unreadCount: number;
   pinned?: boolean;
   isTyping?: boolean;
+  hideAlerts?: boolean;
 }
 
 export interface Recipient {

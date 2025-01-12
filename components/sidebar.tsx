@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { ConversationItem } from "./conversation-item";
-import { PinOff, Trash } from "lucide-react";
+import { PinOff, Trash, BellOff, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -533,6 +533,33 @@ export function Sidebar({
                                     <span>Unpin</span>
                                     {isMobileView && (
                                       <PinOff className="h-4 w-4 ml-2" />
+                                    )}
+                                  </ContextMenuItem>
+                                  <ContextMenuItem
+                                    className={`focus:bg-[#0A7CFF] focus:text-white ${
+                                      isMobileView
+                                        ? "flex items-center justify-between"
+                                        : ""
+                                    }`}
+                                    onClick={() => {
+                                      const updatedConversations =
+                                        conversations.map((conv) =>
+                                          conv.id === conversation.id
+                                            ? { ...conv, hideAlerts: !conv.hideAlerts }
+                                            : conv
+                                        );
+                                      onUpdateConversation(
+                                        updatedConversations
+                                      );
+                                    }}
+                                  >
+                                    <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
+                                    {isMobileView && (
+                                      conversation.hideAlerts ? (
+                                        <Bell className="h-4 w-4 ml-2" />
+                                      ) : (
+                                        <BellOff className="h-4 w-4 ml-2" />
+                                      )
                                     )}
                                   </ContextMenuItem>
                                   <ContextMenuItem

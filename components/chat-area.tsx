@@ -23,6 +23,7 @@ interface ChatAreaProps {
   ) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
   onUpdateConversationName?: (name: string) => void;
+  onHideAlertsChange?: (hide: boolean) => void;
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
   unreadCount?: number;
@@ -42,6 +43,7 @@ export function ChatArea({
   onUpdateConversationRecipients,
   onCreateConversation,
   onUpdateConversationName,
+  onHideAlertsChange,
   messageDraft = "",
   onMessageDraftChange,
   unreadCount = 0,
@@ -140,6 +142,7 @@ export function ChatArea({
           }
           onCreateConversation={onCreateConversation}
           onUpdateConversationName={onUpdateConversationName}
+          onHideAlertsChange={onHideAlertsChange}
           unreadCount={unreadCount}
           showCompactNewChat={showCompactNewChat}
           setShowCompactNewChat={setShowCompactNewChat}

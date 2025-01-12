@@ -243,10 +243,11 @@ export default function App() {
           // This fixes the bug where messages were always marked unread due to stale state
           const shouldIncrementUnread =
             conversationId !== currentActiveConversation &&
-            message.sender !== "me";
+            message.sender !== "me" &&
+            !conversation.hideAlerts;
 
-          // Play received sound if message is in inactive conversation and not from us
-          if (shouldIncrementUnread) {
+          // Play received sound if message is in inactive conversation, not from us, and alerts aren't hidden
+          if (shouldIncrementUnread && !conversation.hideAlerts) {
             soundEffects.playUnreadSound();
           }
 
@@ -274,7 +275,7 @@ export default function App() {
             conv.id === conversationId
               ? {
                   ...conv,
-                  unreadCount: conversationId === currentActiveConversation 
+                  unreadCount: conversationId === currentActiveConversation || conv.hideAlerts
                     ? conv.unreadCount 
                     : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) =>
@@ -437,6 +438,7 @@ export default function App() {
       messages: [],
       lastMessageTime: new Date().toISOString(),
       unreadCount: 0,
+      hideAlerts: false,
     };
 
     // Update state
@@ -674,6 +676,17 @@ export default function App() {
     });
   }, [activeConversation]);
 
+  // Method to handle hide alerts toggle
+  const handleHideAlertsChange = useCallback((hide: boolean) => {
+    setConversations((prevConversations) => 
+      prevConversations.map((conv) =>
+        conv.id === activeConversation
+          ? { ...conv, hideAlerts: hide }
+          : conv
+      )
+    );
+  }, [activeConversation]);
+
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
     soundEffects.toggleSound();
@@ -773,6 +786,7 @@ export default function App() {
               onUpdateConversationRecipients={updateConversationRecipients}
               onCreateConversation={createNewConversation}
               onUpdateConversationName={handleUpdateConversationName}
+              onHideAlertsChange={handleHideAlertsChange}
               messageDraft={
                 isNewConversation
                   ? messageDrafts["new"] || ""
