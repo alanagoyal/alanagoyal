@@ -549,7 +549,6 @@ export function ChatHeader({
 
   // Render helpers
   const renderRecipients = () => {
-    console.log("in renderRecipients");
     const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
 

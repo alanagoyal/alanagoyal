@@ -230,13 +230,6 @@ export function ContactDrawer({
             </div>
           </div>
 
-          {/* Share My Location Button */}
-          <div className="px-4 mt-4">
-            <button className="w-full py-3 px-4 text-blue-500 hover:text-blue-600 bg-background rounded-lg text-left">
-              Share My Location
-            </button>
-          </div>
-
           {/* Hide Alerts Toggle */}
           <div className="px-4 mt-4">
             <div className="w-full py-3 px-4 bg-background rounded-lg flex justify-between items-center">
