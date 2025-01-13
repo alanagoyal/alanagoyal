@@ -1,7 +1,7 @@
 import { Icons } from "./icons";
 import { Conversation } from "../types";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { techPersonalities } from "../data/tech-personalities";
+import { initialContacts } from "../data/initial-contacts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,7 +44,7 @@ interface RecipientSearchProps {
   showResults: boolean;
   selectedIndex: number;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  handlePersonSelect: (person: (typeof techPersonalities)[0]) => void;
+  handlePersonSelect: (person: (typeof initialContacts)[0]) => void;
   handleAddContact: () => Promise<void>;
   setSelectedIndex: (index: number) => void;
   setShowResults: (show: boolean) => void;
@@ -125,7 +125,7 @@ function RecipientSearch({
       .map((r) => r.trim())
       .filter(Boolean);
 
-    const combined = [...techPersonalities];
+    const combined = [...initialContacts];
     const userContacts = getUserContacts();
 
     // Add user contacts, avoiding duplicates
@@ -342,7 +342,7 @@ export function ChatHeader({
       .map((r) => r.trim())
       .filter(Boolean);
 
-    const combined = [...techPersonalities];
+    const combined = [...initialContacts];
     const userContacts = getUserContacts();
 
     // Add user contacts, avoiding duplicates
@@ -425,7 +425,7 @@ export function ChatHeader({
     }
   };
 
-  const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
+  const handlePersonSelect = (person: (typeof initialContacts)[0]) => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
@@ -698,7 +698,7 @@ export function ChatHeader({
                         recipientCount={activeConversation.recipients.length}
                         recipients={
                           activeConversation?.recipients.map((recipient) => {
-                            const personality = techPersonalities.find(
+                            const personality = initialContacts.find(
                               (p) => p.name === recipient.name
                             );
                             return {

@@ -1,11 +1,11 @@
-export interface TechPersonality {
+export interface InitialContact {
   name: string;
   title?: string;
   prompt?: string;
   bio?: string; // New field for short biography
 }
 
-export const techPersonalities: TechPersonality[] = [
+export const initialContacts: InitialContact[] = [
   {
     name: "Aaron Levie",
     title: "Co-founder & CEO of Box",

@@ -1,4 +1,4 @@
-import { TechPersonality } from "@/data/tech-personalities";
+import { TechPersonality } from "@/data/initial-contacts";
 
 const CONTACTS_KEY = "user_contacts";
 
