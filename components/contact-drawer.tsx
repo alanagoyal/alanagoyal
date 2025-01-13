@@ -17,6 +17,7 @@ import { Fragment } from "react";
 
 interface ContactDrawerProps {
   recipients: Array<Omit<Recipient, "id">>;
+  recipientCount: number;
   onClose?: () => void;
   onUpdateName?: (name: string) => void;
   conversationName?: string;
@@ -27,6 +28,7 @@ interface ContactDrawerProps {
 
 export function ContactDrawer({
   recipients,
+  recipientCount,
   onClose,
   onUpdateName,
   conversationName,
@@ -73,14 +75,10 @@ export function ContactDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          aria-label="View contact details"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center cursor-pointer">
+          {recipientCount > 1 ? `${recipientCount} people` : recipients[0]?.name}
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </div>
       </DrawerTrigger>
       <DrawerContent className="h-[90vh] focus:outline-none bg-muted">
         <div className="mx-auto w-full">

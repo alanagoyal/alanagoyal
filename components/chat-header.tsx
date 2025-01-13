@@ -606,12 +606,14 @@ export function ChatHeader({
 
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
+      {/* Mobile view */}
       {isMobileView ? (
         <div
           className="flex items-center justify-between px-4 relative min-h-24 py-2"
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
+          {/* Back button and unread count */}
           <div className="flex items-center gap-2 flex-1">
             <div className="absolute left-2 top-8 w-12">
               <button
@@ -635,7 +637,7 @@ export function ChatHeader({
                 ) : null}
               </button>
             </div>
-
+            {/* Mobile new chat or edit view */}
             {(isNewChat && !showCompactNewChat) || isEditMode ? (
               <div
                 className="flex-1 pl-16"
@@ -671,6 +673,7 @@ export function ChatHeader({
                 </div>
               </div>
             ) : (
+              // Mobile avatar view
               <div
                 className="flex absolute left-1/2 -translate-x-1/2 transform"
                 onClick={handleHeaderClick}
@@ -690,20 +693,9 @@ export function ChatHeader({
                     />
                   </div>
                   <span className="text-xs flex items-center">
-                    {(() => {
-                      if (!isNewChat && activeConversation?.name) {
-                        return activeConversation.name;
-                      }
-                      const recipients = isNewChat
-                        ? recipientInput.split(",").filter((r) => r.trim())
-                        : activeConversation?.recipients.map((r) => r.name) ||
-                          [];
-                      return recipients.length === 1
-                        ? recipients[0]
-                        : `${recipients.length} people`;
-                    })()}
                     {isMobileView && !isNewChat && activeConversation && (
                       <ContactDrawer
+                        recipientCount={activeConversation.recipients.length}
                         recipients={
                           activeConversation?.recipients.map((recipient) => {
                             const personality = techPersonalities.find(
@@ -740,6 +732,7 @@ export function ChatHeader({
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
+          {/* Desktop new chat or edit view */}
           <div className="flex items-center gap-2 flex-1">
             {(isNewChat && !showCompactNewChat) || isEditMode ? (
               <div className="flex-1" onClick={(e) => e.stopPropagation()}>
@@ -771,6 +764,7 @@ export function ChatHeader({
                 </div>
               </div>
             ) : (
+              // Desktop compact view
               <div
                 className="flex"
                 onClick={handleHeaderClick}
