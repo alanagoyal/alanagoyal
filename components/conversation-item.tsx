@@ -8,15 +8,16 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { Pin, Trash } from "lucide-react";
+import { Pin, Trash, BellOff, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Icons } from "./icons";
 
 interface ConversationItemProps {
   conversation: Conversation;
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
-  onUpdateConversation: (conversations: Conversation[]) => void;
+  onUpdateConversation: (conversations: Conversation[], updateType?: 'pin' | 'mute') => void;
   conversations: Conversation[];
   formatTime: (timestamp: string | undefined) => string;
   getInitials: (name: string) => string;
@@ -87,7 +88,7 @@ export function ConversationItem({
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
     );
-    onUpdateConversation(updatedConversations);
+    onUpdateConversation(updatedConversations, 'pin');
     setOpenSwipedConvo(null);
   };
 
@@ -97,15 +98,30 @@ export function ConversationItem({
     setOpenSwipedConvo(null);
   };
 
+  const handleSwipeHideAlerts = () => {
+    if (!isSwipeOpen) return;
+    handleContextMenuHideAlerts();
+    setOpenSwipedConvo(null);
+  };
+
   const handleContextMenuPin = () => {
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
     );
-    onUpdateConversation(updatedConversations);
+    onUpdateConversation(updatedConversations, 'pin');
   };
 
   const handleContextMenuDelete = () => {
     onDeleteConversation(conversation.id);
+  };
+
+  const handleContextMenuHideAlerts = () => {
+    const updatedConversations = conversations.map((conv) =>
+      conv.id === conversation.id
+        ? { ...conv, hideAlerts: !conv.hideAlerts }
+        : conv
+    );
+    onUpdateConversation(updatedConversations, 'mute');
   };
 
   const ConversationContent = (
@@ -148,7 +164,7 @@ export function ConversationItem({
         <div className="flex-1 min-w-0 py-2">
           <div className="flex justify-between items-baseline">
             <span className="text-sm font-medium line-clamp-1 max-w-[70%]">
-              {conversation.recipients.map((r) => r.name).join(", ")}
+              {conversation.name || conversation.recipients.map((r) => r.name).join(", ")}
             </span>
             {conversation.lastMessageTime && (
               <span
@@ -163,7 +179,7 @@ export function ConversationItem({
             )}
           </div>
           <div
-            className={`text-xs h-8 ${
+            className={`text-xs h-8 flex items-center justify-between ${
               activeConversation === conversation.id
                 ? "text-white/80"
                 : "text-muted-foreground"
@@ -212,35 +228,46 @@ export function ConversationItem({
                 </div>
               </div>
             ) : conversation.messages.length > 0 ? (
-              <div className="line-clamp-2">
-                {(() => {
-                  const lastMessage = conversation.messages
-                    .filter((message) => message.sender !== "system")
-                    .slice(-1)[0];
+              <div className="flex items-center gap-2 w-full">
+                <div className="line-clamp-2 flex-1">
+                  {(() => {
+                    const lastMessage = conversation.messages
+                      .filter((message) => message.sender !== "system")
+                      .slice(-1)[0];
 
-                  if (!lastMessage) return "";
+                    if (!lastMessage) return "";
 
-                  // Check if the last message has any reaction
-                  const lastReaction = lastMessage.reactions?.[0];
-                  if (lastReaction) {
-                    const reactionText = {
-                      heart: "loved",
-                      like: "liked",
-                      dislike: "disliked",
-                      laugh: "laughed at",
-                      emphasize: "emphasized",
-                      question: "questioned",
-                    }[lastReaction.type];
+                    // Check if the last message has any reaction
+                    const lastReaction = lastMessage.reactions?.[0];
+                    if (lastReaction) {
+                      const reactionText = {
+                        heart: "loved",
+                        like: "liked",
+                        dislike: "disliked",
+                        laugh: "laughed at",
+                        emphasize: "emphasized",
+                        question: "questioned",
+                      }[lastReaction.type];
 
-                    return lastReaction.sender === "me"
-                      ? `You ${reactionText} "${lastMessage.content}"`
-                      : `${
-                          lastReaction.sender.split(" ")[0]
-                        } ${reactionText} "${lastMessage.content}"`;
-                  }
+                      return lastReaction.sender === "me"
+                        ? `You ${reactionText} "${lastMessage.content}"`
+                        : `${
+                            lastReaction.sender.split(" ")[0]
+                          } ${reactionText} "${lastMessage.content}"`;
+                    }
 
-                  return lastMessage.content;
-                })()}
+                    return lastMessage.content;
+                  })()}
+                </div>
+                {conversation.hideAlerts && (
+                  <Icons.silent 
+                    className={`flex-shrink-0 ${
+                      activeConversation === conversation.id 
+                        ? "text-white/80" 
+                        : "text-muted-foreground"
+                    }`} 
+                  />
+                )}
               </div>
             ) : null}
           </div>
@@ -265,7 +292,9 @@ export function ConversationItem({
               isOpen={isSwipeOpen}
               onPin={handleSwipePin}
               onDelete={handleSwipeDelete}
+              onHideAlerts={handleSwipeHideAlerts}
               isPinned={conversation.pinned}
+              hideAlerts={conversation.hideAlerts}
               aria-hidden={!isSwipeOpen}
             />
           </div>
@@ -279,6 +308,19 @@ export function ConversationItem({
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
             {isMobileView && <Pin className="h-4 w-4 ml-2" />}
+          </ContextMenuItem>
+          <ContextMenuItem
+            className={`focus:bg-[#0A7CFF] focus:text-white ${
+              isMobileView ? "flex items-center justify-between" : ""
+            }`}
+            onClick={handleContextMenuHideAlerts}
+          >
+            <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
+            {isMobileView && (
+              conversation.hideAlerts ? 
+                <Bell className="h-4 w-4 ml-2" /> :
+                <BellOff className="h-4 w-4 ml-2" />
+            )}
           </ContextMenuItem>
           <ContextMenuItem
             className={`focus:bg-[#0A7CFF] focus:text-white ${
@@ -304,6 +346,12 @@ export function ConversationItem({
             onClick={handleContextMenuPin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
+          </ContextMenuItem>
+          <ContextMenuItem
+            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
+            onClick={handleContextMenuHideAlerts}
+          >
+            <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
           </ContextMenuItem>
           <ContextMenuItem
             className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}

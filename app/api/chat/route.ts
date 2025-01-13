@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 import { Recipient, Message, ReactionType } from "../../../types";
-import { techPersonalities } from "../../../data/tech-personalities";
+import { initialContacts } from "../../../data/initial-contacts";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
 
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     }.
     ${
       (recipients[0].name &&
-        techPersonalities.find((p) => p.name === recipients[0].name)?.prompt) ||
+        initialContacts.find((p) => p.name === recipients[0].name)?.prompt) ||
       "Just be yourself and keep it casual."
     }
     `
@@ -117,9 +117,9 @@ export async function POST(req: Request) {
     Match your character's style: 
     ${sortedParticipants
       .map((r: Recipient) => {
-        const personality = techPersonalities.find((p) => p.name === r.name);
-        return personality
-          ? `${r.name}: ${personality.prompt}`
+        const contact = initialContacts.find((p) => p.name === r.name);
+        return contact
+          ? `${r.name}: ${contact.prompt}`
           : `${r.name}: Just be yourself.`;
       })
       .join("\n")}
@@ -189,7 +189,7 @@ export async function POST(req: Request) {
     ];
 
     const response = await client.chat.completions.create({
-      model: "claude-3-5-sonnet-latest",
+      model: "gpt-4o-mini",
       messages: [...openaiMessages],
       tool_choice: "required",
       tools: [

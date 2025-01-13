@@ -17,7 +17,7 @@ import {
   CommandShortcut,
 } from "./ui/command";
 import { DialogTitle, DialogDescription } from "./ui/dialog";
-import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon, Volume2, VolumeX } from "lucide-react";
+import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon, Volume2, VolumeX, Bell, BellOff } from "lucide-react";
 import { Conversation } from "@/types";
 import { useTheme } from "next-themes";
 
@@ -165,6 +165,18 @@ export const CommandMenu = forwardRef<
       handleOpenChange(false);
     }, [activeConversation, conversations, onUpdateConversation, handleOpenChange]);
 
+    const handleToggleAlerts = useCallback(() => {
+      if (!activeConversation) return;
+      const updatedConversations = conversations.map((conv) => {
+        if (conv.id === activeConversation) {
+          return { ...conv, hideAlerts: !conv.hideAlerts };
+        }
+        return conv;
+      });
+      onUpdateConversation(updatedConversations);
+      handleOpenChange(false);
+    }, [activeConversation, conversations, onUpdateConversation, handleOpenChange]);
+
     const handleDeleteConversation = useCallback(() => {
       if (!activeConversation) return;
       onDeleteConversation(activeConversation);
@@ -198,6 +210,16 @@ export const CommandMenu = forwardRef<
         icon: <ArrowDown className="mr-2 h-4 w-4" />,
         shortcut: "J",
         action: handleMoveDown,
+      },
+      {
+        name: activeConversation && conversations.find(c => c.id === activeConversation)?.hideAlerts ? "Show Alerts" : "Hide Alerts",
+        icon: activeConversation && conversations.find(c => c.id === activeConversation)?.hideAlerts ? (
+          <Bell className="mr-2 h-4 w-4" />
+        ) : (
+          <BellOff className="mr-2 h-4 w-4" />
+        ),
+        shortcut: "H",
+        action: handleToggleAlerts,
       },
       {
         name: "Delete chat",

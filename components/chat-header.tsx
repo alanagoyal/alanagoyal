@@ -1,14 +1,16 @@
 import { Icons } from "./icons";
 import { Conversation } from "../types";
-import { useState, useRef, useEffect, useCallback } from "react";
-import { techPersonalities } from "../data/tech-personalities";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { initialContacts } from "../data/initial-contacts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getUserContacts, addUserContact } from "@/lib/contacts";
+import { ContactDrawer } from "./contact-drawer";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
-  const currentRecipients = recipients.split(",").filter(r => r.trim());
+  const currentRecipients = recipients.split(",").filter((r) => r.trim());
   return currentRecipients.length >= 4;
 };
 
@@ -22,6 +24,8 @@ interface ChatHeaderProps {
   activeConversation?: Conversation;
   onUpdateRecipients?: (recipientNames: string[]) => void;
   onCreateConversation?: (recipientNames: string[]) => void;
+  onUpdateConversationName?: (name: string) => void;
+  onHideAlertsChange?: (hide: boolean) => void;
   unreadCount?: number;
   showCompactNewChat?: boolean;
   setShowCompactNewChat?: (show: boolean) => void;
@@ -39,14 +43,15 @@ interface RecipientSearchProps {
   setSearchValue: (value: string) => void;
   showResults: boolean;
   selectedIndex: number;
-  filteredPeople: typeof techPersonalities;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  handlePersonSelect: (person: (typeof techPersonalities)[0]) => void;
+  handlePersonSelect: (person: (typeof initialContacts)[0]) => void;
+  handleAddContact: () => Promise<void>;
   setSelectedIndex: (index: number) => void;
   setShowResults: (show: boolean) => void;
   updateRecipients: () => void;
   isMobileView?: boolean;
   recipientInput: string;
+  isValidating: boolean;
 }
 
 // Sub-components
@@ -85,20 +90,20 @@ function RecipientSearch({
   setSearchValue,
   showResults,
   selectedIndex,
-  filteredPeople,
   handleKeyDown,
   handlePersonSelect,
+  handleAddContact,
   setSelectedIndex,
   setShowResults,
   updateRecipients,
   isMobileView,
   recipientInput,
+  isValidating,
 }: RecipientSearchProps) {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
-
   // Focus on mount
   useEffect(() => {
     if (inputRef.current) {
@@ -109,9 +114,42 @@ function RecipientSearch({
   // Keep selected item in view
   useEffect(() => {
     if (selectedItemRef.current) {
-      selectedItemRef.current.scrollIntoView({ block: 'nearest' });
+      selectedItemRef.current.scrollIntoView({ block: "nearest" });
     }
   }, [selectedIndex]);
+
+  // Filter people based on search value
+  const displayPeople = useMemo(() => {
+    const currentRecipients = recipientInput
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+
+    const combined = [...initialContacts];
+    const userContacts = getUserContacts();
+
+    // Add user contacts, avoiding duplicates
+    userContacts.forEach((contact) => {
+      if (
+        !combined.some(
+          (p) => p.name.toLowerCase() === contact.name.toLowerCase()
+        )
+      ) {
+        combined.push(contact);
+      }
+    });
+
+    // Filter out current recipients and by search value
+    const filtered = combined.filter((person) => {
+      const matchesSearch =
+        !searchValue ||
+        person.name.toLowerCase().includes(searchValue.toLowerCase());
+      const notSelected = !currentRecipients.includes(person.name);
+      return matchesSearch && notSelected;
+    });
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [searchValue, recipientInput]);
 
   return (
     <div
@@ -119,76 +157,101 @@ function RecipientSearch({
       className={cn("relative", isMobileView ? "w-full" : "flex-1")}
       data-chat-header="true"
     >
-      <input
-        ref={inputRef}
-        type="text"
-        value={searchValue}
-        onChange={(e) => {
-          setSearchValue(e.target.value);
-          setShowResults(true);
-        }}
-        onKeyDown={handleKeyDown}
-        onBlur={(e) => {
-          const isRemoveButton = (e.relatedTarget as Element)?.closest(
-            'button[aria-label^="Remove"]'
-          );
-          const isDropdown = e.relatedTarget?.closest('[data-chat-header-dropdown="true"]');
-          
-          if (!isRemoveButton && !isDropdown) {
-            updateRecipients();
-          }
-        }}
-        onFocus={() => {
-          if (!hasReachedMaxRecipients(recipientInput)) {
+      <div className="flex items-center w-full">
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchValue}
+          onChange={(e) => {
+            setSearchValue(e.target.value);
             setShowResults(true);
-          }
-        }}
-        placeholder="Type to add recipients..."
-        className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
-        data-chat-header="true"
-      />
-      {showResults && (
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={(e) => {
+            const isRemoveButton = (e.relatedTarget as Element)?.closest(
+              'button[aria-label^="Remove"]'
+            );
+            const isDropdown = e.relatedTarget?.closest(
+              '[data-chat-header-dropdown="true"]'
+            );
+
+            if (!isRemoveButton && !isDropdown) {
+              updateRecipients();
+            }
+          }}
+          onFocus={() => {
+            if (!hasReachedMaxRecipients(recipientInput)) {
+              setShowResults(true);
+            }
+          }}
+          placeholder="Type to add recipients..."
+          className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+          data-chat-header="true"
+        />
+        <button
+          onClick={handleAddContact}
+          className={cn(
+            "flex items-center justify-center w-8 h-8",
+            searchValue && displayPeople.length === 0
+              ? "text-muted-foreground hover:text-foreground"
+              : "invisible"
+          )}
+        >
+          {isValidating ? (
+            <Icons.spinner className="h-5 w-5 animate-spin" />
+          ) : (
+            <Icons.plus className="h-5 w-5 text-[#404040] dark:text-white" />
+          )}
+        </button>
+      </div>
+
+      {showResults && displayPeople.length > 0 && (
         <div
           ref={dropdownRef}
           className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
           data-chat-header-dropdown="true"
           tabIndex={-1}
         >
-          {filteredPeople.length > 0 && (
-            <ScrollArea
-              style={{ height: `${Math.min(filteredPeople.length * 36 + 16, 376)}px` }}
-              className="w-full rounded-md border border-input bg-background p-2"
-              isMobile={isMobileView}
-            >
-              <div className="p-0">
-                {filteredPeople.map((person, index) => (
-                  <div
-                    key={person.name}
-                    ref={selectedIndex === index ? selectedItemRef : null}
-                    className={`p-2 cursor-pointer rounded-md ${
-                      selectedIndex === index ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]" : ""
-                    }`}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handlePersonSelect(person);
-                    }}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    tabIndex={0}
-                  >
-                    <div className="flex flex-col">
-                      <span
-                        className={`text-sm ${
-                          selectedIndex === index ? "text-white" : "text-[#0A7CFF]"
-                        }`}
-                      >
-                        {person.name}
-                      </span>
-                    </div>
+          <ScrollArea
+            style={{
+              height: `${Math.min(displayPeople.length * 36 + 16, 232)}px`,
+            }}
+            className="w-full rounded-md border border-input bg-background p-2"
+            isMobile={isMobileView}
+            bottomMargin="0"
+          >
+            <div className="p-0">
+              {displayPeople.map((person, index) => (
+                <div
+                  key={person.name}
+                  ref={selectedIndex === index ? selectedItemRef : null}
+                  className={`p-2 cursor-pointer rounded-md ${
+                    selectedIndex === index
+                      ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]"
+                      : ""
+                  }`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handlePersonSelect(person);
+                  }}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  tabIndex={0}
+                >
+                  <div className="flex flex-col">
+                    <span
+                      className={`text-sm ${
+                        selectedIndex === index
+                          ? "text-white"
+                          : "text-[#0A7CFF]"
+                      }`}
+                    >
+                      {person.name}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
     </div>
@@ -251,6 +314,8 @@ export function ChatHeader({
   activeConversation,
   onUpdateRecipients,
   onCreateConversation,
+  onUpdateConversationName,
+  onHideAlertsChange,
   unreadCount,
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
@@ -260,18 +325,48 @@ export function ChatHeader({
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode && activeConversation?.recipients) {
+      setRecipientInput(
+        activeConversation.recipients.map((r) => r.name).join(",") + ","
+      );
+    }
+  }, [isEditMode, activeConversation]);
 
   // Computed values
-  const filteredPeople = techPersonalities.filter((person) => {
+  const displayPeople = useMemo(() => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
       .filter(Boolean);
-    return (
-      person.name.toLowerCase().includes(searchValue.toLowerCase()) &&
-      !currentRecipients.includes(person.name)
-    );
-  });
+
+    const combined = [...initialContacts];
+    const userContacts = getUserContacts();
+
+    // Add user contacts, avoiding duplicates
+    userContacts.forEach((contact) => {
+      if (
+        !combined.some(
+          (p) => p.name.toLowerCase() === contact.name.toLowerCase()
+        )
+      ) {
+        combined.push(contact);
+      }
+    });
+
+    // Filter out current recipients and by search value
+    const filtered = combined.filter((person) => {
+      const matchesSearch =
+        !searchValue ||
+        person.name.toLowerCase().includes(searchValue.toLowerCase());
+      const notSelected = !currentRecipients.includes(person.name);
+      return matchesSearch && notSelected;
+    });
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [searchValue, recipientInput]);
 
   // Handlers
   const updateRecipients = useCallback(() => {
@@ -288,13 +383,19 @@ export function ChatHeader({
         return;
       }
 
-      if (isEditMode && recipientNames.length > 0) {
+      if (isEditMode && recipientNames.length > 0 && !searchValue) {
         setIsEditMode(false);
         onUpdateRecipients?.(recipientNames);
-      } else if (isNewChat && (!isMobileView || recipientNames.length > 0)) {
+      } else if (
+        isNewChat &&
+        (!isMobileView || recipientNames.length > 0) &&
+        !searchValue
+      ) {
         onCreateConversation?.(recipientNames);
       }
-      setSearchValue("");
+      if (!searchValue) {
+        setSearchValue("");
+      }
     }
   }, [
     isNewChat,
@@ -304,6 +405,7 @@ export function ChatHeader({
     onCreateConversation,
     toast,
     isMobileView,
+    searchValue,
   ]);
 
   const handleHeaderClick = () => {
@@ -317,13 +419,13 @@ export function ChatHeader({
       setShowResults(true);
       setSearchValue("");
       setSelectedIndex(-1);
-      if (!recipientInput.split(",").filter(r => r.trim()).length) {
+      if (!recipientInput.split(",").filter((r) => r.trim()).length) {
         setRecipientInput("");
       }
     }
   };
 
-  const handlePersonSelect = (person: (typeof techPersonalities)[0]) => {
+  const handlePersonSelect = (person: (typeof initialContacts)[0]) => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
@@ -336,6 +438,9 @@ export function ChatHeader({
       return;
     }
 
+    // Save the person as a contact for future use
+    addUserContact(person.name);
+
     const newValue = recipientInput
       ? recipientInput
           .split(",")
@@ -347,6 +452,41 @@ export function ChatHeader({
     setSearchValue("");
     setShowResults(!hasReachedMaxRecipients(newValue));
     setSelectedIndex(-1);
+  };
+
+  const handleAddContact = async () => {
+    if (searchValue.trim()) {
+      try {
+        setIsValidating(true);
+        const response = await fetch("/api/validate-contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: searchValue.trim() }),
+        });
+        const data = await response.json();
+
+        if (data.validation === false) {
+          toast({
+            description: "Please enter a valid contact name",
+          });
+          return;
+        }
+
+        handlePersonSelect({
+          name: searchValue.trim(),
+          title: "Personal Contact",
+        });
+        setShowResults(true); // Keep the dropdown open for more selections
+      } catch {
+        toast({
+          description: "Failed to validate contact name",
+        });
+      } finally {
+        setIsValidating(false);
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -373,21 +513,26 @@ export function ChatHeader({
     if (!showResults) return;
 
     switch (e.key) {
+      case "Enter": {
+        e.preventDefault();
+        if (displayPeople.length === 0 && searchValue.trim()) {
+          handleAddContact();
+          return;
+        }
+        if (selectedIndex >= 0 && selectedIndex < displayPeople.length) {
+          handlePersonSelect(displayPeople[selectedIndex]);
+        }
+        break;
+      }
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < filteredPeople.length - 1 ? prev + 1 : prev
+          prev < displayPeople.length - 1 ? prev + 1 : prev
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < filteredPeople.length) {
-          handlePersonSelect(filteredPeople[selectedIndex]);
-        }
         break;
     }
   };
@@ -419,7 +564,7 @@ export function ChatHeader({
         } else if (isNewChat && !isMobileView) {
           setShowCompactNewChat?.(true);
         }
-        
+
         setShowResults(false);
         setSearchValue("");
         setSelectedIndex(-1);
@@ -436,37 +581,39 @@ export function ChatHeader({
     const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
 
-    return (
-      <>
-        {completeRecipients.map((recipient, index) => (
-          <RecipientPill
-            key={index}
-            recipient={recipient}
-            index={index}
-            onRemove={(index) => {
-              const newRecipients = recipientInput
-                .split(",")
-                .filter((r) => r.trim())
-                .filter((_, i) => i !== index)
-                .join(",");
-              setRecipientInput(newRecipients + ",");
-            }}
-            isMobileView={isMobileView}
-          />
-        ))}
-      </>
-    );
+    return completeRecipients.map((recipient, index) => (
+      <RecipientPill
+        key={`${recipient}-${index}`}
+        recipient={recipient}
+        index={index}
+        onRemove={(index) => {
+          const newRecipients = recipientInput
+            .split(",")
+            .filter((r) => r.trim())
+            .filter((_, i) => i !== index)
+            .join(",");
+          setRecipientInput(newRecipients + ",");
+          if (isEditMode && onUpdateRecipients) {
+            onUpdateRecipients(
+              newRecipients.split(",").filter((r) => r.trim())
+            );
+          }
+        }}
+        isMobileView={isMobileView}
+      />
+    ));
   };
 
   return (
     <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
+      {/* Mobile view */}
       {isMobileView ? (
-        // Mobile View
         <div
           className="flex items-center justify-between px-4 relative min-h-24 py-2"
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
+          {/* Back button and unread count */}
           <div className="flex items-center gap-2 flex-1">
             <div className="absolute left-2 top-8 w-12">
               <button
@@ -490,9 +637,12 @@ export function ChatHeader({
                 ) : null}
               </button>
             </div>
-
+            {/* Mobile new chat or edit view */}
             {(isNewChat && !showCompactNewChat) || isEditMode ? (
-              <div className="flex-1 pl-16" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex-1 pl-16"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center gap-1 flex-wrap py-6">
                   <div className="absolute left-16 top-9">
                     <span className="text-base sm:text-sm text-muted-foreground">
@@ -501,26 +651,29 @@ export function ChatHeader({
                   </div>
                   <div className="flex flex-wrap gap-1 flex-1 items-center pl-4">
                     {renderRecipients()}
-                    {recipientInput.split(",").filter((r) => r.trim()).length < 4 && (
+                    {recipientInput.split(",").filter((r) => r.trim()).length <
+                      4 && (
                       <RecipientSearch
                         searchValue={searchValue}
                         setSearchValue={setSearchValue}
                         showResults={showResults}
                         selectedIndex={selectedIndex}
-                        filteredPeople={filteredPeople}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
+                        handleAddContact={handleAddContact}
                         setSelectedIndex={setSelectedIndex}
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
                         recipientInput={recipientInput}
+                        isValidating={isValidating}
                       />
                     )}
                   </div>
                 </div>
               </div>
             ) : (
+              // Mobile avatar view
               <div
                 className="flex absolute left-1/2 -translate-x-1/2 transform"
                 onClick={handleHeaderClick}
@@ -539,15 +692,33 @@ export function ChatHeader({
                       }
                     />
                   </div>
-                  <span className="text-xs">
-                    {(() => {
-                      const recipients = isNewChat
-                        ? recipientInput.split(",").filter((r) => r.trim())
-                        : activeConversation?.recipients.map((r) => r.name) || [];
-                      return recipients.length === 1
-                        ? recipients[0]
-                        : `${recipients.length} people`;
-                    })()}
+                  <span className="text-xs flex items-center">
+                    {isMobileView && !isNewChat && activeConversation && (
+                      <ContactDrawer
+                        recipientCount={activeConversation.recipients.length}
+                        recipients={
+                          activeConversation?.recipients.map((recipient) => {
+                            const contact = initialContacts.find(
+                              (p) => p.name === recipient.name
+                            );
+                            return {
+                              name: recipient.name,
+                              avatar: recipient.avatar,
+                              bio: contact?.bio,
+                              title: contact?.title,
+                            };
+                          }) || []
+                        }
+                        onClose={onBack}
+                        onUpdateName={onUpdateConversationName}
+                        conversationName={activeConversation.name}
+                        onAddContact={() => {
+                          setIsEditMode(true);
+                        }}
+                        onHideAlertsChange={onHideAlertsChange}
+                        hideAlerts={activeConversation.hideAlerts}
+                      />
+                    )}
                   </span>
                 </div>
               </div>
@@ -561,6 +732,7 @@ export function ChatHeader({
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
+          {/* Desktop new chat or edit view */}
           <div className="flex items-center gap-2 flex-1">
             {(isNewChat && !showCompactNewChat) || isEditMode ? (
               <div className="flex-1" onClick={(e) => e.stopPropagation()}>
@@ -570,26 +742,29 @@ export function ChatHeader({
                   </span>
                   <div className="flex flex-wrap gap-1 flex-1 items-center">
                     {renderRecipients()}
-                    {recipientInput.split(",").filter((r) => r.trim()).length < 4 && (
+                    {recipientInput.split(",").filter((r) => r.trim()).length <
+                      4 && (
                       <RecipientSearch
                         searchValue={searchValue}
                         setSearchValue={setSearchValue}
                         showResults={showResults}
                         selectedIndex={selectedIndex}
-                        filteredPeople={filteredPeople}
                         handleKeyDown={handleKeyDown}
                         handlePersonSelect={handlePersonSelect}
+                        handleAddContact={handleAddContact}
                         setSelectedIndex={setSelectedIndex}
                         setShowResults={setShowResults}
                         updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
                         recipientInput={recipientInput}
+                        isValidating={isValidating}
                       />
                     )}
                   </div>
                 </div>
               </div>
             ) : (
+              // Desktop compact view
               <div
                 className="flex"
                 onClick={handleHeaderClick}
@@ -598,13 +773,16 @@ export function ChatHeader({
                 <span className="text-sm">
                   <span className="text-muted-foreground">To: </span>
                   {(() => {
+                    if (!isNewChat && activeConversation?.name) {
+                      return activeConversation.name;
+                    }
                     const recipients =
                       activeConversation?.recipients.map((r) => r.name) || [];
                     return recipients.length <= 3
                       ? recipients.join(", ")
-                      : `${recipients[0]}, ${recipients[1]}, ${recipients[2]} +${
-                          recipients.length - 3
-                        }`;
+                      : `${recipients[0]}, ${recipients[1]}, ${
+                          recipients[2]
+                        } +${recipients.length - 3}`;
                   })()}
                 </span>
               </div>

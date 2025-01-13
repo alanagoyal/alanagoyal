@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { ConversationItem } from "./conversation-item";
-import { PinOff, Trash } from "lucide-react";
+import { PinOff, Trash, BellOff, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ interface SidebarProps {
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
-  onUpdateConversation: (conversations: Conversation[]) => void;
+  onUpdateConversation: (conversations: Conversation[], updateType?: 'pin' | 'mute') => void;
   isMobileView: boolean;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -133,7 +133,7 @@ export function Sidebar({
       }
 
       // For letter shortcuts, check if we're in an input or editor
-      if (["j", "k", "p", "d", "t", "s"].includes(e.key)) {
+      if (["j", "k", "p", "d", "t", "s", "h"].includes(e.key)) {
         if (
           document.activeElement?.tagName === "INPUT" ||
           e.metaKey ||
@@ -156,6 +156,18 @@ export function Sidebar({
       if (e.key === "s") {
         e.preventDefault();
         onSoundToggle();
+        return;
+      }
+
+      // Hide/Show alerts shortcut
+      if (e.key === "h" && activeConversation) {
+        e.preventDefault();
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === activeConversation
+            ? { ...conv, hideAlerts: !conv.hideAlerts }
+            : conv
+        );
+        onUpdateConversation(updatedConversations, 'mute');
         return;
       }
 
@@ -261,7 +273,7 @@ export function Sidebar({
           }
           return conv;
         });
-        onUpdateConversation(updatedConversations);
+        onUpdateConversation(updatedConversations, 'pin');
       } else if (e.key === "d") {
         e.preventDefault();
         if (!activeConversation) return;
@@ -505,7 +517,7 @@ export function Sidebar({
                                           <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full" />
                                         )}
                                         <span className="text-xs truncate max-w-full">
-                                          {conversation.recipients[0].name}
+                                          {conversation.name || conversation.recipients[0].name}
                                         </span>
                                       </div>
                                     </div>
@@ -526,13 +538,42 @@ export function Sidebar({
                                             : conv
                                         );
                                       onUpdateConversation(
-                                        updatedConversations
+                                        updatedConversations,
+                                        'pin'
                                       );
                                     }}
                                   >
                                     <span>Unpin</span>
                                     {isMobileView && (
                                       <PinOff className="h-4 w-4 ml-2" />
+                                    )}
+                                  </ContextMenuItem>
+                                  <ContextMenuItem
+                                    className={`focus:bg-[#0A7CFF] focus:text-white ${
+                                      isMobileView
+                                        ? "flex items-center justify-between"
+                                        : ""
+                                    }`}
+                                    onClick={() => {
+                                      const updatedConversations =
+                                        conversations.map((conv) =>
+                                          conv.id === conversation.id
+                                            ? { ...conv, hideAlerts: !conv.hideAlerts }
+                                            : conv
+                                        );
+                                      onUpdateConversation(
+                                        updatedConversations,
+                                        'mute'
+                                      );
+                                    }}
+                                  >
+                                    <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
+                                    {isMobileView && (
+                                      conversation.hideAlerts ? (
+                                        <Bell className="h-4 w-4 ml-2" />
+                                      ) : (
+                                        <BellOff className="h-4 w-4 ml-2" />
+                                      )
                                     )}
                                   </ContextMenuItem>
                                   <ContextMenuItem

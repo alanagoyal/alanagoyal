@@ -243,10 +243,11 @@ export default function App() {
           // This fixes the bug where messages were always marked unread due to stale state
           const shouldIncrementUnread =
             conversationId !== currentActiveConversation &&
-            message.sender !== "me";
+            message.sender !== "me" &&
+            !conversation.hideAlerts;
 
-          // Play received sound if message is in inactive conversation and not from us
-          if (shouldIncrementUnread) {
+          // Play received sound if message is in inactive conversation, not from us, and alerts aren't hidden
+          if (shouldIncrementUnread && !conversation.hideAlerts) {
             soundEffects.playUnreadSound();
           }
 
@@ -274,7 +275,7 @@ export default function App() {
             conv.id === conversationId
               ? {
                   ...conv,
-                  unreadCount: conversationId === currentActiveConversation 
+                  unreadCount: conversationId === currentActiveConversation || conv.hideAlerts
                     ? conv.unreadCount 
                     : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) =>
@@ -437,6 +438,7 @@ export default function App() {
       messages: [],
       lastMessageTime: new Date().toISOString(),
       unreadCount: 0,
+      hideAlerts: false,
     };
 
     // Update state
@@ -603,7 +605,7 @@ export default function App() {
   };
 
   // Method to handle conversation pin/unpin
-  const handleUpdateConversation = (conversations: Conversation[]) => {
+  const handleUpdateConversation = (conversations: Conversation[], updateType?: 'pin' | 'mute') => {
     const updatedConversation = conversations.find(
       (conv) => conv.id === activeConversation
     );
@@ -612,11 +614,17 @@ export default function App() {
 
     // Show toast notification
     if (updatedConversation) {
-      toast({
-        description: updatedConversation.pinned
-          ? "Conversation pinned"
-          : "Conversation unpinned",
-      });
+      let toastMessage = '';
+      if (updateType === 'pin') {
+        toastMessage = updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned";
+      } else if (updateType === 'mute') {
+        toastMessage = updatedConversation.hideAlerts ? "Conversation muted" : "Conversation unmuted";
+      }
+      if (toastMessage) {
+        toast({
+          description: toastMessage,
+        });
+      }
     }
   };
 
@@ -662,6 +670,28 @@ export default function App() {
     },
     []
   );
+
+  // Method to update conversation name
+  const handleUpdateConversationName = useCallback((name: string) => {
+    setConversations((prevConversations) => {
+      return prevConversations.map((conv) =>
+        conv.id === activeConversation
+          ? { ...conv, name }
+          : conv
+      );
+    });
+  }, [activeConversation]);
+
+  // Method to handle hide alerts toggle
+  const handleHideAlertsChange = useCallback((hide: boolean) => {
+    setConversations((prevConversations) => 
+      prevConversations.map((conv) =>
+        conv.id === activeConversation
+          ? { ...conv, hideAlerts: hide }
+          : conv
+      )
+    );
+  }, [activeConversation]);
 
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
@@ -743,9 +773,11 @@ export default function App() {
           >
             <ChatArea
               isNewChat={isNewConversation}
-              activeConversation={conversations.find(
-                (c) => c.id === activeConversation
-              )}
+              activeConversation={
+                activeConversation
+                  ? conversations.find((c) => c.id === activeConversation)
+                  : undefined
+              }
               recipientInput={recipientInput}
               setRecipientInput={setRecipientInput}
               isMobileView={isMobileView}
@@ -756,9 +788,11 @@ export default function App() {
               onSendMessage={handleSendMessage}
               onReaction={handleReaction}
               typingStatus={typingStatus}
-              conversationId={activeConversation}
+              conversationId={activeConversation || ""}
               onUpdateConversationRecipients={updateConversationRecipients}
               onCreateConversation={createNewConversation}
+              onUpdateConversationName={handleUpdateConversationName}
+              onHideAlertsChange={handleHideAlertsChange}
               messageDraft={
                 isNewConversation
                   ? messageDrafts["new"] || ""
