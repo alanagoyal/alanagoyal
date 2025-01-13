@@ -117,9 +117,9 @@ export async function POST(req: Request) {
     Match your character's style: 
     ${sortedParticipants
       .map((r: Recipient) => {
-        const personality = initialContacts.find((p) => p.name === r.name);
-        return personality
-          ? `${r.name}: ${personality.prompt}`
+        const contact = initialContacts.find((p) => p.name === r.name);
+        return contact
+          ? `${r.name}: ${contact.prompt}`
           : `${r.name}: Just be yourself.`;
       })
       .join("\n")}

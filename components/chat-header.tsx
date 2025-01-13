@@ -698,14 +698,14 @@ export function ChatHeader({
                         recipientCount={activeConversation.recipients.length}
                         recipients={
                           activeConversation?.recipients.map((recipient) => {
-                            const personality = initialContacts.find(
+                            const contact = initialContacts.find(
                               (p) => p.name === recipient.name
                             );
                             return {
                               name: recipient.name,
                               avatar: recipient.avatar,
-                              bio: personality?.bio,
-                              title: personality?.title,
+                              bio: contact?.bio,
+                              title: contact?.title,
                             };
                           }) || []
                         }
