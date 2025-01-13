@@ -214,7 +214,7 @@ function RecipientSearch({
         >
           <ScrollArea
             style={{
-              height: `${Math.min(displayPeople.length * 36 + 16, 376)}px`,
+              height: `${Math.min(displayPeople.length * 36 + 16, 232)}px`,
             }}
             className="w-full rounded-md border border-input bg-background p-2"
             isMobile={isMobileView}
