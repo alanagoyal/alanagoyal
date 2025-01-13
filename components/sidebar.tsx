@@ -21,7 +21,7 @@ interface SidebarProps {
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
-  onUpdateConversation: (conversations: Conversation[]) => void;
+  onUpdateConversation: (conversations: Conversation[], updateType?: 'pin' | 'mute') => void;
   isMobileView: boolean;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -167,7 +167,7 @@ export function Sidebar({
             ? { ...conv, hideAlerts: !conv.hideAlerts }
             : conv
         );
-        onUpdateConversation(updatedConversations);
+        onUpdateConversation(updatedConversations, 'mute');
         return;
       }
 
@@ -273,7 +273,7 @@ export function Sidebar({
           }
           return conv;
         });
-        onUpdateConversation(updatedConversations);
+        onUpdateConversation(updatedConversations, 'pin');
       } else if (e.key === "d") {
         e.preventDefault();
         if (!activeConversation) return;
@@ -538,7 +538,8 @@ export function Sidebar({
                                             : conv
                                         );
                                       onUpdateConversation(
-                                        updatedConversations
+                                        updatedConversations,
+                                        'pin'
                                       );
                                     }}
                                   >
@@ -561,7 +562,8 @@ export function Sidebar({
                                             : conv
                                         );
                                       onUpdateConversation(
-                                        updatedConversations
+                                        updatedConversations,
+                                        'mute'
                                       );
                                     }}
                                   >

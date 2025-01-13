@@ -605,7 +605,7 @@ export default function App() {
   };
 
   // Method to handle conversation pin/unpin
-  const handleUpdateConversation = (conversations: Conversation[]) => {
+  const handleUpdateConversation = (conversations: Conversation[], updateType?: 'pin' | 'mute') => {
     const updatedConversation = conversations.find(
       (conv) => conv.id === activeConversation
     );
@@ -614,11 +614,17 @@ export default function App() {
 
     // Show toast notification
     if (updatedConversation) {
-      toast({
-        description: updatedConversation.pinned
-          ? "Conversation pinned"
-          : "Conversation unpinned",
-      });
+      let toastMessage = '';
+      if (updateType === 'pin') {
+        toastMessage = updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned";
+      } else if (updateType === 'mute') {
+        toastMessage = updatedConversation.hideAlerts ? "Conversation muted" : "Conversation unmuted";
+      }
+      if (toastMessage) {
+        toast({
+          description: toastMessage,
+        });
+      }
     }
   };
 

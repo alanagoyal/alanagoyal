@@ -17,7 +17,7 @@ interface ConversationItemProps {
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
-  onUpdateConversation: (conversations: Conversation[]) => void;
+  onUpdateConversation: (conversations: Conversation[], updateType?: 'pin' | 'mute') => void;
   conversations: Conversation[];
   formatTime: (timestamp: string | undefined) => string;
   getInitials: (name: string) => string;
@@ -88,7 +88,7 @@ export function ConversationItem({
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
     );
-    onUpdateConversation(updatedConversations);
+    onUpdateConversation(updatedConversations, 'pin');
     setOpenSwipedConvo(null);
   };
 
@@ -108,7 +108,7 @@ export function ConversationItem({
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
     );
-    onUpdateConversation(updatedConversations);
+    onUpdateConversation(updatedConversations, 'pin');
   };
 
   const handleContextMenuDelete = () => {
@@ -121,7 +121,7 @@ export function ConversationItem({
         ? { ...conv, hideAlerts: !conv.hideAlerts }
         : conv
     );
-    onUpdateConversation(updatedConversations);
+    onUpdateConversation(updatedConversations, 'mute');
   };
 
   const ConversationContent = (

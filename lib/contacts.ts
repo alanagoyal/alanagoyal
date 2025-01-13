@@ -1,16 +1,16 @@
-import { TechPersonality } from "@/data/initial-contacts";
+import { InitialContact } from "@/data/initial-contacts";
 
 const CONTACTS_KEY = "user_contacts";
 
-export function getUserContacts(): TechPersonality[] {
+export function getUserContacts(): InitialContact[] {
   if (typeof window === "undefined") return [];
   const contacts = localStorage.getItem(CONTACTS_KEY);
   return contacts ? JSON.parse(contacts) : [];
 }
 
-export function addUserContact(name: string): TechPersonality[] {
+export function addUserContact(name: string): InitialContact[] {
   const contacts = getUserContacts();
-  const newContact: TechPersonality = {
+  const newContact: InitialContact = {
     name,
     title: "Custom Contact"
   };
