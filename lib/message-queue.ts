@@ -294,7 +294,7 @@ export class MessageQueue {
         }
 
         // Delay to show reaction before typing animation
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
 
       // Start typing animation and delay for the content
@@ -313,10 +313,7 @@ export class MessageQueue {
         id: crypto.randomUUID(),
         content: data.content,
         sender: data.sender,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        timestamp: new Date().toISOString(),
       };
 
       // Notify of new message
