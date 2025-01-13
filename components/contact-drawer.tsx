@@ -191,7 +191,7 @@ export function ContactDrawer({
                       <div>
                         <div className="font-medium">{recipient.name}</div>
                         {recipient.title && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {recipient.title}
                           </div>
                         )}
@@ -199,14 +199,14 @@ export function ContactDrawer({
                     </div>
                     {recipient.bio && (
                       <ChevronRight
-                        className={`w-5 h-5 text-gray-400 transition-transform ${
+                        className={`w-5 h-5 transition-transform text-muted-foreground flex-shrink-0 ${
                           expandedUser === recipient.name ? "rotate-90" : ""
                         }`}
                       />
                     )}
                   </div>
                   {expandedUser === recipient.name && recipient.bio && (
-                    <div className="pl-13 pr-4 pb-4 text-sm text-gray-600">
+                    <div className="pl-13 pr-4 pb-4 text-sm text-muted-foreground">
                       {recipient.bio}
                     </div>
                   )}
