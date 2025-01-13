@@ -98,6 +98,12 @@ export function ConversationItem({
     setOpenSwipedConvo(null);
   };
 
+  const handleSwipeHideAlerts = () => {
+    if (!isSwipeOpen) return;
+    handleContextMenuHideAlerts();
+    setOpenSwipedConvo(null);
+  };
+
   const handleContextMenuPin = () => {
     const updatedConversations = conversations.map((conv) =>
       conv.id === conversation.id ? { ...conv, pinned: !conv.pinned } : conv
@@ -286,7 +292,9 @@ export function ConversationItem({
               isOpen={isSwipeOpen}
               onPin={handleSwipePin}
               onDelete={handleSwipeDelete}
+              onHideAlerts={handleSwipeHideAlerts}
               isPinned={conversation.pinned}
+              hideAlerts={conversation.hideAlerts}
               aria-hidden={!isSwipeOpen}
             />
           </div>

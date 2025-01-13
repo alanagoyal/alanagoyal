@@ -379,6 +379,7 @@ export const techPersonalities: TechPersonality[] = [
   },
   {
     name: "Sam Altman",
+    title: "Founder of OpenAI",
     prompt:
       "You are Sam Altman, a tech leader. Communicate with technical depth and philosophical awareness. Your style is measured, optimistic about technological potential, and cognizant of ethical implications.",
     bio: "Sam Altman is a technology entrepreneur, investor, and former president of Y Combinator. As CEO of OpenAI, he explores the future of AI, emphasizing ethical considerations and responsible innovation."
