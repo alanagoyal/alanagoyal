@@ -197,18 +197,22 @@ export default function App() {
       if (conversationExists) {
         // If it exists, select it
         setActiveConversation(urlConversationId);
-      } else {
-        // If it doesn't exist, clear the URL and select the first conversation
-        window.history.pushState({}, "", "/");
-        if (allConversations.length > 0) {
-          setActiveConversation(allConversations[0].id);
-        }
+        return;
       }
-    } else if (allConversations.length > 0) {
-      // No conversation in URL, select the first one
+    }
+
+    // If mobile view, show the sidebar
+    if (isMobileView) {
+      window.history.pushState({}, "", "/");
+      setActiveConversation(null);
+      return;
+    }
+
+    // No URL ID or invalid ID, and not mobile - select first conversation
+    if (allConversations.length > 0) {
       setActiveConversation(allConversations[0].id);
     }
-  }, []);
+  }, [isMobileView]);
 
   // Update lastActiveConversation whenever activeConversation changes
   useEffect(() => {
@@ -265,35 +269,44 @@ export default function App() {
           );
         });
       },
-      onMessageUpdated: (conversationId: string, messageId: string, updates: Partial<Message>) => {
+      onMessageUpdated: (
+        conversationId: string,
+        messageId: string,
+        updates: Partial<Message>
+      ) => {
         setConversations((prev) => {
-          const currentActiveConversation = messageQueue.current.getActiveConversation();
-          
+          const currentActiveConversation =
+            messageQueue.current.getActiveConversation();
+
           return prev.map((conv) =>
             conv.id === conversationId
               ? {
                   ...conv,
-                  unreadCount: conversationId === currentActiveConversation || conv.hideAlerts
-                    ? conv.unreadCount 
-                    : (conv.unreadCount || 0) + 1,
+                  unreadCount:
+                    conversationId === currentActiveConversation ||
+                    conv.hideAlerts
+                      ? conv.unreadCount
+                      : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) => {
                     if (msg.id === messageId) {
                       // If we're updating reactions and the message already has reactions,
                       // merge them together instead of overwriting
                       const currentReactions = msg.reactions || [];
                       const newReactions = updates.reactions || [];
-                      
+
                       // Filter out any duplicate reactions (same type and sender)
-                      const uniqueNewReactions = newReactions.filter(newReaction => 
-                        !currentReactions.some(currentReaction => 
-                          currentReaction.type === newReaction.type && 
-                          currentReaction.sender === newReaction.sender
-                        )
+                      const uniqueNewReactions = newReactions.filter(
+                        (newReaction) =>
+                          !currentReactions.some(
+                            (currentReaction) =>
+                              currentReaction.type === newReaction.type &&
+                              currentReaction.sender === newReaction.sender
+                          )
                       );
                       return {
                         ...msg,
                         ...updates,
-                        reactions: [...currentReactions, ...uniqueNewReactions]
+                        reactions: [...currentReactions, ...uniqueNewReactions],
                       };
                     }
                     return msg;
@@ -590,14 +603,18 @@ export default function App() {
         const sortedConvos = [...prevConversations].sort((a, b) => {
           if (a.pinned && !b.pinned) return -1;
           if (!a.pinned && b.pinned) return 1;
-          const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-          const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+          const timeA = a.lastMessageTime
+            ? new Date(a.lastMessageTime).getTime()
+            : 0;
+          const timeB = b.lastMessageTime
+            ? new Date(b.lastMessageTime).getTime()
+            : 0;
           return timeB - timeA;
         });
 
         // Find the index of the deleted conversation in the sorted list
-        const deletedIndex = sortedConvos.findIndex(conv => conv.id === id);
-        
+        const deletedIndex = sortedConvos.findIndex((conv) => conv.id === id);
+
         if (deletedIndex === sortedConvos.length - 1) {
           // If deleting the last conversation, go to the previous one
           selectConversation(sortedConvos[deletedIndex - 1].id);
@@ -620,7 +637,10 @@ export default function App() {
   };
 
   // Method to handle conversation pin/unpin
-  const handleUpdateConversation = (conversations: Conversation[], updateType?: 'pin' | 'mute') => {
+  const handleUpdateConversation = (
+    conversations: Conversation[],
+    updateType?: "pin" | "mute"
+  ) => {
     const updatedConversation = conversations.find(
       (conv) => conv.id === activeConversation
     );
@@ -629,11 +649,15 @@ export default function App() {
 
     // Show toast notification
     if (updatedConversation) {
-      let toastMessage = '';
-      if (updateType === 'pin') {
-        toastMessage = updatedConversation.pinned ? "Conversation pinned" : "Conversation unpinned";
-      } else if (updateType === 'mute') {
-        toastMessage = updatedConversation.hideAlerts ? "Conversation muted" : "Conversation unmuted";
+      let toastMessage = "";
+      if (updateType === "pin") {
+        toastMessage = updatedConversation.pinned
+          ? "Conversation pinned"
+          : "Conversation unpinned";
+      } else if (updateType === "mute") {
+        toastMessage = updatedConversation.hideAlerts
+          ? "Conversation muted"
+          : "Conversation unmuted";
       }
       if (toastMessage) {
         toast({
@@ -687,26 +711,28 @@ export default function App() {
   );
 
   // Method to update conversation name
-  const handleUpdateConversationName = useCallback((name: string) => {
-    setConversations((prevConversations) => {
-      return prevConversations.map((conv) =>
-        conv.id === activeConversation
-          ? { ...conv, name }
-          : conv
-      );
-    });
-  }, [activeConversation]);
+  const handleUpdateConversationName = useCallback(
+    (name: string) => {
+      setConversations((prevConversations) => {
+        return prevConversations.map((conv) =>
+          conv.id === activeConversation ? { ...conv, name } : conv
+        );
+      });
+    },
+    [activeConversation]
+  );
 
   // Method to handle hide alerts toggle
-  const handleHideAlertsChange = useCallback((hide: boolean) => {
-    setConversations((prevConversations) => 
-      prevConversations.map((conv) =>
-        conv.id === activeConversation
-          ? { ...conv, hideAlerts: hide }
-          : conv
-      )
-    );
-  }, [activeConversation]);
+  const handleHideAlertsChange = useCallback(
+    (hide: boolean) => {
+      setConversations((prevConversations) =>
+        prevConversations.map((conv) =>
+          conv.id === activeConversation ? { ...conv, hideAlerts: hide } : conv
+        )
+      );
+    },
+    [activeConversation]
+  );
 
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
