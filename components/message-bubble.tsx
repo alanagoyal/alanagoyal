@@ -10,6 +10,7 @@ import {
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { soundEffects } from "@/lib/sound-effects";
+import { Icons } from "./icons";
 
 // Props for the MessageBubble component
 interface MessageBubbleProps {
@@ -267,7 +268,11 @@ export function MessageBubble({
               isSystemMessage && "bg-background"
             )}
           >
-            <div className="text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]">
+            <div className={cn(
+              "text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]",
+              message.type === "silenced" && "text-[#7978DF] flex items-center gap-1"
+            )}>
+              {message.type === "silenced" && <Icons.silencedMoon />}
               {message.content}
             </div>
           </div>

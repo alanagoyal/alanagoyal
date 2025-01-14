@@ -260,8 +260,8 @@ export function ConversationItem({
                   })()}
                 </div>
                 {conversation.hideAlerts && (
-                  <Icons.silent 
-                    className={`flex-shrink-0 ${
+                  <BellOff
+                    className={`flex-shrink-0 h-3 w-3 ${
                       activeConversation === conversation.id 
                         ? "text-white/80" 
                         : "text-muted-foreground"
