@@ -151,7 +151,7 @@ export function MessageList({
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
       {/* Messages layer */}
       <div className="flex-1 relative">
-        {messages.map((message, index, array) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
             data-message-id={message.id}
