@@ -179,7 +179,7 @@ export function ConversationItem({
             )}
           </div>
           <div
-            className={`text-xs h-8 flex items-center justify-between ${
+            className={`text-xs h-8 flex items-start justify-between ${
               activeConversation === conversation.id
                 ? "text-white/80"
                 : "text-muted-foreground"
