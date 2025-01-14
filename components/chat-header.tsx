@@ -326,6 +326,7 @@ export function ChatHeader({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [showContactDrawer, setShowContactDrawer] = useState(false);
 
   useEffect(() => {
     if (isEditMode && activeConversation?.recipients) {
@@ -709,7 +710,9 @@ export function ChatHeader({
                             };
                           }) || []
                         }
-                        onClose={onBack}
+                        onClose={() => {
+                          setShowContactDrawer(false);
+                        }}
                         onUpdateName={onUpdateConversationName}
                         conversationName={activeConversation.name}
                         onAddContact={() => {
