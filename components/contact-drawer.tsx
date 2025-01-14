@@ -18,7 +18,6 @@ import { Fragment } from "react";
 interface ContactDrawerProps {
   recipients: Array<Omit<Recipient, "id">>;
   recipientCount: number;
-  onClose?: () => void;
   onUpdateName?: (name: string) => void;
   conversationName?: string;
   onAddContact?: () => void;
@@ -29,7 +28,6 @@ interface ContactDrawerProps {
 export function ContactDrawer({
   recipients,
   recipientCount,
-  onClose,
   onUpdateName,
   conversationName,
   onAddContact,
@@ -90,7 +88,7 @@ export function ContactDrawer({
               <Button
                 variant="ghost"
                 className="text-blue-500 text-lg font-medium hover:text-blue-600 hover:bg-transparent"
-                onClick={onClose}
+                onClick={() => setOpen(false)}
               >
                 Done
               </Button>
