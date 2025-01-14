@@ -8,7 +8,7 @@ import {
 } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { Smile, ArrowUp } from "lucide-react";
+import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -340,12 +340,13 @@ export const MessageInput = forwardRef<
           {/* Show send button for mobile when there's text */}
           {isMobileView && editor?.getText().trim() && (
             <button
+              type="submit"
               onClick={handleSubmit}
               disabled={disabled || !message.trim()}
               className="absolute right-1 bottom-1 bg-[#0A7CFF] rounded-full p-1 text-white font-bold transition-colors"
               aria-label="Send message"
             >
-              <ArrowUp className="h-4 w-4" strokeWidth={3} />
+              <Icons.arrowUp className="h-4 w-4" strokeWidth={3} />
             </button>
           )}
         </div>
@@ -353,11 +354,11 @@ export const MessageInput = forwardRef<
         {!isMobileView && (
           <button
             ref={buttonRef}
+            type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            disabled={disabled}
           >
-            <Smile className="h-5 w-5" />
+            <Icons.smile className="h-5 w-5" />
           </button>
         )}
         {showEmojiPicker && !isMobileView && (

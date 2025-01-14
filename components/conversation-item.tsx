@@ -8,7 +8,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { Pin, Trash, BellOff, Bell } from "lucide-react";
+import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 
 interface ConversationItemProps {
@@ -259,7 +259,7 @@ export function ConversationItem({
                   })()}
                 </div>
                 {conversation.hideAlerts && (
-                  <BellOff
+                  <Icons.bellOff
                     className={`flex-shrink-0 h-3 w-3 ${
                       activeConversation === conversation.id 
                         ? "text-white/80" 
@@ -306,7 +306,7 @@ export function ConversationItem({
             onClick={handleContextMenuPin}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
-            {isMobileView && <Pin className="h-4 w-4 ml-2" />}
+            {isMobileView && <Icons.pin className="h-4 w-4 ml-2" />}
           </ContextMenuItem>
           <ContextMenuItem
             className={`focus:bg-[#0A7CFF] focus:text-white ${
@@ -317,8 +317,8 @@ export function ConversationItem({
             <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
             {isMobileView && (
               conversation.hideAlerts ? 
-                <Bell className="h-4 w-4 ml-2" /> :
-                <BellOff className="h-4 w-4 ml-2" />
+                <Icons.bell className="h-4 w-4 ml-2" /> :
+                <Icons.bellOff className="h-4 w-4 ml-2" />
             )}
           </ContextMenuItem>
           <ContextMenuItem
@@ -328,7 +328,7 @@ export function ConversationItem({
             onClick={handleContextMenuDelete}
           >
             <span>Delete</span>
-            {isMobileView && <Trash className="h-4 w-4 ml-2" />}
+            {isMobileView && <Icons.trash className="h-4 w-4 ml-2" />}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>

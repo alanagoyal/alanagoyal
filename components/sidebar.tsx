@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { ConversationItem } from "./conversation-item";
-import { PinOff, Trash, BellOff, Bell } from "lucide-react";
+import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -545,7 +545,7 @@ export function Sidebar({
                                   >
                                     <span>Unpin</span>
                                     {isMobileView && (
-                                      <PinOff className="h-4 w-4 ml-2" />
+                                      <Icons.pinOff className="h-4 w-4 ml-2" />
                                     )}
                                   </ContextMenuItem>
                                   <ContextMenuItem
@@ -570,9 +570,9 @@ export function Sidebar({
                                     <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
                                     {isMobileView && (
                                       conversation.hideAlerts ? (
-                                        <Bell className="h-4 w-4 ml-2" />
+                                        <Icons.bell className="h-4 w-4 ml-2" />
                                       ) : (
-                                        <BellOff className="h-4 w-4 ml-2" />
+                                        <Icons.bellOff className="h-4 w-4 ml-2" />
                                       )
                                     )}
                                   </ContextMenuItem>
@@ -588,7 +588,7 @@ export function Sidebar({
                                   >
                                     <span>Delete</span>
                                     {isMobileView && (
-                                      <Trash className="h-4 w-4 ml-2" />
+                                      <Icons.trash className="h-4 w-4 ml-2" />
                                     )}
                                   </ContextMenuItem>
                                 </ContextMenuContent>

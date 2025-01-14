@@ -629,7 +629,7 @@ export function ChatHeader({
                 className="rounded-sm relative flex items-center gap-2"
                 aria-label="Back to conversations"
               >
-                <Icons.back />
+                <Icons.back size={32} />
                 {unreadCount ? (
                   <div className="bg-[#0A7CFF] text-white rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-medium -ml-4">
                     {unreadCount}
