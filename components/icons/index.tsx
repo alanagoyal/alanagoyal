@@ -143,7 +143,7 @@ export const Icons = {
   arrowDown: ({ size = 16, ...props }: IconProps) => (
     <ArrowDown className="text-muted-foreground" size={size} {...props} />
   ),
-  spinner: ({ size = 16, ...props }: IconProps) => (
+  spinner: ({ ...props }: IconProps) => (
     <svg
       className="spinner"
       xmlns="http://www.w3.org/2000/svg"
