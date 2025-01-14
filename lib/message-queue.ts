@@ -350,6 +350,19 @@ export class MessageQueue {
             this.enqueueAIMessage(updatedConversationWithNextSender);
           }
         }
+      } else {
+        // Send notifications silenced message
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        const silencedMessage: Message = {
+          id: crypto.randomUUID(),
+          content: `${data.sender} has notifications silenced`,
+          sender: "system",
+          type: "silenced",
+          timestamp: new Date().toISOString(),
+        };
+        
+        this.callbacks.onMessageGenerated(task.conversation.id, silencedMessage);
       }
     } catch (error) {
       if (error instanceof Error) {

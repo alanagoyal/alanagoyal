@@ -17,7 +17,7 @@ import {
   CommandShortcut,
 } from "./ui/command";
 import { DialogTitle, DialogDescription } from "./ui/dialog";
-import { Pin, ArrowUp, ArrowDown, Trash, PenSquare, Sun, Moon, Volume2, VolumeX, Bell, BellOff } from "lucide-react";
+import { Icons } from "./icons";
 import { Conversation } from "@/types";
 import { useTheme } from "next-themes";
 
@@ -186,7 +186,7 @@ export const CommandMenu = forwardRef<
     const commands = [
       {
         name: "New chat",
-        icon: <PenSquare className="mr-2 h-4 w-4" />,
+        icon: <Icons.send className="mr-2 h-4 w-4" />,
         shortcut: "N",
         action: () => {
           onNewChat();
@@ -195,35 +195,35 @@ export const CommandMenu = forwardRef<
       },
       {
         name: "Pin or unpin",
-        icon: <Pin className="mr-2 h-4 w-4" />,
+        icon: <Icons.pin className="mr-2 h-4 w-4" />,
         shortcut: "P",
         action: handleTogglePin,
       },
       {
         name: "Move up",
-        icon: <ArrowUp className="mr-2 h-4 w-4" />,
+        icon: <Icons.arrowUp className="mr-2 h-4 w-4" />,
         shortcut: "K",
         action: handleMoveUp,
       },
       {
         name: "Move down",
-        icon: <ArrowDown className="mr-2 h-4 w-4" />,
+        icon: <Icons.arrowDown className="mr-2 h-4 w-4" />,
         shortcut: "J",
         action: handleMoveDown,
       },
       {
         name: activeConversation && conversations.find(c => c.id === activeConversation)?.hideAlerts ? "Show Alerts" : "Hide Alerts",
         icon: activeConversation && conversations.find(c => c.id === activeConversation)?.hideAlerts ? (
-          <Bell className="mr-2 h-4 w-4" />
+          <Icons.bell className="mr-2 h-4 w-4" />
         ) : (
-          <BellOff className="mr-2 h-4 w-4" />
+          <Icons.bellOff className="mr-2 h-4 w-4" />
         ),
         shortcut: "H",
         action: handleToggleAlerts,
       },
       {
         name: "Delete chat",
-        icon: <Trash className="mr-2 h-4 w-4" />,
+        icon: <Icons.trash className="mr-2 h-4 w-4" />,
         shortcut: "D",
         action: handleDeleteConversation,
       },
@@ -231,9 +231,9 @@ export const CommandMenu = forwardRef<
         name: theme === "light" ? "Dark mode" : "Light mode",
         icon:
           theme === "light" ? (
-            <Moon className="mr-2 h-4 w-4" />
+            <Icons.moon className="mr-2 h-4 w-4" />
           ) : (
-            <Sun className="mr-2 h-4 w-4" />
+            <Icons.sun className="mr-2 h-4 w-4" />
           ),
         shortcut: "T",
         action: () => {
@@ -243,9 +243,9 @@ export const CommandMenu = forwardRef<
       {
         name: soundEnabled ? "Sound off" : "Sound on",
         icon: soundEnabled ? (
-          <VolumeX className="mr-2 h-4 w-4" />
+          <Icons.volumeX className="mr-2 h-4 w-4" />
         ) : (
-          <Volume2 className="mr-2 h-4 w-4" />
+          <Icons.volume2 className="mr-2 h-4 w-4" />
         ),
         shortcut: "S",
         action: () => {

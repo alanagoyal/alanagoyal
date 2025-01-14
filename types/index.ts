@@ -4,6 +4,7 @@ export interface Message {
   htmlContent?: string;  
   sender: "me" | "system" | string;
   timestamp: string;
+  type?: "silenced";
   mentions?: { id: string; name: string; }[];
   reactions?: Reaction[];
 }

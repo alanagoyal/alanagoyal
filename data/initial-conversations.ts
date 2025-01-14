@@ -451,6 +451,13 @@ export const initialConversations: Conversation[] = [
         sender: "Jiro Ono",
         timestamp: "12:58 PM",
       },
+      {
+        id: "b1c9c3b3-4c5b-4c1e-8c5c-0a4b7c8a4f8e",
+        content: "Jiro Ono has notification silenced",
+        sender: "system",
+        timestamp: "1:00 PM",
+        type: "silenced",
+      }
     ],
   },
   {
