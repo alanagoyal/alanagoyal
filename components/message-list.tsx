@@ -10,6 +10,7 @@ interface MessageListProps {
   typingStatus: { conversationId: string; recipient: string } | null;
   conversationId: string | null;
   onReaction?: (messageId: string, reaction: Reaction) => void;
+  onReactionComplete?: () => void;
   messageInputRef?: React.RefObject<{ focus: () => void }>;
 }
 
@@ -19,32 +20,107 @@ export function MessageList({
   typingStatus,
   conversationId,
   onReaction,
+  onReactionComplete,
   messageInputRef,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
-  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null);
-  const [prevConversationId, setPrevConversationId] = useState<string | null>(null);
+  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(
+    null
+  );
+  const [prevConversationId, setPrevConversationId] = useState<string | null>(
+    null
+  );
   const [prevMessageCount, setPrevMessageCount] = useState(0);
+  const [prevMessages, setPrevMessages] = useState<Message[]>([]);
+
   const lastUserMessageIndex = messages.findLastIndex(
     (msg) => msg.sender === "me"
   );
-  const lastMessageRef = useRef<HTMLDivElement>(null);
-  const typingRef = useRef<HTMLDivElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
 
   const isTypingInThisConversation =
     typingStatus && typingStatus.conversationId === conversationId;
 
+  const isMessageNearBottom = (messageId: string) => {
+    // Try to find the actual scrollable viewport
+    const viewport = messageListRef.current?.closest(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+
+    if (!viewport) {
+      return false;
+    }
+
+    const messageElement = messageListRef.current?.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
+    if (!messageElement) {
+      return false;
+    }
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const messageRect = messageElement.getBoundingClientRect();
+
+    // Consider "near bottom" if the message is in the bottom 2/3 of the viewport
+    const nearBottomThreshold = viewportRect.height * 0.33; // top 1/3
+    const isNear = messageRect.top >= viewportRect.top + nearBottomThreshold;
+    return isNear;
+  };
+
+  const shouldAutoScroll = () => {
+    // Always scroll when typing starts
+    if (isTypingInThisConversation) {
+      return true;
+    }
+
+    // If no previous messages, this is initial load
+    if (prevMessages.length === 0) {
+      return true;
+    }
+
+    // Check if this is a new message
+    if (messages.length > prevMessages.length) {
+      return true;
+    }
+
+    // If reaction menu is open, only scroll if the message is near the bottom
+    if (isAnyReactionMenuOpen && activeMessageId) {
+      const shouldScroll = isMessageNearBottom(activeMessageId);
+      return shouldScroll;
+    }
+
+    return false;
+  };
+
   useEffect(() => {
-    // If someone is typing, scroll to typing indicator
-    if (isTypingInThisConversation && typingRef.current) {
-      typingRef.current.scrollIntoView({ behavior: "smooth" });
+    const should = shouldAutoScroll();
+
+    if (should) {
+      // Find the ScrollArea viewport
+      const viewport = messageListRef.current?.closest(
+        "[data-radix-scroll-area-viewport]"
+      ) as HTMLElement;
+      if (viewport) {
+        const scrollToBottom = viewport.scrollHeight - viewport.clientHeight;
+
+        // Force layout recalculation and scroll
+        requestAnimationFrame(() => {
+          viewport.scrollTop = scrollToBottom;
+
+          // Then do smooth scroll
+          viewport.scrollTo({
+            top: scrollToBottom,
+            behavior: "smooth",
+          });
+        });
+      }
     }
-    // Otherwise if there are messages, scroll to last message
-    else if (messages.length > 0 && lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+
+    // Update previous messages after scroll check
+    setPrevMessages(messages);
+    setPrevConversationId(conversationId);
+    setPrevMessageCount(messages.length);
   }, [messages, isTypingInThisConversation]);
 
   // Update lastSentMessageId when a new message is added
@@ -52,7 +128,10 @@ export function MessageList({
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       // Only play sound if this is a new message in the same conversation
-      if (conversationId === prevConversationId && messages.length > prevMessageCount) {
+      if (
+        conversationId === prevConversationId &&
+        messages.length > prevMessageCount
+      ) {
         if (lastMessage.sender !== "me" && lastMessage.sender !== "system") {
           soundEffects.playReceivedSound();
         }
@@ -65,12 +144,8 @@ export function MessageList({
           return () => clearTimeout(timer);
         }
       }
-      
-      // Update previous state
-      setPrevConversationId(conversationId);
-      setPrevMessageCount(messages.length);
     }
-  }, [messages, conversationId]);
+  }, [messages, conversationId, prevConversationId, prevMessageCount]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
@@ -79,7 +154,7 @@ export function MessageList({
         {messages.map((message, index, array) => (
           <div
             key={message.id}
-            ref={index === array.length - 1 ? lastMessageRef : null}
+            data-message-id={message.id}
             className="relative"
           >
             {/* Overlay for non-active messages */}
@@ -98,8 +173,8 @@ export function MessageList({
                   setIsAnyReactionMenuOpen(isOpen);
                 }}
                 onReactionComplete={() => {
-                  // Focus input after reaction for smooth typing flow
                   messageInputRef?.current?.focus();
+                  onReactionComplete?.();
                 }}
                 justSent={message.id === lastSentMessageId}
               />
@@ -107,7 +182,7 @@ export function MessageList({
           </div>
         ))}
         {isTypingInThisConversation && (
-          <div ref={typingRef}>
+          <div>
             <MessageBubble
               message={{
                 id: "typing",

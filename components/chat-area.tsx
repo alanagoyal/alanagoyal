@@ -58,35 +58,6 @@ export function ChatArea({
 
   const showRecipientInput = isNewChat && !activeConversation;
   const messageInputRef = useRef<{ focus: () => void }>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === "style"
-        ) {
-          // Get the current scroll viewport
-          const viewport = scrollAreaRef.current?.querySelector(
-            "[data-radix-scroll-area-viewport]"
-          );
-          if (viewport) {
-            // Scroll to bottom with smooth animation
-            viewport.scrollTop = viewport.scrollHeight;
-          }
-        }
-      });
-    });
-
-    // Watch for style changes on document root (where we store the CSS variable)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["style"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if ("virtualKeyboard" in navigator) {
@@ -148,19 +119,19 @@ export function ChatArea({
           setShowCompactNewChat={setShowCompactNewChat}
         />
       </div>
-
       <ScrollArea
-        ref={scrollAreaRef}
         className="h-full"
         isMobile={isMobileView}
         withVerticalMargins
         mobileHeaderHeight={isMobileView}
-        bottomMargin="calc(var(--dynamic-height, 64px))">
+        bottomMargin="calc(var(--dynamic-height, 64px))"
+      >
         <div
           className={cn(
             isMobileView ? "pt-24" : "pt-16",
             "pb-[var(--dynamic-height,64px)]"
-          )}>
+          )}
+        >
           <div className="flex-1 relative">
             {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
@@ -174,7 +145,9 @@ export function ChatArea({
                     ? typingStatus
                     : null
                 }
-                onReaction={onReaction}
+                onReaction={(messageId, reaction) => {
+                  onReaction?.(messageId, reaction);
+                }}
                 conversationId={conversationId}
                 messageInputRef={messageInputRef}
               />
@@ -183,9 +156,7 @@ export function ChatArea({
           </div>
         </div>
       </ScrollArea>
-      <div
-        className="absolute bottom-0 left-0 right-0 z-50 mb-[env(keyboard-inset-height,0px)]"
-      >
+      <div className="absolute bottom-0 left-0 right-0 z-50 mb-[env(keyboard-inset-height,0px)]">
         <MessageInput
           key={messageInputKey}
           ref={messageInputRef}
