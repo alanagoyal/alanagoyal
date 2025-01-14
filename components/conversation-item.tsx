@@ -10,7 +10,6 @@ import {
 } from "./ui/context-menu";
 import { Pin, Trash, BellOff, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Icons } from "./icons";
 
 interface ConversationItemProps {
   conversation: Conversation;
