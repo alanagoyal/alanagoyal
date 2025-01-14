@@ -32,96 +32,62 @@ export function MessageList({
     null
   );
   const [prevMessageCount, setPrevMessageCount] = useState(0);
-  const [prevMessages, setPrevMessages] = useState<Message[]>([]);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const [wasAtBottom, setWasAtBottom] = useState(true);
 
   const lastUserMessageIndex = messages.findLastIndex(
     (msg) => msg.sender === "me"
   );
-  const messageListRef = useRef<HTMLDivElement>(null);
 
   const isTypingInThisConversation =
     typingStatus && typingStatus.conversationId === conversationId;
 
-  const isMessageNearBottom = (messageId: string) => {
-    // Try to find the actual scrollable viewport
+  const isAtBottom = () => {
     const viewport = messageListRef.current?.closest(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
+    if (!viewport) return true;
 
-    if (!viewport) {
-      return false;
-    }
-
-    const messageElement = messageListRef.current?.querySelector(
-      `[data-message-id="${messageId}"]`
-    );
-    if (!messageElement) {
-      return false;
-    }
-
-    const viewportRect = viewport.getBoundingClientRect();
-    const messageRect = messageElement.getBoundingClientRect();
-
-    // Consider "near bottom" if the message is in the bottom 2/3 of the viewport
-    const nearBottomThreshold = viewportRect.height * 0.33; // top 1/3
-    const isNear = messageRect.top >= viewportRect.top + nearBottomThreshold;
-    return isNear;
+    const { scrollTop, scrollHeight, clientHeight } = viewport;
+    return Math.abs(scrollHeight - clientHeight - scrollTop) < 336;
   };
 
-  const shouldAutoScroll = () => {
-    // Always scroll when typing starts
-    if (isTypingInThisConversation) {
-      return true;
-    }
-
-    // If no previous messages, this is initial load
-    if (prevMessages.length === 0) {
-      return true;
-    }
-
-    // Check if this is a new message
-    if (messages.length > prevMessages.length) {
-      return true;
-    }
-
-    // If reaction menu is open, only scroll if the message is near the bottom
-    if (isAnyReactionMenuOpen && activeMessageId) {
-      const shouldScroll = isMessageNearBottom(activeMessageId);
-      return shouldScroll;
-    }
-
-    return false;
-  };
-
+  // Track scroll position
   useEffect(() => {
-    const should = shouldAutoScroll();
+    const viewport = messageListRef.current?.closest(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    if (!viewport) return;
 
-    if (should) {
-      // Find the ScrollArea viewport
-      const viewport = messageListRef.current?.closest(
-        "[data-radix-scroll-area-viewport]"
-      ) as HTMLElement;
-      if (viewport) {
-        const scrollToBottom = viewport.scrollHeight - viewport.clientHeight;
+    const handleScroll = () => {
+      setWasAtBottom(isAtBottom());
+    };
 
-        // Force layout recalculation and scroll
-        requestAnimationFrame(() => {
-          viewport.scrollTop = scrollToBottom;
+    viewport.addEventListener("scroll", handleScroll);
+    return () => viewport.removeEventListener("scroll", handleScroll);
+  }, []);
 
-          // Then do smooth scroll
-          viewport.scrollTo({
-            top: scrollToBottom,
-            behavior: "smooth",
-          });
-        });
-      }
-    }
+  // Auto-scroll only if we were at bottom
+  useEffect(() => {
+    if (!wasAtBottom && !isAtBottom()) return;
 
-    // Update previous messages after scroll check
-    setPrevMessages(messages);
-    setPrevConversationId(conversationId);
+    const viewport = messageListRef.current?.closest(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    if (!viewport) return;
+
+    const scrollToBottom = viewport.scrollHeight - viewport.clientHeight;
+    requestAnimationFrame(() => {
+      viewport.scrollTo({
+        top: scrollToBottom,
+        behavior: "smooth",
+      });
+    });
+
+    // Update previous state after scroll
     setPrevMessageCount(messages.length);
-  }, [messages, isTypingInThisConversation]);
+    setPrevConversationId(conversationId);
+  }, [messages, wasAtBottom, conversationId, isAtBottom]);
 
   // Update lastSentMessageId when a new message is added
   useEffect(() => {
@@ -135,14 +101,14 @@ export function MessageList({
         if (lastMessage.sender !== "me" && lastMessage.sender !== "system") {
           soundEffects.playReceivedSound();
         }
-        if (lastMessage.sender === "me") {
-          setLastSentMessageId(lastMessage.id);
-          // Clear the lastSentMessageId after animation duration
-          const timer = setTimeout(() => {
-            setLastSentMessageId(null);
-          }, 1000); // Adjust this timing to match your animation duration
-          return () => clearTimeout(timer);
-        }
+      }
+      if (lastMessage.sender === "me") {
+        setLastSentMessageId(lastMessage.id);
+        // Clear the lastSentMessageId after animation duration
+        const timer = setTimeout(() => {
+          setLastSentMessageId(null);
+        }, 1000); // Adjust this timing to match your animation duration
+        return () => clearTimeout(timer);
       }
     }
   }, [messages, conversationId, prevConversationId, prevMessageCount]);
