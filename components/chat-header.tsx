@@ -337,12 +337,72 @@ export function ChatHeader({
   const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
-    if (isEditMode && activeConversation?.recipients) {
-      setRecipientInput(
-        activeConversation.recipients.map((r) => r.name).join(",") + ","
-      );
-    }
-  }, [isEditMode, activeConversation]);
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      const isDropdownClick = target.closest('[data-dropdown]');
+      const isPillRemoveClick = target.closest('button[aria-label^="Remove"]');
+      const isHeaderClick = target.closest('[data-chat-header="true"]');
+
+      // Don't handle dropdown clicks
+      if (isDropdownClick) {
+        event.stopPropagation();
+        return;
+      }
+
+      // Don't exit edit mode on remove button clicks
+      if (isPillRemoveClick) {
+        return;
+      }
+
+      // Handle clicks outside the header
+      if (!isHeaderClick) {
+        const currentRecipients = recipientInput.split(",").filter(r => r.trim());
+        
+        // Only exit edit mode if recipients are valid
+        if (isEditMode || isNewChat) {
+          if (isValidRecipientCount(currentRecipients)) {
+            // Stop this click from propagating
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            if (isEditMode) {
+              setIsEditMode(false);
+              onUpdateRecipients?.(currentRecipients);
+            } else if (isNewChat && !isMobileView) {
+              setShowCompactNewChat?.(true);
+              onCreateConversation?.(currentRecipients);
+            }
+
+            // Add a capture event listener to block the next click
+            const blockNextClick = (e: Event) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              document.removeEventListener('click', blockNextClick, true);
+            };
+            document.addEventListener('click', blockNextClick, true);
+          } else {
+            // Show error toast if trying to save invalid state
+            toast({ 
+              description: currentRecipients.length === 0 
+                ? "You need at least one recipient" 
+                : "You can add up to four recipients"
+            });
+            return;
+          }
+        }
+
+        // Reset search state
+        setShowResults(false);
+        setSearchValue("");
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
 
   // Computed values
   const displayPeople = useMemo(() => {
@@ -566,58 +626,12 @@ export function ChatHeader({
   }, [isNewChat]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      const isDropdownClick = target.closest('[data-dropdown]');
-      const isPillRemoveClick = target.closest('button[aria-label^="Remove"]');
-      const isHeaderClick = target.closest('[data-chat-header="true"]');
-
-      // Don't handle dropdown clicks
-      if (isDropdownClick) {
-        event.stopPropagation();
-        return;
-      }
-
-      // Don't exit edit mode on remove button clicks
-      if (isPillRemoveClick) {
-        return;
-      }
-
-      // Handle clicks outside the header
-      if (!isHeaderClick) {
-        const currentRecipients = recipientInput.split(",").filter(r => r.trim());
-        
-        // Only exit edit mode if recipients are valid
-        if (isEditMode || isNewChat) {
-          if (isValidRecipientCount(currentRecipients)) {
-            if (isEditMode) {
-              setIsEditMode(false);
-              onUpdateRecipients?.(currentRecipients);
-            } else if (isNewChat && !isMobileView) {
-              setShowCompactNewChat?.(true);
-              onCreateConversation?.(currentRecipients);
-            }
-          } else {
-            // Show error toast if trying to save invalid state
-            toast({ 
-              description: currentRecipients.length === 0 
-                ? "You need at least one recipient" 
-                : "You can add up to four recipients"
-            });
-            return;
-          }
-        }
-
-        // Reset search state
-        setShowResults(false);
-        setSearchValue("");
-        setSelectedIndex(-1);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
+    if (isEditMode && activeConversation?.recipients) {
+      setRecipientInput(
+        activeConversation.recipients.map((r) => r.name).join(",") + ","
+      );
+    }
+  }, [isEditMode, activeConversation]);
 
   // Render helpers
   const renderRecipients = () => {
