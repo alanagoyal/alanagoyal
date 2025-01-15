@@ -14,6 +14,12 @@ const hasReachedMaxRecipients = (recipients: string) => {
   return currentRecipients.length >= 4;
 };
 
+// Helper to validate recipient count
+const isValidRecipientCount = (recipients: string[]) => {
+  const filtered = recipients.filter(r => r.trim());
+  return filtered.length >= 1 && filtered.length <= 4;
+};
+
 // Types
 interface ChatHeaderProps {
   isNewChat: boolean;
@@ -65,7 +71,13 @@ function RecipientPill({
   if (!trimmedRecipient) return null;
 
   return (
-    <div className={cn("sm:inline", isMobileView && "w-full")}>
+    <div 
+      className={cn("sm:inline", isMobileView && "w-full")}
+      onMouseDown={(e) => {
+        // Prevent the mousedown from reaching document level
+        e.stopPropagation();
+      }}
+    >
       <span className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
         {trimmedRecipient}
         <button
@@ -168,14 +180,11 @@ function RecipientSearch({
           }}
           onKeyDown={handleKeyDown}
           onBlur={(e) => {
-            const isRemoveButton = (e.relatedTarget as Element)?.closest(
-              'button[aria-label^="Remove"]'
-            );
             const isDropdown = e.relatedTarget?.closest(
               '[data-chat-header-dropdown="true"]'
             );
 
-            if (!isRemoveButton && !isDropdown) {
+            if (!isDropdown) {
               updateRecipients();
             }
           }}
@@ -209,7 +218,7 @@ function RecipientSearch({
         <div
           ref={dropdownRef}
           className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
-          data-chat-header-dropdown="true"
+          data-dropdown="true"
           tabIndex={-1}
         >
           <ScrollArea
@@ -408,13 +417,24 @@ export function ChatHeader({
     searchValue,
   ]);
 
-  const handleHeaderClick = () => {
+  const handleHeaderClick = (e: React.MouseEvent) => {
+    // Prevent clicks on dropdown or pill remove buttons from triggering header click
+    const isDropdownClick = (e.target as Element).closest('[data-dropdown]');
+    const isPillRemoveClick = (e.target as Element).closest('button[aria-label^="Remove"]');
+    if (isDropdownClick || isPillRemoveClick) {
+      e.stopPropagation();
+      return;
+    }
+
+    // Desktop: clicking header in compact mode enters edit mode
     if (!isNewChat && !isEditMode && !isMobileView) {
       setIsEditMode(true);
       const recipients =
         activeConversation?.recipients.map((r) => r.name).join(",") || "";
       setRecipientInput(recipients + ",");
-    } else if (isNewChat && showCompactNewChat) {
+    } 
+    // Desktop: clicking header in new chat compact mode enters edit mode
+    else if (isNewChat && showCompactNewChat && !isMobileView) {
       setShowCompactNewChat?.(false);
       setShowResults(true);
       setSearchValue("");
@@ -423,6 +443,7 @@ export function ChatHeader({
         setRecipientInput("");
       }
     }
+    // Mobile: clicking header in compact mode does nothing (handled by ContactDrawer)
   };
 
   const handlePersonSelect = (person: (typeof initialContacts)[0]) => {
@@ -546,40 +567,63 @@ export function ChatHeader({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const isCloseButton = (event.target as Element).closest(
-        'button[aria-label^="Remove"]'
-      );
+      const target = event.target as Element;
+      const isDropdownClick = target.closest('[data-dropdown]');
+      const isPillRemoveClick = target.closest('button[aria-label^="Remove"]');
+      const isHeaderClick = target.closest('[data-chat-header="true"]');
 
-      if (isCloseButton) {
+      // Don't handle dropdown clicks
+      if (isDropdownClick) {
         event.stopPropagation();
         return;
       }
 
-      if (
-        !event.target ||
-        !(event.target as Element).closest('[data-chat-header="true"]')
-      ) {
-        if (isEditMode) {
-          setIsEditMode(false);
-        } else if (isNewChat && !isMobileView) {
-          setShowCompactNewChat?.(true);
+      // Don't exit edit mode on remove button clicks
+      if (isPillRemoveClick) {
+        return;
+      }
+
+      // Handle clicks outside the header
+      if (!isHeaderClick) {
+        const currentRecipients = recipientInput.split(",").filter(r => r.trim());
+        
+        // Only exit edit mode if recipients are valid
+        if (isEditMode || isNewChat) {
+          if (isValidRecipientCount(currentRecipients)) {
+            if (isEditMode) {
+              setIsEditMode(false);
+              onUpdateRecipients?.(currentRecipients);
+            } else if (isNewChat && !isMobileView) {
+              setShowCompactNewChat?.(true);
+              onCreateConversation?.(currentRecipients);
+            }
+          } else {
+            // Show error toast if trying to save invalid state
+            toast({ 
+              description: currentRecipients.length === 0 
+                ? "You need at least one recipient" 
+                : "You can add up to four recipients"
+            });
+            return;
+          }
         }
 
+        // Reset search state
         setShowResults(false);
         setSearchValue("");
         setSelectedIndex(-1);
-        updateRecipients();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isNewChat, isEditMode, isMobileView, updateRecipients]);
+  }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
 
   // Render helpers
   const renderRecipients = () => {
     const recipients = recipientInput.split(",");
     const completeRecipients = recipients.slice(0, -1);
+    const totalRecipients = completeRecipients.filter(r => r.trim()).length;
 
     return completeRecipients.map((recipient, index) => (
       <RecipientPill
@@ -587,13 +631,23 @@ export function ChatHeader({
         recipient={recipient}
         index={index}
         onRemove={(index) => {
+          // Prevent removing if it's the last recipient
+          if (totalRecipients <= 1) {
+            toast({ 
+              description: "You must have at least one recipient" 
+            });
+            return;
+          }
+
           const newRecipients = recipientInput
             .split(",")
             .filter((r) => r.trim())
             .filter((_, i) => i !== index)
             .join(",");
           setRecipientInput(newRecipients + ",");
-          if (isEditMode && onUpdateRecipients) {
+          
+          // Only update recipients if we're not in edit mode
+          if (!isEditMode && onUpdateRecipients) {
             onUpdateRecipients(
               newRecipients.split(",").filter((r) => r.trim())
             );
