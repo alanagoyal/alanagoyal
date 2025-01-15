@@ -416,22 +416,20 @@ export function MessageBubble({
                     isMe ? "flex-row" : "flex-row-reverse"
                   )}
                 >
-                  {/* Sort reactions by timestamp to have most recent first in DOM (appears on top) */}
                   {[...message.reactions]
                     .sort(
                       (a, b) =>
-                        new Date(b.timestamp).getTime() -
-                        new Date(a.timestamp).getTime()
+                        new Date(a.timestamp).getTime() -
+                        new Date(b.timestamp).getTime()
                     )
                     .map((reaction, index, array) => (
                       <div
                         key={`${reaction.type}-${index}`}
                         className={cn(
                           "w-8 h-8 flex items-center justify-center text-sm relative",
-
                           index !== array.length - 1 &&
                             (isMe ? "-mr-7" : "-ml-7"),
-                          `z-[${30 - index}]`
+                          `z-[${array.length - index}]`
                         )}
                         style={{
                           backgroundImage: `url('${getReactionIconSvg(
