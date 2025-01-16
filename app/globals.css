@@ -236,3 +236,12 @@ body {
 .chat-area-messages::-webkit-scrollbar-track {
   margin: 64px 0;
 }
+
+/* Global caret styling */
+* {
+  caret-color: #0A7CFF;
+}
+
+input, textarea {
+  caret-animation: imessage-cursor 1s infinite;
+}
