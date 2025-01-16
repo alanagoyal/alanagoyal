@@ -125,7 +125,7 @@ export function MessageList({
           >
             {/* Overlay for non-active messages */}
             {isAnyReactionMenuOpen && message.id !== activeMessageId && (
-              <div className="absolute inset-0 bg-white/80 dark:bg-[#1E1E1E]/80 pointer-events-none z-20" />
+              <div className="absolute inset-0 bg-white/80 dark:bg-[#1A1A1A]/80 pointer-events-none z-20" />
             )}
             <div className={cn(message.id === activeMessageId && "z-30")}>
               <MessageBubble
