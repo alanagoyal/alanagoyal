@@ -234,6 +234,8 @@ export class MessageQueue {
     try {
       // Check if this task belongs to an outdated conversation version
       if (task.conversationVersion < conversationState.version) {
+        // Clear typing status since we're aborting
+        this.callbacks.onTypingStatusChange(null, null);
         conversationState.status = "idle";
         this.processNextTask(conversationId);
         return;
@@ -252,13 +254,22 @@ export class MessageQueue {
           shouldWrapUp,
           isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
-          shouldReact: Math.random() < 0.5,
+          shouldReact: Math.random() < 0.25,
         }),
         signal: task.abortController.signal,
       });
 
       if (!response.ok) {
         throw new Error("Failed to fetch");
+      }
+
+      // Check version again after API call to catch any interruptions during the request
+      if (task.conversationVersion < conversationState.version || task.abortController.signal.aborted) {
+        // Clear typing status since we're aborting
+        this.callbacks.onTypingStatusChange(null, null);
+        conversationState.status = "idle";
+        this.processNextTask(conversationId);
+        return;
       }
 
       const data = await response.json();
@@ -293,6 +304,15 @@ export class MessageQueue {
           );
         }
 
+        // Check version again after reaction delay
+        if (task.conversationVersion < conversationState.version || task.abortController.signal.aborted) {
+          // Clear typing status since we're aborting
+          this.callbacks.onTypingStatusChange(null, null);
+          conversationState.status = "idle";
+          this.processNextTask(conversationId);
+          return;
+        }
+
         // Delay to show reaction before typing animation
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
@@ -300,11 +320,26 @@ export class MessageQueue {
       // Start typing animation and delay for the content
       const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
+
+      // Check version before starting typing delay
+      if (task.conversationVersion < conversationState.version || task.abortController.signal.aborted) {
+        // Clear typing status since we're aborting
+        this.callbacks.onTypingStatusChange(null, null);
+        conversationState.status = "idle";
+        this.processNextTask(conversationId);
+        return;
+      }
+
       await new Promise((resolve) =>
         setTimeout(resolve, typingDelay + Math.random() * 2000)
       );
 
-      if (task.abortController.signal.aborted) {
+      // Final version check before sending message
+      if (task.conversationVersion < conversationState.version || task.abortController.signal.aborted) {
+        // Clear typing status since we're aborting
+        this.callbacks.onTypingStatusChange(null, null);
+        conversationState.status = "idle";
+        this.processNextTask(conversationId);
         return;
       }
 
