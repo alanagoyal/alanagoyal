@@ -174,7 +174,7 @@ export async function POST(req: Request) {
   `;
 
   try {
-    const openaiMessages = [
+    const chatMessages = [
       { role: "system", content: prompt },
       ...(messages || []).map((msg: Message) => ({
         role: "user",
@@ -190,7 +190,7 @@ export async function POST(req: Request) {
 
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [...openaiMessages],
+      messages: [...chatMessages],
       tool_choice: "required",
       tools: [
         {
@@ -246,11 +246,6 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error("Failed to parse JSON response:", error);
       throw new Error("Invalid JSON format in API response");
-    }
-
-    // Handle special case for "me" sender
-    if (messageData.sender === "me" && sortedParticipants.length > 0) {
-      messageData.sender = sortedParticipants[0].name;
     }
 
     return new Response(JSON.stringify(messageData), {
