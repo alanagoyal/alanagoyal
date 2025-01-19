@@ -6,7 +6,6 @@ import { soundEffects } from "./sound-effects";
 type MessageTask = {
   id: string;
   conversation: Conversation;
-  isFirstMessage: boolean;
   priority: number;
   timestamp: number;
   abortController: AbortController;
@@ -145,7 +144,6 @@ export class MessageQueue {
         const task: MessageTask = {
           id: crypto.randomUUID(),
           conversation: currentState.pendingUserMessages,
-          isFirstMessage: false,
           priority: 100,
           timestamp: Date.now(),
           abortController: new AbortController(),
@@ -164,10 +162,7 @@ export class MessageQueue {
 
   // Adds an AI message to the queue with normal priority
   // Tracks and limits consecutive AI messages to prevent infinite loops
-  public enqueueAIMessage(
-    conversation: Conversation,
-    isFirstMessage: boolean = false
-  ) {
+  public enqueueAIMessage(conversation: Conversation) {
     const conversationState = this.getOrCreateConversationState(conversation.id);
     
     // Count consecutive AI messages for this conversation
@@ -188,7 +183,6 @@ export class MessageQueue {
     const task: MessageTask = {
       id: crypto.randomUUID(),
       conversation,
-      isFirstMessage,
       priority: 50,
       timestamp: Date.now(),
       abortController: new AbortController(),
@@ -252,7 +246,6 @@ export class MessageQueue {
           recipients: task.conversation.recipients,
           messages: task.conversation.messages,
           shouldWrapUp,
-          isFirstMessage: task.isFirstMessage,
           isOneOnOne: task.conversation.recipients.length === 1,
           shouldReact: Math.random() < 0.25,
         }),

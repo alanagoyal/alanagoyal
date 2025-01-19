@@ -542,7 +542,7 @@ export default function App() {
       });
 
       window.history.pushState({}, "", `?id=${newConversation.id}`);
-      messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
+      messageQueue.current.enqueueAIMessage(conversationWithMessage);
       return;
     }
 

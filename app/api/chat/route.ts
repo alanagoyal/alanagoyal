@@ -30,7 +30,6 @@ export async function POST(req: Request) {
     recipients,
     messages,
     shouldWrapUp,
-    isFirstMessage,
     isOneOnOne,
     shouldReact,
   } = body;
@@ -146,6 +145,7 @@ export async function POST(req: Request) {
     }    
     - One quick message
     - Pick someone who hasn't talked in a bit
+    - Don't refer to the user as "me" - you can ask their name if you want
     - If someone specific was tagged or asked a question, reply as them
     - Review the previous messages in the conversation
     - DO NOT repeat yourself or other participants
@@ -160,13 +160,6 @@ export async function POST(req: Request) {
         ? `
     - This is the last message
     - Don't ask a question to another recipient unless it's to "me" the user`
-        : ""
-    }
-    ${
-      isFirstMessage
-        ? `
-    - This is the first message in the group chat
-    - Ask a question or make a statement that gets the group talking`
         : ""
     }
     `
