@@ -4,8 +4,24 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
-export const dynamic = "error";
-export const revalidate = 60 * 60 * 24;
+// Enable ISR with a reasonable revalidation period for public notes
+export const revalidate = 60 * 60; // 1 hour
+
+// Dynamically determine if this is a user note
+export async function generateStaticParams() {
+  const supabase = createBrowserClient();
+  const { data: posts } = await supabase
+    .from("notes")
+    .select("slug")
+    .eq("public", true);
+
+  return posts!.map(({ slug }) => ({
+    slug,
+  }));
+}
+
+// Use dynamic rendering for non-public notes
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
@@ -14,6 +30,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const supabase = createBrowserClient();
   const slug = params.slug.replace(/^notes\//, '');
+  console.log(slug);
 
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
@@ -34,18 +51,6 @@ export async function generateMetadata({
   };
 }
 
-export async function generateStaticParams() {
-  const supabase = createBrowserClient();
-  const { data: posts } = await supabase
-    .from("notes")
-    .select("slug")
-    .eq("public", true);
-
-  return posts!.map(({ slug }) => ({
-    slug,
-  }));
-}
-
 export default async function NotePage({
   params,
 }: {
@@ -59,7 +64,7 @@ export default async function NotePage({
   }).single();
 
   if (!note) {
-    redirect("/notes/error");
+    return redirect("/notes/error");
   }
 
   return (
