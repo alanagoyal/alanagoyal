@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: siteConfig.url,
     images: [
       {
-        url: "/api/og",
+        url: "/messages/api/og",
         width: 1200,
         height: 630,
       },
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
-    images: ["/api/og"],
+    images: ["/messages/api/og"],
   },
 };
 

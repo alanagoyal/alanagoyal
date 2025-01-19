@@ -245,7 +245,7 @@ export class MessageQueue {
       const shouldWrapUp = task.consecutiveAiMessages === MAX_CONSECUTIVE_AI_MESSAGES - 1;
       
       // Make API request
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/messages/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

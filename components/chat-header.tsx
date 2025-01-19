@@ -539,7 +539,7 @@ export function ChatHeader({
     if (searchValue.trim()) {
       try {
         setIsValidating(true);
-        const response = await fetch("/api/validate-contact", {
+        const response = await fetch("/messages/api/validate-contact", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
