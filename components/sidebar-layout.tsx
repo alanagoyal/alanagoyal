@@ -25,7 +25,6 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   }, [isMobile, router, pathname]);
 
   const handleNoteSelect = (note: any) => {
-    console.log("handleNoteSelect", note);
     router.push(`/notes/${note.slug}`);
   };
 
@@ -33,7 +32,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
     return null;
   }
 
-  const showSidebar = !isMobile || pathname === "/";
+  const showSidebar = !isMobile || pathname === "/notes";
 
   return (
     <SessionNotesProvider>
