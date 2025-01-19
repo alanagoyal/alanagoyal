@@ -95,3 +95,8 @@
     border-radius: 6px;
   }
 }
+
+/* Global caret styling */
+* {
+  caret-color: #e2a727;
+}
