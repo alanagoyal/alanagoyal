@@ -13,7 +13,8 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const supabase = createBrowserClient();
-  const slug = params.slug;
+  const slug = params.slug.replace(/^notes\//, '');
+  console.log(`slug: ${slug}`);
 
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
@@ -26,7 +27,7 @@ export async function generateMetadata({
     title: `alana goyal | ${title}`,
     openGraph: {
       images: [
-        `/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(
+        `/notes/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(
           emoji
         )}`,
       ],
@@ -52,14 +53,14 @@ export default async function NotePage({
   params: { slug: string };
 }) {
   const supabase = createBrowserClient();
-  const slug = params.slug;
+  const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
   }).single();
 
   if (!note) {
-    redirect("/error");
+    redirect("/notes/error");
   }
 
   return (

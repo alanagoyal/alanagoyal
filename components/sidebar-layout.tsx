@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
 import { useRouter, usePathname } from "next/navigation";
-import { SessionNotesProvider } from "@/app/session-notes";
+import { SessionNotesProvider } from "@/app/notes/session-notes";
 import Sidebar from "./sidebar";
 
 interface SidebarLayoutProps {
@@ -19,15 +19,14 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_IS_MESSAGES_APP) {
-      if (isMobile !== null && !isMobile && pathname === "/") {
-        router.push("/about-me");
-      }
+    if (isMobile !== null && !isMobile && pathname === "/notes") {
+      router.push("/notes/about-me");
     }
   }, [isMobile, router, pathname]);
 
   const handleNoteSelect = (note: any) => {
-    router.push(`/${note.slug}`);
+    console.log("handleNoteSelect", note);
+    router.push(`/notes/${note.slug}`);
   };
 
   if (isMobile === null) {

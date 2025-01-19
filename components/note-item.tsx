@@ -114,7 +114,7 @@ export function NoteItem({
         className={`h-full w-full px-4`}
       >
         <Link
-          href={`/${item.slug || ""}`}
+          href={`/notes/${item.slug || ""}`}
           prefetch={true}
           tabIndex={-1}
           className="block py-2 h-full w-full flex flex-col justify-center"

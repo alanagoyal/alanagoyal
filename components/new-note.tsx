@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/create-note";
-import { SessionNotesContext } from "@/app/session-notes";
+import { SessionNotesContext } from "@/app/notes/session-notes";
 
 export default function NewNote({
   addNewPinnedNote,

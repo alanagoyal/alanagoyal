@@ -4,8 +4,17 @@ const nextConfig = {
     return [
         {
           source: '/messages/:path*',
-          destination: `${process.env.MESSAGES_URL}/messages/:path*`,
+          destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages/:path*`,
         }
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/notes',
+        permanent: false,
+      },
     ];
   },
 };

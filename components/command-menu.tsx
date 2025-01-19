@@ -23,7 +23,7 @@ import { Pin, ArrowUp, ArrowDown, Trash, PenSquare } from "lucide-react";
 import { createNote } from "@/lib/create-note";
 import { searchNotes } from "@/lib/search";
 import { Note } from "@/lib/types";
-import { SessionNotesContext } from "@/app/session-notes";
+import { SessionNotesContext } from "@/app/notes/session-notes";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 
@@ -120,7 +120,7 @@ export const CommandMenu = forwardRef<
     };
 
     const handleNoteSelect = (slug: string) => {
-      router.push(`/${slug}`);
+      router.push(`/notes/${slug}`);
       setOpen(false);
     };
 
