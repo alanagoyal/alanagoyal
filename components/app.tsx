@@ -47,7 +47,7 @@ export default function App() {
       // If clearing the selection
       if (conversationId === null) {
         setActiveConversation(null);
-        window.history.pushState({}, "", "/");
+        window.history.pushState({}, "", "/messages");
         return;
       }
 
@@ -61,7 +61,7 @@ export default function App() {
         console.error(`Conversation with ID ${conversationId} not found`);
 
         // Clear URL and select first available conversation
-        window.history.pushState({}, "", "/");
+        window.history.pushState({}, "", "/messages");
 
         if (conversations.length > 0) {
           const fallbackConversation = conversations[0];
@@ -203,7 +203,7 @@ export default function App() {
 
     // If mobile view, show the sidebar
     if (isMobileView) {
-      window.history.pushState({}, "", "/");
+      window.history.pushState({}, "", "/messages");
       setActiveConversation(null);
       return;
     }
@@ -759,7 +759,7 @@ export default function App() {
         onNewChat={() => {
           setIsNewConversation(true);
           setActiveConversation(null);
-          window.history.pushState({}, "", "/");
+          window.history.pushState({}, "", "/messages");
         }}
         onSelectConversation={selectConversation}
         onDeleteConversation={handleDeleteConversation}
