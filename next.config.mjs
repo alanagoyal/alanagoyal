@@ -2,10 +2,14 @@
 const nextConfig = {
   async rewrites() {
     return [
-        {
-          source: '/messages/:path*',
-          destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages/:path*`,
-        }
+      {
+        source: '/messages',
+        destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages`,
+      },
+      {
+        source: '/messages/:path*',
+        destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages/:path*`,
+      },
     ];
   },
   async redirects() {
