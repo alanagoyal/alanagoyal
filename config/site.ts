@@ -1,4 +1,4 @@
 export const siteConfig = {
-    name: "alanaOS | messages",
-    url: "https://dialogue-delta.vercel.app",
+    name: "alana goyal | messages",
+    url: process.env.NEXT_PUBLIC_VERCEL_URL,
   };
