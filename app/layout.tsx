@@ -5,10 +5,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: siteConfig.name,
+  title: siteConfig.title,
   openGraph: {
-    title: siteConfig.name,
-    siteName: siteConfig.name,
+    title: siteConfig.title,
+    siteName: siteConfig.title,
     url: siteConfig.url,
     images: [
       {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.name,
+    title: siteConfig.title,
     images: ["/messages/api/og"],
   },
 };
