@@ -206,8 +206,14 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  const rightBubbleSvg = "/messages/message-bubbles/right-bubble-dark.svg";
-  const leftBubbleSvg = "/messages/message-bubbles/left-bubble-dark.svg";
+  const rightBubbleSvg =
+    effectiveTheme === "dark"
+      ? "/messages/message-bubbles/right-bubble-dark.svg"
+      : "/messages/message-bubbles/right-bubble-light.svg";
+  const leftBubbleSvg =
+    effectiveTheme === "dark"
+      ? "/messages/message-bubbles/left-bubble-dark.svg"
+      : "/messages/message-bubbles/left-bubble-light.svg";
   const typingIndicatorSvg =
     effectiveTheme === "dark"
       ? "/messages/typing-bubbles/chat-typing-dark.svg"
