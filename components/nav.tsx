@@ -34,14 +34,16 @@ export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
 
   return (
     <>
-      <div className={cn(
-        "px-4 py-2 flex items-center justify-between sticky top-0 z-[1]",
-        isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
-        isMobileView ? "bg-background" : "bg-muted"
-      )}>
+      <div
+        className={cn(
+          "px-4 py-2 flex items-center justify-between sticky top-0 z-[1]",
+          isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
+          isMobileView ? "bg-background" : "bg-muted"
+        )}
+      >
         <div className="flex items-center gap-1.5 p-2">
-          <button 
-            onClick={() => window.close()} 
+          <button
+            onClick={() => window.close()}
             className="cursor-pointer group relative"
             aria-label="Close tab"
           >
@@ -50,17 +52,13 @@ export function Nav({ onNewChat, isMobileView, isScrolled }: NavProps) {
               <span className="text-background">×</span>
             </span>
           </button>
-          <a 
-            href="https://alanaos.com" 
-            aria-label="Visit alanaos.com"
-            className="group relative"
-          >
+          <button className="cursor-pointer group relative">
             <div className="w-3 h-3 rounded-full bg-yellow-500 group-hover:opacity-80" />
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none text-xs">
               <span className="text-background">−</span>
             </span>
-          </a>
-          <button 
+          </button>
+          <button
             onClick={() => window.location.reload()}
             className="group relative"
             aria-label="Refresh page"

@@ -53,12 +53,12 @@ export function MessageBubble({
   const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
-    heart: "/reactions/heart-gray.svg",
-    like: "/reactions/like-gray.svg",
-    dislike: "/reactions/dislike-gray.svg",
-    laugh: "/reactions/laugh-gray.svg",
-    emphasize: "/reactions/emphasize-gray.svg",
-    question: "/reactions/question-gray.svg",
+    heart: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/heart-gray.svg`,
+    like: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/like-gray.svg`,
+    dislike: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/dislike-gray.svg`,
+    laugh: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/laugh-gray.svg`,
+    emphasize: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/emphasize-gray.svg`,
+    question: `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/question-gray.svg`,
   };
 
   // State to control the Popover open state and animation
@@ -208,16 +208,16 @@ export function MessageBubble({
 
   const rightBubbleSvg =
     effectiveTheme === "dark"
-      ? "/message-bubbles/right-bubble-dark.svg"
-      : "/message-bubbles/right-bubble-light.svg";
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/message-bubbles/right-bubble-dark.svg`
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/message-bubbles/right-bubble-light.svg`;
   const leftBubbleSvg =
     effectiveTheme === "dark"
-      ? "/message-bubbles/left-bubble-dark.svg"
-      : "/message-bubbles/left-bubble-light.svg";
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/message-bubbles/left-bubble-dark.svg`
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/message-bubbles/left-bubble-light.svg`;
   const typingIndicatorSvg =
     effectiveTheme === "dark"
-      ? "/typing-bubbles/chat-typing-dark.svg"
-      : "/typing-bubbles/chat-typing-light.svg";
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/typing-bubbles/chat-typing-dark.svg`
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/typing-bubbles/chat-typing-light.svg`;
 
   const getReactionIconSvg = (
     messageFromMe: boolean,
@@ -232,7 +232,7 @@ export function MessageBubble({
       : effectiveTheme === "dark"
       ? "dark"
       : "light";
-    return `/reactions/${orientation}-${variant}-${reactionType}.svg`;
+    return `${process.env.NEXT_PUBLIC_SITE_URL}/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   return (
