@@ -1,9 +1,6 @@
-'use client';
-
 import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Nav } from "./nav";
 import { Conversation, Message, Reaction } from "../types";
 import { v4 as uuidv4 } from "uuid";
@@ -15,7 +12,6 @@ import { soundEffects } from "@/lib/sound-effects";
 
 export default function App() {
   // State
-  const router = useRouter();
   const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -51,7 +47,7 @@ export default function App() {
       // If clearing the selection
       if (conversationId === null) {
         setActiveConversation(null);
-        router.replace("/");
+        window.history.pushState({}, "", "/");
         return;
       }
 
@@ -65,12 +61,12 @@ export default function App() {
         console.error(`Conversation with ID ${conversationId} not found`);
 
         // Clear URL and select first available conversation
-        router.replace("/");
+        window.history.pushState({}, "", "/");
 
         if (conversations.length > 0) {
           const fallbackConversation = conversations[0];
           setActiveConversation(fallbackConversation.id);
-          router.replace(`?id=${fallbackConversation.id}`);
+          window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
         } else {
           setActiveConversation(null);
         }
@@ -80,9 +76,9 @@ export default function App() {
       // Successfully select the conversation
       setActiveConversation(conversationId);
       setIsNewConversation(false);
-      router.replace(`?id=${conversationId}`);
+      window.history.pushState({}, "", `?id=${conversationId}`);
     },
-    [conversations, setActiveConversation, setIsNewConversation, router]
+    [conversations, setActiveConversation, setIsNewConversation]
   ); // Only recreate when these dependencies change
 
   // Effects
@@ -207,7 +203,7 @@ export default function App() {
 
     // If mobile view, show the sidebar
     if (isMobileView) {
-      router.replace("/");
+      window.history.pushState({}, "", "/");
       setActiveConversation(null);
       return;
     }
@@ -482,7 +478,7 @@ export default function App() {
       return updatedConversations;
     });
 
-    router.replace(`?id=${newConversation.id}`);
+    window.history.pushState({}, "", `?id=${newConversation.id}`);
   };
 
   // Method to handle message sending
@@ -545,7 +541,7 @@ export default function App() {
         return updatedConversations;
       });
 
-      router.replace(`?id=${newConversation.id}`);
+      window.history.pushState({}, "", `?id=${newConversation.id}`);
       messageQueue.current.enqueueAIMessage(conversationWithMessage, true);
       return;
     }
@@ -586,7 +582,7 @@ export default function App() {
 
     setActiveConversation(conversationId);
     setIsNewConversation(false);
-    router.replace(`?id=${conversationId}`);
+    window.history.pushState({}, "", `?id=${conversationId}`);
     messageQueue.current.enqueueUserMessage(updatedConversation);
     clearMessageDraft(conversationId);
   };
@@ -763,7 +759,7 @@ export default function App() {
         onNewChat={() => {
           setIsNewConversation(true);
           setActiveConversation(null);
-          router.replace("/");
+          window.history.pushState({}, "", "/");
         }}
         onSelectConversation={selectConversation}
         onDeleteConversation={handleDeleteConversation}
