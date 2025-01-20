@@ -36,11 +36,11 @@ export async function createNote(
     if (!isMobile) {
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
-        router.push(`/${slug}`);
+        router.push(`/notes/${slug}`);
         router.refresh();
       });
     } else {
-      router.push(`/${slug}`).then(() => {
+      router.push(`/notes/${slug}`).then(() => {
         refreshSessionNotes();
         setSelectedNoteSlug(slug);
       });

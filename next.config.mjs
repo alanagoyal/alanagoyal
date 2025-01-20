@@ -12,6 +12,20 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/notes',
+        permanent: false,
+      },
+      {
+        source: '/:slug((?!notes|api|messages|_next|static|public|favicon.ico).+)',
+        destination: '/notes/:slug',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

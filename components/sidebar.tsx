@@ -19,7 +19,7 @@ import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
-import { SessionNotesContext } from "@/app/session-notes";
+import { SessionNotesContext } from "@/app/notes/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
@@ -200,7 +200,7 @@ export default function Sidebar({
         const nextNote = flattened[nextIndex];
         
         if (nextNote) {
-          router.push(`/${nextNote.slug}`);
+          router.push(`/notes/${nextNote.slug}`);
           // Wait for router navigation and React re-render
           setTimeout(() => {
             const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
@@ -235,7 +235,7 @@ export default function Sidebar({
       clearSearch();
 
       if (!isMobile) {
-        router.push(`/${slug}`);
+        router.push(`/notes/${slug}`);
       }
 
       toast({
@@ -285,7 +285,7 @@ export default function Sidebar({
         }
 
         if (!isMobile) {
-          router.push(nextNote ? `/${nextNote.slug}` : "/about-me");
+          router.push(nextNote ? `/notes/${nextNote.slug}` : "/notes/about-me");
         }
 
         clearSearch();
@@ -313,7 +313,7 @@ export default function Sidebar({
   const goToHighlightedNote = useCallback(() => {
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
-      router.push(`/${selectedNote.slug}`);
+      router.push(`/notes/${selectedNote.slug}`);
       setTimeout(() => {
         const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
         selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -406,7 +406,7 @@ export default function Sidebar({
     (note: any) => {
       onNoteSelect(note);
       if (!isMobile) {
-        router.push(`/${note.slug}`);
+        router.push(`/notes/${note.slug}`);
       }
       clearSearch();
     },

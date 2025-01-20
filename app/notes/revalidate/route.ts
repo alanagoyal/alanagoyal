@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    revalidatePath(`/${slug}`);
+    revalidatePath(`/notes/${slug}`);
     return NextResponse.json({ revalidated: true, now: Date.now() });
   } catch (err) {
     console.error(err);

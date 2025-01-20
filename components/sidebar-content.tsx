@@ -51,7 +51,7 @@ export function SidebarContent({
   const handleEdit = useCallback(
     (slug: string) => {
       clearSearch();
-      router.push(`/${slug}`);
+      router.push(`/notes/${slug}`);
       setSelectedNoteSlug(slug);
     },
     [clearSearch, router, setSelectedNoteSlug]

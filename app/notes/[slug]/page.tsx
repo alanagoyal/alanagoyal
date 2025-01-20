@@ -4,36 +4,10 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
-export const dynamic = "error";
-export const revalidate = 60 * 60 * 24;
+// Enable ISR with a reasonable revalidation period for public notes
+export const revalidate = 60 * 60; // 1 hour
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
-  const supabase = createBrowserClient();
-  const slug = params.slug;
-
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single() as { data: NoteType | null };
-
-  const title = note?.title || "new note";
-  const emoji = note?.emoji || "👋🏼";
-
-  return {
-    title: `alana goyal | ${title}`,
-    openGraph: {
-      images: [
-        `/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(
-          emoji
-        )}`,
-      ],
-    },
-  };
-}
-
+// Dynamically determine if this is a user note
 export async function generateStaticParams() {
   const supabase = createBrowserClient();
   const { data: posts } = await supabase
@@ -46,20 +20,50 @@ export async function generateStaticParams() {
   }));
 }
 
+// Use dynamic rendering for non-public notes
+export const dynamicParams = true;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const supabase = createBrowserClient();
+  const slug = params.slug.replace(/^notes\//, '');
+
+  const { data: note } = await supabase.rpc("select_note", {
+    note_slug_arg: slug,
+  }).single() as { data: NoteType | null };
+
+  const title = note?.title || "new note";
+  const emoji = note?.emoji || "👋🏼";
+
+  return {
+    title: `alana goyal | ${title}`,
+    openGraph: {
+      images: [
+        `/notes/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(
+          emoji
+        )}`,
+      ],
+    },
+  };
+}
+
 export default async function NotePage({
   params,
 }: {
   params: { slug: string };
 }) {
   const supabase = createBrowserClient();
-  const slug = params.slug;
+  const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
   }).single();
 
   if (!note) {
-    redirect("/error");
+    return redirect("/notes/error");
   }
 
   return (
