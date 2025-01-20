@@ -210,7 +210,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "6a476510-f35f-470d-a29b-7ce59c166785",
         content:
-          "My stack's pretty simple these days: Next.js + Supabase + Resend + Braintrust + Browserbase. Basically the basecase portfolio!",
+          "My stack's pretty simple these days: Next.js + Supabase + Resend + Braintrust + Browserbase. Basically the Basecase portfolio!",
         sender: "Paul Copplestone",
         timestamp: "2025-01-20T23:15:05.345Z",
         reactions: [
@@ -228,7 +228,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "65a4198d-ad5a-4fb0-ac12-e44ab3fff3e1",
-        content: "Can't go wrong with the basecase stack",
+        content: "Can't go wrong with The Basecase Stack™️",
         sender: "Guillermo Rauch",
         timestamp: "2025-01-20T23:15:22.749Z",
       },
