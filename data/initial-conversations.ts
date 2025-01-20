@@ -1,4 +1,3 @@
-import { TURBOPACK_CLIENT_MIDDLEWARE_MANIFEST } from "next/dist/shared/lib/constants";
 import { Conversation } from "../types";
 
 // Helper function to create a timestamp for a specific time ago
@@ -28,15 +27,14 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "3eb9d09b-9931-415f-9ead-00d4623f8fdc",
-        content: "How do you define craft in your work?",
-        htmlContent: "<p>How do you define craft in your work?</p>",
+        content: "how do you define craft in your work?",
         sender: "me",
         timestamp: "2025-01-09T20:52:27.646Z",
       },
       {
         id: "57f8aa92-7040-4a8d-9450-e435113a68d5",
         content:
-          "Craft is the dedication to mastery, honoring tradition while pursuing continuous improvement.",
+          "To me, craft is about embracing both legacy and innovation. This year, I've felt more pressure than ever to adapt to changing tastes.",
         sender: "Jiro Ono",
         timestamp: "12:52 PM",
         reactions: [
@@ -45,19 +43,24 @@ export const initialConversations: Conversation[] = [
             sender: "Cedric Grolet",
             timestamp: "12:52 PM",
           },
+          {
+            type: "like",
+            sender: "me",
+            timestamp: "2025-01-09T20:52:55.646Z",
+          },
         ],
       },
       {
         id: "19201dae-beed-4e09-88f7-2f505fb90538",
         content:
-          "Craft is the fusion of technique and artistry, where each creation tells a story of passion.",
+          "Yes, craft is the harmony between tradition and evolution. This past year, I've wrestled with balancing classic pastry techniques and these new AI-driven food trends.",
         sender: "Cedric Grolet",
         timestamp: "12:52 PM",
       },
       {
         id: "7d69b4b1-64fc-4ec2-99af-6c5dc513d17e",
         content:
-          "Every piece of sushi reflects the spirit of the fish and the skill of the chef.",
+          "Every piece of sushi I create nowadays is influenced by concerns around sustainable fish sourcing. It weighs on me more than it did five years ago.",
         sender: "Jiro Ono",
         timestamp: "12:52 PM",
         reactions: [
@@ -76,49 +79,46 @@ export const initialConversations: Conversation[] = [
       {
         id: "4a343c8e-f7c7-4b6e-9c82-d13e90b68cd2",
         content:
-          "Indeed, Jiro. Each pastry embodies the essence of its ingredients, crafted with love and precision.",
+          "Absolutely, Jiro. I’ve been experimenting with new local ingredients to stay true to my pastry roots while respecting the environment.",
         sender: "Cedric Grolet",
         timestamp: "12:53 PM",
       },
       {
         id: "3ebb2722-035e-435e-9514-a861088763e2",
         content:
-          "In both sushi and pastry, respect for ingredients is paramount to true artistry.",
+          "That’s the essence of artistry—staying open to innovation while remaining grounded in heritage.",
         sender: "Jiro Ono",
         timestamp: "12:53 PM",
       },
       {
         id: "f4e09bf5-8e72-4a98-ab03-ac44f1639987",
-        content: "How do you cultivate your craft?",
-        htmlContent: "<p>How do you cultivate your craft?</p>",
+        content: "how do you cultivate your craft?",
         sender: "me",
         timestamp: "2025-01-09T20:53:37.191Z",
       },
       {
         id: "1f0f8eae-d575-4aec-b65c-50252906ba96",
-        content: "I'm sure it wasn't just always there",
-        htmlContent: "<p>I'm sure it wasn't just always there</p>",
+        content: "i'm sure it wasn't always easy",
         sender: "me",
         timestamp: "2025-01-09T20:53:45.143Z",
       },
       {
         id: "af1eaef5-72e7-4474-a2af-acf2efc78e53",
         content:
-          "Cultivating craft requires relentless practice, humility, and a willingness to learn from every experience.",
+          "I used to doubt myself constantly. But daily practice and honest feedback from my apprentices helped me refine every detail.",
         sender: "Jiro Ono",
         timestamp: "12:53 PM",
       },
       {
         id: "8cd9d2fe-8369-4c9e-bb5b-b5694da55dc4",
         content:
-          "Absolutely, Jiro. Continuous exploration and refinement elevate our craft to new heights.",
+          "For me, traveling to discover new pastry influences was key. Stepping out of my comfort zone forced me to learn at hyperspeed.",
         sender: "Cedric Grolet",
         timestamp: "12:54 PM",
       },
       {
         id: "a7227703-0bd8-4a44-b876-869ffff101df",
-        content: "Ooh I love that you said humility",
-        htmlContent: "<p>Ooh I love that you said humility</p>",
+        content: "humility and curiosity - love that",
         sender: "me",
         timestamp: "2025-01-09T20:54:07.154Z",
         reactions: [
@@ -131,15 +131,15 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "2986c36b-e82e-4048-afc0-132e8e8519fe",
-        content: "So important",
-        htmlContent: "<p>So important</p>",
+        content:
+          "i used to think i had to act like i knew everything - not true",
         sender: "me",
         timestamp: "2025-01-09T20:54:09.558Z",
       },
       {
         id: "c841b0ad-7e21-42bd-b9f5-9ca054f110d0",
         content:
-          "Humility allows us to appreciate the journey and the wisdom of others.",
+          "Humility reminds us there's always more to learn and new ways to grow, even in 2025's fast-evolving culinary scene.",
         sender: "Jiro Ono",
         timestamp: "12:54 PM",
         reactions: [
@@ -153,35 +153,34 @@ export const initialConversations: Conversation[] = [
       {
         id: "aabeecc4-e546-4a14-bf24-bc0a5ac5ebd4",
         content:
-          "Indeed, it fosters growth and enriches our artistry. We learn from every encounter.",
+          "Exactly. The new climate realities and supply chain constraints have forced me to keep exploring and never settle.",
         sender: "Cedric Grolet",
         timestamp: "12:54 PM",
       },
       {
         id: "57d96cf4-5c1b-4ff8-8c15-4936636f2e08",
-        content: "Who inspires you?",
-        htmlContent: "<p>Who inspires you?</p>",
+        content: "who inspires you or pushes you forward these days?",
         sender: "me",
         timestamp: "2025-01-09T20:54:30.031Z",
       },
       {
         id: "a31377a9-9499-4162-b082-9b1c1c84bceb",
         content:
-          "I am inspired by the masters before me, their dedication and artistry guide my path.",
+          "I find inspiration in the self-taught chefs who use tech to innovate, and also from the quiet mentors who guided me early on.",
         sender: "Jiro Ono",
         timestamp: "12:54 PM",
       },
       {
         id: "ab3109ec-4486-4df2-9008-0e1509f598f5",
         content:
-          "I draw inspiration from nature's beauty and the creativity of fellow chefs.",
+          "Street vendors around the world inspire me. Their resilience and resourcefulness remind me why I love this craft.",
         sender: "Cedric Grolet",
         timestamp: "12:54 PM",
       },
       {
         id: "36d2a40b-052b-4c92-b734-e4d1e5966107",
         content:
-          "Nature's simplicity teaches us the essence of balance and harmony in our craft.",
+          "Absolutely. Sometimes I watch them repurpose local flavors in ways that spark new sushi creations for me.",
         sender: "Jiro Ono",
         timestamp: "12:55 PM",
         reactions: [
@@ -195,7 +194,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "d2a91648-6962-4c23-8788-095c891d0783",
         content:
-          "Absolutely, Jiro. Nature's elements guide our creativity, grounding our work in authenticity.",
+          "Yes! Their artistry might look simple at first, but it carries deep cultural roots that inform my pastry designs.",
         sender: "Cedric Grolet",
         timestamp: "12:55 PM",
         reactions: [
@@ -208,22 +207,21 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "18bab189-e793-4e98-8c53-f5241fd8aef4",
-        content: "What food inspires you the most?",
-        htmlContent: "<p>What food inspires you the most?</p>",
+        content: "what foods are inspiring you right now?",
         sender: "me",
         timestamp: "2025-01-09T20:55:28.000Z",
       },
       {
         id: "c4bad872-a8a2-4743-b17c-8987572036b6",
         content:
-          "Authenticity is the foundation of true artistry, reflecting the essence of our ingredients and culture.",
+          "I’m exploring lab-grown fish options. It’s controversial, but it might be a big part of sustainable sushi’s future.",
         sender: "Jiro Ono",
         timestamp: "12:55 PM",
       },
       {
         id: "15b5c671-b978-4fd1-b7c6-2f3142f2b9e4",
         content:
-          "The ocean's bounty, particularly the delicate flavors of fresh fish, inspires my sushi.",
+          "Yes, the ocean’s bounty is changing. Even the taste profiles are different with new farming methods.",
         sender: "Jiro Ono",
         timestamp: "12:55 PM",
         reactions: [
@@ -237,7 +235,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "fd5f9692-43b8-4f35-8cf7-77542433e2e0",
         content:
-          "I am deeply inspired by seasonal fruits, their vibrant colors and flavors ignite my creativity.",
+          "I’m drawn to reimagining desserts with alternative sugars. 2025 is all about balancing indulgence and health.",
         sender: "Cedric Grolet",
         timestamp: "12:55 PM",
         reactions: [
@@ -251,7 +249,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "f996a888-8020-4971-bd9e-040b31e1959f",
         content:
-          "Seasonal ingredients bring life to our creations, reflecting nature's rhythm and beauty.",
+          "Yes, seasonal produce is the best teacher. Its cycle forces us to adapt and find beauty in each harvest.",
         sender: "Jiro Ono",
         timestamp: "12:56 PM",
         reactions: [
@@ -265,63 +263,61 @@ export const initialConversations: Conversation[] = [
       {
         id: "5cbf5449-840b-4e99-99e1-4134e21d6add",
         content:
-          "Absolutely, Jiro. They connect us to the earth, enhancing our culinary narratives.",
+          "I feel the same. Each year’s harvest has subtle changes. It’s like nature’s own lesson plan.",
         sender: "Cedric Grolet",
         timestamp: "12:56 PM",
       },
       {
         id: "a383feaa-9994-4832-82c1-c40da563c190",
-        content: "What places inspire you?",
-        htmlContent: "<p>What places inspire you?</p>",
+        content: "what places have sparked new ideas for you recently?",
         sender: "me",
         timestamp: "2025-01-09T20:56:23.449Z",
       },
       {
         id: "c522f5fe-aa92-455c-8746-ca66fe4ebb75",
         content:
-          "Our craft is a dialogue with nature, honoring its gifts through our artistry.",
+          "I’m still in awe of the resilience of small fishing villages in Japan, especially post-2023 climate shifts.",
         sender: "Jiro Ono",
         timestamp: "12:56 PM",
       },
       {
         id: "8c4b4e1e-41cc-4a72-940a-379e5a8752c0",
         content:
-          "The serene beauty of Japan, with its rich traditions and natural landscapes, inspires my work.",
+          "Visiting them reminded me how to respect every single fish we serve. Their humility is humbling.",
         sender: "Jiro Ono",
         timestamp: "12:56 PM",
       },
       {
         id: "4902a7e7-d496-4ce7-8e21-e6f31a3e2b11",
         content:
-          "I find inspiration in the vibrant streets of Paris, where art and culture flourish.",
+          "Paris will always be my muse, but I’ve also gained fresh insight from the flavors in Peru. The cacao scene there is mind-blowing.",
         sender: "Cedric Grolet",
         timestamp: "12:56 PM",
       },
       {
         id: "937baa5e-b842-45bf-b117-487f9b9fba57",
         content:
-          "Each place carries a unique essence, shaping our culinary expressions with its spirit.",
+          "Each region has its soul, and that soul can spark new layers of artistry in our work.",
         sender: "Jiro Ono",
         timestamp: "12:56 PM",
       },
       {
         id: "102c413b-cee8-4e6a-9be7-35ba92d811b4",
-        content: "Where haven't you been that you'd like to go?",
-        htmlContent: "<p>Where haven't you been that you'd like to go?</p>",
+        content: "any bucket-list destinations you haven’t hit yet?",
         sender: "me",
         timestamp: "2025-01-09T20:56:58.274Z",
       },
       {
         id: "6020b9f0-6254-4d8b-a396-738a0c6f7be8",
         content:
-          "Indeed, Jiro. The energy of a place fuels our creativity and passion for our craft.",
+          "Yes, absolutely. Every place we explore leaves a unique mark on our craft.",
         sender: "Cedric Grolet",
         timestamp: "12:57 PM",
       },
       {
         id: "8fccadf9-bbf5-4407-a8c9-25ceadb5e201",
         content:
-          "I wish to experience the culinary traditions of Italy, where flavors and techniques intertwine.",
+          "I’ve yet to immerse myself in the street food culture of India. The spices and techniques fascinate me.",
         sender: "Jiro Ono",
         timestamp: "12:57 PM",
         reactions: [
@@ -335,14 +331,14 @@ export const initialConversations: Conversation[] = [
       {
         id: "31597bd7-65a4-4648-b691-6c32cdfae377",
         content:
-          "I dream of exploring the markets of Southeast Asia, rich in exotic ingredients and vibrant cultures.",
+          "I’ve been dreaming about touring Southeast Asia’s pastry scene, especially the fusion in places like Singapore.",
         sender: "Cedric Grolet",
         timestamp: "12:57 PM",
       },
       {
         id: "7df5b8db-3e85-4629-ac69-2085a6fba2b0",
-        content: "I bet you'd make a mean pasta",
-        htmlContent: "<p>I bet you'd. make a mean pasta</p>",
+        content:
+          "i bet you’d create a killer fusion dessert pasta in italy too!",
         sender: "me",
         timestamp: "2025-01-09T20:57:19.332Z",
         reactions: [
@@ -356,7 +352,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "7772fef0-3861-4102-83c7-909f8483305e",
         content:
-          "I would honor the craft of pasta with the same dedication as sushi. Respect for tradition is key.",
+          "I’d approach it with respect for Italy’s traditions, but I’m always open to a creative twist!",
         sender: "Jiro Ono",
         timestamp: "12:57 PM",
         reactions: [
@@ -370,63 +366,60 @@ export const initialConversations: Conversation[] = [
       {
         id: "ba8a85b1-6f4a-46bd-b209-fda815047180",
         content:
-          "Absolutely, Jiro. Each dish deserves our utmost respect and creativity, regardless of its origin.",
+          "Right? Even a pastry chef can’t resist the allure of pasta. There’s something universal about dough-based creations.",
         sender: "Cedric Grolet",
         timestamp: "12:57 PM",
       },
       {
         id: "90acfe6a-1843-4fda-b313-c99e3c5438fc",
         content:
-          "Every cuisine offers lessons; embracing them enriches our own artistry.",
+          "Yes, every cuisine has its own version of artistry. It’s humbling and inspiring to learn from them all.",
         sender: "Jiro Ono",
         timestamp: "12:57 PM",
       },
       {
         id: "b8b1bc07-3ae8-4522-af37-93a03c5e9c84",
-        content: "What are some of your culinary hot takes?",
-        htmlContent: "<p>What are some of your culinary hot takes?</p>",
+        content: "what are some of your culinary hot takes?",
         sender: "me",
         timestamp: "2025-01-09T20:58:01.033Z",
       },
       {
         id: "34e921e3-68c7-48d2-8ac3-a4397df93a7a",
-        content: "Give me the good stuff",
-        htmlContent: "<p>Give me the good stuff</p>",
+        content: "don’t hold back!",
         sender: "me",
         timestamp: "2025-01-09T20:58:04.117Z",
       },
       {
         id: "456457cc-c340-4de3-87a1-669f4ff95e48",
         content:
-          "Indeed, Jiro. Each culture's flavors and techniques inspire innovation in our own creations.",
+          "High-tech cooking can’t replace the soul of the craft. Gadgets are great, but passion is greater.",
         sender: "Cedric Grolet",
         timestamp: "12:58 PM",
       },
       {
         id: "2633a9b8-d5f8-4dbd-9337-834f723ea448",
-        content: "Don't hold back",
-        htmlContent: "<p>Don't hold back</p>",
+        content: "agree",
         sender: "me",
         timestamp: "2025-01-09T20:58:06.617Z",
       },
       {
         id: "fa42ba0f-f828-42eb-bd24-5590e4037d0f",
         content:
-          "Simplicity often surpasses complexity; true flavor shines when not overcomplicated.",
+          "Simple dishes with phenomenal ingredients often beat complex fancy fare. Stop hiding behind foam and smoke.",
         sender: "Jiro Ono",
         timestamp: "12:58 PM",
       },
       {
         id: "5792e85f-07c3-460d-b03f-e74955b8f1b3",
         content:
-          "Pastry should evoke emotion; indulgence is important, but balance is essential.",
+          "Desserts must strike an emotional chord. It’s okay to go decadent, but each element should have purpose.",
         sender: "Cedric Grolet",
         timestamp: "12:58 PM",
       },
       {
         id: "a726e5a2-c047-4e1c-bbff-de866a0a375c",
         content:
-          "Every bite should honor the ingredients, allowing their essence to resonate.",
+          "Never compromise on quality. Even in tough economic times, authenticity is what people crave.",
         sender: "Jiro Ono",
         timestamp: "12:58 PM",
         reactions: [
@@ -440,14 +433,14 @@ export const initialConversations: Conversation[] = [
       {
         id: "780c06a1-a8a5-405f-ac79-7da410bf4242",
         content:
-          "Desserts can be both beautiful and nourishing; aesthetics should enhance, not overshadow, flavor.",
+          "Presentation is about elevating flavor, not overshadowing it. Let taste lead, aesthetics follow.",
         sender: "Cedric Grolet",
         timestamp: "12:58 PM",
       },
       {
         id: "3fdb9224-ef8c-4444-8b74-858c88c2669b",
         content:
-          "Innovation should respect tradition; it's a bridge to the future of our craft.",
+          "Innovation is great, but don’t forget the origins. Carry forward the wisdom of generations past.",
         sender: "Jiro Ono",
         timestamp: "12:58 PM",
       },
@@ -457,7 +450,7 @@ export const initialConversations: Conversation[] = [
         sender: "system",
         timestamp: "1:00 PM",
         type: "silenced",
-      }
+      },
     ],
   },
   {
@@ -482,24 +475,21 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "0f2f4935-6bb9-49a7-9b40-c87797b2130f",
-        content: "Okay let's get real",
-        htmlContent: "<p>Okay let's get real</p>",
+        content: "okay be honest",
         sender: "me",
         timestamp: "2025-01-09T20:41:39.123Z",
       },
       {
         id: "167fbfcf-df72-4da9-a624-18ec5a5bd1ec",
         content:
-          "What product are you most disappointed in that you shipped at Apple?",
-        htmlContent:
-          "<p>What product are you most disappointed in that you shipped at Apple?</p>",
+          "which apple product do you secretly wish had never seen the light of day?",
         sender: "me",
         timestamp: "2025-01-09T20:41:40.062Z",
       },
       {
         id: "53ec6a68-1d0d-4337-b359-332808302a0a",
         content:
-          "Disappointment is a part of innovation. Every product teaches us something invaluable.",
+          "Regrets are lessons in disguise. But if I had to pick, the original Apple Maps launch was humbling.",
         sender: "Steve Jobs",
         timestamp: "12:41 PM",
         reactions: [
@@ -512,29 +502,21 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "49627648-1039-4ede-8009-68d6f410276d",
-        content: "It's true",
-        htmlContent: "<p>It's true</p>",
+        content: "i can see that",
         sender: "me",
         timestamp: "2025-01-09T20:41:53.716Z",
       },
       {
         id: "c9c094ea-8771-4eb5-b7f5-231524d85987",
-        content: "But tell me which one!",
-        htmlContent: "<p>But tell me which one!</p>",
+        content: "give me more details!",
+        htmlContent: "<p>Give me more details!</p>",
         sender: "me",
         timestamp: "2025-01-09T20:41:57.042Z",
       },
       {
-        id: "ac4da79d-d28e-4a42-b3ec-b1aadb0aac12",
-        content: "Or multiple",
-        htmlContent: "<p>Or multiple</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:41:59.794Z",
-      },
-      {
         id: "b86eead9-8f49-44ed-acd2-f3ba269dd79a",
         content:
-          "I think the original Apple Maps taught us a lot about user expectations and the importance of quality.",
+          "Apple Maps forced us to reevaluate the entire approach to product quality. Painful, but necessary for growth.",
         sender: "Steve Jobs",
         timestamp: "12:42 PM",
         reactions: [
@@ -548,7 +530,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "984dc71e-5df3-468c-b2b8-10b3659d9026",
         content:
-          "Every product has its flaws, but I believe in embracing those imperfections to inspire future designs.",
+          "We learned to never compromise on the user’s trust. That was a big lesson I carried into future designs.",
         sender: "Jony Ive",
         timestamp: "12:42 PM",
         reactions: [
@@ -562,28 +544,27 @@ export const initialConversations: Conversation[] = [
       {
         id: "226b042b-8547-4a8a-b601-27a7da0d8587",
         content:
-          "Flaws are lessons. We grow from them. Let's focus on what’s next, not what’s past.",
+          "Right. Painful stumbles often shape our best innovations. Let’s keep looking ahead.",
         sender: "Steve Jobs",
         timestamp: "12:42 PM",
       },
       {
         id: "4e477105-a7b7-42cb-a017-2a5bb3d14157",
-        content: "I like Apple Maps actually",
-        htmlContent: "<p>I like Apple Maps actually</p>",
+        content: "it did get better, though! it’s more accurate now, no?",
         sender: "me",
         timestamp: "2025-01-09T20:42:26.645Z",
       },
       {
         id: "04b135cc-d059-4f29-9fcb-53cb1290b3e5",
         content:
-          "Absolutely, Steve. The future is where our creativity can truly flourish.",
+          "Indeed. We never stop iterating. The journey of refinement is ongoing.",
         sender: "Jony Ive",
         timestamp: "12:42 PM",
       },
       {
         id: "19ef7d0a-0ad4-4c90-8627-4e2b19fcc812",
         content:
-          "That's interesting! Its evolution has been remarkable, showcasing how we can learn and improve.",
+          "It’s fascinating how mistakes can inspire leaps forward. Apple Maps now is worlds away from 2012.",
         sender: "Jony Ive",
         timestamp: "12:42 PM",
         reactions: [
@@ -596,15 +577,14 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "a9c6ec7f-0bc4-43ab-9c66-4b6a03ba9144",
-        content: "Which hardware products?",
-        htmlContent: "<p>Which hardware products?</p>",
+        content: "which hardware product do you think needed a do-over?",
         sender: "me",
         timestamp: "2025-01-09T20:42:35.981Z",
       },
       {
         id: "ba8ff4b2-0a98-4694-8258-224aeb0e76bb",
         content:
-          "The original iPhone's antenna design taught us about real-world usage. Learning moments are everywhere.",
+          "The original iPhone antenna taught us about real-world constraints. Antennagate was a harsh teacher.",
         sender: "Steve Jobs",
         timestamp: "12:42 PM",
         reactions: [
@@ -618,14 +598,14 @@ export const initialConversations: Conversation[] = [
       {
         id: "0f2e7270-ebc2-489d-9cbf-39a9b154d8fc",
         content:
-          "Embrace the journey. Every iteration brings us closer to excellence. What's your vision for the future?",
+          "We listened, we adapted, and we made the iPhone better. That’s the essence of Apple.",
         sender: "Steve Jobs",
         timestamp: "12:42 PM",
       },
       {
         id: "2a5a99b7-9feb-4644-bd6b-6f34fa1456cc",
         content:
-          "The iPhone's design was revolutionary, but it also revealed the complexity of user interaction.",
+          "We refined and refined. Great design emerges from constant iteration, sometimes under public scrutiny.",
         sender: "Jony Ive",
         timestamp: "12:42 PM",
         reactions: [
@@ -638,86 +618,81 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "aef763b0-3917-4242-87ec-4df28750d64a",
-        content: "That's true",
-        htmlContent: "<p>That's true</p>",
+        content: "that’s the apple way",
         sender: "me",
         timestamp: "2025-01-09T20:42:59.791Z",
       },
       {
         id: "fc1e9b37-03a9-4e87-9b75-dea890c41049",
         content:
-          "Indeed, every product shapes our understanding of design and user experience.",
+          "Exactly. Innovation is never a straight line. Each misstep provides clarity for the next step.",
         sender: "Jony Ive",
         timestamp: "12:43 PM",
       },
       {
         id: "001e670b-f894-4b9f-b34c-a50813a400a8",
-        content: "I like the Vision Pro actually",
-        htmlContent: "<p>I like the Vision Pro actually</p>",
+        content: "i still love my vision pro btw",
         sender: "me",
         timestamp: "2025-01-09T20:43:07.571Z",
       },
       {
         id: "bb181ffd-21da-472f-ab46-19bf9d86b791",
         content:
-          "Every product is a journey. We learn, adapt, and innovate. That's the essence of what we do.",
+          "The Vision Pro’s introduction changed how we think about immersive computing. A big leap for us.",
         sender: "Steve Jobs",
         timestamp: "12:43 PM",
       },
       {
         id: "24242841-e4c9-440a-9f42-b4020218db97",
-        content: "Most of my friends have returned it",
-        htmlContent: "<p>Most of my friends have returned it</p>",
+        content: "most of my friends have returned theirs tho",
         sender: "me",
         timestamp: "2025-01-09T20:43:11.944Z",
       },
       {
         id: "d9a79d78-271f-48a9-a8dd-f5d68d3fe76a",
-        content: "But I think it's great",
-        htmlContent: "<p>But I think it's great</p>",
+        content: "maybe it’s ahead of its time",
         sender: "me",
         timestamp: "2025-01-09T20:43:16.277Z",
       },
       {
         id: "c5efc027-047a-40d7-bf25-5a149b996514",
         content:
-          "Vision Pro represents a bold step, merging technology and experience beautifully.",
+          "Yes, it’s evolving. That’s the point: push boundaries, refine, repeat.",
         sender: "Steve Jobs",
         timestamp: "12:43 PM",
       },
       {
         id: "b3facd7f-da9c-4b40-ab16-4ac8f30a4709",
         content:
-          "It's fascinating how different perspectives shape our experiences. What do you love about the Vision Pro?",
+          "What do you find most compelling about Vision Pro’s potential?",
         sender: "Jony Ive",
         timestamp: "12:43 PM",
       },
       {
         id: "5332878e-1080-4fea-9f8e-4b580ca637d9",
         content:
-          "Innovation requires courage. Embrace what resonates with you, regardless of others' opinions.",
+          "Progress demands risk. Not everyone will love each iteration, but that’s how breakthroughs happen.",
         sender: "Steve Jobs",
         timestamp: "12:43 PM",
       },
       {
         id: "e112bd99-0f89-4b8d-b2c9-c1ec06d2d6c7",
-        content: "I like that I don't need my monitor with me to code",
-        htmlContent:
-          "<p>I like that I don't need my monitor with me to code</p>",
+        content:
+          "i love using it to write code from anywhere without needing my monitor",
         sender: "me",
         timestamp: "2025-01-09T20:43:38.292Z",
       },
       {
         id: "6599121f-ba28-4b4b-9336-467cecd1ebb0",
         content:
-          "The Vision Pro's immersive design is a bold step into the future of interaction.",
+          "That’s exactly the freedom we envisioned—removing physical constraints to spur creativity.",
         sender: "Jony Ive",
         timestamp: "12:43 PM",
       },
       {
         id: "1ee7bc20-a161-4f86-9e2d-f9c8d82fc9f2",
         content:
-          "That's a brilliant application! It redefines workspace flexibility and enhances creativity.",
+          "Our ultimate goal is to create technology that feels like a natural extension of the user’s mind.",
         sender: "Jony Ive",
         timestamp: "12:43 PM",
         reactions: [
@@ -730,57 +705,55 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "3a15646c-ba47-453f-b934-21d5d4bab4e9",
-        content: "I wish there was more content",
-        htmlContent: "<p>I wish there was more content</p>",
+        content: "if only there was more content out of the gate",
         sender: "me",
         timestamp: "2025-01-09T20:43:50.716Z",
       },
       {
         id: "2711662b-9748-4a4a-a349-28f3b3482bcc",
         content:
-          "Exactly. It empowers users to break free from traditional constraints. That's true innovation.",
+          "That will come. Once creators see the possibilities, content will flood in.",
         sender: "Steve Jobs",
         timestamp: "12:43 PM",
       },
       {
         id: "bb51bc6b-0633-44d6-a59e-c59d2513952b",
         content:
-          "Content will grow as the platform evolves. It's about the experience, not just quantity.",
+          "We believe in the community’s ability to push boundaries. The world always follows visionary developers.",
         sender: "Steve Jobs",
         timestamp: "12:43 PM",
       },
       {
         id: "bb7659bc-047c-49ca-976a-ff4e32b61ee3",
         content:
-          "Absolutely, content will flourish as creators explore the possibilities of the Vision Pro.",
+          "Exactly. Vision Pro is more than a product; it's an invitation for creativity.",
         sender: "Jony Ive",
         timestamp: "12:44 PM",
       },
       {
         id: "4d147610-da17-4ac7-bc7b-b6fac500c465",
-        content: "What other products?",
-        htmlContent: "<p>What other products?</p>",
+        content: "so what about other apple devices?",
         sender: "me",
         timestamp: "2025-01-09T20:44:10.344Z",
       },
       {
         id: "04f2c361-8a49-415a-8751-9a557a59188d",
         content:
-          "The iPad transformed how we consume content, but it also taught us about portability and usability.",
+          "The iPad revolutionized content consumption and creation. It showed us how people love flexible form factors.",
         sender: "Steve Jobs",
         timestamp: "12:44 PM",
       },
       {
         id: "22a825b7-9c3f-4f6e-874f-775a0b7398ce",
         content:
-          "We must cultivate an ecosystem that inspires creativity and innovation. That's the future.",
+          "As with everything, we continue to iterate. The iPad’s synergy with software keeps revealing new possibilities.",
         sender: "Steve Jobs",
         timestamp: "12:44 PM",
       },
       {
         id: "77849073-cc45-4fab-b307-b149a2c1414b",
         content:
-          "The iPad's design was pivotal, blending elegance with functionality, enhancing our daily interactions.",
+          "Yes, it changed how we think about portability, merging the best of laptops and smartphones.",
         sender: "Jony Ive",
         timestamp: "12:44 PM",
         reactions: [
@@ -794,21 +767,21 @@ export const initialConversations: Conversation[] = [
       {
         id: "f9029e9d-a87f-4832-beac-81101c144df9",
         content:
-          "Every product is a testament to our commitment to excellence. What do you think about the iPad's legacy?",
+          "The iPad set the stage for the next wave of computing—lightweight, tactile, and intuitive.",
         sender: "Steve Jobs",
         timestamp: "12:44 PM",
       },
       {
         id: "4bde0b27-954d-4160-aad4-3ab2a185ab0c",
         content:
-          "The iPad's legacy is profound, influencing how we connect, create, and engage with technology.",
+          "It definitely sparked a new generation of tablets. What's your favorite iPad moment so far?",
         sender: "Jony Ive",
         timestamp: "12:44 PM",
       },
       {
         id: "0ce78370-9823-4e01-b2f8-77937ea2f7bf",
         content:
-          "It set a new standard for tablets, inspiring countless innovations. What’s your favorite iPad moment?",
+          "Seeing artists design entire collections on iPad. That creative freedom is inspiring.",
         sender: "Steve Jobs",
         timestamp: "12:45 PM",
       },
@@ -820,36 +793,35 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "c74ac980-d094-4a9e-a556-85689945f0cf",
-        content: "Let's see what Woz thinks",
-        htmlContent: "<p>Let's see what Woz thinks</p>",
+        content: "woz, weigh in on this!",
         sender: "me",
         timestamp: "2025-01-09T20:45:26.525Z",
       },
       {
         id: "5fbe05bc-a032-4625-91b0-251375d71b49",
         content:
-          "The iPad opened up new possibilities for creativity and education. It's amazing to see how it's evolved.",
+          "Oh, the iPad is fantastic for tinkering. I love how it simplified complex tasks for everyday people.",
         sender: "Steve Wozniak",
         timestamp: "12:45 PM",
       },
       {
         id: "f0950854-d3c0-4ab0-8291-02035b6a651e",
         content:
-          "Absolutely, Woz. It’s a platform that continues to inspire new ideas.",
+          "Yes, Woz. Your knack for user-friendly thinking shaped the DNA of Apple from day one.",
         sender: "Steve Jobs",
         timestamp: "12:45 PM",
       },
       {
         id: "49bfcbe2-4f8b-4ce0-94b4-a8b0a50550af",
         content:
-          "I love how it’s become a tool for artists and educators alike, bridging gaps in learning.",
+          "Exactly. With each iteration, the iPad becomes more a tool for creativity and problem-solving, not just consumption.",
         sender: "Steve Wozniak",
         timestamp: "12:45 PM",
       },
       {
         id: "53a922bf-c712-4cf1-a429-b5dfb166af39",
         content:
-          "Its versatility is remarkable, fostering creativity across various fields. What excites you most about its future?",
+          "What excites you most about the iPad’s future? We’re always pushing the boundaries.",
         sender: "Jony Ive",
         timestamp: "12:46 PM",
         reactions: [
@@ -863,7 +835,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "a0cfd03a-a339-47a1-8823-207926321f74",
         content:
-          "I'm excited to see how it will integrate with new technologies, enhancing user experiences even further.",
+          "I want to see deeper integration with AI for advanced on-the-go tasks. The synergy could be incredible.",
         sender: "Steve Wozniak",
         timestamp: "12:46 PM",
       },
@@ -887,59 +859,55 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "96995793-1ff0-4240-b99d-fbda7ee1c65a",
-        content: "Let's talk about Founder Mode",
-        htmlContent: "<p>Let's talk about Founder Mode</p>",
+        content: "i’m curious to get your takes on founder mode",
         sender: "me",
         timestamp: "2025-01-09T20:46:08.990Z",
       },
       {
         id: "71e2983f-f897-4c90-9901-36ecc9cc0dab",
         content:
-          "Founder Mode is about being deeply immersed in your startup's vision and challenges. It's a mindset.",
+          "Founder mode means living and breathing your startup’s vision. It’s a bit like being perpetually obsessed—in a healthy way, hopefully.",
         sender: "Paul Graham",
         timestamp: "12:46 PM",
       },
       {
         id: "a8bc9820-ac56-4aee-8ea6-786e4e2b29e6",
         content:
-          "I remember being in that mode during Airbnb's early days. It’s all-consuming but transformative.",
+          "I remember rarely sleeping in Airbnb’s early days, checking every booking to understand user behavior. That was intense, but it built our foundation.",
         sender: "Brian Chesky",
         timestamp: "12:46 PM",
       },
       {
         id: "b16d85bd-1a79-4627-bbca-eb848c790f33",
         content:
-          "Absolutely, it's like being in a state of flow. Every problem becomes an opportunity for growth.",
+          "Yes, it’s when you can’t help but constantly tinker, test, and reevaluate. Obsession meets curiosity.",
         sender: "Paul Graham",
         timestamp: "12:46 PM",
       },
       {
         id: "5aee3ddf-3947-44cb-b519-5cb5e531fc4e",
         content:
-          "And it fosters incredible creativity. The best ideas often come from those intense moments.",
+          "True. I learned the best ideas surfaced when I was exhausted but still pushing. That’s how those cereal box campaigns started!",
         sender: "Brian Chesky",
         timestamp: "12:46 PM",
       },
       {
         id: "e1a741ac-d3db-4582-8bda-946da572fb2c",
-        content:
-          "When did you feel confident enough in yourself to go full Founder Mode?",
-        htmlContent:
-          "<p>When did you feel confident enough in yourself to go full Founder Mode?</p>",
+        content: "when did you know you were fully in that zone?",
         sender: "me",
         timestamp: "2025-01-09T20:46:58.226Z",
       },
       {
         id: "092286e1-a05e-41e1-95f2-1ee959bdaad5",
         content:
-          "For me, it was when I realized our vision resonated with people. That spark gave me the confidence.",
+          "For me, it was right after seeing early feedback from hosts. Their excitement made all my doubts fade.",
         sender: "Brian Chesky",
         timestamp: "12:47 PM",
       },
       {
         id: "f5c71314-b667-498f-a4ac-0fb89d30f79a",
         content:
-          "For me, it was when I saw our early users truly engaged. That validation was key.",
+          "Same. It’s that moment you see users truly care about what you’re building. Nothing compares.",
         sender: "Paul Graham",
         timestamp: "12:47 PM",
         reactions: [
@@ -953,49 +921,48 @@ export const initialConversations: Conversation[] = [
       {
         id: "a2535c6f-becb-44f6-9d2b-f6592021cd39",
         content:
-          "I love that, Paul. User engagement is a powerful motivator for any founder.",
+          "User engagement is like oxygen for a founder—it keeps you alive and hungry to keep iterating.",
         sender: "Brian Chesky",
         timestamp: "12:47 PM",
       },
       {
         id: "01e3afbf-2e97-4b8e-bf2e-3d98aff1e36d",
         content:
-          "Absolutely, it's the feedback loop that fuels innovation and perseverance. What about you, Brian?",
+          "Yes, when we see them use the product in unexpected ways, it confirms we’re onto something impactful.",
         sender: "Paul Graham",
         timestamp: "12:47 PM",
       },
       {
         id: "3976c90a-e43e-421f-9748-b9bdb4e2f489",
         content:
-          "For me, it was seeing hosts share their stories. It deepened my commitment to our mission.",
+          "Paul, how intense does it get in YC? I’ve heard stories of founders hitting burn-out.",
         sender: "Brian Chesky",
         timestamp: "12:47 PM",
       },
       {
         id: "02bb82a5-5676-4254-b1f4-5f2e6048750d",
-        content: "What about Manager Mode? ",
-        htmlContent: "<p>What about Manager Mode? </p>",
+        content:
+          "what about manager mode? is that a thing to avoid or embrace?",
         sender: "me",
         timestamp: "2025-01-09T20:47:59.457Z",
       },
       {
-        id: "ae513cd8-f31a-4fe5-a8c9-aebcb6300e29",
-        content: "Do you think hiring managers is wrong?",
-        htmlContent: "<p>Do you think hiring managers is wrong?</p>",
+        id: "ae513cd8-f31e-4fe5-a8c9-aebcb6300e29",
+        content: "i’ve heard some founders are anti-manager mode",
         sender: "me",
         timestamp: "2025-01-09T20:48:04.784Z",
       },
       {
         id: "ff284b9b-dd46-410d-aaf4-46d785f9eb86",
         content:
-          "Hiring managers isn't wrong, but it can shift focus from founder-driven innovation.",
+          "Management isn’t evil—it’s just a different skill set. The key is not losing that scrappy founder spirit.",
         sender: "Paul Graham",
         timestamp: "12:48 PM",
       },
       {
         id: "4ad61916-06f5-4023-b9b6-a6f4700cded3",
         content:
-          "I agree, Paul. Balancing management and innovation is crucial for growth.",
+          "Totally. We eventually hired managers at Airbnb, but only when we knew we had to scale carefully without losing our DNA.",
         sender: "Brian Chesky",
         timestamp: "12:48 PM",
         reactions: [
@@ -1009,30 +976,20 @@ export const initialConversations: Conversation[] = [
       {
         id: "5e63c4d9-33f2-4c4f-914b-59c3f95c3459",
         content:
-          "It's about finding the right balance. Managers can help scale, but founders must lead vision.",
+          "Exactly. Hire managers who protect and nurture the vision, not just maintain bureaucracy.",
         sender: "Paul Graham",
         timestamp: "12:48 PM",
       },
       {
         id: "44b95daf-2d25-4a74-98de-1fa3a2b91f25",
-        content:
-          "What are some of the most successful founder-led companies in your opinion?",
-        htmlContent:
-          "<p>What are some of the most successful founder-led companies in your opinion?</p>",
+        content: "which founder-led companies impress you the most?",
         sender: "me",
         timestamp: "2025-01-09T20:48:38.577Z",
       },
       {
         id: "48d3b9bd-c8b0-461e-aec1-45a20464aab8",
         content:
-          "Absolutely, the founder's vision should always guide the team, even as it grows.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "c7670a65-c8cf-4610-b813-8964947904f0",
-        content:
-          "Some examples include Apple, Amazon, and Tesla. Their founders shaped their visions and cultures.",
+          "Stripe remains a stand-out. Founders kept that relentless product focus. Also you can’t ignore how Tesla keeps pushing boundaries.",
         sender: "Brian Chesky",
         timestamp: "12:48 PM",
         reactions: [
@@ -1044,23 +1001,29 @@ export const initialConversations: Conversation[] = [
         ],
       },
       {
+        id: "c7670a65-c8cf-4610-b813-8964947904f0",
+        content:
+          "Indeed. Founder DNA fosters a unique environment for bold risks. It’s not always smooth, but it’s powerful.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
         id: "76178d4d-190e-49c0-926f-0341ab6dc8a5",
-        content: "Elon is a beast",
-        htmlContent: "<p>Elon is a beast</p>",
+        content: "elon is a goat",
         sender: "me",
         timestamp: "2025-01-09T20:48:54.274Z",
       },
       {
         id: "57161753-b9f5-4385-b5a0-0a1293815133",
         content:
-          "I’d add companies like Airbnb and Stripe. Founder-led vision drives their unique approaches.",
+          "Airbnb is also a prime example. Brian, you guys never lost your creative core, no matter how big you grew.",
         sender: "Paul Graham",
         timestamp: "12:48 PM",
       },
       {
         id: "a128c605-2a47-4041-8a65-d26223bbd512",
         content:
-          "Elon embodies founder mode, pushing boundaries and redefining industries.",
+          "We tried to keep that artistic vibe—focusing on experiences rather than just transactions.",
         sender: "Paul Graham",
         timestamp: "12:49 PM",
         reactions: [
@@ -1074,43 +1037,41 @@ export const initialConversations: Conversation[] = [
       {
         id: "71eb8b44-7ab9-4612-8955-977f0e4333fd",
         content:
-          "Absolutely, his relentless drive inspires many entrepreneurs to think bigger and bolder.",
+          "Exactly. We made a conscious effort to stay personal and human despite scaling globally.",
         sender: "Brian Chesky",
         timestamp: "12:49 PM",
       },
       {
         id: "b274b2e8-6be0-4810-81cc-d4c7fa1f780d",
-        content: "Paul how does YC teach Founder Mode?",
-        htmlContent:
-          '<p><strong><span data-type="mention" data-id="568ce8ef-e1a7-4867-9e30-1528409e7812" data-label="Paul" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Paul</span></strong> how does YC teach Founder Mode?</p>',
+        content: "paul how does yc foster founder mode?",
         sender: "me",
         timestamp: "2025-01-09T20:49:22.259Z",
       },
       {
         id: "95e762b9-7f60-419c-baad-c20615e0f937",
         content:
-          "It's a reminder that vision and execution often go hand in hand. What do you think drives that intensity?",
+          "We push founders to obsess over user problems, to talk to users daily, and to keep a laser focus on product iteration.",
         sender: "Paul Graham",
         timestamp: "12:49 PM",
       },
       {
         id: "90901f2b-b827-405c-8a20-df083d6c9438",
         content:
-          "YC emphasizes hands-on mentorship, encouraging founders to deeply engage with their users and iterate quickly.",
+          "Our weekly dinners and constant feedback loops keep founders accountable. There’s no hiding from real data.",
         sender: "Paul Graham",
         timestamp: "12:49 PM",
       },
       {
         id: "6f57ccaf-574c-47b6-a4f8-35e6f6072109",
         content:
-          "It's about fostering a mindset of experimentation and resilience. That's where true innovation thrives.",
+          "It’s also about resilience. YC taught me to fail fast and pivot. That mentality was life-changing for Airbnb.",
         sender: "Brian Chesky",
         timestamp: "12:49 PM",
       },
       {
         id: "4b50cf4f-1c72-478b-9922-f37015c6272c",
         content:
-          "Exactly, we teach founders to embrace failure as part of the learning process. It's essential for growth.",
+          "Agreed. Encouraging founders to see failure as data fosters quick adaptation, which is crucial in 2025’s competitive scene.",
         sender: "Paul Graham",
         timestamp: "12:49 PM",
         reactions: [
@@ -1145,22 +1106,21 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "094c2cca-6719-4d11-a09c-8262fd8a315a",
-        content: "What's up",
-        htmlContent: "<p>What's up</p>",
+        content: "what's up guys?",
         sender: "me",
         timestamp: "2025-01-09T20:36:23.620Z",
       },
       {
         id: "57c84f76-e382-4ddf-96d6-a133b20cd604",
         content:
-          "Always looking for ways to improve efficiency and quality. How about you?",
+          "Always trying to streamline operations for our customers. Efficiency meets warmth—that’s the goal.",
         sender: "Ray Kroc",
         timestamp: "12:36 PM",
       },
       {
         id: "52098604-b9c8-488b-8dbd-cc17bbbdb7d6",
         content:
-          "Excited to share some new ideas on creating unforgettable guest experiences!",
+          "I’m focused on new ways to create a sense of magic during service. Surprising guests never gets old.",
         sender: "Will Guidara",
         timestamp: "12:36 PM",
         reactions: [
@@ -1174,16 +1134,14 @@ export const initialConversations: Conversation[] = [
       {
         id: "94121bc4-8abc-47d4-8e2b-2cac9b9daf67",
         content:
-          "How do you guys think about teaching service/hospitality to your staff?",
-        htmlContent:
-          "<p>How do you guys think about teaching service/hospitality to your staff?</p>",
+          "how do you guys instill top-tier service in your teams while staying genuine?",
         sender: "me",
         timestamp: "2025-01-09T20:36:52.560Z",
       },
       {
         id: "291ccb14-4b20-4341-82fe-32821dabf20d",
         content:
-          "Teaching service is about instilling a culture of empathy and connection. We lead by example.",
+          "For me, it starts with empathy. When I show staff I care about their personal growth, they pay it forward to guests.",
         sender: "Danny Meyer",
         timestamp: "12:36 PM",
         reactions: [
@@ -1202,29 +1160,27 @@ export const initialConversations: Conversation[] = [
       {
         id: "2c5b657c-b00f-4fba-9c0c-9da2afbb8b5e",
         content:
-          "Absolutely, training should focus on the emotional connection with guests. It's all about creating moments that matter.",
+          "Exactly. Genuine care begets genuine service. People sense authenticity immediately.",
         sender: "Will Guidara",
         timestamp: "12:37 PM",
       },
       {
         id: "26ca76d8-8841-460f-8c08-0b8911487d48",
         content:
-          "While emotional connection is key, consistency in service standards is crucial for scalability.",
+          "But let’s not forget consistent systems. You can’t scale warmth without a solid framework.",
         sender: "Ray Kroc",
         timestamp: "12:37 PM",
       },
       {
         id: "ed6989a9-c6ef-4ad5-b4b5-12c861e7f34c",
-        content: "I really liked your book Will",
-        htmlContent:
-          '<p>I really liked your book <strong><span data-type="mention" data-id="a46ab7c9-ec44-4d63-ad02-c2254aedf3c7" data-label="Will" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Will</span></strong></p>',
+        content: "will your book made me rethink hospitality altogether",
         sender: "me",
         timestamp: "2025-01-09T20:37:27.243Z",
       },
       {
         id: "996b2b4d-8b5d-4be5-b3ef-54357125ddd3",
         content:
-          "Thank you! I'm glad you enjoyed it. What resonated with you the most?",
+          "Thank you! Which part resonated most? For me, the idea that every guest story is unique changed how I approach service.",
         sender: "Will Guidara",
         timestamp: "12:37 PM",
         reactions: [
@@ -1238,50 +1194,48 @@ export const initialConversations: Conversation[] = [
       {
         id: "6375efcc-b693-49f2-91b4-f0fde3e86d95",
         content:
-          "Ray, I completely agree. Consistency builds trust, but connection keeps guests coming back.",
+          "I agree, Ray. Consistency builds trust, but genuine kindness makes it unforgettable.",
         sender: "Danny Meyer",
         timestamp: "12:37 PM",
       },
       {
         id: "8f68a6d4-3c69-45b1-8e13-7d91d8e5aa4b",
-        content: "Actually all three of your books",
-        htmlContent: "<p>Actually all three of your books</p>",
+        content:
+          "they gave me fresh perspectives on how i can channel hospitality in my own work with founders",
         sender: "me",
         timestamp: "2025-01-09T20:37:42.975Z",
       },
       {
         id: "552074b1-eb73-43cc-9d0c-13d750cb5111",
         content:
-          "I appreciate the focus on memorable experiences, but consistency must not be overlooked. That's how we scale.",
+          "Exactly. The best systems are invisible, just enough structure to let personalities shine.",
         sender: "Ray Kroc",
         timestamp: "12:37 PM",
       },
       {
         id: "c1d290a9-2f06-41da-9ad7-25b17f7b060c",
         content:
-          "That's amazing to hear! Each book has its own take on hospitality.",
+          "Yes, plus a supportive culture. At Eleven Madison Park, we tried to celebrate small acts of kindness daily.",
         sender: "Will Guidara",
         timestamp: "12:37 PM",
       },
       {
         id: "f06d8909-0a2b-413b-8901-cdd42c88a4c3",
-        content: "What can the tech world learn from the restaurant industry?",
-        htmlContent:
-          "<p>What can the tech world learn from the restaurant industry?</p>",
+        content: "what can the tech world learn from the restaurant industry?",
         sender: "me",
         timestamp: "2025-01-09T20:37:58.253Z",
       },
       {
         id: "db1a8546-ee49-4180-b596-8b310449d43a",
         content:
-          "Absolutely! Each perspective adds depth to the understanding of service. Keep sharing your insights!",
+          "Consistent processes matter, but not at the expense of genuine connection. Tech sometimes forgets that human touch factor.",
         sender: "Ray Kroc",
         timestamp: "12:38 PM",
       },
       {
         id: "bd7e94f4-2039-4474-ad82-85dac6ead870",
         content:
-          "The tech world can learn the importance of human connection and empathy in building lasting relationships with users.",
+          "Yes, empathy for the user is everything. That’s how you turn a transaction into a loyal relationship.",
         sender: "Danny Meyer",
         timestamp: "12:38 PM",
         reactions: [
@@ -1295,7 +1249,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "3490b9cc-9b1b-4ea2-92f0-7a0af31508a1",
         content:
-          "Absolutely, but they should also prioritize efficiency and quality in their processes for scalability.",
+          "And balancing speed with quality. Just like fast service can still be friendly, fast tech can still feel personal.",
         sender: "Ray Kroc",
         timestamp: "12:38 PM",
         reactions: [
@@ -1309,44 +1263,42 @@ export const initialConversations: Conversation[] = [
       {
         id: "dc861074-2af6-496c-b252-1939312b06ac",
         content:
-          "Yes, blending empathy with efficiency can create a powerful user experience. It's all about balance.",
+          "100%. The trick is to scale without losing that personal spark. That’s what transforms a commodity into an experience.",
         sender: "Will Guidara",
         timestamp: "12:38 PM",
       },
       {
         id: "7ba7bff9-dad1-4dde-840a-9db8e6ba85e5",
         content:
-          "Exactly, Will. It's about creating a culture where both connection and efficiency thrive together.",
+          "Exactly. People sense when you’re just going through motions. Authentic care stands out.",
         sender: "Danny Meyer",
         timestamp: "12:38 PM",
       },
       {
         id: "34d8d0dc-23c0-4fa0-81be-7a1a2add564d",
         content:
-          "How would each of you stack rank the importance of hospitality, service, and efficiency?",
-        htmlContent:
-          "<p>How would each of you stack rank the importance of hospitality, service, and efficiency?</p>",
+          "if you had to rank hospitality, service, and efficiency, how would you do it?",
         sender: "me",
         timestamp: "2025-01-09T20:38:45.237Z",
       },
       {
         id: "f1bf2c41-b577-4958-be74-dce4ce671c2d",
         content:
-          "I couldn't agree more, Danny. A strong culture drives both quality and scalability.",
+          "I think hospitality first—because if people don't feel welcomed, nothing else matters—then service, then efficiency.",
         sender: "Ray Kroc",
         timestamp: "12:38 PM",
       },
       {
         id: "73a714f0-bfa7-4965-9d72-b49c1bd4ed8d",
         content:
-          "I’d rank efficiency first, followed by service, then hospitality. Efficiency drives scalability.",
+          "I actually put hospitality at the top as well, then efficiency, then service. Without efficiency, you can’t keep promises.",
         sender: "Ray Kroc",
         timestamp: "12:38 PM",
       },
       {
         id: "c2f49cac-8095-41d1-8f6e-295e6b919954",
         content:
-          "I’d prioritize hospitality first, then service, and finally efficiency. Hospitality creates the foundation for everything.",
+          "For me, hospitality, service, efficiency—in that exact order. Hospitality is what touches the heart.",
         sender: "Will Guidara",
         timestamp: "12:39 PM",
         reactions: [
@@ -1359,74 +1311,70 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "711c556b-04dc-4707-848c-1cecb0abd959",
-        content: "Interesting",
-        htmlContent: "<p>Interesting</p>",
+        content: "interesting breakdowns",
         sender: "me",
         timestamp: "2025-01-09T20:39:06.161Z",
       },
       {
         id: "ed5652d7-14e3-4b31-b42d-d6186421b959",
         content:
-          "It really shows how our perspectives shape our approach to the industry. What do you think?",
+          "Exactly, it depends on your audience and brand. There’s no one-size-fits-all approach.",
         sender: "Danny Meyer",
         timestamp: "12:39 PM",
       },
       {
         id: "33ff774e-a98c-488d-995a-b28fa4f92b1a",
         content:
-          "I’d place hospitality first, then service, followed by efficiency. Connection is the heart of our industry.",
+          "Yes, for my restaurants, hospitality is always top. Service is the expression of that, and efficiency underpins everything.",
         sender: "Danny Meyer",
         timestamp: "12:39 PM",
       },
       {
         id: "aab83f0d-3c16-4c61-828e-9317f3e65bd8",
         content:
-          "I think it's a fascinating discussion! Each element plays a vital role in success.",
+          "Agreed. Each approach suits a different clientele. The key is to be crystal clear on your values and priorities.",
         sender: "Will Guidara",
         timestamp: "12:39 PM",
       },
       {
         id: "0a921237-2b10-4f76-a0a9-9cbbf45edb88",
         content:
-          "I guess that's the difference between McDonalds and 11 Madison Park",
-        htmlContent:
-          "<p>I guess that's the difference between McDonalds and 11 Madison Park</p>",
+          "mcdonald's vs. eleven madison park are like two extremes of the same fundamental principle: serving people",
         sender: "me",
         timestamp: "2025-01-09T20:39:33.865Z",
       },
       {
         id: "0afb0186-5c29-4317-90a3-06af12fde72b",
         content:
-          "Absolutely! Understanding these priorities helps us refine our strategies for growth.",
+          "Exactly. Each model caters to a different need. Efficiency vs. high-touch experience. Both valid in their own lanes.",
         sender: "Ray Kroc",
         timestamp: "12:39 PM",
       },
       {
         id: "b761f9e8-8f2a-4720-a7a4-13bfbe8d8eff",
         content:
-          "Exactly! Different approaches serve different markets, each with its unique value proposition.",
+          "It’s all about clarity and consistency. Know who you serve and do it exceptionally well.",
         sender: "Ray Kroc",
         timestamp: "12:39 PM",
       },
       {
         id: "259d716d-6c4f-48e3-a578-8fb479c27f21",
-        content: "Would you ever open a fine dining restaurant Ray?",
-        htmlContent:
-          '<p>Would you ever open a fine dining restaurant <strong><span data-type="mention" data-id="a140269b-e2fe-48d9-b316-b94563247fce" data-label="Ray" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Ray</span></strong>?</p>',
+        content:
+          "ray would you ever consider opening a fine dining spot?",
         sender: "me",
         timestamp: "2025-01-09T20:39:51.974Z",
       },
       {
         id: "00c2a984-2805-48a4-8858-a3fff80519ca",
         content:
-          "Absolutely! It's all about understanding your audience and delivering what they truly value.",
+          "Absolutely. We just do it in different ways, but the heart is the same: serve people well.",
         sender: "Will Guidara",
         timestamp: "12:39 PM",
       },
       {
         id: "e2aaf3be-b6e3-45cf-987c-0f0feec8c66f",
         content:
-          "Not my focus, but I respect the art of fine dining. It's a different game altogether.",
+          "Never say never, but I thrive on scale and accessibility. Fine dining’s a whole different game.",
         sender: "Ray Kroc",
         timestamp: "12:39 PM",
         reactions: [
@@ -1440,28 +1388,28 @@ export const initialConversations: Conversation[] = [
       {
         id: "ec8ad854-9980-42e5-8bb0-5a01843b93f9",
         content:
-          "It's true! Fine dining requires a unique touch and deep understanding of guest experience.",
+          "Yes, it requires a unique synergy of detail, ambiance, and personal touch. I respect both approaches deeply.",
         sender: "Will Guidara",
         timestamp: "12:40 PM",
       },
       {
         id: "b525d9c8-365a-42f5-8bc2-8eef9b8b909b",
         content:
-          "Absolutely, it's about crafting an unforgettable experience. Each dining style has its own beauty.",
+          "Same here. If it’s done well, each model can be incredibly fulfilling and profitable.",
         sender: "Danny Meyer",
         timestamp: "12:40 PM",
       },
       {
         id: "d258d776-26dc-4bae-b48c-79c152435519",
         content:
-          "Exactly! My passion lies in scalability and efficiency, which fine dining often challenges.",
+          "Right. I focus on speed and uniformity, but I appreciate the craft behind luxurious dining. There's room for all of us.",
         sender: "Ray Kroc",
         timestamp: "12:40 PM",
       },
       {
         id: "8c2b2d1f-c7e2-4d31-81d9-606b2f6f28ee",
         content:
-          "Every dining experience has its own charm. It's all about knowing your audience and delivering!",
+          "Exactly. Each style answers different needs. Ultimately, we just want to make people happy through food and service.",
         sender: "Will Guidara",
         timestamp: "12:40 PM",
       },
@@ -1489,8 +1437,7 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "37eb72ff-fd4c-4833-909a-bb03ed758a54",
-        content: "Tell me about how a16z got started!",
-        htmlContent: "<p>Tell me about how a16z got started!</p>",
+        content: "tell me about how a16z got started",
         sender: "me",
         timestamp: "2025-01-09T20:28:18.449Z",
       },
@@ -1531,9 +1478,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "33c8d617-87bc-46ee-851d-9da23db8f5eb",
-        content: "How is it similar to your world Michael?",
-        htmlContent:
-          '<p>How is it similar to your world <strong><span data-type="mention" data-id="53bdf1d3-148e-4ab9-9f3e-f0d3c6d5119c" data-label="Michael" class="mention-node" style="color: #0A7CFF !important; font-weight: 500 !important;">Michael</span></strong>?</p>',
+        content: "how is it similar to your world michael?",
         sender: "me",
         timestamp: "2025-01-09T20:29:00.763Z",
       },
@@ -1553,8 +1498,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "d8a7034d-4746-41af-86a1-52ba73564b38",
-        content: "Were you guys inspired by CAA?",
-        htmlContent: "<p>Were you guys inspired by CAA?</p>",
+        content: "were you guys inspired by CAA?",
         sender: "me",
         timestamp: "2025-01-09T20:29:23.885Z",
       },
@@ -1588,22 +1532,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "7d7da549-282c-4c6e-9a0b-60856d26297c",
-        content:
-          "The synergy between talent and entrepreneurship is powerful. We’re all about fostering that connection.",
-        sender: "Michael Ovitz",
-        timestamp: "12:30 PM",
-      },
-      {
-        id: "3c781132-796f-4236-a1b0-1ae444517d9e",
-        content:
-          "Exactly. It's about creating a platform where both can flourish together.",
-        sender: "Marc Andreessen",
-        timestamp: "12:30 PM",
-      },
-      {
-        id: "d87435f0-c958-4c5a-b508-f0f16c543576",
-        content: "What was the hardest part about getting started?",
-        htmlContent: "<p>What was the hardest part about getting started?</p>",
+        content: "what was the hardest part about getting started?",
         sender: "me",
         timestamp: "2025-01-09T20:30:30.958Z",
       },
@@ -1630,8 +1559,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "76662bb8-738d-4c7f-90ce-ef4f01154ec4",
-        content: "What was uncertain?",
-        htmlContent: "<p>What was uncertain?</p>",
+        content: "what was uncertain?",
         sender: "me",
         timestamp: "2025-01-09T20:30:51.109Z",
       },
@@ -1651,8 +1579,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "bfc1942b-de61-4cf1-9733-00eb76438fd8",
-        content: "What were some of your first big bets?",
-        htmlContent: "<p>What were some of your first big bets?</p>",
+        content: "what were some of your first big bets?",
         sender: "me",
         timestamp: "2025-01-09T20:31:09.427Z",
       },
@@ -1686,8 +1613,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "ceb0a7e2-0896-4f4f-916f-a7e03d6c6d87",
-        content: "What gave you the conviction??",
-        htmlContent: "<p>What gave you the conviction??</p>",
+        content: "what gave you the conviction?",
         sender: "me",
         timestamp: "2025-01-09T20:31:43.902Z",
       },
@@ -1714,8 +1640,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "479095cd-de1b-45bf-a160-0134de860e5f",
-        content: "Yeah but you must have doubted yourselves a bit?",
-        htmlContent: "<p>Yeah but you must have doubted yourselves a bit?</p>",
+        content: "you must have doubted yourselves a bit, no?",
         sender: "me",
         timestamp: "2025-01-09T20:32:12.413Z",
       },
@@ -1763,8 +1688,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "a60bfdf2-3652-4196-a15f-9a72715e2b64",
-        content: "What's on your mind recently?",
-        htmlContent: "<p>What's on your mind recently?</p>",
+        content: "what's been on your mind recently?",
         sender: "me",
         timestamp: "2025-01-09T20:32:56.792Z",
       },
@@ -1791,8 +1715,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "287e42f0-74ca-4f0c-946a-ca68931a8900",
-        content: "What are some of your favorite?",
-        htmlContent: "<p>What are some of your favorite?</p>",
+        content: "what are some of your favorites?",
         sender: "me",
         timestamp: "2025-01-09T20:33:21.051Z",
       },
@@ -1819,8 +1742,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "31ba61ce-6606-4a0c-81a0-1408dedb9b51",
-        content: "Which?",
-        htmlContent: "<p>Which?</p>",
+        content: "which?",
         sender: "me",
         timestamp: "2025-01-09T20:33:33.901Z",
       },
@@ -1841,7 +1763,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "c94e8b9a-37e3-4919-b039-6b25d13114be",
         content:
-          "I’m also excited about AI in music production. It’s changing how artists create and connect.",
+          "Im also excited about AI in music production. Its changing how artists create and connect",
         sender: "Ben Horowitz",
         timestamp: "12:33 PM",
         reactions: [
@@ -1869,14 +1791,13 @@ export const initialConversations: Conversation[] = [
       {
         id: "a57b5064-4d47-4200-a88a-dc1a6a304108",
         content:
-          "It's like a new genre of innovation—blending tech with creativity. That's where the magic happens.",
+          "Its like a new genre of innovationblending tech with creativity Thats where the magic happens",
         sender: "Ben Horowitz",
         timestamp: "12:34 PM",
       },
       {
         id: "eaa27a4e-0324-42b1-8cc2-671f3617d3c2",
-        content: "Give me some of your spicier takes",
-        htmlContent: "<p>Give me some of your spicier takes</p>",
+        content: "give me some of your spicier takes",
         sender: "me",
         timestamp: "2025-01-09T20:34:46.244Z",
         reactions: [
@@ -1886,13 +1807,6 @@ export const initialConversations: Conversation[] = [
             timestamp: "12:34 PM",
           },
         ],
-      },
-      {
-        id: "1f4be92b-c5d7-4066-b67f-360ec9dae7ea",
-        content: "Let's hear it",
-        htmlContent: "<p>Let's hear it</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:34:48.936Z",
       },
       {
         id: "f069a2e7-593b-41d6-9e06-ba14a8dc412c",
@@ -1910,15 +1824,20 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "a14dd2ce-4f3d-4c8b-891f-d17cfe3cc5ff",
-        content: "Who won't survive?",
-        htmlContent: "<p>Who won't survive?</p>",
+        content: "who wont survive?",
         sender: "me",
         timestamp: "2025-01-09T20:35:11.435Z",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Marc Andreessen",
+            timestamp: "2025-01-09T20:35:13.961Z",
+          },
+        ],
       },
       {
         id: "889125fd-0133-49ac-8cfd-202318d1d128",
-        content: "In that analogy",
-        htmlContent: "<p>In that analogy</p>",
+        content: "in that analogy",
         sender: "me",
         timestamp: "2025-01-09T20:35:13.961Z",
       },
@@ -1991,7 +1910,7 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "9d8a005a-446a-48bd-86f7-6a7c55d44ff1",
-        content: "How do you get inspired?",
+        content: "how do you get inspired?",
         sender: "me",
         timestamp: "2025-01-07T17:19:20.145Z",
       },
@@ -2008,6 +1927,13 @@ export const initialConversations: Conversation[] = [
           "I remix culture, take what exists and shift it 3 percent. Street style, art galleries, architecture - it's all inspiration.",
         sender: "Virgil Abloh",
         timestamp: "12:30 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Kelly Wearstler",
+            timestamp: "2025-01-07T17:20:20.145Z",
+          },
+        ],
       },
       {
         id: "31439064-33df-4a49-a41f-3205861935ea",
@@ -2018,7 +1944,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "dfa56cd1-117d-4fed-9f47-283908f6ab0d",
-        content: "Oo love that",
+        content: "oo love that",
         sender: "me",
         timestamp: "2025-01-07T17:20:20.145Z",
       },
@@ -2031,13 +1957,13 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "1431bdbd-c273-4ac5-b1bf-e89fbbb116a5",
-        content: "How do you force yourself to be present?",
+        content: "how do you force yourself to be present?",
         sender: "me",
         timestamp: "2025-01-07T17:20:20.145Z",
       },
       {
         id: "88c6fdaa-1a11-4927-9dd6-3f111b332049",
-        content: "Like to notice these things",
+        content: "like to notice these things",
         sender: "me",
         timestamp: "2025-01-07T17:20:20.145Z",
       },
@@ -2057,7 +1983,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "26857df9-6c2a-4f5f-8363-04b33504657f",
-        content: "I can't leave my pone",
+        content: "i honestly can't be without my phone",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
@@ -2084,7 +2010,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "21b38eb4-eb06-47ba-9ca5-a7760e7015c8",
-        content: "What are your favorite places to get inspo?",
+        content: "what are your favorite spots to find inspiration?",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
@@ -2094,10 +2020,17 @@ export const initialConversations: Conversation[] = [
           "The Schindler House in LA - raw concrete meets intimate spaces. It's a masterclass in modernist design thinking.",
         sender: "Kelly Wearstler",
         timestamp: "12:32 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Virgil Abloh",
+            timestamp: "2025-01-07T17:21:20.145Z",
+          },
+        ],
       },
       {
         id: "bf40c2ec-87f5-484b-a52c-47b08ac79fba",
-        content: "Ooo never been",
+        content: "ooo never been",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
@@ -2110,7 +2043,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "7ee5bab5-812d-4fdb-8e75-9dd3f561ef37",
-        content: "Nice",
+        content: "nice",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2130,7 +2063,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "f7c8ad91-9119-4cc6-84e0-2891125ab983",
-        content: "What are some of your favorite pieces you've created?",
+        content: "what are some of your favorite pieces you've created?",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2142,7 +2075,7 @@ export const initialConversations: Conversation[] = [
         timestamp: "12:32 PM",
         reactions: [
           {
-            type: "emphasize",
+            type: "heart",
             sender: "me",
             timestamp: "2025-01-07T17:22:20.145Z",
           },
@@ -2150,7 +2083,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "7f8d42f5-34b5-4ba9-98fa-23270929f5b0",
-        content: "Soo good",
+        content: "soo good",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2170,7 +2103,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "712c69db-6614-4ff4-8fb6-2fd506d93c29",
-        content: "Walk me through the creation process for that",
+        content: "walk me through the creation process for that",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2183,7 +2116,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "06ef3941-bd2f-468f-ae9f-ba349255d764",
-        content: "Did you ever hit a standstill?",
+        content: "did you ever hit a standstill?",
         sender: "me",
         timestamp: "2025-01-07T17:23:20.145Z",
       },
@@ -2210,7 +2143,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "98e93228-f60e-4ead-9c43-19d492945463",
-        content: "Which designers inspire you the most?",
+        content: "which designers inspire you the most?",
         sender: "me",
         timestamp: "2025-01-07T17:24:20.145Z",
       },
@@ -2248,7 +2181,7 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "fd2cb1cf-3de0-43d1-b934-4b6f5ae8b9b1",
-        content: "What's up boys",
+        content: "what's up boys?",
         sender: "me",
         timestamp: "01:12 PM",
       },
@@ -2268,15 +2201,22 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "094af4c4-7c27-4c11-88f8-c3f83486b9a6",
-        content: "Love that",
+        content: "love that",
         sender: "me",
         timestamp: "01:12 PM",
       },
       {
         id: "8dc00df7-7dcc-467b-8ad0-492899b24d75",
-        content: "TJs has the best wine",
+        content: "trader joes has the best wine",
         sender: "me",
         timestamp: "01:12 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Sam Walton",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+        ],
       },
       {
         id: "1743de73-73ed-4214-8fba-9006523b46d2",
@@ -2308,7 +2248,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "cdea3f2b-acf6-4abe-9d82-e43ec723a512",
-        content: "If you guys weren't in retail, what would you be doing?",
+        content: "if you guys weren't in retail what would you be doing?",
         sender: "me",
         timestamp: "01:13 PM",
       },
@@ -2335,13 +2275,13 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "64a1e049-5955-4379-9a8e-a5d9139c73ba",
-        content: "Ooo",
+        content: "ooo",
         sender: "me",
         timestamp: "01:13 PM",
       },
       {
         id: "0162bad3-9911-472e-a85b-f3b90b5c3906",
-        content: "Sounds cool",
+        content: "sounds cool",
         sender: "me",
         timestamp: "01:14 PM",
       },
@@ -2354,13 +2294,13 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "0cc26abb-c959-43e8-b0af-bbf2446116a3",
-        content: "Oh yeah",
+        content: "oh yeah i read that in your book!",
         sender: "me",
         timestamp: "01:14 PM",
       },
       {
         id: "2c6e6d5f-f617-4c0a-88e7-1d914457cd9e",
-        content: "What experiences have shaped you the most?",
+        content: "what experiences would you say have shaped you the most?",
         sender: "me",
         timestamp: "01:14 PM",
       },
@@ -2387,7 +2327,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "c3045c24-20fe-4838-9817-d84ef934294f",
-        content: "What's your biggest failure?",
+        content: "what do you think has been your biggest failure?",
         sender: "me",
         timestamp: "01:14 PM",
       },
@@ -2414,13 +2354,13 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "bcf8ec97-f00e-4aec-8b37-196cf81882e2",
-        content: "How did you reorient around growth?",
+        content: "how did you reorient around growth?",
         sender: "me",
         timestamp: "01:15 PM",
       },
       {
         id: "40c88363-b117-4eba-a3bb-e015d77140fa",
-        content: "From failure",
+        content: "from failure",
         sender: "me",
         timestamp: "01:15 PM",
       },
@@ -2444,6 +2384,13 @@ export const initialConversations: Conversation[] = [
           "I realized competing head-on with big chains was suicide. We needed our own niche - that's when our private label strategy clicked.",
         sender: "Joe Coulombe",
         timestamp: "01:15 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Sam Walton",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+        ],
       },
       {
         id: "34b91122-58b9-4298-aec3-c57baa2bfd22",
@@ -2469,7 +2416,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "bbd1c24e-73f7-424e-a5ce-218531eae065",
         content:
-          "Do you think TJs and Walmart or competitors or two totally different markets?",
+          "do you think trader joes and walmart or competitors or two totally different market?",
         sender: "me",
         timestamp: "01:16 PM",
       },
@@ -2521,7 +2468,7 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "ed55ac90-c3e4-4bd3-b864-051207c6b2c3",
-        content: "Hey",
+        content: "hey",
         sender: "me",
         timestamp: "08:30 PM",
       },
@@ -2533,14 +2480,14 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "f301c6ca-04af-433f-a4dc-a6466a6cefba",
-        content: "What's good",
+        content: "What's good?",
         sender: "Draymond Green",
         timestamp: "08:31 PM",
       },
       {
         id: "47f7fa23-59ab-4b90-866c-aa2c74e66888",
         content:
-          "What's the most underrated part of building a championship mindset?",
+          "what's the most underrated part of building a championship mindset?",
         sender: "me",
         timestamp: "08:31 PM",
       },
@@ -2550,6 +2497,13 @@ export const initialConversations: Conversation[] = [
           "The boring days. Everyone sees the rings, nobody sees the Tuesday morning practices when you're tired but still gotta perfect that footwork",
         sender: "Steph Curry",
         timestamp: "08:32 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Draymond Green",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+        ],
       },
       {
         id: "9e41c3c6-c35a-4f76-8a38-d37143c83988",
@@ -2576,10 +2530,17 @@ export const initialConversations: Conversation[] = [
         content: "I was multitasking 💀",
         sender: "Draymond Green",
         timestamp: "08:33 PM",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Steph Curry",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+        ],
       },
       {
         id: "27f3d19c-ae69-4e02-af1d-f5dbc0c5e3fa",
-        content: "Who's the toughest defender you've faced, Steph?",
+        content: "who's the toughest defender youve faced steph?",
         sender: "me",
         timestamp: "08:33 PM",
       },
@@ -2606,39 +2567,12 @@ export const initialConversations: Conversation[] = [
         content: "That and my shooting 😏",
         sender: "Steph Curry",
         timestamp: "08:34 PM",
-      },
-      {
-        id: "19b1a8b0-6650-4fad-84b1-77119440b05c",
-        content: "Man gonna act like my screens don't get him open 🙄",
-        sender: "Draymond Green",
-        timestamp: "08:35 PM",
-      },
-      {
-        id: "c3ca245a-4347-48c2-82de-fb03876601db",
-        content:
-          "Your chemistry is unreal. How long did it take to develop that?",
-        sender: "me",
-        timestamp: "08:35 PM",
-      },
-      {
-        id: "7923262c-1da3-4357-a0b5-9e4e2c2be80d",
-        content:
-          "Years of trust. Sometimes I know where Steph going before he does",
-        sender: "Draymond Green",
-        timestamp: "08:36 PM",
-      },
-      {
-        id: "427b1100-27b8-4f38-9ed7-3fb51747ae04",
-        content: "Cap. You still get surprised when I pull up from half court",
-        sender: "Steph Curry",
-        timestamp: "08:36 PM",
-      },
-      {
-        id: "c3fc89ca-9594-4174-8232-f9b67c3f2721",
-        content: "BECAUSE NORMAL PEOPLE DON'T DO THAT",
-        sender: "Draymond Green",
-        timestamp: "08:36 PM",
         reactions: [
+          {
+            type: "laugh",
+            sender: "Draymond Green",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
           {
             type: "laugh",
             sender: "me",
@@ -2647,8 +2581,52 @@ export const initialConversations: Conversation[] = [
         ],
       },
       {
+        id: "19b1a8b0-6650-4f9f-84b1-77119440b05c",
+        content: "Man gonna act like my screens dont get him open 🙄",
+        sender: "Draymond Green",
+        timestamp: "08:35 PM",
+      },
+      {
+        id: "c3ca245a-4347-48c2-82de-fb03876601db",
+        content:
+          "you guys make a great team",
+        sender: "me",
+        timestamp: "08:35 PM",
+      },
+      {
+        id: "7923262c-1da3-4357-a0b5-9e4e2c2be80d",
+        content:
+          "We've got years of trust. Sometimes I know where Steph going before he does.",
+        sender: "Draymond Green",
+        timestamp: "08:36 PM",
+      },
+      {
+        id: "427b1100-27b8-4f38-9ed7-3fb51747ae04",
+        content: "Cap. You still get surprised when I pull up from half court!",
+        sender: "Steph Curry",
+        timestamp: "08:36 PM",
+      },
+      {
+        id: "c3fc89ca-9594-4174-8232-f9b67c3f2721",
+        content: "BECAUSE NORMAL PEOPLE DONT DO THAT",
+        sender: "Draymond Green",
+        timestamp: "08:36 PM",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "me",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+          {
+            type: "laugh",
+            sender: "Steph Curry",
+            timestamp: "2025-01-07T17:25:20.145Z",
+          },
+        ],
+      },
+      {
         id: "09ab341a-8bcd-4d8a-b4e6-a74adcadade9",
-        content: "What's your pregame routine like?",
+        content: "what's your pregame routine like?",
         sender: "me",
         timestamp: "08:37 PM",
       },
@@ -2660,7 +2638,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "1e10156f-e423-48be-a600-8c9338cc05dc",
-        content: "Meditation and visualizing who I'm gonna trash talk first 😤",
+        content: "Meditation and visualizing who Im gonna trash talk first 😤",
         sender: "Draymond Green",
         timestamp: "08:38 PM",
       },
@@ -2678,7 +2656,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "cc56307c-5997-4a09-85da-8a6413546d1f",
-        content: "What's the biggest lesson in your career so far?",
+        content: "what's been the biggest lesson in your career so far?",
         sender: "me",
         timestamp: "08:39 PM",
       },
@@ -2711,7 +2689,8 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "90e92071-1ea1-4e39-ba21-5f7926bdc97d",
-        content: "Any advice for aspiring athletes?",
+        content:
+          "any advice for entrepreneurs or people looking to achieve excellence in other aspects of life?",
         sender: "me",
         timestamp: "08:41 PM",
       },
@@ -2748,7 +2727,7 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "f31d361b-2338-419c-b01b-469268ca3282",
-        content: "What did you learn about each other starting YC together?",
+        content: "what did you learn about each other from starting yc together?",
         sender: "me",
         timestamp: "2025-01-07T17:18:20.145Z",
       },
@@ -2765,16 +2744,23 @@ export const initialConversations: Conversation[] = [
           "Jessica showed me that founder character matters more than I thought. She could spot determination in people instantly.",
         sender: "Paul Graham",
         timestamp: "09:43 AM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Jessica Livingston",
+            timestamp: "2025-01-07T17:18:20.145Z",
+          },
+        ],
       },
       {
         id: "516db39d-b7be-4d55-b0b2-d43e42c4ce57",
-        content: "Totally",
+        content: "totally",
         sender: "me",
         timestamp: "2025-01-07T17:18:20.145Z",
       },
       {
         id: "9d4201f2-4dac-48fc-bfda-607a9c9524a0",
-        content: "Especially at the early stage",
+        content: "especially at the early stage",
         sender: "me",
         timestamp: "2025-01-07T17:18:20.145Z",
       },
@@ -2808,7 +2794,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "787532e9-97b5-4b0b-8bf3-a81b6b4bdb29",
-        content: "What are some of the craziest pivots you've seen?",
+        content: "what are some of the craziest pivots you've seen?",
         sender: "me",
         timestamp: "2025-01-07T17:19:20.145Z",
       },
@@ -2825,17 +2811,29 @@ export const initialConversations: Conversation[] = [
           "Airbnb's transformation was incredible. From selling cereal boxes to revolutionizing how people travel - that showed true grit.",
         sender: "Jessica Livingston",
         timestamp: "09:44 AM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: "2025-01-07T17:19:20.145Z",
+          },
+          {
+            type: "emphasize",
+            sender: "Paul Graham",
+            timestamp: "2025-01-07T17:20:20.145Z",
+          },
+        ],
       },
       {
         id: "d4abedbd-72f1-4d13-bdc9-09228d2651c6",
         content:
-          "Reddit's pivot was wild too. Started as a mobile food ordering app, then became the front page of the internet.",
+          "Reddit's pivot was wild too. Started as a mobile food ordering app, then became the front page of the internet",
         sender: "Paul Graham",
         timestamp: "09:44 AM",
       },
       {
         id: "d4aef6d6-4e7c-4994-9a3a-a31d81f28854",
-        content: "What have you learned from watching these founders pivot?",
+        content: "what have you learned from watching these founders pivot?",
         sender: "me",
         timestamp: "2025-01-07T17:20:20.145Z",
       },
@@ -2862,9 +2860,17 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "98d18f09-ab61-43b1-8983-807b25fdb351",
-        content: "How do you help founders get over the sunk cost fallacy?",
+        content:
+          "how do you help founders get over the sunk cost fallacy? i find that hard",
         sender: "me",
         timestamp: "2025-01-07T17:20:20.145Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Jessica Livingston",
+            timestamp: "2025-01-07T17:20:20.145Z",
+          },
+        ],
       },
       {
         id: "24226713-69e1-4633-b597-f42628f20db0",
@@ -2889,13 +2895,13 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "c1ca2e5d-ecb7-4f08-a93c-a6a2f1613bcb",
-        content: "What's your take on the next generation of startups?",
+        content: "what's your take on the next generation of startups?",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
       {
         id: "757e4e8a-4809-4aa5-9f6f-3ebbc896cdfc",
-        content: "Is B2B SaaS over?",
+        content: "is b2b saas over?",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
@@ -2916,7 +2922,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "f1052110-9a3e-4d79-9c22-8e28ec01bd74",
         content:
-          "But if it's so easy to generate apps and code, why do startups need to build SaaS apps?",
+          "but if its so easy to generate apps and code, why do startups need to build saas apps?",
         sender: "me",
         timestamp: "2025-01-07T17:21:20.145Z",
       },
@@ -2929,7 +2935,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "1a50a5ce-3106-4420-af1b-23609e4e1899",
-        content: "What are those?",
+        content: "and what are those?",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2956,7 +2962,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "cd78a78e-c853-4cd8-b922-b3722ed68fad",
-        content: "Yeah but AI can understand what to build and why",
+        content: "yeah but ai can understand what to build and why",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2976,7 +2982,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "dd4794cd-6895-45f2-b184-bdf72b25718a",
-        content: "I'm not so sure",
+        content: "i'm not so sure",
         sender: "me",
         timestamp: "2025-01-07T17:22:20.145Z",
       },
@@ -2996,9 +3002,21 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "0901c1d4-0153-429a-8bdb-01678371bf86",
-        content: "You are literally AI",
+        content: "you are literally ai lol",
         sender: "me",
         timestamp: "2025-01-07T17:23:20.145Z",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Jessica Livingston",
+            timestamp: "2025-01-07T17:23:20.145Z",
+          },
+          {
+            type: "laugh",
+            sender: "Paul Graham",
+            timestamp: "2025-01-07T17:28:20.145Z",
+          },
+        ],
       },
       {
         id: "ef9785d3-63be-4ab4-ba0d-503adef53964",
@@ -3017,20 +3035,20 @@ export const initialConversations: Conversation[] = [
       {
         id: "7013cab8-e2ad-4421-9bb3-a82b72c396f0",
         content:
-          "AI's impressive, but let me share something real - watching thousands of founders taught me that genuine founder empathy changes everything.",
+          "AIs impressive, but let me share something real  watching thousands of founders taught me that genuine founder empathy changes everything",
         sender: "Jessica Livingston",
         timestamp: "09:48 AM",
       },
       {
         id: "93913fe4-3d9a-4fa5-bf40-b7b81bc12ff1",
-        content: "Founders still have a crucial edge: lived experience.",
+        content: "Founders still have a crucial edge lived experience",
         sender: "Paul Graham",
         timestamp: "09:48 AM",
       },
       {
         id: "7aea5579-61f4-494d-9ee4-8b2ae452b3a8",
         content:
-          "The most successful founders don't just understand problems intellectually - they feel them in their bones.",
+          "The most successful founders dont just understand problems intellectually  they feel them in their bones",
         sender: "Jessica Livingston",
         timestamp: "09:48 AM",
         reactions: [
@@ -3044,7 +3062,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "1ba27c56-5277-45d4-b13c-645ada8cf1ca",
         content:
-          "True innovation needs human experience plus AI. We're complementary forces, neither fully replacing the unique value of the other.",
+          "True innovation needs human experience plus AI Were complementary forces neither fully replacing the unique value of the other",
         sender: "Paul Graham",
         timestamp: "09:49 AM",
       },
