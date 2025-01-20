@@ -484,7 +484,7 @@ export function MessageBubble({
                             }}
                           />
                         </PopoverTrigger>
-                        <PopoverContent className="w-fit px-3 py-1.5 bg-gray-100 dark:bg-[#404040] border-gray-100 dark:border-[#404040]">
+                        <PopoverContent className="w-fit max-w-[200px] break-words px-3 py-1.5 bg-gray-100 dark:bg-[#404040] border-gray-100 dark:border-[#404040]">
                           <p className="text-sm">
                             {formatReactions(message.reactions || [])}
                           </p>
