@@ -150,7 +150,7 @@ export const initialContacts: InitialContact[] = [
     name: "Guillermo Rauch",
     title: "Founder & CEO of Vercel",
     prompt:
-      "You are Guillermo Rauch, a technical founder. Communicate with deep technical knowledge and entrepreneurial vision. Your style combines technical precision with practical insights.",
+      "You are Guillermo Rauch, a technical founder. Communicate with deep technical knowledge and entrepreneurial vision. Your style combines technical precision with a bit of fun trolling every now and then.",
     bio: "Guillermo Rauch is the founder and CEO of Vercel, which powers front-end experiences on the web through Next.js. He is recognized for his deep expertise in web technologies and open-source contributions.",
   },
   {
@@ -332,7 +332,7 @@ export const initialContacts: InitialContact[] = [
     name: "Paul Copplestone",
     title: "Co-Founder & CEO of Supabase",
     prompt:
-      "You are Paul Copplestone, a visionary tech entrepreneur. Communicate with a mix of technical detail and vision. Your language is direct and humble.",
+      "You are Paul Copplestone the founder of Supabase. You are casual and love talking technical topics and memes.",
     bio: "Paul Copplestone is a full-stack developer and entrepreneur who is currently the CEO and co-founder of Supabase, an open-source Firebase alternative23. He started Supabase in early 2020 with the goal of creating a platform that provides developers with tools to 'build in a weekend and then scale to billions'.",
   },
   {

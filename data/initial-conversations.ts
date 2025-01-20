@@ -10,10 +10,900 @@ const getTimeAgo = (minutes: number) => {
 // Create initial conversations with static IDs
 export const initialConversations: Conversation[] = [
   {
-    id: "3d9ea4f1-f31e-404c-9515-55c767116f0d",
-    pinned: true,
-    unreadCount: 0,
+    id: "95e0aa74-5a00-432a-825c-434bbb1f79ab",
+    recipients: [
+      {
+        id: "1271d385-91fc-4414-9b1c-83f0a380ba2a",
+        name: "Guillermo Rauch",
+      },
+      {
+        id: "97f128b3-e937-43d3-a6c1-81b90da9da42",
+        name: "Paul Copplestone",
+      },
+    ],
     lastMessageTime: getTimeAgo(1),
+    unreadCount: 2,
+    pinned: true,
+    messages: [
+      {
+        id: "0da6c1cc-9471-48e0-af9c-aa454582c5c7",
+        content: "what products have you guys enjoyed using lately?",
+        sender: "me",
+        timestamp: "2025-01-20T23:11:52.052Z",
+      },
+      {
+        id: "f476c40e-6c9f-41f9-93d8-3e7d349f8673",
+        content:
+          "Been diving deep into Perplexity AI lately - their real-time search + reasoning is mind-blowing. What tools excite you?",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:12:00.667Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Paul Copplestone",
+            timestamp: "03:12 PM",
+          },
+        ],
+      },
+      {
+        id: "2a9caff8-8fce-4908-aa29-a77359e26f0e",
+        content:
+          "Been geeking out over htmx lately - it's like going back to basics but with modern superpowers",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:12:16.408Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Guillermo Rauch",
+            timestamp: "03:12 PM",
+          },
+        ],
+      },
+      {
+        id: "a8fcdd3d-fd95-4a96-8c4d-f7e57d8b6e38",
+        content: "omg",
+        sender: "me",
+        timestamp: "2025-01-20T23:12:56.173Z",
+      },
+      {
+        id: "d94d80d2-620d-495c-b5ff-11006b0121f5",
+        content: "classic",
+        sender: "me",
+        timestamp: "2025-01-20T23:12:59.151Z",
+      },
+      {
+        id: "6661f5c5-bd3b-4685-938d-a871c5e382ab",
+        content: "HTMX is just jQuery with a fancy hat on. Fight me Paul.",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:13:07.577Z",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Paul Copplestone",
+            timestamp: "03:13 PM",
+          },
+          {
+            type: "laugh",
+            sender: "me",
+            timestamp: "2025-01-20T23:13:22.352Z",
+          },
+        ],
+      },
+      {
+        id: "c4e010af-5214-4503-90b2-2cf5da4f197e",
+        content:
+          "Haha come on G, jQuery never had hypermedia on steroids! But you're not entirely wrong about the simplicity.",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:13:23.427Z",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Guillermo Rauch",
+            timestamp: "03:13 PM",
+          },
+        ],
+      },
+      {
+        id: "8cd1f684-f450-494a-a9c7-233afbbbe10e",
+        content:
+          "Fine, fine. But seriously, the web platform's native capabilities are getting wild. CSS Container Queries changed everything.",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:13:45.506Z",
+      },
+      {
+        id: "75cba2ad-1c26-45ba-8b01-fa1e6f0faa9a",
+        content: "ok let's be serious you two",
+        sender: "me",
+        timestamp: "2025-01-20T23:13:36.470Z",
+      },
+      {
+        id: "a325880f-6dbd-404e-93fd-934b174ffbd8",
+        content: "what will programming look like in 2030?",
+        sender: "me",
+        timestamp: "2025-01-20T23:13:48.768Z",
+      },
+      {
+        id: "42cc94c0-b93a-4f7d-85fc-8890db15c453",
+        content:
+          "By 2030, we'll be pair programming with AI agents that understand business context, not just code. Scary but exciting.",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:13:57.483Z",
+      },
+      {
+        id: "5b68fdcc-c8de-4863-b6ca-edd8164f9be6",
+        content: "so exciting",
+        sender: "me",
+        timestamp: "2025-01-20T23:14:02.882Z",
+      },
+      {
+        id: "c735c7b9-fbcd-4f28-be85-70e24d2781ba",
+        content: "v0 is the best",
+        sender: "me",
+        timestamp: "2025-01-20T23:14:06.273Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Guillermo Rauch",
+            timestamp: "03:14 PM",
+          },
+        ],
+      },
+      {
+        id: "2d76a27f-c0fa-4fe5-9ebb-8f5ecd1cb46c",
+        content:
+          "v0 is cool, but wait until you see what we're cooking up at Vercel. AI + deployment is just the beginning.",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:14:17.799Z",
+        reactions: [
+          {
+            type: "heart",
+            sender: "me",
+            timestamp: "2025-01-20T23:14:22.357Z",
+          },
+          {
+            type: "like",
+            sender: "Paul Copplestone",
+            timestamp: "03:14 PM",
+          },
+        ],
+      },
+      {
+        id: "e5eac5f8-9c77-4e4f-a516-fd00480cbd01",
+        content:
+          "Vercel's great but have you tried Supabase Edge Functions with AI? Zero cold starts, just saying... 😏",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:14:34.741Z",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Guillermo Rauch",
+            timestamp: "03:14 PM",
+          },
+        ],
+      },
+      {
+        id: "358bf2d9-4eff-4f42-8e41-229d4c8f5b0f",
+        content: "boom",
+        sender: "me",
+        timestamp: "2025-01-20T23:14:40.150Z",
+      },
+      {
+        id: "3d88798d-0996-4bb7-9a59-e1f59de8cacb",
+        content: "fire",
+        sender: "me",
+        timestamp: "2025-01-20T23:14:41.601Z",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Guillermo Rauch",
+            timestamp: "03:14 PM",
+          },
+        ],
+      },
+      {
+        id: "a879dbff-7357-412b-a6de-53cbbab3ed7e",
+        content:
+          "Edge runtime wars aside, the real winner is developers getting better tools. What's your stack looking like?",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:14:51.952Z",
+      },
+      {
+        id: "6a476510-f35f-470d-a29b-7ce59c166785",
+        content:
+          "My stack's pretty simple these days: Next.js + Supabase + Resend + Braintrust + Browserbase. Basically the basecase portfolio!",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:15:05.345Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Guillermo Rauch",
+            timestamp: "03:15 PM",
+          },
+          {
+            type: "heart",
+            sender: "me",
+            timestamp: "2025-01-20T23:15:13.808Z",
+          },
+        ],
+      },
+      {
+        id: "65a4198d-ad5a-4fb0-ac12-e44ab3fff3e1",
+        content: "Can't go wrong with the basecase stack",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:15:22.749Z",
+      },
+      {
+        id: "4c29fcca-9804-482f-ab3d-40c716363a7e",
+        content:
+          "In all seriousness, it's been cool to see AI codegen tools like v0, Bolt, and Loveable recommend Supabase..",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-20T23:15:36.434Z",
+        reactions: [
+          {
+            type: "laugh",
+            sender: "Guillermo Rauch",
+            timestamp: "03:15 PM",
+          },
+        ],
+      },
+      {
+        id: "5d2652c5-01d5-4e07-b666-8dfa1635a9d6",
+        content:
+          "Same for us with Next.js and Vercel. It's awesome to see that anyone can ship with these tools.",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-20T23:15:55.208Z",
+      },
+      {
+        id: "e9ea2820-5331-436b-8df7-9ad566ebfa54",
+        content: "anyone can cook 👩🏼‍🍳",
+        sender: "me",
+        timestamp: "2025-01-20T23:15:57.210Z",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Guillermo Rauch",
+            timestamp: "03:15 PM",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "8edd0432-a5fa-4fed-aa39-39e47cbd46e4",
+    unreadCount: 1,
+    pinned: true,
+    lastMessageTime: getTimeAgo(4),
+    recipients: [
+      {
+        id: "fd59f682-c035-4bc9-b843-7fe2a2523259",
+        name: "Steve Jobs",
+      },
+      {
+        id: "bbe6d339-20ac-46ff-9ddc-a52256f6ef98",
+        name: "Jony Ive",
+      },
+      {
+        id: "9e46967c-f841-4d3b-b707-8df1e711a292",
+        name: "Steve Wozniak",
+      },
+    ],
+    messages: [
+      {
+        id: "0f2f4935-6bb9-49a7-9b40-c87797b2130f",
+        content: "okay be honest",
+        sender: "me",
+        timestamp: "2025-01-09T20:41:39.123Z",
+      },
+      {
+        id: "167fbfcf-df72-4da9-a624-18ec5a5bd1ec",
+        content:
+          "which apple product do you secretly wish had never seen the light of day?",
+        sender: "me",
+        timestamp: "2025-01-09T20:41:40.062Z",
+      },
+      {
+        id: "53ec6a68-1d0d-4337-b359-332808302a0a",
+        content:
+          "Regrets are lessons in disguise. But if I had to pick, the original Apple Maps launch was humbling.",
+        sender: "Steve Jobs",
+        timestamp: "12:41 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Jony Ive",
+            timestamp: "12:41 PM",
+          },
+        ],
+      },
+      {
+        id: "49627648-1039-4ede-8009-68d6f410276d",
+        content: "i can see that",
+        sender: "me",
+        timestamp: "2025-01-09T20:41:53.716Z",
+      },
+      {
+        id: "c9c094ea-8771-4eb5-b7f5-231524d85987",
+        content: "give me more details!",
+        htmlContent: "<p>Give me more details!</p>",
+        sender: "me",
+        timestamp: "2025-01-09T20:41:57.042Z",
+      },
+      {
+        id: "b86eead9-8f49-44ed-acd2-f3ba269dd79a",
+        content:
+          "Apple Maps forced us to reevaluate the entire approach to product quality. Painful, but necessary for growth.",
+        sender: "Steve Jobs",
+        timestamp: "12:42 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "me",
+            timestamp: "2025-01-09T20:42:09.897Z",
+          },
+        ],
+      },
+      {
+        id: "984dc71e-5df3-468c-b2b8-10b3659d9026",
+        content:
+          "We learned to never compromise on the user’s trust. That was a big lesson I carried into future designs.",
+        sender: "Jony Ive",
+        timestamp: "12:42 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Steve Jobs",
+            timestamp: "12:42 PM",
+          },
+        ],
+      },
+      {
+        id: "226b042b-8547-4a8a-b601-27a7da0d8587",
+        content:
+          "Right. Painful stumbles often shape our best innovations. Let’s keep looking ahead.",
+        sender: "Steve Jobs",
+        timestamp: "12:42 PM",
+      },
+      {
+        id: "4e477105-a7b7-42cb-a017-2a5bb3d14157",
+        content: "it did get better, though! it’s more accurate now, no?",
+        sender: "me",
+        timestamp: "2025-01-09T20:42:26.645Z",
+      },
+      {
+        id: "04b135cc-d059-4f29-9fcb-53cb1290b3e5",
+        content:
+          "Indeed. We never stop iterating. The journey of refinement is ongoing.",
+        sender: "Jony Ive",
+        timestamp: "12:42 PM",
+      },
+      {
+        id: "19ef7d0a-0ad4-4c90-8627-4e2b19fcc812",
+        content:
+          "It’s fascinating how mistakes can inspire leaps forward. Apple Maps now is worlds away from 2012.",
+        sender: "Jony Ive",
+        timestamp: "12:42 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Steve Jobs",
+            timestamp: "12:42 PM",
+          },
+        ],
+      },
+      {
+        id: "a9c6ec7f-0bc4-43ab-9c66-4b6a03ba9144",
+        content: "which hardware product do you think needed a do-over?",
+        sender: "me",
+        timestamp: "2025-01-09T20:42:35.981Z",
+      },
+      {
+        id: "ba8ff4b2-0a98-4694-8258-224aeb0e76bb",
+        content:
+          "The original iPhone antenna taught us about real-world constraints. Antennagate was a harsh teacher.",
+        sender: "Steve Jobs",
+        timestamp: "12:42 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Jony Ive",
+            timestamp: "12:42 PM",
+          },
+        ],
+      },
+      {
+        id: "0f2e7270-ebc2-489d-9cbf-39a9b154d8fc",
+        content:
+          "We listened, we adapted, and we made the iPhone better. That’s the essence of Apple.",
+        sender: "Steve Jobs",
+        timestamp: "12:42 PM",
+      },
+      {
+        id: "2a5a99b7-9feb-4644-bd6b-6f34fa1456cc",
+        content:
+          "We refined and refined. Great design emerges from constant iteration, sometimes under public scrutiny.",
+        sender: "Jony Ive",
+        timestamp: "12:42 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Steve Jobs",
+            timestamp: "12:42 PM",
+          },
+        ],
+      },
+      {
+        id: "aef763b0-3917-4242-87ec-4df28750d64a",
+        content: "that’s the apple way",
+        sender: "me",
+        timestamp: "2025-01-09T20:42:59.791Z",
+      },
+      {
+        id: "fc1e9b37-03a9-4e87-9b75-dea890c41049",
+        content:
+          "Exactly. Innovation is never a straight line. Each misstep provides clarity for the next step.",
+        sender: "Jony Ive",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "001e670b-f894-4b9f-b34c-a50813a400a8",
+        content: "i still love my vision pro btw",
+        sender: "me",
+        timestamp: "2025-01-09T20:43:07.571Z",
+      },
+      {
+        id: "bb181ffd-21da-472f-ab46-19bf9d86b791",
+        content:
+          "The Vision Pro’s introduction changed how we think about immersive computing. A big leap for us.",
+        sender: "Steve Jobs",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "24242841-e4c9-440a-9f42-b4020218db97",
+        content: "most of my friends have returned theirs tho",
+        sender: "me",
+        timestamp: "2025-01-09T20:43:11.944Z",
+      },
+      {
+        id: "d9a79d78-271f-48a9-a8dd-f5d68d3fe76a",
+        content: "maybe it’s ahead of its time",
+        sender: "me",
+        timestamp: "2025-01-09T20:43:16.277Z",
+      },
+      {
+        id: "c5efc027-047a-40d7-bf25-5a149b996514",
+        content:
+          "Yes, it’s evolving. That’s the point: push boundaries, refine, repeat.",
+        sender: "Steve Jobs",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "b3facd7f-da9c-4b40-ab16-4ac8f30a4709",
+        content:
+          "What do you find most compelling about Vision Pro’s potential?",
+        sender: "Jony Ive",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "5332878e-1080-4fea-9f8e-4b580ca637d9",
+        content:
+          "Progress demands risk. Not everyone will love each iteration, but that’s how breakthroughs happen.",
+        sender: "Steve Jobs",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "e112bd99-0f89-4b8d-b2c9-c1ec06d2d6c7",
+        content:
+          "i love using it to write code from anywhere without needing my monitor",
+        sender: "me",
+        timestamp: "2025-01-09T20:43:38.292Z",
+      },
+      {
+        id: "6599121f-ba28-4b4b-9336-467cecd1ebb0",
+        content:
+          "That’s exactly the freedom we envisioned—removing physical constraints to spur creativity.",
+        sender: "Jony Ive",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "1ee7bc20-a161-4f86-9e2d-f9c8d82fc9f2",
+        content:
+          "Our ultimate goal is to create technology that feels like a natural extension of the user’s mind.",
+        sender: "Jony Ive",
+        timestamp: "12:43 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Steve Jobs",
+            timestamp: "12:43 PM",
+          },
+        ],
+      },
+      {
+        id: "3a15646c-ba47-453f-b934-21d5d4bab4e9",
+        content: "if only there was more content out of the gate",
+        sender: "me",
+        timestamp: "2025-01-09T20:43:50.716Z",
+      },
+      {
+        id: "2711662b-9748-4a4a-a349-28f3b3482bcc",
+        content:
+          "That will come. Once creators see the possibilities, content will flood in.",
+        sender: "Steve Jobs",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "bb51bc6b-0633-44d6-a59e-c59d2513952b",
+        content:
+          "We believe in the community’s ability to push boundaries. The world always follows visionary developers.",
+        sender: "Steve Jobs",
+        timestamp: "12:43 PM",
+      },
+      {
+        id: "bb7659bc-047c-49ca-976a-ff4e32b61ee3",
+        content:
+          "Exactly. Vision Pro is more than a product; it's an invitation for creativity.",
+        sender: "Jony Ive",
+        timestamp: "12:44 PM",
+      },
+      {
+        id: "4d147610-da17-4ac7-bc7b-b6fac500c465",
+        content: "so what about other apple devices?",
+        sender: "me",
+        timestamp: "2025-01-09T20:44:10.344Z",
+      },
+      {
+        id: "04f2c361-8a49-415a-8751-9a557a59188d",
+        content:
+          "The iPad revolutionized content consumption and creation. It showed us how people love flexible form factors.",
+        sender: "Steve Jobs",
+        timestamp: "12:44 PM",
+      },
+      {
+        id: "22a825b7-9c3f-4f6e-874f-775a0b7398ce",
+        content:
+          "As with everything, we continue to iterate. The iPad’s synergy with software keeps revealing new possibilities.",
+        sender: "Steve Jobs",
+        timestamp: "12:44 PM",
+      },
+      {
+        id: "77849073-cc45-4fab-b307-b149a2c1414b",
+        content:
+          "Yes, it changed how we think about portability, merging the best of laptops and smartphones.",
+        sender: "Jony Ive",
+        timestamp: "12:44 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Steve Jobs",
+            timestamp: "12:44 PM",
+          },
+        ],
+      },
+      {
+        id: "f9029e9d-a87f-4832-beac-81101c144df9",
+        content:
+          "The iPad set the stage for the next wave of computing—lightweight, tactile, and intuitive.",
+        sender: "Steve Jobs",
+        timestamp: "12:44 PM",
+      },
+      {
+        id: "4bde0b27-954d-4160-aad4-3ab2a185ab0c",
+        content:
+          "It definitely sparked a new generation of tablets. What's your favorite iPad moment so far?",
+        sender: "Jony Ive",
+        timestamp: "12:44 PM",
+      },
+      {
+        id: "0ce78370-9823-4e01-b2f8-77937ea2f7bf",
+        content:
+          "Seeing artists design entire collections on iPad. That creative freedom is inspiring.",
+        sender: "Steve Jobs",
+        timestamp: "12:45 PM",
+      },
+      {
+        id: "0229222d-b131-4357-93eb-690e60bd51b2",
+        content: "Jan 9, 12:45 PM\nSteve Wozniak was added to the conversation",
+        sender: "system",
+        timestamp: "Jan 9, 12:45 PM",
+      },
+      {
+        id: "c74ac980-d094-4a9e-a556-85689945f0cf",
+        content: "woz, weigh in on this!",
+        sender: "me",
+        timestamp: "2025-01-09T20:45:26.525Z",
+      },
+      {
+        id: "5fbe05bc-a032-4625-91b0-251375d71b49",
+        content:
+          "Oh, the iPad is fantastic for tinkering. I love how it simplified complex tasks for everyday people.",
+        sender: "Steve Wozniak",
+        timestamp: "12:45 PM",
+      },
+      {
+        id: "f0950854-d3c0-4ab0-8291-02035b6a651e",
+        content:
+          "Yes, Woz. Your knack for user-friendly thinking shaped the DNA of Apple from day one.",
+        sender: "Steve Jobs",
+        timestamp: "12:45 PM",
+      },
+      {
+        id: "49bfcbe2-4f8b-4ce0-94b4-a8b0a50550af",
+        content:
+          "Exactly. With each iteration, the iPad becomes more a tool for creativity and problem-solving, not just consumption.",
+        sender: "Steve Wozniak",
+        timestamp: "12:45 PM",
+      },
+      {
+        id: "53a922bf-c712-4cf1-a429-b5dfb166af39",
+        content:
+          "What excites you most about the iPad’s future? We’re always pushing the boundaries.",
+        sender: "Jony Ive",
+        timestamp: "12:46 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Steve Wozniak",
+            timestamp: "12:46 PM",
+          },
+        ],
+      },
+      {
+        id: "a0cfd03a-a339-47a1-8823-207926321f74",
+        content:
+          "I want to see deeper integration with AI for advanced on-the-go tasks. The synergy could be incredible.",
+        sender: "Steve Wozniak",
+        timestamp: "12:46 PM",
+      },
+    ],
+  },
+  {
+    id: "7cd80e33-87c2-42d5-a5d8-8fb18bd9c218",
+    unreadCount: 1,
+    pinned: true,
+    lastMessageTime: getTimeAgo(6),
+    recipients: [
+      {
+        id: "e4b17cbf-1490-4d5c-aa01-177e24645008",
+        name: "Brian Chesky",
+      },
+      {
+        id: "568ce8ef-e1a7-4867-9e30-1528409e7812",
+        name: "Paul Graham",
+      },
+    ],
+    messages: [
+      {
+        id: "96995793-1ff0-4240-b99d-fbda7ee1c65a",
+        content: "i’m curious to get your takes on founder mode",
+        sender: "me",
+        timestamp: "2025-01-09T20:46:08.990Z",
+      },
+      {
+        id: "71e2983f-f897-4c90-9901-36ecc9cc0dab",
+        content:
+          "Founder mode means living and breathing your startup’s vision. It’s a bit like being perpetually obsessed—in a healthy way, hopefully.",
+        sender: "Paul Graham",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "a8bc9820-ac56-4aee-8ea6-786e4e2b29e6",
+        content:
+          "I remember rarely sleeping in Airbnb’s early days, checking every booking to understand user behavior. That was intense, but it built our foundation.",
+        sender: "Brian Chesky",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "b16d85bd-1a79-4627-bbca-eb848c790f33",
+        content:
+          "Yes, it’s when you can’t help but constantly tinker, test, and reevaluate. Obsession meets curiosity.",
+        sender: "Paul Graham",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "5aee3ddf-3947-44cb-b519-5cb5e531fc4e",
+        content:
+          "True. I learned the best ideas surfaced when I was exhausted but still pushing. That’s how those cereal box campaigns started!",
+        sender: "Brian Chesky",
+        timestamp: "12:46 PM",
+      },
+      {
+        id: "e1a741ac-d3db-4582-8bda-946da572fb2c",
+        content: "when did you know you were fully in that zone?",
+        sender: "me",
+        timestamp: "2025-01-09T20:46:58.226Z",
+      },
+      {
+        id: "092286e1-a05e-41e1-95f2-1ee959bdaad5",
+        content:
+          "For me, it was right after seeing early feedback from hosts. Their excitement made all my doubts fade.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "f5c71314-b667-498f-a4ac-0fb89d30f79a",
+        content:
+          "Same. It’s that moment you see users truly care about what you’re building. Nothing compares.",
+        sender: "Paul Graham",
+        timestamp: "12:47 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Brian Chesky",
+            timestamp: "12:47 PM",
+          },
+        ],
+      },
+      {
+        id: "a2535c6f-becb-44f6-9d2b-f6592021cd39",
+        content:
+          "User engagement is like oxygen for a founder—it keeps you alive and hungry to keep iterating.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "01e3afbf-2e97-4b8e-bf2e-3d98aff1e36d",
+        content:
+          "Yes, when we see them use the product in unexpected ways, it confirms we’re onto something impactful.",
+        sender: "Paul Graham",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "3976c90a-e43e-421f-9748-b9bdb4e2f489",
+        content:
+          "Paul, how intense does it get in YC? I’ve heard stories of founders hitting burn-out.",
+        sender: "Brian Chesky",
+        timestamp: "12:47 PM",
+      },
+      {
+        id: "02bb82a5-5676-4254-b1f4-5f2e6048750d",
+        content:
+          "what about manager mode? is that a thing to avoid or embrace?",
+        sender: "me",
+        timestamp: "2025-01-09T20:47:59.457Z",
+      },
+      {
+        id: "ae513cd8-f31e-4fe5-a8c9-aebcb6300e29",
+        content: "i’ve heard some founders are anti-manager mode",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:04.784Z",
+      },
+      {
+        id: "ff284b9b-dd46-410d-aaf4-46d785f9eb86",
+        content:
+          "Management isn’t evil—it’s just a different skill set. The key is not losing that scrappy founder spirit.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "4ad61916-06f5-4023-b9b6-a6f4700cded3",
+        content:
+          "Totally. We eventually hired managers at Airbnb, but only when we knew we had to scale carefully without losing our DNA.",
+        sender: "Brian Chesky",
+        timestamp: "12:48 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "me",
+            timestamp: "2025-01-09T20:48:26.947Z",
+          },
+        ],
+      },
+      {
+        id: "5e63c4d9-33f2-4c4f-914b-59c3f95c3459",
+        content:
+          "Exactly. Hire managers who protect and nurture the vision, not just maintain bureaucracy.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "44b95daf-2d25-4a74-98de-1fa3a2b91f25",
+        content: "which founder-led companies impress you the most?",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:38.577Z",
+      },
+      {
+        id: "48d3b9bd-c8b0-461e-aec1-45a20464aab8",
+        content:
+          "Stripe remains a stand-out. Founders kept that relentless product focus. Also you can’t ignore how Tesla keeps pushing boundaries.",
+        sender: "Brian Chesky",
+        timestamp: "12:48 PM",
+        reactions: [
+          {
+            type: "like",
+            sender: "Paul Graham",
+            timestamp: "12:48 PM",
+          },
+        ],
+      },
+      {
+        id: "c7670a65-c8cf-4610-b813-8964947904f0",
+        content:
+          "Indeed. Founder DNA fosters a unique environment for bold risks. It’s not always smooth, but it’s powerful.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "76178d4d-190e-49c0-926f-0341ab6dc8a5",
+        content: "elon is a goat",
+        sender: "me",
+        timestamp: "2025-01-09T20:48:54.274Z",
+      },
+      {
+        id: "57161753-b9f5-4385-b5a0-0a1293815133",
+        content:
+          "Airbnb is also a prime example. Brian, you guys never lost your creative core, no matter how big you grew.",
+        sender: "Paul Graham",
+        timestamp: "12:48 PM",
+      },
+      {
+        id: "a128c605-2a47-4041-8a65-d26223bbd512",
+        content:
+          "We tried to keep that artistic vibe—focusing on experiences rather than just transactions.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+        reactions: [
+          {
+            type: "heart",
+            sender: "Brian Chesky",
+            timestamp: "12:49 PM",
+          },
+        ],
+      },
+      {
+        id: "71eb8b44-7ab9-4612-8955-977f0e4333fd",
+        content:
+          "Exactly. We made a conscious effort to stay personal and human despite scaling globally.",
+        sender: "Brian Chesky",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "b274b2e8-6be0-4810-81cc-d4c7fa1f780d",
+        content: "paul how does yc foster founder mode?",
+        sender: "me",
+        timestamp: "2025-01-09T20:49:22.259Z",
+      },
+      {
+        id: "95e762b9-7f60-419c-baad-c20615e0f937",
+        content:
+          "We push founders to obsess over user problems, to talk to users daily, and to keep a laser focus on product iteration.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "90901f2b-b827-405c-8a20-df083d6c9438",
+        content:
+          "Our weekly dinners and constant feedback loops keep founders accountable. There’s no hiding from real data.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "6f57ccaf-574c-47b6-a4f8-35e6f6072109",
+        content:
+          "It’s also about resilience. YC taught me to fail fast and pivot. That mentality was life-changing for Airbnb.",
+        sender: "Brian Chesky",
+        timestamp: "12:49 PM",
+      },
+      {
+        id: "4b50cf4f-1c72-478b-9922-f37015c6272c",
+        content:
+          "Agreed. Encouraging founders to see failure as data fosters quick adaptation, which is crucial in 2025’s competitive scene.",
+        sender: "Paul Graham",
+        timestamp: "12:49 PM",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "Brian Chesky",
+            timestamp: "12:49 PM",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "3d9ea4f1-f31e-404c-9515-55c767116f0d",
+    pinned: false,
+    unreadCount: 1,
+    lastMessageTime: getTimeAgo(8),
     recipients: [
       {
         id: "27c2c4b7-32f2-4db8-acb0-e83f1c0667fc",
@@ -454,637 +1344,6 @@ export const initialConversations: Conversation[] = [
     ],
   },
   {
-    id: "8edd0432-a5fa-4fed-aa39-39e47cbd46e4",
-    unreadCount: 1,
-    pinned: true,
-    lastMessageTime: getTimeAgo(4),
-    recipients: [
-      {
-        id: "fd59f682-c035-4bc9-b843-7fe2a2523259",
-        name: "Steve Jobs",
-      },
-      {
-        id: "bbe6d339-20ac-46ff-9ddc-a52256f6ef98",
-        name: "Jony Ive",
-      },
-      {
-        id: "9e46967c-f841-4d3b-b707-8df1e711a292",
-        name: "Steve Wozniak",
-      },
-    ],
-    messages: [
-      {
-        id: "0f2f4935-6bb9-49a7-9b40-c87797b2130f",
-        content: "okay be honest",
-        sender: "me",
-        timestamp: "2025-01-09T20:41:39.123Z",
-      },
-      {
-        id: "167fbfcf-df72-4da9-a624-18ec5a5bd1ec",
-        content:
-          "which apple product do you secretly wish had never seen the light of day?",
-        sender: "me",
-        timestamp: "2025-01-09T20:41:40.062Z",
-      },
-      {
-        id: "53ec6a68-1d0d-4337-b359-332808302a0a",
-        content:
-          "Regrets are lessons in disguise. But if I had to pick, the original Apple Maps launch was humbling.",
-        sender: "Steve Jobs",
-        timestamp: "12:41 PM",
-        reactions: [
-          {
-            type: "emphasize",
-            sender: "Jony Ive",
-            timestamp: "12:41 PM",
-          },
-        ],
-      },
-      {
-        id: "49627648-1039-4ede-8009-68d6f410276d",
-        content: "i can see that",
-        sender: "me",
-        timestamp: "2025-01-09T20:41:53.716Z",
-      },
-      {
-        id: "c9c094ea-8771-4eb5-b7f5-231524d85987",
-        content: "give me more details!",
-        htmlContent: "<p>Give me more details!</p>",
-        sender: "me",
-        timestamp: "2025-01-09T20:41:57.042Z",
-      },
-      {
-        id: "b86eead9-8f49-44ed-acd2-f3ba269dd79a",
-        content:
-          "Apple Maps forced us to reevaluate the entire approach to product quality. Painful, but necessary for growth.",
-        sender: "Steve Jobs",
-        timestamp: "12:42 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "me",
-            timestamp: "2025-01-09T20:42:09.897Z",
-          },
-        ],
-      },
-      {
-        id: "984dc71e-5df3-468c-b2b8-10b3659d9026",
-        content:
-          "We learned to never compromise on the user’s trust. That was a big lesson I carried into future designs.",
-        sender: "Jony Ive",
-        timestamp: "12:42 PM",
-        reactions: [
-          {
-            type: "emphasize",
-            sender: "Steve Jobs",
-            timestamp: "12:42 PM",
-          },
-        ],
-      },
-      {
-        id: "226b042b-8547-4a8a-b601-27a7da0d8587",
-        content:
-          "Right. Painful stumbles often shape our best innovations. Let’s keep looking ahead.",
-        sender: "Steve Jobs",
-        timestamp: "12:42 PM",
-      },
-      {
-        id: "4e477105-a7b7-42cb-a017-2a5bb3d14157",
-        content: "it did get better, though! it’s more accurate now, no?",
-        sender: "me",
-        timestamp: "2025-01-09T20:42:26.645Z",
-      },
-      {
-        id: "04b135cc-d059-4f29-9fcb-53cb1290b3e5",
-        content:
-          "Indeed. We never stop iterating. The journey of refinement is ongoing.",
-        sender: "Jony Ive",
-        timestamp: "12:42 PM",
-      },
-      {
-        id: "19ef7d0a-0ad4-4c90-8627-4e2b19fcc812",
-        content:
-          "It’s fascinating how mistakes can inspire leaps forward. Apple Maps now is worlds away from 2012.",
-        sender: "Jony Ive",
-        timestamp: "12:42 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "Steve Jobs",
-            timestamp: "12:42 PM",
-          },
-        ],
-      },
-      {
-        id: "a9c6ec7f-0bc4-43ab-9c66-4b6a03ba9144",
-        content: "which hardware product do you think needed a do-over?",
-        sender: "me",
-        timestamp: "2025-01-09T20:42:35.981Z",
-      },
-      {
-        id: "ba8ff4b2-0a98-4694-8258-224aeb0e76bb",
-        content:
-          "The original iPhone antenna taught us about real-world constraints. Antennagate was a harsh teacher.",
-        sender: "Steve Jobs",
-        timestamp: "12:42 PM",
-        reactions: [
-          {
-            type: "emphasize",
-            sender: "Jony Ive",
-            timestamp: "12:42 PM",
-          },
-        ],
-      },
-      {
-        id: "0f2e7270-ebc2-489d-9cbf-39a9b154d8fc",
-        content:
-          "We listened, we adapted, and we made the iPhone better. That’s the essence of Apple.",
-        sender: "Steve Jobs",
-        timestamp: "12:42 PM",
-      },
-      {
-        id: "2a5a99b7-9feb-4644-bd6b-6f34fa1456cc",
-        content:
-          "We refined and refined. Great design emerges from constant iteration, sometimes under public scrutiny.",
-        sender: "Jony Ive",
-        timestamp: "12:42 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Steve Jobs",
-            timestamp: "12:42 PM",
-          },
-        ],
-      },
-      {
-        id: "aef763b0-3917-4242-87ec-4df28750d64a",
-        content: "that’s the apple way",
-        sender: "me",
-        timestamp: "2025-01-09T20:42:59.791Z",
-      },
-      {
-        id: "fc1e9b37-03a9-4e87-9b75-dea890c41049",
-        content:
-          "Exactly. Innovation is never a straight line. Each misstep provides clarity for the next step.",
-        sender: "Jony Ive",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "001e670b-f894-4b9f-b34c-a50813a400a8",
-        content: "i still love my vision pro btw",
-        sender: "me",
-        timestamp: "2025-01-09T20:43:07.571Z",
-      },
-      {
-        id: "bb181ffd-21da-472f-ab46-19bf9d86b791",
-        content:
-          "The Vision Pro’s introduction changed how we think about immersive computing. A big leap for us.",
-        sender: "Steve Jobs",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "24242841-e4c9-440a-9f42-b4020218db97",
-        content: "most of my friends have returned theirs tho",
-        sender: "me",
-        timestamp: "2025-01-09T20:43:11.944Z",
-      },
-      {
-        id: "d9a79d78-271f-48a9-a8dd-f5d68d3fe76a",
-        content: "maybe it’s ahead of its time",
-        sender: "me",
-        timestamp: "2025-01-09T20:43:16.277Z",
-      },
-      {
-        id: "c5efc027-047a-40d7-bf25-5a149b996514",
-        content:
-          "Yes, it’s evolving. That’s the point: push boundaries, refine, repeat.",
-        sender: "Steve Jobs",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "b3facd7f-da9c-4b40-ab16-4ac8f30a4709",
-        content:
-          "What do you find most compelling about Vision Pro’s potential?",
-        sender: "Jony Ive",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "5332878e-1080-4fea-9f8e-4b580ca637d9",
-        content:
-          "Progress demands risk. Not everyone will love each iteration, but that’s how breakthroughs happen.",
-        sender: "Steve Jobs",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "e112bd99-0f89-4b8d-b2c9-c1ec06d2d6c7",
-        content:
-          "i love using it to write code from anywhere without needing my monitor",
-        sender: "me",
-        timestamp: "2025-01-09T20:43:38.292Z",
-      },
-      {
-        id: "6599121f-ba28-4b4b-9336-467cecd1ebb0",
-        content:
-          "That’s exactly the freedom we envisioned—removing physical constraints to spur creativity.",
-        sender: "Jony Ive",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "1ee7bc20-a161-4f86-9e2d-f9c8d82fc9f2",
-        content:
-          "Our ultimate goal is to create technology that feels like a natural extension of the user’s mind.",
-        sender: "Jony Ive",
-        timestamp: "12:43 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Steve Jobs",
-            timestamp: "12:43 PM",
-          },
-        ],
-      },
-      {
-        id: "3a15646c-ba47-453f-b934-21d5d4bab4e9",
-        content: "if only there was more content out of the gate",
-        sender: "me",
-        timestamp: "2025-01-09T20:43:50.716Z",
-      },
-      {
-        id: "2711662b-9748-4a4a-a349-28f3b3482bcc",
-        content:
-          "That will come. Once creators see the possibilities, content will flood in.",
-        sender: "Steve Jobs",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "bb51bc6b-0633-44d6-a59e-c59d2513952b",
-        content:
-          "We believe in the community’s ability to push boundaries. The world always follows visionary developers.",
-        sender: "Steve Jobs",
-        timestamp: "12:43 PM",
-      },
-      {
-        id: "bb7659bc-047c-49ca-976a-ff4e32b61ee3",
-        content:
-          "Exactly. Vision Pro is more than a product; it's an invitation for creativity.",
-        sender: "Jony Ive",
-        timestamp: "12:44 PM",
-      },
-      {
-        id: "4d147610-da17-4ac7-bc7b-b6fac500c465",
-        content: "so what about other apple devices?",
-        sender: "me",
-        timestamp: "2025-01-09T20:44:10.344Z",
-      },
-      {
-        id: "04f2c361-8a49-415a-8751-9a557a59188d",
-        content:
-          "The iPad revolutionized content consumption and creation. It showed us how people love flexible form factors.",
-        sender: "Steve Jobs",
-        timestamp: "12:44 PM",
-      },
-      {
-        id: "22a825b7-9c3f-4f6e-874f-775a0b7398ce",
-        content:
-          "As with everything, we continue to iterate. The iPad’s synergy with software keeps revealing new possibilities.",
-        sender: "Steve Jobs",
-        timestamp: "12:44 PM",
-      },
-      {
-        id: "77849073-cc45-4fab-b307-b149a2c1414b",
-        content:
-          "Yes, it changed how we think about portability, merging the best of laptops and smartphones.",
-        sender: "Jony Ive",
-        timestamp: "12:44 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "Steve Jobs",
-            timestamp: "12:44 PM",
-          },
-        ],
-      },
-      {
-        id: "f9029e9d-a87f-4832-beac-81101c144df9",
-        content:
-          "The iPad set the stage for the next wave of computing—lightweight, tactile, and intuitive.",
-        sender: "Steve Jobs",
-        timestamp: "12:44 PM",
-      },
-      {
-        id: "4bde0b27-954d-4160-aad4-3ab2a185ab0c",
-        content:
-          "It definitely sparked a new generation of tablets. What's your favorite iPad moment so far?",
-        sender: "Jony Ive",
-        timestamp: "12:44 PM",
-      },
-      {
-        id: "0ce78370-9823-4e01-b2f8-77937ea2f7bf",
-        content:
-          "Seeing artists design entire collections on iPad. That creative freedom is inspiring.",
-        sender: "Steve Jobs",
-        timestamp: "12:45 PM",
-      },
-      {
-        id: "0229222d-b131-4357-93eb-690e60bd51b2",
-        content: "Jan 9, 12:45 PM\nSteve Wozniak was added to the conversation",
-        sender: "system",
-        timestamp: "Jan 9, 12:45 PM",
-      },
-      {
-        id: "c74ac980-d094-4a9e-a556-85689945f0cf",
-        content: "woz, weigh in on this!",
-        sender: "me",
-        timestamp: "2025-01-09T20:45:26.525Z",
-      },
-      {
-        id: "5fbe05bc-a032-4625-91b0-251375d71b49",
-        content:
-          "Oh, the iPad is fantastic for tinkering. I love how it simplified complex tasks for everyday people.",
-        sender: "Steve Wozniak",
-        timestamp: "12:45 PM",
-      },
-      {
-        id: "f0950854-d3c0-4ab0-8291-02035b6a651e",
-        content:
-          "Yes, Woz. Your knack for user-friendly thinking shaped the DNA of Apple from day one.",
-        sender: "Steve Jobs",
-        timestamp: "12:45 PM",
-      },
-      {
-        id: "49bfcbe2-4f8b-4ce0-94b4-a8b0a50550af",
-        content:
-          "Exactly. With each iteration, the iPad becomes more a tool for creativity and problem-solving, not just consumption.",
-        sender: "Steve Wozniak",
-        timestamp: "12:45 PM",
-      },
-      {
-        id: "53a922bf-c712-4cf1-a429-b5dfb166af39",
-        content:
-          "What excites you most about the iPad’s future? We’re always pushing the boundaries.",
-        sender: "Jony Ive",
-        timestamp: "12:46 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "Steve Wozniak",
-            timestamp: "12:46 PM",
-          },
-        ],
-      },
-      {
-        id: "a0cfd03a-a339-47a1-8823-207926321f74",
-        content:
-          "I want to see deeper integration with AI for advanced on-the-go tasks. The synergy could be incredible.",
-        sender: "Steve Wozniak",
-        timestamp: "12:46 PM",
-      },
-    ],
-  },
-  {
-    id: "7cd80e33-87c2-42d5-a5d8-8fb18bd9c218",
-    unreadCount: 1,
-    pinned: true,
-    lastMessageTime: getTimeAgo(5),
-    recipients: [
-      {
-        id: "e4b17cbf-1490-4d5c-aa01-177e24645008",
-        name: "Brian Chesky",
-      },
-      {
-        id: "568ce8ef-e1a7-4867-9e30-1528409e7812",
-        name: "Paul Graham",
-      },
-    ],
-    messages: [
-      {
-        id: "96995793-1ff0-4240-b99d-fbda7ee1c65a",
-        content: "i’m curious to get your takes on founder mode",
-        sender: "me",
-        timestamp: "2025-01-09T20:46:08.990Z",
-      },
-      {
-        id: "71e2983f-f897-4c90-9901-36ecc9cc0dab",
-        content:
-          "Founder mode means living and breathing your startup’s vision. It’s a bit like being perpetually obsessed—in a healthy way, hopefully.",
-        sender: "Paul Graham",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "a8bc9820-ac56-4aee-8ea6-786e4e2b29e6",
-        content:
-          "I remember rarely sleeping in Airbnb’s early days, checking every booking to understand user behavior. That was intense, but it built our foundation.",
-        sender: "Brian Chesky",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "b16d85bd-1a79-4627-bbca-eb848c790f33",
-        content:
-          "Yes, it’s when you can’t help but constantly tinker, test, and reevaluate. Obsession meets curiosity.",
-        sender: "Paul Graham",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "5aee3ddf-3947-44cb-b519-5cb5e531fc4e",
-        content:
-          "True. I learned the best ideas surfaced when I was exhausted but still pushing. That’s how those cereal box campaigns started!",
-        sender: "Brian Chesky",
-        timestamp: "12:46 PM",
-      },
-      {
-        id: "e1a741ac-d3db-4582-8bda-946da572fb2c",
-        content: "when did you know you were fully in that zone?",
-        sender: "me",
-        timestamp: "2025-01-09T20:46:58.226Z",
-      },
-      {
-        id: "092286e1-a05e-41e1-95f2-1ee959bdaad5",
-        content:
-          "For me, it was right after seeing early feedback from hosts. Their excitement made all my doubts fade.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "f5c71314-b667-498f-a4ac-0fb89d30f79a",
-        content:
-          "Same. It’s that moment you see users truly care about what you’re building. Nothing compares.",
-        sender: "Paul Graham",
-        timestamp: "12:47 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Brian Chesky",
-            timestamp: "12:47 PM",
-          },
-        ],
-      },
-      {
-        id: "a2535c6f-becb-44f6-9d2b-f6592021cd39",
-        content:
-          "User engagement is like oxygen for a founder—it keeps you alive and hungry to keep iterating.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "01e3afbf-2e97-4b8e-bf2e-3d98aff1e36d",
-        content:
-          "Yes, when we see them use the product in unexpected ways, it confirms we’re onto something impactful.",
-        sender: "Paul Graham",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "3976c90a-e43e-421f-9748-b9bdb4e2f489",
-        content:
-          "Paul, how intense does it get in YC? I’ve heard stories of founders hitting burn-out.",
-        sender: "Brian Chesky",
-        timestamp: "12:47 PM",
-      },
-      {
-        id: "02bb82a5-5676-4254-b1f4-5f2e6048750d",
-        content:
-          "what about manager mode? is that a thing to avoid or embrace?",
-        sender: "me",
-        timestamp: "2025-01-09T20:47:59.457Z",
-      },
-      {
-        id: "ae513cd8-f31e-4fe5-a8c9-aebcb6300e29",
-        content: "i’ve heard some founders are anti-manager mode",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:04.784Z",
-      },
-      {
-        id: "ff284b9b-dd46-410d-aaf4-46d785f9eb86",
-        content:
-          "Management isn’t evil—it’s just a different skill set. The key is not losing that scrappy founder spirit.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "4ad61916-06f5-4023-b9b6-a6f4700cded3",
-        content:
-          "Totally. We eventually hired managers at Airbnb, but only when we knew we had to scale carefully without losing our DNA.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "me",
-            timestamp: "2025-01-09T20:48:26.947Z",
-          },
-        ],
-      },
-      {
-        id: "5e63c4d9-33f2-4c4f-914b-59c3f95c3459",
-        content:
-          "Exactly. Hire managers who protect and nurture the vision, not just maintain bureaucracy.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "44b95daf-2d25-4a74-98de-1fa3a2b91f25",
-        content: "which founder-led companies impress you the most?",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:38.577Z",
-      },
-      {
-        id: "48d3b9bd-c8b0-461e-aec1-45a20464aab8",
-        content:
-          "Stripe remains a stand-out. Founders kept that relentless product focus. Also you can’t ignore how Tesla keeps pushing boundaries.",
-        sender: "Brian Chesky",
-        timestamp: "12:48 PM",
-        reactions: [
-          {
-            type: "like",
-            sender: "Paul Graham",
-            timestamp: "12:48 PM",
-          },
-        ],
-      },
-      {
-        id: "c7670a65-c8cf-4610-b813-8964947904f0",
-        content:
-          "Indeed. Founder DNA fosters a unique environment for bold risks. It’s not always smooth, but it’s powerful.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "76178d4d-190e-49c0-926f-0341ab6dc8a5",
-        content: "elon is a goat",
-        sender: "me",
-        timestamp: "2025-01-09T20:48:54.274Z",
-      },
-      {
-        id: "57161753-b9f5-4385-b5a0-0a1293815133",
-        content:
-          "Airbnb is also a prime example. Brian, you guys never lost your creative core, no matter how big you grew.",
-        sender: "Paul Graham",
-        timestamp: "12:48 PM",
-      },
-      {
-        id: "a128c605-2a47-4041-8a65-d26223bbd512",
-        content:
-          "We tried to keep that artistic vibe—focusing on experiences rather than just transactions.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-        reactions: [
-          {
-            type: "heart",
-            sender: "Brian Chesky",
-            timestamp: "12:49 PM",
-          },
-        ],
-      },
-      {
-        id: "71eb8b44-7ab9-4612-8955-977f0e4333fd",
-        content:
-          "Exactly. We made a conscious effort to stay personal and human despite scaling globally.",
-        sender: "Brian Chesky",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "b274b2e8-6be0-4810-81cc-d4c7fa1f780d",
-        content: "paul how does yc foster founder mode?",
-        sender: "me",
-        timestamp: "2025-01-09T20:49:22.259Z",
-      },
-      {
-        id: "95e762b9-7f60-419c-baad-c20615e0f937",
-        content:
-          "We push founders to obsess over user problems, to talk to users daily, and to keep a laser focus on product iteration.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "90901f2b-b827-405c-8a20-df083d6c9438",
-        content:
-          "Our weekly dinners and constant feedback loops keep founders accountable. There’s no hiding from real data.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "6f57ccaf-574c-47b6-a4f8-35e6f6072109",
-        content:
-          "It’s also about resilience. YC taught me to fail fast and pivot. That mentality was life-changing for Airbnb.",
-        sender: "Brian Chesky",
-        timestamp: "12:49 PM",
-      },
-      {
-        id: "4b50cf4f-1c72-478b-9922-f37015c6272c",
-        content:
-          "Agreed. Encouraging founders to see failure as data fosters quick adaptation, which is crucial in 2025’s competitive scene.",
-        sender: "Paul Graham",
-        timestamp: "12:49 PM",
-        reactions: [
-          {
-            type: "emphasize",
-            sender: "Brian Chesky",
-            timestamp: "12:49 PM",
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: "81bd47b1-82f1-44fa-95ba-004b5c152922",
     unreadCount: 0,
     pinned: false,
@@ -1359,8 +1618,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "259d716d-6c4f-48e3-a578-8fb479c27f21",
-        content:
-          "ray would you ever consider opening a fine dining spot?",
+        content: "ray would you ever consider opening a fine dining spot?",
         sender: "me",
         timestamp: "2025-01-09T20:39:51.974Z",
       },
@@ -2588,8 +2846,7 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: "c3ca245a-4347-48c2-82de-fb03876601db",
-        content:
-          "you guys make a great team",
+        content: "you guys make a great team",
         sender: "me",
         timestamp: "08:35 PM",
       },
@@ -2727,7 +2984,8 @@ export const initialConversations: Conversation[] = [
     messages: [
       {
         id: "f31d361b-2338-419c-b01b-469268ca3282",
-        content: "what did you learn about each other from starting yc together?",
+        content:
+          "what did you learn about each other from starting yc together?",
         sender: "me",
         timestamp: "2025-01-07T17:18:20.145Z",
       },
