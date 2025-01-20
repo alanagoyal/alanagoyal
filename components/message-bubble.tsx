@@ -206,6 +206,46 @@ export function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
+  // Helper function to get reaction verb
+  const getReactionVerb = (type: ReactionType) => {
+    switch (type) {
+      case "heart":
+        return "loved";
+      case "like":
+        return "liked";
+      case "dislike":
+        return "disliked";
+      case "laugh":
+        return "laughed at";
+      case "emphasize":
+        return "emphasized";
+      case "question":
+        return "questioned";
+      default:
+        return "reacted to";
+    }
+  };
+
+  // Helper function to format reactions into a sentence
+  const formatReactions = (reactions: Reaction[]) => {
+    const sortedReactions = [...reactions].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    return sortedReactions.map((reaction, index) => {
+      const name = reaction.sender === "me" ? "You" : reaction.sender;
+      const verb = getReactionVerb(reaction.type);
+      
+      if (index === 0) {
+        return `${name} ${verb} this message`;
+      }
+      if (index === sortedReactions.length - 1) {
+        return ` ${name} ${verb} this message`;
+      }
+      return `${name} ${verb} this message`;
+    }).join(", ");
+  };
+
   const rightBubbleSvg =
     effectiveTheme === "dark"
       ? "/messages/message-bubbles/right-bubble-dark.svg"
@@ -423,25 +463,33 @@ export function MessageBubble({
                         new Date(b.timestamp).getTime()
                     )
                     .map((reaction, index, array) => (
-                      <div
-                        key={`${reaction.type}-${index}`}
-                        className={cn(
-                          "w-8 h-8 flex items-center justify-center text-sm relative",
-                          index !== array.length - 1 &&
-                            (isMe ? "-mr-7" : "-ml-7"),
-                          `z-[${array.length - index}]`
-                        )}
-                        style={{
-                          backgroundImage: `url('${getReactionIconSvg(
-                            isMe,
-                            reaction.type,
-                            reaction.sender === "me"
-                          )}')`,
-                          backgroundSize: "contain",
-                          backgroundRepeat: "no-repeat",
-                          backgroundPosition: "center",
-                        }}
-                      ></div>
+                      <Popover key={`${reaction.type}-${index}`}>
+                        <PopoverTrigger>
+                          <div
+                            className={cn(
+                              "w-8 h-8 flex items-center justify-center text-sm relative cursor-pointer",
+                              index !== array.length - 1 &&
+                                (isMe ? "-mr-7" : "-ml-7"),
+                              `z-[${array.length - index}]`
+                            )}
+                            style={{
+                              backgroundImage: `url('${getReactionIconSvg(
+                                isMe,
+                                reaction.type,
+                                reaction.sender === "me"
+                              )}')`,
+                              backgroundSize: "contain",
+                              backgroundRepeat: "no-repeat",
+                              backgroundPosition: "center",
+                            }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-fit px-3 py-1.5 bg-gray-100 dark:bg-[#404040] border-gray-100 dark:border-[#404040]">
+                          <p className="text-sm">
+                            {formatReactions(message.reactions || [])}
+                          </p>
+                        </PopoverContent>
+                      </Popover>
                     ))}
                 </div>
               )}
