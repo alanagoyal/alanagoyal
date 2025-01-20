@@ -30,7 +30,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const supabase = createBrowserClient();
   const slug = params.slug.replace(/^notes\//, '');
-  console.log(slug);
 
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
