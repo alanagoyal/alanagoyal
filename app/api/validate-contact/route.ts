@@ -2,7 +2,7 @@ import { initLogger, invoke, wrapTraced } from "braintrust";
 import { NextResponse } from 'next/server';
 
 initLogger({
-  projectName: "dialogue",
+  projectName: "messages",
   apiKey: process.env.BRAINTRUST_API_KEY,
   asyncFlush: true,
 });
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 const handleRequest = wrapTraced(async function handleRequest(name: string) {
   try {
     const result = await invoke({
-      projectName: "dialogue",
+      projectName: "messages",
       slug: "validate-name-317c",
       input: {
         name,

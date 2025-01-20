@@ -14,7 +14,7 @@ const client = wrapOpenAI(
 );
 
 initLogger({
-  projectName: "dialogue",
+  projectName: "messages",
   apiKey: process.env.BRAINTRUST_API_KEY,
 });
 
