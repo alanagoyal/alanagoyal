@@ -1,32 +1,36 @@
-## Getting Started
+# [notes](https://alanagoyal.com/notes)
 
-### Clone the repository
+i'm obsessed with re-creating apple products. this one is a notes-inspired website that doubles as my personal website.
+
+## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`
 
-### Set up the database
-This project uses [Supabase](https://supabase.com) as a backend. To set up the database, create a [new project](https://database.new), enter your project details, and wait for the database to launch. Navigate to the SQL editor in the dashboard, paste the SQL from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) into the SQL editor and press run. You can also use the Supabase CLI to do this locally.
+## set up the database
 
-Grab the project URL and anon key from the API settings and put them in a new `.env.local` file in the root directory as shown:
+this project uses [supabase](https://supabase.com) as a backend. to set up the database, create a [new project](https://database.new), enter your project details, and wait for the database to launch. navigate to the sql editor in the dashboard, paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) into the sql editor and press run. you can also use the supabase cli to do this locally.
+
+grab the project url and anon key from the api settings and put them in a new `.env.local` file in the root directory as shown:
+
 ```
-NEXT_PUBLIC_SUPABASE_URL="<your-supabase-url>" 
+NEXT_PUBLIC_SUPABASE_URL="<your-supabase-url>"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-anon-key>"
 ```
 
-### Install dependencies
+## install dependencies
 
 `npm install`
 
-### Run the application
+## run the app
 
-Run the application in the command line and it will be available at http://localhost:3000.
+run the application in the command line and it will be available at http://localhost:3000.
 
 `npm run dev`
 
-### Deploy
+## deploy
 
-Deploy using [Vercel](https://vercel.com)
+deploy using [vercel](https://vercel.com)
 
-## License
+## license
 
-Licensed under the [MIT license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
+licensed under the [mit license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
