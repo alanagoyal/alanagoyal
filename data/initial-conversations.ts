@@ -117,6 +117,86 @@ export const initialConversations: Conversation[] = [
         timestamp: "2025-01-20T23:13:36.470Z",
       },
       {
+        id: "344b0824-0c68-41cc-85a8-4494885fd397",
+        content:
+          "what has been the hardest part of scaling as technical founders?",
+        htmlContent:
+          "<p>what has been the hardest part of scaling as technical founders?</p>",
+        sender: "me",
+        timestamp: "2025-01-21T16:06:25.046Z",
+      },
+      {
+        id: "cf6c3016-f83e-4f82-b0ab-131f2365b63a",
+        content:
+          "Finding the right balance between tech and business needs. It's a constant juggling act.",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-21T16:06:33.750Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Guillermo Rauch",
+            timestamp: "08:06 AM",
+          },
+        ],
+      },
+      {
+        id: "3839b44d-527b-49ce-9d12-794b47d962a7",
+        content:
+          "Absolutely. Also, managing team dynamics as you grow is a real challenge. Thoughts on that?",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-21T16:06:47.612Z",
+      },
+      {
+        id: "2c1e8a63-c67d-4520-a69e-9faa6223ffa8",
+        content: "do you still write a lot of code?",
+        htmlContent: "<p>do you still write a lot of code?</p>",
+        sender: "me",
+        timestamp: "2025-01-21T16:06:49.303Z",
+      },
+      {
+        id: "5429df32-aca8-4e14-8a22-5b22bc612564",
+        content:
+          "Not as much as I used to, but I still dive in occasionally to keep my skills sharp.",
+        sender: "Paul Copplestone",
+        timestamp: "2025-01-21T16:06:55.741Z",
+      },
+      {
+        id: "cfa182d8-5cc5-4490-9dbf-1d00c85325b0",
+        content:
+          "Same here. I code less, but I love contributing to key features. Keeps things fun!",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-21T16:07:07.140Z",
+        reactions: [
+          {
+            type: "like",
+            sender: "Paul Copplestone",
+            timestamp: "08:07 AM",
+          },
+        ],
+      },
+      {
+        id: "32cff561-c9b9-443b-aef8-1f53447de3b8",
+        content: "i see you shipping some little things on the weekend g",
+        htmlContent:
+          "<p>i see you shipping some little things on the weekend g</p>",
+        sender: "me",
+        timestamp: "2025-01-21T16:07:11.953Z",
+      },
+      {
+        id: "c8057ee5-7bba-4002-8faa-2314f7d976d5",
+        content:
+          "Gotta keep the passion alive! Weekend coding is where the magic happens.",
+        sender: "Guillermo Rauch",
+        timestamp: "2025-01-21T16:07:20.547Z",
+        reactions: [
+          {
+            type: "emphasize",
+            sender: "me",
+            timestamp: "2025-01-21T16:07:25.472Z",
+          },
+        ],
+      },
+      {
         id: "a325880f-6dbd-404e-93fd-934b174ffbd8",
         content: "what will programming look like in 2030?",
         sender: "me",
@@ -201,41 +281,9 @@ export const initialConversations: Conversation[] = [
         ],
       },
       {
-        id: "a879dbff-7357-412b-a6de-53cbbab3ed7e",
-        content:
-          "Edge runtime wars aside, the real winner is developers getting better tools. What's your stack looking like?",
-        sender: "Guillermo Rauch",
-        timestamp: "2025-01-20T23:14:51.952Z",
-      },
-      {
-        id: "6a476510-f35f-470d-a29b-7ce59c166785",
-        content:
-          "My stack's pretty simple these days: Next.js + Supabase + Resend + Braintrust + Browserbase. Basically the Basecase portfolio!",
-        sender: "Paul Copplestone",
-        timestamp: "2025-01-20T23:15:05.345Z",
-        reactions: [
-          {
-            type: "like",
-            sender: "Guillermo Rauch",
-            timestamp: "03:15 PM",
-          },
-          {
-            type: "heart",
-            sender: "me",
-            timestamp: "2025-01-20T23:15:13.808Z",
-          },
-        ],
-      },
-      {
-        id: "65a4198d-ad5a-4fb0-ac12-e44ab3fff3e1",
-        content: "Can't go wrong with The Basecase Stack™️",
-        sender: "Guillermo Rauch",
-        timestamp: "2025-01-20T23:15:22.749Z",
-      },
-      {
         id: "4c29fcca-9804-482f-ab3d-40c716363a7e",
         content:
-          "In all seriousness, it's been cool to see AI codegen tools like v0, Bolt, and Loveable recommend Supabase..",
+          "It's been cool to see AI codegen tools make these dev tools more accessible. We get a lot of users coming from platforms like Bolt, Loveable, and v0.",
         sender: "Paul Copplestone",
         timestamp: "2025-01-20T23:15:36.434Z",
         reactions: [
@@ -249,7 +297,7 @@ export const initialConversations: Conversation[] = [
       {
         id: "5d2652c5-01d5-4e07-b666-8dfa1635a9d6",
         content:
-          "Same for us with Next.js and Vercel. It's awesome to see that anyone can ship with these tools.",
+          "Same for us. It's awesome to see that anyone can ship with these tools.",
         sender: "Guillermo Rauch",
         timestamp: "2025-01-20T23:15:55.208Z",
       },
