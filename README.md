@@ -1,6 +1,8 @@
-# alanagoyal.com/messages
+# [messages](https://alanagoyal.com/messages) 
 
-## clone  the repo
+i'm obsessed with re-creating apple products. this one is an imessage-inspried website that allows you to create automomous group chats with ai personas.
+
+## clone the repo
 
 `git clone https://github.com/alanagoyal/messages`
 
