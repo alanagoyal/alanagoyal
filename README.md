@@ -8,6 +8,10 @@
 
 `npm install`
 
+## api keys
+
+you'll need a [braintrust.dev](https://braintrust.dev) api key. add it to the `.env.local` file as `BRAINTRUST_API_KEY`
+
 ## run the app
 
 `npm run dev`
