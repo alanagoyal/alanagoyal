@@ -1,6 +1,6 @@
 # [messages](https://alanagoyal.com/messages) 
 
-i'm obsessed with re-creating apple products. this one is an imessage-inspried website that allows you to create automomous group chats with ai personas.
+i'm obsessed with re-creating apple products. this one is an imessage-inspired website that allows you to create automomous group chats with ai personas.
 
 ## clone the repo
 
