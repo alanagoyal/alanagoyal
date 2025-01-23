@@ -182,7 +182,7 @@ export async function POST(req: Request) {
     ];
 
     const response = await client.chat.completions.create({
-      model: "claude-3-5-sonnet-latest",
+      model: "gpt-4o-mini",
       messages: [...chatMessages],
       tool_choice: "required",
       tools: [
