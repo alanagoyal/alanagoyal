@@ -90,11 +90,6 @@ export function MessageBubble({
   const handleReaction = useCallback(
     (type: ReactionType) => {
       if (onReaction) {
-        // Check if this reaction type already exists
-        const isExistingReaction = message.reactions?.some(
-          (r) => r.type === type && r.sender === "me"
-        );
-
         // Create reaction with current timestamp
         const reaction: Reaction = {
           type,
@@ -102,10 +97,8 @@ export function MessageBubble({
           timestamp: new Date().toISOString(),
         };
 
-        // Only play sound if adding a new reaction
-        if (!isExistingReaction) {
-          soundEffects.playReactionSound();
-        }
+        // Play sound for any reaction action
+        soundEffects.playReactionSound();
 
         // Send reaction to parent
         onReaction(message.id, reaction);
@@ -120,7 +113,6 @@ export function MessageBubble({
     },
     [
       message.id,
-      message.reactions,
       onReaction,
       onOpenChange,
       onReactionComplete,

@@ -674,26 +674,27 @@ export default function App() {
         return prevConversations.map((conversation) => {
           const messages = conversation.messages.map((message) => {
             if (message.id === messageId) {
-              // Check if this reaction type from this sender already exists
-              const existingReactionIndex =
-                message.reactions?.findIndex(
-                  (r) =>
-                    r.type === reaction.type && r.sender === reaction.sender
-                ) ?? -1;
+              // Check if this exact reaction already exists
+              const existingReaction = message.reactions?.find(
+                (r) => r.sender === reaction.sender && r.type === reaction.type
+              );
 
-              if (existingReactionIndex === -1) {
-                // Add new reaction
+              if (existingReaction) {
+                // If the same reaction exists, remove it
                 return {
                   ...message,
-                  reactions: [...(message.reactions || []), reaction],
+                  reactions: message.reactions?.filter(
+                    (r) => !(r.sender === reaction.sender && r.type === reaction.type)
+                  ) || [],
                 };
               } else {
-                // Remove existing reaction
-                const newReactions = [...(message.reactions || [])];
-                newReactions.splice(existingReactionIndex, 1);
+                // Remove any other reaction from this sender and add the new one
+                const otherReactions = message.reactions?.filter(
+                  (r) => r.sender !== reaction.sender
+                ) || [];
                 return {
                   ...message,
-                  reactions: newReactions,
+                  reactions: [...otherReactions, reaction],
                 };
               }
             }
