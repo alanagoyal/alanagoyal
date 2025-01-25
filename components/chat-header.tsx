@@ -223,13 +223,13 @@ function RecipientSearch({
         >
           <ScrollArea
             style={{
-              height: `${Math.min(displayPeople.length * 36 + 8, 224)}px`,
+              height: `${Math.min(displayPeople.length * 36 + 16, 232)}px`,
             }}
             className="w-full rounded-md border border-input bg-background"
             isMobile={isMobileView}
             bottomMargin="0"
           >
-            <div className="p-2">
+            <div className="p-0">
               {displayPeople.map((person, index) => (
                 <div
                   key={person.name}
@@ -297,8 +297,7 @@ function MobileAvatars({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 dark:from-gray-400 dark:via-gray-500 dark:to-gray-400 relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-10 pointer-events-none" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
               <span className="relative text-white text-base font-medium">
                 {recipient.name
                   .split(" ")

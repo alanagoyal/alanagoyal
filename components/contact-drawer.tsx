@@ -115,8 +115,8 @@ export function ContactDrawer({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center font-medium text-gray-100 bg-gradient-to-b from-[#A5AAB2] to-[#8B919A] dark:from-[#9BA1AA] dark:to-[#7D828A]">
-                        <span>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
+                        <span className="relative text-white text-2xl font-medium">
                           {recipient.name
                             .split(" ")
                             .map((n) => n[0])
@@ -173,8 +173,8 @@ export function ContactDrawer({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center font-medium text-gray-100 bg-gradient-to-b from-[#A5AAB2] to-[#8B919A] dark:from-[#9BA1AA] dark:to-[#7D828A]">
-                            <span>
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A]">
+                            <span className="text-white text-sm font-medium">
                               {recipient.name
                                 .split(" ")
                                 .map((n) => n[0])

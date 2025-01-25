@@ -430,7 +430,7 @@ export function Sidebar({
                                             lastMessage.sender !== "me"
                                           ) {
                                             return (
-                                              <div className="absolute -top-3 -right-3 flex z-30">
+                                              <div className="absolute -top-4 -right-4 flex z-30">
                                                 {[...lastMessage.reactions]
                                                   .sort(
                                                     (a, b) =>
@@ -508,8 +508,8 @@ export function Sidebar({
                                             className="w-full h-full object-cover"
                                           />
                                         ) : (
-                                          <div className="w-full h-full flex items-center justify-center font-medium text-gray-100 bg-gradient-to-b from-[#A5AAB2] to-[#8B919A] dark:from-[#9BA1AA] dark:to-[#7D828A]">
-                                            <span>
+                                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
+                                            <span className="relative text-white text-2xl sm:text-xl font-medium">
                                               {getInitials(
                                                 conversation.recipients[0].name
                                               )}
