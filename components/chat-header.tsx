@@ -223,13 +223,13 @@ function RecipientSearch({
         >
           <ScrollArea
             style={{
-              height: `${Math.min(displayPeople.length * 36 + 16, 232)}px`,
+              height: `${Math.min(displayPeople.length * 36 + 8, 224)}px`,
             }}
-            className="w-full rounded-md border border-input bg-background p-2"
+            className="w-full rounded-md border border-input bg-background"
             isMobile={isMobileView}
             bottomMargin="0"
           >
-            <div className="p-0">
+            <div className="p-2">
               {displayPeople.map((person, index) => (
                 <div
                   key={person.name}
