@@ -30,7 +30,9 @@ export default function NoteContent({
   }, [note.content, saveNote]);
 
   const renderListItem = useCallback(({ children, ...props }: any) => {
-    delete props.node
+    if ('node' in props) {
+      delete props.node
+    }
     if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>;
 
     const checkbox = children.find((child: any) => child.type === 'input');
@@ -73,7 +75,9 @@ export default function NoteContent({
   }, [canEdit, handleMarkdownCheckboxChange]);
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
-    delete (props as any).node
+    if ('node' in props) {
+      delete props.node
+    }
     return (
       <a {...props} target="_blank" rel="noopener noreferrer">
         {props.children}
