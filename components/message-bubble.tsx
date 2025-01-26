@@ -395,7 +395,7 @@ export function MessageBubble({
 
                   {/* Reaction menu */}
                   <PopoverContent
-                    className="flex p-2 gap-2 min-w-[280px] rounded-full bg-gray-100 dark:bg-[#404040] z-50 reaction-menu"
+                    className="flex p-2 gap-2 w-fit rounded-full bg-gray-100 dark:bg-[#404040] z-50 reaction-menu"
                     align={isMe ? "end" : "start"}
                     alignOffset={-8}
                     side="top"
@@ -409,7 +409,7 @@ export function MessageBubble({
                           handleReaction(type as ReactionType);
                         }}
                         className={cn(
-                          "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
+                          "inline-flex items-center justify-center rounded-full w-8 h-8 aspect-square p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125 flex-shrink-0",
                           isReactionActive(type as ReactionType)
                             ? "bg-[#0A7CFF] text-white scale-110"
                             : ""
