@@ -111,12 +111,7 @@ export function MessageBubble({
         }, 500);
       }
     },
-    [
-      message.id,
-      onReaction,
-      onOpenChange,
-      onReactionComplete,
-    ]
+    [message.id, onReaction, onOpenChange, onReactionComplete]
   );
 
   // Check if a specific reaction type is already active for the current user
@@ -221,21 +216,24 @@ export function MessageBubble({
   // Helper function to format reactions into a sentence
   const formatReactions = (reactions: Reaction[]) => {
     const sortedReactions = [...reactions].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
-    return sortedReactions.map((reaction, index) => {
-      const name = reaction.sender === "me" ? "You" : reaction.sender;
-      const verb = getReactionVerb(reaction.type);
-      
-      if (index === 0) {
+    return sortedReactions
+      .map((reaction, index) => {
+        const name = reaction.sender === "me" ? "You" : reaction.sender;
+        const verb = getReactionVerb(reaction.type);
+
+        if (index === 0) {
+          return `${name} ${verb} this message`;
+        }
+        if (index === sortedReactions.length - 1) {
+          return ` ${name} ${verb} this message`;
+        }
         return `${name} ${verb} this message`;
-      }
-      if (index === sortedReactions.length - 1) {
-        return ` ${name} ${verb} this message`;
-      }
-      return `${name} ${verb} this message`;
-    }).join(", ");
+      })
+      .join(", ");
   };
 
   const rightBubbleSvg =
@@ -254,17 +252,16 @@ export function MessageBubble({
   const getReactionIconSvg = (
     messageFromMe: boolean,
     reactionType: ReactionType,
-    reactionFromMe: boolean
+    overlay: boolean = false
   ) => {
     const orientation = messageFromMe ? "left" : "right";
-    const variant = reactionFromMe
-      ? effectiveTheme === "dark"
-        ? "dark-blue"
-        : "light-blue"
-      : effectiveTheme === "dark"
-      ? "dark"
-      : "light";
-    return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
+    const variant = effectiveTheme === "dark" ? "dark" : "light";
+    if (overlay) {
+      const path = `messages/reactions/${orientation}-${variant}-${reactionType}-overlay.svg`;
+      return path;
+    }
+    const path = `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
+    return path;
   };
 
   return (
@@ -300,10 +297,13 @@ export function MessageBubble({
               isSystemMessage && "bg-background"
             )}
           >
-            <div className={cn(
-              "text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]",
-              message.type === "silenced" && "text-[#7978DF] flex items-center gap-1"
-            )}>
+            <div
+              className={cn(
+                "text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]",
+                message.type === "silenced" &&
+                  "text-[#7978DF] flex items-center gap-1"
+              )}
+            >
               {message.type === "silenced" && <Icons.silencedMoon />}
               {message.content}
             </div>
@@ -469,13 +469,11 @@ export function MessageBubble({
                                 ? {
                                     WebkitMaskImage: `url('${getReactionIconSvg(
                                       isMe,
-                                      reaction.type,
-                                      reaction.sender === "me"
+                                      reaction.type
                                     )}')`,
                                     maskImage: `url('${getReactionIconSvg(
                                       isMe,
-                                      reaction.type,
-                                      reaction.sender === "me"
+                                      reaction.type
                                     )}')`,
                                     WebkitMaskSize: "contain",
                                     maskSize: "contain",
@@ -483,39 +481,35 @@ export function MessageBubble({
                                     maskRepeat: "no-repeat",
                                     WebkitMaskPosition: "center",
                                     maskPosition: "center",
-                                    background: "linear-gradient(to bottom, #43CDF6, #0A7CFF)",
-                                    backgroundAttachment: "fixed"
+                                    background:
+                                      "linear-gradient(to bottom, #43CDF6, #0A7CFF)",
+                                    backgroundAttachment: "fixed",
                                   }
                                 : {
                                     backgroundImage: `url('${getReactionIconSvg(
                                       isMe,
                                       reaction.type,
-                                      reaction.sender === "me"
                                     )}')`,
                                     backgroundSize: "contain",
                                     backgroundRepeat: "no-repeat",
-                                    backgroundPosition: "center"
-                                  })
+                                    backgroundPosition: "center",
+                                  }),
                             }}
                           >
                             {reaction.sender === "me" && (
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <Image
-                                  src={`/messages/reactions/${reaction.type}-white.svg`}
-                                  width={12}
-                                  height={12}
+                                  src={getReactionIconSvg(
+                                    isMe,
+                                    reaction.type,
+                                    true
+                                  )}
+                                  width={32}
+                                  height={32}
                                   alt={`${reaction.type} reaction`}
                                   className={cn(
-                                    "relative z-10",
-                                    isMe ? "translate-x-[2.5px]" : "-translate-x-[2.5px]"
+                                    "relative z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                                   )}
-                                  style={
-                                    reaction.type === "emphasize"
-                                      ? { transform: "scale(0.75)" }
-                                      : reaction.type === "question"
-                                      ? { transform: "scale(0.6)" }
-                                      : undefined
-                                  }
                                 />
                               </div>
                             )}
