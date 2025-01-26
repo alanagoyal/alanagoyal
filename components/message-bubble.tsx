@@ -315,9 +315,9 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isTyping
-                ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                ? "border-[17px] border-solid border-l-[22px] bg-transparent text-gray-900 dark:text-gray-100"
                 : isMe
-                ? "border-[17px] border-solid border-r-[22px] text-white"
+                ? "border-[17px] border-solid border-r-[22px] text-white bg-[linear-gradient(to_bottom,#43CDF6,#0A7CFF)] bg-fixed"
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
@@ -465,16 +465,61 @@ export function MessageBubble({
                               `z-[${array.length - index}]`
                             )}
                             style={{
-                              backgroundImage: `url('${getReactionIconSvg(
-                                isMe,
-                                reaction.type,
-                                reaction.sender === "me"
-                              )}')`,
-                              backgroundSize: "contain",
-                              backgroundRepeat: "no-repeat",
-                              backgroundPosition: "center",
+                              ...(reaction.sender === "me"
+                                ? {
+                                    WebkitMaskImage: `url('${getReactionIconSvg(
+                                      isMe,
+                                      reaction.type,
+                                      reaction.sender === "me"
+                                    )}')`,
+                                    maskImage: `url('${getReactionIconSvg(
+                                      isMe,
+                                      reaction.type,
+                                      reaction.sender === "me"
+                                    )}')`,
+                                    WebkitMaskSize: "contain",
+                                    maskSize: "contain",
+                                    WebkitMaskRepeat: "no-repeat",
+                                    maskRepeat: "no-repeat",
+                                    WebkitMaskPosition: "center",
+                                    maskPosition: "center",
+                                    background: "linear-gradient(to bottom, #43CDF6, #0A7CFF)",
+                                    backgroundAttachment: "fixed"
+                                  }
+                                : {
+                                    backgroundImage: `url('${getReactionIconSvg(
+                                      isMe,
+                                      reaction.type,
+                                      reaction.sender === "me"
+                                    )}')`,
+                                    backgroundSize: "contain",
+                                    backgroundRepeat: "no-repeat",
+                                    backgroundPosition: "center"
+                                  })
                             }}
-                          />
+                          >
+                            {reaction.sender === "me" && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Image
+                                  src={`/messages/reactions/${reaction.type}-white.svg`}
+                                  width={12}
+                                  height={12}
+                                  alt={`${reaction.type} reaction`}
+                                  className={cn(
+                                    "relative z-10",
+                                    isMe ? "translate-x-[2.5px]" : "-translate-x-[2.5px]"
+                                  )}
+                                  style={
+                                    reaction.type === "emphasize"
+                                      ? { transform: "scale(0.75)" }
+                                      : reaction.type === "question"
+                                      ? { transform: "scale(0.6)" }
+                                      : undefined
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-fit max-w-[200px] break-words px-3 py-1.5 bg-gray-100 dark:bg-[#404040] border-gray-100 dark:border-[#404040]">
                           <p className="text-sm">

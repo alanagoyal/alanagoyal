@@ -133,8 +133,6 @@ export function ChatArea({
           )}
         >
           <div className="flex-1 relative">
-            {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
             <div className="relative h-full flex">
               <div className="w-3 bg-background" />
               <MessageList
