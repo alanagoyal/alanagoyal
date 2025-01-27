@@ -20,8 +20,8 @@ const nextConfig = {
         permanent: false,
       },
       {
-        source: '/:slug((?!notes|api|messages|_next|static|public|favicon.ico|sitemap.xml).+)',
-        destination: '/notes/:slug',
+        source: '/:path((?!notes|api|messages|_next|static|public|favicon\\.ico|sitemap\\.xml|robots\\.txt).*)',
+        destination: '/notes/:path',
         permanent: true,
       },
     ];
