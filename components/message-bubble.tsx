@@ -317,7 +317,7 @@ export function MessageBubble({
                 : isTyping
                 ? "border-[17px] border-solid border-l-[22px] bg-transparent text-gray-900 dark:text-gray-100"
                 : isMe
-                ? "border-[17px] border-solid border-r-[22px] text-white bg-[linear-gradient(to_bottom,#43CDF6,#0A7CFF)] bg-fixed"
+                ? "border-[17px] border-solid border-r-[22px] text-white before:content-[''] before:absolute before:inset-[-17px] before:bg-[linear-gradient(#43CDF6,#0A7CFF)] before:bg-fixed before:-z-10"
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
