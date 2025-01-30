@@ -119,7 +119,13 @@ export function ChatArea({
           setShowCompactNewChat={setShowCompactNewChat}
         />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]",
+          isMobileView ? "top-24" : "top-16",
+          "bottom-16"
+        )}
+      />
       <ScrollArea
         className="h-full"
         isMobile={isMobileView}
