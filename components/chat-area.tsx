@@ -120,7 +120,7 @@ export function ChatArea({
         />
       </div>
       <ScrollArea
-        className="h-full"
+        className="h-full flex flex-col"
         isMobile={isMobileView}
         withVerticalMargins
         mobileHeaderHeight={isMobileView}
@@ -128,12 +128,20 @@ export function ChatArea({
       >
         <div
           className={cn(
+            "absolute bg-gradient-to-b w-full from-[#43CDF6] to-[#0A7CFF]",
+            isMobileView
+              ? "top-24 h-[calc(100vh-96px-var(--dynamic-height,64px))]"
+              : "top-16 h-[calc(100vh-64px-var(--dynamic-height,64px))]"
+          )}
+        />
+        <div
+          className={cn(
+            "min-h-screen flex flex-col",
             isMobileView ? "pt-24" : "pt-16",
             "pb-[var(--dynamic-height,64px)]"
           )}
         >
-          <div className="flex-1 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
+          <div className="flex-1 flex flex-col relative">
             <div className="relative h-full flex">
               <div className="w-3 bg-background" />
               <MessageList
@@ -152,6 +160,7 @@ export function ChatArea({
               />
               <div className="w-3 bg-background" />
             </div>
+            <div className="bg-background flex-1" />
           </div>
         </div>
       </ScrollArea>
