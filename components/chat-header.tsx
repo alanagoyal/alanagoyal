@@ -368,9 +368,14 @@ export function ChatHeader({
             if (isEditMode) {
               setIsEditMode(false);
               onUpdateRecipients?.(currentRecipients);
-            } else if (isNewChat && !isMobileView) {
-              setShowCompactNewChat?.(true);
-              onCreateConversation?.(currentRecipients);
+            } else if (isNewChat) {
+              if (isMobileView) {
+                setShowResults(false);
+                onCreateConversation?.(currentRecipients);
+              } else {
+                setShowCompactNewChat?.(true);
+                onCreateConversation?.(currentRecipients);
+              }
             }
 
             // Add a capture event listener to block the next click
