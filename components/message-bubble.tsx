@@ -315,7 +315,7 @@ export function MessageBubble({
               isSystemMessage
                 ? "bg-muted/50 rounded-lg text-center"
                 : isTyping
-                ? "border-[17px] border-solid border-l-[22px] bg-transparent text-gray-900 dark:text-gray-100"
+                ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : isMe
                 ? "border-[17px] border-solid border-r-[22px] text-white before:content-[''] before:absolute before:inset-[-17px] before:bg-[linear-gradient(#43CDF6,#0A7CFF)] before:bg-fixed before:-z-10"
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
@@ -347,7 +347,7 @@ export function MessageBubble({
                     )}
                   />
                   <div className="text-[14px] flex items-center">
-                    <div className="flex items-center justify-center gap-[4px]">
+                    <div className="flex items-center justify-center gap-[4px] bg-gray-100 dark:bg-[#404040]">
                       <style>{typingAnimation}</style>
                       <div
                         className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
