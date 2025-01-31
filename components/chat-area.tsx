@@ -119,13 +119,6 @@ export function ChatArea({
           setShowCompactNewChat={setShowCompactNewChat}
         />
       </div>
-      <div
-        className={cn(
-          "absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]",
-          isMobileView ? "top-24" : "top-16",
-          "bottom-16"
-        )}
-      />
       <ScrollArea
         className="h-full"
         isMobile={isMobileView}
@@ -140,6 +133,7 @@ export function ChatArea({
           )}
         >
           <div className="flex-1 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#43CDF6] to-[#0A7CFF]" />
             <div className="relative h-full flex">
               <div className="w-3 bg-background" />
               <MessageList
