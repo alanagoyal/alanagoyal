@@ -116,6 +116,10 @@ function RecipientSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
+
+  const ITEM_HEIGHT = 36;  // Height of each item in pixels
+  const MAX_VISIBLE_ITEMS = 8;  // Maximum number of items to show before scrolling
+
   // Focus on mount
   useEffect(() => {
     if (inputRef.current) {
@@ -223,13 +227,13 @@ function RecipientSearch({
         >
           <ScrollArea
             style={{
-              height: `${Math.min(displayPeople.length * 36 + 16, 232)}px`,
+              height: `${Math.min(displayPeople.length * ITEM_HEIGHT, MAX_VISIBLE_ITEMS * ITEM_HEIGHT)}px`,
             }}
             className="w-full rounded-md border border-input bg-background"
             isMobile={isMobileView}
             bottomMargin="0"
           >
-            <div className="p-0">
+            <div>
               {displayPeople.map((person, index) => (
                 <div
                   key={person.name}
