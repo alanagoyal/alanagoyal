@@ -273,6 +273,39 @@ export function MessageBubble({
     return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
+  const getReactionStyle = (reaction: Reaction, isMe: boolean, isMobileView: boolean) => {
+    const iconUrl = getReactionIconSvg(
+      reaction.sender === "me",
+      isMe,
+      reaction.type,
+      isMobileView
+    );
+
+    const mobileStyle = {
+      backgroundImage: `url('${iconUrl}')`,
+      backgroundSize: "contain",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+    };
+
+    if (isMobileView || reaction.sender !== "me") {
+      return mobileStyle;
+    }
+
+    return {
+      WebkitMaskImage: `url('${iconUrl}')`,
+      maskImage: `url('${iconUrl}')`,
+      WebkitMaskSize: "contain",
+      maskSize: "contain",
+      WebkitMaskRepeat: "no-repeat",
+      maskRepeat: "no-repeat",
+      WebkitMaskPosition: "center",
+      maskPosition: "center",
+      background: "linear-gradient(to bottom, #0198FF, #0A7CFF)",
+      backgroundAttachment: "fixed",
+    };
+  };
+
   return (
     <div className="flex w-full flex-col relative z-10">
       {/* Spacer before messages */}
@@ -478,74 +511,22 @@ export function MessageBubble({
                                 (isMe ? "-mr-7" : "-ml-7"),
                               `z-[${array.length - index}]`
                             )}
-                            style={{
-                              ...(isMobileView
-                                ? {
-                                    backgroundImage: `url('${getReactionIconSvg(
-                                      reaction.sender === "me",
-                                      isMe,
-                                      reaction.type,
-                                      isMobileView
-                                    )}')`,
-                                    backgroundSize: "contain",
-                                    backgroundRepeat: "no-repeat",
-                                    backgroundPosition: "center",
-                                  }
-                                : reaction.sender === "me"
-                                ? {
-                                    WebkitMaskImage: `url('${getReactionIconSvg(
-                                      reaction.sender === "me",
-                                      isMe,
-                                      reaction.type,
-                                      isMobileView
-                                    )}')`,
-                                    maskImage: `url('${getReactionIconSvg(
-                                      reaction.sender === "me",
-                                      isMe,
-                                      reaction.type,
-                                      isMobileView
-                                    )}')`,
-                                    WebkitMaskSize: "contain",
-                                    maskSize: "contain",
-                                    WebkitMaskRepeat: "no-repeat",
-                                    maskRepeat: "no-repeat",
-                                    WebkitMaskPosition: "center",
-                                    maskPosition: "center",
-                                    background:
-                                      "linear-gradient(to bottom, #0198FF, #0A7CFF)",
-                                    backgroundAttachment: "fixed",
-                                  }
-                                : {
-                                    backgroundImage: `url('${getReactionIconSvg(
-                                      reaction.sender === "me",
-                                      isMe,
-                                      reaction.type,
-                                      isMobileView
-                                    )}')`,
-                                    backgroundSize: "contain",
-                                    backgroundRepeat: "no-repeat",
-                                    backgroundPosition: "center",
-                                  }),
-                            }}
+                            style={getReactionStyle(reaction, isMe, isMobileView)}
                           >
-                            {reaction.sender === "me" && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <Image
-                                  src={getReactionIconSvg(
-                                    reaction.sender === "me",
-                                    isMe,
-                                    reaction.type,
-                                    isMobileView,
-                                    true
-                                  )}
-                                  width={32}
-                                  height={32}
-                                  alt={`${reaction.type} reaction`}
-                                  className={cn(
-                                    "relative z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                                  )}
-                                />
-                              </div>
+                            {reaction.sender === "me" && !isMobileView && (
+                              <Image
+                                src={getReactionIconSvg(
+                                  reaction.sender === "me",
+                                  isMe,
+                                  reaction.type,
+                                  isMobileView,
+                                  true
+                                )}
+                                width={32}
+                                height={32}
+                                alt={`${reaction.type} reaction`}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+                              />
                             )}
                           </div>
                         </PopoverTrigger>
