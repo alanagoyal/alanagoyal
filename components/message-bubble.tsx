@@ -502,14 +502,17 @@ export function MessageBubble({
                         new Date(b.timestamp).getTime()
                     )
                     .map((reaction, index, array) => (
-                      <Popover key={`${reaction.type}-${index}`}>
+                      <Popover key={`${reaction.type}-${reaction.timestamp}`}>
                         <PopoverTrigger>
                           <div
+                            key={`${reaction.type}-${reaction.timestamp}`}
                             className={cn(
                               "w-8 h-8 flex items-center justify-center text-sm relative cursor-pointer",
                               index !== array.length - 1 &&
                                 (isMe ? "-mr-7" : "-ml-7"),
-                              `z-[${array.length - index}]`
+                              `z-[${array.length - index}]`,
+                              // Add animation class when reaction is new
+                              new Date().getTime() - new Date(reaction.timestamp).getTime() < 1000 && "reaction-pop"
                             )}
                             style={getReactionStyle(reaction, isMe, isMobileView)}
                           >
