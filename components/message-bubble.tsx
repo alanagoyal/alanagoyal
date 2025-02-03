@@ -256,21 +256,21 @@ export function MessageBubble({
     messageFromMe: boolean,
     reactionType: ReactionType,
     isMobileView: boolean,
-    overlay?: boolean,
+    overlay?: boolean
   ) => {
     const orientation = messageFromMe ? "left" : "right";
     const baseVariant = effectiveTheme === "dark" ? "dark" : "light";
-    
-    if (reactionFromMe && isMobileView) {
-      const variant = `${baseVariant}-blue`;
-      return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
-    }
-    
+
+    // If overlay is true, always use the base variant without "-blue"
     if (overlay) {
       return `messages/reactions/${orientation}-${baseVariant}-${reactionType}-overlay.svg`;
     }
-    
-    return `messages/reactions/${orientation}-${baseVariant}-${reactionType}.svg`;
+
+    // Otherwise, if the reaction is from me and we're in mobile view, use the blue variant
+    const variant =
+      reactionFromMe && isMobileView ? `${baseVariant}-blue` : baseVariant;
+
+    return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   return (
@@ -328,8 +328,9 @@ export function MessageBubble({
                 : isMe
                 ? cn(
                     "border-[17px] border-solid border-r-[22px] text-white",
-                    !isMobileView &&
-                      "before:content-[''] before:absolute before:inset-[-17px] before:bg-[linear-gradient(#0198FF,#0A7CFF)] before:bg-fixed before:-z-10"
+                    isMobileView
+                      ? "bg-[#0A7CFF]"
+                      : "bg-[linear-gradient(#0198FF,#0A7CFF)] bg-fixed"
                   )
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
@@ -535,7 +536,7 @@ export function MessageBubble({
                                     isMe,
                                     reaction.type,
                                     isMobileView,
-                                    true,
+                                    true
                                   )}
                                   width={32}
                                   height={32}

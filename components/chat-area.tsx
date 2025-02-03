@@ -128,14 +128,6 @@ export function ChatArea({
       >
         <div
           className={cn(
-            "absolute bg-gradient-to-b w-full from-[#0198FF] to-[#0A7CFF]",
-            isMobileView
-              ? "top-24 h-[calc(100dvh-96px-var(--dynamic-height,64px))]"
-              : "top-16 h-[calc(100dvh-64px-var(--dynamic-height,64px))]"
-          )}
-        />
-        <div
-          className={cn(
             "min-h-screen flex flex-col",
             isMobileView ? "pt-24" : "pt-16",
             "pb-[var(--dynamic-height,64px)]"
