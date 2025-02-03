@@ -12,6 +12,7 @@ interface MessageListProps {
   onReaction?: (messageId: string, reaction: Reaction) => void;
   onReactionComplete?: () => void;
   messageInputRef?: React.RefObject<{ focus: () => void }>;
+  isMobileView?: boolean;
 }
 
 export function MessageList({
@@ -22,6 +23,7 @@ export function MessageList({
   onReaction,
   onReactionComplete,
   messageInputRef,
+  isMobileView,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
@@ -143,6 +145,7 @@ export function MessageList({
                   onReactionComplete?.();
                 }}
                 justSent={message.id === lastSentMessageId}
+                isMobileView={isMobileView}
               />
             </div>
           </div>
@@ -158,6 +161,7 @@ export function MessageList({
               }}
               isTyping={true}
               conversation={conversation}
+              isMobileView={isMobileView}
             />
           </div>
         )}

@@ -128,7 +128,7 @@ export function ChatArea({
       >
         <div
           className={cn(
-            "absolute bg-gradient-to-b w-full from-[#43CDF6] to-[#0A7CFF]",
+            "absolute bg-gradient-to-b w-full from-[#0198FF] to-[#0A7CFF]",
             isMobileView
               ? "top-24 h-[calc(100dvh-96px-var(--dynamic-height,64px))]"
               : "top-16 h-[calc(100dvh-64px-var(--dynamic-height,64px))]"
@@ -157,6 +157,7 @@ export function ChatArea({
                 }}
                 conversationId={conversationId}
                 messageInputRef={messageInputRef}
+                isMobileView={isMobileView}
               />
               <div className="w-3 bg-background" />
             </div>

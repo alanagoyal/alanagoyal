@@ -22,6 +22,7 @@ interface MessageBubbleProps {
   onOpenChange?: (isOpen: boolean) => void;
   onReactionComplete?: () => void;
   justSent?: boolean;
+  isMobileView?: boolean;
 }
 
 const typingAnimation = `
@@ -41,6 +42,7 @@ export function MessageBubble({
   onOpenChange,
   onReactionComplete,
   justSent = false,
+  isMobileView = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -250,18 +252,25 @@ export function MessageBubble({
       : "/messages/typing-bubbles/chat-typing-light.svg";
 
   const getReactionIconSvg = (
+    reactionFromMe: boolean,
     messageFromMe: boolean,
     reactionType: ReactionType,
-    overlay: boolean = false
+    isMobileView: boolean,
+    overlay?: boolean,
   ) => {
     const orientation = messageFromMe ? "left" : "right";
-    const variant = effectiveTheme === "dark" ? "dark" : "light";
-    if (overlay) {
-      const path = `messages/reactions/${orientation}-${variant}-${reactionType}-overlay.svg`;
-      return path;
+    const baseVariant = effectiveTheme === "dark" ? "dark" : "light";
+    
+    if (reactionFromMe && isMobileView) {
+      const variant = `${baseVariant}-blue`;
+      return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
     }
-    const path = `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
-    return path;
+    
+    if (overlay) {
+      return `messages/reactions/${orientation}-${baseVariant}-${reactionType}-overlay.svg`;
+    }
+    
+    return `messages/reactions/${orientation}-${baseVariant}-${reactionType}.svg`;
   };
 
   return (
@@ -317,7 +326,11 @@ export function MessageBubble({
                 : isTyping
                 ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : isMe
-                ? "border-[17px] border-solid border-r-[22px] text-white before:content-[''] before:absolute before:inset-[-17px] before:bg-[linear-gradient(#43CDF6,#0A7CFF)] before:bg-fixed before:-z-10"
+                ? cn(
+                    "border-[17px] border-solid border-r-[22px] text-white",
+                    !isMobileView &&
+                      "before:content-[''] before:absolute before:inset-[-17px] before:bg-[linear-gradient(#0198FF,#0A7CFF)] before:bg-fixed before:-z-10"
+                  )
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
@@ -465,15 +478,31 @@ export function MessageBubble({
                               `z-[${array.length - index}]`
                             )}
                             style={{
-                              ...(reaction.sender === "me"
+                              ...(isMobileView
+                                ? {
+                                    backgroundImage: `url('${getReactionIconSvg(
+                                      reaction.sender === "me",
+                                      isMe,
+                                      reaction.type,
+                                      isMobileView
+                                    )}')`,
+                                    backgroundSize: "contain",
+                                    backgroundRepeat: "no-repeat",
+                                    backgroundPosition: "center",
+                                  }
+                                : reaction.sender === "me"
                                 ? {
                                     WebkitMaskImage: `url('${getReactionIconSvg(
+                                      reaction.sender === "me",
                                       isMe,
-                                      reaction.type
+                                      reaction.type,
+                                      isMobileView
                                     )}')`,
                                     maskImage: `url('${getReactionIconSvg(
+                                      reaction.sender === "me",
                                       isMe,
-                                      reaction.type
+                                      reaction.type,
+                                      isMobileView
                                     )}')`,
                                     WebkitMaskSize: "contain",
                                     maskSize: "contain",
@@ -482,13 +511,15 @@ export function MessageBubble({
                                     WebkitMaskPosition: "center",
                                     maskPosition: "center",
                                     background:
-                                      "linear-gradient(to bottom, #43CDF6, #0A7CFF)",
+                                      "linear-gradient(to bottom, #0198FF, #0A7CFF)",
                                     backgroundAttachment: "fixed",
                                   }
                                 : {
                                     backgroundImage: `url('${getReactionIconSvg(
+                                      reaction.sender === "me",
                                       isMe,
                                       reaction.type,
+                                      isMobileView
                                     )}')`,
                                     backgroundSize: "contain",
                                     backgroundRepeat: "no-repeat",
@@ -500,9 +531,11 @@ export function MessageBubble({
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <Image
                                   src={getReactionIconSvg(
+                                    reaction.sender === "me",
                                     isMe,
                                     reaction.type,
-                                    true
+                                    isMobileView,
+                                    true,
                                   )}
                                   width={32}
                                   height={32}
