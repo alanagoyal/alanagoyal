@@ -301,7 +301,7 @@ export function MessageBubble({
       maskRepeat: "no-repeat",
       WebkitMaskPosition: "center",
       maskPosition: "center",
-      background: "linear-gradient(to bottom, #0198FF, #0A7CFF)",
+      background: "linear-gradient(to bottom, #47B5FF, #0A7CFF)",
       backgroundAttachment: "fixed",
     };
   };
@@ -363,7 +363,7 @@ export function MessageBubble({
                     "border-[17px] border-solid border-r-[22px] text-white",
                     isMobileView
                       ? "bg-[#0A7CFF]"
-                      : "bg-[linear-gradient(#0198FF,#0A7CFF)] bg-fixed"
+                      : "bg-[linear-gradient(#47B5FF,#0A7CFF)] bg-fixed"
                   )
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
