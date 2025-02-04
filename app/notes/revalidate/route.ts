@@ -4,6 +4,14 @@ import { revalidatePath } from "next/cache";
 export async function POST(request: NextRequest) {
   try {
     const { slug } = await request.json();
+    const token = request.headers.get('x-revalidate-token');
+
+    if (!token || token !== process.env.REVALIDATE_TOKEN) {
+      return NextResponse.json(
+        { message: "Invalid token" },
+        { status: 401 }
+      );
+    }
 
     if (!slug) {
       return NextResponse.json(
