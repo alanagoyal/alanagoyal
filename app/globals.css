@@ -93,6 +93,13 @@ body {
   }
 }
 
+/* Prevent iOS overscroll behavior */
+html, body {
+  overscroll-behavior-y: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* Typing indicator animation */
 .typing-indicator {
   display: flex;
