@@ -93,18 +93,6 @@ body {
   }
 }
 
-/* Prevent iOS overscroll behavior */
-html, body {
-  overscroll-behavior-y: none;
-  margin: 0;
-  padding: 0;
-}
-
-.no-ios-bounce {
-  overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
-}
-
 /* Typing indicator animation */
 .typing-indicator {
   display: flex;
@@ -224,10 +212,4 @@ html, body {
 /* Global caret styling */
 * {
   caret-color: #0A7CFF;
-}
-
-/* Custom utility for iOS scroll behavior */
-.overscroll-none {
-  overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
 }
