@@ -22,6 +22,7 @@ interface MessageBubbleProps {
   onOpenChange?: (isOpen: boolean) => void;
   onReactionComplete?: () => void;
   justSent?: boolean;
+  isMobileView?: boolean;
 }
 
 const typingAnimation = `
@@ -41,6 +42,7 @@ export function MessageBubble({
   onOpenChange,
   onReactionComplete,
   justSent = false,
+  isMobileView = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -111,12 +113,7 @@ export function MessageBubble({
         }, 500);
       }
     },
-    [
-      message.id,
-      onReaction,
-      onOpenChange,
-      onReactionComplete,
-    ]
+    [message.id, onReaction, onOpenChange, onReactionComplete]
   );
 
   // Check if a specific reaction type is already active for the current user
@@ -221,21 +218,24 @@ export function MessageBubble({
   // Helper function to format reactions into a sentence
   const formatReactions = (reactions: Reaction[]) => {
     const sortedReactions = [...reactions].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
-    return sortedReactions.map((reaction, index) => {
-      const name = reaction.sender === "me" ? "You" : reaction.sender;
-      const verb = getReactionVerb(reaction.type);
-      
-      if (index === 0) {
+    return sortedReactions
+      .map((reaction, index) => {
+        const name = reaction.sender === "me" ? "You" : reaction.sender;
+        const verb = getReactionVerb(reaction.type);
+
+        if (index === 0) {
+          return `${name} ${verb} this message`;
+        }
+        if (index === sortedReactions.length - 1) {
+          return ` ${name} ${verb} this message`;
+        }
         return `${name} ${verb} this message`;
-      }
-      if (index === sortedReactions.length - 1) {
-        return ` ${name} ${verb} this message`;
-      }
-      return `${name} ${verb} this message`;
-    }).join(", ");
+      })
+      .join(", ");
   };
 
   const rightBubbleSvg =
@@ -252,19 +252,58 @@ export function MessageBubble({
       : "/messages/typing-bubbles/chat-typing-light.svg";
 
   const getReactionIconSvg = (
+    reactionFromMe: boolean,
     messageFromMe: boolean,
     reactionType: ReactionType,
-    reactionFromMe: boolean
+    isMobileView: boolean,
+    overlay?: boolean
   ) => {
     const orientation = messageFromMe ? "left" : "right";
-    const variant = reactionFromMe
-      ? effectiveTheme === "dark"
-        ? "dark-blue"
-        : "light-blue"
-      : effectiveTheme === "dark"
-      ? "dark"
-      : "light";
+    const baseVariant = effectiveTheme === "dark" ? "dark" : "light";
+
+    // If overlay is true, always use the base variant without "-blue"
+    if (overlay) {
+      return `messages/reactions/${orientation}-${baseVariant}-${reactionType}-overlay.svg`;
+    }
+
+    // Otherwise, if the reaction is from me and we're in mobile view, use the blue variant
+    const variant =
+      reactionFromMe && isMobileView ? `${baseVariant}-blue` : baseVariant;
+
     return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
+  };
+
+  const getReactionStyle = (reaction: Reaction, isMe: boolean, isMobileView: boolean) => {
+    const iconUrl = getReactionIconSvg(
+      reaction.sender === "me",
+      isMe,
+      reaction.type,
+      isMobileView
+    );
+
+    const mobileStyle = {
+      backgroundImage: `url('${iconUrl}')`,
+      backgroundSize: "contain",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+    };
+
+    if (isMobileView || reaction.sender !== "me") {
+      return mobileStyle;
+    }
+
+    return {
+      WebkitMaskImage: `url('${iconUrl}')`,
+      maskImage: `url('${iconUrl}')`,
+      WebkitMaskSize: "contain",
+      maskSize: "contain",
+      WebkitMaskRepeat: "no-repeat",
+      maskRepeat: "no-repeat",
+      WebkitMaskPosition: "center",
+      maskPosition: "center",
+      background: "linear-gradient(to bottom, #47B5FF, #0A7CFF)",
+      backgroundAttachment: "fixed",
+    };
   };
 
   return (
@@ -300,10 +339,13 @@ export function MessageBubble({
               isSystemMessage && "bg-background"
             )}
           >
-            <div className={cn(
-              "text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]",
-              message.type === "silenced" && "text-[#7978DF] flex items-center gap-1"
-            )}>
+            <div
+              className={cn(
+                "text-[12px] text-muted-foreground text-center whitespace-pre-line max-w-[80%]",
+                message.type === "silenced" &&
+                  "text-[#7978DF] flex items-center gap-1"
+              )}
+            >
               {message.type === "silenced" && <Icons.silencedMoon />}
               {message.content}
             </div>
@@ -317,7 +359,12 @@ export function MessageBubble({
                 : isTyping
                 ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : isMe
-                ? "border-[17px] border-solid border-r-[22px] text-white"
+                ? cn(
+                    "border-[17px] border-solid border-r-[22px] text-white",
+                    isMobileView
+                      ? "bg-[#0A7CFF]"
+                      : "bg-[linear-gradient(#47B5FF,#0A7CFF)] bg-fixed"
+                  )
                 : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
             )}
             style={
@@ -347,7 +394,7 @@ export function MessageBubble({
                     )}
                   />
                   <div className="text-[14px] flex items-center">
-                    <div className="flex items-center justify-center gap-[4px]">
+                    <div className="flex items-center justify-center gap-[4px] bg-gray-100 dark:bg-[#404040]">
                       <style>{typingAnimation}</style>
                       <div
                         className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-gray-300"
@@ -395,7 +442,7 @@ export function MessageBubble({
 
                   {/* Reaction menu */}
                   <PopoverContent
-                    className="flex p-2 gap-2 min-w-[280px] rounded-full bg-gray-100 dark:bg-[#404040] z-50 reaction-menu"
+                    className="flex p-2 gap-2 w-fit rounded-full bg-gray-100 dark:bg-[#404040] z-50 reaction-menu"
                     align={isMe ? "end" : "start"}
                     alignOffset={-8}
                     side="top"
@@ -409,7 +456,7 @@ export function MessageBubble({
                           handleReaction(type as ReactionType);
                         }}
                         className={cn(
-                          "flex-1 flex items-center justify-center rounded-full w-8 h-8 p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125",
+                          "inline-flex items-center justify-center rounded-full w-8 h-8 aspect-square p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125 flex-shrink-0",
                           isReactionActive(type as ReactionType)
                             ? "bg-[#0A7CFF] text-white scale-110"
                             : ""
@@ -455,26 +502,36 @@ export function MessageBubble({
                         new Date(b.timestamp).getTime()
                     )
                     .map((reaction, index, array) => (
-                      <Popover key={`${reaction.type}-${index}`}>
+                      <Popover key={`${reaction.type}-${reaction.timestamp}`}>
                         <PopoverTrigger>
                           <div
+                            key={`${reaction.type}-${reaction.timestamp}`}
                             className={cn(
                               "w-8 h-8 flex items-center justify-center text-sm relative cursor-pointer",
                               index !== array.length - 1 &&
                                 (isMe ? "-mr-7" : "-ml-7"),
-                              `z-[${array.length - index}]`
+                              `z-[${array.length - index}]`,
+                              // Add animation class when reaction is new
+                              // new Date().getTime() - new Date(reaction.timestamp).getTime() < 1000 && "reaction-pop"
                             )}
-                            style={{
-                              backgroundImage: `url('${getReactionIconSvg(
-                                isMe,
-                                reaction.type,
-                                reaction.sender === "me"
-                              )}')`,
-                              backgroundSize: "contain",
-                              backgroundRepeat: "no-repeat",
-                              backgroundPosition: "center",
-                            }}
-                          />
+                            style={getReactionStyle(reaction, isMe, isMobileView)}
+                          >
+                            {reaction.sender === "me" && !isMobileView && (
+                              <Image
+                                src={getReactionIconSvg(
+                                  reaction.sender === "me",
+                                  isMe,
+                                  reaction.type,
+                                  isMobileView,
+                                  true
+                                )}
+                                width={32}
+                                height={32}
+                                alt={`${reaction.type} reaction`}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+                              />
+                            )}
+                          </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-fit max-w-[200px] break-words px-3 py-1.5 bg-gray-100 dark:bg-[#404040] border-gray-100 dark:border-[#404040]">
                           <p className="text-sm">

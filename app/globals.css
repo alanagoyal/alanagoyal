@@ -93,6 +93,13 @@ body {
   }
 }
 
+/* Prevent iOS overscroll behavior */
+html, body {
+  overscroll-behavior-y: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* Typing indicator animation */
 .typing-indicator {
   display: flex;
@@ -176,8 +183,24 @@ body {
   transform: scale(1.2);
 }
 
-.reaction-bubble {
-  animation: fadeIn 0.2s ease-out forwards;
+@keyframes reactionPop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reaction-pop {
+  animation: reactionPop 0.3s cubic-bezier(0.17, 0.67, 0.29, 1) forwards;
+  transform-origin: center;
 }
 
 /* Remove focus rings from reaction buttons */

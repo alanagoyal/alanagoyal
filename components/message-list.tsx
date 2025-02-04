@@ -12,6 +12,7 @@ interface MessageListProps {
   onReaction?: (messageId: string, reaction: Reaction) => void;
   onReactionComplete?: () => void;
   messageInputRef?: React.RefObject<{ focus: () => void }>;
+  isMobileView?: boolean;
 }
 
 export function MessageList({
@@ -22,6 +23,7 @@ export function MessageList({
   onReaction,
   onReactionComplete,
   messageInputRef,
+  isMobileView,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
@@ -125,7 +127,7 @@ export function MessageList({
           >
             {/* Overlay for non-active messages */}
             {isAnyReactionMenuOpen && message.id !== activeMessageId && (
-              <div className="absolute inset-0 bg-white/80 dark:bg-[#1A1A1A]/80 pointer-events-none z-20" />
+              <div className="absolute inset-0 bg-white/90 dark:bg-[#1A1A1A]/90 pointer-events-none z-20" />
             )}
             <div className={cn(message.id === activeMessageId && "z-30")}>
               <MessageBubble
@@ -143,6 +145,7 @@ export function MessageList({
                   onReactionComplete?.();
                 }}
                 justSent={message.id === lastSentMessageId}
+                isMobileView={isMobileView}
               />
             </div>
           </div>
@@ -158,6 +161,7 @@ export function MessageList({
               }}
               isTyping={true}
               conversation={conversation}
+              isMobileView={isMobileView}
             />
           </div>
         )}
