@@ -512,7 +512,7 @@ export function MessageBubble({
                                 (isMe ? "-mr-7" : "-ml-7"),
                               `z-[${array.length - index}]`,
                               // Add animation class when reaction is new
-                              new Date().getTime() - new Date(reaction.timestamp).getTime() < 1000 && "reaction-pop"
+                              // new Date().getTime() - new Date(reaction.timestamp).getTime() < 1000 && "reaction-pop"
                             )}
                             style={getReactionStyle(reaction, isMe, isMobileView)}
                           >
