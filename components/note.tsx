@@ -56,6 +56,7 @@ export default function Note({ note: initialNote }: { note: any }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
             },
             body: JSON.stringify({ slug: note.slug }),
           });
