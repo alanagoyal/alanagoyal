@@ -31,39 +31,6 @@ run the application in the command line and it will be available at http://local
 
 deploy using [vercel](https://vercel.com)
 
-## troubleshooting
-
-### "Invalid rewrites found" error
-
-if you encounter an error like:
-```
-`destination` does not start with `/`, `http://`, or `https://` for route {"source":"/messages","destination":"undefined/messages"}
-```
-
-this means there's a rewrite configuration in `next.config.mjs` that's specific to the original author's setup. remove or comment out the `rewrites()` section:
-
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Remove this entire section if present:
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/messages',
-  //       destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages`,
-  //     },
-  //     {
-  //       source: '/messages/:path*',
-  //       destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages/:path*`,
-  //     },
-  //   ];
-  // },
-  async redirects() {
-    // ... keep the redirects section
-  },
-};
-```
-
 ## license
 
 licensed under the [mit license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
