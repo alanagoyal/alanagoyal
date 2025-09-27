@@ -45,8 +45,8 @@ export function SearchBar({
     const filteredNotes = notes.filter(
       (note) =>
         (note.public || note.session_id === sessionId) &&
-        (note.title.toLowerCase().includes(query.toLowerCase()) ||
-          note.content.toLowerCase().includes(query.toLowerCase()))
+        (note.title.toLowerCase().includes(query.trim().toLowerCase()) ||
+          note.content.toLowerCase().includes(query.trim().toLowerCase()))
     );
 
     onSearchResults(filteredNotes);

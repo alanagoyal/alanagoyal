@@ -1,7 +1,7 @@
 import { Note } from "./types";
 
 export function searchNotes(notes: Note[], searchTerm: string, sessionId: string): Note[] {
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = searchTerm.trim().toLowerCase();
     
     return notes.filter((note) => {
       const isPublic = note.public;
