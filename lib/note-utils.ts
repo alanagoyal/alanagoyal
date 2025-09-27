@@ -108,3 +108,52 @@ export function sortGroupedNotes(groupedNotes: any) {
     );
   });
 }
+
+export async function syncNoteDatesWithDatabase(notes: any[], pinnedNotes: Set<string>, sessionId: string, supabase: any) {
+  const userSpecificNotes = notes.filter(
+    (note) => !note.public && note.session_id === sessionId
+  );
+
+  for (const note of userSpecificNotes) {
+    if (pinnedNotes.has(note.slug)) {
+      continue; // Skip pinned notes
+    }
+
+    let category = note.category;
+    const createdDate = new Date(note.created_at);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (createdDate.toDateString() === now.toDateString()) {
+      category = "today";
+    } else if (createdDate.toDateString() === yesterday.toDateString()) {
+      category = "yesterday";
+    } else if (createdDate > sevenDaysAgo) {
+      category = "7";
+    } else if (createdDate > thirtyDaysAgo) {
+      category = "30";
+    } else {
+      category = "older";
+    }
+
+    const syncedNote = syncNoteDateWithCategory(note, category);
+
+    if (syncedNote.created_at !== note.created_at) {
+      try {
+        await supabase.rpc("update_note_date", {
+          uuid_arg: note.id,
+          session_arg: sessionId,
+          created_at_arg: syncedNote.created_at,
+        });
+        console.log(`Updated note ${note.slug} date to ${syncedNote.created_at}`);
+      } catch (error) {
+        console.error(`Failed to update note ${note.slug}:`, error);
+      }
+    }
+  }
+}
