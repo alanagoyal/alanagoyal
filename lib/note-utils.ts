@@ -65,11 +65,7 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
   console.log('🔍 Note is public:', note.public);
   console.log('🔍 PinnedNotes set:', Array.from(pinnedNotes));
 
-  // Only preserve original dates for public notes
-  if (note.public) {
-    console.log('📌 Note is public, returning original date');
-    return new Date(note.created_at);
-  }
+  // Apply display date logic to ALL notes (both public and private)
 
   const now = new Date();
   const createdDate = new Date(note.created_at);
