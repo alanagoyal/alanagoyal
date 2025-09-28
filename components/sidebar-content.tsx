@@ -3,6 +3,33 @@ import { useRouter } from "next/navigation";
 import { NoteItem } from "./note-item";
 import { Note } from "@/lib/types";
 
+function getNoteCategory(note: Note & { category?: string }): string {
+  if (note.public) {
+    return (note as any).category || "older";
+  }
+
+  const createdDate = new Date(note.created_at);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  if (createdDate.toDateString() === now.toDateString()) {
+    return "today";
+  } else if (createdDate.toDateString() === yesterday.toDateString()) {
+    return "yesterday";
+  } else if (createdDate > sevenDaysAgo) {
+    return "7";
+  } else if (createdDate > thirtyDaysAgo) {
+    return "30";
+  } else {
+    return "older";
+  }
+}
+
 interface SidebarContentProps {
   groupedNotes: Record<string, Note[]>;
   selectedNoteSlug: string | null;
@@ -94,6 +121,7 @@ export function SidebarContent({
                         openSwipeItemSlug={openSwipeItemSlug}
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                         showDivider={index < groupedNotes[categoryKey].length - 1}
+                        category={categoryKey}
                       />
                     )
                   )}
@@ -120,6 +148,7 @@ export function SidebarContent({
               openSwipeItemSlug={openSwipeItemSlug}
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
+              category={getNoteCategory(item)}
             />
           ))}
         </ul>

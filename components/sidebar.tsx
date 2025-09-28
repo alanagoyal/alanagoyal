@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
-import { groupNotesByCategory, sortGroupedNotes, syncNoteDatesWithDatabase } from "@/lib/note-utils";
+import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
@@ -67,7 +67,6 @@ export default function Sidebar({
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [hasPerformedDateSync, setHasPerformedDateSync] = useState(false);
 
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
@@ -148,34 +147,6 @@ export default function Sidebar({
       );
     }
   }, [notes, sessionId]);
-
-  // One-time effect to sync note dates with database
-  useEffect(() => {
-    if (!hasPerformedDateSync && sessionId && notes.length > 0) {
-      const hasDateSyncKey = `date-sync-performed-${sessionId}`;
-      const alreadySynced = localStorage.getItem(hasDateSyncKey);
-
-      if (!alreadySynced) {
-        const performSync = async () => {
-          try {
-            await syncNoteDatesWithDatabase(notes, pinnedNotes, sessionId, supabase);
-            localStorage.setItem(hasDateSyncKey, 'true');
-            setHasPerformedDateSync(true);
-            // Refresh notes after sync
-            refreshSessionNotes();
-            toast({
-              description: "Note dates synchronized with categories",
-            });
-          } catch (error) {
-            console.error("Failed to sync note dates:", error);
-          }
-        };
-        performSync();
-      } else {
-        setHasPerformedDateSync(true);
-      }
-    }
-  }, [sessionId, notes, pinnedNotes, supabase, hasPerformedDateSync, refreshSessionNotes]);
 
   useEffect(() => {
     const userSpecificNotes = notes.filter(

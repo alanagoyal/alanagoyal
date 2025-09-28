@@ -10,6 +10,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
+import { getDisplayDateForNote } from "@/lib/note-utils";
+
+function getNoteCategory(note: any): string {
+  if (note.public) {
+    return (note as any).category || "older";
+  }
+
+  const createdDate = new Date(note.created_at);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  if (createdDate.toDateString() === now.toDateString()) {
+    return "today";
+  } else if (createdDate.toDateString() === yesterday.toDateString()) {
+    return "yesterday";
+  } else if (createdDate > sevenDaysAgo) {
+    return "7";
+  } else if (createdDate > thirtyDaysAgo) {
+    return "30";
+  } else {
+    return "older";
+  }
+}
 
 export default function NoteHeader({
   note,
@@ -26,8 +54,10 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
+    const category = getNoteCategory(note);
+    const displayDate = getDisplayDateForNote(note, category);
     setFormattedDate(
-      format(parseISO(note.created_at), "MMMM d, yyyy 'at' h:mm a")
+      format(parseISO(displayDate), "MMMM d, yyyy 'at' h:mm a")
     );
   }, [note.created_at]);
 
