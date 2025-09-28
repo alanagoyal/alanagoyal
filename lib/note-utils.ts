@@ -9,28 +9,27 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
       return;
     }
 
+    // Apply categorization logic to ALL notes (public and private)
     let category = note.category;
-    if (!note.public) {
-      const createdDate = new Date(note.created_at);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const createdDate = new Date(note.created_at);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      if (createdDate.toDateString() === today.toDateString()) {
-        category = "today";
-      } else if (createdDate.toDateString() === yesterday.toDateString()) {
-        category = "yesterday";
-      } else if (createdDate > sevenDaysAgo) {
-        category = "7";
-      } else if (createdDate > thirtyDaysAgo) {
-        category = "30";
-      } else {
-        category = "older";
-      }
+    if (createdDate.toDateString() === today.toDateString()) {
+      category = "today";
+    } else if (createdDate.toDateString() === yesterday.toDateString()) {
+      category = "yesterday";
+    } else if (createdDate > sevenDaysAgo) {
+      category = "7";
+    } else if (createdDate > thirtyDaysAgo) {
+      category = "30";
+    } else {
+      category = "older";
     }
 
     if (!groupedNotes[category]) {
@@ -60,29 +59,22 @@ function seededRandom(seed: string): number {
   return Math.abs(hash) / 2147483647;
 }
 
-export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
-  console.log('🔍 getDisplayDate called for note:', note.slug, 'created_at:', note.created_at);
-  console.log('🔍 Note is public:', note.public);
-  console.log('🔍 PinnedNotes set:', Array.from(pinnedNotes));
+export function getNoteCategory(note: any, pinnedNotes: Set<string>): string {
+  if (pinnedNotes.has(note.slug)) {
+    return "pinned";
+  }
 
-  // Apply display date logic to ALL notes (both public and private)
-
-  const now = new Date();
+  // Apply categorization logic to ALL notes (public and private)
+  let category = note.category;
   const createdDate = new Date(note.created_at);
-  const today = new Date(now);
-  const yesterday = new Date(now);
+  const today = new Date();
+  const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const sevenDaysAgo = new Date(now);
+  const sevenDaysAgo = new Date(today);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const thirtyDaysAgo = new Date(now);
+  const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  console.log('🗓️ Current time:', now.toString());
-  console.log('🗓️ Note created:', createdDate.toString());
-  console.log('🗓️ Today:', today.toDateString());
-  console.log('🗓️ Yesterday:', yesterday.toDateString());
-
-  let category: string;
   if (createdDate.toDateString() === today.toDateString()) {
     category = "today";
   } else if (createdDate.toDateString() === yesterday.toDateString()) {
@@ -94,8 +86,19 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
   } else {
     category = "older";
   }
+  return category;
+}
 
-  console.log('📂 Category determined:', category);
+export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
+  const category = getNoteCategory(note, pinnedNotes);
+  console.log('🔍 getDisplayDate called for note:', note.slug, 'in category:', category);
+
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  console.log('🗓️ Current time:', now.toString());
+  console.log('📂 Using category:', category);
 
   switch (category) {
     case "today": {
