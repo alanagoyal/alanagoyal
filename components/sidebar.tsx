@@ -399,6 +399,7 @@ export default function Sidebar({
     handleNoteDelete,
     commandMenuRef,
     goToHighlightedNote,
+    setTheme,
     theme,
   ]);
 
