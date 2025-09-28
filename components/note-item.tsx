@@ -134,9 +134,22 @@ export function NoteItem({
             }`}
           >
             <span className="text-black dark:text-white">
-              {new Date(
-                category ? getDisplayDateForNote(item, category) : item.created_at
-              ).toLocaleDateString("en-US")}
+              {(() => {
+                if (category) {
+                  console.log(`Note ${item.slug}: category=${category}, original=${item.created_at}`);
+                  // Test: hardcode today's date to see if it shows
+                  if (category === "today") {
+                    return new Date().toLocaleDateString("en-US");
+                  }
+                  // For other categories, use the function
+                  const displayDate = getDisplayDateForNote(item, category);
+                  console.log(`Display date calculated: ${displayDate}`);
+                  return new Date(displayDate).toLocaleDateString("en-US");
+                } else {
+                  console.log(`Note ${item.slug}: no category, using original date`);
+                  return new Date(item.created_at).toLocaleDateString("en-US");
+                }
+              })()}
             </span>{" "}
             {previewContent(item.content)}
           </p>

@@ -56,6 +56,7 @@ export default function NoteHeader({
   useEffect(() => {
     const category = getNoteCategory(note);
     const displayDate = getDisplayDateForNote(note, category);
+    console.log(`Header for note ${note.slug}: category=${category}, original=${note.created_at}, display=${displayDate}`);
     setFormattedDate(
       format(parseISO(displayDate), "MMMM d, yyyy 'at' h:mm a")
     );
