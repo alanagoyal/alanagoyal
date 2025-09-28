@@ -94,6 +94,7 @@ export function SidebarContent({
                         openSwipeItemSlug={openSwipeItemSlug}
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                         showDivider={index < groupedNotes[categoryKey].length - 1}
+                        pinnedNotes={pinnedNotes}
                       />
                     )
                   )}
@@ -120,6 +121,7 @@ export function SidebarContent({
               openSwipeItemSlug={openSwipeItemSlug}
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
+              pinnedNotes={pinnedNotes}
             />
           ))}
         </ul>

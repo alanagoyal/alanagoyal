@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 import SessionId from "./session-id";
-import { useState, useCallback, useRef, useContext } from "react";
+import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 
 export default function Note({ note: initialNote }: { note: any }) {
@@ -13,9 +13,17 @@ export default function Note({ note: initialNote }: { note: any }) {
   const router = useRouter();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
+  const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
+
+  useEffect(() => {
+    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+    if (storedPinnedNotes) {
+      setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
+    }
+  }, []);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -75,7 +83,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   return (
     <div className="h-full overflow-y-auto bg-background">
       <SessionId setSessionId={setSessionId} />
-      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} pinnedNotes={pinnedNotes} />
       <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
     </div>
   );

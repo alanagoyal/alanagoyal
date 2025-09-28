@@ -10,15 +10,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
+import { getDisplayDate } from "@/lib/note-utils";
 
 export default function NoteHeader({
   note,
   saveNote,
   canEdit,
+  pinnedNotes = new Set(),
 }: {
   note: any;
   saveNote: (updates: Partial<typeof note>) => void;
   canEdit: boolean;
+  pinnedNotes?: Set<string>;
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
@@ -26,10 +29,11 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
+    const displayDate = getDisplayDate(note, pinnedNotes);
     setFormattedDate(
-      format(parseISO(note.created_at), "MMMM d, yyyy 'at' h:mm a")
+      format(displayDate, "MMMM d, yyyy 'at' h:mm a")
     );
-  }, [note.created_at]);
+  }, [note.created_at, note, pinnedNotes]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;

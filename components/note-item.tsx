@@ -11,6 +11,7 @@ import {
 } from "./ui/context-menu";
 import { Note } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
+import { getDisplayDate } from "@/lib/note-utils";
 
 function previewContent(content: string): string {
   return content
@@ -36,6 +37,7 @@ interface NoteItemProps {
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
   showDivider?: boolean;
+  pinnedNotes: Set<string>;
 }
 
 export function NoteItem({
@@ -52,6 +54,7 @@ export function NoteItem({
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
   showDivider = false,
+  pinnedNotes,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
@@ -131,7 +134,7 @@ export function NoteItem({
             }`}
           >
             <span className="text-black dark:text-white">
-              {new Date(item.created_at).toLocaleDateString("en-US")}
+              {getDisplayDate(item, pinnedNotes).toLocaleDateString("en-US")}
             </span>{" "}
             {previewContent(item.content)}
           </p>
