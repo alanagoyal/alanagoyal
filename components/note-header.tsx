@@ -27,11 +27,11 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
-    const displayDate = getDisplayDateByCategory(note.category);
+    const displayDate = getDisplayDateByCategory(note.category, note.id);
     setFormattedDate(
       format(displayDate, "MMMM d, yyyy 'at' h:mm a")
     );
-  }, [note.category]);
+  }, [note.category, note.id]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;

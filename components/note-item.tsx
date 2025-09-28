@@ -132,7 +132,7 @@ export function NoteItem({
             }`}
           >
             <span className="text-black dark:text-white">
-              {getDisplayDateByCategory(item.category).toLocaleDateString("en-US")}
+              {getDisplayDateByCategory(item.category, item.id).toLocaleDateString("en-US")}
             </span>{" "}
             {previewContent(item.content)}
           </p>

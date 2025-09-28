@@ -50,7 +50,24 @@ export function sortGroupedNotes(groupedNotes: any) {
   });
 }
 
-export function getDisplayDateByCategory(category: string | undefined): Date {
+// Simple hash function to convert string to number
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Seeded random function
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+export function getDisplayDateByCategory(category: string | undefined, noteId: string): Date {
   const today = new Date();
 
   switch (category) {
@@ -63,22 +80,25 @@ export function getDisplayDateByCategory(category: string | undefined): Date {
       return yesterday;
 
     case "7":
-      // Random date 2-7 days ago
-      const daysAgo7 = Math.floor(Math.random() * 6) + 2; // Random between 2-7
+      // Deterministic "random" date 2-7 days ago based on note ID
+      const seed7 = simpleHash(noteId + "7days");
+      const daysAgo7 = Math.floor(seededRandom(seed7) * 6) + 2; // Between 2-7
       const date7 = new Date(today);
       date7.setDate(date7.getDate() - daysAgo7);
       return date7;
 
     case "30":
-      // Random date 8-30 days ago
-      const daysAgo30 = Math.floor(Math.random() * 23) + 8; // Random between 8-30
+      // Deterministic "random" date 8-30 days ago based on note ID
+      const seed30 = simpleHash(noteId + "30days");
+      const daysAgo30 = Math.floor(seededRandom(seed30) * 23) + 8; // Between 8-30
       const date30 = new Date(today);
       date30.setDate(date30.getDate() - daysAgo30);
       return date30;
 
     case "older":
-      // Random date 31-365 days ago
-      const daysAgoOlder = Math.floor(Math.random() * 335) + 31; // Random between 31-365
+      // Deterministic "random" date 31-365 days ago based on note ID
+      const seedOlder = simpleHash(noteId + "older");
+      const daysAgoOlder = Math.floor(seededRandom(seedOlder) * 335) + 31; // Between 31-365
       const dateOlder = new Date(today);
       dateOlder.setDate(dateOlder.getDate() - daysAgoOlder);
       return dateOlder;
