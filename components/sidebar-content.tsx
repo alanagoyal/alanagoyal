@@ -105,25 +105,28 @@ export function SidebarContent({
                 </h3>
                 <ul>
                   {groupedNotes[categoryKey].map(
-                    (item: Note, index: number) => (
-                      <NoteItem
-                        key={index}
-                        item={item}
-                        selectedNoteSlug={selectedNoteSlug}
-                        sessionId={sessionId}
-                        onNoteSelect={onNoteSelect}
-                        handlePinToggle={handlePinToggle}
-                        isPinned={pinnedNotes.has(item.slug)}
-                        isHighlighted={false}
-                        isSearching={false}
-                        handleNoteDelete={handleNoteDelete}
-                        onNoteEdit={handleEdit}
-                        openSwipeItemSlug={openSwipeItemSlug}
-                        setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-                        showDivider={index < groupedNotes[categoryKey].length - 1}
-                        category={categoryKey}
-                      />
-                    )
+                    (item: Note, index: number) => {
+                      console.log(`🔹 SidebarContent: Rendering note ${item.slug} in category ${categoryKey}, created_at=${item.created_at}`);
+                      return (
+                        <NoteItem
+                          key={index}
+                          item={item}
+                          selectedNoteSlug={selectedNoteSlug}
+                          sessionId={sessionId}
+                          onNoteSelect={onNoteSelect}
+                          handlePinToggle={handlePinToggle}
+                          isPinned={pinnedNotes.has(item.slug)}
+                          isHighlighted={false}
+                          isSearching={false}
+                          handleNoteDelete={handleNoteDelete}
+                          onNoteEdit={handleEdit}
+                          openSwipeItemSlug={openSwipeItemSlug}
+                          setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+                          showDivider={index < groupedNotes[categoryKey].length - 1}
+                          category={categoryKey}
+                        />
+                      );
+                    }
                   )}
                 </ul>
               </section>
