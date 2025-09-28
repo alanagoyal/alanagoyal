@@ -29,10 +29,11 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
+    console.log('🎯 NoteHeader useEffect triggered for note:', note.slug);
     const displayDate = getDisplayDate(note, pinnedNotes);
-    setFormattedDate(
-      format(displayDate, "MMMM d, yyyy 'at' h:mm a")
-    );
+    const formatted = format(displayDate, "MMMM d, yyyy 'at' h:mm a");
+    console.log('🎯 NoteHeader formatted date:', formatted);
+    setFormattedDate(formatted);
   }, [note.created_at, note, pinnedNotes]);
 
   const handleEmojiSelect = (emojiObject: any) => {

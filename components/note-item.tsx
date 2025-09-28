@@ -134,7 +134,13 @@ export function NoteItem({
             }`}
           >
             <span className="text-black dark:text-white">
-              {getDisplayDate(item, pinnedNotes).toLocaleDateString("en-US")}
+              {(() => {
+                console.log('🎯 NoteItem getting display date for:', item.slug);
+                const displayDate = getDisplayDate(item, pinnedNotes);
+                const formatted = displayDate.toLocaleDateString("en-US");
+                console.log('🎯 NoteItem formatted date:', formatted);
+                return formatted;
+              })()}
             </span>{" "}
             {previewContent(item.content)}
           </p>

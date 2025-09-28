@@ -61,8 +61,13 @@ function seededRandom(seed: string): number {
 }
 
 export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
+  console.log('🔍 getDisplayDate called for note:', note.slug, 'created_at:', note.created_at);
+  console.log('🔍 Note is public:', note.public);
+  console.log('🔍 PinnedNotes set:', Array.from(pinnedNotes));
+
   // Only preserve original dates for public notes
   if (note.public) {
+    console.log('📌 Note is public, returning original date');
     return new Date(note.created_at);
   }
 
@@ -75,6 +80,11 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  console.log('🗓️ Current time:', now.toString());
+  console.log('🗓️ Note created:', createdDate.toString());
+  console.log('🗓️ Today:', today.toDateString());
+  console.log('🗓️ Yesterday:', yesterday.toDateString());
 
   let category: string;
   if (createdDate.toDateString() === today.toDateString()) {
@@ -89,12 +99,20 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
     category = "older";
   }
 
-  switch (category) {
-    case "today":
-      return new Date(now);
+  console.log('📂 Category determined:', category);
 
-    case "yesterday":
-      return new Date(yesterday);
+  switch (category) {
+    case "today": {
+      const todayDate = new Date(now);
+      console.log('✅ Returning TODAY date:', todayDate.toString());
+      return todayDate;
+    }
+
+    case "yesterday": {
+      const yesterdayDate = new Date(yesterday);
+      console.log('✅ Returning YESTERDAY date:', yesterdayDate.toString());
+      return yesterdayDate;
+    }
 
     case "7": {
       const minDays = 2;
@@ -104,6 +122,7 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
       const randomDays = Math.floor(randomValue * (maxDays - minDays + 1)) + minDays;
       const randomDate = new Date(now);
       randomDate.setDate(randomDate.getDate() - randomDays);
+      console.log('✅ Returning 7 DAYS date (', randomDays, 'days ago):', randomDate.toString());
       return randomDate;
     }
 
@@ -115,6 +134,7 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
       const randomDays = Math.floor(randomValue * (maxDays - minDays + 1)) + minDays;
       const randomDate = new Date(now);
       randomDate.setDate(randomDate.getDate() - randomDays);
+      console.log('✅ Returning 30 DAYS date (', randomDays, 'days ago):', randomDate.toString());
       return randomDate;
     }
 
@@ -126,10 +146,13 @@ export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
       const randomDays = Math.floor(randomValue * (maxDays - minDays + 1)) + minDays;
       const randomDate = new Date(now);
       randomDate.setDate(randomDate.getDate() - randomDays);
+      console.log('✅ Returning OLDER date (', randomDays, 'days ago):', randomDate.toString());
       return randomDate;
     }
 
-    default:
+    default: {
+      console.log('⚠️ Fallback: returning original date');
       return new Date(note.created_at);
+    }
   }
 }
