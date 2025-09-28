@@ -7,4 +7,5 @@ export interface Note {
     session_id: string;
     emoji?: string;
     public: boolean;
+    category?: string;
   }

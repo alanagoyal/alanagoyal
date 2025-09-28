@@ -10,6 +10,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { Note } from "@/lib/types";
+import { getDisplayDateByCategory } from "@/lib/note-utils";
 import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {
@@ -131,7 +132,7 @@ export function NoteItem({
             }`}
           >
             <span className="text-black dark:text-white">
-              {new Date(item.created_at).toLocaleDateString("en-US")}
+              {getDisplayDateByCategory(item.category).toLocaleDateString("en-US")}
             </span>{" "}
             {previewContent(item.content)}
           </p>

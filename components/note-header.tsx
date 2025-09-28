@@ -10,6 +10,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
+import { getDisplayDateByCategory } from "@/lib/note-utils";
 
 export default function NoteHeader({
   note,
@@ -26,10 +27,11 @@ export default function NoteHeader({
   const [formattedDate, setFormattedDate] = useState("");
 
   useEffect(() => {
+    const displayDate = getDisplayDateByCategory(note.category);
     setFormattedDate(
-      format(parseISO(note.created_at), "MMMM d, yyyy 'at' h:mm a")
+      format(displayDate, "MMMM d, yyyy 'at' h:mm a")
     );
-  }, [note.created_at]);
+  }, [note.category]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;
