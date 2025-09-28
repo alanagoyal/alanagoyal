@@ -61,10 +61,7 @@ function seededRandom(seed: string): number {
 }
 
 export function getDisplayDate(note: any, pinnedNotes: Set<string>): Date {
-  if (pinnedNotes.has(note.slug)) {
-    return new Date(note.created_at);
-  }
-
+  // Only preserve original dates for public notes
   if (note.public) {
     return new Date(note.created_at);
   }
