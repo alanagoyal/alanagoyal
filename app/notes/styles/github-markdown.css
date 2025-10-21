@@ -131,3 +131,84 @@
   overflow: auto;
   border-radius: 3px;
 }
+
+/* Apple Notes-style Tables */
+.markdown-body table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: auto;
+  margin: 16px 0;
+  background-color: transparent;
+  font-size: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.markdown-body table thead {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.dark .markdown-body table thead {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.markdown-body table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.03);
+  white-space: nowrap;
+}
+
+.dark .markdown-body table th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.markdown-body table th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.markdown-body table th:last-child {
+  border-top-right-radius: 8px;
+  border-right: none;
+}
+
+.markdown-body table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+}
+
+.dark .markdown-body table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.markdown-body table td:last-child {
+  border-right: none;
+}
+
+.markdown-body table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.markdown-body table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.markdown-body table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-body table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark .markdown-body table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
