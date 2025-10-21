@@ -1,24 +1,34 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/types";
+import MarkdownToolbar from "./markdown-toolbar";
 
 export default function NoteContent({
   note,
   saveNote,
   canEdit,
+  onDelete,
+  onNewNote,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  onDelete?: () => void;
+  onNewNote?: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
+  }, [saveNote]);
+
+  const handleContentChange = useCallback((newContent: string) => {
+    saveNote({ content: newContent });
   }, [saveNote]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
@@ -80,36 +90,51 @@ export default function NoteContent({
   }, []);
 
   return (
-    <div className="px-2">
+    <div>
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
-        <Textarea
-          id="note-content"
-          value={note.content || ""}
-          className="min-h-dvh focus:outline-none leading-normal"
-          placeholder="Start writing..."
-          onChange={handleChange}
-          onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
-        />
+        <>
+          <MarkdownToolbar
+            textareaRef={textareaRef}
+            onContentChange={handleContentChange}
+            content={note.content || ""}
+            onDelete={onDelete}
+            onNewNote={onNewNote}
+            canEdit={canEdit}
+          />
+          <div className="px-2">
+            <Textarea
+              ref={textareaRef}
+              id="note-content"
+              value={note.content || ""}
+              className="min-h-dvh focus:outline-none leading-normal"
+              placeholder="Start writing..."
+              onChange={handleChange}
+              onFocus={() => setIsEditing(true)}
+              onBlur={() => setIsEditing(false)}
+            />
+          </div>
+        </>
       ) : (
-        <div
-          className="h-full text-sm"
-          onClick={(e) => {
-            if (canEdit && !note.public) {
-              setIsEditing(true);
-            }
-          }}
-        >
-          <ReactMarkdown
-            className="markdown-body min-h-dvh"
-            remarkPlugins={[remarkGfm]}
-            components={{
-              li: renderListItem,
-              a: renderLink,
+        <div className="px-2">
+          <div
+            className="h-full text-sm"
+            onClick={(e) => {
+              if (canEdit && !note.public) {
+                setIsEditing(true);
+              }
             }}
           >
-            {note.content || "Start writing..."}
-          </ReactMarkdown>
+            <ReactMarkdown
+              className="markdown-body min-h-dvh"
+              remarkPlugins={[remarkGfm]}
+              components={{
+                li: renderListItem,
+                a: renderLink,
+              }}
+            >
+              {note.content || "Start writing..."}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
     </div>
