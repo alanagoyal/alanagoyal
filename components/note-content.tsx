@@ -91,29 +91,27 @@ export default function NoteContent({
 
   return (
     <div>
+      <MarkdownToolbar
+        textareaRef={textareaRef}
+        onContentChange={handleContentChange}
+        content={note.content || ""}
+        onDelete={onDelete}
+        onNewNote={onNewNote}
+        canEdit={canEdit}
+      />
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
-        <>
-          <MarkdownToolbar
-            textareaRef={textareaRef}
-            onContentChange={handleContentChange}
-            content={note.content || ""}
-            onDelete={onDelete}
-            onNewNote={onNewNote}
-            canEdit={canEdit}
+        <div className="px-2">
+          <Textarea
+            ref={textareaRef}
+            id="note-content"
+            value={note.content || ""}
+            className="min-h-dvh focus:outline-none leading-normal"
+            placeholder="Start writing..."
+            onChange={handleChange}
+            onFocus={() => setIsEditing(true)}
+            onBlur={() => setIsEditing(false)}
           />
-          <div className="px-2">
-            <Textarea
-              ref={textareaRef}
-              id="note-content"
-              value={note.content || ""}
-              className="min-h-dvh focus:outline-none leading-normal"
-              placeholder="Start writing..."
-              onChange={handleChange}
-              onFocus={() => setIsEditing(true)}
-              onBlur={() => setIsEditing(false)}
-            />
-          </div>
-        </>
+        </div>
       ) : (
         <div className="px-2">
           <div

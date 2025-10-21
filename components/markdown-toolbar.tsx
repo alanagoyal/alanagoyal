@@ -209,8 +209,6 @@ export default function MarkdownToolbar({
     }, 0);
   };
 
-  if (!canEdit) return null;
-
   return (
     <div className="sticky top-0 z-10 bg-background border-b border-border/40">
       <div className="flex items-center justify-between px-3 py-2 gap-2">
@@ -220,7 +218,8 @@ export default function MarkdownToolbar({
               variant="ghost"
               size="icon"
               onClick={onDelete}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              disabled={!canEdit}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
               title="Delete note"
             >
               <Trash2 className="h-[18px] w-[18px]" />
@@ -246,7 +245,8 @@ export default function MarkdownToolbar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-serif font-semibold"
+                disabled={!canEdit}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-serif font-semibold disabled:opacity-40"
                 title="Text styles"
               >
                 <span className="text-base">Aa</span>
@@ -381,7 +381,8 @@ export default function MarkdownToolbar({
             variant="ghost"
             size="icon"
             onClick={insertChecklist}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            disabled={!canEdit}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
             title="Checklist"
           >
             <CheckSquare className="h-[18px] w-[18px]" />
@@ -392,7 +393,8 @@ export default function MarkdownToolbar({
             variant="ghost"
             size="icon"
             onClick={insertTable}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            disabled={!canEdit}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
             title="Table"
           >
             <Table className="h-[18px] w-[18px]" />
