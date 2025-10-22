@@ -161,7 +161,7 @@
 }
 
 .dark .markdown-body table th {
-  background-color: #1c1c1c;
+  background-color: #2a2a2a;
   color: #ffffff;
 }
 
@@ -170,5 +170,5 @@
 }
 
 .dark .markdown-body table tr:nth-child(even) {
-  background-color: #242424;
+  background-color: #1c1c1c;
 }
