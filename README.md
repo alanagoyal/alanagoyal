@@ -31,6 +31,45 @@ run the application in the command line and it will be available at http://local
 
 deploy using [vercel](https://vercel.com)
 
+## creating tables in notes
+
+you can create markdown tables using standard markdown table syntax. tables are rendered with a styled dark theme that matches the notes app design.
+
+### table syntax
+
+here's an example of a table tracking books you've read:
+
+```markdown
+| book | author | year read |
+|------|--------|-----------|
+| the great gatsby | f. scott fitzgerald | 2023 |
+| 1984 | george orwell | 2024 |
+```
+
+this renders as:
+
+| book | author | year read |
+|------|--------|-----------|
+| the great gatsby | f. scott fitzgerald | 2023 |
+| 1984 | george orwell | 2024 |
+
+here's another example with sample data:
+
+```markdown
+| name | status | priority |
+|------|--------|----------|
+| project alpha | in progress | high |
+| project beta | completed | medium |
+| project gamma | planning | low |
+```
+
+### rendering features
+
+- white borders on dark background
+- properly padded cells
+- header row styling
+- responsive layout
+
 ## license
 
 licensed under the [mit license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
