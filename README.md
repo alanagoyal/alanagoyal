@@ -2,15 +2,61 @@
 
 i'm obsessed with re-creating apple products. this one is a notes-inspired website that doubles as my personal website.
 
+## how it works
+
+### architecture
+
+the app uses a session-based architecture with two types of notes:
+
+**public notes**: viewable by everyone, managed by the site owner. these appear on the public site and in the sidebar for all visitors.
+
+**private notes**: anyone can create and view their own private notes. each browser session gets a unique session id (stored in localstorage) that links to the notes you create. only you can see and edit your private notes.
+
+the app is built with:
+- **next.js 14** with app router for server-side rendering and static generation
+- **typescript** for type safety
+- **supabase** for database and authentication
+- **react-markdown** with github flavored markdown support
+- **tailwind css** for styling
+
+### how supabase powers the backend
+
+supabase provides the postgresql database and handles security through row-level security (rls) policies:
+
+**database schema**:
+- `notes` table stores all notes with fields: `id`, `title`, `content`, `session_id`, `public`, `slug`, `category`, `emoji`, `created_at`
+- `public` boolean field controls visibility
+- `session_id` links notes to browser sessions
+
+**security model**:
+- **public notes**: anyone can view notes where `public = true`
+- **private notes**: anyone can create private notes (`public = false`), but only the session owner can view, edit, or delete them
+- **server-side functions**: all updates/deletes verify session ownership before executing
+- **rls policies**: enforce access control at the database level
+
+the app uses two supabase clients:
+- **server client** (`utils/supabase/server.ts`) for server-side operations
+- **browser client** (`utils/supabase/client.ts`) for client-side operations
+
 ## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`
 
 ## set up the database
 
-this project uses [supabase](https://supabase.com) as a backend. to set up the database, create a [new project](https://database.new), enter your project details, and wait for the database to launch. navigate to the sql editor in the dashboard, paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) into the sql editor and press run. you can also use the supabase cli to do this locally.
+this project uses [supabase](https://supabase.com) as a backend. to set up the database:
 
-grab the project url and anon key from the api settings and put them in a new `.env.local` file in the root directory as shown:
+1. create a [new project](https://database.new) and enter your project details
+2. wait for the database to launch
+3. navigate to the sql editor in the dashboard
+4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) into the sql editor and press run
+
+alternatively, use the supabase cli to run migrations locally:
+```bash
+supabase db push
+```
+
+grab the project url and anon key from the api settings and put them in a new `.env.local` file in the root directory:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL="<your-supabase-url>"
@@ -30,6 +76,121 @@ run the application in the command line and it will be available at http://local
 ## deploy
 
 deploy using [vercel](https://vercel.com)
+
+## markdown syntax for notes
+
+notes support github flavored markdown (gfm) with interactive features. here's what you can use:
+
+### headings
+
+```markdown
+# heading 1
+## heading 2
+### heading 3
+```
+
+### text formatting
+
+```markdown
+**bold text**
+*italic text*
+~~strikethrough~~
+`inline code`
+```
+
+### lists
+
+**unordered lists**:
+```markdown
+- item one
+- item two
+  - nested item
+  - another nested item
+```
+
+**ordered lists**:
+```markdown
+1. first item
+2. second item
+3. third item
+```
+
+### task lists (interactive)
+
+task lists are interactive - click checkboxes to toggle completion:
+
+```markdown
+- [ ] task to do
+- [x] completed task
+- [ ] another task
+```
+
+the app automatically updates the markdown when you click checkboxes, so your progress is saved.
+
+### tables
+
+create tables using standard markdown table syntax. tables render with a styled dark theme:
+
+```markdown
+| book | author | year read |
+|------|--------|-----------|
+| the great gatsby | f. scott fitzgerald | 2023 |
+| 1984 | george orwell | 2024 |
+```
+
+this renders as:
+
+| book | author | year read |
+|------|--------|-----------|
+| the great gatsby | f. scott fitzgerald | 2023 |
+| 1984 | george orwell | 2024 |
+
+**table features**:
+- white borders on dark background
+- properly padded cells
+- header row styling
+- responsive layout
+- supports links in cells
+
+### links
+
+```markdown
+[link text](https://example.com)
+```
+
+all links automatically open in new tabs for better navigation.
+
+### code blocks
+
+**inline code**: use backticks for `inline code`
+
+**code blocks**: use triple backticks for multi-line code
+````markdown
+```javascript
+function hello() {
+  console.log("hello world");
+}
+```
+````
+
+### blockquotes
+
+```markdown
+> this is a blockquote
+> it can span multiple lines
+```
+
+### images
+
+```markdown
+![alt text](image-url.jpg)
+```
+
+### horizontal rules
+
+```markdown
+---
+```
 
 ## license
 
