@@ -136,7 +136,6 @@
   border-collapse: collapse;
   width: 100%;
   margin: 16px 0;
-  overflow: hidden;
 }
 
 .markdown-body table th,
@@ -148,20 +147,9 @@
 
 .markdown-body table th {
   font-weight: 600;
-  background-color: #f6f8fa;
-}
-
-.markdown-body table tr:nth-child(even) {
-  background-color: #f6f8fa;
 }
 
 .dark .markdown-body table th,
 .dark .markdown-body table td {
   border: 1px solid #4a4a4a;
-  background-color: transparent;
-}
-
-.dark .markdown-body table th {
-  color: #ffffff;
-  font-weight: 600;
 }
