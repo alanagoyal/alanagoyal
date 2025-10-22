@@ -31,6 +31,36 @@ run the application in the command line and it will be available at http://local
 
 deploy using [vercel](https://vercel.com)
 
+## creating tables in notes
+
+you can create markdown tables in your notes using standard markdown table syntax. the tables will automatically render with a styled dark theme.
+
+### table syntax
+
+```markdown
+| book | author | year read |
+|------|--------|-----------|
+| the great gatsby | f. scott fitzgerald | 2023 |
+| 1984 | george orwell | 2024 |
+```
+
+### example
+
+create a table with this markdown:
+
+```markdown
+| column 1 | column 2 | column 3 |
+|----------|----------|----------|
+| data 1   | data 2   | data 3   |
+| data 4   | data 5   | data 6   |
+```
+
+the table will render with:
+- white borders on dark background
+- properly padded cells
+- header row styling
+- responsive layout
+
 ## license
 
 licensed under the [mit license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
