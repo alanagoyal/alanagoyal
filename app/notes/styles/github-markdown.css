@@ -149,7 +149,20 @@
   font-weight: 600;
 }
 
+.markdown-body table a {
+  color: #e2a727;
+  text-decoration: underline;
+}
+
+.markdown-body table a:hover {
+  text-decoration: underline;
+}
+
 .dark .markdown-body table th,
 .dark .markdown-body table td {
   border: 1px solid #4a4a4a;
+}
+
+.dark .markdown-body table a {
+  color: #e2a727;
 }
