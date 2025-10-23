@@ -5,7 +5,7 @@ import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
 // Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 60 * 60; // 1 hour
+export const revalidate = 86400; // 24 hours
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
