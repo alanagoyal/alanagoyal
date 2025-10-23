@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    const { slug } = await request.json();
+    const { slug, layout } = await request.json();
     const token = request.headers.get('x-revalidate-token');
 
     if (!token || token !== process.env.REVALIDATE_TOKEN) {
@@ -13,6 +13,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Revalidate layout (sidebar) if requested
+    if (layout) {
+      revalidatePath('/notes', 'layout');
+      return NextResponse.json({
+        revalidated: true,
+        type: 'layout',
+        now: Date.now()
+      });
+    }
+
+    // Revalidate specific note page
     if (!slug) {
       return NextResponse.json(
         { message: "Missing slug parameter" },
@@ -21,7 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     revalidatePath(`/notes/${slug}`);
-    return NextResponse.json({ revalidated: true, now: Date.now() });
+    return NextResponse.json({
+      revalidated: true,
+      type: 'page',
+      slug,
+      now: Date.now()
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

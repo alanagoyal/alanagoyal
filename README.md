@@ -38,83 +38,27 @@ the `notes` table stores all notes with these fields:
 
 ### caching
 
-the app uses next.js incremental static regeneration (isr) to cache public notes for optimal performance:
+public notes are cached for 24 hours using next.js isr. private notes are always real-time.
 
-**cache durations**:
-- **layout (sidebar)**: 24 hours (`app/notes/layout.tsx`)
-- **individual note pages**: 24 hours (`app/notes/[slug]/page.tsx`)
-- **private notes**: no caching (always real-time)
+**to manually revalidate public notes**:
 
-**what this means**:
-- private notes you create always show up immediately
-- public notes in the sidebar refresh every 24 hours
-- public note content refreshes every 24 hours
-- database queries reduced by 99%+, significantly lowering costs
-
-**manually revalidating public notes**:
-
-if you publish a new public note or update existing public note content and want it to appear immediately (without waiting 24 hours), you can manually trigger revalidation:
-
-**option 1: revalidate via next.js api route**
-
-create an api route at `app/api/revalidate/route.ts`:
-
-```typescript
-import { revalidatePath } from 'next/cache';
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function POST(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get('secret');
-
-  // protect the endpoint with a secret token
-  if (secret !== process.env.REVALIDATION_SECRET) {
-    return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
-  }
-
-  try {
-    // revalidate the layout (sidebar)
-    revalidatePath('/notes', 'layout');
-
-    // optionally revalidate a specific note page
-    const slug = request.nextUrl.searchParams.get('slug');
-    if (slug) {
-      revalidatePath(`/notes/${slug}`);
-    }
-
-    return NextResponse.json({ revalidated: true, now: Date.now() });
-  } catch (err) {
-    return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
-  }
-}
-```
-
-add `REVALIDATION_SECRET=your-secret-token` to your `.env.local` and vercel environment variables.
-
-**trigger revalidation**:
-```bash
-# revalidate the sidebar
-curl -X POST "https://yourdomain.com/api/revalidate?secret=your-secret-token"
-
-# revalidate a specific note
-curl -X POST "https://yourdomain.com/api/revalidate?secret=your-secret-token&slug=your-note-slug"
-```
-
-**option 2: redeploy the site**
-
-the simplest option is to trigger a redeploy on vercel, which will rebuild all static pages:
+set `REVALIDATE_TOKEN` in environment variables, then:
 
 ```bash
-# using vercel cli
-vercel --prod
+# revalidate sidebar (when adding/removing public notes)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"layout": true}'
 
-# or just push to your git repository and vercel will auto-deploy
-git commit -m "update public notes"
-git push
+# revalidate specific note (when updating content)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"slug": "note-slug"}'
 ```
 
-**option 3: wait 24 hours**
-
-for infrequent updates (like portfolio updates), simply wait up to 24 hours for the cache to naturally expire and regenerate.
+or redeploy on vercel to refresh all pages.
 
 ## clone the repo
 
