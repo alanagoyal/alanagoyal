@@ -19,24 +19,46 @@ the app is built with:
 - **react-markdown** with github flavored markdown support
 - **tailwind css** for styling
 
-### how supabase powers the backend
+### backend
 
-supabase provides the postgresql database and handles security through row-level security (rls) policies:
+the app uses [supabase](https://supabase.com) for the postgresql database with row-level security policies to control access to public and private notes.
 
 **database schema**:
-- `notes` table stores all notes with fields: `id`, `title`, `content`, `session_id`, `public`, `slug`, `category`, `emoji`, `created_at`
-- `public` boolean field controls visibility
-- `session_id` links notes to browser sessions
 
-**security model**:
-- **public notes**: anyone can view notes where `public = true`
-- **private notes**: anyone can create private notes (`public = false`), but only the session owner can view, edit, or delete them
-- **server-side functions**: all updates/deletes verify session ownership before executing
-- **rls policies**: enforce access control at the database level
+the `notes` table stores all notes with these fields:
+- `id` (uuid): unique identifier
+- `title` (text): note title
+- `content` (text): markdown content
+- `session_id` (uuid): links notes to browser sessions
+- `public` (boolean): controls visibility
+- `slug` (text): url-friendly identifier
+- `category` (text): optional categorization
+- `emoji` (text): note icon
+- `created_at` (timestamp): when the note was created
 
-the app uses two supabase clients:
-- **server client** (`utils/supabase/server.ts`) for server-side operations
-- **browser client** (`utils/supabase/client.ts`) for client-side operations
+### caching
+
+public notes are cached for 24 hours using next.js isr. private notes are always real-time.
+
+**to manually revalidate public notes**:
+
+set `REVALIDATE_TOKEN` in environment variables, then:
+
+```bash
+# revalidate sidebar (when adding/removing public notes)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"layout": true}'
+
+# revalidate specific note (when updating content)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"slug": "note-slug"}'
+```
+
+or redeploy on vercel to refresh all pages.
 
 for a deep dive into the architecture, data flow, and implementation details, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 

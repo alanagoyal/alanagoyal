@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { createClient as createBrowserClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/server";
 import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -19,14 +19,14 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-export const revalidate = 0;
+export const revalidate = 86400; // 24 hours
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const { data: notes } = await supabase
     .from("notes")
     .select("*")
