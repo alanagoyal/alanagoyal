@@ -10,7 +10,6 @@
 7. [Note Creation Flow](#note-creation-flow)
 8. [ISR & Revalidation Strategy](#isr--revalidation-strategy)
 9. [Performance Bottlenecks](#performance-bottlenecks)
-10. [Proposed Improvements](#proposed-improvements)
 
 ## Overview
 
@@ -34,11 +33,11 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
   - `select_note` - Fetch single note by slug
   - `select_session_notes` - Fetch all notes for a session
   - `delete_note` - Delete a note (with session verification)
-  - `update_note` - Update all fields (legacy - updates all three fields)
-  - `update_note_partial` - **[NEW]** Flexible update for any subset of fields
-  - `update_note_title` - Update only title (legacy - still available)
-  - `update_note_emoji` - Update only emoji (legacy - still available)
-  - `update_note_content` - Update only content (legacy - still available)
+  - `update_note` - Update all fields at once (legacy)
+  - `update_note_partial` - Flexible update for any subset of fields (primary method)
+  - `update_note_title` - Update only title (legacy)
+  - `update_note_emoji` - Update only emoji (legacy)
+  - `update_note_content` - Update only content (legacy)
 
 ### UI & Styling
 - **Tailwind CSS** - Utility-first styling
@@ -258,11 +257,9 @@ app/notes/layout.tsx (Server)
    └── Updates context with full note list (sidebar shows updated preview)
 ```
 
-**Data Fetch Count per Edit**: 2 queries (down from 2-4)
-1. update_note_partial RPC (single write for all fields)
+**Data Fetch Count per Edit**: 2 queries
+1. update_note_partial RPC (single write for all changed fields)
 2. select_session_notes RPC (read all session notes for sidebar update)
-3. ~~Eliminated~~: Multiple separate update RPCs (was 1-3 calls)
-4. ~~Eliminated for private notes~~: Router.refresh and revalidation (only for public notes)
 
 ### Note Creation Flow
 
@@ -629,189 +626,6 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 ## Performance Bottlenecks
 
-### Recent Improvements
-
-#### Phase 1: Caching & Deduplication (Completed)
-
-**Implemented optimizations**:
-1. **Eliminated duplicate note fetches** - Using React `cache()` to deduplicate
-2. **Fixed server client usage** - Layout now uses proper server-side client
-3. **Added layout caching** - Changed from `revalidate = 0` to `revalidate = 86400`
-4. **Enhanced revalidation API** - Added layout revalidation support
-
-**Performance Results**:
-- 25% reduction in queries per page load (from 4 to 3)
-- 99%+ reduction in layout queries (cached 24 hours instead of every request)
-- 50% reduction in note page queries (eliminated duplicate fetch)
-
-#### Phase 2: Save Architecture Overhaul (October 2024)
-
-**Implemented improvements**:
-1. **Batched updates** - New `update_note_partial` RPC consolidates 1-3 calls into single batched call
-2. **Accumulated debouncing** - Pending changes accumulate instead of being canceled
-3. **Immediate save on blur** - Title and content fields flush pending changes when focus is lost
-4. **Save on unmount** - Component cleanup ensures no data loss on navigation
-5. **Conditional revalidation** - Only revalidate ISR cache for public notes (private notes skip this)
-6. **Race condition fix** - Title updates no longer lost when quickly switching to content field
-
-**Performance Results**:
-- 66% reduction in database calls per save (from 1-3 RPC calls to 1)
-- 100% elimination of race condition data loss
-- Improved UX with optimistic updates and predictable save behavior
-- Reduced network traffic for multi-field edits
-
-**Files Modified**:
-- `components/note.tsx` - Core save logic with accumulating debounce
-- `components/note-header.tsx` - Added blur handler for immediate title saves
-- `components/note-content.tsx` - Added blur handler for immediate content saves
-- `supabase/migrations/20251023000000_add_partial_update_function.sql` - New RPC function
-
-**See Also**: `/root/repo/MIGRATION_INSTRUCTIONS.md` for detailed migration guide
-
----
-
-### Historical Issues (Resolved)
-
-#### 1. Duplicate Data Fetching in Note Pages (Resolved)
-
-**Location**: `app/notes/[slug]/page.tsx`
-
-**Previous Issue**: The same note was fetched twice on every page load:
-
-```typescript
-// First fetch - generateMetadata
-export async function generateMetadata({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... use note for metadata
-}
-
-// Second fetch - NotePage render
-export default async function NotePage({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... render note
-}
-```
-
-**Impact**:
-- 2x database queries for every note page load
-- Increased latency (sequential queries)
-- Wasted database resources
-
-**Why It Happened**: Next.js executes `generateMetadata` and page render separately, and they don't share cache by default.
-
-**Solution Implemented**:
-```typescript
-import { cache } from "react";
-
-const getNote = cache(async (slug: string) => {
-  const supabase = createServerClient();
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  return note;
-});
-
-// Both generateMetadata and NotePage now use getNote(slug)
-// React cache() ensures only one fetch happens per request
-```
-
----
-
-#### 2. Root Layout Fetching on Every Request (Resolved)
-
-**Location**: `app/notes/layout.tsx`
-
-**Previous Issue**:
-```typescript
-export const revalidate = 0;
-
-export default async function RootLayout({ children }) {
-  const supabase = createBrowserClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ... pass to SidebarLayout
-}
-```
-
-**Impact**:
-- Database query on every navigation
-- No caching benefits from ISR
-- High load on Supabase for popular sites
-- Slow page transitions
-
-**Why It Was Done**: To ensure sidebar always shows latest public notes.
-
-**Solution Implemented**:
-```typescript
-import { createClient } from "@/utils/supabase/server";
-
-export const revalidate = 86400; // 24 hour cache
-
-export default async function RootLayout({ children }) {
-  const supabase = createClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ...
-}
-```
-
----
-
-### Current Bottlenecks
-
-#### 1. ~~Excessive Refetching After Note Updates~~ (RESOLVED)
-
-**Status**: ✅ **Fixed** (October 2024)
-
-**Previous Issue**: After every note save, the app would trigger 1-3 separate RPC calls for title, emoji, and content, plus router refresh and session notes refresh.
-
-**Solution Implemented**:
-- New `update_note_partial` RPC function that batches all field updates into single call
-- Accumulated updates system that doesn't cancel pending changes
-- Immediate save on blur to prevent race conditions
-- Conditional revalidation (only for public notes)
-- Optimistic UI updates for better perceived performance
-
-**Impact**:
-- ✅ Reduced from 1-3 RPC calls to single batched call
-- ✅ Fixed race condition where title updates were lost when quickly switching to content
-- ✅ No more choppy editing experience
-- ✅ Data loss prevention via blur/unmount saves
-
-**Migration**: `/root/repo/supabase/migrations/20251023000000_add_partial_update_function.sql`
-
-#### 2. ~~Three Separate RPC Calls for Note Updates~~ (RESOLVED)
-
-**Status**: ✅ **Fixed** (October 2024)
-
-**Previous Issue**: Each field update triggered separate RPC call.
-
-**Solution**: Unified `update_note_partial` function with accumulating debounce:
-
-```typescript
-// New implementation - accumulates all changes
-saveNote({ title: "new" })     // adds to pending updates
-saveNote({ content: "new" })   // accumulates with title
-// After 500ms or on blur: single RPC call with both fields
-await supabase.rpc("update_note_partial", {
-  uuid_arg,
-  session_arg,
-  title_arg: "new",
-  content_arg: "new",
-  emoji_arg: '___NO_UPDATE___'  // sentinel for "don't update"
-});
-```
-
-**Legacy Functions**: The old individual update functions (`update_note_title`, `update_note_emoji`, `update_note_content`) remain available for backward compatibility but are no longer used.
-
 #### 1. Complex Sidebar with 10+ State Variables
 
 **Location**: `components/sidebar.tsx`
@@ -841,37 +655,7 @@ await supabase.rpc("update_note_partial", {
 - Extract custom hooks for keyboard navigation, search, note grouping
 - Use React.memo to prevent unnecessary re-renders
 
-#### 2. ~~Debounce Implementation Can Drop Edits~~ (RESOLVED)
-
-**Status**: ✅ **Fixed** (October 2024)
-
-**Previous Issue**: If user navigated away or closed tab within 500ms window, edits would be lost.
-
-**Solution Implemented**:
-- Immediate save on blur for both title and content fields
-- Save on component unmount via useEffect cleanup
-- Accumulated updates prevent race conditions
-- Error handling with failed update re-queuing
-
-**Code Example**:
-```typescript
-// Immediate save on blur
-const handleTitleBlur = () => {
-  saveImmediately();  // Flushes pending changes immediately
-};
-
-// Save on unmount
-useEffect(() => {
-  return () => {
-    if (Object.keys(pendingUpdatesRef.current).length > 0) {
-      // Flush pending changes before unmount
-      supabase.rpc("update_note_partial", { ...pendingUpdates });
-    }
-  };
-}, [note.id, sessionId, supabase]);
-```
-
-#### 3. Keyboard Event Listeners Not Cleaned Up Properly
+#### 2. Keyboard Event Listeners Not Cleaned Up Properly
 
 **Location**: `components/sidebar.tsx`
 
@@ -899,7 +683,7 @@ useEffect(() => {
 - Memoize handler functions to reduce re-runs
 - Use refs for values that don't need to trigger re-renders
 
-#### 4. Search Runs on Every Keystroke
+#### 3. Search Runs on Every Keystroke
 
 **Location**: `components/search.tsx`
 
@@ -915,7 +699,7 @@ useEffect(() => {
 - Use virtual scrolling for large result sets
 - Implement fuzzy search with indexed lookups
 
-#### 5. Large Bundle Size from UI Components
+#### 4. Large Bundle Size from UI Components
 
 **Issue**: App imports many Radix UI components and other libraries:
 - Command menu (`cmdk`)
