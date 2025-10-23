@@ -19,22 +19,6 @@ export default function Note({ note: initialNote }: { note: any }) {
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
-  // Sync state when navigating between different notes
-  useEffect(() => {
-    // IMPORTANT: When switching to a different note, immediately flush any pending saves
-    // This prevents data loss when rapidly navigating (common on mobile)
-    const isDifferentNote = noteMetadataRef.current.id && noteMetadataRef.current.id !== initialNote.id;
-
-    if (isDifferentNote && Object.keys(pendingUpdatesRef.current).length > 0) {
-      // Synchronously flush updates before switching
-      flushPendingUpdates();
-    }
-
-    setNote(initialNote);
-    // Clear any pending updates when switching notes
-    pendingUpdatesRef.current = {};
-  }, [initialNote.id, flushPendingUpdates]);
-
   // Store note metadata in ref to avoid stale closures
   const noteMetadataRef = useRef({ id: note.id, slug: note.slug, public: note.public });
   useEffect(() => {
@@ -123,6 +107,22 @@ export default function Note({ note: initialNote }: { note: any }) {
     }
     flushPendingUpdates();
   }, [flushPendingUpdates]);
+
+  // Sync state when navigating between different notes
+  useEffect(() => {
+    // IMPORTANT: When switching to a different note, immediately flush any pending saves
+    // This prevents data loss when rapidly navigating (common on mobile)
+    const isDifferentNote = noteMetadataRef.current.id && noteMetadataRef.current.id !== initialNote.id;
+
+    if (isDifferentNote && Object.keys(pendingUpdatesRef.current).length > 0) {
+      // Synchronously flush updates before switching
+      flushPendingUpdates();
+    }
+
+    setNote(initialNote);
+    // Clear any pending updates when switching notes
+    pendingUpdatesRef.current = {};
+  }, [initialNote.id, flushPendingUpdates]);
 
   // Save on unmount - flush any pending changes before component destroys
   useEffect(() => {
