@@ -684,49 +684,76 @@ const updateNoteLocally = useCallback((noteId: string, updates: Partial<any>) =>
 
 // New implementation - Note component
 const saveNote = useCallback(async (updates) => {
+  // Clear existing timeout if any
+  if (saveTimeoutRef.current) {
+    clearTimeout(saveTimeoutRef.current);
+  }
+
+  // Accumulate updates instead of replacing them
+  pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
+
   // Optimistic update locally
-  const updatedNote = { ...note, ...updates };
+  const updatedNote = { ...note, ...pendingUpdatesRef.current };
   setNote(updatedNote);
 
   saveTimeoutRef.current = setTimeout(async () => {
     try {
       if (note.id && sessionId) {
-        // Build parallel RPC calls array
+        // Use accumulated pending updates
+        const allUpdates = pendingUpdatesRef.current;
+
+        // Build parallel RPC calls array based on accumulated updates
         const promises = [];
-        if ('title' in updates) {
+        if ('title' in allUpdates) {
           promises.push(supabase.rpc("update_note_title", { ... }));
         }
-        if ('emoji' in updates) {
+        if ('emoji' in allUpdates) {
           promises.push(supabase.rpc("update_note_emoji", { ... }));
         }
-        if ('content' in updates) {
+        if ('content' in allUpdates) {
           promises.push(supabase.rpc("update_note_content", { ... }));
         }
 
-        // Execute all RPC calls in parallel - fast!
-        await Promise.all(promises);
+        // Execute all RPC calls in parallel
+        const results = await Promise.all(promises);
+
+        // Check for errors in RPC results
+        results.forEach((result, index) => {
+          if (result.error) {
+            console.error(`RPC call ${index} failed:`, result.error);
+            throw result.error;
+          }
+        });
 
         // Hybrid approach: check if note exists in sidebar
         const noteExistsInSidebar = notes.some(n => n.id === note.id);
 
         if (noteExistsInSidebar) {
-          // For existing notes: optimistic update (no DB query)
-          updateNoteLocally(note.id, updates);
+          // For existing notes: optimistic update with all accumulated updates
+          updateNoteLocally(note.id, allUpdates);
         } else {
           // For brand new notes: full refresh to populate sidebar
           await refreshSessionNotes();
         }
 
-        // Only revalidate ISR for public notes
+        // Clear pending updates after successful save
+        pendingUpdatesRef.current = {};
+
+        // Only revalidate ISR cache for public notes
         if (note.public) {
           await fetch("/notes/revalidate", { slug: note.slug });
         }
 
-        // Skip router.refresh() - not needed
+        // Refresh router cache to ensure fresh data on navigation
+        // This ensures when user navigates away and back, they see updated data
+        router.refresh();
       }
     } catch (error) {
+      console.error("Save failed:", error);
       // Revert optimistic update on error
       setNote(note);
+      // Clear pending updates on error
+      pendingUpdatesRef.current = {};
       toast({ description: "Failed to save note", variant: "destructive" });
     }
   }, 500);
@@ -738,30 +765,40 @@ const saveNote = useCallback(async (updates) => {
 1. **Parallel RPC Execution**
    - Multiple field updates happen simultaneously via `Promise.all()`
    - ~2-3x faster than sequential execution
+   - Explicit error checking for each RPC result
 
-2. **Hybrid Update Strategy**
+2. **Update Accumulation (Bug Fix)**
+   - Uses `pendingUpdatesRef` to accumulate rapid edits within debounce window
+   - Prevents lost updates when user rapidly edits multiple fields
+   - Example: Edit title then immediately edit content → both save correctly
+   - Clears accumulated updates after successful save
+
+3. **Hybrid Update Strategy**
    - **Existing notes**: Use optimistic local updates (instant, no DB query)
    - **Brand new notes**: Full refresh to populate sidebar (handles race condition)
    - Automatically detects which approach to use
 
-3. **Race Condition Handling**
+4. **Race Condition Handling**
    - When user creates a note and immediately starts typing, there's a race between:
      - `createNote()` → `refreshSessionNotes()` populating sidebar
      - `saveNote()` → trying to update the note in sidebar
    - Old implementation: Note would disappear (updateNoteLocally failed silently)
    - New implementation: Detects missing note and does full refresh
 
-4. **Conditional ISR Revalidation**
+5. **Conditional ISR Revalidation**
    - Only revalidates for public notes (needed for ISR cache)
    - Private notes skip revalidation (no ISR cache to invalidate)
 
-5. **Removed Unnecessary Operations**
-   - No `router.refresh()` (server components don't need refresh for private notes)
-   - No `refreshSessionNotes()` for existing notes (optimistic update instead)
+6. **Router Cache Invalidation (Bug Fix)**
+   - Calls `router.refresh()` after save to invalidate Next.js server component cache
+   - Ensures fresh data when navigating away and back to a note
+   - Fixes issue where emoji/title changes weren't visible after navigation
 
-6. **Error Handling**
+7. **Error Handling**
    - Reverts optimistic updates on failure
+   - Clears pending updates on error
    - Shows user-friendly toast notification
+   - Logs specific RPC errors to console
 
 **Performance Impact**:
 
@@ -783,9 +820,12 @@ After:
 
 1. **Self-healing**: Automatically detects out-of-sync state and refreshes
 2. **Preserves data integrity**: Never loses notes due to race conditions
-3. **Graceful degradation**: Falls back to full refresh when needed
-4. **99% fast path**: Most saves use instant optimistic updates
-5. **1% safe path**: New note edge case handled correctly
+3. **Prevents lost edits**: Update accumulation ensures rapid multi-field edits all save
+4. **Cache consistency**: Router refresh ensures navigation always shows latest data
+5. **Graceful degradation**: Falls back to full refresh when needed
+6. **99% fast path**: Most saves use instant optimistic updates
+7. **1% safe path**: New note edge case handled correctly
+8. **Comprehensive error handling**: RPC errors caught, logged, and user notified
 
 ---
 
