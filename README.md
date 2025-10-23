@@ -24,19 +24,69 @@ the app is built with:
 supabase provides the postgresql database and handles security through row-level security (rls) policies:
 
 **database schema**:
-- `notes` table stores all notes with fields: `id`, `title`, `content`, `session_id`, `public`, `slug`, `category`, `emoji`, `created_at`
-- `public` boolean field controls visibility
-- `session_id` links notes to browser sessions
+
+the `notes` table structure:
+- `id` (uuid): unique identifier for each note
+- `title` (text): note title
+- `content` (text): markdown content
+- `session_id` (uuid): links notes to browser sessions
+- `public` (boolean): controls visibility (true = public, false = private)
+- `slug` (text): url-friendly identifier
+- `category` (text): optional categorization
+- `emoji` (text): emoji icon for the note
+- `created_at` (timestamp): creation timestamp
 
 **security model**:
 - **public notes**: anyone can view notes where `public = true`
 - **private notes**: anyone can create private notes (`public = false`), but only the session owner can view, edit, or delete them
 - **server-side functions**: all updates/deletes verify session ownership before executing
 - **rls policies**: enforce access control at the database level
+  - `allow_all_users_select_public_notes`: allows everyone to read public notes
+  - `allow_all_users_insert_private_notes`: allows anyone to create private notes
 
-the app uses two supabase clients:
+**supabase rpc functions**:
+
+the app uses postgresql functions (called via `supabase.rpc()`) to ensure secure database operations:
+
+1. **`select_note(note_slug_arg)`** - retrieves a single note by slug
+   - used for: loading individual note pages
+   - security: stable, security definer
+   - usage: `app/notes/[slug]/page.tsx:34`, `app/notes/[slug]/page.tsx:61`
+
+2. **`select_session_notes(session_id_arg)`** - retrieves all notes for a session
+   - used for: loading a user's private notes in the sidebar
+   - security: stable, security definer
+   - usage: `app/notes/session-notes.tsx:71`
+
+3. **`update_note_title(uuid_arg, session_arg, title_arg)`** - updates note title
+   - used for: real-time title editing
+   - security: verifies session ownership before updating
+   - usage: `components/note.tsx:33`
+
+4. **`update_note_emoji(uuid_arg, session_arg, emoji_arg)`** - updates note emoji
+   - used for: changing note icon
+   - security: verifies session ownership before updating
+   - usage: `components/note.tsx:40`
+
+5. **`update_note_content(uuid_arg, session_arg, content_arg)`** - updates note content
+   - used for: real-time markdown editing with 500ms debounce
+   - security: verifies session ownership before updating
+   - usage: `components/note.tsx:47`
+
+6. **`update_note(uuid_arg, session_arg, title_arg, emoji_arg, content_arg)`** - updates all fields at once
+   - defined in: `supabase/migrations/20240710180237_initial.sql:58`
+   - currently unused but available for bulk updates
+
+7. **`delete_note(uuid_arg, session_arg)`** - deletes a note
+   - used for: removing private notes
+   - security: verifies session ownership before deleting
+   - usage: `components/sidebar.tsx:259`
+
+**supabase clients**:
 - **server client** (`utils/supabase/server.ts`) for server-side operations
-- **browser client** (`utils/supabase/client.ts`) for client-side operations
+- **browser client** (`utils/supabase/client.ts`) for client-side operations and real-time updates
+
+all rpc functions use `SECURITY DEFINER` to run with elevated privileges while enforcing session-based access control through explicit session_id verification.
 
 ## clone the repo
 
