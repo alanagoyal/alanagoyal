@@ -1,82 +1,154 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 import SessionId from "./session-id";
-import { useState, useCallback, useRef, useContext } from "react";
+import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { persistNoteFields, revalidateNote, NoteField } from "@/lib/note-persistence";
+import { Note as NoteType } from "@/lib/types";
 
-export default function Note({ note: initialNote }: { note: any }) {
-  const supabase = createClient();
+export default function Note({ note: initialNote }: { note: NoteType }) {
   const router = useRouter();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { refreshSessionNotes } = useContext(SessionNotesContext);
+  // Separate timeout refs for each field to prevent race conditions
+  const saveTimeoutRefs = useRef<Record<NoteField, NodeJS.Timeout | null>>({
+    title: null,
+    content: null,
+    emoji: null,
+  });
 
-  const saveNote = useCallback(
-    async (updates: Partial<typeof note>) => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+  // Track which fields have pending saves
+  const pendingSaves = useRef<Set<NoteField>>(new Set());
+
+  const { updateNoteInContext } = useContext(SessionNotesContext);
+
+  /**
+   * Save a specific field to the database with independent debouncing
+   * This prevents race conditions where one field's save cancels another's
+   */
+  const saveField = useCallback(
+    async (field: NoteField, value: string) => {
+      // Clear only THIS field's timeout (not others!)
+      if (saveTimeoutRefs.current[field]) {
+        clearTimeout(saveTimeoutRefs.current[field]!);
       }
 
-      const updatedNote = { ...note, ...updates };
+      // Update local state immediately (optimistic update)
+      const updatedNote = { ...note, [field]: value };
       setNote(updatedNote);
 
-      saveTimeoutRef.current = setTimeout(async () => {
+      // Update context optimistically (keeps sidebar in sync without refetching)
+      updateNoteInContext(note.id, { [field]: value });
+
+      // Mark this field as having a pending save
+      pendingSaves.current.add(field);
+
+      // Debounce THIS field independently
+      saveTimeoutRefs.current[field] = setTimeout(async () => {
         try {
           if (note.id && sessionId) {
-            if ('title' in updates) {
-              await supabase.rpc("update_note_title", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                title_arg: updatedNote.title,
-              });
+            // Persist to database
+            const result = await persistNoteFields(note.id, sessionId, {
+              [field]: value,
+            } as Partial<Pick<NoteType, NoteField>>);
+
+            if (!result.success) {
+              console.error(`Failed to save ${field}:`, result.error);
+              // TODO: Show error toast to user
+              return;
             }
-            if ('emoji' in updates) {
-              await supabase.rpc("update_note_emoji", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                emoji_arg: updatedNote.emoji,
-              });
-            }
-            if ('content' in updates) {
-              await supabase.rpc("update_note_content", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                content_arg: updatedNote.content,
-              });
+
+            // Only revalidate for public notes (ISR cache)
+            if (note.public) {
+              await revalidateNote(note.slug);
             }
           }
-
-          await fetch("/notes/revalidate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
-            },
-            body: JSON.stringify({ slug: note.slug }),
-          });
-          refreshSessionNotes();
-          router.refresh();
         } catch (error) {
-          console.error("Save failed:", error);
+          console.error(`Save failed for ${field}:`, error);
+          // TODO: Show error toast to user
+        } finally {
+          // Mark save as complete
+          pendingSaves.current.delete(field);
         }
       }, 500);
     },
-    [note, supabase, router, refreshSessionNotes, sessionId]
+    [note, sessionId, updateNoteInContext]
   );
+
+  /**
+   * Flush all pending saves immediately
+   * Called on blur or unmount to prevent data loss
+   */
+  const flushPendingSaves = useCallback(async () => {
+    // Clear all timeouts
+    Object.entries(saveTimeoutRefs.current).forEach(([field, timeout]) => {
+      if (timeout) {
+        clearTimeout(timeout);
+        saveTimeoutRefs.current[field as NoteField] = null;
+      }
+    });
+
+    // Save all pending fields immediately
+    if (pendingSaves.current.size > 0 && note.id && sessionId) {
+      const updates: Partial<Pick<NoteType, NoteField>> = {};
+
+      pendingSaves.current.forEach(field => {
+        updates[field] = note[field] as any;
+      });
+
+      try {
+        await persistNoteFields(note.id, sessionId, updates);
+        pendingSaves.current.clear();
+      } catch (error) {
+        console.error("Failed to flush pending saves:", error);
+      }
+    }
+  }, [note, sessionId]);
+
+  // Flush pending saves on unmount
+  useEffect(() => {
+    return () => {
+      flushPendingSaves();
+    };
+  }, [flushPendingSaves]);
+
+  // Flush pending saves before page unload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingSaves.current.size > 0) {
+        // Show browser warning if there are unsaved changes
+        e.preventDefault();
+        e.returnValue = '';
+        flushPendingSaves();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [flushPendingSaves]);
 
   const canEdit = sessionId === note.session_id;
 
   return (
     <div className="h-full overflow-y-auto bg-background">
       <SessionId setSessionId={setSessionId} />
-      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} />
-      <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
+      <NoteHeader
+        note={note}
+        onTitleChange={(value) => saveField('title', value)}
+        onEmojiChange={(value) => saveField('emoji', value)}
+        onBlur={flushPendingSaves}
+        canEdit={canEdit}
+      />
+      <NoteContent
+        note={note}
+        onContentChange={(value) => saveField('content', value)}
+        onBlur={flushPendingSaves}
+        canEdit={canEdit}
+      />
     </div>
   );
 }

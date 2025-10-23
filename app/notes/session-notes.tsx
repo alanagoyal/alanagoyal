@@ -11,12 +11,16 @@ import {
   useMemo,
   useState,
 } from "react";
+import { Note } from "@/lib/types";
 
 export interface SessionNotes {
   sessionId: string;
-  notes: any[];
+  notes: Note[];
   setSessionId: (sessionId: string) => void;
   refreshSessionNotes: () => Promise<void>;
+  addOptimisticNote: (note: Note) => void;
+  updateNoteInContext: (noteId: string, updates: Partial<Note>) => void;
+  removeNoteFromContext: (noteId: string) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
@@ -24,6 +28,9 @@ export const SessionNotesContext = createContext<SessionNotes>({
   notes: [],
   setSessionId: () => {},
   refreshSessionNotes: async () => {},
+  addOptimisticNote: () => {},
+  updateNoteInContext: () => {},
+  removeNoteFromContext: () => {},
 });
 
 export function SessionNotesProvider({
@@ -33,7 +40,7 @@ export function SessionNotesProvider({
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<any[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {
@@ -41,6 +48,32 @@ export function SessionNotesProvider({
       setNotes(notes || []);
     }
   }, [supabase, sessionId]);
+
+  /**
+   * Add a note optimistically (before DB confirmation)
+   * Used for instant UI when creating new notes
+   */
+  const addOptimisticNote = useCallback((note: Note) => {
+    setNotes(prev => [note, ...prev]);
+  }, []);
+
+  /**
+   * Update a note in the context without refetching from DB
+   * Used for optimistic updates during editing
+   */
+  const updateNoteInContext = useCallback((noteId: string, updates: Partial<Note>) => {
+    setNotes(prev => prev.map(note =>
+      note.id === noteId ? { ...note, ...updates } : note
+    ));
+  }, []);
+
+  /**
+   * Remove a note from the context
+   * Used after deletion
+   */
+  const removeNoteFromContext = useCallback((noteId: string) => {
+    setNotes(prev => prev.filter(note => note.id !== noteId));
+  }, []);
 
   useEffect(() => {
     refreshSessionNotes();
@@ -53,6 +86,9 @@ export function SessionNotesProvider({
         notes,
         setSessionId,
         refreshSessionNotes,
+        addOptimisticNote,
+        updateNoteInContext,
+        removeNoteFromContext,
       }}
     >
       {children}

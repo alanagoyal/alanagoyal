@@ -14,11 +14,15 @@ import { getDisplayDateByCategory } from "@/lib/note-utils";
 
 export default function NoteHeader({
   note,
-  saveNote,
+  onTitleChange,
+  onEmojiChange,
+  onBlur,
   canEdit,
 }: {
   note: any;
-  saveNote: (updates: Partial<typeof note>) => void;
+  onTitleChange: (value: string) => void;
+  onEmojiChange: (value: string) => void;
+  onBlur?: () => void;
   canEdit: boolean;
 }) {
   const isMobile = useMobileDetect();
@@ -35,12 +39,12 @@ export default function NoteHeader({
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;
-    saveNote({ emoji: newEmoji });
+    onEmojiChange(newEmoji);
     setShowEmojiPicker(false);
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    saveNote({ title: e.target.value });
+    onTitleChange(e.target.value);
   };
 
   return (
@@ -87,6 +91,7 @@ export default function NoteHeader({
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
               onChange={handleTitleChange}
+              onBlur={onBlur}
               autoFocus={!note.title}
             />
           )}

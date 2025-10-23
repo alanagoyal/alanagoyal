@@ -8,26 +8,28 @@ import { Note } from "@/lib/types";
 
 export default function NoteContent({
   note,
-  saveNote,
+  onContentChange,
+  onBlur,
   canEdit,
 }: {
   note: Note;
-  saveNote: (updates: Partial<Note>) => void;
+  onContentChange: (value: string) => void;
+  onBlur?: () => void;
   canEdit: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    saveNote({ content: e.target.value });
-  }, [saveNote]);
+    onContentChange(e.target.value);
+  }, [onContentChange]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
       new RegExp(`\\[[ x]\\] ${taskText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'),
       `[${isChecked ? 'x' : ' '}] ${taskText}`
     );
-    saveNote({ content: updatedContent });
-  }, [note.content, saveNote]);
+    onContentChange(updatedContent);
+  }, [note.content, onContentChange]);
 
   const renderListItem = useCallback(({ children, ...props }: any) => {
     if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>;
@@ -89,7 +91,10 @@ export default function NoteContent({
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
+          onBlur={() => {
+            setIsEditing(false);
+            onBlur?.();
+          }}
         />
       ) : (
         <div

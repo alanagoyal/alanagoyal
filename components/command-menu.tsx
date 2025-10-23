@@ -105,14 +105,14 @@ export const CommandMenu = forwardRef<
       );
     }
 
-    const { refreshSessionNotes } = useContext(SessionNotesContext);
+    const { addOptimisticNote } = useContext(SessionNotesContext);
 
     const handleCreateNote = () => {
       createNote(
         sessionId,
         router,
         addNewPinnedNote,
-        refreshSessionNotes,
+        addOptimisticNote,
         setSelectedNoteSlug,
         isMobile
       );

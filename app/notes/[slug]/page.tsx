@@ -69,7 +69,36 @@ export default async function NotePage({
   const slug = params.slug.replace(/^notes\//, '');
   const note = await getNote(slug);
 
+  // Handle optimistic notes that haven't been persisted to DB yet
+  // This allows instant navigation while the note is being saved
   if (!note) {
+    // Check if this is a newly created note (slug pattern: new-note-{uuid})
+    if (slug.startsWith('new-note-')) {
+      // Extract the UUID from the slug
+      const noteId = slug.replace('new-note-', '');
+
+      // Create a temporary note object
+      // The actual note data will be loaded from the session context on the client
+      const tempNote: NoteType = {
+        id: noteId,
+        slug: slug,
+        title: "",
+        content: "",
+        public: false,
+        created_at: new Date().toISOString(),
+        session_id: "", // Will be set by SessionId component
+        category: "today",
+        emoji: "👋🏼",
+      };
+
+      return (
+        <div className="w-full min-h-dvh p-3">
+          <Note note={tempNote} />
+        </div>
+      );
+    }
+
+    // For non-new notes that don't exist, show error
     return redirect("/notes/error");
   }
 
