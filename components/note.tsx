@@ -36,9 +36,17 @@ export default function Note({ note: initialNote }: { note: any }) {
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
+          // Use accumulated pending updates
+          const allUpdates = pendingUpdatesRef.current;
+
+          console.log('[SAVE] Attempting save:', {
+            noteId: note.id,
+            sessionId,
+            hasSessionId: !!sessionId,
+            updates: allUpdates
+          });
+
           if (note.id && sessionId) {
-            // Use accumulated pending updates
-            const allUpdates = pendingUpdatesRef.current;
 
             // Build parallel RPC calls array based on accumulated updates
             const promises = [];
