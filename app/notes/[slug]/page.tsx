@@ -1,4 +1,5 @@
 import Note from "@/components/note";
+import { createClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
@@ -9,6 +10,7 @@ export const revalidate = 60 * 60; // 1 hour
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
+  // Use browser client for build-time static generation (no request context)
   const supabase = createBrowserClient();
   const { data: posts } = await supabase
     .from("notes")
@@ -28,7 +30,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
@@ -55,7 +57,7 @@ export default async function NotePage({
 }: {
   params: { slug: string };
 }) {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
