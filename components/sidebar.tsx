@@ -187,7 +187,7 @@ export default function Sidebar({
         const currentIndex = flattened.findIndex(
           (note) => note.slug === selectedNoteSlug
         );
-        
+
         let nextIndex;
         if (direction === "up") {
           nextIndex =
@@ -198,16 +198,16 @@ export default function Sidebar({
         }
 
         const nextNote = flattened[nextIndex];
-        
+
         if (nextNote) {
-          router.push(`/notes/${nextNote.slug}`);
-          // Wait for router navigation and React re-render
-          setTimeout(() => {
-            const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
-            if (selectedElement) {
-              selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-          }, 100);
+          // Update URL without triggering full page navigation
+          router.replace(`/notes/${nextNote.slug}`, { scroll: false });
+
+          // Scroll into view immediately (no setTimeout needed)
+          const selectedElement = scrollViewportRef.current?.querySelector(`[data-note-slug="${nextNote.slug}"]`);
+          if (selectedElement) {
+            selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         }
       }
     },
@@ -313,11 +313,12 @@ export default function Sidebar({
   const goToHighlightedNote = useCallback(() => {
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
-      router.push(`/notes/${selectedNote.slug}`);
-      setTimeout(() => {
-        const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
-        selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 0);
+      router.replace(`/notes/${selectedNote.slug}`, { scroll: false });
+
+      // Scroll into view immediately (no setTimeout needed)
+      const selectedElement = scrollViewportRef.current?.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
+      selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
       clearSearch();
     }
   }, [localSearchResults, highlightedIndex, router, clearSearch]);
