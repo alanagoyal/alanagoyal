@@ -57,11 +57,9 @@ export default function Note({ note: initialNote }: { note: any }) {
         router.refresh();
       }
 
-      // Refresh session notes less frequently - only on title/emoji changes
-      // Content changes don't affect the sidebar
-      if (updates.title !== undefined || updates.emoji !== undefined) {
-        refreshSessionNotes();
-      }
+      // Refresh session notes to update the sidebar
+      // The sidebar displays title, emoji, AND content preview
+      refreshSessionNotes();
     } catch (error) {
       console.error("Save failed:", error);
       // Re-add failed updates to pending queue

@@ -43,7 +43,7 @@ npx supabase db push
 2. **Single Database Call**: All pending changes are saved in one RPC call
 3. **Immediate Save on Blur**: When you leave a field, changes are immediately flushed to prevent data loss
 4. **Save on Unmount**: Component cleanup ensures no pending changes are lost
-5. **Reduced Refreshes**: Only refreshes session notes when title/emoji changes (not content)
+5. **Consistent Sidebar Updates**: Session notes refresh after saves to keep sidebar content preview in sync
 
 ## Architecture Improvements
 
@@ -66,9 +66,9 @@ saveNote({ content: "new" })   // adds to pending: { title: "new", content: "new
 
 ### Performance Benefits
 
-1. **Reduced Database Calls**: 1 call instead of up to 3 separate RPC calls
-2. **Smarter Refreshes**: Session notes only refresh when sidebar-visible fields change
-3. **Better UX**: No data loss, faster saves, less network traffic
+1. **Reduced Database Calls**: 1 call instead of up to 3 separate RPC calls per save
+2. **Batched Updates**: Multiple field changes within 500ms are combined into single save
+3. **Better UX**: No data loss, faster saves, predictable behavior
 
 ## Testing the Fix
 
