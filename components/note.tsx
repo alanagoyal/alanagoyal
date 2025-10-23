@@ -24,7 +24,19 @@ export default function Note({ note: initialNote }: { note: NoteType }) {
   // Track which fields have pending saves
   const pendingSaves = useRef<Set<NoteField>>(new Set());
 
-  const { updateNoteInContext } = useContext(SessionNotesContext);
+  const { updateNoteInContext, notes } = useContext(SessionNotesContext);
+
+  // Sync note state from context if it has more recent data
+  // This handles the case where we navigate away and back before saves complete
+  useEffect(() => {
+    const contextNote = notes.find(n => n.id === initialNote.id);
+    if (contextNote) {
+      // Only update if we don't have pending saves (to avoid overwriting user input)
+      if (pendingSaves.current.size === 0) {
+        setNote(contextNote);
+      }
+    }
+  }, [notes, initialNote.id]);
 
   /**
    * Save a specific field to the database with independent debouncing
@@ -82,8 +94,10 @@ export default function Note({ note: initialNote }: { note: NoteType }) {
   /**
    * Flush all pending saves immediately
    * Called on blur or unmount to prevent data loss
+   * Note: This is fire-and-forget on unmount, but optimistic updates in context
+   * ensure the UI shows the latest state even if DB save is pending
    */
-  const flushPendingSaves = useCallback(async () => {
+  const flushPendingSaves = useCallback(() => {
     // Clear all timeouts
     Object.entries(saveTimeoutRefs.current).forEach(([field, timeout]) => {
       if (timeout) {
@@ -100,12 +114,16 @@ export default function Note({ note: initialNote }: { note: NoteType }) {
         updates[field] = note[field] as any;
       });
 
-      try {
-        await persistNoteFields(note.id, sessionId, updates);
-        pendingSaves.current.clear();
-      } catch (error) {
-        console.error("Failed to flush pending saves:", error);
-      }
+      // Fire off the save
+      // The optimistic update in context ensures UI consistency
+      // even if this hasn't completed when we navigate away
+      persistNoteFields(note.id, sessionId, updates)
+        .then(() => {
+          pendingSaves.current.clear();
+        })
+        .catch((error) => {
+          console.error("Failed to flush pending saves:", error);
+        });
     }
   }, [note, sessionId]);
 
