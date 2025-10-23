@@ -45,13 +45,6 @@ export default function Note({ note: initialNote }: { note: any }) {
               );
             }
             if ('emoji' in updates) {
-              console.log('[DEBUG] Updating emoji:', {
-                noteId: note.id,
-                sessionId,
-                oldEmoji: note.emoji,
-                newEmoji: updatedNote.emoji,
-                updatesEmoji: updates.emoji
-              });
               promises.push(
                 supabase.rpc("update_note_emoji", {
                   uuid_arg: note.id,
@@ -92,7 +85,7 @@ export default function Note({ note: initialNote }: { note: any }) {
               await refreshSessionNotes();
             }
 
-            // Only revalidate if it's a public note
+            // Only revalidate ISR cache for public notes
             if (note.public) {
               await fetch("/notes/revalidate", {
                 method: "POST",
@@ -104,7 +97,9 @@ export default function Note({ note: initialNote }: { note: any }) {
               });
             }
 
-            // Skip router.refresh() - not needed for private notes
+            // Refresh router cache to ensure fresh data on navigation
+            // This ensures when user navigates away and back, they see updated data
+            router.refresh();
           }
         } catch (error) {
           console.error("Save failed:", error);
