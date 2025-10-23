@@ -10,7 +10,6 @@
 7. [Note Creation Flow](#note-creation-flow)
 8. [ISR & Revalidation Strategy](#isr--revalidation-strategy)
 9. [Performance Bottlenecks](#performance-bottlenecks)
-10. [Proposed Improvements](#proposed-improvements)
 
 ## Overview
 
@@ -30,7 +29,15 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
 ### Backend & Database
 - **Supabase** - PostgreSQL database with Row Level Security (RLS)
 - **@supabase/ssr** - SSR-optimized Supabase client
-- 7 custom RPC functions for data operations
+- 8 custom RPC functions for data operations:
+  - `select_note` - Fetch single note by slug
+  - `select_session_notes` - Fetch all notes for a session
+  - `delete_note` - Delete a note (with session verification)
+  - `update_note` - Update all fields at once (legacy)
+  - `update_note_partial` - Flexible update for any subset of fields (primary method)
+  - `update_note_title` - Update only title (legacy)
+  - `update_note_emoji` - Update only emoji (legacy)
+  - `update_note_content` - Update only content (legacy)
 
 ### UI & Styling
 - **Tailwind CSS** - Utility-first styling
@@ -169,10 +176,11 @@ app/notes/layout.tsx (Server)
 
 #### `components/note.tsx` (Client)
 - **Purpose**: Note editor with auto-save
-- **Debouncing**: 500ms delay before saving changes
-- **Granular Updates**: Separate RPC calls for title, emoji, content
-- **Revalidation**: Calls `/notes/revalidate` after each save
-- **Issue**: 3 separate RPC calls per save, redundant revalidation
+- **Debouncing**: 500ms delay before saving changes, with accumulated updates
+- **Batched Updates**: Single RPC call for all pending field changes (title, emoji, content)
+- **Immediate Save**: Saves on blur/unmount to prevent data loss
+- **Revalidation**: Calls `/notes/revalidate` after each save (public notes only)
+- **Optimistic Updates**: UI updates immediately, database saves are debounced
 
 #### `app/notes/session-notes.tsx` (Client Context)
 - **Purpose**: Provides session notes to all components
@@ -223,34 +231,35 @@ app/notes/layout.tsx (Server)
 ### Note Edit Flow
 
 ```
-1. User types in note editor
+1. User types in note editor (title or content)
    │
-2. NoteContent onChange fires
-   ├── Calls saveNote({ content: newContent })
+2. NoteHeader/NoteContent onChange fires
+   ├── Calls saveNote({ title/content: newValue })
    │
-3. saveNote function (debounced 500ms)
-   ├── Clears previous timeout
+3. saveNote function (accumulating debounce)
    ├── Updates local state immediately (optimistic update)
-   ├── After 500ms:
-   │   ├── supabase.rpc("update_note_content", { uuid, session, content })
+   ├── Accumulates change in pendingUpdatesRef (doesn't clear previous pending changes)
+   ├── Clears previous 500ms timeout
+   ├── Starts new 500ms timeout
+   │
+4. After 500ms OR on blur/unmount:
+   ├── flushPendingUpdates() executes
+   ├── Batches all accumulated changes (title, emoji, content)
+   ├── Single RPC: supabase.rpc("update_note_partial", { ...all changes })
+   ├── If public note:
    │   ├── fetch("/notes/revalidate", { slug })
-   │   ├── refreshSessionNotes() - refetches ALL session notes
    │   └── router.refresh() - refetches server components
+   ├── refreshSessionNotes() - updates sidebar
+   └── pendingUpdatesRef cleared
    │
-4. SessionNotesProvider.refreshSessionNotes()
+5. SessionNotesProvider.refreshSessionNotes()
    ├── supabase.rpc("select_session_notes", { session_id })
-   └── Updates context with full note list
-   │
-5. Router.refresh()
-   ├── Re-executes layout.tsx (fetches all public notes again)
-   └── Re-executes [slug]/page.tsx if ISR cache is stale
+   └── Updates context with full note list (sidebar shows updated preview)
 ```
 
-**Data Fetch Count per Edit**: 2-4 queries
-1. update_note_content RPC (write)
-2. select_session_notes RPC (read all session notes)
-3. Layout refresh: All public notes (if router.refresh executes)
-4. Page refresh: select_note (if ISR cache is invalidated)
+**Data Fetch Count per Edit**: 2 queries
+1. update_note_partial RPC (single write for all changed fields)
+2. select_session_notes RPC (read all session notes for sidebar update)
 
 ### Note Creation Flow
 
@@ -617,189 +626,7 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 ## Performance Bottlenecks
 
-### Recent Improvements
-
-**Implemented optimizations**:
-1. **Eliminated duplicate note fetches** - Using React `cache()` to deduplicate
-2. **Fixed server client usage** - Layout now uses proper server-side client
-3. **Added layout caching** - Changed from `revalidate = 0` to `revalidate = 86400`
-4. **Enhanced revalidation API** - Added layout revalidation support
-
-**Performance Results**:
-- 25% reduction in queries per page load (from 4 to 3)
-- 99%+ reduction in layout queries (cached 24 hours instead of every request)
-- 50% reduction in note page queries (eliminated duplicate fetch)
-
----
-
-### Historical Issues (Resolved)
-
-#### 1. Duplicate Data Fetching in Note Pages (Resolved)
-
-**Location**: `app/notes/[slug]/page.tsx`
-
-**Previous Issue**: The same note was fetched twice on every page load:
-
-```typescript
-// First fetch - generateMetadata
-export async function generateMetadata({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... use note for metadata
-}
-
-// Second fetch - NotePage render
-export default async function NotePage({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... render note
-}
-```
-
-**Impact**:
-- 2x database queries for every note page load
-- Increased latency (sequential queries)
-- Wasted database resources
-
-**Why It Happened**: Next.js executes `generateMetadata` and page render separately, and they don't share cache by default.
-
-**Solution Implemented**:
-```typescript
-import { cache } from "react";
-
-const getNote = cache(async (slug: string) => {
-  const supabase = createServerClient();
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  return note;
-});
-
-// Both generateMetadata and NotePage now use getNote(slug)
-// React cache() ensures only one fetch happens per request
-```
-
----
-
-#### 2. Root Layout Fetching on Every Request (Resolved)
-
-**Location**: `app/notes/layout.tsx`
-
-**Previous Issue**:
-```typescript
-export const revalidate = 0;
-
-export default async function RootLayout({ children }) {
-  const supabase = createBrowserClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ... pass to SidebarLayout
-}
-```
-
-**Impact**:
-- Database query on every navigation
-- No caching benefits from ISR
-- High load on Supabase for popular sites
-- Slow page transitions
-
-**Why It Was Done**: To ensure sidebar always shows latest public notes.
-
-**Solution Implemented**:
-```typescript
-import { createClient } from "@/utils/supabase/server";
-
-export const revalidate = 86400; // 24 hour cache
-
-export default async function RootLayout({ children }) {
-  const supabase = createClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ...
-}
-```
-
----
-
-### Current Bottlenecks
-
-#### 1. Excessive Refetching After Note Updates
-
-**Location**: `components/note.tsx`
-
-**Issue**: After every note save (debounced 500ms), the app triggers:
-
-```typescript
-// 1. Update RPC call
-await supabase.rpc("update_note_content", { ... });
-
-// 2. Revalidate ISR cache
-await fetch("/notes/revalidate", { slug });
-
-// 3. Refetch ALL session notes
-refreshSessionNotes();
-
-// 4. Refresh ALL server components
-router.refresh();
-```
-
-**Impact**:
-- `refreshSessionNotes()` refetches entire note list (unnecessary)
-- `router.refresh()` re-executes layout (fetches all public notes again)
-- Multiple queries for single change
-- Choppy editing experience if debounce fails
-
-**Why It's Done**: To keep sidebar in sync with database changes.
-
-**Better Approach**:
-- Optimistic updates for sidebar
-- Only refetch on navigation, not on every save
-- Use Supabase real-time subscriptions for live updates
-
-#### 2. Three Separate RPC Calls for Note Updates
-
-**Location**: `components/note.tsx`
-
-**Issue**: Each field update triggers separate RPC call:
-
-```typescript
-if ('title' in updates) {
-  await supabase.rpc("update_note_title", { uuid_arg, session_arg, title_arg });
-}
-if ('emoji' in updates) {
-  await supabase.rpc("update_note_emoji", { uuid_arg, session_arg, emoji_arg });
-}
-if ('content' in updates) {
-  await supabase.rpc("update_note_content", { uuid_arg, session_arg, content_arg });
-}
-```
-
-**Impact**:
-- 1-3 separate database queries per save
-- Sequential execution (not parallel)
-- Higher latency for multi-field updates
-- More complex RPC function management
-
-**Why It's Done**: Granular control over what gets updated.
-
-**Better Approach**: Single `update_note` RPC that accepts optional fields:
-```typescript
-await supabase.rpc("update_note", {
-  uuid_arg,
-  session_arg,
-  title_arg: updates.title,
-  emoji_arg: updates.emoji,
-  content_arg: updates.content
-});
-```
-
-#### 3. Complex Sidebar with 10+ State Variables
+#### 1. Complex Sidebar with 10+ State Variables
 
 **Location**: `components/sidebar.tsx`
 
@@ -828,30 +655,7 @@ await supabase.rpc("update_note", {
 - Extract custom hooks for keyboard navigation, search, note grouping
 - Use React.memo to prevent unnecessary re-renders
 
-#### 4. Debounce Implementation Can Drop Edits
-
-**Location**: `components/note.tsx`
-
-**Issue**: If user navigates away or closes tab within 500ms window:
-
-```typescript
-saveTimeoutRef.current = setTimeout(async () => {
-  // ... save logic
-}, 500);
-```
-
-**Impact**:
-- Lost edits if user navigates quickly
-- No visual feedback that save is pending
-- No error handling for failed saves
-
-**Better Approach**:
-- Save immediately on blur/unmount
-- Show "saving..." indicator
-- Implement retry logic for failed saves
-- Use beforeunload event to prevent data loss
-
-#### 5. Keyboard Event Listeners Not Cleaned Up Properly
+#### 2. Keyboard Event Listeners Not Cleaned Up Properly
 
 **Location**: `components/sidebar.tsx`
 
@@ -879,7 +683,7 @@ useEffect(() => {
 - Memoize handler functions to reduce re-runs
 - Use refs for values that don't need to trigger re-renders
 
-#### 6. Search Runs on Every Keystroke
+#### 3. Search Runs on Every Keystroke
 
 **Location**: `components/search.tsx`
 
@@ -895,7 +699,7 @@ useEffect(() => {
 - Use virtual scrolling for large result sets
 - Implement fuzzy search with indexed lookups
 
-#### 7. Large Bundle Size from UI Components
+#### 4. Large Bundle Size from UI Components
 
 **Issue**: App imports many Radix UI components and other libraries:
 - Command menu (`cmdk`)
