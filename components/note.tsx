@@ -16,7 +16,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { refreshSessionNotes, updateNoteLocally } = useContext(SessionNotesContext);
+  const { refreshSessionNotes, updateNoteLocally, notes } = useContext(SessionNotesContext);
   const { toast } = useToast();
 
   const saveNote = useCallback(
@@ -66,8 +66,16 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Execute all RPC calls in parallel
             await Promise.all(promises);
 
-            // Update sidebar optimistically (no DB refetch)
-            updateNoteLocally(note.id, updates);
+            // Check if note exists in sidebar
+            const noteExistsInSidebar = notes.some(n => n.id === note.id);
+
+            if (noteExistsInSidebar) {
+              // Update sidebar optimistically (no DB refetch)
+              updateNoteLocally(note.id, updates);
+            } else {
+              // For brand new notes not yet in sidebar, do a full refresh
+              await refreshSessionNotes();
+            }
 
             // Only revalidate if it's a public note
             if (note.public) {
@@ -81,7 +89,6 @@ export default function Note({ note: initialNote }: { note: any }) {
               });
             }
 
-            // Skip refreshSessionNotes() - using optimistic update instead
             // Skip router.refresh() - not needed for private notes
           }
         } catch (error) {
@@ -95,7 +102,7 @@ export default function Note({ note: initialNote }: { note: any }) {
         }
       }, 500);
     },
-    [note, supabase, sessionId, updateNoteLocally, toast]
+    [note, supabase, sessionId, updateNoteLocally, notes, refreshSessionNotes, toast]
   );
 
   const canEdit = sessionId === note.session_id;
