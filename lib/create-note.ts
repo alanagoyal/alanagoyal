@@ -8,7 +8,9 @@ export async function createNote(
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
-  isMobile: boolean
+  isMobile: boolean,
+  addNoteLocally: (note: any) => void,
+  deleteNoteLocally: (noteId: string) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -27,29 +29,38 @@ export async function createNote(
   };
 
   try {
-    const { error } = await supabase.from("notes").insert(note);
-
-    if (error) throw error;
-
+    // Optimistic update - add to UI immediately
+    addNoteLocally(note);
     addNewPinnedNote(slug);
 
+    // Navigate to new note
     if (!isMobile) {
-      refreshSessionNotes().then(() => {
-        setSelectedNoteSlug(slug);
-        router.push(`/notes/${slug}`);
-        router.refresh();
-      });
+      setSelectedNoteSlug(slug);
+      router.push(`/notes/${slug}`);
+      router.refresh();
     } else {
       router.push(`/notes/${slug}`).then(() => {
-        refreshSessionNotes();
         setSelectedNoteSlug(slug);
       });
     }
+
+    // Insert to database (async)
+    const { error } = await supabase.from("notes").insert(note);
+
+    if (error) throw error;
 
     toast({
       description: "Private note created",
     });
   } catch (error) {
     console.error("Error creating note:", error);
+
+    // Revert optimistic update on error
+    deleteNoteLocally(noteId);
+
+    toast({
+      description: "Failed to create note",
+      variant: "destructive",
+    });
   }
 }

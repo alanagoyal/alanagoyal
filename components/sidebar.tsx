@@ -102,6 +102,7 @@ export default function Sidebar({
     sessionId,
     setSessionId,
     refreshSessionNotes,
+    deleteNoteLocally,
   } = useContext(SessionNotesContext);
 
   const notes = useMemo(
@@ -255,13 +256,10 @@ export default function Sidebar({
       }
 
       try {
-        if (noteToDelete.id && sessionId) {
-          await supabase.rpc("delete_note", {
-            uuid_arg: noteToDelete.id,
-            session_arg: sessionId,
-          });
-        }
+        // Optimistic update - remove from UI immediately
+        deleteNoteLocally(noteToDelete.id);
 
+        // Update grouped notes locally
         setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
           const newGroupedNotes = { ...prevGroupedNotes };
           for (const category in newGroupedNotes) {
@@ -272,6 +270,7 @@ export default function Sidebar({
           return newGroupedNotes;
         });
 
+        // Navigate to next note
         const allNotes = flattenedNotes();
         const deletedNoteIndex = allNotes.findIndex(
           (note) => note.slug === noteToDelete.slug
@@ -289,19 +288,36 @@ export default function Sidebar({
         }
 
         clearSearch();
-        refreshSessionNotes();
-        router.refresh();
+
+        // Delete from database (async)
+        if (noteToDelete.id && sessionId) {
+          const { error } = await supabase.rpc("delete_note", {
+            uuid_arg: noteToDelete.id,
+            session_arg: sessionId,
+          });
+
+          if (error) throw error;
+        }
 
         toast({
           description: "Note deleted",
         });
       } catch (error) {
         console.error("Error deleting note:", error);
+
+        // Revert optimistic update on error
+        refreshSessionNotes();
+
+        toast({
+          description: "Failed to delete note",
+          variant: "destructive",
+        });
       }
     },
     [
       supabase,
       sessionId,
+      deleteNoteLocally,
       flattenedNotes,
       isMobile,
       clearSearch,

@@ -17,6 +17,8 @@ export interface SessionNotes {
   notes: any[];
   setSessionId: (sessionId: string) => void;
   refreshSessionNotes: () => Promise<void>;
+  addNoteLocally: (note: any) => void;
+  deleteNoteLocally: (noteId: string) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
@@ -24,6 +26,8 @@ export const SessionNotesContext = createContext<SessionNotes>({
   notes: [],
   setSessionId: () => {},
   refreshSessionNotes: async () => {},
+  addNoteLocally: () => {},
+  deleteNoteLocally: () => {},
 });
 
 export function SessionNotesProvider({
@@ -42,6 +46,14 @@ export function SessionNotesProvider({
     }
   }, [supabase, sessionId]);
 
+  const addNoteLocally = useCallback((note: any) => {
+    setNotes(prevNotes => [note, ...prevNotes]);
+  }, []);
+
+  const deleteNoteLocally = useCallback((noteId: string) => {
+    setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+  }, []);
+
   useEffect(() => {
     refreshSessionNotes();
   }, [refreshSessionNotes, sessionId, supabase]);
@@ -53,6 +65,8 @@ export function SessionNotesProvider({
         notes,
         setSessionId,
         refreshSessionNotes,
+        addNoteLocally,
+        deleteNoteLocally,
       }}
     >
       {children}

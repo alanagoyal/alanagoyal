@@ -105,7 +105,7 @@ export const CommandMenu = forwardRef<
       );
     }
 
-    const { refreshSessionNotes } = useContext(SessionNotesContext);
+    const { refreshSessionNotes, addNoteLocally, deleteNoteLocally } = useContext(SessionNotesContext);
 
     const handleCreateNote = () => {
       createNote(
@@ -114,7 +114,9 @@ export const CommandMenu = forwardRef<
         addNewPinnedNote,
         refreshSessionNotes,
         setSelectedNoteSlug,
-        isMobile
+        isMobile,
+        addNoteLocally,
+        deleteNoteLocally
       );
       setOpen(false);
     };
