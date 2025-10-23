@@ -9,8 +9,8 @@
 6. [Session Management](#session-management)
 7. [Note Creation Flow](#note-creation-flow)
 8. [ISR & Revalidation Strategy](#isr--revalidation-strategy)
-9. [Performance Bottlenecks](#performance-bottlenecks)
-10. [Proposed Improvements](#proposed-improvements)
+9. [Note Save Implementation](#note-save-implementation)
+10. [Current Bottlenecks](#current-bottlenecks)
 
 ## Overview
 
@@ -615,65 +615,13 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
   -d '{"layout": true}'
 ```
 
-## Performance Bottlenecks
-
-### Recent Improvements
-
-**Implemented optimizations**:
-1. **Eliminated duplicate note fetches** - Using React `cache()` to deduplicate
-2. **Fixed server client usage** - Layout now uses proper server-side client
-3. **Added layout caching** - Changed from `revalidate = 0` to `revalidate = 86400`
-4. **Enhanced revalidation API** - Added layout revalidation support
-5. **Optimized note save flow with parallel RPC calls and hybrid updates** - See below
-
-**Performance Results**:
-- 25% reduction in queries per page load (from 4 to 3)
-- 99%+ reduction in layout queries (cached 24 hours instead of every request)
-- 50% reduction in note page queries (eliminated duplicate fetch)
-- 2-4x faster note saves (parallel RPC execution + optimistic updates)
-- 2-4 fewer database queries per save for existing notes
-
----
-
-#### 5. Optimized Note Save Flow with Parallel RPC Calls (Implemented)
+## Note Save Implementation
 
 **Location**: `components/note.tsx`, `app/notes/session-notes.tsx`
 
-**Previous Issue**: Sequential RPC calls with excessive refetching:
+#### SessionNotesContext - Local Update Function
 
 ```typescript
-// Old implementation
-const saveNote = useCallback(async (updates) => {
-  // Sequential RPC calls - slow!
-  if ('title' in updates) {
-    await supabase.rpc("update_note_title", { ... });
-  }
-  if ('emoji' in updates) {
-    await supabase.rpc("update_note_emoji", { ... });
-  }
-  if ('content' in updates) {
-    await supabase.rpc("update_note_content", { ... });
-  }
-
-  // Refetch ALL session notes from DB - unnecessary!
-  refreshSessionNotes();
-
-  // Refresh ALL server components - expensive!
-  router.refresh();
-}, [note, supabase, router, refreshSessionNotes, sessionId]);
-```
-
-**Impact**:
-- 1-3 sequential RPC calls (300-900ms total)
-- Full session notes refetch on every save (~100-200ms)
-- Unnecessary router refresh
-- Choppy editing experience
-- 2-4 extra database queries per save
-
-**Solution Implemented**: Hybrid approach with parallel RPC calls and intelligent updates:
-
-```typescript
-// New implementation - SessionNotesContext
 const updateNoteLocally = useCallback((noteId: string, updates: Partial<any>) => {
   setNotes(prevNotes =>
     prevNotes.map(note =>
@@ -681,8 +629,14 @@ const updateNoteLocally = useCallback((noteId: string, updates: Partial<any>) =>
     )
   );
 }, []);
+```
 
-// New implementation - Note component
+This function updates a note in the sidebar's local state without fetching from the database.
+
+#### Note Component - Save Flow
+
+```typescript
+// components/note.tsx
 const saveNote = useCallback(async (updates) => {
   // Clear existing timeout if any
   if (saveTimeoutRef.current) {
@@ -760,167 +714,28 @@ const saveNote = useCallback(async (updates) => {
 }, [note, supabase, sessionId, updateNoteLocally, notes, refreshSessionNotes, toast]);
 ```
 
-**Key Improvements**:
+#### Save Flow Steps
 
-1. **Parallel RPC Execution**
-   - Multiple field updates happen simultaneously via `Promise.all()`
-   - ~2-3x faster than sequential execution
-   - Explicit error checking for each RPC result
+1. **Debounce & Accumulation**: When `saveNote()` is called, it clears any existing timeout and accumulates the updates in `pendingUpdatesRef`. This ensures rapid edits to multiple fields (e.g., title then content) are batched together.
 
-2. **Update Accumulation (Bug Fix)**
-   - Uses `pendingUpdatesRef` to accumulate rapid edits within debounce window
-   - Prevents lost updates when user rapidly edits multiple fields
-   - Example: Edit title then immediately edit content → both save correctly
-   - Clears accumulated updates after successful save
+2. **Optimistic UI Update**: Immediately updates the local note state with all accumulated changes, providing instant feedback in the editor.
 
-3. **Hybrid Update Strategy**
-   - **Existing notes**: Use optimistic local updates (instant, no DB query)
-   - **Brand new notes**: Full refresh to populate sidebar (handles race condition)
-   - Automatically detects which approach to use
+3. **Parallel RPC Calls**: After 500ms debounce, builds an array of RPC promises based on which fields were updated (`title`, `emoji`, `content`). Executes all RPC calls in parallel using `Promise.all()`.
 
-4. **Race Condition Handling**
-   - When user creates a note and immediately starts typing, there's a race between:
-     - `createNote()` → `refreshSessionNotes()` populating sidebar
-     - `saveNote()` → trying to update the note in sidebar
-   - Old implementation: Note would disappear (updateNoteLocally failed silently)
-   - New implementation: Detects missing note and does full refresh
+4. **Error Checking**: Iterates through RPC results to check for errors. If any RPC call failed, throws the error.
 
-5. **Conditional ISR Revalidation**
-   - Only revalidates for public notes (needed for ISR cache)
-   - Private notes skip revalidation (no ISR cache to invalidate)
+5. **Sidebar Update Strategy**:
+   - Checks if note exists in sidebar using `notes.some(n => n.id === note.id)`
+   - **If exists**: Calls `updateNoteLocally()` to update sidebar without DB query
+   - **If new**: Calls `refreshSessionNotes()` to fetch full note list from DB
 
-6. **Router Cache Invalidation (Bug Fix)**
-   - Calls `router.refresh()` after save to invalidate Next.js server component cache
-   - Ensures fresh data when navigating away and back to a note
-   - Fixes issue where emoji/title changes weren't visible after navigation
+6. **Cleanup**: Clears `pendingUpdatesRef` after successful save.
 
-7. **Error Handling**
-   - Reverts optimistic updates on failure
-   - Clears pending updates on error
-   - Shows user-friendly toast notification
-   - Logs specific RPC errors to console
+7. **ISR Revalidation**: For public notes only, calls `/notes/revalidate` API to invalidate the ISR cache.
 
-**Performance Impact**:
+8. **Router Refresh**: Calls `router.refresh()` to invalidate Next.js server component cache, ensuring navigation shows fresh data.
 
-Before:
-- 3 sequential RPC calls: ~300-900ms
-- 1 session notes refetch: ~100-200ms
-- 1 router refresh: ~50-100ms
-- **Total: ~450-1200ms + choppy UI**
-
-After:
-- 3 parallel RPC calls: ~100-300ms
-- Optimistic sidebar update: instant (no DB query)
-- ISR revalidation only for public notes: ~50-100ms
-- **Total: ~100-400ms + smooth UI**
-
-**Result**: 2-4x faster saves, smoother editing experience, significantly reduced database load.
-
-**Why It's Robust**:
-
-1. **Self-healing**: Automatically detects out-of-sync state and refreshes
-2. **Preserves data integrity**: Never loses notes due to race conditions
-3. **Prevents lost edits**: Update accumulation ensures rapid multi-field edits all save
-4. **Cache consistency**: Router refresh ensures navigation always shows latest data
-5. **Graceful degradation**: Falls back to full refresh when needed
-6. **99% fast path**: Most saves use instant optimistic updates
-7. **1% safe path**: New note edge case handled correctly
-8. **Comprehensive error handling**: RPC errors caught, logged, and user notified
-
----
-
-### Historical Issues (Resolved)
-
-#### 1. Duplicate Data Fetching in Note Pages (Resolved)
-
-**Location**: `app/notes/[slug]/page.tsx`
-
-**Previous Issue**: The same note was fetched twice on every page load:
-
-```typescript
-// First fetch - generateMetadata
-export async function generateMetadata({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... use note for metadata
-}
-
-// Second fetch - NotePage render
-export default async function NotePage({ params }) {
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  // ... render note
-}
-```
-
-**Impact**:
-- 2x database queries for every note page load
-- Increased latency (sequential queries)
-- Wasted database resources
-
-**Why It Happened**: Next.js executes `generateMetadata` and page render separately, and they don't share cache by default.
-
-**Solution Implemented**:
-```typescript
-import { cache } from "react";
-
-const getNote = cache(async (slug: string) => {
-  const supabase = createServerClient();
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
-  return note;
-});
-
-// Both generateMetadata and NotePage now use getNote(slug)
-// React cache() ensures only one fetch happens per request
-```
-
----
-
-#### 2. Root Layout Fetching on Every Request (Resolved)
-
-**Location**: `app/notes/layout.tsx`
-
-**Previous Issue**:
-```typescript
-export const revalidate = 0;
-
-export default async function RootLayout({ children }) {
-  const supabase = createBrowserClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ... pass to SidebarLayout
-}
-```
-
-**Impact**:
-- Database query on every navigation
-- No caching benefits from ISR
-- High load on Supabase for popular sites
-- Slow page transitions
-
-**Why It Was Done**: To ensure sidebar always shows latest public notes.
-
-**Solution Implemented**:
-```typescript
-import { createClient } from "@/utils/supabase/server";
-
-export const revalidate = 86400; // 24 hour cache
-
-export default async function RootLayout({ children }) {
-  const supabase = createClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-  // ...
-}
-```
+9. **Error Handling**: On error, reverts the optimistic update by restoring the previous note state, clears pending updates, and shows a toast notification.
 
 ---
 
