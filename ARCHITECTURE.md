@@ -55,8 +55,8 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
 ┌─────────────────────────────────────────────────────────────┐
 │                     Root Layout (Server)                     │
 │  - Fetches public notes from Supabase                       │
-│  - Cached for 24 hours (revalidate = 86400) ✅ OPTIMIZED   │
-│  - Uses server-side Supabase client ✅ OPTIMIZED           │
+│  - Cached for 24 hours (revalidate = 86400)                 │
+│  - Uses server-side Supabase client                         │
 │  - Wraps app with ThemeProvider + SessionNotesProvider      │
 └────────────────────┬────────────────────────────────────────┘
                      │
@@ -67,7 +67,7 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
 │  - Home page     │   │ (Server + ISR)     │
 │  - Metadata only │   │ - revalidate: 86400│
 └──────────────────┘   │ - Static params    │
-                       │ - React cache() ✅  │
+                       │ - React cache()    │
                        │ - Dynamic rendering│
                        └────────────────────┘
 ```
@@ -97,7 +97,7 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
 ### API Routes
 
 ```
-POST /notes/revalidate ✅ ENHANCED
+POST /notes/revalidate
 ├── Purpose: On-demand ISR cache invalidation
 ├── Auth: Token-based (x-revalidate-token header)
 ├── Input: { slug?: string, layout?: boolean }
@@ -140,21 +140,19 @@ app/notes/layout.tsx (Server)
 
 ### Key Component Responsibilities
 
-#### `app/notes/layout.tsx` (Server) ✅ OPTIMIZED
+#### `app/notes/layout.tsx` (Server)
 - **Purpose**: Root layout that provides public notes to all pages
 - **Data Fetching**: Queries Supabase for public notes using server client
-- **Revalidation**: `revalidate = 86400` (24 hour cache) ✅ **FIXED**
-- **Supabase Client**: Uses `createClient()` from `@/utils/supabase/server` ✅ **FIXED**
-- **Performance**: Dramatically reduced DB queries (from every request to once per 24 hours)
+- **Revalidation**: `revalidate = 86400` (24 hour cache)
+- **Supabase Client**: Uses `createClient()` from `@/utils/supabase/server`
 
-#### `app/notes/[slug]/page.tsx` (Server) ✅ OPTIMIZED
+#### `app/notes/[slug]/page.tsx` (Server)
 - **Purpose**: Individual note page with ISR
-- **Data Fetching**: Uses `select_note` RPC with React `cache()` deduplication ✅ **FIXED**
+- **Data Fetching**: Uses `select_note` RPC with React `cache()` deduplication
 - **Revalidation**: ISR with 24 hour cache (`revalidate = 86400`)
 - **Static Generation**: Pre-renders public notes at build time
 - **Dynamic Params**: Allows runtime note creation for private notes
-- **Cache Function**: `getNote = cache(async (slug) => ...)` eliminates duplicate fetches
-- **Performance**: 50% reduction in queries (metadata and page now share cached result)
+- **Cache Function**: `getNote = cache(async (slug) => ...)` eliminates duplicate fetches between metadata and page render
 
 #### `components/sidebar.tsx` (Client)
 - **Purpose**: Main sidebar with note list, search, keyboard shortcuts
@@ -184,19 +182,19 @@ app/notes/layout.tsx (Server)
 
 ## Data Flow
 
-### Initial Page Load (Public Note) ✅ OPTIMIZED
+### Initial Page Load (Public Note)
 
 ```
 1. User visits /notes/about-me
    │
-2. app/notes/layout.tsx (Server) ✅ CACHED
+2. app/notes/layout.tsx (Server)
    ├── Fetches all public notes from Supabase (cached 24 hours)
    │   └── supabase.from("notes").select("*").eq("public", true)
    │
-3. app/notes/[slug]/page.tsx (Server) ✅ DEDUPLICATED
+3. app/notes/[slug]/page.tsx (Server)
    ├── getNote(slug) - Cached function using React cache()
    ├── generateMetadata(): await getNote(slug)
-   ├── NotePage render: await getNote(slug) [SHARES CACHE - NO DUPLICATE!]
+   ├── NotePage render: await getNote(slug) [shares cache]
    │
 4. Client Hydration
    ├── SidebarLayout mounts
@@ -217,12 +215,10 @@ app/notes/layout.tsx (Server)
        └── Renders NoteHeader + NoteContent
 ```
 
-**Data Fetch Count**: 3 queries ✅ **REDUCED FROM 4**
+**Data Fetch Count**: 3 queries
 1. Layout: All public notes (cached 24 hours)
-2. getNote: select_note (slug) - SHARED between metadata and render
+2. getNote: select_note (slug) - shared between metadata and render
 3. SessionNotesProvider: select_session_notes (session_id)
-
-**Improvement**: 25% reduction in queries per page load
 
 ### Note Edit Flow
 
@@ -494,16 +490,16 @@ router.push(`/notes/${slug}`).then(() => {
 
 ## ISR & Revalidation Strategy
 
-### Incremental Static Regeneration (ISR) ✅ UPDATED
+### Incremental Static Regeneration (ISR)
 
 **Configuration** (`app/notes/[slug]/page.tsx`):
 ```typescript
-export const revalidate = 86400; // 24 hours ✅ CHANGED FROM 1 HOUR
+export const revalidate = 86400; // 24 hours
 export const dynamicParams = true;
 
-// Cached note fetching to eliminate duplicates ✅ NEW
+// Cached note fetching to eliminate duplicates
 const getNote = cache(async (slug: string) => {
-  const supabase = createServerClient(); // ✅ Uses server client
+  const supabase = createServerClient();
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
   }).single();
@@ -513,10 +509,10 @@ const getNote = cache(async (slug: string) => {
 
 **How it Works**:
 1. **Build Time**: Public notes are pre-rendered using `generateStaticParams()`
-2. **Runtime**: Cached pages are served for 24 hours ✅ **EXTENDED CACHE**
+2. **Runtime**: Cached pages are served for 24 hours
 3. **Stale-While-Revalidate**: After 24 hours, Next.js regenerates in background
 4. **Dynamic Pages**: Private notes bypass ISR and render on-demand
-5. **React cache()**: Eliminates duplicate fetches within same request ✅ **NEW**
+5. **React cache()**: Eliminates duplicate fetches within same request
 
 ### generateStaticParams
 
@@ -534,19 +530,19 @@ export async function generateStaticParams() {
 
 **Purpose**: Pre-render all public notes at build time for optimal performance.
 
-### On-Demand Revalidation ✅ ENHANCED
+### On-Demand Revalidation
 
 **API Route** (`app/notes/revalidate/route.ts`):
 ```typescript
 export async function POST(request: NextRequest) {
-  const { slug, layout } = await request.json(); // ✅ Added layout parameter
+  const { slug, layout } = await request.json();
   const token = request.headers.get('x-revalidate-token');
 
   if (!token || token !== process.env.REVALIDATE_TOKEN) {
     return NextResponse.json({ message: "Invalid token" }, { status: 401 });
   }
 
-  // ✅ NEW: Revalidate layout (sidebar) if requested
+  // Revalidate layout (sidebar) if requested
   if (layout) {
     revalidatePath('/notes', 'layout');
     return NextResponse.json({
@@ -575,7 +571,7 @@ export async function POST(request: NextRequest) {
 - Note content updates
 - Note title updates
 - Note emoji updates
-- Public note creation/deletion (layout revalidation) ✅ **NEW**
+- Public note creation/deletion (layout revalidation)
 
 **Called From**:
 ```typescript
@@ -589,7 +585,7 @@ await fetch("/notes/revalidate", {
   body: JSON.stringify({ slug: note.slug }),
 });
 
-// ✅ NEW: Revalidate layout/sidebar when public notes change
+// Revalidate layout/sidebar when public notes change
 await fetch("/notes/revalidate", {
   method: "POST",
   headers: {
@@ -600,18 +596,16 @@ await fetch("/notes/revalidate", {
 });
 ```
 
-### Layout Revalidation ✅ OPTIMIZED
+### Layout Revalidation
 
 **Configuration** (`app/notes/layout.tsx`):
 ```typescript
-export const revalidate = 86400; // 24 hours ✅ CHANGED FROM 0
+export const revalidate = 86400; // 24 hours
 ```
 
-**Impact**: Root layout is cached for 24 hours, dramatically reducing database load.
+**Impact**: Root layout is cached for 24 hours, reducing database load.
 
 **Reasoning**: For a personal site with infrequent public note changes, 24-hour cache is acceptable.
-
-**Performance Gain**: 99%+ reduction in layout queries (from every request to once per 24 hours).
 
 **Manual Revalidation**: Use the revalidation API when adding/removing public notes:
 ```bash
@@ -623,13 +617,13 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 ## Performance Bottlenecks
 
-### Week 1 Improvements Summary ✅
+### Recent Improvements
 
-**Completed optimizations (implemented in production)**:
-1. ✅ **Fixed duplicate note fetches** - Using React `cache()` to deduplicate
-2. ✅ **Fixed server client usage** - Layout now uses proper server-side client
-3. ✅ **Added layout caching** - Changed from `revalidate = 0` to `revalidate = 86400`
-4. ✅ **Enhanced revalidation API** - Added layout revalidation support
+**Implemented optimizations**:
+1. **Eliminated duplicate note fetches** - Using React `cache()` to deduplicate
+2. **Fixed server client usage** - Layout now uses proper server-side client
+3. **Added layout caching** - Changed from `revalidate = 0` to `revalidate = 86400`
+4. **Enhanced revalidation API** - Added layout revalidation support
 
 **Performance Results**:
 - 25% reduction in queries per page load (from 4 to 3)
@@ -638,11 +632,11 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 ---
 
-### ~~1. Duplicate Data Fetching in Note Pages~~ ✅ FIXED
+### Historical Issues (Resolved)
+
+#### 1. Duplicate Data Fetching in Note Pages (Resolved)
 
 **Location**: `app/notes/[slug]/page.tsx`
-
-**Status**: ✅ **RESOLVED** - Now uses React `cache()` to deduplicate fetches
 
 **Previous Issue**: The same note was fetched twice on every page load:
 
@@ -689,11 +683,9 @@ const getNote = cache(async (slug: string) => {
 
 ---
 
-### ~~2. Root Layout Fetches All Public Notes on Every Request~~ ✅ FIXED
+#### 2. Root Layout Fetching on Every Request (Resolved)
 
 **Location**: `app/notes/layout.tsx`
-
-**Status**: ✅ **RESOLVED** - Now cached for 24 hours and uses server client
 
 **Previous Issue**:
 ```typescript
@@ -719,12 +711,12 @@ export default async function RootLayout({ children }) {
 
 **Solution Implemented**:
 ```typescript
-import { createClient } from "@/utils/supabase/server"; // ✅ Server client
+import { createClient } from "@/utils/supabase/server";
 
-export const revalidate = 86400; // ✅ 24 hour cache
+export const revalidate = 86400; // 24 hour cache
 
 export default async function RootLayout({ children }) {
-  const supabase = createClient(); // ✅ Correct client
+  const supabase = createClient();
   const { data: notes } = await supabase
     .from("notes")
     .select("*")
@@ -733,22 +725,11 @@ export default async function RootLayout({ children }) {
 }
 ```
 
-**Performance Gain**: 99%+ reduction in layout queries
-
 ---
 
-### ~~6. Missing Supabase Client on Server Component~~ ✅ FIXED
+### Current Bottlenecks
 
-**Location**: `app/notes/layout.tsx`
-
-**Status**: ✅ **RESOLVED** - Now uses correct server-side client
-
-**Previous Issue**: Using browser client in server component
-**Solution**: Changed import to `@/utils/supabase/server`
-
----
-
-### 3. Excessive Refetching After Note Updates
+#### 1. Excessive Refetching After Note Updates
 
 **Location**: `components/note.tsx`
 
@@ -781,7 +762,7 @@ router.refresh();
 - Only refetch on navigation, not on every save
 - Use Supabase real-time subscriptions for live updates
 
-### 4. Three Separate RPC Calls for Note Updates
+#### 2. Three Separate RPC Calls for Note Updates
 
 **Location**: `components/note.tsx`
 
@@ -818,7 +799,7 @@ await supabase.rpc("update_note", {
 });
 ```
 
-### 5. Complex Sidebar with 10+ State Variables
+#### 3. Complex Sidebar with 10+ State Variables
 
 **Location**: `components/sidebar.tsx`
 
@@ -847,7 +828,7 @@ await supabase.rpc("update_note", {
 - Extract custom hooks for keyboard navigation, search, note grouping
 - Use React.memo to prevent unnecessary re-renders
 
-### 6. Debounce Implementation Can Drop Edits
+#### 4. Debounce Implementation Can Drop Edits
 
 **Location**: `components/note.tsx`
 
@@ -870,7 +851,7 @@ saveTimeoutRef.current = setTimeout(async () => {
 - Implement retry logic for failed saves
 - Use beforeunload event to prevent data loss
 
-### 7. Keyboard Event Listeners Not Cleaned Up Properly
+#### 5. Keyboard Event Listeners Not Cleaned Up Properly
 
 **Location**: `components/sidebar.tsx`
 
@@ -898,7 +879,7 @@ useEffect(() => {
 - Memoize handler functions to reduce re-runs
 - Use refs for values that don't need to trigger re-renders
 
-### 8. Search Runs on Every Keystroke
+#### 6. Search Runs on Every Keystroke
 
 **Location**: `components/search.tsx`
 
@@ -914,7 +895,7 @@ useEffect(() => {
 - Use virtual scrolling for large result sets
 - Implement fuzzy search with indexed lookups
 
-### 9. Large Bundle Size from UI Components
+#### 7. Large Bundle Size from UI Components
 
 **Issue**: App imports many Radix UI components and other libraries:
 - Command menu (`cmdk`)
@@ -932,7 +913,3 @@ useEffect(() => {
 - Lazy load emoji picker (only when emoji button clicked)
 - Use tree-shakeable icon imports
 - Consider code splitting by route
-
-## Proposed Improvements
-
-See [PERFORMANCE_IMPROVEMENTS.md](./PERFORMANCE_IMPROVEMENTS.md) for detailed optimization proposals with implementation plans and priority rankings.
