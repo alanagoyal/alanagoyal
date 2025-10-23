@@ -19,13 +19,28 @@ export default function Note({ note: initialNote }: { note: any }) {
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
+  // Sync state when navigating between different notes
+  useEffect(() => {
+    setNote(initialNote);
+    // Clear any pending updates when switching notes
+    pendingUpdatesRef.current = {};
+  }, [initialNote.id]);
+
+  // Store note metadata in ref to avoid stale closures
+  const noteMetadataRef = useRef({ id: note.id, slug: note.slug, public: note.public });
+  useEffect(() => {
+    noteMetadataRef.current = { id: note.id, slug: note.slug, public: note.public };
+  }, [note.id, note.slug, note.public]);
+
   // Flush pending changes to database
   const flushPendingUpdates = useCallback(async () => {
     if (isSavingRef.current || Object.keys(pendingUpdatesRef.current).length === 0) {
       return;
     }
 
-    if (!note.id || !sessionId) {
+    const { id, slug, public: isPublic } = noteMetadataRef.current;
+
+    if (!id || !sessionId) {
       return;
     }
 
@@ -37,7 +52,7 @@ export default function Note({ note: initialNote }: { note: any }) {
       // Use the new partial update function that only updates provided fields
       // Pass sentinel value for fields that should not be updated
       await supabase.rpc("update_note_partial", {
-        uuid_arg: note.id,
+        uuid_arg: id,
         session_arg: sessionId,
         title_arg: updates.title !== undefined ? updates.title : '___NO_UPDATE___',
         emoji_arg: updates.emoji !== undefined ? updates.emoji : '___NO_UPDATE___',
@@ -45,14 +60,14 @@ export default function Note({ note: initialNote }: { note: any }) {
       });
 
       // Only revalidate and refresh if this is a public note
-      if (note.public) {
+      if (isPublic) {
         await fetch("/notes/revalidate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
           },
-          body: JSON.stringify({ slug: note.slug }),
+          body: JSON.stringify({ slug }),
         });
         router.refresh();
       }
@@ -67,7 +82,7 @@ export default function Note({ note: initialNote }: { note: any }) {
     } finally {
       isSavingRef.current = false;
     }
-  }, [note.id, note.slug, note.public, sessionId, supabase, router, refreshSessionNotes]);
+  }, [sessionId, supabase, router, refreshSessionNotes]);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -91,7 +106,7 @@ export default function Note({ note: initialNote }: { note: any }) {
     [note, flushPendingUpdates]
   );
 
-  // Immediate save function for blur/unmount events
+  // Immediate save function for blur events
   const saveImmediately = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -100,15 +115,24 @@ export default function Note({ note: initialNote }: { note: any }) {
     flushPendingUpdates();
   }, [flushPendingUpdates]);
 
-  // Save on unmount to prevent data loss
+  // Save on unmount - flush any pending changes before component destroys
   useEffect(() => {
     return () => {
+      // If there are pending changes, try to flush them
+      // This is best-effort since we can't await in cleanup
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
       if (Object.keys(pendingUpdatesRef.current).length > 0) {
-        // Synchronous flush on unmount
+        const { id, slug } = noteMetadataRef.current;
         const updates = { ...pendingUpdatesRef.current };
-        if (note.id && sessionId) {
-          supabase.rpc("update_note_partial", {
-            uuid_arg: note.id,
+
+        // Fire-and-forget save attempt
+        // Note: This may not complete if the page unloads quickly
+        // The blur handlers are the primary data loss prevention mechanism
+        if (id && sessionId) {
+          void supabase.rpc("update_note_partial", {
+            uuid_arg: id,
             session_arg: sessionId,
             title_arg: updates.title !== undefined ? updates.title : '___NO_UPDATE___',
             emoji_arg: updates.emoji !== undefined ? updates.emoji : '___NO_UPDATE___',
@@ -117,7 +141,7 @@ export default function Note({ note: initialNote }: { note: any }) {
         }
       }
     };
-  }, [note.id, sessionId, supabase]);
+  }, [sessionId, supabase]);
 
   const canEdit = sessionId === note.session_id;
 
