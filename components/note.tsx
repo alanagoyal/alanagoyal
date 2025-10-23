@@ -69,6 +69,9 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Update sidebar optimistically (no DB refetch)
             updateNoteLocally(note.id, updates);
 
+            // Refresh router to sync server-side data
+            router.refresh();
+
             // Only revalidate if it's a public note
             if (note.public) {
               await fetch("/notes/revalidate", {
@@ -82,7 +85,6 @@ export default function Note({ note: initialNote }: { note: any }) {
             }
 
             // Skip refreshSessionNotes() - using optimistic update instead
-            // Skip router.refresh() - not needed for private notes
           }
         } catch (error) {
           console.error("Save failed:", error);
