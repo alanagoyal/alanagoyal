@@ -33,18 +33,67 @@ export function SessionNotesProvider({
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<any[]>([]);
+
+  // Initialize from localStorage cache to prevent layout shift on refresh
+  const [notes, setNotes] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('sessionNotes');
+        if (cached) {
+          const parsedCache = JSON.parse(cached);
+          // Return cached notes if they exist
+          return parsedCache.notes || [];
+        }
+      } catch (error) {
+        // Silently fail on localStorage errors (quota exceeded, parse errors, etc.)
+        console.warn('Failed to load cached session notes:', error);
+      }
+    }
+    return [];
+  });
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {
       const notes = await getSessionNotes({ supabase, sessionId });
       setNotes(notes || []);
+
+      // Cache results in localStorage for next load
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sessionNotes', JSON.stringify({
+            sessionId,
+            notes: notes || [],
+            timestamp: Date.now()
+          }));
+        } catch (error) {
+          // Silently fail on localStorage errors (quota exceeded, private browsing, etc.)
+          console.warn('Failed to cache session notes:', error);
+        }
+      }
     }
   }, [supabase, sessionId]);
 
   useEffect(() => {
     refreshSessionNotes();
   }, [refreshSessionNotes, sessionId, supabase]);
+
+  // Invalidate cache when sessionId changes
+  useEffect(() => {
+    if (sessionId && typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('sessionNotes');
+        if (cached) {
+          const parsedCache = JSON.parse(cached);
+          // Clear notes if cached sessionId doesn't match current sessionId
+          if (parsedCache.sessionId && parsedCache.sessionId !== sessionId) {
+            setNotes([]);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to validate cached session notes:', error);
+      }
+    }
+  }, [sessionId]);
 
   return (
     <SessionNotesContext.Provider
