@@ -60,33 +60,6 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 or redeploy on vercel to refresh all pages.
 
-for a deep dive into the architecture, data flow, and implementation details, see [ARCHITECTURE.md](./ARCHITECTURE.md).
-
-### performance and optimization
-
-this app has been analyzed for performance bottlenecks and optimization opportunities. key findings include:
-
-**current architecture strengths**:
-- incremental static regeneration (isr) for public notes with 1-hour cache
-- session-based architecture with localStorage for client state
-- granular rpc functions for secure database operations
-
-**identified bottlenecks**:
-- duplicate data fetches in note pages (metadata + render)
-- root layout fetches all public notes on every request
-- excessive refetching after note updates
-- complex sidebar component with many state variables
-
-**recommended improvements**:
-- use react `cache()` to deduplicate note fetches (50% query reduction)
-- add layout caching (5-minute revalidation instead of 0)
-- implement optimistic updates for smoother ux
-- consolidate rpc functions for atomic updates
-- split sidebar into smaller, focused components
-- add lazy loading for heavy components (command menu, emoji picker)
-
-see [PERFORMANCE_IMPROVEMENTS.md](./PERFORMANCE_IMPROVEMENTS.md) for detailed optimization proposals with implementation plans, priority rankings, and expected impact.
-
 ## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`
