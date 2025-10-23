@@ -1,5 +1,5 @@
 import Note from "@/components/note";
-import { createClient } from "@/utils/supabase/server";
+import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
@@ -30,7 +30,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const supabase = createClient();
+  const supabase = createServerClient();
   const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
@@ -57,7 +57,7 @@ export default async function NotePage({
 }: {
   params: { slug: string };
 }) {
-  const supabase = createClient();
+  const supabase = createServerClient();
   const slug = params.slug.replace(/^notes\//, '');
 
   const { data: note } = await supabase.rpc("select_note", {
