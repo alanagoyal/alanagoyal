@@ -20,6 +20,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/types";
 import { toast } from "./ui/use-toast";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { useClientNote } from "@/app/notes/client-note-context";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
@@ -50,6 +51,7 @@ export default function Sidebar({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const { navigateToNote } = useClientNote();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -200,10 +202,10 @@ export default function Sidebar({
         const nextNote = flattened[nextIndex];
 
         if (nextNote) {
-          // Update URL without triggering full page navigation
-          router.replace(`/notes/${nextNote.slug}`, { scroll: false });
+          // Use client-side navigation for instant updates
+          navigateToNote(nextNote);
 
-          // Scroll into view immediately (no setTimeout needed)
+          // Scroll into view immediately
           const selectedElement = scrollViewportRef.current?.querySelector(`[data-note-slug="${nextNote.slug}"]`);
           if (selectedElement) {
             selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -211,7 +213,7 @@ export default function Sidebar({
         }
       }
     },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+    [flattenedNotes, selectedNoteSlug, navigateToNote, localSearchResults]
   );
 
   const handlePinToggle = useCallback(
@@ -313,15 +315,15 @@ export default function Sidebar({
   const goToHighlightedNote = useCallback(() => {
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
-      router.replace(`/notes/${selectedNote.slug}`, { scroll: false });
+      navigateToNote(selectedNote);
 
-      // Scroll into view immediately (no setTimeout needed)
+      // Scroll into view immediately
       const selectedElement = scrollViewportRef.current?.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
       selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
       clearSearch();
     }
-  }, [localSearchResults, highlightedIndex, router, clearSearch]);
+  }, [localSearchResults, highlightedIndex, navigateToNote, clearSearch]);
 
   const { setTheme, theme } = useTheme();
 
