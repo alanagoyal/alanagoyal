@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
 // Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 60 * 60; // 1 hour
+export const revalidate = 86400; // 24 hours
 
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
