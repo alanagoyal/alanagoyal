@@ -36,6 +36,30 @@ the `notes` table stores all notes with these fields:
 - `emoji` (text): note icon
 - `created_at` (timestamp): when the note was created
 
+### caching
+
+public notes are cached for 24 hours using next.js isr. private notes are always real-time.
+
+**to manually revalidate public notes**:
+
+set `REVALIDATE_TOKEN` in environment variables, then:
+
+```bash
+# revalidate sidebar (when adding/removing public notes)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"layout": true}'
+
+# revalidate specific note (when updating content)
+curl -X POST "https://yourdomain.com/notes/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-token: your-token" \
+  -d '{"slug": "note-slug"}'
+```
+
+or redeploy on vercel to refresh all pages.
+
 ## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Note from "@/components/note";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
@@ -6,7 +7,16 @@ import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
 // Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 60 * 60; // 1 hour
+export const revalidate = 86400; // 24 hours
+
+// Cached function to fetch a note by slug - eliminates duplicate fetches
+const getNote = cache(async (slug: string) => {
+  const supabase = createBrowserClient();
+  const { data: note } = await supabase.rpc("select_note", {
+    note_slug_arg: slug,
+  }).single() as { data: NoteType | null };
+  return note;
+});
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
@@ -32,13 +42,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const supabase = createServerClient();
   const slug = params.slug.replace(/^notes\//, '');
+  const note = await getNote(slug);
 
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single() as { data: NoteType | null };
+  if (!note) {
+    return { title: "Note not found" };
+  }
 
-  const title = note?.title || "new note";
-  const emoji = note?.emoji || "👋🏼";
+  const title = note.title || "new note";
+  const emoji = note.emoji || "👋🏼";
 
   return {
     title: `alana goyal | ${title}`,
@@ -59,10 +70,7 @@ export default async function NotePage({
 }) {
   const supabase = createServerClient();
   const slug = params.slug.replace(/^notes\//, '');
-
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single();
+  const note = await getNote(slug);
 
   if (!note) {
     return redirect("/notes/error");
