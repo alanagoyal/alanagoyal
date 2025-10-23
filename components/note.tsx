@@ -15,27 +15,35 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdatesRef = useRef<Partial<typeof note>>({});
 
   const { refreshSessionNotes, updateNoteLocally, notes } = useContext(SessionNotesContext);
   const { toast } = useToast();
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
+      // Clear existing timeout if any
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
+      // Accumulate updates instead of replacing them
+      pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
+
       // Optimistic update locally
-      const updatedNote = { ...note, ...updates };
+      const updatedNote = { ...note, ...pendingUpdatesRef.current };
       setNote(updatedNote);
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           if (note.id && sessionId) {
-            // Build parallel RPC calls array
+            // Use accumulated pending updates
+            const allUpdates = pendingUpdatesRef.current;
+
+            // Build parallel RPC calls array based on accumulated updates
             const promises = [];
 
-            if ('title' in updates) {
+            if ('title' in allUpdates) {
               promises.push(
                 supabase.rpc("update_note_title", {
                   uuid_arg: note.id,
@@ -44,7 +52,7 @@ export default function Note({ note: initialNote }: { note: any }) {
                 })
               );
             }
-            if ('emoji' in updates) {
+            if ('emoji' in allUpdates) {
               promises.push(
                 supabase.rpc("update_note_emoji", {
                   uuid_arg: note.id,
@@ -53,7 +61,7 @@ export default function Note({ note: initialNote }: { note: any }) {
                 })
               );
             }
-            if ('content' in updates) {
+            if ('content' in allUpdates) {
               promises.push(
                 supabase.rpc("update_note_content", {
                   uuid_arg: note.id,
@@ -78,12 +86,15 @@ export default function Note({ note: initialNote }: { note: any }) {
             const noteExistsInSidebar = notes.some(n => n.id === note.id);
 
             if (noteExistsInSidebar) {
-              // Update sidebar optimistically (no DB refetch)
-              updateNoteLocally(note.id, updates);
+              // Update sidebar optimistically with all accumulated updates
+              updateNoteLocally(note.id, allUpdates);
             } else {
               // For brand new notes not yet in sidebar, do a full refresh
               await refreshSessionNotes();
             }
+
+            // Clear pending updates after successful save
+            pendingUpdatesRef.current = {};
 
             // Only revalidate ISR cache for public notes
             if (note.public) {
@@ -105,6 +116,8 @@ export default function Note({ note: initialNote }: { note: any }) {
           console.error("Save failed:", error);
           // Revert optimistic update on error
           setNote(note);
+          // Clear pending updates on error
+          pendingUpdatesRef.current = {};
           toast({
             description: "Failed to save note",
             variant: "destructive",
