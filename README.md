@@ -23,6 +23,19 @@ the app is built with:
 
 the app uses [supabase](https://supabase.com) for the postgresql database with row-level security policies to control access to public and private notes.
 
+**database schema**:
+
+the `notes` table stores all notes with these fields:
+- `id` (uuid): unique identifier
+- `title` (text): note title
+- `content` (text): markdown content
+- `session_id` (uuid): links notes to browser sessions
+- `public` (boolean): controls visibility
+- `slug` (text): url-friendly identifier
+- `category` (text): optional categorization
+- `emoji` (text): note icon
+- `created_at` (timestamp): when the note was created
+
 ## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`
