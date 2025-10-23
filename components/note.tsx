@@ -7,6 +7,7 @@ import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { useToast } from "./ui/use-toast";
 
 export default function Note({ note: initialNote }: { note: any }) {
   const supabase = createClient();
@@ -15,7 +16,8 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { refreshSessionNotes } = useContext(SessionNotesContext);
+  const { refreshSessionNotes, updateNoteLocally } = useContext(SessionNotesContext);
+  const { toast } = useToast();
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -23,51 +25,77 @@ export default function Note({ note: initialNote }: { note: any }) {
         clearTimeout(saveTimeoutRef.current);
       }
 
+      // Optimistic update locally
       const updatedNote = { ...note, ...updates };
       setNote(updatedNote);
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           if (note.id && sessionId) {
+            // Build parallel RPC calls array
+            const promises = [];
+
             if ('title' in updates) {
-              await supabase.rpc("update_note_title", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                title_arg: updatedNote.title,
-              });
+              promises.push(
+                supabase.rpc("update_note_title", {
+                  uuid_arg: note.id,
+                  session_arg: sessionId,
+                  title_arg: updatedNote.title,
+                })
+              );
             }
             if ('emoji' in updates) {
-              await supabase.rpc("update_note_emoji", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                emoji_arg: updatedNote.emoji,
-              });
+              promises.push(
+                supabase.rpc("update_note_emoji", {
+                  uuid_arg: note.id,
+                  session_arg: sessionId,
+                  emoji_arg: updatedNote.emoji,
+                })
+              );
             }
             if ('content' in updates) {
-              await supabase.rpc("update_note_content", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                content_arg: updatedNote.content,
+              promises.push(
+                supabase.rpc("update_note_content", {
+                  uuid_arg: note.id,
+                  session_arg: sessionId,
+                  content_arg: updatedNote.content,
+                })
+              );
+            }
+
+            // Execute all RPC calls in parallel
+            await Promise.all(promises);
+
+            // Update sidebar optimistically (no DB refetch)
+            updateNoteLocally(note.id, updates);
+
+            // Only revalidate if it's a public note
+            if (note.public) {
+              await fetch("/notes/revalidate", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
+                },
+                body: JSON.stringify({ slug: note.slug }),
               });
             }
-          }
 
-          await fetch("/notes/revalidate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
-            },
-            body: JSON.stringify({ slug: note.slug }),
-          });
-          refreshSessionNotes();
-          router.refresh();
+            // Skip refreshSessionNotes() - using optimistic update instead
+            // Skip router.refresh() - not needed for private notes
+          }
         } catch (error) {
           console.error("Save failed:", error);
+          // Revert optimistic update on error
+          setNote(note);
+          toast({
+            description: "Failed to save note",
+            variant: "destructive",
+          });
         }
       }, 500);
     },
-    [note, supabase, router, refreshSessionNotes, sessionId]
+    [note, supabase, sessionId, updateNoteLocally, toast]
   );
 
   const canEdit = sessionId === note.session_id;
