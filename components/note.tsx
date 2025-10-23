@@ -45,6 +45,13 @@ export default function Note({ note: initialNote }: { note: any }) {
               );
             }
             if ('emoji' in updates) {
+              console.log('[DEBUG] Updating emoji:', {
+                noteId: note.id,
+                sessionId,
+                oldEmoji: note.emoji,
+                newEmoji: updatedNote.emoji,
+                updatesEmoji: updates.emoji
+              });
               promises.push(
                 supabase.rpc("update_note_emoji", {
                   uuid_arg: note.id,
@@ -64,7 +71,15 @@ export default function Note({ note: initialNote }: { note: any }) {
             }
 
             // Execute all RPC calls in parallel
-            await Promise.all(promises);
+            const results = await Promise.all(promises);
+
+            // Check for errors in RPC results
+            results.forEach((result, index) => {
+              if (result.error) {
+                console.error(`RPC call ${index} failed:`, result.error);
+                throw result.error;
+              }
+            });
 
             // Check if note exists in sidebar
             const noteExistsInSidebar = notes.some(n => n.id === note.id);
