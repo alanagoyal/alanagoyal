@@ -43,6 +43,7 @@ export async function createNote(
       router.push(`/notes/${slug}`).then(() => {
         refreshSessionNotes();
         setSelectedNoteSlug(slug);
+        router.refresh();
       });
     }
 
