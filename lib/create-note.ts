@@ -27,26 +27,27 @@ export async function createNote(
     emoji: "👋🏼",
   };
 
-  try {
-    const { error } = await supabase.from("notes").insert(note);
+  // Add note to context BEFORE database insert
+  // This ensures it's available immediately for rendering
+  addNoteToContext(note);
+  addNewPinnedNote(slug);
+  setSelectedNoteSlug(slug);
 
-    if (error) throw error;
+  // Navigate immediately - note is already in context
+  router.push(`/notes/${slug}`);
 
-    // Optimistically add note to sidebar context immediately
-    // This ensures note appears in sidebar without waiting for database refetch
-    addNoteToContext(note);
-
-    addNewPinnedNote(slug);
-
-    // Navigate immediately without blocking refresh
-    // The note is already in context via addNoteToContext, so it will render instantly
-    setSelectedNoteSlug(slug);
-    router.push(`/notes/${slug}`);
-
-    toast({
-      description: "Private note created",
-    });
-  } catch (error) {
-    console.error("Error creating note:", error);
-  }
+  // Database insert happens in background (fire and forget)
+  supabase.from("notes").insert(note).then(({ error }) => {
+    if (error) {
+      console.error("Error creating note:", error);
+      toast({
+        description: "Error creating note",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        description: "Private note created",
+      });
+    }
+  });
 }
