@@ -103,7 +103,7 @@ export default function NoteContent({
         />
       ) : (
         <div
-          className="h-full text-base"
+          className="h-full text-base md:text-sm"
           onClick={(e) => {
             if (canEdit && !note.public) {
               setIsEditing(true);
