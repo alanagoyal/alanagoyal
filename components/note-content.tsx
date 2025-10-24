@@ -9,12 +9,10 @@ import { Note } from "@/lib/types";
 export default function NoteContent({
   note,
   saveNote,
-  saveImmediately,
   canEdit,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
-  saveImmediately: () => void;
   canEdit: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
@@ -22,12 +20,6 @@ export default function NoteContent({
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
   }, [saveNote]);
-
-  const handleBlur = useCallback(() => {
-    // Immediately save any pending changes when content field loses focus
-    saveImmediately();
-    setIsEditing(false);
-  }, [saveImmediately]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
@@ -97,7 +89,7 @@ export default function NoteContent({
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
-          onBlur={handleBlur}
+          onBlur={() => setIsEditing(false)}
         />
       ) : (
         <div

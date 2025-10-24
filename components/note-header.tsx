@@ -15,12 +15,10 @@ import { getDisplayDateByCategory } from "@/lib/note-utils";
 export default function NoteHeader({
   note,
   saveNote,
-  saveImmediately,
   canEdit,
 }: {
   note: any;
   saveNote: (updates: Partial<typeof note>) => void;
-  saveImmediately: () => void;
   canEdit: boolean;
 }) {
   const isMobile = useMobileDetect();
@@ -43,11 +41,6 @@ export default function NoteHeader({
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     saveNote({ title: e.target.value });
-  };
-
-  const handleTitleBlur = () => {
-    // Immediately save any pending changes when title field loses focus
-    saveImmediately();
   };
 
   return (
@@ -94,7 +87,6 @@ export default function NoteHeader({
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
               onChange={handleTitleChange}
-              onBlur={handleTitleBlur}
               autoFocus={!note.title}
             />
           )}
