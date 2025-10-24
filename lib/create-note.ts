@@ -38,18 +38,10 @@ export async function createNote(
 
     addNewPinnedNote(slug);
 
-    if (!isMobile) {
-      // Desktop: navigate immediately
-      setSelectedNoteSlug(slug);
-      router.push(`/notes/${slug}`);
-      router.refresh(); // Ensure server component fetches fresh data
-    } else {
-      // Mobile: navigate to note, then refresh to ensure server has latest data
-      router.push(`/notes/${slug}`).then(() => {
-        setSelectedNoteSlug(slug);
-        router.refresh(); // Ensure server component fetches the note from DB
-      });
-    }
+    // Navigate immediately without blocking refresh
+    // The note is already in context via addNoteToContext, so it will render instantly
+    setSelectedNoteSlug(slug);
+    router.push(`/notes/${slug}`);
 
     toast({
       description: "Private note created",

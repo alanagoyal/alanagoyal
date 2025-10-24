@@ -8,10 +8,17 @@ import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 
-export default function Note({ note: initialNote }: { note: any }) {
+export default function Note({ note: initialNote, slug }: { note: any; slug?: string }) {
   const supabase = createClient();
   const router = useRouter();
-  const [note, setNote] = useState(initialNote);
+  const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
+
+  // If initialNote is null, try to find it in context by slug
+  const noteFromContext = slug && !initialNote
+    ? sessionNotes.find(n => n.slug === slug)
+    : null;
+
+  const [note, setNote] = useState(initialNote || noteFromContext);
   const [sessionId, setSessionId] = useState("");
 
   // Refs for managing saves
@@ -19,19 +26,27 @@ export default function Note({ note: initialNote }: { note: any }) {
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
   const isSavingRef = useRef(false);
 
-  const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
-
   /**
    * Sync with context when note is found in session notes
    * This ensures we use the latest data from context instead of stale server data
+   * Also handles the case where initialNote is null and we need to load from context
    */
   useEffect(() => {
-    const contextNote = sessionNotes.find(n => n.id === initialNote.id);
-    if (contextNote && (contextNote.title !== note.title || contextNote.content !== note.content || contextNote.emoji !== note.emoji)) {
-      // Context has newer data, use it
-      setNote(contextNote);
+    if (!initialNote && slug) {
+      // New note case: load from context
+      const contextNote = sessionNotes.find(n => n.slug === slug);
+      if (contextNote && !note) {
+        setNote(contextNote);
+      }
+    } else if (initialNote) {
+      // Existing note case: sync updates from context
+      const contextNote = sessionNotes.find(n => n.id === initialNote.id);
+      if (contextNote && (contextNote.title !== note?.title || contextNote.content !== note?.content || contextNote.emoji !== note?.emoji)) {
+        // Context has newer data, use it
+        setNote(contextNote);
+      }
     }
-  }, [sessionNotes, initialNote.id, note.title, note.content, note.emoji]);
+  }, [sessionNotes, initialNote, slug, note]);
 
   /**
    * Performs the actual database save with accumulated pending updates.
@@ -166,6 +181,18 @@ export default function Note({ note: initialNote }: { note: any }) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
+
+  // Show loading state while waiting for note to load from context
+  if (!note) {
+    return (
+      <div className="h-full overflow-y-auto bg-background">
+        <SessionId setSessionId={setSessionId} />
+        <div className="flex items-center justify-center h-full">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   const canEdit = sessionId === note.session_id;
 

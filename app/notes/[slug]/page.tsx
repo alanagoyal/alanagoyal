@@ -70,7 +70,13 @@ export default async function NotePage({
   const note = await getNote(slug);
 
   if (!note) {
-    return redirect("/notes/error");
+    // For new notes, return a loading placeholder that will be populated from context
+    // This enables instant navigation without waiting for server-side data
+    return (
+      <div className="w-full min-h-dvh p-3">
+        <Note note={null} slug={slug} />
+      </div>
+    );
   }
 
   return (
