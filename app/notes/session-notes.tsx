@@ -17,6 +17,8 @@ export interface SessionNotes {
   notes: any[];
   setSessionId: (sessionId: string) => void;
   refreshSessionNotes: () => Promise<void>;
+  updateNoteInContext: (noteId: string, updates: any) => void;
+  addNoteToContext: (note: any) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
@@ -24,6 +26,8 @@ export const SessionNotesContext = createContext<SessionNotes>({
   notes: [],
   setSessionId: () => {},
   refreshSessionNotes: async () => {},
+  updateNoteInContext: () => {},
+  addNoteToContext: () => {},
 });
 
 export function SessionNotesProvider({
@@ -42,6 +46,28 @@ export function SessionNotesProvider({
     }
   }, [supabase, sessionId]);
 
+  /**
+   * Optimistically update a note in the sidebar context
+   * This ensures sidebar reflects changes immediately without refetching
+   */
+  const updateNoteInContext = useCallback((noteId: string, updates: any) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note.id === noteId
+          ? { ...note, ...updates }
+          : note
+      )
+    );
+  }, []);
+
+  /**
+   * Optimistically add a new note to the sidebar context
+   * This ensures newly created notes appear in sidebar immediately
+   */
+  const addNoteToContext = useCallback((note: any) => {
+    setNotes((prevNotes) => [note, ...prevNotes]);
+  }, []);
+
   useEffect(() => {
     refreshSessionNotes();
   }, [refreshSessionNotes, sessionId, supabase]);
@@ -53,6 +79,8 @@ export function SessionNotesProvider({
         notes,
         setSessionId,
         refreshSessionNotes,
+        updateNoteInContext,
+        addNoteToContext,
       }}
     >
       {children}

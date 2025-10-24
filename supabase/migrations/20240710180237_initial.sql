@@ -109,6 +109,22 @@ END;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.update_note_batched(uuid_arg uuid, session_arg uuid, title_arg text DEFAULT NULL, emoji_arg text DEFAULT NULL, content_arg text DEFAULT NULL)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    UPDATE public.notes
+    SET
+        title = COALESCE(title_arg, title),
+        emoji = COALESCE(emoji_arg, emoji),
+        content = COALESCE(content_arg, content)
+    WHERE id = uuid_arg AND session_id = session_arg;
+END;
+$function$
+;
+
 grant delete on table "public"."notes" to "anon";
 
 grant insert on table "public"."notes" to "anon";
