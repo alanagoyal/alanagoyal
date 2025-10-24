@@ -8,7 +8,8 @@ export async function createNote(
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
-  isMobile: boolean
+  isMobile: boolean,
+  addNoteToContext: (note: any) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -31,18 +32,22 @@ export async function createNote(
 
     if (error) throw error;
 
+    // Optimistically add note to sidebar context immediately
+    // This ensures note appears in sidebar without waiting for database refetch
+    addNoteToContext(note);
+
     addNewPinnedNote(slug);
 
     if (!isMobile) {
-      refreshSessionNotes().then(() => {
-        setSelectedNoteSlug(slug);
-        router.push(`/notes/${slug}`);
-        router.refresh();
-      });
+      // Desktop: navigate immediately
+      setSelectedNoteSlug(slug);
+      router.push(`/notes/${slug}`);
+      router.refresh(); // Ensure server component fetches fresh data
     } else {
+      // Mobile: navigate to note, then refresh to ensure server has latest data
       router.push(`/notes/${slug}`).then(() => {
-        refreshSessionNotes();
         setSelectedNoteSlug(slug);
+        router.refresh(); // Ensure server component fetches the note from DB
       });
     }
 
