@@ -7,28 +7,18 @@ import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
-import { getPendingNote } from "@/lib/create-note";
 
 export default function Note({ note: initialNote, slug }: { note: any; slug?: string }) {
   const supabase = createClient();
   const router = useRouter();
   const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
 
-  /**
-   * Note data loading strategy (in priority order):
-   * 1. initialNote: Note data from server-side rendering (existing notes)
-   * 2. pendingNotesCache: Temporary cache for newly created notes on mobile (instant access during navigation)
-   * 3. sessionNotes context: Client-side note data (for notes that failed to SSR or were added optimistically)
-   *
-   * This multi-source approach enables instant rendering on both mobile and desktop
-   * while maintaining smooth UX without loading states.
-   */
-  const noteFromPending = slug && !initialNote ? getPendingNote(slug) : null;
-  const noteFromContext = slug && !initialNote && !noteFromPending
+  // If server didn't find the note, try to get it from context (for newly created notes)
+  const noteFromContext = slug && !initialNote
     ? sessionNotes.find(n => n.slug === slug)
     : null;
 
-  const [note, setNote] = useState(initialNote || noteFromPending || noteFromContext);
+  const [note, setNote] = useState(initialNote || noteFromContext);
   const [sessionId, setSessionId] = useState("");
 
   // Refs for managing saves
@@ -39,26 +29,18 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
   /**
    * Sync with context when note is found in session notes
    * This ensures we use the latest data from context instead of stale server data
-   * Also handles the case where initialNote is null and we need to load from context or pending cache
    */
   useEffect(() => {
     if (!initialNote && slug) {
-      // New note case: check pending cache first, then context
-      const pendingNote = getPendingNote(slug);
-      if (pendingNote && !note) {
-        setNote(pendingNote);
-        return;
-      }
-
+      // New note: load from context
       const contextNote = sessionNotes.find(n => n.slug === slug);
       if (contextNote && !note) {
         setNote(contextNote);
       }
     } else if (initialNote) {
-      // Existing note case: sync updates from context
+      // Existing note: sync updates from context
       const contextNote = sessionNotes.find(n => n.id === initialNote.id);
       if (contextNote && (contextNote.title !== note?.title || contextNote.content !== note?.content || contextNote.emoji !== note?.emoji)) {
-        // Context has newer data, use it
         setNote(contextNote);
       }
     }
