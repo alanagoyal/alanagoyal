@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const fontSans = FontSans({
@@ -27,10 +28,26 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = createClient();
-  const { data: notes } = await supabase
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("session_id")?.value;
+
+  // Fetch public notes
+  const { data: publicNotes } = await supabase
     .from("notes")
     .select("*")
     .eq("public", true);
+
+  // Fetch private notes if we have a session ID
+  let sessionNotes: any[] = [];
+  if (sessionId) {
+    const { data } = await supabase.rpc("select_session_notes", {
+      session_id_arg: sessionId,
+    });
+    sessionNotes = data || [];
+  }
+
+  // Combine both sets of notes
+  const notes = [...(publicNotes || []), ...sessionNotes];
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -56,7 +73,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarLayout notes={notes}>
+          <SidebarLayout notes={notes} sessionId={sessionId} sessionNotes={sessionNotes}>
             <Analytics />
             {children}
           </SidebarLayout>

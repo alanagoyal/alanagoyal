@@ -28,12 +28,16 @@ export const SessionNotesContext = createContext<SessionNotes>({
 
 export function SessionNotesProvider({
   children,
+  initialSessionId = "",
+  initialNotes = [],
 }: {
   children: React.ReactNode;
+  initialSessionId?: string;
+  initialNotes?: any[];
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<any[]>([]);
+  const [sessionId, setSessionId] = useState<string>(initialSessionId);
+  const [notes, setNotes] = useState<any[]>(initialNotes);
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {
