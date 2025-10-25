@@ -180,16 +180,10 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
 
-  // If note is not found, this is an error state (shouldn't happen with current flow)
+  // If note is not found in server or context, redirect to error page
   if (!note) {
-    return (
-      <div className="h-full overflow-y-auto bg-background">
-        <SessionId setSessionId={setSessionId} />
-        <div className="flex items-center justify-center h-full">
-          <div className="text-muted-foreground">Note not found</div>
-        </div>
-      </div>
-    );
+    router.push("/notes/error");
+    return null;
   }
 
   const canEdit = sessionId === note.session_id;

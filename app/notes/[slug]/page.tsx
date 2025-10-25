@@ -70,8 +70,8 @@ export default async function NotePage({
   const note = await getNote(slug);
 
   if (!note) {
-    // For new notes, return a loading placeholder that will be populated from context
-    // This enables instant navigation without waiting for server-side data
+    // Note not found on server - could be a newly created note in context
+    // Pass null and let Note component check context, or show error if not found there either
     return (
       <div className="w-full min-h-dvh p-3">
         <Note note={null} slug={slug} />
