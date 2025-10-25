@@ -180,13 +180,13 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
 
-  // Show loading state while waiting for note to load from context
+  // If note is not found, this is an error state (shouldn't happen with current flow)
   if (!note) {
     return (
       <div className="h-full overflow-y-auto bg-background">
         <SessionId setSessionId={setSessionId} />
         <div className="flex items-center justify-center h-full">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-muted-foreground">Note not found</div>
         </div>
       </div>
     );
