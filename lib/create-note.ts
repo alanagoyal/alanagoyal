@@ -44,12 +44,15 @@ export async function createNote(
     // Mobile: Store note in temporary cache for instant access
     // Navigate immediately without updating context (avoids sidebar flash)
     pendingNotesCache.set(slug, note);
+
+    // Pin immediately so it's marked as pinned even before appearing in sidebar
+    addNewPinnedNote(slug);
+
     router.push(`/notes/${slug}`);
 
     // Add to context after navigation completes so it appears in sidebar later
     setTimeout(() => {
       addNoteToContext(note);
-      addNewPinnedNote(slug);
       pendingNotesCache.delete(slug);
     }, 500);
   } else {
