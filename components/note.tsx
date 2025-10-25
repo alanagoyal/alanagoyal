@@ -7,18 +7,22 @@ import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { getPendingNote } from "@/lib/create-note";
 
 export default function Note({ note: initialNote, slug }: { note: any; slug?: string }) {
   const supabase = createClient();
   const router = useRouter();
   const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
 
-  // If initialNote is null, try to find it in context by slug
-  const noteFromContext = slug && !initialNote
+  // If initialNote is null, try multiple sources:
+  // 1. Pending notes cache (for instant mobile navigation)
+  // 2. Session notes context
+  const noteFromPending = slug && !initialNote ? getPendingNote(slug) : null;
+  const noteFromContext = slug && !initialNote && !noteFromPending
     ? sessionNotes.find(n => n.slug === slug)
     : null;
 
-  const [note, setNote] = useState(initialNote || noteFromContext);
+  const [note, setNote] = useState(initialNote || noteFromPending || noteFromContext);
   const [sessionId, setSessionId] = useState("");
 
   // Refs for managing saves
@@ -29,11 +33,17 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
   /**
    * Sync with context when note is found in session notes
    * This ensures we use the latest data from context instead of stale server data
-   * Also handles the case where initialNote is null and we need to load from context
+   * Also handles the case where initialNote is null and we need to load from context or pending cache
    */
   useEffect(() => {
     if (!initialNote && slug) {
-      // New note case: load from context
+      // New note case: check pending cache first, then context
+      const pendingNote = getPendingNote(slug);
+      if (pendingNote && !note) {
+        setNote(pendingNote);
+        return;
+      }
+
       const contextNote = sessionNotes.find(n => n.slug === slug);
       if (contextNote && !note) {
         setNote(contextNote);

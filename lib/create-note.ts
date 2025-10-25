@@ -2,6 +2,17 @@ import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
+// Temporary cache for pending notes (for instant mobile navigation)
+const pendingNotesCache = new Map<string, any>();
+
+export function getPendingNote(slug: string) {
+  return pendingNotesCache.get(slug);
+}
+
+export function clearPendingNote(slug: string) {
+  pendingNotesCache.delete(slug);
+}
+
 export async function createNote(
   sessionId: string | null,
   router: any,
@@ -27,23 +38,24 @@ export async function createNote(
     emoji: "👋🏼",
   };
 
+  setSelectedNoteSlug(slug);
+
   if (isMobile) {
-    // Mobile: Navigate FIRST to trigger route change and hide sidebar
-    setSelectedNoteSlug(slug);
+    // Mobile: Store note in temporary cache for instant access
+    // Navigate immediately without updating context (avoids sidebar flash)
+    pendingNotesCache.set(slug, note);
     router.push(`/notes/${slug}`);
 
-    // Defer adding to context until next frame
-    // This ensures the navigation starts and sidebar hides before the note appears in it
-    requestAnimationFrame(() => {
+    // Add to context after navigation completes so it appears in sidebar later
+    setTimeout(() => {
       addNoteToContext(note);
       addNewPinnedNote(slug);
-    });
+      pendingNotesCache.delete(slug);
+    }, 500);
   } else {
-    // Desktop: Add to context immediately so sidebar and note view update simultaneously
-    // Both are visible, so we want them to appear at the same time
+    // Desktop: Add to context immediately so both sidebar and note view update together
     addNoteToContext(note);
     addNewPinnedNote(slug);
-    setSelectedNoteSlug(slug);
     router.push(`/notes/${slug}`);
   }
 
