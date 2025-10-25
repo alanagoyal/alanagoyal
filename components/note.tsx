@@ -14,9 +14,15 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
   const router = useRouter();
   const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
 
-  // If initialNote is null, try multiple sources:
-  // 1. Pending notes cache (for instant mobile navigation)
-  // 2. Session notes context
+  /**
+   * Note data loading strategy (in priority order):
+   * 1. initialNote: Note data from server-side rendering (existing notes)
+   * 2. pendingNotesCache: Temporary cache for newly created notes on mobile (instant access during navigation)
+   * 3. sessionNotes context: Client-side note data (for notes that failed to SSR or were added optimistically)
+   *
+   * This multi-source approach enables instant rendering on both mobile and desktop
+   * while maintaining smooth UX without loading states.
+   */
   const noteFromPending = slug && !initialNote ? getPendingNote(slug) : null;
   const noteFromContext = slug && !initialNote && !noteFromPending
     ? sessionNotes.find(n => n.slug === slug)
