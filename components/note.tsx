@@ -180,9 +180,15 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
 
-  // If note is not found in server or context, redirect to error page
+  // Redirect to error page if note not found
+  useEffect(() => {
+    if (!note) {
+      router.push("/notes/error");
+    }
+  }, [note, router]);
+
+  // Show loading while redirecting
   if (!note) {
-    router.push("/notes/error");
     return null;
   }
 
