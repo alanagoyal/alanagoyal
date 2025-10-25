@@ -180,16 +180,17 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
 
-  // Redirect to error page if note not found
-  useEffect(() => {
-    if (!note) {
-      router.push("/notes/error");
-    }
-  }, [note, router]);
-
-  // Show loading while redirecting
+  // If note is not found in server or context, show error
   if (!note) {
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🤔</div>
+          <h3 className="text-xl font-bold mb-2">Oops! This page doesn't exist</h3>
+          <p className="text-muted-foreground text-sm">Please select or create another note</p>
+        </div>
+      </div>
+    );
   }
 
   const canEdit = sessionId === note.session_id;

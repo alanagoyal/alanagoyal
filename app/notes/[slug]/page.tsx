@@ -70,8 +70,9 @@ export default async function NotePage({
   const note = await getNote(slug);
 
   if (!note) {
-    // Note not found on server - could be a newly created note in context
-    // Pass null and let Note component check context, or show error if not found there either
+    // Note not found on server
+    // For newly created notes, they'll be in client context and will render
+    // For truly invalid slugs, Note component will handle showing error state
     return (
       <div className="w-full min-h-dvh p-3">
         <Note note={null} slug={slug} />
