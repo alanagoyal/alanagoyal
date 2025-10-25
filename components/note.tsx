@@ -8,30 +8,57 @@ import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext, useEffect } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 
-export default function Note({ note: initialNote }: { note: any }) {
+export default function Note({ note: initialNote, slug }: { note: any; slug?: string }) {
   const supabase = createClient();
   const router = useRouter();
-  const [note, setNote] = useState(initialNote);
+  const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
+
+  // If server didn't find the note, try to get it from context (for newly created notes)
+  const noteFromContext = slug && !initialNote
+    ? sessionNotes.find(n => n.slug === slug)
+    : null;
+
+  const [note, setNote] = useState(initialNote || noteFromContext);
   const [sessionId, setSessionId] = useState("");
+
+  // If note is not found in server or context, show error early
+  // This prevents errors in hooks/callbacks that depend on note
+  if (!note) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🤔</div>
+          <h3 className="text-xl font-bold mb-2">Oops! This page doesn&apos;t exist</h3>
+          <p className="text-muted-foreground text-sm">Please select or create another note</p>
+        </div>
+      </div>
+    );
+  }
 
   // Refs for managing saves
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
   const isSavingRef = useRef(false);
 
-  const { refreshSessionNotes, updateNoteInContext, notes: sessionNotes } = useContext(SessionNotesContext);
-
   /**
    * Sync with context when note is found in session notes
    * This ensures we use the latest data from context instead of stale server data
    */
   useEffect(() => {
-    const contextNote = sessionNotes.find(n => n.id === initialNote.id);
-    if (contextNote && (contextNote.title !== note.title || contextNote.content !== note.content || contextNote.emoji !== note.emoji)) {
-      // Context has newer data, use it
-      setNote(contextNote);
+    if (!initialNote && slug) {
+      // New note: load from context
+      const contextNote = sessionNotes.find(n => n.slug === slug);
+      if (contextNote && !note) {
+        setNote(contextNote);
+      }
+    } else if (initialNote) {
+      // Existing note: sync updates from context
+      const contextNote = sessionNotes.find(n => n.id === initialNote.id);
+      if (contextNote && (contextNote.title !== note?.title || contextNote.content !== note?.content || contextNote.emoji !== note?.emoji)) {
+        setNote(contextNote);
+      }
     }
-  }, [sessionNotes, initialNote.id, note.title, note.content, note.emoji]);
+  }, [sessionNotes, initialNote, slug, note]);
 
   /**
    * Performs the actual database save with accumulated pending updates.

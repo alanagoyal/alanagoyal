@@ -27,34 +27,26 @@ export async function createNote(
     emoji: "👋🏼",
   };
 
-  try {
-    const { error } = await supabase.from("notes").insert(note);
+  // Add note to context immediately so it's available for rendering
+  addNoteToContext(note);
+  addNewPinnedNote(slug);
+  setSelectedNoteSlug(slug);
 
-    if (error) throw error;
+  // Navigate immediately - on mobile this hides the sidebar, on desktop both update together
+  router.push(`/notes/${slug}`);
 
-    // Optimistically add note to sidebar context immediately
-    // This ensures note appears in sidebar without waiting for database refetch
-    addNoteToContext(note);
-
-    addNewPinnedNote(slug);
-
-    if (!isMobile) {
-      // Desktop: navigate immediately
-      setSelectedNoteSlug(slug);
-      router.push(`/notes/${slug}`);
-      router.refresh(); // Ensure server component fetches fresh data
+  // Insert to database in background
+  supabase.from("notes").insert(note).then(({ error }) => {
+    if (error) {
+      console.error("Error creating note:", error);
+      toast({
+        description: "Error creating note",
+        variant: "destructive",
+      });
     } else {
-      // Mobile: navigate to note, then refresh to ensure server has latest data
-      router.push(`/notes/${slug}`).then(() => {
-        setSelectedNoteSlug(slug);
-        router.refresh(); // Ensure server component fetches the note from DB
+      toast({
+        description: "Private note created",
       });
     }
-
-    toast({
-      description: "Private note created",
-    });
-  } catch (error) {
-    console.error("Error creating note:", error);
-  }
+  });
 }
