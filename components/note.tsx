@@ -21,6 +21,20 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
   const [note, setNote] = useState(initialNote || noteFromContext);
   const [sessionId, setSessionId] = useState("");
 
+  // If note is not found in server or context, show error early
+  // This prevents errors in hooks/callbacks that depend on note
+  if (!note) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🤔</div>
+          <h3 className="text-xl font-bold mb-2">Oops! This page doesn&apos;t exist</h3>
+          <p className="text-muted-foreground text-sm">Please select or create another note</p>
+        </div>
+      </div>
+    );
+  }
+
   // Refs for managing saves
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
@@ -179,19 +193,6 @@ export default function Note({ note: initialNote, slug }: { note: any; slug?: st
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [performSave]);
-
-  // If note is not found in server or context, show error
-  if (!note) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🤔</div>
-          <h3 className="text-xl font-bold mb-2">Oops! This page doesn&apos;t exist</h3>
-          <p className="text-muted-foreground text-sm">Please select or create another note</p>
-        </div>
-      </div>
-    );
-  }
 
   const canEdit = sessionId === note.session_id;
 
