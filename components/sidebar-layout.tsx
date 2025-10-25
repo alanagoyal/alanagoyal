@@ -11,9 +11,11 @@ import Sidebar from "./sidebar";
 interface SidebarLayoutProps {
   children: React.ReactNode;
   notes: any;
+  sessionId?: string;
+  sessionNotes?: any[];
 }
 
-export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
+export default function SidebarLayout({ children, notes, sessionId = "", sessionNotes = [] }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
@@ -35,7 +37,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   const showSidebar = !isMobile || pathname === "/notes";
 
   return (
-    <SessionNotesProvider>
+    <SessionNotesProvider initialSessionId={sessionId} initialNotes={sessionNotes}>
       <div className="dark:text-white h-dvh flex">
         {showSidebar && (
           <Sidebar

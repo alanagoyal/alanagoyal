@@ -104,8 +104,16 @@ export default function Sidebar({
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
+  // Notes are already combined from server, but we still need to merge
+  // with any new session notes that were created after initial load
   const notes = useMemo(
-    () => [...publicNotes, ...sessionNotes],
+    () => {
+      // Create a set of IDs from publicNotes to avoid duplicates
+      const publicNoteIds = new Set(publicNotes.map((note: any) => note.id));
+      // Only add session notes that aren't already in publicNotes
+      const newSessionNotes = sessionNotes.filter((note: any) => !publicNoteIds.has(note.id));
+      return [...publicNotes, ...newSessionNotes];
+    },
     [publicNotes, sessionNotes]
   );
 
