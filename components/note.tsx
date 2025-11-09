@@ -60,8 +60,9 @@ export default function Note({ note: initialNote }: { note: any }) {
             },
             body: JSON.stringify({ slug: note.slug }),
           });
-          refreshSessionNotes();
-          router.refresh();
+          // Note: refreshSessionNotes() and router.refresh() removed to eliminate lag
+          // The UI is already updated optimistically via setNote() on line 27
+          // These calls are only needed for operations that affect the sidebar (like delete)
         } catch (error) {
           console.error("Save failed:", error);
         }
