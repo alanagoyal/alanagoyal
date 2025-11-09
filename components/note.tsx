@@ -60,9 +60,13 @@ export default function Note({ note: initialNote }: { note: any }) {
             },
             body: JSON.stringify({ slug: note.slug }),
           });
-          // Note: refreshSessionNotes() and router.refresh() removed to eliminate lag
-          // The UI is already updated optimistically via setNote() on line 27
-          // These calls are only needed for operations that affect the sidebar (like delete)
+
+          // Only refresh sidebar for title/emoji changes (visible in sidebar)
+          // Content changes don't need sidebar refresh
+          // router.refresh() removed - it refetches ALL public notes (expensive!)
+          if ('title' in updates || 'emoji' in updates) {
+            refreshSessionNotes();
+          }
         } catch (error) {
           console.error("Save failed:", error);
         }
