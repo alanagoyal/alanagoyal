@@ -28,8 +28,10 @@ export default function Note({ note: initialNote }: { note: any }) {
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
+          console.log('Save timeout fired', { noteId: note.id, sessionId, updates, updatedNote });
           if (note.id && sessionId) {
             if ('title' in updates) {
+              console.log('Saving title:', updatedNote.title);
               await supabase.rpc("update_note_title", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
