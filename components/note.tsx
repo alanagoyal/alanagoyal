@@ -14,6 +14,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
@@ -61,12 +62,15 @@ export default function Note({ note: initialNote }: { note: any }) {
             body: JSON.stringify({ slug: note.slug }),
           });
 
-          // Only refresh sidebar for title/emoji changes (visible in sidebar)
-          // Content changes don't need sidebar refresh
+          // Debounce sidebar refresh to reduce unnecessary queries
+          // This updates the sidebar preview but only after user stops typing
           // router.refresh() removed - it refetches ALL public notes (expensive!)
-          if ('title' in updates || 'emoji' in updates) {
-            refreshSessionNotes();
+          if (refreshTimeoutRef.current) {
+            clearTimeout(refreshTimeoutRef.current);
           }
+          refreshTimeoutRef.current = setTimeout(() => {
+            refreshSessionNotes();
+          }, 1000); // Longer debounce for sidebar refresh (1s after last edit)
         } catch (error) {
           console.error("Save failed:", error);
         }
