@@ -28,8 +28,18 @@ export default function Note({ note: initialNote }: { note: any }) {
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          console.log('Save timeout fired', { noteId: note.id, sessionId, updates, updatedNote });
+          console.log('Save timeout fired', {
+            noteId: note.id,
+            sessionId,
+            updates,
+            updatedNote,
+            hasTitleInUpdates: 'title' in updates,
+            hasNoteId: !!note.id,
+            hasSessionId: !!sessionId,
+            conditionResult: !!(note.id && sessionId)
+          });
           if (note.id && sessionId) {
+            console.log('Inside if block');
             if ('title' in updates) {
               console.log('Saving title:', updatedNote.title);
               await supabase.rpc("update_note_title", {
@@ -37,6 +47,8 @@ export default function Note({ note: initialNote }: { note: any }) {
                 session_arg: sessionId,
                 title_arg: updatedNote.title,
               });
+            } else {
+              console.log('title not in updates');
             }
             if ('emoji' in updates) {
               await supabase.rpc("update_note_emoji", {
