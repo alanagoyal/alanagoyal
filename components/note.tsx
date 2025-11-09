@@ -14,7 +14,6 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
@@ -62,15 +61,13 @@ export default function Note({ note: initialNote }: { note: any }) {
             body: JSON.stringify({ slug: note.slug }),
           });
 
-          // Debounce sidebar refresh to reduce unnecessary queries
-          // This updates the sidebar preview but only after user stops typing
+          // Refresh sidebar to show updated note preview
+          // This is debounced via the 500ms saveTimeout above, so it only runs
+          // 500ms after user stops typing (not on every keystroke)
+          refreshSessionNotes();
+
           // router.refresh() removed - it refetches ALL public notes (expensive!)
-          if (refreshTimeoutRef.current) {
-            clearTimeout(refreshTimeoutRef.current);
-          }
-          refreshTimeoutRef.current = setTimeout(() => {
-            refreshSessionNotes();
-          }, 1000); // Longer debounce for sidebar refresh (1s after last edit)
+          // Not needed for private notes which use refreshSessionNotes() instead
         } catch (error) {
           console.error("Save failed:", error);
         }
