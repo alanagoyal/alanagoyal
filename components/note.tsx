@@ -26,7 +26,7 @@ export default function Note({ note: initialNote }: { note: any }) {
       }
 
       // Update local state immediately (optimistic update)
-      setNote(prevNote => ({ ...prevNote, ...updates }));
+      setNote((prevNote: typeof note) => ({ ...prevNote, ...updates }));
 
       // Accumulate all pending updates
       pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
