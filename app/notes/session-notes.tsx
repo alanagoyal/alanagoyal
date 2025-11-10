@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useState,
+  useTransition,
 } from "react";
 
 export interface SessionNotes {
@@ -26,10 +27,14 @@ export function SessionNotesProvider({
 }) {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string>("");
+  const [isPending, startTransition] = useTransition();
 
   const refreshSessionNotes = useCallback(async () => {
-    // Trigger a server-side re-fetch of all notes (public + session)
-    router.refresh();
+    // Use startTransition to make this non-blocking
+    // This allows the UI to remain responsive during the refresh
+    startTransition(() => {
+      router.refresh();
+    });
   }, [router]);
 
   return (

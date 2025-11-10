@@ -7,6 +7,7 @@ import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import "./globals.css";
 
 const fontSans = FontSans({
@@ -20,16 +21,14 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-export const dynamic = 'force-dynamic'; // Disable static generation since we're fetching session-specific notes
+// Use a short revalidation time to balance fresh data with performance
+// This allows Next.js to serve cached layouts for 15 seconds, making navigation fast
+// router.refresh() will still bypass this cache when explicitly called
+export const revalidate = 15;
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+// Cache notes at the React request level to avoid duplicate fetches within a single render
+const getAllNotes = cache(async (sessionId: string | undefined) => {
   const supabase = createClient();
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get("session_id")?.value;
 
   // Fetch public notes
   const { data: publicNotes } = await supabase
@@ -47,7 +46,18 @@ export default async function RootLayout({
   }
 
   // Combine all notes
-  const notes = [...(publicNotes || []), ...sessionNotes];
+  return [...(publicNotes || []), ...sessionNotes];
+});
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("session_id")?.value;
+
+  const notes = await getAllNotes(sessionId);
 
   return (
     <html lang="en" suppressHydrationWarning>
