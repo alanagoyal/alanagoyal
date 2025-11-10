@@ -15,6 +15,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
+  const noteRef = useRef(initialNote);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
@@ -26,7 +27,11 @@ export default function Note({ note: initialNote }: { note: any }) {
       }
 
       // Update local state immediately (optimistic update)
-      setNote((prevNote: typeof note) => ({ ...prevNote, ...updates }));
+      setNote((prevNote: typeof note) => {
+        const updatedNote = { ...prevNote, ...updates };
+        noteRef.current = updatedNote;
+        return updatedNote;
+      });
 
       // Accumulate all pending updates
       pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
@@ -34,43 +39,30 @@ export default function Note({ note: initialNote }: { note: any }) {
       // Set new timeout to batch save all pending updates
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          if (note.id && sessionId && Object.keys(pendingUpdatesRef.current).length > 0) {
+          if (noteRef.current.id && sessionId && Object.keys(pendingUpdatesRef.current).length > 0) {
             const updatesToSave = pendingUpdatesRef.current;
+            const currentNote = noteRef.current;
 
             // Clear pending updates before making calls
             pendingUpdatesRef.current = {};
 
-            // Make all necessary RPC calls for the accumulated updates
-            if ('title' in updatesToSave) {
-              await supabase.rpc("update_note_title", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                title_arg: updatesToSave.title,
-              });
-            }
-            if ('emoji' in updatesToSave) {
-              await supabase.rpc("update_note_emoji", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                emoji_arg: updatesToSave.emoji,
-              });
-            }
-            if ('content' in updatesToSave) {
-              await supabase.rpc("update_note_content", {
-                uuid_arg: note.id,
-                session_arg: sessionId,
-                content_arg: updatesToSave.content,
-              });
-            }
+            // Use the batched update_note function for efficiency - saves all fields in one call
+            await supabase.rpc("update_note", {
+              uuid_arg: currentNote.id,
+              session_arg: sessionId,
+              title_arg: updatesToSave.title ?? currentNote.title,
+              emoji_arg: updatesToSave.emoji ?? currentNote.emoji,
+              content_arg: updatesToSave.content ?? currentNote.content,
+            });
 
-            // Revalidate and refresh after all updates
+            // Revalidate and refresh after update
             await fetch("/notes/revalidate", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
               },
-              body: JSON.stringify({ slug: note.slug }),
+              body: JSON.stringify({ slug: currentNote.slug }),
             });
             refreshSessionNotes();
             router.refresh();
@@ -80,7 +72,7 @@ export default function Note({ note: initialNote }: { note: any }) {
         }
       }, 500);
     },
-    [note.id, note.slug, supabase, router, refreshSessionNotes, sessionId]
+    [supabase, router, refreshSessionNotes, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
