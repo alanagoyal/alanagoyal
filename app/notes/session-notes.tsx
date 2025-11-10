@@ -1,21 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { createClient as createBrowserClient } from "@/utils/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import {
   createContext,
   useCallback,
+  useContext,
+  useEffect,
+  useMemo,
   useState,
-  useTransition,
 } from "react";
 
 export interface SessionNotes {
   sessionId: string;
+  notes: any[];
   setSessionId: (sessionId: string) => void;
   refreshSessionNotes: () => Promise<void>;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
   sessionId: "",
+  notes: [],
   setSessionId: () => {},
   refreshSessionNotes: async () => {},
 });
@@ -25,22 +30,26 @@ export function SessionNotesProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
+  const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>("");
-  const [isPending, startTransition] = useTransition();
+  const [notes, setNotes] = useState<any[]>([]);
 
   const refreshSessionNotes = useCallback(async () => {
-    // Use startTransition to make this non-blocking
-    // This allows the UI to remain responsive during the refresh
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+    if (sessionId) {
+      const notes = await getSessionNotes({ supabase, sessionId });
+      setNotes(notes || []);
+    }
+  }, [supabase, sessionId]);
+
+  useEffect(() => {
+    refreshSessionNotes();
+  }, [refreshSessionNotes, sessionId, supabase]);
 
   return (
     <SessionNotesContext.Provider
       value={{
         sessionId,
+        notes,
         setSessionId,
         refreshSessionNotes,
       }}
@@ -48,4 +57,18 @@ export function SessionNotesProvider({
       {children}
     </SessionNotesContext.Provider>
   );
+}
+
+async function getSessionNotes({
+  supabase,
+  sessionId,
+}: {
+  supabase: SupabaseClient;
+  sessionId: string;
+}) {
+  const { data: notes } = await supabase.rpc("select_session_notes", {
+    session_id_arg: sessionId,
+  });
+
+  return notes;
 }

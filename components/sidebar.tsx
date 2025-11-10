@@ -98,13 +98,17 @@ export default function Sidebar({
   }, [selectedNoteSlug, highlightedIndex]);
 
   const {
+    notes: sessionNotes,
     sessionId,
     setSessionId,
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
-  // Notes are already combined (public + session) from server-side
-  const notes = publicNotes;
+  // Merge public notes (from server, cached) with session notes (from client, always fresh)
+  const notes = useMemo(
+    () => [...publicNotes, ...sessionNotes],
+    [publicNotes, sessionNotes]
+  );
 
   useEffect(() => {
     if (pathname) {

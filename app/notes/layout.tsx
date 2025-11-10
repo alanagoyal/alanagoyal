@@ -21,32 +21,18 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-// Use a short revalidation time to balance fresh data with performance
-// This allows Next.js to serve cached layouts for 15 seconds, making navigation fast
-// router.refresh() will still bypass this cache when explicitly called
-export const revalidate = 15;
+// Cache public notes for 24 hours since they rarely change
+// Private notes are always fetched fresh client-side
+export const revalidate = 86400;
 
-// Cache notes at the React request level to avoid duplicate fetches within a single render
-const getAllNotes = cache(async (sessionId: string | undefined) => {
+// Only fetch public notes server-side and cache them
+const getPublicNotes = cache(async () => {
   const supabase = createClient();
-
-  // Fetch public notes
   const { data: publicNotes } = await supabase
     .from("notes")
     .select("*")
     .eq("public", true);
-
-  // Fetch private notes for this session if session ID exists
-  let sessionNotes: any[] = [];
-  if (sessionId) {
-    const { data } = await supabase.rpc("select_session_notes", {
-      session_id_arg: sessionId,
-    });
-    sessionNotes = data || [];
-  }
-
-  // Combine all notes
-  return [...(publicNotes || []), ...sessionNotes];
+  return publicNotes || [];
 });
 
 export default async function RootLayout({
@@ -54,10 +40,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get("session_id")?.value;
-
-  const notes = await getAllNotes(sessionId);
+  // Only pass public notes from server
+  // Private notes will be loaded client-side
+  const notes = await getPublicNotes();
 
   return (
     <html lang="en" suppressHydrationWarning>
