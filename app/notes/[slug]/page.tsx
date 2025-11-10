@@ -1,12 +1,12 @@
 import { cache } from "react";
+import Note from "@/components/note";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
-import NoteWrapper from "@/components/note-wrapper";
 
-// Cache for 5 minutes - balance between SEO freshness and navigation speed
+// Cache for 5 minutes - reasonable balance
 export const revalidate = 300;
 
 // Cached function to fetch a note by slug
@@ -76,7 +76,7 @@ export default async function NotePage({
 
   return (
     <div className="w-full min-h-dvh p-3">
-      <NoteWrapper note={note} slug={slug} />
+      <Note note={note} />
     </div>
   );
 }

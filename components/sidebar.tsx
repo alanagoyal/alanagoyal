@@ -290,17 +290,13 @@ export default function Sidebar({
           nextNote = allNotes[deletedNoteIndex - 1];
         }
 
-        // Clear deleted note from cache
-        import("./note-wrapper").then(({ clearNoteCache }) => {
-          clearNoteCache(noteToDelete.slug);
-        });
-
         if (!isMobile) {
           router.push(nextNote ? `/notes/${nextNote.slug}` : "/notes/about-me");
         }
 
         clearSearch();
         refreshSessionNotes();
+        router.refresh();
 
         toast({
           description: "Note deleted",

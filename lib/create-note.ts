@@ -33,15 +33,11 @@ export async function createNote(
 
     addNewPinnedNote(slug);
 
-    // Pre-populate cache with the new note for instant navigation
-    import("@/components/note-wrapper").then(({ updateNoteCache }) => {
-      updateNoteCache(slug, note);
-    });
-
     if (!isMobile) {
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);
+        router.refresh();
       });
     } else {
       router.push(`/notes/${slug}`).then(() => {

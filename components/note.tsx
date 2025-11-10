@@ -81,11 +81,6 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Execute all updates in parallel for efficiency
             await Promise.all(promises);
 
-            // Update the note cache so navigation stays fast
-            import("./note-wrapper").then(({ updateNoteCache }) => {
-              updateNoteCache(currentNote.slug, currentNote);
-            });
-
             // Revalidate and refresh after all updates
             await fetch("/notes/revalidate", {
               method: "POST",
@@ -96,6 +91,7 @@ export default function Note({ note: initialNote }: { note: any }) {
               body: JSON.stringify({ slug: currentNote.slug }),
             });
             refreshSessionNotes();
+            router.refresh();
           }
         } catch (error) {
           console.error("Save failed:", error);

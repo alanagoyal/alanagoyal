@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
@@ -13,20 +13,10 @@ interface SidebarLayoutProps {
   notes: any;
 }
 
-export default function SidebarLayout({ children, notes: serverNotes }: SidebarLayoutProps) {
+export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
-
-  // Cache notes client-side to avoid re-fetching on every navigation
-  const [cachedNotes, setCachedNotes] = useState(serverNotes);
-
-  // Update cache when server provides new notes (e.g., after router.refresh())
-  useEffect(() => {
-    setCachedNotes(serverNotes);
-  }, [serverNotes]);
-
-  const notes = cachedNotes;
 
   useEffect(() => {
     if (isMobile !== null && !isMobile && pathname === "/notes") {
