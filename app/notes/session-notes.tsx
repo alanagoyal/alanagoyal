@@ -1,76 +1,55 @@
 "use client";
 
-import { createClient as createBrowserClient } from "@/utils/supabase/client";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Session } from "inspector";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
-  useContext,
-  useEffect,
   useMemo,
-  useState,
 } from "react";
 
 export interface SessionNotes {
   sessionId: string;
-  notes: any[];
-  setSessionId: (sessionId: string) => void;
-  refreshSessionNotes: () => Promise<void>;
+  refreshSessionNotes: () => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
   sessionId: "",
-  notes: [],
-  setSessionId: () => {},
-  refreshSessionNotes: async () => {},
+  refreshSessionNotes: () => {},
 });
 
 export function SessionNotesProvider({
   children,
+  initialSessionId,
 }: {
   children: React.ReactNode;
+  initialSessionId: string;
 }) {
-  const supabase = useMemo(() => createBrowserClient(), []);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<any[]>([]);
+  const router = useRouter();
 
-  const refreshSessionNotes = useCallback(async () => {
-    if (sessionId) {
-      const notes = await getSessionNotes({ supabase, sessionId });
-      setNotes(notes || []);
+  // Sync session ID to localStorage for client-side consistency
+  useMemo(() => {
+    if (typeof window !== 'undefined' && initialSessionId) {
+      const localSessionId = localStorage.getItem("session_id");
+      if (localSessionId !== initialSessionId) {
+        localStorage.setItem("session_id", initialSessionId);
+      }
     }
-  }, [supabase, sessionId]);
+  }, [initialSessionId]);
 
-  useEffect(() => {
-    refreshSessionNotes();
-  }, [refreshSessionNotes, sessionId, supabase]);
+  // Refresh session notes by triggering a router refresh
+  // This will re-fetch data from the server and update the UI
+  const refreshSessionNotes = useCallback(() => {
+    router.refresh();
+  }, [router]);
 
   return (
     <SessionNotesContext.Provider
       value={{
-        sessionId,
-        notes,
-        setSessionId,
+        sessionId: initialSessionId,
         refreshSessionNotes,
       }}
     >
       {children}
     </SessionNotesContext.Provider>
   );
-}
-
-async function getSessionNotes({
-  supabase,
-  sessionId,
-}: {
-  supabase: SupabaseClient;
-  sessionId: string;
-}) {
-
-  const { data : notes } = await supabase.rpc("select_session_notes", {
-    session_id_arg: sessionId
-  });
-
-  return notes;
 }

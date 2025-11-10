@@ -6,7 +6,7 @@ export async function createNote(
   sessionId: string | null,
   router: any,
   addNewPinnedNote: (slug: string) => void,
-  refreshSessionNotes: () => Promise<void>,
+  refreshSessionNotes: () => void,
   setSelectedNoteSlug: (slug: string | null) => void,
   isMobile: boolean
 ) {
@@ -32,19 +32,17 @@ export async function createNote(
     if (error) throw error;
 
     addNewPinnedNote(slug);
+    setSelectedNoteSlug(slug);
 
+    // Navigate to the new note
     if (!isMobile) {
-      refreshSessionNotes().then(() => {
-        setSelectedNoteSlug(slug);
-        router.push(`/notes/${slug}`);
-        router.refresh();
-      });
+      router.push(`/notes/${slug}`);
     } else {
-      router.push(`/notes/${slug}`).then(() => {
-        refreshSessionNotes();
-        setSelectedNoteSlug(slug);
-      });
+      await router.push(`/notes/${slug}`);
     }
+
+    // Refresh to get the new note from the server
+    refreshSessionNotes();
 
     toast({
       description: "Private note created",

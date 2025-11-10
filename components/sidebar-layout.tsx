@@ -11,15 +11,16 @@ import Sidebar from "./sidebar";
 interface SidebarLayoutProps {
   children: React.ReactNode;
   notes: any;
+  sessionId: string;
 }
 
-export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
+export default function SidebarLayout({ children, notes, sessionId }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (isMobile !== null && !isMobile && pathname === "/notes") {
+    if (!isMobile && pathname === "/notes") {
       router.push("/notes/about-me");
     }
   }, [isMobile, router, pathname]);
@@ -28,14 +29,10 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
     router.push(`/notes/${note.slug}`);
   };
 
-  if (isMobile === null) {
-    return null;
-  }
-
   const showSidebar = !isMobile || pathname === "/notes";
 
   return (
-    <SessionNotesProvider>
+    <SessionNotesProvider initialSessionId={sessionId}>
       <div className="dark:text-white h-dvh flex">
         {showSidebar && (
           <Sidebar

@@ -9,7 +9,6 @@ import {
   useContext,
 } from "react";
 import { usePathname } from "next/navigation";
-import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
@@ -98,15 +97,14 @@ export default function Sidebar({
   }, [selectedNoteSlug, highlightedIndex]);
 
   const {
-    notes: sessionNotes,
     sessionId,
-    setSessionId,
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
+  // Notes are now passed directly as props (both public and session notes)
   const notes = useMemo(
-    () => [...publicNotes, ...sessionNotes],
-    [publicNotes, sessionNotes]
+    () => publicNotes,
+    [publicNotes]
   );
 
   useEffect(() => {
@@ -445,7 +443,6 @@ export default function Sidebar({
         isMobile={isMobile}
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
-          <SessionId setSessionId={setSessionId} />
           <CommandMenu
             notes={notes}
             sessionId={sessionId}
