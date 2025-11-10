@@ -26,9 +26,11 @@ export default function NoteLoader({ slug }: { slug: string }) {
 
       // Fetch from database
       try {
-        const { data } = await supabase.rpc("select_note", {
-          note_slug_arg: slug,
-        }).single();
+        const { data } = await supabase
+          .rpc("select_note", {
+            note_slug_arg: slug,
+          })
+          .single();
 
         if (data) {
           noteCache.set(slug, data);
@@ -57,16 +59,13 @@ export default function NoteLoader({ slug }: { slug: string }) {
       }
     };
 
-    window.addEventListener('note-updated' as any, handleNoteUpdate);
-    return () => window.removeEventListener('note-updated' as any, handleNoteUpdate);
+    window.addEventListener("note-updated" as any, handleNoteUpdate);
+    return () =>
+      window.removeEventListener("note-updated" as any, handleNoteUpdate);
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return null;
   }
 
   if (!note) {
@@ -89,5 +88,7 @@ export function clearNoteCache(slug?: string) {
 export function updateNoteCache(slug: string, note: any) {
   noteCache.set(slug, note);
   // Dispatch event to update any active NoteLoader
-  window.dispatchEvent(new CustomEvent('note-updated', { detail: { slug, note } }));
+  window.dispatchEvent(
+    new CustomEvent("note-updated", { detail: { slug, note } })
+  );
 }
