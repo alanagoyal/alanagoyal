@@ -16,10 +16,12 @@ export default function NoteHeader({
   note,
   saveNote,
   canEdit,
+  flushPendingChanges,
 }: {
   note: any;
   saveNote: (updates: Partial<typeof note>) => void;
   canEdit: boolean;
+  flushPendingChanges: () => void;
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
@@ -41,6 +43,11 @@ export default function NoteHeader({
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     saveNote({ title: e.target.value });
+  };
+
+  const handleTitleBlur = () => {
+    // Flush any pending title changes when user leaves the field
+    flushPendingChanges();
   };
 
   return (
@@ -87,6 +94,7 @@ export default function NoteHeader({
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
               onChange={handleTitleChange}
+              onBlur={handleTitleBlur}
               autoFocus={!note.title}
             />
           )}

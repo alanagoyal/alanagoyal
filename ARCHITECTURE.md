@@ -30,7 +30,7 @@ The app uses server-side rendering (SSR) with Incremental Static Regeneration (I
 ### Backend & Database
 - **Supabase** - PostgreSQL database with Row Level Security (RLS)
 - **@supabase/ssr** - SSR-optimized Supabase client
-- 7 custom RPC functions for data operations
+- 4 custom RPC functions for data operations (reduced from 7 after batching optimizations)
 
 ### UI & Styling
 - **Tailwind CSS** - Utility-first styling
@@ -762,42 +762,112 @@ router.refresh();
 - Only refetch on navigation, not on every save
 - Use Supabase real-time subscriptions for live updates
 
-#### 2. Three Separate RPC Calls for Note Updates
+#### 2. Note Save Race Condition (RESOLVED)
 
 **Location**: `components/note.tsx`
 
-**Issue**: Each field update triggers separate RPC call:
+**Previous Issue**: Single debounce timer shared across all fields (title, content, emoji):
 
 ```typescript
-if ('title' in updates) {
-  await supabase.rpc("update_note_title", { uuid_arg, session_arg, title_arg });
-}
-if ('emoji' in updates) {
-  await supabase.rpc("update_note_emoji", { uuid_arg, session_arg, emoji_arg });
-}
-if ('content' in updates) {
-  await supabase.rpc("update_note_content", { uuid_arg, session_arg, content_arg });
-}
+// OLD CODE - RACE CONDITION
+const saveNote = useCallback(async (updates) => {
+  if (saveTimeoutRef.current) {
+    clearTimeout(saveTimeoutRef.current); // ❌ Cancels previous field saves
+  }
+
+  setNote({ ...note, ...updates }); // Optimistic update
+
+  saveTimeoutRef.current = setTimeout(async () => {
+    if ('title' in updates) {
+      await supabase.rpc("update_note_title", { ... });
+    }
+    if ('content' in updates) {
+      await supabase.rpc("update_note_content", { ... });
+    }
+    // ... more RPC calls
+  }, 500);
+}, [note, ...]);
 ```
 
 **Impact**:
-- 1-3 separate database queries per save
-- Sequential execution (not parallel)
-- Higher latency for multi-field updates
-- More complex RPC function management
+- When user quickly types title → tabs → types content, the title save timer gets cancelled
+- Only the last field edited gets saved to database
+- Title changes lost if user switches to content within 500ms
+- Critical data loss bug during rapid editing
 
-**Why It's Done**: Granular control over what gets updated.
+**Why It Happened**: Single timeout for all fields meant editing field B cancelled field A's pending save.
 
-**Better Approach**: Single `update_note` RPC that accepts optional fields:
+**Solution Implemented** (2025-11-10):
+
 ```typescript
-await supabase.rpc("update_note", {
-  uuid_arg,
-  session_arg,
-  title_arg: updates.title,
-  emoji_arg: updates.emoji,
-  content_arg: updates.content
-});
+// NEW CODE - FIELD-LEVEL DEBOUNCING
+const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+const contentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+const emojiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+const pendingChangesRef = useRef<{ title?: string; content?: string; emoji?: string }>({});
+
+const saveNote = useCallback(async (updates) => {
+  setNote({ ...note, ...updates }); // Optimistic update
+
+  // Separate debounce timer per field
+  if ('title' in updates) {
+    if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
+    pendingChangesRef.current.title = updates.title;
+    titleTimeoutRef.current = setTimeout(() => {
+      const titleToSave = pendingChangesRef.current.title;
+      delete pendingChangesRef.current.title;
+      persistChanges({ title: titleToSave });
+    }, 500);
+  }
+
+  if ('content' in updates) {
+    if (contentTimeoutRef.current) clearTimeout(contentTimeoutRef.current);
+    pendingChangesRef.current.content = updates.content;
+    contentTimeoutRef.current = setTimeout(() => {
+      const contentToSave = pendingChangesRef.current.content;
+      delete pendingChangesRef.current.content;
+      persistChanges({ content: contentToSave });
+    }, 500);
+  }
+
+  // Emoji is immediate (no debounce needed)
+  if ('emoji' in updates) {
+    persistChanges({ emoji: updates.emoji });
+  }
+}, [note]);
+
+// Flush pending changes on blur
+const flushPendingChanges = useCallback(() => {
+  if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
+  if (contentTimeoutRef.current) clearTimeout(contentTimeoutRef.current);
+
+  const changes = { ...pendingChangesRef.current };
+  pendingChangesRef.current = {};
+
+  if (Object.keys(changes).length > 0) {
+    persistChanges(changes);
+  }
+}, []);
+
+// Flush on unmount
+useEffect(() => {
+  return () => flushPendingChanges();
+}, [flushPendingChanges]);
 ```
+
+**Key Improvements**:
+1. **Separate timers per field** - Title changes don't cancel content saves
+2. **Save-on-blur** - Pending changes flushed when user leaves field (fixes rapid tab switching)
+3. **Save-on-unmount** - Pending changes flushed on navigation
+4. **Batched RPC call** - Uses `update_note_batched` to send all fields in one query
+5. **COALESCE in DB** - Only updates provided fields, leaves others unchanged
+6. **Reduced revalidation** - Only revalidates for public notes
+
+**Benefits**:
+- ✅ No data loss during rapid editing
+- ✅ Reduced database calls (1 instead of 1-3)
+- ✅ Better performance (less refetching)
+- ✅ Improved UX (immediate blur saves)
 
 #### 3. Complex Sidebar with 10+ State Variables
 

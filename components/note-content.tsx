@@ -10,16 +10,24 @@ export default function NoteContent({
   note,
   saveNote,
   canEdit,
+  flushPendingChanges,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  flushPendingChanges: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
   }, [saveNote]);
+
+  const handleBlur = useCallback(() => {
+    // Flush any pending content changes when user leaves the field
+    flushPendingChanges();
+    setIsEditing(false);
+  }, [flushPendingChanges]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
@@ -89,7 +97,7 @@ export default function NoteContent({
           placeholder="Start writing..."
           onChange={handleChange}
           onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
+          onBlur={handleBlur}
         />
       ) : (
         <div
