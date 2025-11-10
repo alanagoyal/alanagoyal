@@ -7,17 +7,19 @@ import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 import { cookies } from "next/headers";
 
-// Cached function to fetch a note by slug - eliminates duplicate fetches
+// Cached function to fetch a note by slug - eliminates duplicate fetches within same request
 const getNote = cache(async (slug: string) => {
+  // Always call cookies() to force dynamic rendering for all note pages
+  // This ensures private notes never serve stale cached data
+  // Public notes will still benefit from revalidation on-demand
+  cookies();
+
   const supabase = createServerClient();
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
   }).single() as { data: NoteType | null };
   return note;
 });
-
-// Enable ISR with 24-hour revalidation for public notes
-export const revalidate = 86400;
 
 // Use dynamic rendering for non-public notes
 export const dynamicParams = true;
@@ -61,29 +63,9 @@ export default async function NotePage({
     return redirect("/notes/error");
   }
 
-  // Force dynamic rendering for private notes by accessing cookies
-  // This ensures fresh data on navigation for user's private notes
-  if (!note.public) {
-    cookies(); // This opt-out marker forces dynamic rendering
-  }
-
   return (
     <div className="w-full min-h-dvh p-3">
       <Note note={note} />
     </div>
   );
-}
-
-// Pre-generate static pages only for public notes at build time
-// Private notes will be dynamically rendered (forced by cookies() call above)
-export async function generateStaticParams() {
-  const supabase = createBrowserClient();
-  const { data: posts } = await supabase
-    .from("notes")
-    .select("slug")
-    .eq("public", true);
-
-  return posts!.map(({ slug }) => ({
-    slug,
-  }));
 }

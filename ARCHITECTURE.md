@@ -884,18 +884,15 @@ After implementing the race condition fix, a secondary bug was discovered on mob
 **Solution**:
 ```typescript
 // app/notes/[slug]/page.tsx
-export const revalidate = 86400; // Keep ISR for public notes
+const getNote = cache(async (slug: string) => {
+  cookies(); // Force ALL pages to be dynamic - prevents stale cache
 
-export default async function NotePage({ params }) {
-  const note = await getNote(slug);
-
-  // Force dynamic rendering for private notes by accessing cookies
-  if (!note.public) {
-    cookies(); // Opt-out marker - disables caching for this request
-  }
-
-  return <Note note={note} />;
-}
+  const supabase = createServerClient();
+  const { data: note } = await supabase.rpc("select_note", {
+    note_slug_arg: slug,
+  }).single();
+  return note;
+});
 
 // components/note.tsx
 useEffect(() => {
@@ -904,9 +901,11 @@ useEffect(() => {
 ```
 
 This ensures:
-- **Public notes**: Benefit from 24-hour ISR cache (fast, SEO-friendly)
-- **Private notes**: Always dynamically rendered (fresh data on every navigation)
+- **All note pages**: Always fetch fresh data (no stale cache issues)
 - **Component**: Syncs local state when navigating between notes
+- **Trade-off**: Disables ISR caching, but ensures data correctness
+
+Note: We call `cookies()` at the fetch level (in `getNote`) rather than conditionally, because we can't determine if a note is public/private until AFTER fetching it, which would be too late to opt-out of caching.
 
 #### 3. Complex Sidebar with 10+ State Variables
 
