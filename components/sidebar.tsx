@@ -98,14 +98,19 @@ export default function Sidebar({
   }, [selectedNoteSlug, highlightedIndex]);
 
   const {
+    notes: sessionNotes,
     sessionId,
     setSessionId,
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
-  // Notes are already combined (public + session) from server-side
-  // The server caches for 5 minutes, making navigation fast
-  const notes = publicNotes;
+  // Merge cached public notes with session notes
+  // Public notes are cached server-side (24hr), session notes are client-side state
+  // This keeps all notes in memory, making j/k navigation instant
+  const notes = useMemo(
+    () => [...publicNotes, ...sessionNotes],
+    [publicNotes, sessionNotes]
+  );
 
   useEffect(() => {
     if (pathname) {
@@ -185,7 +190,7 @@ export default function Sidebar({
         const currentIndex = flattened.findIndex(
           (note) => note.slug === selectedNoteSlug
         );
-        
+
         let nextIndex;
         if (direction === "up") {
           nextIndex =
@@ -196,16 +201,19 @@ export default function Sidebar({
         }
 
         const nextNote = flattened[nextIndex];
-        
+
         if (nextNote) {
-          router.push(`/notes/${nextNote.slug}`);
-          // Wait for router navigation and React re-render
+          // Use replace instead of push to avoid adding to browser history
+          // This makes navigation feel more immediate
+          router.replace(`/notes/${nextNote.slug}`, { scroll: false });
+
+          // Scroll to the selected note in sidebar
           setTimeout(() => {
             const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
             if (selectedElement) {
               selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-          }, 100);
+          }, 0);
         }
       }
     },

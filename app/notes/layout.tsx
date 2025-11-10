@@ -21,32 +21,17 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-// Cache for 5 minutes on the server - this is a balance between:
-// - Fresh data when you create/delete notes (router.refresh() bypasses this)
-// - Fast navigation (layout cached for 5 min, so j/k navigation doesn't refetch)
-export const revalidate = 300;
+// Cache public notes for 24 hours - they rarely change
+export const revalidate = 86400;
 
-// Fetch ALL notes (public + session) server-side
-const getAllNotes = cache(async (sessionId: string | undefined) => {
+// Only fetch public notes server-side for caching
+const getPublicNotes = cache(async () => {
   const supabase = createClient();
-
-  // Fetch public notes
   const { data: publicNotes } = await supabase
     .from("notes")
     .select("*")
     .eq("public", true);
-
-  // Fetch private notes for this session if session ID exists
-  let sessionNotes: any[] = [];
-  if (sessionId) {
-    const { data } = await supabase.rpc("select_session_notes", {
-      session_id_arg: sessionId,
-    });
-    sessionNotes = data || [];
-  }
-
-  // Combine all notes
-  return [...(publicNotes || []), ...sessionNotes];
+  return publicNotes || [];
 });
 
 export default async function RootLayout({
@@ -54,11 +39,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get("session_id")?.value;
-
-  // Fetch all notes server-side (no layout shift!)
-  const notes = await getAllNotes(sessionId);
+  // Only fetch public notes - session notes will be fetched client-side
+  // to avoid making the layout dynamic
+  const notes = await getPublicNotes();
 
   return (
     <html lang="en" suppressHydrationWarning>
