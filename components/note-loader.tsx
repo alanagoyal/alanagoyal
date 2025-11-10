@@ -9,21 +9,22 @@ import Note from "./note";
 const noteCache = new Map<string, any>();
 
 export default function NoteLoader({ slug }: { slug: string }) {
-  const [note, setNote] = useState<any>(noteCache.get(slug) || null);
-  const [loading, setLoading] = useState(!noteCache.has(slug));
+  const [note, setNote] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // If note is already cached, use it immediately
-    if (noteCache.has(slug)) {
-      setNote(noteCache.get(slug));
-      setLoading(false);
-      return;
-    }
-
-    // Otherwise fetch it
     const fetchNote = async () => {
+      // Check cache first
+      const cached = noteCache.get(slug);
+      if (cached) {
+        setNote(cached);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch from database
       try {
         const { data } = await supabase.rpc("select_note", {
           note_slug_arg: slug,
@@ -45,6 +46,20 @@ export default function NoteLoader({ slug }: { slug: string }) {
 
     fetchNote();
   }, [slug, supabase, router]);
+
+  // Listen for note updates from the Note component
+  useEffect(() => {
+    const handleNoteUpdate = (event: CustomEvent) => {
+      if (event.detail.slug === slug) {
+        // Update cache with new note data
+        noteCache.set(slug, event.detail.note);
+        setNote(event.detail.note);
+      }
+    };
+
+    window.addEventListener('note-updated' as any, handleNoteUpdate);
+    return () => window.removeEventListener('note-updated' as any, handleNoteUpdate);
+  }, [slug]);
 
   if (loading) {
     return (
@@ -68,4 +83,11 @@ export function clearNoteCache(slug?: string) {
   } else {
     noteCache.clear();
   }
+}
+
+// Export function to update cache
+export function updateNoteCache(slug: string, note: any) {
+  noteCache.set(slug, note);
+  // Dispatch event to update any active NoteLoader
+  window.dispatchEvent(new CustomEvent('note-updated', { detail: { slug, note } }));
 }
