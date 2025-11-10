@@ -14,60 +14,73 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdatesRef = useRef<Partial<typeof note>>({});
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
+      // Clear existing timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      const updatedNote = { ...note, ...updates };
-      setNote(updatedNote);
+      // Update local state immediately (optimistic update)
+      setNote(prevNote => ({ ...prevNote, ...updates }));
 
+      // Accumulate all pending updates
+      pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
+
+      // Set new timeout to batch save all pending updates
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          if (note.id && sessionId) {
-            if ('title' in updates) {
+          if (note.id && sessionId && Object.keys(pendingUpdatesRef.current).length > 0) {
+            const updatesToSave = pendingUpdatesRef.current;
+
+            // Clear pending updates before making calls
+            pendingUpdatesRef.current = {};
+
+            // Make all necessary RPC calls for the accumulated updates
+            if ('title' in updatesToSave) {
               await supabase.rpc("update_note_title", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
-                title_arg: updatedNote.title,
+                title_arg: updatesToSave.title,
               });
             }
-            if ('emoji' in updates) {
+            if ('emoji' in updatesToSave) {
               await supabase.rpc("update_note_emoji", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
-                emoji_arg: updatedNote.emoji,
+                emoji_arg: updatesToSave.emoji,
               });
             }
-            if ('content' in updates) {
+            if ('content' in updatesToSave) {
               await supabase.rpc("update_note_content", {
                 uuid_arg: note.id,
                 session_arg: sessionId,
-                content_arg: updatedNote.content,
+                content_arg: updatesToSave.content,
               });
             }
-          }
 
-          await fetch("/notes/revalidate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
-            },
-            body: JSON.stringify({ slug: note.slug }),
-          });
-          refreshSessionNotes();
-          router.refresh();
+            // Revalidate and refresh after all updates
+            await fetch("/notes/revalidate", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
+              },
+              body: JSON.stringify({ slug: note.slug }),
+            });
+            refreshSessionNotes();
+            router.refresh();
+          }
         } catch (error) {
           console.error("Save failed:", error);
         }
       }, 500);
     },
-    [note, supabase, router, refreshSessionNotes, sessionId]
+    [note.id, note.slug, supabase, router, refreshSessionNotes, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
