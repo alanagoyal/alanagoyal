@@ -291,7 +291,7 @@ export default function Sidebar({
         }
 
         // Clear deleted note from cache
-        import("./note-loader").then(({ clearNoteCache }) => {
+        import("./note-wrapper").then(({ clearNoteCache }) => {
           clearNoteCache(noteToDelete.slug);
         });
 

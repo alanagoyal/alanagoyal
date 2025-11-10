@@ -82,7 +82,7 @@ export default function Note({ note: initialNote }: { note: any }) {
             await Promise.all(promises);
 
             // Update the note cache so navigation stays fast
-            import("./note-loader").then(({ updateNoteCache }) => {
+            import("./note-wrapper").then(({ updateNoteCache }) => {
               updateNoteCache(currentNote.slug, currentNote);
             });
 

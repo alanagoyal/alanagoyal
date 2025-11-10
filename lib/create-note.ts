@@ -34,7 +34,7 @@ export async function createNote(
     addNewPinnedNote(slug);
 
     // Pre-populate cache with the new note for instant navigation
-    import("@/components/note-loader").then(({ updateNoteCache }) => {
+    import("@/components/note-wrapper").then(({ updateNoteCache }) => {
       updateNoteCache(slug, note);
     });
 
