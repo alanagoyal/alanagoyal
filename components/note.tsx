@@ -47,7 +47,7 @@ export default function Note({ note: initialNote }: { note: any }) {
             content_arg: changes.content ?? null,
           });
 
-          // Only revalidate for public notes to reduce overhead
+          // Revalidate ISR cache for public notes
           if (note.public) {
             await fetch("/notes/revalidate", {
               method: "POST",
@@ -57,11 +57,14 @@ export default function Note({ note: initialNote }: { note: any }) {
               },
               body: JSON.stringify({ slug: note.slug }),
             });
-            router.refresh();
           }
 
           // Refresh session notes in sidebar
           refreshSessionNotes();
+
+          // CRITICAL: Invalidate Next.js router cache for ALL notes
+          // This ensures mobile navigation shows fresh data after editing
+          router.refresh();
         }
       } catch (error) {
         console.error("Save failed:", error);

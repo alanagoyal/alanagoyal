@@ -881,11 +881,13 @@ After implementing the race condition fix, a secondary bug was discovered on mob
 - Navigating from sidebar loaded stale cached data
 - Note component's local state wasn't syncing with fresh prop data
 
-**Solution**:
+**Solution** (Two-part fix):
+
+**Part 1: Disable Static Caching**
 ```typescript
 // app/notes/[slug]/page.tsx
 const getNote = cache(async (slug: string) => {
-  cookies(); // Force ALL pages to be dynamic - prevents stale cache
+  cookies(); // Force ALL pages to be dynamic - prevents static cache
 
   const supabase = createServerClient();
   const { data: note } = await supabase.rpc("select_note", {
@@ -893,19 +895,29 @@ const getNote = cache(async (slug: string) => {
   }).single();
   return note;
 });
+```
 
+**Part 2: Invalidate Router Cache on Save**
+```typescript
 // components/note.tsx
+const persistChanges = useCallback(async (changes) => {
+  await supabase.rpc("update_note_batched", { ... });
+
+  refreshSessionNotes(); // Update sidebar
+  router.refresh(); // ⚡ CRITICAL: Bust Next.js router cache for ALL notes
+}, [...]);
+
 useEffect(() => {
   setNote(initialNote); // Sync local state when prop changes
 }, [initialNote]);
 ```
 
-This ensures:
-- **All note pages**: Always fetch fresh data (no stale cache issues)
-- **Component**: Syncs local state when navigating between notes
-- **Trade-off**: Disables ISR caching, but ensures data correctness
+**Why Both Are Needed**:
+- `cookies()` in fetch → Disables static generation (build-time caching)
+- `router.refresh()` on save → Invalidates router cache (client-side caching)
+- `useEffect` sync → Updates component state when navigating
 
-Note: We call `cookies()` at the fetch level (in `getNote`) rather than conditionally, because we can't determine if a note is public/private until AFTER fetching it, which would be too late to opt-out of caching.
+Without `router.refresh()`, the Next.js App Router's client-side cache would serve stale data even with dynamic rendering enabled.
 
 #### 3. Complex Sidebar with 10+ State Variables
 
