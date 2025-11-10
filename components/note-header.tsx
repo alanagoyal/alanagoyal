@@ -7,7 +7,7 @@ import Picker from "@emoji-mart/react";
 import { useMobileDetect } from "./mobile-detector";
 import { ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
 import { getDisplayDateByCategory } from "@/lib/note-utils";
@@ -25,6 +25,7 @@ export default function NoteHeader({
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
+  const router = useRouter();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [formattedDate, setFormattedDate] = useState("");
 
@@ -50,15 +51,24 @@ export default function NoteHeader({
     flushPendingChanges();
   };
 
+  const handleBackClick = () => {
+    // Flush all pending changes before navigating back
+    // This ensures data is saved when user clicks back button on mobile
+    flushPendingChanges();
+
+    // Small delay to ensure flush completes before navigation
+    setTimeout(() => {
+      router.push("/notes");
+    }, 50);
+  };
+
   return (
     <>
       {isMobile && pathname !== "/notes" && (
-        <Link href="/notes">
-          <button className="pt-2 flex items-center">
-            <Icons.back />
-            <span className="text-[#e2a727] text-base ml-1">Notes</span>
-          </button>
-        </Link>
+        <button onClick={handleBackClick} className="pt-2 flex items-center">
+          <Icons.back />
+          <span className="text-[#e2a727] text-base ml-1">Notes</span>
+        </button>
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
