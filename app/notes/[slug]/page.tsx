@@ -6,9 +6,6 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
-// Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 86400; // 24 hours
-
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
   const supabase = createServerClient();
@@ -17,19 +14,6 @@ const getNote = cache(async (slug: string) => {
   }).single() as { data: NoteType | null };
   return note;
 });
-
-// Dynamically determine if this is a user note
-export async function generateStaticParams() {
-  const supabase = createBrowserClient();
-  const { data: posts } = await supabase
-    .from("notes")
-    .select("slug")
-    .eq("public", true);
-
-  return posts!.map(({ slug }) => ({
-    slug,
-  }));
-}
 
 // Use dynamic rendering for non-public notes
 export const dynamicParams = true;
@@ -79,3 +63,19 @@ export default async function NotePage({
     </div>
   );
 }
+
+// Enable ISR only for public notes - private notes are always dynamic
+export async function generateStaticParams() {
+  const supabase = createBrowserClient();
+  const { data: posts } = await supabase
+    .from("notes")
+    .select("slug")
+    .eq("public", true);
+
+  return posts!.map(({ slug }) => ({
+    slug,
+  }));
+}
+
+// Disable static generation for private notes to ensure fresh data
+export const revalidate = 0;

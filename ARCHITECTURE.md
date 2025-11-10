@@ -869,6 +869,34 @@ useEffect(() => {
 - ✅ Better performance (less refetching)
 - ✅ Improved UX (immediate blur saves)
 
+**Mobile Navigation Bug Fix** (2025-11-10):
+
+After implementing the race condition fix, a secondary bug was discovered on mobile:
+- Create a new note, edit title and content, navigate back to sidebar
+- Sidebar shows correct data, but clicking the note shows empty fields until refresh
+
+**Root Cause**:
+- Page was using `revalidate = 86400` (24 hours) for ISR caching
+- Private notes were being cached server-side
+- Navigating from sidebar loaded stale cached data
+- Note component's local state wasn't syncing with fresh prop data
+
+**Solution**:
+```typescript
+// app/notes/[slug]/page.tsx
+export const revalidate = 0; // Disable caching (down from 24 hours)
+
+// components/note.tsx
+useEffect(() => {
+  setNote(initialNote); // Sync local state when prop changes
+}, [initialNote]);
+```
+
+This ensures:
+- Private notes always fetch fresh data (no stale cache)
+- Public notes still benefit from ISR via `generateStaticParams()`
+- Component state syncs when navigating between notes
+
 #### 3. Complex Sidebar with 10+ State Variables
 
 **Location**: `components/sidebar.tsx`
