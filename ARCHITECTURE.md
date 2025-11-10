@@ -877,14 +877,25 @@ After implementing the race condition fix, a secondary bug was discovered on mob
 
 **Root Cause**:
 - Page was using `revalidate = 86400` (24 hours) for ISR caching
-- Private notes were being cached server-side
+- Private notes were being cached server-side alongside public notes
 - Navigating from sidebar loaded stale cached data
 - Note component's local state wasn't syncing with fresh prop data
 
 **Solution**:
 ```typescript
 // app/notes/[slug]/page.tsx
-export const revalidate = 0; // Disable caching (down from 24 hours)
+export const revalidate = 86400; // Keep ISR for public notes
+
+export default async function NotePage({ params }) {
+  const note = await getNote(slug);
+
+  // Force dynamic rendering for private notes by accessing cookies
+  if (!note.public) {
+    cookies(); // Opt-out marker - disables caching for this request
+  }
+
+  return <Note note={note} />;
+}
 
 // components/note.tsx
 useEffect(() => {
@@ -893,9 +904,9 @@ useEffect(() => {
 ```
 
 This ensures:
-- Private notes always fetch fresh data (no stale cache)
-- Public notes still benefit from ISR via `generateStaticParams()`
-- Component state syncs when navigating between notes
+- **Public notes**: Benefit from 24-hour ISR cache (fast, SEO-friendly)
+- **Private notes**: Always dynamically rendered (fresh data on every navigation)
+- **Component**: Syncs local state when navigating between notes
 
 #### 3. Complex Sidebar with 10+ State Variables
 
