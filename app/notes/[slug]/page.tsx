@@ -5,21 +5,31 @@ import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
-import { cookies } from "next/headers";
 
-// Cached function to fetch a note by slug - eliminates duplicate fetches within same request
+// Enable ISR with a reasonable revalidation period for public notes
+export const revalidate = 86400; // 24 hours
+
+// Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
-  // Always call cookies() to force dynamic rendering for all note pages
-  // This ensures private notes never serve stale cached data
-  // Public notes will still benefit from revalidation on-demand
-  cookies();
-
   const supabase = createServerClient();
   const { data: note } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
   }).single() as { data: NoteType | null };
   return note;
 });
+
+// Dynamically determine if this is a user note
+export async function generateStaticParams() {
+  const supabase = createBrowserClient();
+  const { data: posts } = await supabase
+    .from("notes")
+    .select("slug")
+    .eq("public", true);
+
+  return posts!.map(({ slug }) => ({
+    slug,
+  }));
+}
 
 // Use dynamic rendering for non-public notes
 export const dynamicParams = true;

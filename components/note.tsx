@@ -14,14 +14,6 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
 
-  // Update local state when navigating to a different note (ID changed)
-  // Don't sync on content changes to avoid overwriting user edits
-  useEffect(() => {
-    if (initialNote.id !== note.id) {
-      setNote(initialNote);
-    }
-  }, [initialNote.id, note.id, initialNote]);
-
   // Separate refs for each field to prevent race conditions
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
