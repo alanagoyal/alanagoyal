@@ -98,19 +98,13 @@ export default function Sidebar({
   }, [selectedNoteSlug, highlightedIndex]);
 
   const {
-    notes: sessionNotes,
     sessionId,
     setSessionId,
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
-  // Merge cached public notes with session notes
-  // Public notes are cached server-side (24hr), session notes are client-side state
-  // This keeps all notes in memory, making j/k navigation instant
-  const notes = useMemo(
-    () => [...publicNotes, ...sessionNotes],
-    [publicNotes, sessionNotes]
-  );
+  // Notes are already combined (public + session) from server-side
+  const notes = publicNotes;
 
   useEffect(() => {
     if (pathname) {

@@ -13,6 +13,10 @@ export default function SessionId({ setSessionId }: SessionIdProps) {
     if (!localStorage.getItem("session_id")) {
       localStorage.setItem("session_id", currentSessionId);
     }
+
+    // Set cookie so server can read session_id and load private notes immediately
+    document.cookie = `session_id=${currentSessionId}; path=/; max-age=31536000; SameSite=Lax`;
+
     setSessionId(currentSessionId);
   }, [setSessionId]);
 
