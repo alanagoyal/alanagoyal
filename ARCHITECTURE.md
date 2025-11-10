@@ -897,27 +897,35 @@ const getNote = cache(async (slug: string) => {
 });
 ```
 
-**Part 2: Invalidate Router Cache on Save**
+**Part 2: Smart State Sync on Navigation**
 ```typescript
 // components/note.tsx
+useEffect(() => {
+  // Only sync when navigating to a DIFFERENT note (ID changed)
+  // Don't sync on content updates (would overwrite user edits)
+  if (initialNote.id !== note.id) {
+    setNote(initialNote);
+  }
+}, [initialNote.id, note.id, initialNote]);
+
 const persistChanges = useCallback(async (changes) => {
   await supabase.rpc("update_note_batched", { ... });
 
   refreshSessionNotes(); // Update sidebar
-  router.refresh(); // ⚡ CRITICAL: Bust Next.js router cache for ALL notes
-}, [...]);
 
-useEffect(() => {
-  setNote(initialNote); // Sync local state when prop changes
-}, [initialNote]);
+  // Only refresh for public notes (ISR cache invalidation)
+  // Private notes don't need refresh (already dynamic via cookies())
+  if (note.public) {
+    router.refresh();
+  }
+}, [...]);
 ```
 
-**Why Both Are Needed**:
-- `cookies()` in fetch → Disables static generation (build-time caching)
-- `router.refresh()` on save → Invalidates router cache (client-side caching)
-- `useEffect` sync → Updates component state when navigating
-
-Without `router.refresh()`, the Next.js App Router's client-side cache would serve stale data even with dynamic rendering enabled.
+**Why This Works**:
+- `cookies()` forces dynamic rendering → no stale server cache
+- `useEffect` checks note.id → only syncs on navigation, not on edits
+- No `router.refresh()` for private notes → prevents overwriting user input
+- Optimistic updates → local state changes immediately while save happens in background
 
 #### 3. Complex Sidebar with 10+ State Variables
 

@@ -14,10 +14,13 @@ export default function Note({ note: initialNote }: { note: any }) {
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
 
-  // Update local state when initialNote changes (e.g., navigation)
+  // Update local state when navigating to a different note (ID changed)
+  // Don't sync on content changes to avoid overwriting user edits
   useEffect(() => {
-    setNote(initialNote);
-  }, [initialNote]);
+    if (initialNote.id !== note.id) {
+      setNote(initialNote);
+    }
+  }, [initialNote.id, note.id, initialNote]);
 
   // Separate refs for each field to prevent race conditions
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,14 +60,11 @@ export default function Note({ note: initialNote }: { note: any }) {
               },
               body: JSON.stringify({ slug: note.slug }),
             });
+            router.refresh();
           }
 
           // Refresh session notes in sidebar
           refreshSessionNotes();
-
-          // CRITICAL: Invalidate Next.js router cache for ALL notes
-          // This ensures mobile navigation shows fresh data after editing
-          router.refresh();
         }
       } catch (error) {
         console.error("Save failed:", error);
