@@ -46,16 +46,42 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Clear pending updates before making calls
             pendingUpdatesRef.current = {};
 
-            // Use the batched update_note function for efficiency - saves all fields in one call
-            await supabase.rpc("update_note", {
-              uuid_arg: currentNote.id,
-              session_arg: sessionId,
-              title_arg: updatesToSave.title ?? currentNote.title,
-              emoji_arg: updatesToSave.emoji ?? currentNote.emoji,
-              content_arg: updatesToSave.content ?? currentNote.content,
-            });
+            // Make RPC calls only for fields that were actually updated
+            // This prevents overwriting unchanged fields with stale data
+            const promises = [];
 
-            // Revalidate and refresh after update
+            if ('title' in updatesToSave) {
+              promises.push(
+                supabase.rpc("update_note_title", {
+                  uuid_arg: currentNote.id,
+                  session_arg: sessionId,
+                  title_arg: updatesToSave.title,
+                })
+              );
+            }
+            if ('emoji' in updatesToSave) {
+              promises.push(
+                supabase.rpc("update_note_emoji", {
+                  uuid_arg: currentNote.id,
+                  session_arg: sessionId,
+                  emoji_arg: updatesToSave.emoji,
+                })
+              );
+            }
+            if ('content' in updatesToSave) {
+              promises.push(
+                supabase.rpc("update_note_content", {
+                  uuid_arg: currentNote.id,
+                  session_arg: sessionId,
+                  content_arg: updatesToSave.content,
+                })
+              );
+            }
+
+            // Execute all updates in parallel for efficiency
+            await Promise.all(promises);
+
+            // Revalidate and refresh after all updates
             await fetch("/notes/revalidate", {
               method: "POST",
               headers: {
