@@ -11,16 +11,18 @@ import {
 
 export interface SessionNotes {
   sessionId: string;
-  refreshSessionNotes: () => void;
+  refreshSessionNotes: () => Promise<void>;
   optimisticNotes: any[];
   addOptimisticNote: (note: any) => void;
+  removeOptimisticNote: (slug: string) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
   sessionId: "",
-  refreshSessionNotes: () => {},
+  refreshSessionNotes: async () => {},
   optimisticNotes: [],
   addOptimisticNote: () => {},
+  removeOptimisticNote: () => {},
 });
 
 export function SessionNotesProvider({
@@ -44,18 +46,29 @@ export function SessionNotesProvider({
     }
   }, [initialSessionId]);
 
-  // Add a note optimistically before the server refresh completes
+  // Add a note optimistically before the server insert completes
   const addOptimisticNote = useCallback((note: any) => {
     setOptimisticNotes(prev => [...prev, note]);
   }, []);
 
+  // Remove a specific optimistic note (for error handling)
+  const removeOptimisticNote = useCallback((slug: string) => {
+    setOptimisticNotes(prev => prev.filter(note => note.slug !== slug));
+  }, []);
+
   // Refresh session notes by triggering a router refresh
-  // This will re-fetch data from the server and update the UI
-  const refreshSessionNotes = useCallback(() => {
-    startTransition(() => {
-      router.refresh();
-      // Clear optimistic notes after refresh completes
-      setOptimisticNotes([]);
+  // Returns a promise that resolves when the transition completes
+  const refreshSessionNotes = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      startTransition(() => {
+        router.refresh();
+        // Clear optimistic notes after refresh starts
+        // The transition will handle timing
+        setTimeout(() => {
+          setOptimisticNotes([]);
+          resolve();
+        }, 100); // Small delay to ensure refresh has started
+      });
     });
   }, [router]);
 
@@ -66,6 +79,7 @@ export function SessionNotesProvider({
         refreshSessionNotes,
         optimisticNotes,
         addOptimisticNote,
+        removeOptimisticNote,
       }}
     >
       {children}

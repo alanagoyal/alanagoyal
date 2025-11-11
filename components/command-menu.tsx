@@ -105,7 +105,7 @@ export const CommandMenu = forwardRef<
       );
     }
 
-    const { refreshSessionNotes, addOptimisticNote } = useContext(SessionNotesContext);
+    const { refreshSessionNotes, addOptimisticNote, removeOptimisticNote } = useContext(SessionNotesContext);
 
     const handleCreateNote = () => {
       createNote(
@@ -115,7 +115,8 @@ export const CommandMenu = forwardRef<
         refreshSessionNotes,
         setSelectedNoteSlug,
         isMobile,
-        addOptimisticNote
+        addOptimisticNote,
+        removeOptimisticNote
       );
       setOpen(false);
     };

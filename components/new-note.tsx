@@ -21,7 +21,7 @@ export default function NewNote({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
 
-  const { refreshSessionNotes, addOptimisticNote } = useContext(SessionNotesContext);
+  const { refreshSessionNotes, addOptimisticNote, removeOptimisticNote } = useContext(SessionNotesContext);
 
   const handleCreateNote = useCallback(() => {
     clearSearch();
@@ -32,7 +32,8 @@ export default function NewNote({
       refreshSessionNotes,
       setSelectedNoteSlug,
       isMobile,
-      addOptimisticNote
+      addOptimisticNote,
+      removeOptimisticNote
     );
   }, [
     sessionId,
@@ -43,6 +44,7 @@ export default function NewNote({
     setSelectedNoteSlug,
     isMobile,
     addOptimisticNote,
+    removeOptimisticNote,
   ]);
 
   useEffect(() => {

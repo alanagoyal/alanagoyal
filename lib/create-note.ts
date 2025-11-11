@@ -6,10 +6,11 @@ export async function createNote(
   sessionId: string | null,
   router: any,
   addNewPinnedNote: (slug: string) => void,
-  refreshSessionNotes: () => void,
+  refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
   isMobile: boolean,
-  addOptimisticNote?: (note: any) => void
+  addOptimisticNote?: (note: any) => void,
+  removeOptimisticNote?: (slug: string) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -28,7 +29,7 @@ export async function createNote(
   };
 
   try {
-    // Add the note optimistically to the UI immediately
+    // Step 1: Add note optimistically to UI immediately
     if (addOptimisticNote) {
       addOptimisticNote(note);
     }
@@ -36,23 +37,31 @@ export async function createNote(
     addNewPinnedNote(slug);
     setSelectedNoteSlug(slug);
 
-    // Navigate to the new note page immediately
-    router.push(`/notes/${slug}`);
-
-    // Insert the note in the database
+    // Step 2: Insert into database BEFORE navigating
     const { error } = await supabase.from("notes").insert(note);
 
-    if (error) throw error;
+    if (error) {
+      // If insert fails, remove optimistic note and show error
+      if (removeOptimisticNote) {
+        removeOptimisticNote(slug);
+      }
+      throw error;
+    }
 
-    // Refresh to sync with the server (this will clear optimistic notes)
-    refreshSessionNotes();
+    // Step 3: Now that DB insert succeeded, navigate to the note
+    router.push(`/notes/${slug}`);
+
+    // Step 4: Refresh to sync with server and clear optimistic state
+    await refreshSessionNotes();
 
     toast({
       description: "Private note created",
     });
   } catch (error) {
     console.error("Error creating note:", error);
-    // If there's an error, still try to refresh to clear optimistic state
-    refreshSessionNotes();
+    toast({
+      description: "Failed to create note",
+      variant: "destructive",
+    });
   }
 }
