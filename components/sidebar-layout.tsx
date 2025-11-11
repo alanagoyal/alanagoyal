@@ -10,10 +10,9 @@ import Sidebar from "./sidebar";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  notes: any;
 }
 
-export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
+export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,7 +38,6 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
       <div className="dark:text-white h-dvh flex">
         {showSidebar && (
           <Sidebar
-            notes={notes}
             onNoteSelect={isMobile ? handleNoteSelect : () => {}}
             isMobile={isMobile}
           />

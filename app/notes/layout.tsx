@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { createClient } from "@/utils/supabase/server";
 import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -19,19 +18,11 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-export const revalidate = 86400; // 24 hours
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -56,7 +47,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarLayout notes={notes}>
+          <SidebarLayout>
             <Analytics />
             {children}
           </SidebarLayout>

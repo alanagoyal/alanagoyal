@@ -40,17 +40,17 @@ const labels = {
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 
 export default function Sidebar({
-  notes: publicNotes,
   onNoteSelect,
   isMobile,
 }: {
-  notes: any[];
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
 
+  const [publicNotes, setPublicNotes] = useState<any[]>([]);
+  const [isLoadingPublicNotes, setIsLoadingPublicNotes] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
@@ -67,6 +67,25 @@ export default function Sidebar({
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch public notes client-side
+  useEffect(() => {
+    const fetchPublicNotes = async () => {
+      try {
+        const response = await fetch("/api/notes/public");
+        if (response.ok) {
+          const data = await response.json();
+          setPublicNotes(data);
+        }
+      } catch (error) {
+        console.error("Error fetching public notes:", error);
+      } finally {
+        setIsLoadingPublicNotes(false);
+      }
+    };
+
+    fetchPublicNotes();
+  }, []);
 
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
