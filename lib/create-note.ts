@@ -8,7 +8,8 @@ export async function createNote(
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => void,
   setSelectedNoteSlug: (slug: string | null) => void,
-  isMobile: boolean
+  isMobile: boolean,
+  addOptimisticNote?: (note: any) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -27,21 +28,23 @@ export async function createNote(
   };
 
   try {
-    const { error } = await supabase.from("notes").insert(note);
-
-    if (error) throw error;
+    // Add the note optimistically to the UI immediately
+    if (addOptimisticNote) {
+      addOptimisticNote(note);
+    }
 
     addNewPinnedNote(slug);
     setSelectedNoteSlug(slug);
 
-    // Navigate to the new note
-    if (!isMobile) {
-      router.push(`/notes/${slug}`);
-    } else {
-      await router.push(`/notes/${slug}`);
-    }
+    // Navigate to the new note page immediately
+    router.push(`/notes/${slug}`);
 
-    // Refresh to get the new note from the server
+    // Insert the note in the database
+    const { error } = await supabase.from("notes").insert(note);
+
+    if (error) throw error;
+
+    // Refresh to sync with the server (this will clear optimistic notes)
     refreshSessionNotes();
 
     toast({
@@ -49,5 +52,7 @@ export async function createNote(
     });
   } catch (error) {
     console.error("Error creating note:", error);
+    // If there's an error, still try to refresh to clear optimistic state
+    refreshSessionNotes();
   }
 }

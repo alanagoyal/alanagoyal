@@ -5,16 +5,22 @@ import {
   createContext,
   useCallback,
   useMemo,
+  useState,
+  useTransition,
 } from "react";
 
 export interface SessionNotes {
   sessionId: string;
   refreshSessionNotes: () => void;
+  optimisticNotes: any[];
+  addOptimisticNote: (note: any) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
   sessionId: "",
   refreshSessionNotes: () => {},
+  optimisticNotes: [],
+  addOptimisticNote: () => {},
 });
 
 export function SessionNotesProvider({
@@ -25,6 +31,8 @@ export function SessionNotesProvider({
   initialSessionId: string;
 }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [optimisticNotes, setOptimisticNotes] = useState<any[]>([]);
 
   // Sync session ID to localStorage for client-side consistency
   useMemo(() => {
@@ -36,10 +44,19 @@ export function SessionNotesProvider({
     }
   }, [initialSessionId]);
 
+  // Add a note optimistically before the server refresh completes
+  const addOptimisticNote = useCallback((note: any) => {
+    setOptimisticNotes(prev => [...prev, note]);
+  }, []);
+
   // Refresh session notes by triggering a router refresh
   // This will re-fetch data from the server and update the UI
   const refreshSessionNotes = useCallback(() => {
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+      // Clear optimistic notes after refresh completes
+      setOptimisticNotes([]);
+    });
   }, [router]);
 
   return (
@@ -47,6 +64,8 @@ export function SessionNotesProvider({
       value={{
         sessionId: initialSessionId,
         refreshSessionNotes,
+        optimisticNotes,
+        addOptimisticNote,
       }}
     >
       {children}

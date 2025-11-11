@@ -99,12 +99,18 @@ export default function Sidebar({
   const {
     sessionId,
     refreshSessionNotes,
+    optimisticNotes,
   } = useContext(SessionNotesContext);
 
-  // Notes are now passed directly as props (both public and session notes)
+  // Merge server notes with optimistic notes
   const notes = useMemo(
-    () => publicNotes,
-    [publicNotes]
+    () => {
+      // Filter out any optimistic notes that might already be in publicNotes
+      const optimisticSlugs = new Set(optimisticNotes.map(n => n.slug));
+      const serverNotes = publicNotes.filter(n => !optimisticSlugs.has(n.slug));
+      return [...serverNotes, ...optimisticNotes];
+    },
+    [publicNotes, optimisticNotes]
   );
 
   useEffect(() => {
