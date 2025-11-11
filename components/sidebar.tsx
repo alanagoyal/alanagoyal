@@ -100,17 +100,29 @@ export default function Sidebar({
     sessionId,
     refreshSessionNotes,
     optimisticNotes,
+    updateOptimisticNote,
   } = useContext(SessionNotesContext);
 
-  // Merge server notes with optimistic notes
+  // Track client-side edits to note titles/emojis for instant sidebar updates
+  const [clientEdits, setClientEdits] = useState<Record<string, Partial<any>>>({});
+
+  // Merge server notes with optimistic new notes and client edits
   const notes = useMemo(
     () => {
-      // Filter out any optimistic notes that might already be in publicNotes
+      // Start with server notes and apply any client-side edits
+      const notesWithEdits = publicNotes.map(note => {
+        const edits = clientEdits[note.slug];
+        return edits ? { ...note, ...edits } : note;
+      });
+
+      // Add optimistic new notes (that don't exist on server yet)
       const optimisticSlugs = new Set(optimisticNotes.map(n => n.slug));
-      const serverNotes = publicNotes.filter(n => !optimisticSlugs.has(n.slug));
-      return [...serverNotes, ...optimisticNotes];
+      const serverSlugs = new Set(publicNotes.map(n => n.slug));
+      const newOptimisticNotes = optimisticNotes.filter(n => !serverSlugs.has(n.slug));
+
+      return [...notesWithEdits, ...newOptimisticNotes];
     },
-    [publicNotes, optimisticNotes]
+    [publicNotes, optimisticNotes, clientEdits]
   );
 
   useEffect(() => {
@@ -293,8 +305,10 @@ export default function Sidebar({
         }
 
         clearSearch();
-        refreshSessionNotes();
-        router.refresh();
+
+        // Refresh session notes to update the sidebar
+        // This will trigger router.refresh() internally
+        await refreshSessionNotes();
 
         toast({
           description: "Note deleted",

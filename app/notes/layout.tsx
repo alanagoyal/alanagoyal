@@ -22,9 +22,11 @@ export const metadata: Metadata = {
 };
 
 // Use dynamic rendering to fetch session-specific notes on each request
+// This is required because we need to read the session_id cookie
 export const dynamic = 'force-dynamic';
 
-// Helper function to fetch public notes with React cache for deduplication
+// Helper function to fetch public notes with Next.js cache
+// This will be cached and reused across requests
 const getPublicNotes = cache(async () => {
   const supabase = createClient();
   const { data: publicNotes } = await supabase
@@ -34,8 +36,9 @@ const getPublicNotes = cache(async () => {
   return publicNotes || [];
 });
 
-// Helper function to fetch session notes
-async function getSessionNotes(sessionId: string) {
+// Helper function to fetch session notes with Next.js cache
+// Cache is keyed by sessionId, so each user gets their own cached notes
+const getSessionNotes = cache(async (sessionId: string) => {
   if (!sessionId) return [];
 
   const supabase = createClient();
@@ -43,7 +46,7 @@ async function getSessionNotes(sessionId: string) {
     session_id_arg: sessionId
   });
   return data || [];
-}
+});
 
 export default async function RootLayout({
   children,
@@ -53,7 +56,8 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const sessionId = cookieStore.get('session_id')?.value || "";
 
-  // Fetch both public and session notes in parallel for better performance
+  // Fetch both public and session notes in parallel
+  // React cache will deduplicate these calls within the same request
   const [publicNotes, sessionNotes] = await Promise.all([
     getPublicNotes(),
     getSessionNotes(sessionId)

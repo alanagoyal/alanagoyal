@@ -81,7 +81,8 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Execute all updates in parallel for efficiency
             await Promise.all(promises);
 
-            // Revalidate and refresh after all updates
+            // Revalidate the specific note page (for ISR cache)
+            // No need to refresh router or session notes - the note already exists in sidebar
             await fetch("/notes/revalidate", {
               method: "POST",
               headers: {
@@ -90,8 +91,6 @@ export default function Note({ note: initialNote }: { note: any }) {
               },
               body: JSON.stringify({ slug: currentNote.slug }),
             });
-            refreshSessionNotes();
-            router.refresh();
           }
         } catch (error) {
           console.error("Save failed:", error);

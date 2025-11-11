@@ -15,6 +15,7 @@ export interface SessionNotes {
   optimisticNotes: any[];
   addOptimisticNote: (note: any) => void;
   removeOptimisticNote: (slug: string) => void;
+  updateOptimisticNote: (slug: string, updates: Partial<any>) => void;
 }
 
 export const SessionNotesContext = createContext<SessionNotes>({
@@ -23,6 +24,7 @@ export const SessionNotesContext = createContext<SessionNotes>({
   optimisticNotes: [],
   addOptimisticNote: () => {},
   removeOptimisticNote: () => {},
+  updateOptimisticNote: () => {},
 });
 
 export function SessionNotesProvider({
@@ -56,6 +58,13 @@ export function SessionNotesProvider({
     setOptimisticNotes(prev => prev.filter(note => note.slug !== slug));
   }, []);
 
+  // Update an existing optimistic note (for live editing)
+  const updateOptimisticNote = useCallback((slug: string, updates: Partial<any>) => {
+    setOptimisticNotes(prev =>
+      prev.map(note => note.slug === slug ? { ...note, ...updates } : note)
+    );
+  }, []);
+
   // Refresh session notes by triggering a router refresh
   // Returns a promise that resolves when the transition completes
   const refreshSessionNotes = useCallback((): Promise<void> => {
@@ -80,6 +89,7 @@ export function SessionNotesProvider({
         optimisticNotes,
         addOptimisticNote,
         removeOptimisticNote,
+        updateOptimisticNote,
       }}
     >
       {children}
