@@ -1,6 +1,7 @@
-# Optimize Note Save Performance
-
-This skill explains the current note save mechanism and provides optimization strategies for the debounced auto-save pattern used in this application.
+---
+name: optimize-note-save-performance
+description: This skill explains the current note save mechanism and provides optimization strategies for the debounced auto-save pattern used in this application.
+---
 
 ## When to Use This Skill
 

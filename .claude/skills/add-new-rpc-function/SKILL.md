@@ -1,6 +1,7 @@
-# Add New RPC Function
-
-This skill guides you through adding a new Supabase RPC function to the notes application, following the repository's security patterns and conventions.
+---
+name: add-new-rpc-function
+description: This skill guides you through adding a new Supabase RPC function to the notes application, following the repository's security patterns and conventions.
+---
 
 ## When to Use This Skill
 

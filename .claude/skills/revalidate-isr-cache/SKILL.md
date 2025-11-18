@@ -1,6 +1,7 @@
-# Revalidate ISR Cache
-
-This skill guides you through revalidating the Incremental Static Regeneration (ISR) cache in this Next.js notes application when public notes are updated.
+---
+name: revalidate-isr-cache
+description: This skill guides you through revalidating the Incremental Static Regeneration (ISR) cache in this Next.js notes application when public notes are updated.
+---
 
 ## When to Use This Skill
 

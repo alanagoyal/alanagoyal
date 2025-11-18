@@ -1,6 +1,7 @@
-# Add Keyboard Shortcut
-
-This skill guides you through adding a new keyboard shortcut to the notes application, following the existing patterns in the sidebar component.
+---
+name: add-keyboard-shortcut
+description: This skill guides you through adding a new keyboard shortcut to the notes application, following the existing patterns in the sidebar component.
+---
 
 ## When to Use This Skill
 

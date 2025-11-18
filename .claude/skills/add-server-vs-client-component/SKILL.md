@@ -1,6 +1,7 @@
-# Add Server vs Client Component
-
-This skill helps you decide whether to create a Server Component or Client Component, and how to implement each correctly in this Next.js 14 App Router application.
+---
+name: add-server-vs-client-component
+description: This skill helps you decide whether to create a Server Component or Client Component, and how to implement each correctly in this Next.js 14 App Router application.
+---
 
 ## When to Use This Skill
 

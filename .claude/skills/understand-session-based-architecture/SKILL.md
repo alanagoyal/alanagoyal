@@ -1,6 +1,7 @@
-# Understand Session-Based Architecture
-
-This skill explains the unique session-based authentication and note ownership model in this notes application.
+---
+name: understand-session-based-architecture
+description: This skill explains the unique session-based authentication and note ownership model in this notes application.
+---
 
 ## When to Use This Skill
 
