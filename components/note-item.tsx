@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSwipeable } from "react-swipeable";
 import { useMobileDetect } from "@/components/mobile-detector";
@@ -39,7 +39,7 @@ interface NoteItemProps {
   showDivider?: boolean;
 }
 
-export function NoteItem({
+export const NoteItem = React.memo(function NoteItem({
   item,
   selectedNoteSlug,
   sessionId,
@@ -205,4 +205,4 @@ export function NoteItem({
       </ContextMenu>
     );
   }
-}
+});
