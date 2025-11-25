@@ -50,7 +50,9 @@ export default function NoteContent({
         if (result.success && result.url && textareaRef.current) {
           insertImageMarkdown(textareaRef.current, result.url);
           // Save the updated content since the synthetic event doesn't trigger React's onChange
-          saveNote({ content: textareaRef.current.value });
+          // Use setTimeout to defer the state update and avoid "Cannot update a component while rendering" warning
+          const newContent = textareaRef.current.value;
+          setTimeout(() => saveNote({ content: newContent }), 0);
         } else if (result.error) {
           console.error("Image upload failed:", result.error);
           toast({ description: `Failed to upload image: ${result.error}`, variant: "destructive" });
