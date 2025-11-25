@@ -71,9 +71,7 @@ this project uses [supabase](https://supabase.com) as a backend. to set up the d
 1. create a [new project](https://database.new) and enter your project details
 2. wait for the database to launch
 3. navigate to the sql editor in the dashboard
-4. run all migrations from the [migrations folder](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) in order:
-   - `20240710180237_initial.sql` - creates the notes table
-   - `20250125000000_create_note_images_bucket.sql` - creates the storage bucket for image uploads
+4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations/20240710180237_initial.sql) into the sql editor and press run
 
 alternatively, use the supabase cli to run migrations locally:
 ```bash
