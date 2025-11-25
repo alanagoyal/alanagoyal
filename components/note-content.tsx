@@ -124,6 +124,13 @@ export default function NoteContent({
     );
   }, []);
 
+  const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img {...props} alt={props.alt || "image"} className="max-w-full h-auto max-h-96 object-contain" />
+    );
+  }, []);
+
   return (
     <div className="px-2">
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
@@ -153,6 +160,7 @@ export default function NoteContent({
             components={{
               li: renderListItem,
               a: renderLink,
+              img: renderImage,
             }}
           >
             {note.content || "Start writing..."}
