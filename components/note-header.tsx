@@ -35,10 +35,18 @@ export default function NoteHeader({
   }, [note.category, note.id]);
 
   useEffect(() => {
-    if (isMobile && !note.title && canEdit && titleInputRef.current) {
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 100);
+    // Only run when isMobile is determined (not null) and conditions are met
+    if (isMobile === true && !note.title && canEdit) {
+      // Longer delay to ensure page navigation and rendering is complete
+      const timer = setTimeout(() => {
+        if (titleInputRef.current) {
+          titleInputRef.current.focus();
+          // For iOS, sometimes we need to trigger click as well
+          titleInputRef.current.click();
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
     }
   }, [isMobile, note.title, canEdit]);
 
