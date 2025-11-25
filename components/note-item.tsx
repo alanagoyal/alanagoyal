@@ -15,6 +15,7 @@ import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {
   return content
+    .replace(/!\[([^\]]*)\]\([^\)]+\)/g, "")
     .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
     .replace(/\[[ x]\]/g, "")
     .replace(/[#*_~`>+\-]/g, "")
