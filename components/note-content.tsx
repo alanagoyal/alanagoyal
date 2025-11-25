@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/types";
+import {
+  getImageFromClipboard,
+  uploadNoteImage,
+  insertImageMarkdown,
+} from "@/lib/image-upload";
 
 export default function NoteContent({
   note,
@@ -16,10 +21,45 @@ export default function NoteContent({
   canEdit: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
+  const [isUploading, setIsUploading] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
   }, [saveNote]);
+
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      if (!canEdit) return;
+
+      const clipboardEvent = e.nativeEvent as ClipboardEvent;
+      const imageFile = getImageFromClipboard(clipboardEvent);
+
+      if (!imageFile) return;
+
+      // Prevent default paste behavior for images
+      e.preventDefault();
+
+      setIsUploading(true);
+
+      try {
+        const result = await uploadNoteImage(imageFile, note.id);
+
+        if (result.success && result.url && textareaRef.current) {
+          insertImageMarkdown(textareaRef.current, result.url);
+        } else if (result.error) {
+          console.error("Image upload failed:", result.error);
+          alert(`Failed to upload image: ${result.error}`);
+        }
+      } catch (error) {
+        console.error("Unexpected error during image upload:", error);
+        alert("An unexpected error occurred while uploading the image.");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [canEdit, note.id]
+  );
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
@@ -82,15 +122,25 @@ export default function NoteContent({
   return (
     <div className="px-2">
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
-        <Textarea
-          id="note-content"
-          value={note.content || ""}
-          className="min-h-dvh focus:outline-none leading-normal"
-          placeholder="Start writing..."
-          onChange={handleChange}
-          onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
-        />
+        <>
+          <Textarea
+            ref={textareaRef}
+            id="note-content"
+            value={note.content || ""}
+            className="min-h-dvh focus:outline-none leading-normal"
+            placeholder="Start writing..."
+            onChange={handleChange}
+            onPaste={handlePaste}
+            onFocus={() => setIsEditing(true)}
+            onBlur={() => setIsEditing(false)}
+            disabled={isUploading}
+          />
+          {isUploading && (
+            <div className="fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg">
+              Uploading image...
+            </div>
+          )}
+        </>
       ) : (
         <div
           className="h-full text-base md:text-sm"
