@@ -76,6 +76,20 @@ export default function Sidebar({
 
   const scrollViewportRef = useRef<HTMLDivElement>(null);
 
+  // Refs for keyboard handler to avoid event listener churn
+  const highlightedNoteRef = useRef<Note | null>(null);
+  const localSearchResultsRef = useRef<any[] | null>(null);
+  const themeRef = useRef<string | undefined>(undefined);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    highlightedNoteRef.current = highlightedNote;
+  }, [highlightedNote]);
+
+  useEffect(() => {
+    localSearchResultsRef.current = localSearchResults;
+  }, [localSearchResults]);
+
   useEffect(() => {
     if (selectedNoteSlug && scrollViewportRef.current) {
       const selectedElement = scrollViewportRef.current.querySelector(`[data-note-slug="${selectedNoteSlug}"]`);
@@ -324,84 +338,92 @@ export default function Sidebar({
 
   const { setTheme, theme } = useTheme();
 
+  // Keep theme ref in sync with state (must be after useTheme call)
   useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
+
+  // Stable keyboard event handler using refs to avoid re-attaching on every state change
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    const target = event.target as HTMLElement;
+    const isTyping =
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+      target.isContentEditable;
+
+    // Use refs for values that change frequently
+    const currentHighlightedNote = highlightedNoteRef.current;
+    const currentSearchResults = localSearchResultsRef.current;
+    const currentTheme = themeRef.current;
+
     const shortcuts = {
       j: () => navigateNotes("down"),
       ArrowDown: () => navigateNotes("down"),
       k: () => navigateNotes("up"),
       ArrowUp: () => navigateNotes("up"),
-      p: () => highlightedNote && handlePinToggle(highlightedNote.slug),
-      d: () => highlightedNote && handleNoteDelete(highlightedNote),
+      p: () => currentHighlightedNote && handlePinToggle(currentHighlightedNote.slug),
+      d: () => currentHighlightedNote && handleNoteDelete(currentHighlightedNote),
       "/": () => searchInputRef.current?.focus(),
       Escape: () => (document.activeElement as HTMLElement)?.blur(),
-      t: () => setTheme(theme === "dark" ? "light" : "dark"),
+      t: () => setTheme(currentTheme === "dark" ? "light" : "dark"),
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      const isTyping =
-        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
-        target.isContentEditable;
-
-      if (isTyping) {
-        if (event.key === "Escape") {
-          shortcuts["Escape"]();
-        } else if (
-          event.key === "Enter" &&
-          localSearchResults &&
-          localSearchResults.length > 0
-        ) {
-          event.preventDefault();
-          goToHighlightedNote();
-        }
-        return;
-      }
-
-      const key = event.key as keyof typeof shortcuts;
-      if (shortcuts[key] && !(event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        (document.activeElement as HTMLElement)?.blur();
-
-        if (
-          localSearchResults &&
-          ["j", "ArrowDown", "k", "ArrowUp"].includes(key)
-        ) {
-          const direction = ["j", "ArrowDown"].includes(key) ? 1 : -1;
-          setHighlightedIndex(
-            (prevIndex) =>
-              (prevIndex + direction + localSearchResults.length) %
-              localSearchResults.length
-          );
-        } else {
-          shortcuts[key]();
-        }
-      } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        commandMenuRef.current?.setOpen(true);
+    if (isTyping) {
+      if (event.key === "Escape") {
+        shortcuts["Escape"]();
       } else if (
         event.key === "Enter" &&
-        localSearchResults &&
-        localSearchResults.length > 0
+        currentSearchResults &&
+        currentSearchResults.length > 0
       ) {
         event.preventDefault();
         goToHighlightedNote();
       }
-    };
+      return;
+    }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const key = event.key as keyof typeof shortcuts;
+    if (shortcuts[key] && !(event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      (document.activeElement as HTMLElement)?.blur();
+
+      if (
+        currentSearchResults &&
+        ["j", "ArrowDown", "k", "ArrowUp"].includes(key)
+      ) {
+        const direction = ["j", "ArrowDown"].includes(key) ? 1 : -1;
+        setHighlightedIndex(
+          (prevIndex) =>
+            (prevIndex + direction + currentSearchResults.length) %
+            currentSearchResults.length
+        );
+      } else {
+        shortcuts[key]();
+      }
+    } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      commandMenuRef.current?.setOpen(true);
+    } else if (
+      event.key === "Enter" &&
+      currentSearchResults &&
+      currentSearchResults.length > 0
+    ) {
+      event.preventDefault();
+      goToHighlightedNote();
+    }
   }, [
     navigateNotes,
-    highlightedNote,
     handlePinToggle,
-    localSearchResults,
-    setHighlightedIndex,
     handleNoteDelete,
-    commandMenuRef,
+    setHighlightedIndex,
     goToHighlightedNote,
     setTheme,
-    theme,
   ]);
+
+  // Attach keyboard event listener with stable handler
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleNoteSelect = useCallback(
     (note: any) => {
