@@ -21,6 +21,57 @@ export default function NoteContent({
     saveNote({ content: e.target.value });
   }, [saveNote]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const content = textarea.value;
+
+      // Find the start of the current line
+      const lineStart = content.lastIndexOf('\n', start - 1) + 1;
+      // Find the end of the current line (or selection)
+      const lineEnd = content.indexOf('\n', end);
+      const actualLineEnd = lineEnd === -1 ? content.length : lineEnd;
+
+      if (e.shiftKey) {
+        // Shift+Tab: Outdent (remove up to 2 spaces or 1 tab)
+        const line = content.substring(lineStart, actualLineEnd);
+        let outdented = line;
+
+        if (line.startsWith('  ')) {
+          outdented = line.substring(2);
+        } else if (line.startsWith('\t')) {
+          outdented = line.substring(1);
+        } else if (line.startsWith(' ')) {
+          outdented = line.substring(1);
+        }
+
+        const newContent = content.substring(0, lineStart) + outdented + content.substring(actualLineEnd);
+        const charsDiff = line.length - outdented.length;
+
+        saveNote({ content: newContent });
+
+        // Restore cursor position
+        setTimeout(() => {
+          textarea.setSelectionRange(start - charsDiff, end - charsDiff);
+        }, 0);
+      } else {
+        // Tab: Indent (add 2 spaces)
+        const indent = '  ';
+        const newContent = content.substring(0, lineStart) + indent + content.substring(lineStart);
+
+        saveNote({ content: newContent });
+
+        // Restore cursor position
+        setTimeout(() => {
+          textarea.setSelectionRange(start + indent.length, end + indent.length);
+        }, 0);
+      }
+    }
+  }, [saveNote]);
+
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
       new RegExp(`\\[[ x]\\] ${taskText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'),
@@ -88,6 +139,7 @@ export default function NoteContent({
           className="min-h-dvh focus:outline-none leading-normal"
           placeholder="Start writing..."
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           onFocus={() => setIsEditing(true)}
           onBlur={() => setIsEditing(false)}
         />
