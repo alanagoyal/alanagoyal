@@ -3,6 +3,15 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
     pinned: [],
   };
 
+  // Calculate date boundaries once before the loop
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   notes.forEach((note) => {
     if (pinnedNotes.has(note.slug)) {
       groupedNotes.pinned.push(note);
@@ -12,13 +21,6 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
     let category = note.category;
     if (!note.public) {
       const createdDate = new Date(note.created_at);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       if (createdDate.toDateString() === today.toDateString()) {
         category = "today";
