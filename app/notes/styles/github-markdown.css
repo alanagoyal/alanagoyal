@@ -59,14 +59,30 @@
   margin-bottom: 16px;
 }
 
+/* Nested bullet styling with different markers */
+.markdown-body ul ul {
+  list-style-type: circle;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
+
 .markdown-body ul.contains-task-list {
   list-style-type: none;
   padding-left: 0;
 }
 
+/* Nested task lists should have indentation */
+.markdown-body ul.contains-task-list ul.contains-task-list {
+  padding-left: 2em;
+}
+
 .markdown-body .task-list-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 0.5em;
 }
 
