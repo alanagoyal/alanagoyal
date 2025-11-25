@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import { Input } from "./ui/input";
 import Picker from "@emoji-mart/react";
@@ -25,6 +25,7 @@ export default function NoteHeader({
   const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [formattedDate, setFormattedDate] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const displayDate = getDisplayDateByCategory(note.category, note.id);
@@ -32,6 +33,14 @@ export default function NoteHeader({
       format(displayDate, "MMMM d, yyyy 'at' h:mm a")
     );
   }, [note.category, note.id]);
+
+  useEffect(() => {
+    if (isMobile && !note.title && canEdit && titleInputRef.current) {
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isMobile, note.title, canEdit]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;
@@ -82,6 +91,7 @@ export default function NoteHeader({
             </span>
           ) : (
             <Input
+              ref={titleInputRef}
               id="title"
               value={note.title}
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
