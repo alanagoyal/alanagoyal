@@ -17,7 +17,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
   const noteRef = useRef(initialNote);
 
-  const { refreshSessionNotes } = useContext(SessionNotesContext);
+  const { updateSessionNote } = useContext(SessionNotesContext);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -81,7 +81,10 @@ export default function Note({ note: initialNote }: { note: any }) {
             // Execute all updates in parallel for efficiency
             await Promise.all(promises);
 
-            // Revalidate and refresh after all updates
+            // Update the session notes context with the changes
+            updateSessionNote(currentNote.id, updatesToSave);
+
+            // Revalidate ISR cache for public notes
             await fetch("/notes/revalidate", {
               method: "POST",
               headers: {
@@ -90,15 +93,13 @@ export default function Note({ note: initialNote }: { note: any }) {
               },
               body: JSON.stringify({ slug: currentNote.slug }),
             });
-            refreshSessionNotes();
-            router.refresh();
           }
         } catch (error) {
           console.error("Save failed:", error);
         }
       }, 500);
     },
-    [supabase, router, refreshSessionNotes, sessionId]
+    [supabase, updateSessionNote, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
