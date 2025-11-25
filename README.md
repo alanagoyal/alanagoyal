@@ -71,7 +71,7 @@ this project uses [supabase](https://supabase.com) as a backend. to set up the d
 1. create a [new project](https://database.new) and enter your project details
 2. wait for the database to launch
 3. navigate to the sql editor in the dashboard
-4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations) into the sql editor and press run
+4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations/20240710180237_initial.sql) into the sql editor and press run
 
 alternatively, use the supabase cli to run migrations locally:
 ```bash
@@ -204,9 +204,16 @@ function hello() {
 
 ### images
 
+paste images directly into notes by copying any image (screenshot, file, etc.) and pressing `ctrl+v` (or `cmd+v` on mac). images are automatically uploaded to supabase storage and inserted as markdown.
+
+you can also manually add images:
 ```markdown
 ![alt text](image-url.jpg)
 ```
+
+**supported formats**: jpeg, png, gif, webp (including animated gifs)
+**file size limit**: 5mb
+**images are automatically resized** to fit the note width while maintaining aspect ratio
 
 ### horizontal rules
 

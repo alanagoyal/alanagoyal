@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/types";
+import {
+  getImageFromClipboard,
+  uploadNoteImage,
+  insertImageMarkdown,
+} from "@/lib/image-upload";
+import { toast } from "@/components/ui/use-toast";
 
 export default function NoteContent({
   note,
@@ -16,10 +22,49 @@ export default function NoteContent({
   canEdit: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
   }, [saveNote]);
+
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      if (!canEdit) return;
+
+      const clipboardEvent = e.nativeEvent as ClipboardEvent;
+      const imageFile = getImageFromClipboard(clipboardEvent);
+
+      if (!imageFile) return;
+
+      // Prevent default paste behavior for images
+      e.preventDefault();
+
+      const { dismiss } = toast({ description: "Uploading image..." });
+
+      try {
+        const result = await uploadNoteImage(imageFile, note.id);
+
+        dismiss();
+
+        if (result.success && result.url && textareaRef.current) {
+          insertImageMarkdown(textareaRef.current, result.url);
+          // Save the updated content since the synthetic event doesn't trigger React's onChange
+          // Use setTimeout to defer the state update and avoid "Cannot update a component while rendering" warning
+          const newContent = textareaRef.current.value;
+          setTimeout(() => saveNote({ content: newContent }), 0);
+        } else if (result.error) {
+          console.error("Image upload failed:", result.error);
+          toast({ description: `Failed to upload image: ${result.error}`, variant: "destructive" });
+        }
+      } catch (error) {
+        console.error("Unexpected error during image upload:", error);
+        dismiss();
+        toast({ description: "An unexpected error occurred while uploading the image.", variant: "destructive" });
+      }
+    },
+    [canEdit, note.id, saveNote]
+  );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
@@ -130,15 +175,24 @@ export default function NoteContent({
     );
   }, []);
 
+  const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img {...props} alt={props.alt || "image"} className="max-w-full h-auto max-h-96 object-contain" />
+    );
+  }, []);
+
   return (
     <div className="px-2">
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
+          ref={textareaRef}
           id="note-content"
           value={note.content || ""}
           className="min-h-dvh focus:outline-none leading-normal"
           placeholder="Start writing..."
           onChange={handleChange}
+          onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsEditing(true)}
           onBlur={() => setIsEditing(false)}
@@ -158,6 +212,7 @@ export default function NoteContent({
             components={{
               li: renderListItem,
               a: renderLink,
+              img: renderImage,
             }}
           >
             {note.content || "Start writing..."}

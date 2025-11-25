@@ -182,3 +182,11 @@
 .dark .markdown-body table a {
   color: #e2a727;
 }
+
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 16px 0;
+  border-radius: 4px;
+}
