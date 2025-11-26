@@ -178,7 +178,7 @@ export default function NoteContent({
   const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img {...props} alt={props.alt || "image"} className="max-w-full h-auto max-h-96 object-contain" />
+      <img {...props} alt={props.alt || "image"} className="w-full max-w-2xl h-auto object-contain" />
     );
   }, []);
 
