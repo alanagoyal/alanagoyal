@@ -35,10 +35,15 @@ export default function NoteHeader({
   }, [note.category, note.id]);
 
   useEffect(() => {
-    if (canEdit && !note.title && titleInputRef.current) {
-      titleInputRef.current.focus();
+    // Focus the title input when it mounts with an empty title (new note).
+    // This runs on mount and handles cases where autoFocus doesn't work.
+    if (!note.title && !note.public) {
+      const rafId = requestAnimationFrame(() => {
+        titleInputRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(rafId);
     }
-  }, [canEdit, note.title]);
+  }, [note.title, note.public]);
 
   const handleEmojiSelect = (emojiObject: any) => {
     const newEmoji = emojiObject.native;
@@ -83,7 +88,7 @@ export default function NoteHeader({
           ) : (
             <span className="mr-2">{note.emoji}</span>
           )}
-          {note.public || !canEdit ? (
+          {note.public ? (
             <span className="text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]">
               {note.title}
             </span>
@@ -94,7 +99,9 @@ export default function NoteHeader({
               value={note.title}
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder="Your title here..."
-              onChange={handleTitleChange}
+              onChange={canEdit ? handleTitleChange : undefined}
+              readOnly={!canEdit}
+              autoFocus={!note.title}
             />
           )}
         </div>

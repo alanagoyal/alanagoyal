@@ -28,25 +28,25 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
     router.push(`/notes/${note.slug}`);
   };
 
-  if (isMobile === null) {
-    return null;
-  }
-
-  const showSidebar = !isMobile || pathname === "/notes";
+  // Use mobile layout as default during initial detection to avoid layout shift on mobile
+  // This also allows children to mount earlier, enabling autoFocus to work
+  const effectiveIsMobile = isMobile ?? true;
+  const showSidebar = !effectiveIsMobile || pathname === "/notes";
+  const isDetecting = isMobile === null;
 
   return (
     <SessionNotesProvider>
-      <div className="dark:text-white h-dvh flex">
+      <div className={`dark:text-white h-dvh flex ${isDetecting ? 'opacity-0' : ''}`}>
         {showSidebar && (
           <Sidebar
             notes={notes}
-            onNoteSelect={isMobile ? handleNoteSelect : () => {}}
-            isMobile={isMobile}
+            onNoteSelect={effectiveIsMobile ? handleNoteSelect : () => {}}
+            isMobile={effectiveIsMobile}
           />
         )}
-        {(!isMobile || !showSidebar) && (
+        {(!effectiveIsMobile || !showSidebar) && (
           <div className="flex-grow h-dvh">
-            <ScrollArea className="h-full" isMobile={isMobile}>
+            <ScrollArea className="h-full" isMobile={effectiveIsMobile}>
               {children}
             </ScrollArea>
           </div>
