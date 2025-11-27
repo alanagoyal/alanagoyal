@@ -29,19 +29,19 @@ export function Nav({
         >
           <div className="w-3 h-3 rounded-full bg-red-500 group-hover:opacity-80" />
           <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-xs leading-none">
-            <span className="text-background">×</span>
+            <span className="text-background -translate-y-px">×</span>
           </span>
         </button>
         <button className="group relative cursor-default">
           <div className="w-3 h-3 rounded-full bg-yellow-500 group-hover:opacity-80" />
           <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-xs leading-none">
-            <span className="text-background">−</span>
+            <span className="text-background -translate-y-px">−</span>
           </span>
         </button>
         <button className="group relative cursor-default">
           <div className="w-3 h-3 rounded-full bg-green-500 group-hover:opacity-80" />
           <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-xs leading-none">
-            <span className="text-background">+</span>
+            <span className="text-background -translate-y-px">+</span>
           </span>
         </button>
       </div>
