@@ -168,8 +168,15 @@ export default function NoteContent({
   }, [canEdit, handleMarkdownCheckboxChange]);
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    const href = props.href || "";
+    const isMailto = href.startsWith("mailto:");
     return (
-      <a {...props} target="_blank" rel="noopener noreferrer">
+      <a
+        {...props}
+        target={isMailto ? undefined : "_blank"}
+        rel={isMailto ? undefined : "noopener noreferrer"}
+        onClick={(e) => e.stopPropagation()}
+      >
         {props.children}
       </a>
     );
