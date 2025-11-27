@@ -39,14 +39,16 @@ export async function createNote(
         router.refresh();
       });
     } else {
-      // Navigate first, then update sidebar state after navigation
-      // to prevent the note from flashing in the sidebar
-      setSelectedNoteSlug(slug);
+      // On mobile, update localStorage directly without triggering React state.
+      // This prevents the note from flashing in the sidebar before navigation.
+      // The sidebar will read the updated pinnedNotes from localStorage when it remounts.
+      const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+      const pinnedNotes = storedPinnedNotes ? JSON.parse(storedPinnedNotes) : [];
+      if (!pinnedNotes.includes(slug)) {
+        pinnedNotes.push(slug);
+        localStorage.setItem("pinnedNotes", JSON.stringify(pinnedNotes));
+      }
       router.push(`/notes/${slug}`);
-      setTimeout(() => {
-        addNewPinnedNote(slug);
-        refreshSessionNotes();
-      }, 100);
     }
 
     toast({
