@@ -31,20 +31,20 @@ export async function createNote(
 
     if (error) throw error;
 
-    addNewPinnedNote(slug);
-
     if (!isMobile) {
+      addNewPinnedNote(slug);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);
         router.refresh();
       });
     } else {
+      // Navigate first, then update sidebar state after navigation
+      // to prevent the note from flashing in the sidebar
       setSelectedNoteSlug(slug);
       router.push(`/notes/${slug}`);
-      // Delay refresh to ensure navigation completes first,
-      // preventing the note from flashing in the sidebar
       setTimeout(() => {
+        addNewPinnedNote(slug);
         refreshSessionNotes();
       }, 100);
     }
