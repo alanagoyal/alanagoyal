@@ -169,13 +169,12 @@ export default function NoteContent({
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
     const href = props.href || "";
-    const isMailto = href.startsWith("mailto:");
+    const isExternalLink = href.startsWith("http://") || href.startsWith("https://");
     return (
       <a
         {...props}
-        target={isMailto ? undefined : "_blank"}
-        rel={isMailto ? undefined : "noopener noreferrer"}
-        onClick={(e) => e.stopPropagation()}
+        target={isExternalLink ? "_blank" : undefined}
+        rel={isExternalLink ? "noopener noreferrer" : undefined}
       >
         {props.children}
       </a>
@@ -208,6 +207,8 @@ export default function NoteContent({
         <div
           className="h-full text-base md:text-sm"
           onClick={(e) => {
+            const target = e.target as HTMLElement;
+            if (target.closest("a")) return;
             if (canEdit && !note.public) {
               setIsEditing(true);
             }
