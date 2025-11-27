@@ -31,19 +31,24 @@ export async function createNote(
 
     if (error) throw error;
 
-    addNewPinnedNote(slug);
-
     if (!isMobile) {
+      addNewPinnedNote(slug);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);
         router.refresh();
       });
     } else {
-      router.push(`/notes/${slug}`).then(() => {
-        refreshSessionNotes();
-        setSelectedNoteSlug(slug);
-      });
+      // On mobile, update localStorage directly without triggering React state.
+      // This prevents the note from flashing in the sidebar before navigation.
+      // The sidebar will read the updated pinnedNotes from localStorage when it remounts.
+      const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+      const pinnedNotes = storedPinnedNotes ? JSON.parse(storedPinnedNotes) : [];
+      if (!pinnedNotes.includes(slug)) {
+        pinnedNotes.push(slug);
+        localStorage.setItem("pinnedNotes", JSON.stringify(pinnedNotes));
+      }
+      router.push(`/notes/${slug}`);
     }
 
     toast({
