@@ -40,10 +40,9 @@ export async function createNote(
         router.refresh();
       });
     } else {
-      router.push(`/notes/${slug}`).then(() => {
-        refreshSessionNotes();
-        setSelectedNoteSlug(slug);
-      });
+      router.push(`/notes/${slug}`);
+      refreshSessionNotes();
+      setSelectedNoteSlug(slug);
     }
 
     toast({
