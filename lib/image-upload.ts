@@ -6,6 +6,109 @@ export interface ImageUploadResult {
   error?: string;
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/**
+ * Compress an image file using Canvas API
+ * @param file - The image file to compress
+ * @param maxSize - Maximum file size in bytes
+ * @returns Compressed file or original if already small enough
+ */
+async function compressImage(file: File, maxSize: number): Promise<File> {
+  // If already under limit, return as-is
+  if (file.size <= maxSize) {
+    return file;
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    img.onload = async () => {
+      if (!ctx) {
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      // Start with original dimensions
+      let width = img.width;
+      let height = img.height;
+
+      // Scale down large images to reduce file size
+      const maxDimension = 2048;
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Try different quality levels to get under the size limit
+      const qualities = [0.8, 0.6, 0.4, 0.3, 0.2];
+
+      for (const quality of qualities) {
+        const blob = await new Promise<Blob | null>((res) =>
+          canvas.toBlob(res, "image/jpeg", quality)
+        );
+
+        if (blob && blob.size <= maxSize) {
+          const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+          return;
+        }
+      }
+
+      // If still too large after compression, scale down further
+      const scaleFactors = [0.75, 0.5, 0.25];
+      for (const scale of scaleFactors) {
+        const scaledWidth = Math.round(width * scale);
+        const scaledHeight = Math.round(height * scale);
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+        ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+
+        const blob = await new Promise<Blob | null>((res) =>
+          canvas.toBlob(res, "image/jpeg", 0.7)
+        );
+
+        if (blob && blob.size <= maxSize) {
+          const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+          return;
+        }
+      }
+
+      // Last resort: return smallest attempt
+      const finalBlob = await new Promise<Blob | null>((res) =>
+        canvas.toBlob(res, "image/jpeg", 0.5)
+      );
+
+      if (finalBlob) {
+        const compressedFile = new File([finalBlob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+          type: "image/jpeg",
+          lastModified: Date.now(),
+        });
+        resolve(compressedFile);
+      } else {
+        reject(new Error("Failed to compress image"));
+      }
+    };
+
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 /**
  * Upload an image file to Supabase Storage
  * @param file - The image file to upload
@@ -26,13 +129,17 @@ export async function uploadNoteImage(
       };
     }
 
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return {
-        success: false,
-        error: "File too large. Maximum size is 5MB.",
-      };
+    // Compress image if over size limit
+    let fileToUpload = file;
+    if (file.size > MAX_FILE_SIZE) {
+      try {
+        fileToUpload = await compressImage(file, MAX_FILE_SIZE);
+      } catch {
+        return {
+          success: false,
+          error: "Failed to compress image. Please try a smaller file.",
+        };
+      }
     }
 
     const supabase = createClient();
@@ -40,13 +147,13 @@ export async function uploadNoteImage(
     // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
-    const fileExt = file.name.split(".").pop() || "png";
+    const fileExt = fileToUpload.name.split(".").pop() || "png";
     const fileName = `${noteId}/${timestamp}-${randomString}.${fileExt}`;
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from("note-images")
-      .upload(fileName, file, {
+      .upload(fileName, fileToUpload, {
         cacheControl: "3600",
         upsert: false,
       });
