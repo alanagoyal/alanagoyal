@@ -169,12 +169,12 @@ export default function NoteContent({
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
     const href = props.href || "";
-    const isMailto = href.startsWith("mailto:");
+    const isExternal = /^https?:\/\//i.test(href);
     return (
       <a
         {...props}
-        target={isMailto ? undefined : "_blank"}
-        rel={isMailto ? undefined : "noopener noreferrer"}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         {props.children}
