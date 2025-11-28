@@ -168,8 +168,15 @@ export default function NoteContent({
   }, [canEdit, handleMarkdownCheckboxChange]);
 
   const renderLink = useCallback((props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    const href = props.href || "";
+    const isExternal = /^https?:\/\//i.test(href);
     return (
-      <a {...props} target="_blank" rel="noopener noreferrer">
+      <a
+        {...props}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        onClick={(e) => e.stopPropagation()}
+      >
         {props.children}
       </a>
     );
