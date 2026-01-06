@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AppGrid } from "./app-grid";
 import { TabBar } from "./tab-bar";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 
 const STORAGE_KEY = "mobile-active-app";
+const DEFAULT_APP = "notes";
 
 export function MobileShell() {
-  const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const [activeAppId, setActiveAppId] = useState<string>(DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load last used app from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    if (saved && (saved === "notes" || saved === "messages")) {
       setActiveAppId(saved);
     }
     setIsHydrated(true);
@@ -23,27 +23,29 @@ export function MobileShell() {
 
   // Save active app to localStorage
   useEffect(() => {
-    if (isHydrated && activeAppId) {
+    if (isHydrated) {
       localStorage.setItem(STORAGE_KEY, activeAppId);
     }
   }, [activeAppId, isHydrated]);
 
-  const handleAppSelect = (appId: string) => {
-    setActiveAppId(appId);
-  };
-
   const handleTabSelect = (appId: string | null) => {
-    setActiveAppId(appId);
+    if (appId) {
+      setActiveAppId(appId);
+    }
   };
 
-  // Show app grid if no app is selected
-  if (!activeAppId) {
-    return <AppGrid onAppSelect={handleAppSelect} />;
+  // Don't render until hydrated to prevent flash
+  if (!isHydrated) {
+    return (
+      <div className="min-h-dvh bg-background">
+        {/* Placeholder with same background as apps to prevent flash */}
+      </div>
+    );
   }
 
   // Render the active app with tab bar
   return (
-    <div className="min-h-dvh pb-20">
+    <div className="min-h-dvh pb-20 bg-background">
       {activeAppId === "notes" && <NotesApp isMobile={true} inShell={true} />}
       {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={true} />}
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
