@@ -2,11 +2,15 @@
 
 import App from "./app";
 
-// Wrapper for Messages app in the desktop environment
-export function MessagesApp() {
+interface MessagesAppProps {
+  isMobile?: boolean;
+}
+
+// Wrapper for Messages app in the desktop/mobile environment
+export function MessagesApp({ isMobile = false }: MessagesAppProps) {
   return (
     <div className="h-full w-full overflow-hidden">
-      <App isDesktop={true} />
+      <App isDesktop={!isMobile} />
     </div>
   );
 }

@@ -1,97 +1,40 @@
 # Desktop Environment Bugs
 
-## Critical (Blocks Core Functionality)
+## Phase 1 - FIXED (Commit 609edae)
 
-### 1. Duplicate Navigation Bars
-**Affects:** Both Notes and Messages apps
-**Description:** Each app window shows two navigation areas:
-- The window title bar (with traffic lights - close/minimize/maximize)
-- The app's original internal navigation bar
+### 1. Duplicate Navigation Bars - FIXED
+Added `isDesktop` prop to Nav components in both Notes and Messages apps. When `isDesktop={true}`, the internal traffic lights are hidden since the window wrapper provides them.
 
-**Root Cause:** The NotesApp and MessagesApp components include their original Nav components which were designed for standalone use. The window wrapper adds its own title bar on top.
+### 2. Clicking Notes Doesn't Switch Selection - FIXED
+Updated Sidebar to use `onNoteSelect()` callback instead of `router.push()` when `isDesktop={true}`. This applies to all navigation: clicking notes, keyboard navigation (j/k), pinning, and deletion.
 
-**Files involved:**
-- `components/desktop/window.tsx` - adds title bar
-- `components/apps/notes/sidebar.tsx` - has Nav component
-- `components/apps/messages/sidebar.tsx` - has Nav component
+### 3. All SVGs Broken in Messages App - FIXED
+Moved assets from `public/reactions/`, `public/message-bubbles/`, `public/typing-bubbles/`, and `public/sound-effects/` to `public/messages/` folder. Disabled the Next.js rewrite rules that were proxying `/messages/*` requests.
 
 ---
 
-### 2. Clicking Notes Doesn't Switch Selection
-**Affects:** Notes app in desktop window
-**Description:** Clicking on different notes in the sidebar doesn't load the selected note content.
+## Phase 2 - FIXED
 
-**Root Cause:** The Sidebar component uses `router.push()` internally for navigation, but in the desktop environment we're not using Next.js routing. The `onNoteSelect` callback is passed but the sidebar may still be trying to use router-based navigation.
+### 4. Messages Sidebar Scroll Stuck - FIXED
+Changed `h-dvh` to `h-full` in Messages App when `isDesktop={true}`. The `h-dvh` (100dvh) was causing height conflicts when embedded in a window with a title bar.
 
-**Files involved:**
-- `components/apps/notes/notes-app.tsx` - passes onNoteSelect
-- `components/apps/notes/sidebar.tsx` - handles note clicks
+### 5. Notes Mobile Sidebar Not Full Screen - FIXED
+Added `isMobile` prop to NotesApp and MessagesApp. When `isMobile={true}` (passed from mobile-shell), the apps render mobile-optimized views with proper full-screen sidebars and back navigation.
 
----
+### 6. Window Drag Bounds Not Enforced - FIXED
+Added bounds checking to window drag handler. Windows are now constrained to:
+- Top: Can't go above menu bar
+- Bottom: Keep at least 50px visible above dock
+- Left/Right: Keep at least 100px visible on screen
 
-### 3. All SVGs Broken in Messages App
-**Affects:** Messages app - contact avatars, reaction icons, all UI icons
-**Description:** SVG icons throughout the Messages app are not rendering.
-
-**Root Cause:** Likely an import path issue after reorganizing files to `components/apps/messages/`. The icons may be referencing old paths or the icons folder wasn't properly moved.
-
-**Files involved:**
-- `components/apps/messages/icons/` - icon components
-- Various message components that use icons
+### 7. Messages App URL State Management - FIXED
+Created `updateUrl()` helper that conditionally calls `window.history.pushState()` only when `isDesktop={false}`. In desktop mode, URL updates are skipped.
 
 ---
 
-## High Priority (Degrades UX)
+## Remaining Bugs (To Be Verified/Fixed)
 
-### 4. Messages Sidebar Scroll Stuck
-**Affects:** Messages app sidebar
-**Description:** The sidebar scrolls but gets stuck partway up and won't scroll to the very top.
-
-**Root Cause:** Likely a CSS issue with the ScrollArea component or conflicting height calculations between the window container and the sidebar's internal scroll area.
-
-**Files involved:**
-- `components/apps/messages/sidebar.tsx`
-- `components/desktop/window.tsx` - container sizing
-
----
-
-### 5. Notes Mobile Sidebar Not Full Screen
-**Affects:** Notes app on mobile devices
-**Description:** On mobile, the Notes sidebar doesn't expand to full screen as it should.
-
-**Root Cause:** The NotesApp component hardcodes `isMobile={false}` when rendering the Sidebar. The mobile detection isn't being passed through properly.
-
-**Files involved:**
-- `components/apps/notes/notes-app.tsx` - hardcoded isMobile
-- `components/mobile/mobile-shell.tsx` - mobile app rendering
-
----
-
-## Medium Priority (Polish Issues)
-
-### 6. Window Drag Bounds Not Enforced
-**Affects:** Desktop windows
-**Description:** Windows can be dragged off-screen or behind the menu bar/dock.
-
-**Root Cause:** The window dragging logic in `window.tsx` doesn't enforce boundaries to keep windows visible.
-
-**Files involved:**
-- `components/desktop/window.tsx`
-
----
-
-### 7. Messages App URL State Management
-**Affects:** Messages app in desktop window
-**Description:** The Messages app uses `window.history.pushState()` which may cause unexpected browser history entries when used inside a window.
-
-**Root Cause:** The app was designed for standalone use with URL-based state.
-
-**Files involved:**
-- `components/apps/messages/app.tsx` - selectConversation function
-
----
-
-### 8. Command Menu (⌘K) May Not Work in Windows
+### 8. Command Menu (CMD+K) May Not Work in Windows
 **Affects:** Both apps
 **Description:** The keyboard shortcut for command menu may not work when app is in a window context.
 
@@ -114,8 +57,6 @@
 - App-specific theme toggles
 
 ---
-
-## Low Priority (Minor Issues)
 
 ### 10. localStorage State May Have Stale App References
 **Affects:** Desktop window restoration

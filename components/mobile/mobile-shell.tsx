@@ -44,8 +44,8 @@ export function MobileShell() {
   // Render the active app with tab bar
   return (
     <div className="min-h-dvh pb-20">
-      {activeAppId === "notes" && <NotesApp />}
-      {activeAppId === "messages" && <MessagesApp />}
+      {activeAppId === "notes" && <NotesApp isMobile={true} />}
+      {activeAppId === "messages" && <MessagesApp isMobile={true} />}
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
     </div>
   );

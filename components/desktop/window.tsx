@@ -51,12 +51,30 @@ export function Window({ appId, children }: WindowProps) {
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isDragging) return;
-      moveWindow(appId, {
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y,
-      });
+
+      // Calculate raw position
+      let newX = e.clientX - dragOffset.x;
+      let newY = e.clientY - dragOffset.y;
+
+      // Get current window dimensions
+      const windowWidth = windowState?.size.width ?? 400;
+      const windowHeight = windowState?.size.height ?? 300;
+
+      // Constrain bounds:
+      // - Top: Can't go above menu bar
+      // - Bottom: Keep at least 50px of window visible above dock
+      // - Left/Right: Keep at least 100px of window visible on screen
+      const minX = -windowWidth + 100;
+      const maxX = window.innerWidth - 100;
+      const minY = MENU_BAR_HEIGHT;
+      const maxY = window.innerHeight - DOCK_HEIGHT - 50;
+
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+
+      moveWindow(appId, { x: newX, y: newY });
     },
-    [isDragging, appId, moveWindow, dragOffset]
+    [isDragging, appId, moveWindow, dragOffset, windowState?.size]
   );
 
   const handleMouseUp = useCallback(() => {

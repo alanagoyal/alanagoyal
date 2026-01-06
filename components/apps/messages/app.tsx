@@ -15,6 +15,16 @@ interface AppProps {
 }
 
 export default function App({ isDesktop = false }: AppProps) {
+  // Helper to conditionally update URL (skip in desktop mode)
+  const updateUrl = useCallback(
+    (url: string) => {
+      if (!isDesktop) {
+        window.history.pushState({}, "", url);
+      }
+    },
+    [isDesktop]
+  );
+
   // State
   const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
@@ -51,7 +61,7 @@ export default function App({ isDesktop = false }: AppProps) {
       // If clearing the selection
       if (conversationId === null) {
         setActiveConversation(null);
-        window.history.pushState({}, "", "/messages");
+        updateUrl("/messages");
         return;
       }
 
@@ -65,12 +75,12 @@ export default function App({ isDesktop = false }: AppProps) {
         console.error(`Conversation with ID ${conversationId} not found`);
 
         // Clear URL and select first available conversation
-        window.history.pushState({}, "", "/messages");
+        updateUrl("/messages");
 
         if (conversations.length > 0) {
           const fallbackConversation = conversations[0];
           setActiveConversation(fallbackConversation.id);
-          window.history.pushState({}, "", `?id=${fallbackConversation.id}`);
+          updateUrl(`?id=${fallbackConversation.id}`);
         } else {
           setActiveConversation(null);
         }
@@ -80,9 +90,9 @@ export default function App({ isDesktop = false }: AppProps) {
       // Successfully select the conversation
       setActiveConversation(conversationId);
       setIsNewConversation(false);
-      window.history.pushState({}, "", `?id=${conversationId}`);
+      updateUrl(`?id=${conversationId}`);
     },
-    [conversations, setActiveConversation, setIsNewConversation]
+    [conversations, setActiveConversation, setIsNewConversation, updateUrl]
   ); // Only recreate when these dependencies change
 
   // Effects
@@ -207,7 +217,7 @@ export default function App({ isDesktop = false }: AppProps) {
 
     // If mobile view, show the sidebar
     if (isMobileView) {
-      window.history.pushState({}, "", "/messages");
+      updateUrl("/messages");
       setActiveConversation(null);
       return;
     }
@@ -482,7 +492,7 @@ export default function App({ isDesktop = false }: AppProps) {
       return updatedConversations;
     });
 
-    window.history.pushState({}, "", `?id=${newConversation.id}`);
+    updateUrl(`?id=${newConversation.id}`);
   };
 
   // Method to handle message sending
@@ -545,7 +555,7 @@ export default function App({ isDesktop = false }: AppProps) {
         return updatedConversations;
       });
 
-      window.history.pushState({}, "", `?id=${newConversation.id}`);
+      updateUrl(`?id=${newConversation.id}`);
       messageQueue.current.enqueueAIMessage(conversationWithMessage);
       return;
     }
@@ -586,7 +596,7 @@ export default function App({ isDesktop = false }: AppProps) {
 
     setActiveConversation(conversationId);
     setIsNewConversation(false);
-    window.history.pushState({}, "", `?id=${conversationId}`);
+    updateUrl(`?id=${conversationId}`);
     messageQueue.current.enqueueUserMessage(updatedConversation);
     clearMessageDraft(conversationId);
   };
@@ -764,7 +774,7 @@ export default function App({ isDesktop = false }: AppProps) {
         onNewChat={() => {
           setIsNewConversation(true);
           setActiveConversation(null);
-          window.history.pushState({}, "", "/messages");
+          updateUrl("/messages");
         }}
         onSelectConversation={selectConversation}
         onDeleteConversation={handleDeleteConversation}
@@ -773,7 +783,7 @@ export default function App({ isDesktop = false }: AppProps) {
         soundEnabled={soundEnabled}
         onSoundToggle={handleSoundToggle}
       />
-      <main className="h-dvh w-full bg-background flex flex-col">
+      <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col`}>
         <div className="flex-1 flex h-full">
           <div
             className={`h-full w-full sm:w-[320px] flex-shrink-0 ${

@@ -9,10 +9,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Sidebar from "./sidebar";
 import Note from "./note";
 
-export function NotesApp() {
+interface NotesAppProps {
+  isMobile?: boolean;
+}
+
+export function NotesApp({ isMobile = false }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
   const supabase = createClient();
 
   // Fetch public notes on mount
@@ -50,8 +55,16 @@ export function NotesApp() {
       .single();
     if (fullNote) {
       setSelectedNote(fullNote as NoteType);
+      // On mobile, hide sidebar when note is selected
+      if (isMobile) {
+        setShowSidebar(false);
+      }
     }
-  }, [supabase]);
+  }, [supabase, isMobile]);
+
+  const handleBackToSidebar = useCallback(() => {
+    setShowSidebar(true);
+  }, []);
 
   if (loading) {
     return (
@@ -61,6 +74,43 @@ export function NotesApp() {
     );
   }
 
+  // On mobile, show either sidebar or note content
+  if (isMobile) {
+    return (
+      <SessionNotesProvider>
+        <div className="h-full bg-background text-foreground">
+          {showSidebar ? (
+            <Sidebar
+              notes={notes}
+              onNoteSelect={handleNoteSelect}
+              isMobile={true}
+              selectedSlug={selectedNote?.slug}
+              isDesktop={false}
+            />
+          ) : (
+            <div className="h-full">
+              {selectedNote && (
+                <>
+                  <button
+                    onClick={handleBackToSidebar}
+                    className="p-4 text-blue-500 flex items-center gap-1"
+                  >
+                    ← Back
+                  </button>
+                  <div className="p-3">
+                    <Note note={selectedNote} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <Toaster />
+        </div>
+      </SessionNotesProvider>
+    );
+  }
+
+  // Desktop view - show both sidebar and note
   return (
     <SessionNotesProvider>
       <div className="h-full flex bg-background text-foreground">
