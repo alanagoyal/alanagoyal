@@ -32,49 +32,40 @@ Created `updateUrl()` helper that conditionally calls `window.history.pushState(
 
 ---
 
-## Remaining Bugs (To Be Verified/Fixed)
+## Phase 3 - FIXED
 
-### 8. Command Menu (CMD+K) May Not Work in Windows
-**Affects:** Both apps
-**Description:** The keyboard shortcut for command menu may not work when app is in a window context.
+### 8. Notes App Interactivity in Desktop Windows - FIXED
+Clicking notes, keyboard navigation (j/k), and creating new notes now work correctly in desktop windows. Added `isDesktop` prop throughout the component chain and used callbacks instead of router navigation.
 
-**Root Cause:** Keyboard event handling may be scoped incorrectly after embedding in windows.
+### 9. Keyboard Shortcuts Firing Across Apps - FIXED
+Added `data-app="notes"` and `data-app="messages"` attributes to app containers. All keyboard handlers now check `target.closest('[data-app]')` before handling, ensuring shortcuts only fire for the focused app.
 
-**Files involved:**
-- `components/apps/notes/command-menu.tsx`
-- `components/apps/messages/command-menu.tsx`
+### 10. Messages App Layout Overflow in Desktop - FIXED
+Fixed sidebar not scrolling and input being cut off by:
+- Using `h-full` instead of `h-dvh` when `isDesktop={true}`
+- Adding `min-h-0` to flex children for proper shrinking
+- Adding `overflow-hidden` to containers
+
+### 11. Mobile Shell Navigation Issues - FIXED
+Added `inShell` prop to NotesApp and MessagesApp. When in shell:
+- URL updates are skipped (no navigation to /notes or /messages)
+- Note items use callbacks instead of Links
+- Back button uses callback instead of Link to /notes
+
+### 12. Mobile Loading Flash - FIXED
+Removed gradient background and "Loading..." text flash on mobile by:
+- Using `bg-background` instead of gradient in page.tsx hydration placeholder
+- Returning empty `bg-background` div during loading states
+- Defaulting to Notes app instead of null state in MobileShell
 
 ---
 
-### 9. Theme Not Synced Across Windows
-**Affects:** Desktop environment
+## Remaining Bugs (Minor/To Be Verified)
+
+### Theme Sync Across Windows
+**Status:** To verify
 **Description:** Theme changes may not properly propagate to all open windows.
 
-**Root Cause:** Each app may have its own theme handling that doesn't coordinate with the parent desktop shell.
-
-**Files involved:**
-- `components/theme-provider.tsx`
-- App-specific theme toggles
-
----
-
-### 10. localStorage State May Have Stale App References
-**Affects:** Desktop window restoration
-**Description:** If app IDs change, saved window state in localStorage could reference non-existent apps.
-
-**Root Cause:** No migration/validation of stored state against current app config.
-
-**Files involved:**
-- `lib/window-context.tsx`
-
----
-
-### 11. Mobile Shell May Not Properly Show Apps
-**Affects:** Mobile experience
-**Description:** The mobile shell might not be rendering the actual app content correctly.
-
-**Root Cause:** Mobile shell uses same app components but may need different props/context.
-
-**Files involved:**
-- `components/mobile/mobile-shell.tsx`
-- `components/mobile/app-grid.tsx`
+### localStorage Stale References
+**Status:** Low priority
+**Description:** If app IDs change, saved window state could reference non-existent apps. No migration/validation currently exists.
