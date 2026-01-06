@@ -78,7 +78,13 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
   if (isMobile) {
     return (
       <SessionNotesProvider>
-        <div data-app="notes" className="notes-app h-full bg-background text-foreground">
+        <div
+          ref={containerRef}
+          data-app="notes"
+          tabIndex={-1}
+          onMouseDown={() => containerRef.current?.focus()}
+          className="notes-app h-full bg-background text-foreground outline-none"
+        >
           {showSidebar ? (
             <Sidebar
               notes={notes}
@@ -105,7 +111,13 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
   // Desktop view - show both sidebar and note
   return (
     <SessionNotesProvider>
-      <div ref={containerRef} data-app="notes" className="notes-app h-full flex bg-background text-foreground relative">
+      <div
+        ref={containerRef}
+        data-app="notes"
+        tabIndex={-1}
+        onMouseDown={() => containerRef.current?.focus()}
+        className="notes-app h-full flex bg-background text-foreground relative outline-none"
+      >
         <Sidebar
           notes={notes}
           onNoteSelect={handleNoteSelect}

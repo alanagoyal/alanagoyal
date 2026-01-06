@@ -769,7 +769,13 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   }
 
   return (
-    <div ref={containerRef} data-app="messages" className={`flex ${isDesktop ? 'h-full' : 'h-dvh'} relative`}>
+    <div
+      ref={containerRef}
+      data-app="messages"
+      tabIndex={-1}
+      onMouseDown={() => containerRef.current?.focus()}
+      className={`flex ${isDesktop ? 'h-full' : 'h-dvh'} relative outline-none`}
+    >
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
