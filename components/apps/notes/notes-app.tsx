@@ -69,6 +69,7 @@ export function NotesApp() {
           onNoteSelect={handleNoteSelect}
           isMobile={false}
           selectedSlug={selectedNote?.slug}
+          isDesktop={true}
         />
         <div className="flex-grow h-full overflow-hidden">
           <ScrollArea className="h-full" isMobile={false}>

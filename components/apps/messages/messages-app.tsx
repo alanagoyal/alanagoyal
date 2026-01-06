@@ -6,7 +6,7 @@ import App from "./app";
 export function MessagesApp() {
   return (
     <div className="h-full w-full overflow-hidden">
-      <App />
+      <App isDesktop={true} />
     </div>
   );
 }

@@ -44,11 +44,13 @@ export default function Sidebar({
   onNoteSelect,
   isMobile,
   selectedSlug: externalSelectedSlug,
+  isDesktop = false,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
   selectedSlug?: string | null;
+  isDesktop?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -203,10 +205,14 @@ export default function Sidebar({
         }
 
         const nextNote = flattened[nextIndex];
-        
+
         if (nextNote) {
-          router.push(`/notes/${nextNote.slug}`);
-          // Wait for router navigation and React re-render
+          if (isDesktop) {
+            onNoteSelect(nextNote);
+          } else {
+            router.push(`/notes/${nextNote.slug}`);
+          }
+          // Wait for navigation and React re-render
           setTimeout(() => {
             const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
             if (selectedElement) {
@@ -216,7 +222,7 @@ export default function Sidebar({
         }
       }
     },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults]
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults, isDesktop, onNoteSelect]
   );
 
   const handlePinToggle = useCallback(
@@ -239,15 +245,18 @@ export default function Sidebar({
 
       clearSearch();
 
-      if (!isMobile) {
+      if (!isMobile && !isDesktop) {
         router.push(`/notes/${slug}`);
+      } else if (isDesktop) {
+        const note = notes.find((n) => n.slug === slug);
+        if (note) onNoteSelect(note);
       }
 
       toast({
         description: isPinning ? "Note pinned" : "Note unpinned",
       });
     },
-    [router, isMobile, clearSearch]
+    [router, isMobile, isDesktop, clearSearch, notes, onNoteSelect]
   );
 
   const handleNoteDelete = useCallback(
@@ -289,13 +298,17 @@ export default function Sidebar({
           nextNote = allNotes[deletedNoteIndex - 1];
         }
 
-        if (!isMobile) {
+        if (!isMobile && !isDesktop) {
           router.push(nextNote ? `/notes/${nextNote.slug}` : "/notes/about-me");
+        } else if (isDesktop && nextNote) {
+          onNoteSelect(nextNote);
         }
 
         clearSearch();
         refreshSessionNotes();
-        router.refresh();
+        if (!isDesktop) {
+          router.refresh();
+        }
 
         toast({
           description: "Note deleted",
@@ -309,23 +322,29 @@ export default function Sidebar({
       sessionId,
       flattenedNotes,
       isMobile,
+      isDesktop,
       clearSearch,
       refreshSessionNotes,
       router,
+      onNoteSelect,
     ]
   );
 
   const goToHighlightedNote = useCallback(() => {
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
-      router.push(`/notes/${selectedNote.slug}`);
+      if (isDesktop) {
+        onNoteSelect(selectedNote);
+      } else {
+        router.push(`/notes/${selectedNote.slug}`);
+      }
       setTimeout(() => {
         const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
         selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 0);
       clearSearch();
     }
-  }, [localSearchResults, highlightedIndex, router, clearSearch]);
+  }, [localSearchResults, highlightedIndex, router, clearSearch, isDesktop, onNoteSelect]);
 
   const { setTheme, theme } = useTheme();
 
@@ -411,12 +430,12 @@ export default function Sidebar({
   const handleNoteSelect = useCallback(
     (note: any) => {
       onNoteSelect(note);
-      if (!isMobile) {
+      if (!isMobile && !isDesktop) {
         router.push(`/notes/${note.slug}`);
       }
       clearSearch();
     },
-    [clearSearch, onNoteSelect, isMobile, router]
+    [clearSearch, onNoteSelect, isMobile, isDesktop, router]
   );
 
   return (
@@ -434,6 +453,7 @@ export default function Sidebar({
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
           isScrolled={isScrolled}
+          isDesktop={isDesktop}
         />
       </div>
       <ScrollArea 

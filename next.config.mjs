@@ -1,19 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    // Only apply rewrites if NEXT_PUBLIC_MESSAGES_URL is defined
-    if (process.env.NEXT_PUBLIC_MESSAGES_URL) {
-      return [
-        {
-          source: '/messages',
-          destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages`,
-        },
-        {
-          source: '/messages/:path*',
-          destination: `${process.env.NEXT_PUBLIC_MESSAGES_URL}/messages/:path*`,
-        },
-      ];
-    }
+    // Rewrites disabled for desktop environment - Messages app is embedded directly
+    // Static assets are served from /public/messages/
     return [];
   },
   async redirects() {

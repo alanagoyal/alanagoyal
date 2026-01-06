@@ -10,7 +10,11 @@ import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hoo
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects } from "@/lib/messages/sound-effects";
 
-export default function App() {
+interface AppProps {
+  isDesktop?: boolean;
+}
+
+export default function App({ isDesktop = false }: AppProps) {
   // State
   const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
@@ -803,6 +807,7 @@ export default function App() {
                 }}
                 isMobileView={isMobileView}
                 isScrolled={isScrolled}
+                isDesktop={isDesktop}
               />
             </Sidebar>
           </div>
