@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { Note } from "@/lib/notes/types";
 
 export async function createNote(
   sessionId: string | null,
@@ -8,7 +9,9 @@ export async function createNote(
   addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
-  isMobile: boolean
+  isMobile: boolean,
+  isDesktop: boolean = false,
+  onNoteCreated?: (note: Note) => void
 ) {
   const supabase = createClient();
   const noteId = uuidv4();
@@ -31,7 +34,21 @@ export async function createNote(
 
     if (error) throw error;
 
-    if (!isMobile) {
+    if (isDesktop) {
+      // In desktop mode, use callbacks instead of router
+      addNewPinnedNote(slug);
+      await refreshSessionNotes();
+      setSelectedNoteSlug(slug);
+      // Fetch the full note and call the callback
+      if (onNoteCreated) {
+        const { data: fullNote } = await supabase
+          .rpc("select_note", { note_slug_arg: slug })
+          .single();
+        if (fullNote) {
+          onNoteCreated(fullNote as Note);
+        }
+      }
+    } else if (!isMobile) {
       addNewPinnedNote(slug);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);

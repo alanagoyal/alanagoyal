@@ -766,7 +766,7 @@ export default function App({ isDesktop = false }: AppProps) {
   }
 
   return (
-    <div className="flex h-dvh">
+    <div data-app="messages" className="flex h-dvh">
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}

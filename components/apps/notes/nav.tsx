@@ -1,4 +1,5 @@
 import NewNote from "./new-note";
+import { Note } from "@/lib/notes/types";
 
 interface NavProps {
   addNewPinnedNote: (slug: string) => void;
@@ -7,6 +8,7 @@ interface NavProps {
   isMobile: boolean;
   isScrolled: boolean;
   isDesktop?: boolean;
+  onNoteCreated?: (note: Note) => void;
 }
 
 export function Nav({
@@ -16,6 +18,7 @@ export function Nav({
   isMobile,
   isScrolled,
   isDesktop = false,
+  onNoteCreated,
 }: NavProps) {
   return (
     <div
@@ -46,6 +49,8 @@ export function Nav({
         clearSearch={clearSearch}
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
+        isDesktop={isDesktop}
+        onNoteCreated={onNoteCreated}
       />
     </div>
   );

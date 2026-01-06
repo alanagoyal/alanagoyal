@@ -19,6 +19,7 @@ interface SidebarContentProps {
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
+  isDesktop?: boolean;
 }
 
 export function SidebarContent({
@@ -37,6 +38,7 @@ export function SidebarContent({
   setOpenSwipeItemSlug,
   clearSearch,
   setSelectedNoteSlug,
+  isDesktop = false,
 }: SidebarContentProps) {
   const router = useRouter();
 
@@ -94,6 +96,7 @@ export function SidebarContent({
                         openSwipeItemSlug={openSwipeItemSlug}
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                         showDivider={index < groupedNotes[categoryKey].length - 1}
+                        isDesktop={isDesktop}
                       />
                     )
                   )}
@@ -120,6 +123,7 @@ export function SidebarContent({
               openSwipeItemSlug={openSwipeItemSlug}
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
+              isDesktop={isDesktop}
             />
           ))}
         </ul>

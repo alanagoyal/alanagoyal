@@ -6,17 +6,22 @@ import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/notes/create-note";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { Note } from "@/lib/notes/types";
 
 export default function NewNote({
   addNewPinnedNote,
   clearSearch,
   setSelectedNoteSlug,
   isMobile,
+  isDesktop = false,
+  onNoteCreated,
 }: {
   addNewPinnedNote: (slug: string) => void;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
+  isDesktop?: boolean;
+  onNoteCreated?: (note: Note) => void;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
@@ -31,7 +36,9 @@ export default function NewNote({
       addNewPinnedNote,
       refreshSessionNotes,
       setSelectedNoteSlug,
-      isMobile
+      isMobile,
+      isDesktop,
+      onNoteCreated
     );
   }, [
     sessionId,
@@ -41,11 +48,17 @@ export default function NewNote({
     refreshSessionNotes,
     setSelectedNoteSlug,
     isMobile,
+    isDesktop,
+    onNoteCreated,
   ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
+
+      // Only handle shortcuts if focus is within this app
+      if (!target.closest('[data-app="notes"]')) return;
+
       const isTyping =
         target.isContentEditable ||
         target.tagName === "INPUT" ||

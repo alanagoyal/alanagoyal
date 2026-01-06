@@ -123,6 +123,10 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts if focus is within this app
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-app="messages"]')) return;
+
       // Don't handle navigation if command menu is open
       if (isCommandMenuOpen) return;
 

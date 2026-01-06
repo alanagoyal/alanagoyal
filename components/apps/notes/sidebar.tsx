@@ -45,12 +45,14 @@ export default function Sidebar({
   isMobile,
   selectedSlug: externalSelectedSlug,
   isDesktop = false,
+  onNoteCreated,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
   selectedSlug?: string | null;
   isDesktop?: boolean;
+  onNoteCreated?: (note: any) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -363,6 +365,10 @@ export default function Sidebar({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
+
+      // Only handle shortcuts if focus is within this app
+      if (!target.closest('[data-app="notes"]')) return;
+
       const isTyping =
         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
         target.isContentEditable;
@@ -454,6 +460,7 @@ export default function Sidebar({
           isMobile={isMobile}
           isScrolled={isScrolled}
           isDesktop={isDesktop}
+          onNoteCreated={onNoteCreated}
         />
       </div>
       <ScrollArea 
@@ -509,6 +516,7 @@ export default function Sidebar({
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               clearSearch={clearSearch}
               setSelectedNoteSlug={setSelectedNoteSlug}
+              isDesktop={isDesktop}
             />
           </div>
         </div>

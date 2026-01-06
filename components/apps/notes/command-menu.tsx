@@ -89,6 +89,10 @@ export const CommandMenu = forwardRef<
 
     useEffect(() => {
       const down = (e: KeyboardEvent) => {
+        // Only handle shortcuts if focus is within this app
+        const target = e.target as HTMLElement;
+        if (!target.closest('[data-app="notes"]')) return;
+
         if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           setOpen((open) => !open);

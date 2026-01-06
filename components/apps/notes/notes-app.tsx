@@ -78,7 +78,7 @@ export function NotesApp({ isMobile = false }: NotesAppProps) {
   if (isMobile) {
     return (
       <SessionNotesProvider>
-        <div className="h-full bg-background text-foreground">
+        <div data-app="notes" className="notes-app h-full bg-background text-foreground">
           {showSidebar ? (
             <Sidebar
               notes={notes}
@@ -98,7 +98,7 @@ export function NotesApp({ isMobile = false }: NotesAppProps) {
                     ← Back
                   </button>
                   <div className="p-3">
-                    <Note note={selectedNote} />
+                    <Note key={selectedNote.id} note={selectedNote} />
                   </div>
                 </>
               )}
@@ -113,19 +113,20 @@ export function NotesApp({ isMobile = false }: NotesAppProps) {
   // Desktop view - show both sidebar and note
   return (
     <SessionNotesProvider>
-      <div className="h-full flex bg-background text-foreground">
+      <div data-app="notes" className="notes-app h-full flex bg-background text-foreground">
         <Sidebar
           notes={notes}
           onNoteSelect={handleNoteSelect}
           isMobile={false}
           selectedSlug={selectedNote?.slug}
           isDesktop={true}
+          onNoteCreated={setSelectedNote}
         />
         <div className="flex-grow h-full overflow-hidden">
           <ScrollArea className="h-full" isMobile={false}>
             {selectedNote ? (
               <div className="w-full min-h-full p-3">
-                <Note note={selectedNote} />
+                <Note key={selectedNote.id} note={selectedNote} />
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

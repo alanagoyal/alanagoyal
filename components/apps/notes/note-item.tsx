@@ -38,6 +38,7 @@ interface NoteItemProps {
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
   showDivider?: boolean;
+  isDesktop?: boolean;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -54,6 +55,7 @@ export const NoteItem = React.memo(function NoteItem({
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
   showDivider = false,
+  isDesktop = false,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
@@ -96,6 +98,27 @@ export const NoteItem = React.memo(function NoteItem({
     }
   };
 
+  const noteContentInner = (
+    <>
+      <h2 className="text-sm font-bold px-2 break-words line-clamp-1">
+        {item.emoji} {item.title}
+      </h2>
+      <p
+        className={`text-xs pl-2 break-words line-clamp-1 ${
+          (!isMobile && isSearching && isHighlighted) ||
+          (!isSearching && item.slug === selectedNoteSlug)
+            ? "text-muted-foreground dark:text-white/80"
+            : "text-muted-foreground"
+        }`}
+      >
+        <span className="text-black dark:text-white">
+          {getDisplayDateByCategory(item.category, item.id).toLocaleDateString("en-US")}
+        </span>{" "}
+        {previewContent(item.content)}
+      </p>
+    </>
+  );
+
   const NoteContent = (
     <li
       tabIndex={0}
@@ -111,33 +134,28 @@ export const NoteItem = React.memo(function NoteItem({
           : ""
       }`}
     >
-      <div 
+      <div
         data-note-slug={item.slug}
         className={`h-full w-full px-4`}
       >
-        <Link
-          href={`/notes/${item.slug || ""}`}
-          prefetch={true}
-          tabIndex={-1}
-          className="block py-2 h-full w-full flex flex-col justify-center"
-        >
-          <h2 className="text-sm font-bold px-2 break-words line-clamp-1">
-            {item.emoji} {item.title}
-          </h2>
-          <p
-            className={`text-xs pl-2 break-words line-clamp-1 ${
-              (!isMobile && isSearching && isHighlighted) ||
-              (!isSearching && item.slug === selectedNoteSlug)
-                ? "text-muted-foreground dark:text-white/80"
-                : "text-muted-foreground"
-            }`}
+        {isDesktop ? (
+          <button
+            onClick={() => onNoteSelect(item)}
+            tabIndex={-1}
+            className="block py-2 h-full w-full flex flex-col justify-center text-left"
           >
-            <span className="text-black dark:text-white">
-              {getDisplayDateByCategory(item.category, item.id).toLocaleDateString("en-US")}
-            </span>{" "}
-            {previewContent(item.content)}
-          </p>
-        </Link>
+            {noteContentInner}
+          </button>
+        ) : (
+          <Link
+            href={`/notes/${item.slug || ""}`}
+            prefetch={true}
+            tabIndex={-1}
+            className="block py-2 h-full w-full flex flex-col justify-center"
+          >
+            {noteContentInner}
+          </Link>
+        )}
       </div>
     </li>
   );

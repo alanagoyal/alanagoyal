@@ -196,7 +196,7 @@ export default function NoteContent({
           ref={textareaRef}
           id="note-content"
           value={note.content || ""}
-          className="min-h-dvh focus:outline-none leading-normal"
+          className="min-h-dvh focus:outline-none leading-relaxed resize-none"
           placeholder="Start writing..."
           onChange={handleChange}
           onPaste={handlePaste}

@@ -13,6 +13,10 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts if focus is within this app
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-app="messages"]')) return;
+
       // Don't trigger if typing in an input, if command/meta key is pressed,
       // or if the TipTap editor is focused
       if (

@@ -1,4 +1,5 @@
 @import './tiptap.css';
+@import './notes/styles/github-markdown.css';
 
 @tailwind base;
 @tailwind components;
@@ -216,7 +217,12 @@ html, body {
   outline: none !important;
 }
 
-/* Global caret styling */
+/* Global caret styling - blue for Messages */
 * {
   caret-color: #0A7CFF;
+}
+
+/* Golden caret for Notes app */
+.notes-app * {
+  caret-color: #e2a727;
 }
