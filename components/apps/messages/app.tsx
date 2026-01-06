@@ -12,17 +12,18 @@ import { soundEffects } from "@/lib/messages/sound-effects";
 
 interface AppProps {
   isDesktop?: boolean;
+  inShell?: boolean; // When true, prevent URL updates (for mobile shell)
 }
 
-export default function App({ isDesktop = false }: AppProps) {
-  // Helper to conditionally update URL (skip in desktop mode)
+export default function App({ isDesktop = false, inShell = false }: AppProps) {
+  // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
-      if (!isDesktop) {
+      if (!isDesktop && !inShell) {
         window.history.pushState({}, "", url);
       }
     },
-    [isDesktop]
+    [isDesktop, inShell]
   );
 
   // State

@@ -8,7 +8,12 @@ import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 
-export default function Note({ note: initialNote }: { note: any }) {
+interface NoteProps {
+  note: any;
+  onBack?: () => void; // Callback for back navigation in shell mode
+}
+
+export default function Note({ note: initialNote, onBack }: NoteProps) {
   const supabase = createClient();
   const router = useRouter();
   const [note, setNote] = useState(initialNote);
@@ -106,7 +111,7 @@ export default function Note({ note: initialNote }: { note: any }) {
   return (
     <div className="h-full overflow-y-auto bg-background">
       <SessionId setSessionId={setSessionId} />
-      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
       <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
     </div>
   );

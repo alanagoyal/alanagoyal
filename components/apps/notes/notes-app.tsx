@@ -11,9 +11,10 @@ import Note from "./note";
 
 interface NotesAppProps {
   isMobile?: boolean;
+  inShell?: boolean; // When true, use callback navigation instead of route navigation
 }
 
-export function NotesApp({ isMobile = false }: NotesAppProps) {
+export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,22 +86,14 @@ export function NotesApp({ isMobile = false }: NotesAppProps) {
               onNoteSelect={handleNoteSelect}
               isMobile={true}
               selectedSlug={selectedNote?.slug}
-              isDesktop={false}
+              isDesktop={inShell}
             />
           ) : (
             <div className="h-full">
               {selectedNote && (
-                <>
-                  <button
-                    onClick={handleBackToSidebar}
-                    className="p-4 text-blue-500 flex items-center gap-1"
-                  >
-                    ← Back
-                  </button>
-                  <div className="p-3">
-                    <Note key={selectedNote.id} note={selectedNote} />
-                  </div>
-                </>
+                <div className="p-3">
+                  <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} />
+                </div>
               )}
             </div>
           )}

@@ -17,10 +17,12 @@ export default function NoteHeader({
   note,
   saveNote,
   canEdit,
+  onBack,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  onBack?: () => void; // Callback for back navigation in shell mode
 }) {
   const isMobile = useMobileDetect();
   const pathname = usePathname();
@@ -47,12 +49,19 @@ export default function NoteHeader({
   return (
     <>
       {isMobile && pathname !== "/notes" && (
-        <Link href="/notes">
-          <button className="pt-2 flex items-center">
+        onBack ? (
+          <button onClick={onBack} className="pt-2 flex items-center">
             <Icons.back />
             <span className="text-[#e2a727] text-base ml-1">Notes</span>
           </button>
-        </Link>
+        ) : (
+          <Link href="/notes">
+            <button className="pt-2 flex items-center">
+              <Icons.back />
+              <span className="text-[#e2a727] text-base ml-1">Notes</span>
+            </button>
+          </Link>
+        )
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
