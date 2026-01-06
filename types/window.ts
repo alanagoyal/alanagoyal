@@ -12,6 +12,7 @@ export interface WindowState {
   id: string;
   appId: string;
   isOpen: boolean;
+  isMinimized: boolean;
   isMaximized: boolean;
   position: Position;
   size: Size;
@@ -29,6 +30,7 @@ export type WindowAction =
   | { type: "CLOSE_WINDOW"; appId: string }
   | { type: "FOCUS_WINDOW"; appId: string }
   | { type: "MOVE_WINDOW"; appId: string; position: Position }
+  | { type: "MINIMIZE_WINDOW"; appId: string }
   | { type: "MAXIMIZE_WINDOW"; appId: string }
   | { type: "RESTORE_WINDOW"; appId: string }
   | { type: "RESTORE_STATE"; state: WindowManagerState };

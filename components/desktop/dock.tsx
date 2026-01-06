@@ -6,11 +6,16 @@ import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 
 export function Dock() {
-  const { openWindow, focusWindow, isWindowOpen } = useWindowManager();
+  const { openWindow, focusWindow, restoreWindow, isWindowOpen, getWindow } = useWindowManager();
 
   const handleAppClick = (appId: string) => {
-    if (isWindowOpen(appId)) {
-      focusWindow(appId);
+    const windowState = getWindow(appId);
+    if (windowState?.isOpen) {
+      if (windowState.isMinimized) {
+        restoreWindow(appId);
+      } else {
+        focusWindow(appId);
+      }
     } else {
       openWindow(appId);
     }

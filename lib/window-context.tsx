@@ -26,6 +26,7 @@ function getDefaultWindowState(appId: string): WindowState {
     id: appId,
     appId,
     isOpen: false,
+    isMinimized: false,
     isMaximized: false,
     position: app.defaultPosition,
     size: app.defaultSize,
@@ -125,6 +126,30 @@ function windowReducer(
       };
     }
 
+    case "MINIMIZE_WINDOW": {
+      const { appId } = action;
+      const window = state.windows[appId];
+      if (!window || !window.isOpen) return state;
+
+      // Find next window to focus (non-minimized)
+      const openWindows = Object.values(state.windows)
+        .filter((w) => w.isOpen && !w.isMinimized && w.appId !== appId)
+        .sort((a, b) => b.zIndex - a.zIndex);
+      const nextFocused = openWindows[0]?.appId || null;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [appId]: {
+            ...window,
+            isMinimized: true,
+          },
+        },
+        focusedWindowId: nextFocused,
+      };
+    }
+
     case "FOCUS_WINDOW": {
       const { appId } = action;
       const window = state.windows[appId];
@@ -192,9 +217,13 @@ function windowReducer(
           ...state.windows,
           [appId]: {
             ...window,
+            isMinimized: false,
             isMaximized: false,
+            zIndex: state.nextZIndex,
           },
         },
+        focusedWindowId: appId,
+        nextZIndex: state.nextZIndex + 1,
       };
     }
 
@@ -213,6 +242,7 @@ interface WindowManagerContextValue {
   closeWindow: (appId: string) => void;
   focusWindow: (appId: string) => void;
   moveWindow: (appId: string, position: Position) => void;
+  minimizeWindow: (appId: string) => void;
   maximizeWindow: (appId: string) => void;
   restoreWindow: (appId: string) => void;
   toggleMaximize: (appId: string) => void;
@@ -265,6 +295,10 @@ export function WindowManagerProvider({
     dispatch({ type: "MOVE_WINDOW", appId, position });
   }, []);
 
+  const minimizeWindow = useCallback((appId: string) => {
+    dispatch({ type: "MINIMIZE_WINDOW", appId });
+  }, []);
+
   const maximizeWindow = useCallback((appId: string) => {
     dispatch({ type: "MAXIMIZE_WINDOW", appId });
   }, []);
@@ -306,6 +340,7 @@ export function WindowManagerProvider({
     closeWindow,
     focusWindow,
     moveWindow,
+    minimizeWindow,
     maximizeWindow,
     restoreWindow,
     toggleMaximize,

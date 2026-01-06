@@ -19,6 +19,7 @@ export function Window({ appId, children }: WindowProps) {
     closeWindow,
     focusWindow,
     moveWindow,
+    minimizeWindow,
     toggleMaximize,
     state,
   } = useWindowManager();
@@ -92,7 +93,7 @@ export function Window({ appId, children }: WindowProps) {
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  if (!windowState || !windowState.isOpen || !app) {
+  if (!windowState || !windowState.isOpen || windowState.isMinimized || !app) {
     return null;
   }
 
@@ -148,10 +149,14 @@ export function Window({ appId, children }: WindowProps) {
             </span>
           </button>
           <button
-            className="w-3 h-3 rounded-full bg-yellow-500 opacity-50 cursor-not-allowed"
-            title="Minimize (coming soon)"
-            disabled
-          />
+            onClick={() => minimizeWindow(appId)}
+            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors flex items-center justify-center group"
+            title="Minimize"
+          >
+            <span className="text-yellow-900 text-[10px] opacity-0 group-hover:opacity-100">
+              −
+            </span>
+          </button>
           <button
             onClick={() => toggleMaximize(appId)}
             className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center group"
