@@ -766,7 +766,7 @@ export default function App({ isDesktop = false }: AppProps) {
   }
 
   return (
-    <div data-app="messages" className="flex h-dvh">
+    <div data-app="messages" className={`flex ${isDesktop ? 'h-full' : 'h-dvh'}`}>
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
@@ -783,10 +783,10 @@ export default function App({ isDesktop = false }: AppProps) {
         soundEnabled={soundEnabled}
         onSoundToggle={handleSoundToggle}
       />
-      <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col`}>
-        <div className="flex-1 flex h-full">
+      <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col overflow-hidden`}>
+        <div className="flex-1 flex min-h-0">
           <div
-            className={`h-full w-full sm:w-[320px] flex-shrink-0 ${
+            className={`h-full w-full sm:w-[320px] flex-shrink-0 overflow-hidden ${
               isMobileView && (activeConversation || isNewConversation)
                 ? "hidden"
                 : "block sm:border-r dark:border-foreground/20"
@@ -822,7 +822,7 @@ export default function App({ isDesktop = false }: AppProps) {
             </Sidebar>
           </div>
           <div
-            className={`flex-1 h-full ${
+            className={`flex-1 min-h-0 overflow-hidden ${
               isMobileView && !activeConversation && !isNewConversation
                 ? "hidden"
                 : "block"

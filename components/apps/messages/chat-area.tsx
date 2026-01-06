@@ -96,7 +96,7 @@ export function ChatArea({
   };
 
   return (
-    <div className="h-dvh relative">
+    <div className="h-full relative flex flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
         <ChatHeader
           isNewChat={showRecipientInput}
