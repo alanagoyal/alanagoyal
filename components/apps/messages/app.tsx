@@ -761,9 +761,9 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     return total + (conv.unreadCount || 0);
   }, 0);
 
-  // Don't render until layout is initialized
+  // Show empty background while initializing to prevent flash
   if (!isLayoutInitialized) {
-    return null;
+    return <div className="h-full bg-background" />;
   }
 
   return (

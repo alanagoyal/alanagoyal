@@ -20,11 +20,9 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Prevent flash during hydration
+  // Prevent flash during hydration - use neutral background
   if (!isHydrated) {
-    return (
-      <div className="min-h-dvh bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" />
-    );
+    return <div className="min-h-dvh bg-background" />;
   }
 
   return isMobile ? <MobileShell /> : <Desktop />;

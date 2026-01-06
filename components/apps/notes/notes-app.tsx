@@ -67,12 +67,9 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
     setShowSidebar(true);
   }, []);
 
+  // Show empty background while loading to prevent flash
   if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <div className="h-full bg-background" />;
   }
 
   // On mobile, show either sidebar or note content
