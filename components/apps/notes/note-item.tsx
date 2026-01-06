@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSwipeable } from "react-swipeable";
-import { useMobileDetect } from "@/components/mobile-detector";
+import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "./ui/context-menu";
-import { Note } from "@/lib/types";
-import { getDisplayDateByCategory } from "@/lib/note-utils";
+} from "@/components/ui/context-menu";
+import { Note } from "@/lib/notes/types";
+import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
 import { Dispatch, SetStateAction } from "react";
 
 function previewContent(content: string): string {

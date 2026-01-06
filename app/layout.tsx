@@ -6,22 +6,11 @@ import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: siteConfig.title,
+  description: "Personal website of Alana Goyal",
   openGraph: {
     title: siteConfig.title,
     siteName: siteConfig.title,
     url: siteConfig.url,
-    images: [
-      {
-        url: "/messages/api/og",
-        width: 1200,
-        height: 630,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteConfig.title,
-    images: ["/messages/api/og"],
   },
 };
 

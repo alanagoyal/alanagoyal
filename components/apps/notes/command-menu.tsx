@@ -16,13 +16,13 @@ import {
   CommandItem,
   CommandList,
   CommandShortcut,
-} from "./ui/command";
-import { DialogTitle, DialogDescription } from "./ui/dialog";
+} from "@/components/ui/command";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Pin, ArrowUp, ArrowDown, Trash, PenSquare } from "lucide-react";
-import { createNote } from "@/lib/create-note";
-import { searchNotes } from "@/lib/search";
-import { Note } from "@/lib/types";
+import { createNote } from "@/lib/notes/create-note";
+import { searchNotes } from "@/lib/notes/search";
+import { Note } from "@/lib/notes/types";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";

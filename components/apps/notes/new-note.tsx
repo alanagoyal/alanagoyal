@@ -4,7 +4,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icons } from "./icons";
 import SessionId from "./session-id";
-import { createNote } from "@/lib/create-note";
+import { createNote } from "@/lib/notes/create-note";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 
 export default function NewNote({

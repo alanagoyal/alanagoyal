@@ -1,4 +1,4 @@
-import { InitialContact } from "@/data/initial-contacts";
+import { InitialContact } from "@/data/messages/initial-contacts";
 
 const CONTACTS_KEY = "user_contacts";
 

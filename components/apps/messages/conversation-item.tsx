@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
-import { Conversation } from "../types";
+import { Conversation } from "@/types/messages";
 import { SwipeActions } from "./swipe-actions";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "./ui/context-menu";
+} from "@/components/ui/context-menu";
 import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 

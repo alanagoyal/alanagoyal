@@ -2,19 +2,18 @@
 
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Session } from "inspector";
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import { Note } from "@/lib/notes/types";
 
 export interface SessionNotes {
   sessionId: string;
-  notes: any[];
+  notes: Note[];
   setSessionId: (sessionId: string) => void;
   refreshSessionNotes: () => Promise<void>;
 }
@@ -33,7 +32,7 @@ export function SessionNotesProvider({
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<any[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {

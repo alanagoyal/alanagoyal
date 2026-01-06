@@ -2,13 +2,13 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message, Reaction } from "../types";
+import { Conversation, Message, Reaction } from "@/types/messages";
 import { v4 as uuidv4 } from "uuid";
-import { initialConversations } from "../data/initial-conversations";
-import { MessageQueue } from "../lib/message-queue";
+import { initialConversations } from "@/data/messages/initial-conversations";
+import { MessageQueue } from "@/lib/messages/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
-import { soundEffects } from "@/lib/sound-effects";
+import { soundEffects } from "@/lib/messages/sound-effects";
 
 export default function App() {
   // State

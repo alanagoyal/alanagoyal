@@ -1,20 +1,22 @@
 import { cache } from "react";
-import Note from "@/components/note";
+import Note from "@/components/apps/notes/note";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
-import { Note as NoteType } from "@/lib/types";
+import { Note as NoteType } from "@/lib/notes/types";
 
 // Enable ISR with a reasonable revalidation period for public notes
 export const revalidate = 86400; // 24 hours
 
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
-  const supabase = createServerClient();
-  const { data: note } = await supabase.rpc("select_note", {
-    note_slug_arg: slug,
-  }).single() as { data: NoteType | null };
+  const supabase = await createServerClient();
+  const { data: note } = (await supabase
+    .rpc("select_note", {
+      note_slug_arg: slug,
+    })
+    .single()) as { data: NoteType | null };
   return note;
 });
 
@@ -34,13 +36,16 @@ export async function generateStaticParams() {
 // Use dynamic rendering for non-public notes
 export const dynamicParams = true;
 
+type PageProps = {
+  params: Promise<{ slug: string }>;
+};
+
 export async function generateMetadata({
   params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
-  const slug = params.slug.replace(/^notes\//, '');
-  const note = await getNote(slug);
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const cleanSlug = slug.replace(/^notes\//, "");
+  const note = await getNote(cleanSlug);
 
   if (!note) {
     return { title: "Note not found" };
@@ -53,21 +58,16 @@ export async function generateMetadata({
     title: `alana goyal | ${title}`,
     openGraph: {
       images: [
-        `/notes/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(
-          emoji
-        )}`,
+        `/notes/api/og/?title=${encodeURIComponent(title)}&emoji=${encodeURIComponent(emoji)}`,
       ],
     },
   };
 }
 
-export default async function NotePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const slug = params.slug.replace(/^notes\//, '');
-  const note = await getNote(slug);
+export default async function NotePage({ params }: PageProps) {
+  const { slug } = await params;
+  const cleanSlug = slug.replace(/^notes\//, "");
+  const note = await getNote(cleanSlug);
 
   if (!note) {
     return redirect("/notes/error");

@@ -1,8 +1,8 @@
-import { Message, Conversation, Reaction } from "../types";
+import { Message, Conversation, Reaction } from "@/types/messages";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { soundEffects } from "@/lib/sound-effects";
+import { soundEffects } from "@/lib/messages/sound-effects";
 
 interface MessageListProps {
   messages: Message[];

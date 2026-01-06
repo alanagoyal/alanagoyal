@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { Message, ReactionType, Reaction } from "../types";
-import { Conversation } from "../types";
+import { Message, ReactionType, Reaction } from "@/types/messages";
+import { Conversation } from "@/types/messages";
 import { useCallback, useState, useRef } from "react";
 import {
   Popover,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { soundEffects } from "@/lib/sound-effects";
+import { soundEffects } from "@/lib/messages/sound-effects";
 import { Icons } from "./icons";
 
 // Props for the MessageBubble component

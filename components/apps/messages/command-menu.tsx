@@ -15,10 +15,10 @@ import {
   CommandItem,
   CommandList,
   CommandShortcut,
-} from "./ui/command";
-import { DialogTitle, DialogDescription } from "./ui/dialog";
+} from "@/components/ui/command";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Icons } from "./icons";
-import { Conversation } from "@/types";
+import { Conversation } from "@/types/messages";
 import { useTheme } from "next-themes";
 
 export interface CommandMenuProps {

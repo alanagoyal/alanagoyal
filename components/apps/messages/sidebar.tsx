@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Conversation } from "../types";
+import { Conversation } from "@/types/messages";
 import { SearchBar } from "./search-bar";
 import { format, isToday, isYesterday, isThisWeek, parseISO } from "date-fns";
 import {
@@ -7,11 +7,11 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "./ui/context-menu";
+} from "@/components/ui/context-menu";
 import { ConversationItem } from "./conversation-item";
 import { Icons } from "./icons";
 import { useTheme } from "next-themes";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 

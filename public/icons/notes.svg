@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="notesGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFDE59"/>
+      <stop offset="100%" style="stop-color:#FFC107"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="26" fill="url(#notesGrad)"/>
+  <g fill="#8B6914">
+    <rect x="25" y="35" width="70" height="4" rx="2"/>
+    <rect x="25" y="50" width="55" height="4" rx="2"/>
+    <rect x="25" y="65" width="70" height="4" rx="2"/>
+    <rect x="25" y="80" width="40" height="4" rx="2"/>
+  </g>
+</svg>

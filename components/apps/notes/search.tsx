@@ -1,5 +1,5 @@
 import { RefObject, Dispatch, SetStateAction, useEffect } from "react";
-import { Note } from "@/lib/types";
+import { Note } from "@/lib/notes/types";
 import { Icons } from "./icons";
 
 interface SearchBarProps {

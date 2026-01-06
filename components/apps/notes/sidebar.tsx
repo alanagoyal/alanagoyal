@@ -15,14 +15,14 @@ import { useRouter } from "next/navigation";
 import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
-import { groupNotesByCategory, sortGroupedNotes } from "@/lib/note-utils";
+import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
-import { Note } from "@/lib/types";
-import { toast } from "./ui/use-toast";
+import { Note } from "@/lib/notes/types";
+import { toast } from "@/components/ui/use-toast";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const labels = {
   pinned: (
@@ -43,10 +43,12 @@ export default function Sidebar({
   notes: publicNotes,
   onNoteSelect,
   isMobile,
+  selectedSlug: externalSelectedSlug,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
+  selectedSlug?: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -110,11 +112,14 @@ export default function Sidebar({
   );
 
   useEffect(() => {
-    if (pathname) {
+    // Use external selectedSlug prop if provided (for desktop environment)
+    if (externalSelectedSlug !== undefined) {
+      setSelectedNoteSlug(externalSelectedSlug);
+    } else if (pathname) {
       const slug = pathname.split("/").pop();
       setSelectedNoteSlug(slug || null);
     }
-  }, [pathname]);
+  }, [pathname, externalSelectedSlug]);
 
   useEffect(() => {
     if (selectedNoteSlug) {

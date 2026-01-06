@@ -1,11 +1,11 @@
 import { Icons } from "./icons";
-import { Conversation } from "../types";
+import { Conversation } from "@/types/messages";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { initialContacts } from "../data/initial-contacts";
+import { initialContacts } from "@/data/messages/initial-contacts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getUserContacts, addUserContact } from "@/lib/contacts";
+import { getUserContacts, addUserContact } from "@/lib/messages/contacts";
 import { ContactDrawer } from "./contact-drawer";
 
 // Helper to check if we can add more recipients

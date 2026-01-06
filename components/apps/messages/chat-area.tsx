@@ -1,9 +1,9 @@
-import { Conversation, Reaction } from "../types";
+import { Conversation, Reaction } from "@/types/messages";
 import { useEffect, useRef, useState } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {

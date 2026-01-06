@@ -1,4 +1,4 @@
-import { Conversation, Message } from "../types";
+import { Conversation, Message } from "@/types/messages";
 import { soundEffects } from "./sound-effects";
 
 // Represents a task in the message queue

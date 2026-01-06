@@ -1,5 +1,5 @@
 export const siteConfig = {
-  title: "alana goyal | notes",
+  title: "alana goyal",
   url: "https://alanagoyal.com",
 };
 

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { NoteItem } from "./note-item";
-import { Note } from "@/lib/types";
+import { Note } from "@/lib/notes/types";
 
 interface SidebarContentProps {
   groupedNotes: Record<string, Note[]>;

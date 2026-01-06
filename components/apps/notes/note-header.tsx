@@ -1,24 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
-import { Input } from "./ui/input";
+import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import Picker from "@emoji-mart/react";
 import { useMobileDetect } from "./mobile-detector";
-import { ChevronLeft, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
+import { Note } from "@/lib/notes/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
-import { getDisplayDateByCategory } from "@/lib/note-utils";
+import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
 
 export default function NoteHeader({
   note,
   saveNote,
   canEdit,
 }: {
-  note: any;
-  saveNote: (updates: Partial<typeof note>) => void;
+  note: Note;
+  saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
 }) {
   const isMobile = useMobileDetect();
@@ -33,7 +34,7 @@ export default function NoteHeader({
     );
   }, [note.category, note.id]);
 
-  const handleEmojiSelect = (emojiObject: any) => {
+  const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;
     saveNote({ emoji: newEmoji });
     setShowEmojiPicker(false);

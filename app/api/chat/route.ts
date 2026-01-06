@@ -1,22 +1,32 @@
 import { OpenAI } from "openai";
-import { Recipient, Message, ReactionType } from "../../../types";
-import { initialContacts } from "../../../data/initial-contacts";
+import { Recipient, Message, ReactionType } from "@/types/messages";
+import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
 
-const client = wrapOpenAI(
-  new OpenAI({
-    baseURL: "https://api.braintrust.dev/v1/proxy",
-    apiKey: process.env.BRAINTRUST_API_KEY!,
-    timeout: 30000,
-    maxRetries: 3,
-  })
-);
+let client: OpenAI | null = null;
+let loggerInitialized = false;
 
-initLogger({
-  projectName: "messages",
-  apiKey: process.env.BRAINTRUST_API_KEY,
-});
+function getClient() {
+  if (!client) {
+    client = wrapOpenAI(
+      new OpenAI({
+        baseURL: "https://api.braintrust.dev/v1/proxy",
+        apiKey: process.env.BRAINTRUST_API_KEY!,
+        timeout: 30000,
+        maxRetries: 3,
+      })
+    ) as unknown as OpenAI;
+  }
+  if (!loggerInitialized) {
+    initLogger({
+      projectName: "messages",
+      apiKey: process.env.BRAINTRUST_API_KEY,
+    });
+    loggerInitialized = true;
+  }
+  return client;
+}
 
 interface ChatResponse {
   sender: string;
@@ -181,7 +191,7 @@ export async function POST(req: Request) {
       })),
     ];
 
-    const response = await client.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [...chatMessages],
       tool_choice: "required",

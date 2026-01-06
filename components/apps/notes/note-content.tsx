@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Textarea } from "./ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Note } from "@/lib/types";
+import { Note } from "@/lib/notes/types";
 import {
   getImageFromClipboard,
   uploadNoteImage,
   insertImageMarkdown,
-} from "@/lib/image-upload";
+} from "@/lib/notes/image-upload";
 import { toast } from "@/components/ui/use-toast";
 
 export default function NoteContent({

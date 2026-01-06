@@ -1,4 +1,4 @@
-import { Conversation } from "../types";
+import { Conversation } from "@/types/messages";
 
 // Helper function to create a timestamp for a specific time ago
 const getTimeAgo = (minutes: number) => {

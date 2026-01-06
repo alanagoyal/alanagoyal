@@ -18,13 +18,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Legacy note slugs redirect to /notes/*
+      // Only match paths that have at least one character and aren't reserved
       {
-        source: '/',
-        destination: '/notes',
-        permanent: false,
-      },
-      {
-        source: '/:path((?!notes|api|messages|_next|static|public|favicon\\.ico|sitemap\\.xml|robots\\.txt).*)',
+        source: '/:path((?!notes|api|messages|_next|static|public|icons|favicon\\.ico|sitemap\\.xml|robots\\.txt).+)',
         destination: '/notes/:path',
         permanent: true,
       },

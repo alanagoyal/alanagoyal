@@ -1,4 +1,4 @@
-import { Recipient } from "@/types";
+import { Recipient } from "@/types/messages";
 import {
   useState,
   useRef,
@@ -15,7 +15,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Mention from "@tiptap/extension-mention";
 import { SuggestionProps } from "@tiptap/suggestion";
 import Placeholder from "@tiptap/extension-placeholder";
-import { soundEffects } from "@/lib/sound-effects";
+import { soundEffects } from "@/lib/messages/sound-effects";
 
 interface MessageInputProps {
   message: string;
