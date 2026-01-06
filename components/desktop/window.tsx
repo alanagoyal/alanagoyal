@@ -158,12 +158,9 @@ export function Window({ appId, children }: WindowProps) {
             </span>
           </button>
           <button
-            onClick={() => !isMaximized && toggleMaximize(appId)}
-            className={cn(
-              "w-3 h-3 rounded-full bg-green-500 transition-colors flex items-center justify-center group",
-              !isMaximized && "hover:bg-green-600"
-            )}
-            title="Maximize"
+            onClick={() => toggleMaximize(appId)}
+            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center group"
+            title={isMaximized ? "Restore" : "Maximize"}
           >
             <span className="text-green-900 text-[8px] opacity-0 group-hover:opacity-100">
               +
