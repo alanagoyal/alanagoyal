@@ -53,6 +53,8 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   // Add command menu ref
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
+  // Container ref for scoping dialogs to this app
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const STORAGE_KEY = "dialogueConversations";
 
@@ -767,7 +769,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   }
 
   return (
-    <div data-app="messages" className={`flex ${isDesktop ? 'h-full' : 'h-dvh'}`}>
+    <div ref={containerRef} data-app="messages" className={`flex ${isDesktop ? 'h-full' : 'h-dvh'} relative`}>
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
@@ -783,6 +785,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         onOpenChange={setIsCommandMenuOpen}
         soundEnabled={soundEnabled}
         onSoundToggle={handleSoundToggle}
+        container={isDesktop ? containerRef.current : undefined}
       />
       <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col overflow-hidden`}>
         <div className="flex-1 flex min-h-0">

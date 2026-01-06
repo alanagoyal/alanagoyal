@@ -38,6 +38,7 @@ export interface CommandMenuProps {
   ref: React.RefObject<{ setOpen: (open: boolean) => void }>;
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
+  container?: HTMLElement | null;
 }
 
 export const CommandMenu = forwardRef<
@@ -55,6 +56,7 @@ export const CommandMenu = forwardRef<
       highlightedNote,
       setSelectedNoteSlug,
       isMobile,
+      container,
     },
     ref
   ) => {
@@ -200,7 +202,7 @@ export const CommandMenu = forwardRef<
     );
 
     return (
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} container={container}>
         <DialogTitle className="sr-only">Command Menu</DialogTitle>
         <DialogDescription className="sr-only">
           Use this dialog to execute commands or search for a note

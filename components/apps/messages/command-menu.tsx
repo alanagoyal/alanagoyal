@@ -32,6 +32,7 @@ export interface CommandMenuProps {
   onOpenChange?: (open: boolean) => void;
   soundEnabled: boolean;
   onSoundToggle: () => void;
+  container?: HTMLElement | null;
 }
 
 export const CommandMenu = forwardRef<
@@ -49,6 +50,7 @@ export const CommandMenu = forwardRef<
       onOpenChange,
       soundEnabled,
       onSoundToggle,
+      container,
     },
     ref
   ) => {
@@ -286,7 +288,7 @@ export const CommandMenu = forwardRef<
     );
 
     return (
-      <CommandDialog open={open} onOpenChange={handleOpenChange}>
+      <CommandDialog open={open} onOpenChange={handleOpenChange} container={container}>
         <DialogTitle className="sr-only">Command Menu</DialogTitle>
         <DialogDescription className="sr-only">
           Use this dialog to execute commands or search for a chat

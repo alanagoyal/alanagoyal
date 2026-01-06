@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/notes/session-notes";
@@ -20,6 +20,8 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const supabase = createClient();
+  // Container ref for scoping dialogs to this app
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch public notes on mount
   useEffect(() => {
@@ -103,7 +105,7 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
   // Desktop view - show both sidebar and note
   return (
     <SessionNotesProvider>
-      <div data-app="notes" className="notes-app h-full flex bg-background text-foreground">
+      <div ref={containerRef} data-app="notes" className="notes-app h-full flex bg-background text-foreground relative">
         <Sidebar
           notes={notes}
           onNoteSelect={handleNoteSelect}
@@ -111,6 +113,7 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
           selectedSlug={selectedNote?.slug}
           isDesktop={true}
           onNoteCreated={setSelectedNote}
+          dialogContainer={containerRef.current}
         />
         <div className="flex-grow h-full overflow-hidden">
           <ScrollArea className="h-full" isMobile={false}>

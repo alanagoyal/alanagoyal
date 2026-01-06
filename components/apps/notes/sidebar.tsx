@@ -46,6 +46,7 @@ export default function Sidebar({
   selectedSlug: externalSelectedSlug,
   isDesktop = false,
   onNoteCreated,
+  dialogContainer,
 }: {
   notes: any[];
   onNoteSelect: (note: any) => void;
@@ -53,6 +54,7 @@ export default function Sidebar({
   selectedSlug?: string | null;
   isDesktop?: boolean;
   onNoteCreated?: (note: any) => void;
+  dialogContainer?: HTMLElement | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -488,6 +490,7 @@ export default function Sidebar({
             highlightedNote={highlightedNote}
             setSelectedNoteSlug={setSelectedNoteSlug}
             isMobile={isMobile}
+            container={dialogContainer}
           />
           <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
             <SearchBar
