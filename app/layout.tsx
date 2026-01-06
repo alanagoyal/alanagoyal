@@ -7,6 +7,9 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: siteConfig.title,
   description: "Personal website of Alana Goyal",
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     title: siteConfig.title,
     siteName: siteConfig.title,
