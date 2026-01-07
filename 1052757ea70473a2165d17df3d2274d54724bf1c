@@ -1,0 +1,25 @@
+components/apps/notes/nav.tsx
+  8f284c76fb6649b0 33,35,60-61,64-69,74
+components/apps/notes/sidebar.tsx
+  8f284c76fb6649b0 27,461-462,464-465,467,478,480,539
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "1052757ea70473a2165d17df3d2274d54724bf1c",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 219,
+      "total_deletions": 136,
+      "accepted_lines": 150,
+      "overriden_lines": 0
+    }
+  }
+}
