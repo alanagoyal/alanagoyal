@@ -34,10 +34,13 @@ export function Window({ appId, children, onFocus }: WindowProps) {
 
   const isFocused = state.focusedWindowId === appId;
 
-  const handleMouseDown = useCallback(
+  const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
-      // Only drag from title bar area
+      // Don't drag if clicking on interactive elements
       if ((e.target as HTMLElement).closest(".window-controls")) {
+        return;
+      }
+      if (windowState?.isMaximized) {
         return;
       }
       e.preventDefault();
@@ -48,7 +51,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         y: e.clientY - (windowState?.position.y ?? 0),
       });
     },
-    [appId, focusWindow, windowState?.position]
+    [appId, focusWindow, windowState?.position, windowState?.isMaximized]
   );
 
   const handleMouseMove = useCallback(
@@ -134,60 +137,17 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         onFocus?.();
       }}
     >
-      {/* Title Bar */}
-      <div
-        className={cn(
-          "h-12 flex items-center px-4 border-b border-black/5 dark:border-white/5 select-none bg-white/20 dark:bg-zinc-800/20 backdrop-blur-md",
-          isMaximized ? "cursor-default" : "cursor-grab",
-          isDragging && "cursor-grabbing"
-        )}
-        onMouseDown={!isMaximized ? handleMouseDown : undefined}
-      >
-        {/* Traffic Lights */}
-        <div className="window-controls flex items-center gap-2">
-          <button
-            onClick={() => closeWindow(appId)}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center group"
-            title="Close"
-          >
-            <span className="text-red-900 text-[10px] opacity-0 group-hover:opacity-100">
-              ×
-            </span>
-          </button>
-          <button
-            onClick={() => minimizeWindow(appId)}
-            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors flex items-center justify-center group"
-            title="Minimize"
-          >
-            <span className="text-yellow-900 text-[10px] opacity-0 group-hover:opacity-100">
-              −
-            </span>
-          </button>
-          <button
-            onClick={() => toggleMaximize(appId)}
-            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center group"
-            title={isMaximized ? "Restore" : "Maximize"}
-          >
-            <span className="text-green-900 text-[8px] opacity-0 group-hover:opacity-100">
-              +
-            </span>
-          </button>
-        </div>
-
-        {/* Title */}
-        <div className="flex-1 text-center">
-          <span className="text-sm font-medium text-black/80 dark:text-white/80">
-            {app.name}
-          </span>
-        </div>
-
-        {/* Spacer for symmetry */}
-        <div className="w-14" />
-      </div>
-
-      {/* Content */}
+      {/* Content - no title bar, apps render their own nav with traffic lights */}
       <div className="flex-1 overflow-hidden">
-        <WindowFocusProvider isFocused={isFocused} appId={appId}>
+        <WindowFocusProvider
+          isFocused={isFocused}
+          appId={appId}
+          closeWindow={() => closeWindow(appId)}
+          minimizeWindow={() => minimizeWindow(appId)}
+          toggleMaximize={() => toggleMaximize(appId)}
+          isMaximized={isMaximized}
+          onDragStart={handleDragStart}
+        >
           {children}
         </WindowFocusProvider>
       </div>
