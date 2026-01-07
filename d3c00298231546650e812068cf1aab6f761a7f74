@@ -1,0 +1,27 @@
+components/ui/input.tsx
+  8f284c76fb6649b0 5-8,14
+components/apps/notes/note-content.tsx
+  8f284c76fb6649b0 199
+app/globals.css
+  8f284c76fb6649b0 8-15,39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "d3c00298231546650e812068cf1aab6f761a7f74",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 11,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
