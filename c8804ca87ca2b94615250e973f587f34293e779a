@@ -1,0 +1,43 @@
+BUGS.md
+  8f284c76fb6649b0 73-75,77-79
+  e5e98b0d9a5686e6 76
+lib/messages/message-queue.ts
+  8f284c76fb6649b0 255
+components/apps/messages/chat-header.tsx
+  8f284c76fb6649b0 550
+components/apps/messages/app.tsx
+  8f284c76fb6649b0 132,135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "c8804ca87ca2b94615250e973f587f34293e779a",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 10,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    },
+    "e5e98b0d9a5686e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3749bb5a-901d-4a59-84d7-85cadf4aab1f",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
