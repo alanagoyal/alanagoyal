@@ -69,3 +69,7 @@ Removed gradient background and "Loading..." text flash on mobile by:
 ### localStorage Stale References
 **Status:** Low priority
 **Description:** If app IDs change, saved window state could reference non-existent apps. No migration/validation currently exists.
+
+### Messages App Shows Split View on Narrow Screens
+**Status:** To fix
+**Description:** On narrow (but not mobile) screens, the Messages app incorrectly shows both the sidebar and an empty conversation area side-by-side. On small screens, it should behave like mobile and only show the sidebar until a conversation is selected.

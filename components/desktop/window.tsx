@@ -136,7 +136,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
       {/* Title Bar */}
       <div
         className={cn(
-          "h-12 flex items-center px-4 border-b border-black/5 dark:border-white/5 select-none",
+          "h-12 flex items-center px-4 border-b border-black/5 dark:border-white/5 select-none bg-white/20 dark:bg-zinc-800/20 backdrop-blur-md",
           isMaximized ? "cursor-default" : "cursor-grab",
           isDragging && "cursor-grabbing"
         )}
