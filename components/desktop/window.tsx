@@ -103,13 +103,13 @@ export function Window({ appId, children, onFocus }: WindowProps) {
 
   const windowStyle: React.CSSProperties = isMaximized
     ? {
-        top: MENU_BAR_HEIGHT,
+        top: 0,
         left: 0,
         right: 0,
-        bottom: DOCK_HEIGHT,
+        bottom: 0,
         width: "auto",
         height: "auto",
-        zIndex,
+        zIndex: zIndex + 100, // Above menu bar (z-50) and dock (z-40), preserves focus order
       }
     : {
         top: position.y,
@@ -123,9 +123,10 @@ export function Window({ appId, children, onFocus }: WindowProps) {
     <div
       ref={windowRef}
       className={cn(
-        "fixed bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+        "fixed bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+        isMaximized ? "rounded-none" : "rounded-xl",
         isDragging && "cursor-grabbing",
-        !isFocused && "opacity-95"
+        !isFocused && !isMaximized && "opacity-95"
       )}
       style={windowStyle}
       onMouseDown={() => {
