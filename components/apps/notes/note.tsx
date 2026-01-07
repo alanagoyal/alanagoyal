@@ -1,7 +1,6 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 import SessionId from "./session-id";
@@ -15,7 +14,6 @@ interface NoteProps {
 
 export default function Note({ note: initialNote, onBack }: NoteProps) {
   const supabase = createClient();
-  const router = useRouter();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -96,14 +94,13 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
               body: JSON.stringify({ slug: currentNote.slug }),
             });
             refreshSessionNotes();
-            router.refresh();
           }
         } catch (error) {
           console.error("Save failed:", error);
         }
       }, 500);
     },
-    [supabase, router, refreshSessionNotes, sessionId]
+    [supabase, refreshSessionNotes, sessionId]
   );
 
   const canEdit = sessionId === note.session_id;
