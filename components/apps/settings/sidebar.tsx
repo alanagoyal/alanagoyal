@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { Settings, Paintbrush, Search } from "lucide-react";
+import { Settings, Paintbrush, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { SettingsCategory } from "./settings-app";
@@ -15,18 +16,22 @@ interface SidebarProps {
   isDesktop?: boolean;
 }
 
-const categories: { id: SettingsCategory; name: string; icon: React.ReactNode }[] = [
+const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; keywords: string[] }[] = [
   {
     id: "general",
     name: "General",
     icon: <Settings className="w-5 h-5" />,
+    keywords: ["about", "macbook", "software update", "storage", "chip", "memory", "serial", "macos", "sonoma"],
   },
   {
     id: "appearance",
     name: "Appearance",
     icon: <Paintbrush className="w-5 h-5" />,
+    keywords: ["light", "dark", "auto", "theme", "mode"],
   },
 ];
+
+const appleAccountKeywords = ["alana", "goyal", "apple", "account", "personal", "information", "name", "birthday"];
 
 export function Sidebar({
   selectedCategory,
@@ -36,8 +41,22 @@ export function Sidebar({
   isMobile,
   isDesktop = false,
 }: SidebarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+
+  const query = searchQuery.toLowerCase();
+
+  // Filter categories based on search (name or keywords)
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(query) ||
+    category.keywords.some((keyword) => keyword.includes(query))
+  );
+
+  // Check if Apple Account matches search
+  const showAppleAccount =
+    searchQuery === "" ||
+    appleAccountKeywords.some((keyword) => keyword.includes(query));
 
   return (
     <div
@@ -90,45 +109,62 @@ export function Sidebar({
       )}
 
       {/* Search bar */}
-      <div className="px-3 pb-2">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-background/50 rounded-md border border-border/50">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Search</span>
+      <div className="p-2">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search"
+            className="w-full pl-8 pr-8 py-0.5 rounded-lg text-base sm:text-sm placeholder:text-sm placeholder:text-muted-foreground focus:outline-none bg-[#E8E8E7] dark:bg-[#353533]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Apple Account */}
-      <div className="px-3 py-2">
-        <button
-          onClick={onAccountClick}
-          className={cn(
-            "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
-            selectedPanel === "personal-info"
-              ? "bg-blue-500 text-white"
-              : "hover:bg-background/50"
-          )}
-        >
-          <Image
-            src="/headshot.jpg"
-            alt="Alana Goyal"
-            width={48}
-            height={48}
-            className="rounded-full"
-          />
-          <div className="text-left">
-            <div className="font-medium text-sm">Alana Goyal</div>
-            <div className={cn(
-              "text-xs",
-              selectedPanel === "personal-info" ? "text-white/70" : "text-muted-foreground"
-            )}>Apple Account</div>
-          </div>
-        </button>
-      </div>
+      {showAppleAccount && (
+        <div className="px-3 py-2">
+          <button
+            onClick={onAccountClick}
+            className={cn(
+              "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
+              selectedPanel === "personal-info"
+                ? "bg-blue-500 text-white"
+                : "hover:bg-background/50"
+            )}
+          >
+            <Image
+              src="/headshot.jpg"
+              alt="Alana Goyal"
+              width={48}
+              height={48}
+              className="rounded-full"
+            />
+            <div className="text-left">
+              <div className="font-medium text-sm">Alana Goyal</div>
+              <div className={cn(
+                "text-xs",
+                selectedPanel === "personal-info" ? "text-white/70" : "text-muted-foreground"
+              )}>Apple Account</div>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Categories */}
       <div className="flex-1 px-3 py-2 overflow-y-auto">
         <div className="space-y-0.5">
-          {categories.map((category) => {
+          {filteredCategories.map((category) => {
             const isSelected = selectedCategory === category.id && selectedPanel !== "personal-info";
             return (
               <button
