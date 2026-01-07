@@ -60,7 +60,17 @@ function loadStateFromStorage(): WindowManagerState | null {
       const parsed = JSON.parse(saved);
       // Validate structure
       if (parsed.windows && typeof parsed.nextZIndex === "number") {
-        return parsed;
+        // Merge with current APPS config to pick up any new apps
+        const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
+        APPS.forEach((app) => {
+          if (!mergedWindows[app.id]) {
+            mergedWindows[app.id] = getDefaultWindowState(app.id);
+          }
+        });
+        return {
+          ...parsed,
+          windows: mergedWindows,
+        };
       }
     }
   } catch (e) {

@@ -8,6 +8,7 @@ import { Dock } from "./dock";
 import { Window } from "./window";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
+import { SettingsApp } from "@/components/apps/settings/settings-app";
 import wallpaper from "@/public/desktop/wallpaper.png";
 
 interface DesktopProps {
@@ -31,6 +32,11 @@ export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
     }
   }, [initialNoteSlug]);
 
+  // Update URL when settings window is focused
+  const handleSettingsFocus = useCallback(() => {
+    window.history.replaceState(null, "", "/settings");
+  }, []);
+
   return (
     <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
       <div className="fixed inset-0">
@@ -50,6 +56,10 @@ export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
 
         <Window appId="messages" onFocus={handleMessagesFocus}>
           <MessagesApp inShell={true} />
+        </Window>
+
+        <Window appId="settings" onFocus={handleSettingsFocus}>
+          <SettingsApp inShell={true} />
         </Window>
 
         <Dock />

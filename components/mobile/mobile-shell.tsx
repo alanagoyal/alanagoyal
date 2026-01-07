@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { TabBar } from "./tab-bar";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
+import { SettingsApp } from "@/components/apps/settings/settings-app";
 
 const STORAGE_KEY = "mobile-active-app";
 const DEFAULT_APP = "notes";
@@ -23,7 +24,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId(initialApp);
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved && (saved === "notes" || saved === "messages")) {
+      if (saved && (saved === "notes" || saved === "messages" || saved === "settings")) {
         setActiveAppId(saved);
       }
     }
@@ -46,6 +47,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       } else if (appId === "notes") {
         // Go to /notes (sidebar view) when switching to notes
         window.history.replaceState(null, "", "/notes");
+      } else if (appId === "settings") {
+        window.history.replaceState(null, "", "/settings");
       }
     }
   };
@@ -66,6 +69,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
       )}
       {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
+      {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
     </div>
   );
