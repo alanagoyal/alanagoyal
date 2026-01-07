@@ -15,12 +15,18 @@ interface WindowProps {
 const MENU_BAR_HEIGHT = 28;
 const DOCK_HEIGHT = 80;
 
+type ResizeDirection =
+  | "n" | "s" | "e" | "w"
+  | "ne" | "nw" | "se" | "sw"
+  | null;
+
 export function Window({ appId, children, onFocus }: WindowProps) {
   const {
     getWindow,
     closeWindow,
     focusWindow,
     moveWindow,
+    resizeWindow,
     minimizeWindow,
     toggleMaximize,
     state,
@@ -31,6 +37,8 @@ export function Window({ appId, children, onFocus }: WindowProps) {
   const windowRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizeDir, setResizeDir] = useState<ResizeDirection>(null);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
 
   const isFocused = state.focusedWindowId === appId;
 
@@ -85,7 +93,71 @@ export function Window({ appId, children, onFocus }: WindowProps) {
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setResizeDir(null);
   }, []);
+
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent, direction: ResizeDirection) => {
+      if (windowState?.isMaximized) return;
+      e.preventDefault();
+      e.stopPropagation();
+      focusWindow(appId);
+      setResizeDir(direction);
+      setResizeStart({
+        x: e.clientX,
+        y: e.clientY,
+        width: windowState?.size.width ?? 400,
+        height: windowState?.size.height ?? 300,
+        posX: windowState?.position.x ?? 0,
+        posY: windowState?.position.y ?? 0,
+      });
+    },
+    [appId, focusWindow, windowState?.size, windowState?.position, windowState?.isMaximized]
+  );
+
+  const handleResizeMove = useCallback(
+    (e: MouseEvent) => {
+      if (!resizeDir || !app) return;
+
+      const dx = e.clientX - resizeStart.x;
+      const dy = e.clientY - resizeStart.y;
+      const minWidth = app.minSize?.width ?? 200;
+      const minHeight = app.minSize?.height ?? 150;
+
+      let newWidth = resizeStart.width;
+      let newHeight = resizeStart.height;
+      let newX = resizeStart.posX;
+      let newY = resizeStart.posY;
+
+      // Handle horizontal resize
+      if (resizeDir.includes("e")) {
+        newWidth = Math.max(minWidth, resizeStart.width + dx);
+      } else if (resizeDir.includes("w")) {
+        const proposedWidth = resizeStart.width - dx;
+        if (proposedWidth >= minWidth) {
+          newWidth = proposedWidth;
+          newX = resizeStart.posX + dx;
+        }
+      }
+
+      // Handle vertical resize
+      if (resizeDir.includes("s")) {
+        newHeight = Math.max(minHeight, resizeStart.height + dy);
+      } else if (resizeDir.includes("n")) {
+        const proposedHeight = resizeStart.height - dy;
+        if (proposedHeight >= minHeight) {
+          newHeight = proposedHeight;
+          newY = resizeStart.posY + dy;
+        }
+      }
+
+      // Constrain position
+      newY = Math.max(MENU_BAR_HEIGHT, newY);
+
+      resizeWindow(appId, { width: newWidth, height: newHeight }, { x: newX, y: newY });
+    },
+    [resizeDir, resizeStart, app, appId, resizeWindow]
+  );
 
   useEffect(() => {
     if (isDragging) {
@@ -97,6 +169,17 @@ export function Window({ appId, children, onFocus }: WindowProps) {
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  useEffect(() => {
+    if (resizeDir) {
+      window.addEventListener("mousemove", handleResizeMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        window.removeEventListener("mousemove", handleResizeMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [resizeDir, handleResizeMove, handleMouseUp]);
 
   if (!windowState || !windowState.isOpen || windowState.isMinimized || !app) {
     return null;
@@ -121,6 +204,10 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         height: size.height,
         zIndex,
       };
+
+  const resizeHandleClass = "absolute z-10";
+  const edgeSize = 6;
+  const cornerSize = 12;
 
   return (
     <div
@@ -151,6 +238,55 @@ export function Window({ appId, children, onFocus }: WindowProps) {
           {children}
         </WindowFocusProvider>
       </div>
+
+      {/* Resize handles - only shown when not maximized */}
+      {!isMaximized && (
+        <>
+          {/* Edge handles */}
+          <div
+            className={cn(resizeHandleClass, "cursor-n-resize")}
+            style={{ top: 0, left: cornerSize, right: cornerSize, height: edgeSize }}
+            onMouseDown={(e) => handleResizeStart(e, "n")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-s-resize")}
+            style={{ bottom: 0, left: cornerSize, right: cornerSize, height: edgeSize }}
+            onMouseDown={(e) => handleResizeStart(e, "s")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-e-resize")}
+            style={{ right: 0, top: cornerSize, bottom: cornerSize, width: edgeSize }}
+            onMouseDown={(e) => handleResizeStart(e, "e")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-w-resize")}
+            style={{ left: 0, top: cornerSize, bottom: cornerSize, width: edgeSize }}
+            onMouseDown={(e) => handleResizeStart(e, "w")}
+          />
+
+          {/* Corner handles */}
+          <div
+            className={cn(resizeHandleClass, "cursor-nw-resize")}
+            style={{ top: 0, left: 0, width: cornerSize, height: cornerSize }}
+            onMouseDown={(e) => handleResizeStart(e, "nw")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-ne-resize")}
+            style={{ top: 0, right: 0, width: cornerSize, height: cornerSize }}
+            onMouseDown={(e) => handleResizeStart(e, "ne")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-sw-resize")}
+            style={{ bottom: 0, left: 0, width: cornerSize, height: cornerSize }}
+            onMouseDown={(e) => handleResizeStart(e, "sw")}
+          />
+          <div
+            className={cn(resizeHandleClass, "cursor-se-resize")}
+            style={{ bottom: 0, right: 0, width: cornerSize, height: cornerSize }}
+            onMouseDown={(e) => handleResizeStart(e, "se")}
+          />
+        </>
+      )}
     </div>
   );
 }

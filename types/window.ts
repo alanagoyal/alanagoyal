@@ -30,6 +30,7 @@ export type WindowAction =
   | { type: "CLOSE_WINDOW"; appId: string }
   | { type: "FOCUS_WINDOW"; appId: string }
   | { type: "MOVE_WINDOW"; appId: string; position: Position }
+  | { type: "RESIZE_WINDOW"; appId: string; size: Size; position?: Position }
   | { type: "MINIMIZE_WINDOW"; appId: string }
   | { type: "MAXIMIZE_WINDOW"; appId: string }
   | { type: "RESTORE_WINDOW"; appId: string }

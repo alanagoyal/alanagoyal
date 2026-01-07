@@ -12,6 +12,7 @@ import {
   WindowManagerState,
   WindowAction,
   Position,
+  Size,
 } from "@/types/window";
 import { APPS, getAppById } from "./app-config";
 
@@ -186,6 +187,24 @@ function windowReducer(
       };
     }
 
+    case "RESIZE_WINDOW": {
+      const { appId, size, position } = action;
+      const window = state.windows[appId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [appId]: {
+            ...window,
+            size,
+            ...(position && { position }),
+          },
+        },
+      };
+    }
+
     case "MAXIMIZE_WINDOW": {
       const { appId } = action;
       const window = state.windows[appId];
@@ -242,6 +261,7 @@ interface WindowManagerContextValue {
   closeWindow: (appId: string) => void;
   focusWindow: (appId: string) => void;
   moveWindow: (appId: string, position: Position) => void;
+  resizeWindow: (appId: string, size: Size, position?: Position) => void;
   minimizeWindow: (appId: string) => void;
   maximizeWindow: (appId: string) => void;
   restoreWindow: (appId: string) => void;
@@ -340,6 +360,10 @@ export function WindowManagerProvider({
     dispatch({ type: "MOVE_WINDOW", appId, position });
   }, []);
 
+  const resizeWindow = useCallback((appId: string, size: Size, position?: Position) => {
+    dispatch({ type: "RESIZE_WINDOW", appId, size, position });
+  }, []);
+
   const minimizeWindow = useCallback((appId: string) => {
     dispatch({ type: "MINIMIZE_WINDOW", appId });
   }, []);
@@ -385,6 +409,7 @@ export function WindowManagerProvider({
     closeWindow,
     focusWindow,
     moveWindow,
+    resizeWindow,
     minimizeWindow,
     maximizeWindow,
     restoreWindow,
