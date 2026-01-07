@@ -20,7 +20,7 @@ export function TabBar({ activeAppId, onTabSelect }: TabBarProps) {
               key={app.id}
               onClick={() => onTabSelect(app.id)}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
+                "flex items-center justify-center p-2 rounded-lg transition-colors",
                 isActive
                   ? "text-blue-500"
                   : "text-gray-500 dark:text-gray-400"
@@ -35,7 +35,6 @@ export function TabBar({ activeAppId, onTabSelect }: TabBarProps) {
                   className={cn("rounded-md", !isActive && "opacity-60")}
                 />
               </div>
-              <span className="text-[10px] font-medium">{app.name}</span>
             </button>
           );
         })}
