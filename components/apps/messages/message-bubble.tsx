@@ -55,12 +55,12 @@ export function MessageBubble({
   const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const menuReactionIcons = {
-    heart: "messages/reactions/heart-gray.svg",
-    like: "messages/reactions/like-gray.svg",
-    dislike: "messages/reactions/dislike-gray.svg",
-    laugh: "messages/reactions/laugh-gray.svg",
-    emphasize: "messages/reactions/emphasize-gray.svg",
-    question: "messages/reactions/question-gray.svg",
+    heart: "/messages/reactions/heart-gray.svg",
+    like: "/messages/reactions/like-gray.svg",
+    dislike: "/messages/reactions/dislike-gray.svg",
+    laugh: "/messages/reactions/laugh-gray.svg",
+    emphasize: "/messages/reactions/emphasize-gray.svg",
+    question: "/messages/reactions/question-gray.svg",
   };
 
   // State to control the Popover open state and animation
@@ -263,14 +263,14 @@ export function MessageBubble({
 
     // If overlay is true, always use the base variant without "-blue"
     if (overlay) {
-      return `messages/reactions/${orientation}-${baseVariant}-${reactionType}-overlay.svg`;
+      return `/messages/reactions/${orientation}-${baseVariant}-${reactionType}-overlay.svg`;
     }
 
     // Otherwise, if the reaction is from me and we're in mobile view, use the blue variant
     const variant =
       reactionFromMe && isMobileView ? `${baseVariant}-blue` : baseVariant;
 
-    return `messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
+    return `/messages/reactions/${orientation}-${variant}-${reactionType}.svg`;
   };
 
   const getReactionStyle = (reaction: Reaction, isMe: boolean, isMobileView: boolean) => {

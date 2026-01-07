@@ -90,7 +90,7 @@ export function Sidebar({
 
   const getReactionIconSvg = (reactionType: string) => {
     const variant = effectiveTheme === "dark" ? "dark" : "pinned-light";
-    return `messages/reactions/left-${variant}-${reactionType}.svg`;
+    return `/messages/reactions/left-${variant}-${reactionType}.svg`;
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
