@@ -1,9 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  basePath: "/messages",
-};
-
-module.exports = nextConfig;
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

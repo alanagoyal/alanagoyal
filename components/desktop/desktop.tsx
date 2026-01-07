@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
+import Image from "next/image";
 import { WindowManagerProvider } from "@/lib/window-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
+import wallpaper from "@/public/desktop/wallpaper.png";
 
 interface DesktopProps {
   initialAppId?: string; // App to open and focus on load
@@ -31,7 +33,15 @@ export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
 
   return (
     <WindowManagerProvider initialAppId={initialAppId}>
-      <div className="fixed inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900">
+      <div className="fixed inset-0">
+        <Image
+          src={wallpaper}
+          alt="Desktop wallpaper"
+          fill
+          className="object-cover -z-10"
+          priority
+          quality={100}
+        />
         <MenuBar />
 
         <Window appId="notes" onFocus={handleNotesFocus}>
