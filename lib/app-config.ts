@@ -4,7 +4,7 @@ export const APPS: AppConfig[] = [
   {
     id: "notes",
     name: "Notes",
-    icon: "/icons/notes.svg",
+    icon: "/notes.png",
     description: "Personal notes and thoughts",
     accentColor: "#FFCC00",
     defaultPosition: { x: 100, y: 50 },
@@ -15,7 +15,7 @@ export const APPS: AppConfig[] = [
   {
     id: "messages",
     name: "Messages",
-    icon: "/icons/messages.svg",
+    icon: "/messages.png",
     description: "Chat with AI personas",
     accentColor: "#34C759",
     defaultPosition: { x: 150, y: 80 },
