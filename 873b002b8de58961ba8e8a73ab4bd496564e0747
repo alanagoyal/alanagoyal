@@ -1,0 +1,40 @@
+components/desktop/menu-bar.tsx
+  8f284c76fb6649b0 6-8,20-23,26-27,36,38,43-48
+BUGS.md
+  e5e98b0d9a5686e6 72-75
+components/desktop/window.tsx
+  8f284c76fb6649b0 139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "873b002b8de58961ba8e8a73ab4bd496564e0747",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 69,
+      "total_deletions": 77,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    },
+    "e5e98b0d9a5686e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3749bb5a-901d-4a59-84d7-85cadf4aab1f",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
