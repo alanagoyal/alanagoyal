@@ -474,8 +474,8 @@ export default function Sidebar({
           onNoteCreated={onNoteCreated}
         />
       </div>
-      <ScrollArea 
-        className="flex-1" 
+      <ScrollArea
+        className="flex-1"
         onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
           const viewport = e.currentTarget.querySelector(
             '[data-radix-scroll-area-viewport]'
@@ -486,6 +486,7 @@ export default function Sidebar({
           }
         }}
         isMobile={isMobile}
+        bottomMargin="0px"
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
           <SessionId setSessionId={setSessionId} />

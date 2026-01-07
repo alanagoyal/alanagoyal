@@ -126,9 +126,9 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
           dialogContainer={containerRef.current}
         />
         <div className="flex-grow h-full overflow-hidden">
-          <ScrollArea className="h-full" isMobile={false}>
+          <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
             {selectedNote ? (
-              <div className="w-full min-h-full p-3">
+              <div className="w-full p-3">
                 <Note key={selectedNote.id} note={selectedNote} />
               </div>
             ) : (
