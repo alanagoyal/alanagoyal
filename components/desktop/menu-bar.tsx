@@ -6,6 +6,7 @@ import { getAppById } from "@/lib/app-config";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { faWifi, faBatteryFull, faMagnifyingGlass, faSliders } from "@fortawesome/free-solid-svg-icons";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export function MenuBar() {
   const { getFocusedAppId } = useWindowManager();
@@ -35,7 +36,7 @@ export function MenuBar() {
   return (
     <div className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50 select-none">
       <div className="flex items-center gap-4">
-        <FontAwesomeIcon icon={faApple} className="w-4 h-4 text-black dark:text-white" />
+        <FontAwesomeIcon icon={faApple as IconProp} className="w-4 h-4 text-black dark:text-white" />
         <span className="text-sm font-semibold text-black dark:text-white">
           {focusedApp?.menuBarTitle || "Finder"}
         </span>
