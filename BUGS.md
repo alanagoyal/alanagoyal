@@ -74,6 +74,6 @@ Removed gradient background and "Loading..." text flash on mobile by:
 **Status:** To fix
 **Description:** On narrow (but not mobile) screens, the Messages app incorrectly shows both the sidebar and an empty conversation area side-by-side. On small screens, it should behave like mobile and only show the sidebar until a conversation is selected. In desktop window mode, should use ResizeObserver to measure container width (not viewport width) to determine layout.
 
-### Messages API Routes Not Working
-**Status:** To fix
-**Description:** Messages API routes are broken. Need to change `/messages/api/chat` to `/api/chat` and `/messages/api/validate-contact` to `/api/validate-contact`. The old paths were remnants from when Messages was a separate app with basePath.
+### Messages API Routes Not Working - FIXED
+**Status:** Fixed
+**Description:** Fixed API route paths from `/messages/api/chat` to `/api/chat` and `/messages/api/validate-contact` to `/api/validate-contact`. The old paths were remnants from when Messages was a separate app with basePath.
