@@ -106,7 +106,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
               onNoteSelect={handleNoteSelect}
               isMobile={true}
               selectedSlug={selectedNote?.slug}
-              isDesktop={inShell}
+              isDesktop={true} // Use callback navigation on mobile, not Link navigation
             />
           ) : (
             <div className="h-full">
