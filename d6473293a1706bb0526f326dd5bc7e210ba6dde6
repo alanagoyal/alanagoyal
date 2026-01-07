@@ -1,0 +1,49 @@
+components/apps/settings/panels/personal-info.tsx
+  8f284c76fb6649b0 1-26
+lib/window-context.tsx
+  8f284c76fb6649b0 63-73
+components/apps/settings/settings-app.tsx
+  8f284c76fb6649b0 1-146
+next.config.mjs
+  8f284c76fb6649b0 13
+components/apps/settings/panels/general.tsx
+  8f284c76fb6649b0 1-61
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 11,35-39,61-64
+components/apps/settings/panels/appearance.tsx
+  8f284c76fb6649b0 1-154
+components/mobile/mobile-shell.tsx
+  8f284c76fb6649b0 7,27,50-51,72
+components/apps/settings/sidebar.tsx
+  8f284c76fb6649b0 1-162
+components/apps/settings/content.tsx
+  8f284c76fb6649b0 1-83
+app/(desktop)/settings/page.tsx
+  8f284c76fb6649b0 1-57
+components/apps/settings/panels/about.tsx
+  8f284c76fb6649b0 1-119
+components/apps/settings/nav.tsx
+  8f284c76fb6649b0 1-53
+lib/app-config.ts
+  8f284c76fb6649b0 26-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "d6473293a1706bb0526f326dd5bc7e210ba6dde6",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 956,
+      "total_deletions": 60,
+      "accepted_lines": 905,
+      "overriden_lines": 0
+    }
+  }
+}
