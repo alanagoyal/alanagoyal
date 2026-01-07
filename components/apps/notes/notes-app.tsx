@@ -34,6 +34,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
 
       if (data) {
         setNotes(data);
+        // On mobile without initialSlug, show sidebar only (no note selected)
+        // On desktop or with initialSlug, select a note
+        if (isMobile && !initialSlug) {
+          // Don't auto-select a note on mobile - show sidebar only
+          setLoading(false);
+          return;
+        }
+
         // Use initialSlug if provided, otherwise "about-me", otherwise first note
         const targetSlug = initialSlug || "about-me";
         const defaultNote = data.find((n: NoteType) => n.slug === targetSlug) || data[0];
@@ -50,7 +58,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
       setLoading(false);
     }
     fetchNotes();
-  }, [supabase, initialSlug]);
+  }, [supabase, initialSlug, isMobile]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Fetch full note data using RPC
@@ -59,20 +67,22 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
       .single();
     if (fullNote) {
       setSelectedNote(fullNote as NoteType);
-      // Update URL to reflect selected note (shallow update, no navigation)
-      if (inShell) {
-        window.history.replaceState(null, "", `/notes/${note.slug}`);
-      }
+      // Update URL to reflect selected note
+      window.history.replaceState(null, "", `/notes/${note.slug}`);
       // On mobile, hide sidebar when note is selected
       if (isMobile) {
         setShowSidebar(false);
       }
     }
-  }, [supabase, isMobile, inShell]);
+  }, [supabase, isMobile]);
 
   const handleBackToSidebar = useCallback(() => {
     setShowSidebar(true);
-  }, []);
+    // Update URL when going back to sidebar on mobile
+    if (isMobile) {
+      window.history.replaceState(null, "", "/notes");
+    }
+  }, [isMobile]);
 
   // Show empty background while loading to prevent flash
   if (loading) {

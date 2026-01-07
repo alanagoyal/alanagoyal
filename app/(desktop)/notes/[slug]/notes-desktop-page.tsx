@@ -5,7 +5,7 @@ import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 
 interface NotesDesktopPageProps {
-  slug: string;
+  slug?: string; // Optional - if not provided on mobile, shows sidebar only
 }
 
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
@@ -29,11 +29,13 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
     return <div className="min-h-dvh bg-background" />;
   }
 
-  // On mobile, show the mobile shell with notes app and this note selected
+  // On mobile, show the mobile shell with notes app
+  // If slug is provided, that note will be selected; otherwise shows sidebar
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;
   }
 
-  // On desktop, show the desktop with notes window open on this note
-  return <Desktop initialAppId="notes" initialNoteSlug={slug} />;
+  // On desktop, show the desktop with notes window open
+  // Default to about-me if no slug provided
+  return <Desktop initialAppId="notes" initialNoteSlug={slug || "about-me"} />;
 }

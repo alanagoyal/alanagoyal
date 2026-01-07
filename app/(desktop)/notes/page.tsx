@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function NotesPage() {
-  // Render Desktop with notes app focused (no specific note)
-  return <NotesDesktopPage slug="about-me" />;
+  // On mobile: shows sidebar (no note selected)
+  // On desktop: shows notes window with about-me selected
+  return <NotesDesktopPage />;
 }

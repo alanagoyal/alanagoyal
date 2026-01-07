@@ -44,11 +44,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       if (appId === "messages") {
         window.history.replaceState(null, "", "/messages");
       } else if (appId === "notes") {
-        // Keep current note slug if on notes, otherwise use default
-        const currentPath = window.location.pathname;
-        if (!currentPath.startsWith("/notes/")) {
-          window.history.replaceState(null, "", "/notes/about-me");
-        }
+        // Go to /notes (sidebar view) when switching to notes
+        window.history.replaceState(null, "", "/notes");
       }
     }
   };
