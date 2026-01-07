@@ -40,8 +40,9 @@ function getInitialState(): WindowManagerState {
   APPS.forEach((app) => {
     windows[app.id] = getDefaultWindowState(app.id);
   });
-  // Notes opens by default
+  // Notes opens by default in fullscreen
   windows["notes"].isOpen = true;
+  windows["notes"].isMaximized = true;
   windows["notes"].zIndex = 1;
 
   return {
