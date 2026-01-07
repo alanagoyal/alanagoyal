@@ -1,0 +1,29 @@
+components/apps/messages/nav.tsx
+  8f284c76fb6649b0 16-18,57,59-60,62,64-93,98,101,104,106-108
+lib/window-focus-context.tsx
+  8f284c76fb6649b0 8-14,23-27,32-36,42-47
+components/desktop/window.tsx
+  8f284c76fb6649b0 37,39,43-45,54,140,145-149
+components/apps/notes/nav.tsx
+  8f284c76fb6649b0 3-4,25-29,32-35,37-68,73-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "a76ea52d39ea7118bda801a3085628e2477e7d86",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 156,
+      "total_deletions": 100,
+      "accepted_lines": 134,
+      "overriden_lines": 0
+    }
+  }
+}
