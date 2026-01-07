@@ -255,22 +255,67 @@ const WindowManagerContext = createContext<WindowManagerContextValue | null>(
   null
 );
 
+interface WindowManagerProviderProps {
+  children: React.ReactNode;
+  initialAppId?: string; // If provided, this app will be opened and focused on load
+}
+
 export function WindowManagerProvider({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  initialAppId,
+}: WindowManagerProviderProps) {
   const [state, dispatch] = useReducer(windowReducer, getInitialState());
   const [isHydrated, setIsHydrated] = React.useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount, but override with initialAppId if provided
   useEffect(() => {
-    const savedState = loadStateFromStorage();
-    if (savedState) {
-      dispatch({ type: "RESTORE_STATE", state: savedState });
+    if (initialAppId) {
+      // When URL specifies an app, load localStorage for positions but ensure this app is open
+      const savedState = loadStateFromStorage();
+      if (savedState) {
+        // Start with saved state but ensure the specified app is open and focused
+        const newState: WindowManagerState = {
+          ...savedState,
+          windows: {
+            ...savedState.windows,
+            [initialAppId]: {
+              ...savedState.windows[initialAppId],
+              isOpen: true,
+              isMinimized: false,
+              zIndex: savedState.nextZIndex,
+            },
+          },
+          focusedWindowId: initialAppId,
+          nextZIndex: savedState.nextZIndex + 1,
+        };
+        dispatch({ type: "RESTORE_STATE", state: newState });
+      } else {
+        // No saved state, create initial with specified app open
+        const initialState = getInitialState();
+        const newState: WindowManagerState = {
+          ...initialState,
+          windows: {
+            ...initialState.windows,
+            [initialAppId]: {
+              ...initialState.windows[initialAppId],
+              isOpen: true,
+              zIndex: initialState.nextZIndex,
+            },
+          },
+          focusedWindowId: initialAppId,
+          nextZIndex: initialState.nextZIndex + 1,
+        };
+        dispatch({ type: "RESTORE_STATE", state: newState });
+      }
+    } else {
+      // No initialAppId - use localStorage or defaults
+      const savedState = loadStateFromStorage();
+      if (savedState) {
+        dispatch({ type: "RESTORE_STATE", state: savedState });
+      }
     }
     setIsHydrated(true);
-  }, []);
+  }, [initialAppId]);
 
   // Save to localStorage on state change
   useEffect(() => {

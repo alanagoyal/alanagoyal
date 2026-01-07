@@ -11,9 +11,10 @@ import Note from "./note";
 interface NotesAppProps {
   isMobile?: boolean;
   inShell?: boolean; // When true, use callback navigation instead of route navigation
+  initialSlug?: string; // If provided, select this note on load
 }
 
-export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
+export function NotesApp({ isMobile = false, inShell = false, initialSlug }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,8 +34,9 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
 
       if (data) {
         setNotes(data);
-        // Select "about-me" by default, or the first note
-        const defaultNote = data.find((n: NoteType) => n.slug === "about-me") || data[0];
+        // Use initialSlug if provided, otherwise "about-me", otherwise first note
+        const targetSlug = initialSlug || "about-me";
+        const defaultNote = data.find((n: NoteType) => n.slug === targetSlug) || data[0];
         if (defaultNote && !selectedNote) {
           // Fetch full note data using RPC
           const { data: fullNote } = await supabase
@@ -48,7 +50,7 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
       setLoading(false);
     }
     fetchNotes();
-  }, [supabase]);
+  }, [supabase, initialSlug]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Fetch full note data using RPC
@@ -57,12 +59,16 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
       .single();
     if (fullNote) {
       setSelectedNote(fullNote as NoteType);
+      // Update URL to reflect selected note (shallow update, no navigation)
+      if (inShell) {
+        window.history.replaceState(null, "", `/notes/${note.slug}`);
+      }
       // On mobile, hide sidebar when note is selected
       if (isMobile) {
         setShowSidebar(false);
       }
     }
-  }, [supabase, isMobile]);
+  }, [supabase, isMobile, inShell]);
 
   const handleBackToSidebar = useCallback(() => {
     setShowSidebar(true);

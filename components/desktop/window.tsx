@@ -9,12 +9,13 @@ import { WindowFocusProvider } from "@/lib/window-focus-context";
 interface WindowProps {
   appId: string;
   children: React.ReactNode;
+  onFocus?: () => void; // Called when window gains focus
 }
 
 const MENU_BAR_HEIGHT = 28;
 const DOCK_HEIGHT = 80;
 
-export function Window({ appId, children }: WindowProps) {
+export function Window({ appId, children, onFocus }: WindowProps) {
   const {
     getWindow,
     closeWindow,
@@ -127,7 +128,10 @@ export function Window({ appId, children }: WindowProps) {
         !isFocused && "opacity-95"
       )}
       style={windowStyle}
-      onMouseDown={() => focusWindow(appId)}
+      onMouseDown={() => {
+        focusWindow(appId);
+        onFocus?.();
+      }}
     >
       {/* Title Bar */}
       <div

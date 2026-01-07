@@ -8,18 +8,27 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 const STORAGE_KEY = "mobile-active-app";
 const DEFAULT_APP = "notes";
 
-export function MobileShell() {
+interface MobileShellProps {
+  initialApp?: string; // App to show on load (overrides localStorage)
+  initialNoteSlug?: string; // For notes app: which note to select
+}
+
+export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load last used app from localStorage
+  // Load last used app from localStorage, but initialApp takes precedence
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && (saved === "notes" || saved === "messages")) {
-      setActiveAppId(saved);
+    if (initialApp) {
+      setActiveAppId(initialApp);
+    } else {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved && (saved === "notes" || saved === "messages")) {
+        setActiveAppId(saved);
+      }
     }
     setIsHydrated(true);
-  }, []);
+  }, [initialApp]);
 
   // Save active app to localStorage
   useEffect(() => {
@@ -46,7 +55,9 @@ export function MobileShell() {
   // Render the active app with tab bar
   return (
     <div className="min-h-dvh pb-20 bg-background">
-      {activeAppId === "notes" && <NotesApp isMobile={true} inShell={true} />}
+      {activeAppId === "notes" && (
+        <NotesApp isMobile={true} inShell={true} initialSlug={initialNoteSlug} />
+      )}
       {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={true} />}
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
     </div>

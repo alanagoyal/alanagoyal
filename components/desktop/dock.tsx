@@ -19,6 +19,17 @@ export function Dock() {
     } else {
       openWindow(appId);
     }
+
+    // Update URL based on which app was clicked
+    if (appId === "messages") {
+      window.history.replaceState(null, "", "/messages");
+    } else if (appId === "notes") {
+      // Keep current note URL if on notes, otherwise use default
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith("/notes/")) {
+        window.history.replaceState(null, "", "/notes/about-me");
+      }
+    }
   };
 
   return (

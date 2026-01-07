@@ -1,10 +1,10 @@
 import { cache } from "react";
-import Note from "@/components/apps/notes/note";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/notes/types";
+import { NotesDesktopPage } from "./notes-desktop-page";
 
 // Enable ISR with a reasonable revalidation period for public notes
 export const revalidate = 86400; // 24 hours
@@ -73,9 +73,6 @@ export default async function NotePage({ params }: PageProps) {
     return redirect("/notes/error");
   }
 
-  return (
-    <div className="w-full min-h-dvh p-3">
-      <Note note={note} />
-    </div>
-  );
+  // Render Desktop with notes app focused on this specific note
+  return <NotesDesktopPage slug={cleanSlug} />;
 }

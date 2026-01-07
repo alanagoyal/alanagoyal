@@ -240,12 +240,7 @@ The final repository MUST contain git history from both repos:
 
 ## Phase 2 Scope
 
-**Window Resizing:**
-- Drag window edges/corners to resize
-- Respect minimum window sizes from app config
-- Persist window size to localStorage
-
-**URL Backwards Compatibility:**
+**URL Backwards Compatibility:** - COMPLETE
 - Support direct URLs: `/notes/[slug]`, `/messages`
 - On page load, parse URL to determine initial window state:
   - `/notes/reading-list` → open Notes window with that note selected
@@ -254,6 +249,11 @@ The final repository MUST contain git history from both repos:
 - Window positions still come from localStorage
 - URLs are shareable and bookmarkable
 - Existing links continue to work
+
+**Window Resizing:**
+- Drag window edges/corners to resize
+- Respect minimum window sizes from app config
+- Persist window size to localStorage
 
 ---
 
