@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Note } from "@/lib/notes/types";
 
 export async function createNote(

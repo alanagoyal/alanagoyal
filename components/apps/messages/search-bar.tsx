@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Icons } from "./icons";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface SearchBarProps {
   value: string;
@@ -8,9 +9,20 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   const justBlurred = useRef(false);
+  const windowFocus = useWindowFocus();
 
   useEffect(() => {
     const handleGlobalEscape = (e: KeyboardEvent) => {
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        const target = e.target as HTMLElement;
+        if (!target.closest('[data-app="messages"]')) return;
+      }
+
       if (e.key === "Escape") {
         const searchInput = document.querySelector(
           'input[placeholder="Search"]'
@@ -28,7 +40,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
 
     window.addEventListener("keydown", handleGlobalEscape);
     return () => window.removeEventListener("keydown", handleGlobalEscape);
-  }, [value, onChange]);
+  }, [value, onChange, windowFocus]);
 
   return (
     <div className="p-2">

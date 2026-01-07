@@ -10,7 +10,7 @@ import {
   uploadNoteImage,
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export default function NoteContent({
   note,

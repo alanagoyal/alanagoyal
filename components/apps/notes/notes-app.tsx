@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/notes/session-notes";
-import { Toaster } from "@/components/ui/toaster";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Sidebar from "./sidebar";
 import Note from "./note";
@@ -102,7 +101,6 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
               )}
             </div>
           )}
-          <Toaster />
         </div>
       </SessionNotesProvider>
     );
@@ -140,7 +138,6 @@ export function NotesApp({ isMobile = false, inShell = false }: NotesAppProps) {
             )}
           </ScrollArea>
         </div>
-        <Toaster />
       </div>
     </SessionNotesProvider>
   );

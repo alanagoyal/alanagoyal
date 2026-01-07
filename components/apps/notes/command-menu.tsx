@@ -26,6 +26,7 @@ import { Note } from "@/lib/notes/types";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 export interface CommandMenuProps {
   notes: Note[];
@@ -64,6 +65,7 @@ export const CommandMenu = forwardRef<
     const [searchTerm, setSearchTerm] = useState("");
     const router = useRouter();
     const { setTheme, theme } = useTheme();
+    const windowFocus = useWindowFocus();
 
     useImperativeHandle(ref, () => ({
       setOpen: (newOpen: boolean) => {
@@ -91,9 +93,15 @@ export const CommandMenu = forwardRef<
 
     useEffect(() => {
       const down = (e: KeyboardEvent) => {
-        // Only handle shortcuts if focus is within this app
-        const target = e.target as HTMLElement;
-        if (!target.closest('[data-app="notes"]')) return;
+        // Check if this app should handle the shortcut
+        // In desktop mode (windowFocus exists), check if this window is focused
+        // In standalone mode, check if target is within this app
+        if (windowFocus) {
+          if (!windowFocus.isFocused) return;
+        } else {
+          const target = e.target as HTMLElement;
+          if (!target.closest('[data-app="notes"]')) return;
+        }
 
         if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
@@ -102,7 +110,7 @@ export const CommandMenu = forwardRef<
       };
       document.addEventListener("keydown", down);
       return () => document.removeEventListener("keydown", down);
-    }, []);
+    }, [windowFocus]);
 
     function toTitleCase(str: string): string {
       return str.replace(

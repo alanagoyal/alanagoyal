@@ -20,6 +20,7 @@ import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Icons } from "./icons";
 import { Conversation } from "@/types/messages";
 import { useTheme } from "next-themes";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 export interface CommandMenuProps {
   conversations: Conversation[];
@@ -57,6 +58,7 @@ export const CommandMenu = forwardRef<
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const { setTheme, theme } = useTheme();
+    const windowFocus = useWindowFocus();
 
     const handleOpenChange = useCallback(
       (newOpen: boolean) => {
@@ -92,9 +94,15 @@ export const CommandMenu = forwardRef<
 
     useEffect(() => {
       const down = (e: KeyboardEvent) => {
-        // Only handle shortcuts if focus is within this app
-        const target = e.target as HTMLElement;
-        if (!target.closest('[data-app="messages"]')) return;
+        // Check if this app should handle the shortcut
+        // In desktop mode (windowFocus exists), check if this window is focused
+        // In standalone mode, check if target is within this app
+        if (windowFocus) {
+          if (!windowFocus.isFocused) return;
+        } else {
+          const target = e.target as HTMLElement;
+          if (!target.closest('[data-app="messages"]')) return;
+        }
 
         if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
@@ -103,7 +111,7 @@ export const CommandMenu = forwardRef<
       };
       document.addEventListener("keydown", down);
       return () => document.removeEventListener("keydown", down);
-    }, [open, handleOpenChange]);
+    }, [open, handleOpenChange, windowFocus]);
 
     const handleMoveUp = useCallback(() => {
       if (!activeConversation || conversations.length === 0) return;

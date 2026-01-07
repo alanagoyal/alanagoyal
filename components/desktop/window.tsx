@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useWindowManager } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
+import { WindowFocusProvider } from "@/lib/window-focus-context";
 
 interface WindowProps {
   appId: string;
@@ -180,7 +181,11 @@ export function Window({ appId, children }: WindowProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <div className="flex-1 overflow-hidden">
+        <WindowFocusProvider isFocused={isFocused} appId={appId}>
+          {children}
+        </WindowFocusProvider>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { RefObject, Dispatch, SetStateAction, useEffect } from "react";
 import { Note } from "@/lib/notes/types";
 import { Icons } from "./icons";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface SearchBarProps {
   notes: Note[];
@@ -23,8 +24,20 @@ export function SearchBar({
   setHighlightedIndex,
   clearSearch,
 }: SearchBarProps) {
+  const windowFocus = useWindowFocus();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        const target = e.target as HTMLElement;
+        if (!target.closest('[data-app="notes"]')) return;
+      }
+
       // Handle second Escape press to clear search
       if (e.key === "Escape" && document.activeElement !== inputRef.current && searchQuery) {
         clearSearch();
@@ -33,7 +46,7 @@ export function SearchBar({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [inputRef, searchQuery, clearSearch]);
+  }, [inputRef, searchQuery, clearSearch, windowFocus]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

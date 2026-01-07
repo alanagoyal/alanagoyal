@@ -18,11 +18,12 @@ import { SearchBar } from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/notes/types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 const labels = {
   pinned: (
@@ -79,6 +80,7 @@ export default function Sidebar({
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
     null
   );
+  const windowFocus = useWindowFocus();
 
   const selectedNoteRef = useRef<HTMLDivElement>(null);
 
@@ -368,8 +370,14 @@ export default function Sidebar({
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
 
-      // Only handle shortcuts if focus is within this app
-      if (!target.closest('[data-app="notes"]')) return;
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        if (!target.closest('[data-app="notes"]')) return;
+      }
 
       const isTyping =
         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
@@ -433,6 +441,7 @@ export default function Sidebar({
     goToHighlightedNote,
     setTheme,
     theme,
+    windowFocus,
   ]);
 
   const handleNoteSelect = useCallback(
@@ -452,7 +461,7 @@ export default function Sidebar({
         isMobile
           ? "w-full max-w-full"
           : "w-[320px] border-r border-muted-foreground/20"
-      } h-dvh flex flex-col dark:bg-muted`}
+      } ${isDesktop ? "h-full" : "h-dvh"} flex flex-col dark:bg-muted`}
     >
       <div className={`${isMobile ? "w-full" : "w-[320px]"}`}>
         <Nav

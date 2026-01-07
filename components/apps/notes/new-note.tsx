@@ -7,6 +7,7 @@ import SessionId from "./session-id";
 import { createNote } from "@/lib/notes/create-note";
 import { SessionNotesContext } from "@/app/notes/session-notes";
 import { Note } from "@/lib/notes/types";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 export default function NewNote({
   addNewPinnedNote,
@@ -25,6 +26,7 @@ export default function NewNote({
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
+  const windowFocus = useWindowFocus();
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
@@ -56,8 +58,14 @@ export default function NewNote({
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
 
-      // Only handle shortcuts if focus is within this app
-      if (!target.closest('[data-app="notes"]')) return;
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        if (!target.closest('[data-app="notes"]')) return;
+      }
 
       const isTyping =
         target.isContentEditable ||
@@ -76,7 +84,7 @@ export default function NewNote({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleCreateNote]);
+  }, [handleCreateNote, windowFocus]);
 
   return (
     <div className="flex flex-col items-center justify-center">

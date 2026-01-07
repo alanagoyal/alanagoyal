@@ -1,6 +1,7 @@
 import { Icons } from "./icons";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface NavProps {
   onNewChat: () => void;
@@ -10,12 +11,21 @@ interface NavProps {
 }
 
 export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: NavProps) {
+  const windowFocus = useWindowFocus();
+
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle shortcuts if focus is within this app
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-app="messages"]')) return;
+
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        if (!target.closest('[data-app="messages"]')) return;
+      }
 
       // Don't trigger if typing in an input, if command/meta key is pressed,
       // or if the TipTap editor is focused
@@ -35,7 +45,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onNewChat]);
+  }, [onNewChat, windowFocus]);
 
   return (
     <>

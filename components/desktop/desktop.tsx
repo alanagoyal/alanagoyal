@@ -14,11 +14,11 @@ export function Desktop() {
         <MenuBar />
 
         <Window appId="notes">
-          <NotesApp />
+          <NotesApp inShell={true} />
         </Window>
 
         <Window appId="messages">
-          <MessagesApp />
+          <MessagesApp inShell={true} />
         </Window>
 
         <Dock />

@@ -13,6 +13,7 @@ import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useWindowFocus } from "@/lib/window-focus-context";
 import Image from "next/image";
 
 interface SidebarProps {
@@ -51,6 +52,7 @@ export function Sidebar({
 }: SidebarProps) {
   const { theme, systemTheme, setTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
+  const windowFocus = useWindowFocus();
 
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
   const formatTime = (timestamp: string | undefined) => {
@@ -123,9 +125,16 @@ export function Sidebar({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle shortcuts if focus is within this app
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-app="messages"]')) return;
+
+      // Check if this app should handle the shortcut
+      // In desktop mode (windowFocus exists), check if this window is focused
+      // In standalone mode, check if target is within this app
+      if (windowFocus) {
+        if (!windowFocus.isFocused) return;
+      } else {
+        if (!target.closest('[data-app="messages"]')) return;
+      }
 
       // Don't handle navigation if command menu is open
       if (isCommandMenuOpen) return;
@@ -298,6 +307,10 @@ export function Sidebar({
     onUpdateConversation,
     onDeleteConversation,
     isCommandMenuOpen,
+    windowFocus,
+    setTheme,
+    effectiveTheme,
+    onSoundToggle,
   ]);
 
   return (
