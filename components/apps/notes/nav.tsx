@@ -30,8 +30,9 @@ export function Nav({
   return (
     <div
       className={cn(
-        "px-4 py-2 flex items-center justify-between select-none",
+        "px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none",
         isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
+        isMobile ? "bg-background" : "bg-muted",
         inShell && !windowFocus.isMaximized && "cursor-grab active:cursor-grabbing"
       )}
       onMouseDown={inShell ? windowFocus.onDragStart : undefined}
@@ -56,18 +57,21 @@ export function Nav({
               aria-label={windowFocus.isMaximized ? "Restore window" : "Maximize window"}
             />
           </>
-        ) : !isDesktop ? (
-          // Standalone browser - close tab
+        ) : (
+          // Static buttons (mobile shell or standalone browser)
           <>
             <button
-              onClick={() => window.close()}
-              className="cursor-pointer w-3 h-3 rounded-full bg-red-500 hover:bg-red-700"
-              aria-label="Close tab"
+              onClick={!isMobile ? () => window.close() : undefined}
+              className={cn(
+                "w-3 h-3 rounded-full bg-red-500",
+                !isMobile && "cursor-pointer hover:bg-red-700"
+              )}
+              aria-label={!isMobile ? "Close tab" : undefined}
             />
             <button className="w-3 h-3 rounded-full bg-yellow-500 cursor-default" />
             <button className="w-3 h-3 rounded-full bg-green-500 cursor-default" />
           </>
-        ) : null}
+        )}
       </div>
       <NewNote
         addNewPinnedNote={addNewPinnedNote}

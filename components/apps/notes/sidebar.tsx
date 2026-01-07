@@ -24,6 +24,7 @@ import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { cn } from "@/lib/utils";
 
 const labels = {
   pinned: (
@@ -457,25 +458,26 @@ export default function Sidebar({
 
   return (
     <div
-      className={`${
+      className={cn(
+        "flex flex-col",
         isMobile
-          ? "w-full max-w-full"
-          : "w-[320px] border-r border-muted-foreground/20"
-      } ${isDesktop ? "h-full" : "h-dvh"} flex flex-col dark:bg-muted`}
+          ? "w-full max-w-full bg-background"
+          : "w-[320px] border-r border-muted-foreground/20 bg-muted",
+        isDesktop ? "h-full" : "h-dvh"
+      )}
     >
-      <div className={`${isMobile ? "w-full" : "w-[320px]"}`}>
-        <Nav
-          addNewPinnedNote={handlePinToggle}
-          clearSearch={clearSearch}
-          setSelectedNoteSlug={setSelectedNoteSlug}
-          isMobile={isMobile}
-          isScrolled={isScrolled}
-          isDesktop={isDesktop}
-          onNoteCreated={onNoteCreated}
-        />
-      </div>
-      <ScrollArea
-        className="flex-1"
+      <Nav
+        addNewPinnedNote={handlePinToggle}
+        clearSearch={clearSearch}
+        setSelectedNoteSlug={setSelectedNoteSlug}
+        isMobile={isMobile}
+        isScrolled={isScrolled}
+        isDesktop={isDesktop}
+        onNoteCreated={onNoteCreated}
+      />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <ScrollArea
+          className="h-full"
         onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
           const viewport = e.currentTarget.querySelector(
             '[data-radix-scroll-area-viewport]'
@@ -534,6 +536,7 @@ export default function Sidebar({
           </div>
         </div>
       </ScrollArea>
+      </div>
     </div>
   );
 }
