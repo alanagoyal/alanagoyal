@@ -124,6 +124,10 @@ export function Window({ appId, children, onFocus }: WindowProps) {
       const minWidth = app.minSize?.width ?? 200;
       const minHeight = app.minSize?.height ?? 150;
 
+      // Max constraints based on screen bounds
+      const maxWidth = window.innerWidth - resizeStart.posX;
+      const maxHeight = window.innerHeight - DOCK_HEIGHT - resizeStart.posY;
+
       let newWidth = resizeStart.width;
       let newHeight = resizeStart.height;
       let newX = resizeStart.posX;
@@ -131,28 +135,33 @@ export function Window({ appId, children, onFocus }: WindowProps) {
 
       // Handle horizontal resize
       if (resizeDir.includes("e")) {
-        newWidth = Math.max(minWidth, resizeStart.width + dx);
+        // Resizing from east - clamp between min and max
+        newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStart.width + dx));
       } else if (resizeDir.includes("w")) {
+        // Resizing from west - size decreases as we move right (positive dx)
         const proposedWidth = resizeStart.width - dx;
-        if (proposedWidth >= minWidth) {
-          newWidth = proposedWidth;
-          newX = resizeStart.posX + dx;
-        }
+        // Clamp width to min, and also don't let window go off left edge
+        const maxLeftExpand = resizeStart.posX; // Can't go past x=0
+        const maxWidthFromLeft = resizeStart.width + maxLeftExpand;
+        newWidth = Math.max(minWidth, Math.min(maxWidthFromLeft, proposedWidth));
+        // Position moves by the difference between original and new width
+        newX = resizeStart.posX + (resizeStart.width - newWidth);
       }
 
       // Handle vertical resize
       if (resizeDir.includes("s")) {
-        newHeight = Math.max(minHeight, resizeStart.height + dy);
+        // Resizing from south - clamp between min and max
+        newHeight = Math.max(minHeight, Math.min(maxHeight, resizeStart.height + dy));
       } else if (resizeDir.includes("n")) {
+        // Resizing from north - size decreases as we move down (positive dy)
         const proposedHeight = resizeStart.height - dy;
-        if (proposedHeight >= minHeight) {
-          newHeight = proposedHeight;
-          newY = resizeStart.posY + dy;
-        }
+        // Clamp height to min, and also don't let window go above menu bar
+        const maxTopExpand = resizeStart.posY - MENU_BAR_HEIGHT;
+        const maxHeightFromTop = resizeStart.height + maxTopExpand;
+        newHeight = Math.max(minHeight, Math.min(maxHeightFromTop, proposedHeight));
+        // Position moves by the difference between original and new height
+        newY = resizeStart.posY + (resizeStart.height - newHeight);
       }
-
-      // Constrain position
-      newY = Math.max(MENU_BAR_HEIGHT, newY);
 
       resizeWindow(appId, { width: newWidth, height: newHeight }, { x: newX, y: newY });
     },
@@ -205,16 +214,16 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         zIndex,
       };
 
-  const resizeHandleClass = "absolute z-10";
-  const edgeSize = 6;
+  // Resize handle sizes - corners are larger hit targets
+  const edgeThickness = 6;
   const cornerSize = 12;
 
   return (
+    // Outer wrapper - handles resize events, no overflow clipping
     <div
       ref={windowRef}
       className={cn(
-        "fixed bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
-        isMaximized ? "rounded-none" : "rounded-xl",
+        "fixed",
         isDragging && "cursor-grabbing",
         !isFocused && !isMaximized && "opacity-95"
       )}
@@ -224,66 +233,74 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         onFocus?.();
       }}
     >
-      {/* Content - no title bar, apps render their own nav with traffic lights */}
-      <div className="flex-1 overflow-hidden">
-        <WindowFocusProvider
-          isFocused={isFocused}
-          appId={appId}
-          closeWindow={() => closeWindow(appId)}
-          minimizeWindow={() => minimizeWindow(appId)}
-          toggleMaximize={() => toggleMaximize(appId)}
-          isMaximized={isMaximized}
-          onDragStart={handleDragStart}
-        >
-          {children}
-        </WindowFocusProvider>
+      {/* Inner wrapper - visual styling with rounded corners and overflow hidden */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+          isMaximized ? "rounded-none" : "rounded-xl"
+        )}
+      >
+        {/* Content - no title bar, apps render their own nav with traffic lights */}
+        <div className="flex-1 overflow-hidden">
+          <WindowFocusProvider
+            isFocused={isFocused}
+            appId={appId}
+            closeWindow={() => closeWindow(appId)}
+            minimizeWindow={() => minimizeWindow(appId)}
+            toggleMaximize={() => toggleMaximize(appId)}
+            isMaximized={isMaximized}
+            onDragStart={handleDragStart}
+          >
+            {children}
+          </WindowFocusProvider>
+        </div>
       </div>
 
-      {/* Resize handles - only shown when not maximized */}
+      {/* Resize handles - outside the overflow-hidden container */}
       {!isMaximized && (
         <>
-          {/* Edge handles */}
+          {/* Corner handles - positioned slightly outside for easy grabbing */}
           <div
-            className={cn(resizeHandleClass, "cursor-n-resize")}
-            style={{ top: 0, left: cornerSize, right: cornerSize, height: edgeSize }}
-            onMouseDown={(e) => handleResizeStart(e, "n")}
-          />
-          <div
-            className={cn(resizeHandleClass, "cursor-s-resize")}
-            style={{ bottom: 0, left: cornerSize, right: cornerSize, height: edgeSize }}
-            onMouseDown={(e) => handleResizeStart(e, "s")}
-          />
-          <div
-            className={cn(resizeHandleClass, "cursor-e-resize")}
-            style={{ right: 0, top: cornerSize, bottom: cornerSize, width: edgeSize }}
-            onMouseDown={(e) => handleResizeStart(e, "e")}
-          />
-          <div
-            className={cn(resizeHandleClass, "cursor-w-resize")}
-            style={{ left: 0, top: cornerSize, bottom: cornerSize, width: edgeSize }}
-            onMouseDown={(e) => handleResizeStart(e, "w")}
-          />
-
-          {/* Corner handles */}
-          <div
-            className={cn(resizeHandleClass, "cursor-nw-resize")}
-            style={{ top: 0, left: 0, width: cornerSize, height: cornerSize }}
+            className="absolute cursor-nw-resize"
+            style={{ top: -3, left: -3, width: cornerSize, height: cornerSize, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "nw")}
           />
           <div
-            className={cn(resizeHandleClass, "cursor-ne-resize")}
-            style={{ top: 0, right: 0, width: cornerSize, height: cornerSize }}
+            className="absolute cursor-ne-resize"
+            style={{ top: -3, right: -3, width: cornerSize, height: cornerSize, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "ne")}
           />
           <div
-            className={cn(resizeHandleClass, "cursor-sw-resize")}
-            style={{ bottom: 0, left: 0, width: cornerSize, height: cornerSize }}
+            className="absolute cursor-sw-resize"
+            style={{ bottom: -3, left: -3, width: cornerSize, height: cornerSize, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "sw")}
           />
           <div
-            className={cn(resizeHandleClass, "cursor-se-resize")}
-            style={{ bottom: 0, right: 0, width: cornerSize, height: cornerSize }}
+            className="absolute cursor-se-resize"
+            style={{ bottom: -3, right: -3, width: cornerSize, height: cornerSize, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "se")}
+          />
+
+          {/* Edge handles */}
+          <div
+            className="absolute cursor-n-resize"
+            style={{ top: -3, left: cornerSize, right: cornerSize, height: edgeThickness, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "n")}
+          />
+          <div
+            className="absolute cursor-s-resize"
+            style={{ bottom: -3, left: cornerSize, right: cornerSize, height: edgeThickness, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "s")}
+          />
+          <div
+            className="absolute cursor-e-resize"
+            style={{ right: -3, top: cornerSize, bottom: cornerSize, width: edgeThickness, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "e")}
+          />
+          <div
+            className="absolute cursor-w-resize"
+            style={{ left: -3, top: cornerSize, bottom: cornerSize, width: edgeThickness, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "w")}
           />
         </>
       )}
