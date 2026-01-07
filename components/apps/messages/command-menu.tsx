@@ -242,7 +242,7 @@ export const CommandMenu = forwardRef<
         action: handleDeleteConversation,
       },
       {
-        name: theme === "light" ? "Dark mode" : "Light mode",
+        name: "Toggle theme",
         icon:
           theme === "light" ? (
             <Icons.moon className="mr-2 h-4 w-4" />
