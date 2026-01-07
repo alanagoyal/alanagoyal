@@ -128,7 +128,7 @@ export function ChatArea({
       >
         <div
           className={cn(
-            "min-h-screen flex flex-col",
+            "min-h-full flex flex-col",
             isMobileView ? "pt-24" : "pt-16",
             "pb-[var(--dynamic-height,64px)]"
           )}
