@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, RefObject } from "react";
 
 interface WindowFocusContextValue {
   isFocused: boolean;
@@ -12,6 +12,8 @@ interface WindowFocusContextValue {
   isMaximized: boolean;
   // Drag handler - call this onMouseDown to start dragging
   onDragStart: (e: React.MouseEvent) => void;
+  // Container ref for dialogs - positioned at window bounds
+  dialogContainerRef: RefObject<HTMLDivElement | null>;
 }
 
 const WindowFocusContext = createContext<WindowFocusContextValue | null>(null);
@@ -25,6 +27,7 @@ export function WindowFocusProvider({
   toggleMaximize,
   isMaximized,
   onDragStart,
+  dialogContainerRef,
 }: {
   children: React.ReactNode;
   isFocused: boolean;
@@ -34,6 +37,7 @@ export function WindowFocusProvider({
   toggleMaximize: () => void;
   isMaximized: boolean;
   onDragStart: (e: React.MouseEvent) => void;
+  dialogContainerRef: RefObject<HTMLDivElement | null>;
 }) {
   return (
     <WindowFocusContext.Provider
@@ -45,6 +49,7 @@ export function WindowFocusProvider({
         toggleMaximize,
         isMaximized,
         onDragStart,
+        dialogContainerRef,
       }}
     >
       {children}

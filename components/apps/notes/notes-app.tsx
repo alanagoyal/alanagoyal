@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useWindowFocus } from "@/lib/window-focus-context";
 import Sidebar from "./sidebar";
 import Note from "./note";
 
@@ -20,8 +21,11 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const supabase = createClient();
-  // Container ref for scoping dialogs to this app
+  const windowFocus = useWindowFocus();
+  // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  // Use window's dialog container when in desktop shell, otherwise use local ref
+  const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
   // Fetch public notes on mount
   useEffect(() => {
@@ -139,7 +143,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           selectedSlug={selectedNote?.slug}
           isDesktop={true}
           onNoteCreated={setSelectedNote}
-          dialogContainer={containerRef.current}
+          dialogContainer={dialogContainer}
         />
         <div className="flex-grow h-full overflow-hidden">
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">

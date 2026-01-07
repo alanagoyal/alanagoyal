@@ -9,6 +9,7 @@ import { MessageQueue } from "@/lib/messages/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects } from "@/lib/messages/sound-effects";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -53,8 +54,11 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   // Add command menu ref
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
-  // Container ref for scoping dialogs to this app
+  // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  const windowFocus = useWindowFocus();
+  // Use window's dialog container when in desktop shell, otherwise use local ref
+  const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
   const STORAGE_KEY = "dialogueConversations";
 
@@ -802,7 +806,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         onOpenChange={setIsCommandMenuOpen}
         soundEnabled={soundEnabled}
         onSoundToggle={handleSoundToggle}
-        container={isDesktop ? containerRef.current : undefined}
+        container={isDesktop ? dialogContainer : undefined}
       />
       <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col overflow-hidden`}>
         <div className="flex-1 flex min-h-0">

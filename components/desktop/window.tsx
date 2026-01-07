@@ -35,6 +35,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
   const windowState = getWindow(appId);
   const app = getAppById(appId);
   const windowRef = useRef<HTMLDivElement>(null);
+  const innerWrapperRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizeDir, setResizeDir] = useState<ResizeDirection>(null);
@@ -235,13 +236,14 @@ export function Window({ appId, children, onFocus }: WindowProps) {
     >
       {/* Inner wrapper - visual styling with rounded corners and overflow hidden */}
       <div
+        ref={innerWrapperRef}
         className={cn(
           "absolute inset-0 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
           isMaximized ? "rounded-none" : "rounded-xl"
         )}
       >
         {/* Content - no title bar, apps render their own nav with traffic lights */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <WindowFocusProvider
             isFocused={isFocused}
             appId={appId}
@@ -250,6 +252,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
             toggleMaximize={() => toggleMaximize(appId)}
             isMaximized={isMaximized}
             onDragStart={handleDragStart}
+            dialogContainerRef={innerWrapperRef}
           >
             {children}
           </WindowFocusProvider>
