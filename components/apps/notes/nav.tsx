@@ -42,42 +42,30 @@ export function Nav({
           <>
             <button
               onClick={windowFocus.closeWindow}
-              className="cursor-pointer group w-3 h-3 rounded-full bg-red-500 hover:opacity-80 flex items-center justify-center"
+              className="cursor-pointer w-3 h-3 rounded-full bg-red-500 hover:bg-red-700"
               aria-label="Close window"
-            >
-              <span className="opacity-0 group-hover:opacity-100 text-[10px] font-medium leading-none text-red-900 -translate-y-[0.5px]">×</span>
-            </button>
+            />
             <button
               onClick={windowFocus.minimizeWindow}
-              className="group w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80 flex items-center justify-center cursor-pointer"
+              className="cursor-pointer w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-700"
               aria-label="Minimize window"
-            >
-              <span className="opacity-0 group-hover:opacity-100 text-[10px] font-medium leading-none text-yellow-900 -translate-y-[0.5px]">−</span>
-            </button>
+            />
             <button
               onClick={windowFocus.toggleMaximize}
-              className="group w-3 h-3 rounded-full bg-green-500 hover:opacity-80 flex items-center justify-center cursor-pointer"
+              className="cursor-pointer w-3 h-3 rounded-full bg-green-500 hover:bg-green-700"
               aria-label={windowFocus.isMaximized ? "Restore window" : "Maximize window"}
-            >
-              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-medium leading-none text-green-900 -translate-y-[0.5px]">+</span>
-            </button>
+            />
           </>
         ) : !isDesktop ? (
           // Standalone browser - close tab
           <>
             <button
               onClick={() => window.close()}
-              className="cursor-pointer group w-3 h-3 rounded-full bg-red-500 hover:opacity-80 flex items-center justify-center"
+              className="cursor-pointer w-3 h-3 rounded-full bg-red-500 hover:bg-red-700"
               aria-label="Close tab"
-            >
-              <span className="opacity-0 group-hover:opacity-100 text-[10px] font-medium leading-none text-red-900 -translate-y-[0.5px]">×</span>
-            </button>
-            <button className="group w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80 flex items-center justify-center cursor-default">
-              <span className="opacity-0 group-hover:opacity-100 text-[10px] font-medium leading-none text-yellow-900 -translate-y-[0.5px]">−</span>
-            </button>
-            <button className="group w-3 h-3 rounded-full bg-green-500 hover:opacity-80 flex items-center justify-center cursor-default">
-              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-medium leading-none text-green-900 -translate-y-[0.5px]">+</span>
-            </button>
+            />
+            <button className="w-3 h-3 rounded-full bg-yellow-500 cursor-default" />
+            <button className="w-3 h-3 rounded-full bg-green-500 cursor-default" />
           </>
         ) : null}
       </div>
