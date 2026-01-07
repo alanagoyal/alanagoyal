@@ -70,9 +70,9 @@ Removed gradient background and "Loading..." text flash on mobile by:
 **Status:** Low priority
 **Description:** If app IDs change, saved window state could reference non-existent apps. No migration/validation currently exists.
 
-### Messages App Shows Split View on Narrow Screens
-**Status:** To fix
-**Description:** On narrow (but not mobile) screens, the Messages app incorrectly shows both the sidebar and an empty conversation area side-by-side. On small screens, it should behave like mobile and only show the sidebar until a conversation is selected. In desktop window mode, should use ResizeObserver to measure container width (not viewport width) to determine layout.
+### Messages App Shows Split View on Narrow Screens - FIXED
+**Status:** Fixed
+**Description:** Fixed by removing CSS `sm:` breakpoints and using `isMobileView` state consistently. In MobileShell mode, always uses mobile layout. In desktop mode, dynamically switches at 768px viewport width.
 
 ### Messages API Routes Not Working - FIXED
 **Status:** Fixed
