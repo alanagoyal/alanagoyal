@@ -40,6 +40,16 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   const handleTabSelect = (appId: string | null) => {
     if (appId) {
       setActiveAppId(appId);
+      // Update URL when switching apps
+      if (appId === "messages") {
+        window.history.replaceState(null, "", "/messages");
+      } else if (appId === "notes") {
+        // Keep current note slug if on notes, otherwise use default
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith("/notes/")) {
+          window.history.replaceState(null, "", "/notes/about-me");
+        }
+      }
     }
   };
 
@@ -56,9 +66,9 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   return (
     <div className="min-h-dvh pb-20 bg-background">
       {activeAppId === "notes" && (
-        <NotesApp isMobile={true} inShell={true} initialSlug={initialNoteSlug} />
+        <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
       )}
-      {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={true} />}
+      {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
     </div>
   );

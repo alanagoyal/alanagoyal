@@ -129,8 +129,18 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     }
   }, [conversations]);
 
-  // Set mobile view
+  // Set mobile view based on context:
+  // - In MobileShell (isDesktop=false): Always use mobile layout
+  // - In Desktop windows (isDesktop=true): Use window.innerWidth to allow dynamic resizing
   useEffect(() => {
+    // MobileShell is only shown on small screens, so always use mobile layout
+    if (!isDesktop) {
+      setIsMobileView(true);
+      setIsLayoutInitialized(true);
+      return;
+    }
+
+    // Desktop mode: check window width for dynamic layout switching
     const handleResize = () => {
       const newIsMobileView = window.innerWidth < 768;
       if (isMobileView !== newIsMobileView) {
@@ -148,6 +158,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [
+    isDesktop,
     isMobileView,
     activeConversation,
     lastActiveConversation,
@@ -796,10 +807,12 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col overflow-hidden`}>
         <div className="flex-1 flex min-h-0">
           <div
-            className={`h-full w-full sm:w-[320px] flex-shrink-0 overflow-hidden ${
-              isMobileView && (activeConversation || isNewConversation)
-                ? "hidden"
-                : "block sm:border-r dark:border-foreground/20"
+            className={`h-full flex-shrink-0 overflow-hidden ${
+              isMobileView
+                ? activeConversation || isNewConversation
+                  ? "hidden"
+                  : "block w-full"
+                : "block w-[320px] border-r dark:border-foreground/20"
             }`}
           >
             <Sidebar
