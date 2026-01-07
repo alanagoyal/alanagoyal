@@ -11,18 +11,40 @@ interface NotesDesktopPageProps {
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [currentApp, setCurrentApp] = useState<string>("notes");
+  const [currentNoteSlug, setCurrentNoteSlug] = useState<string | undefined>(slug);
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
+    // Check current URL to determine which app should be focused
+    // This handles the case where user navigated via MobileShell's tab bar
+    const checkUrl = () => {
+      const path = window.location.pathname;
+      if (path.startsWith("/notes")) {
+        setCurrentApp("notes");
+        const match = path.match(/^\/notes\/(.+)$/);
+        setCurrentNoteSlug(match ? match[1] : slug || "about-me");
+      } else if (path === "/messages") {
+        setCurrentApp("messages");
+      } else {
+        setCurrentApp("notes");
+        setCurrentNoteSlug(slug || "about-me");
+      }
+    };
+
     checkMobile();
+    checkUrl();
     setIsHydrated(true);
 
-    window.addEventListener("resize", checkMobile);
+    window.addEventListener("resize", () => {
+      checkMobile();
+      checkUrl();
+    });
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [slug]);
 
   // Prevent flash during hydration - use neutral background
   if (!isHydrated) {
@@ -35,7 +57,6 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;
   }
 
-  // On desktop, show the desktop with notes window open
-  // Default to about-me if no slug provided
-  return <Desktop initialAppId="notes" initialNoteSlug={slug || "about-me"} />;
+  // On desktop, show the desktop with the current app focused (based on URL)
+  return <Desktop initialAppId={currentApp} initialNoteSlug={currentNoteSlug} />;
 }

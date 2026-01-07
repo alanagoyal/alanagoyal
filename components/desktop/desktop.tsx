@@ -32,7 +32,7 @@ export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
   }, [initialNoteSlug]);
 
   return (
-    <WindowManagerProvider initialAppId={initialAppId}>
+    <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
       <div className="fixed inset-0">
         <Image
           src={wallpaper}
