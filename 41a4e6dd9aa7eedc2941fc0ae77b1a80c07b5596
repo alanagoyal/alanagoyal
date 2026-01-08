@@ -1,0 +1,27 @@
+app/api/github/route.ts
+  8f284c76fb6649b0 1-75
+components/apps/iterm/terminal.tsx
+  8f284c76fb6649b0 8-18,20-21,25-28,32,48-93,96-117,126-128,169-172,174-184,192,196-201,222-223,237-265,267,277-319,321,333,335,337-342,344-356,358,360-361,389,417-418,420,423,425-429,431,455-457,459-491,493,495-521,523-525,539,565-568,577-581
+lib/github.ts
+  8f284c76fb6649b0 1-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "41a4e6dd9aa7eedc2941fc0ae77b1a80c07b5596",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 634,
+      "total_deletions": 141,
+      "accepted_lines": 555,
+      "overriden_lines": 1
+    }
+  }
+}
