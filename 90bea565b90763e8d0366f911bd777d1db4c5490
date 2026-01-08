@@ -1,0 +1,23 @@
+components/apps/settings/panels/bluetooth.tsx
+  8f284c76fb6649b0 20,23-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "90bea565b90763e8d0366f911bd777d1db4c5490",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 3,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
