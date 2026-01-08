@@ -240,20 +240,17 @@ export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCe
         {/* Wi-Fi tile */}
         <button
           onClick={() => setWifiEnabled(!wifiEnabled)}
-          className={cn(
-            "flex items-center gap-2 p-2 rounded-md transition-colors",
-            wifiEnabled ? "bg-blue-500 text-white" : "bg-black/5 dark:bg-white/10"
-          )}
+          className="flex items-center gap-2 p-2 rounded-md transition-colors bg-black/5 dark:bg-white/10"
         >
           <div className={cn(
             "flex items-center justify-center w-6 h-6 rounded-full",
-            wifiEnabled ? "bg-white/20" : "bg-black/10 dark:bg-white/10"
+            wifiEnabled ? "bg-blue-500" : "bg-black/10 dark:bg-white/10"
           )}>
-            <Wifi className="w-3.5 h-3.5" />
+            <Wifi className={cn("w-3.5 h-3.5", wifiEnabled ? "text-white" : "")} />
           </div>
           <div className="text-left min-w-0">
             <div className="text-xs font-medium truncate">Wi-Fi</div>
-            <div className={cn("text-[10px] truncate", wifiEnabled ? "text-white/70" : "text-muted-foreground")}>
+            <div className="text-[10px] truncate text-muted-foreground">
               {wifiEnabled ? "basecase" : "Off"}
             </div>
           </div>
@@ -262,20 +259,17 @@ export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCe
         {/* Bluetooth tile */}
         <button
           onClick={() => setBluetoothEnabled(!bluetoothEnabled)}
-          className={cn(
-            "flex items-center gap-2 p-2 rounded-md transition-colors",
-            bluetoothEnabled ? "bg-blue-500 text-white" : "bg-black/5 dark:bg-white/10"
-          )}
+          className="flex items-center gap-2 p-2 rounded-md transition-colors bg-black/5 dark:bg-white/10"
         >
           <div className={cn(
             "flex items-center justify-center w-6 h-6 rounded-full",
-            bluetoothEnabled ? "bg-white/20" : "bg-black/10 dark:bg-white/10"
+            bluetoothEnabled ? "bg-blue-500" : "bg-black/10 dark:bg-white/10"
           )}>
-            <Bluetooth className="w-3.5 h-3.5" />
+            <Bluetooth className={cn("w-3.5 h-3.5", bluetoothEnabled ? "text-white" : "")} />
           </div>
           <div className="text-left min-w-0">
             <div className="text-xs font-medium truncate">Bluetooth</div>
-            <div className={cn("text-[10px] truncate", bluetoothEnabled ? "text-white/70" : "text-muted-foreground")}>
+            <div className="text-[10px] truncate text-muted-foreground">
               {bluetoothEnabled ? "On" : "Off"}
             </div>
           </div>
