@@ -36,18 +36,23 @@ function getDefaultWindowState(appId: string): WindowState {
 }
 
 function getInitialState(): WindowManagerState {
+  return getInitialStateForApp("notes");
+}
+
+// Creates initial state with a specific app fullscreen (for new visitors)
+function getInitialStateForApp(appId: string): WindowManagerState {
   const windows: Record<string, WindowState> = {};
   APPS.forEach((app) => {
     windows[app.id] = getDefaultWindowState(app.id);
   });
-  // Notes opens by default in fullscreen (for new visitors)
-  windows["notes"].isOpen = true;
-  windows["notes"].isMaximized = true;
-  windows["notes"].zIndex = 1;
+  // Open the specified app in fullscreen
+  windows[appId].isOpen = true;
+  windows[appId].isMaximized = true;
+  windows[appId].zIndex = 1;
 
   return {
     windows,
-    focusedWindowId: "notes",
+    focusedWindowId: appId,
     nextZIndex: 2,
   };
 }
@@ -366,20 +371,8 @@ export function WindowManagerProvider({
           nextZIndex: savedState.nextZIndex + 1,
         };
       } else {
-        const initialState = getInitialState();
-        return {
-          ...initialState,
-          windows: {
-            ...initialState.windows,
-            [initialAppId]: {
-              ...initialState.windows[initialAppId],
-              isOpen: true,
-              zIndex: initialState.nextZIndex,
-            },
-          },
-          focusedWindowId: initialAppId,
-          nextZIndex: initialState.nextZIndex + 1,
-        };
+        // New visitor - open the requested app fullscreen
+        return getInitialStateForApp(initialAppId);
       }
     } else {
       const savedState = loadStateFromStorage();
@@ -395,6 +388,7 @@ export function WindowManagerProvider({
     if (initialAppId) {
       const savedState = loadStateFromStorage();
       if (savedState) {
+        // Returning user - just open and focus the requested app
         const newState: WindowManagerState = {
           ...savedState,
           windows: {
@@ -410,6 +404,9 @@ export function WindowManagerProvider({
           nextZIndex: savedState.nextZIndex + 1,
         };
         dispatch({ type: "RESTORE_STATE", state: newState });
+      } else {
+        // New visitor - open the requested app fullscreen
+        dispatch({ type: "RESTORE_STATE", state: getInitialStateForApp(initialAppId) });
       }
     }
     setIsHydrated(true);
