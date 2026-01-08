@@ -1,6 +1,7 @@
 const GITHUB_USERNAME = "alanagoyal";
-const CACHE_TTL_REPOS = 5 * 60 * 1000; // 5 minutes
-const CACHE_TTL_FILES = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_REPOS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_TREES = 2 * 60 * 60 * 1000; // 2 hours
+const CACHE_TTL_FILES = 2 * 60 * 60 * 1000; // 2 hours
 
 interface CacheEntry<T> {
   data: T;
@@ -21,8 +22,42 @@ interface GitHubTreeItem {
   sha: string;
 }
 
-// In-memory cache
+// In-memory cache with localStorage persistence
+const STORAGE_KEY = "github_cache";
 const cache = new Map<string, CacheEntry<unknown>>();
+
+// Load cache from localStorage on init
+function loadCache(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      Object.entries(parsed).forEach(([key, value]) => {
+        cache.set(key, value as CacheEntry<unknown>);
+      });
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+// Save cache to localStorage
+function saveCache(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const obj: Record<string, CacheEntry<unknown>> = {};
+    cache.forEach((value, key) => {
+      obj[key] = value;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+// Initialize cache from storage
+loadCache();
 
 function getCached<T>(key: string, ttl: number): T | null {
   const entry = cache.get(key) as CacheEntry<T> | undefined;
@@ -34,6 +69,7 @@ function getCached<T>(key: string, ttl: number): T | null {
 
 function setCache<T>(key: string, data: T): void {
   cache.set(key, { data, timestamp: Date.now() });
+  saveCache();
 }
 
 export async function fetchUserRepos(): Promise<GitHubRepo[]> {
@@ -50,7 +86,7 @@ export async function fetchUserRepos(): Promise<GitHubRepo[]> {
           Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
         }),
       },
-      next: { revalidate: 300 }, // Next.js cache for 5 minutes
+      next: { revalidate: 3600 }, // Next.js cache for 1 hour
     }
   );
 
@@ -72,7 +108,7 @@ export async function fetchRepoTree(
   const cacheKey = `tree:${GITHUB_USERNAME}/${repo}`;
   const cached = getCached<{ name: string; type: "file" | "dir"; path: string }[]>(
     cacheKey,
-    CACHE_TTL_FILES
+    CACHE_TTL_TREES
   );
   if (cached) return cached;
 
