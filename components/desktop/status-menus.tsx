@@ -16,7 +16,7 @@ import { useSystemSettings } from "@/lib/system-settings-context";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 
 // Shared menu container style - matching Apple menu exactly
-const menuContainerClass = "absolute top-7 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 py-1 z-[1000] overflow-hidden";
+const menuContainerClass = "absolute top-7 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 py-1 z-[70] overflow-hidden";
 
 // Small toggle switch component
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {

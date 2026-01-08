@@ -47,10 +47,10 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   return (
     <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume }}>
       {children}
-      {/* Brightness overlay - below menus (z-1000) but above content */}
+      {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
         <div
-          className="fixed inset-0 bg-black pointer-events-none z-[100]"
+          className="fixed inset-0 bg-black pointer-events-none z-[90]"
           style={{ opacity: (100 - brightness) / 100 }}
         />
       )}

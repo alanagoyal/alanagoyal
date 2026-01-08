@@ -33,7 +33,7 @@ export function Dock() {
   };
 
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40">
+    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
       <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg">
         {APPS.map((app) => {
           const isOpen = isWindowOpen(app.id);

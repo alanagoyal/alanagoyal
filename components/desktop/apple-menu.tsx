@@ -44,7 +44,7 @@ export function AppleMenu({
   return (
     <div
       ref={menuRef}
-      className="absolute top-7 left-2 w-64 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 py-1 z-[1000] overflow-hidden"
+      className="absolute top-7 left-2 w-64 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 py-1 z-[70] overflow-hidden"
     >
       <MenuItem
         icon={<Monitor className="w-4 h-4" />}

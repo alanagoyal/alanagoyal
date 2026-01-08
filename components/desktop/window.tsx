@@ -205,7 +205,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         bottom: 0,
         width: "auto",
         height: "auto",
-        zIndex: 1500, // Above menu bar (z-1000), below overlays (z-2000)
+        zIndex: 80, // Fullscreen: above menu bar (70), below overlays (100)
       }
     : {
         top: position.y,

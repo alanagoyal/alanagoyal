@@ -111,8 +111,9 @@ function saveStateToStorage(state: WindowManagerState): void {
   }
 }
 
-// Max z-index before we normalize (keep well below menu bar's z-index)
-const MAX_Z_INDEX = 500;
+// Max z-index before we normalize (windows stay in 1-50 range)
+// See lib/desktop/z-index.ts for the full layering system
+const MAX_Z_INDEX = 50;
 
 // Normalize z-indexes to prevent unbounded growth
 function normalizeZIndexes(state: WindowManagerState): WindowManagerState {

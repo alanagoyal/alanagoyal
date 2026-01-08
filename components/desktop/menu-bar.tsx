@@ -66,7 +66,7 @@ export function MenuBar({
   const closeMenu = () => setOpenMenu(null);
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[1000] select-none">
+    <div className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[70] select-none">
       <div className="flex items-center gap-4">
         <button
           onClick={() => toggleMenu("apple")}
