@@ -18,7 +18,7 @@ export function ShutdownOverlay({ onBootComplete }: ShutdownOverlayProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black flex items-center justify-center cursor-pointer"
+      className="fixed inset-0 z-[2000] bg-black flex items-center justify-center cursor-pointer"
       onClick={handleClick}
     >
       {isBooting && <BootSequence onComplete={onBootComplete} />}

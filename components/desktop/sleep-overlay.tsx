@@ -18,7 +18,7 @@ export function SleepOverlay({ onWake }: SleepOverlayProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] bg-black cursor-pointer transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[2000] bg-black cursor-pointer transition-opacity duration-500 ${
         isWaking ? "opacity-0" : "opacity-100"
       }`}
       onClick={handleWake}

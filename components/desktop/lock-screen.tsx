@@ -43,7 +43,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[200] flex flex-col items-center transition-opacity duration-300 bg-black ${
+      className={`fixed inset-0 z-[2000] flex flex-col items-center transition-opacity duration-300 bg-black ${
         isUnlocking ? "opacity-0" : "opacity-100"
       }`}
       onClick={handleUnlock}

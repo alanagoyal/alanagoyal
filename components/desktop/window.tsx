@@ -205,7 +205,7 @@ export function Window({ appId, children, onFocus }: WindowProps) {
         bottom: 0,
         width: "auto",
         height: "auto",
-        zIndex: zIndex + 100, // Above menu bar (z-50) and dock (z-40), preserves focus order
+        zIndex: 1500, // Above menu bar (z-1000), below overlays (z-2000)
       }
     : {
         top: position.y,
