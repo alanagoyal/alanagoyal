@@ -1,0 +1,35 @@
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 14,30,59-85,174-177
+components/apps/finder/finder-app.tsx
+  8f284c76fb6649b0 1-744
+components/mobile/mobile-shell.tsx
+  8f284c76fb6649b0 8,32-33,52
+components/desktop/dock.tsx
+  8f284c76fb6649b0 36-37
+next.config.mjs
+  8f284c76fb6649b0 13
+lib/app-config.ts
+  8f284c76fb6649b0 5-14
+app/(desktop)/finder/page.tsx
+  8f284c76fb6649b0 1-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "af5a84027d8b48fe2a49e5d54c5f3fd84965bcfb",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1067,
+      "total_deletions": 242,
+      "accepted_lines": 829,
+      "overriden_lines": 0
+    }
+  }
+}
