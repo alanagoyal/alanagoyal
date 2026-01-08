@@ -17,11 +17,12 @@ interface BluetoothDevice {
 const myDevicesDesktop: BluetoothDevice[] = [
   { name: "Alana's Magic Keyboard", connected: true, battery: 91, type: "keyboard" },
   { name: "Alana's Magic Trackpad", connected: true, battery: 20, type: "trackpad" },
+  { name: "Nothing Headphones", connected: false, type: "headphones" },
   { name: "Alana's AirPods Max", connected: false, type: "airpods-max" },
   { name: "Alana's AirPods Pro", connected: false, type: "airpods" },
-  { name: "Ankur's AirPods", connected: false, type: "airpods" },
-  { name: "Paul Dornier's Keyboard #1", connected: false, type: "keyboard" },
-  { name: "Paul Dornier's Trackpad", connected: false, type: "trackpad" },
+  { name: "Flipper Reg0l1", connected: false, type: "headphones" },
+  { name: "Matic-Robot-07m-53jp", connected: false, type: "headphones" },
+  { name: "Porsche BT 1524", connected: false, type: "headphones" },
 ];
 
 const myDevicesMobile = [
