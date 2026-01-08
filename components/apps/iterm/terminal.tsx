@@ -25,7 +25,7 @@ const BASE_FILE_SYSTEM: Record<string, FileNode> = {
   "/Users/alanagoyal/Desktop": { type: "dir", contents: ["hello.md"] },
   "/Users/alanagoyal/Desktop/hello.md": {
     type: "file",
-    content: "# Hello World\n\nWelcome to my terminal! Feel free to explore.\n\nTry:\n- `ls Projects` to see my GitHub repos\n- `cat Projects/<repo>/README.md` to read about a project",
+    content: "hello world!",
   },
   "/Users/alanagoyal/Documents": { type: "dir", contents: [] },
   "/Users/alanagoyal/Downloads": { type: "dir", contents: [] },
@@ -117,7 +117,7 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
 
 export function Terminal({ isMobile = false }: TerminalProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([
-    { type: "output", content: "Welcome to iTerm2 - Type 'help' for available commands" },
+    { type: "output", content: "Type 'help' for available commands" },
   ]);
   const [currentInput, setCurrentInput] = useState("");
   const [currentDir, setCurrentDir] = useState(HOME_DIR);
