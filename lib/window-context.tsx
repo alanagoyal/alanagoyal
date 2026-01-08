@@ -35,48 +35,82 @@ function getDefaultWindowState(appId: string): WindowState {
   };
 }
 
-function getInitialState(): WindowManagerState {
-  return getInitialStateForApp("notes");
-}
+// =============================================================================
+// State Factory Functions
+// =============================================================================
 
-// Creates initial state with a specific app fullscreen (for new visitors)
-function getInitialStateForApp(appId: string): WindowManagerState {
+// Default app shown to new visitors (used when no initialAppId specified)
+const DEFAULT_APP = "notes";
+
+// Desktop default configuration (shown after logout/restart/shutdown)
+const DESKTOP_DEFAULT_APPS = ["notes", "messages"] as const;
+const DESKTOP_DEFAULT_FOCUSED = "messages";
+
+/**
+ * Creates a fresh state with all windows closed
+ */
+function getBaseState(): WindowManagerState {
   const windows: Record<string, WindowState> = {};
   APPS.forEach((app) => {
     windows[app.id] = getDefaultWindowState(app.id);
   });
-  // Open the specified app in fullscreen
-  windows[appId].isOpen = true;
-  windows[appId].isMaximized = true;
-  windows[appId].zIndex = 1;
-
   return {
     windows,
-    focusedWindowId: appId,
-    nextZIndex: 2,
+    focusedWindowId: null,
+    nextZIndex: 1,
   };
 }
 
-// Desktop default: Notes and Messages both open in windowed mode
+/**
+ * New visitor state: single app open in fullscreen
+ * Used when a new user visits /messages, /notes, /settings, etc.
+ */
+function getNewVisitorState(appId: string = DEFAULT_APP): WindowManagerState {
+  const state = getBaseState();
+  state.windows[appId].isOpen = true;
+  state.windows[appId].isMaximized = true;
+  state.windows[appId].zIndex = 1;
+  state.focusedWindowId = appId;
+  state.nextZIndex = 2;
+  return state;
+}
+
+/**
+ * Desktop default state: multiple apps open in windowed mode
+ * Used after logout/restart/shutdown to show a "fresh desktop" view
+ */
 function getDesktopDefaultState(): WindowManagerState {
-  const windows: Record<string, WindowState> = {};
-  APPS.forEach((app) => {
-    windows[app.id] = getDefaultWindowState(app.id);
+  const state = getBaseState();
+
+  DESKTOP_DEFAULT_APPS.forEach((appId, index) => {
+    state.windows[appId].isOpen = true;
+    state.windows[appId].isMaximized = false;
+    state.windows[appId].zIndex = index + 1;
   });
-  // Notes open in windowed mode
-  windows["notes"].isOpen = true;
-  windows["notes"].isMaximized = false;
-  windows["notes"].zIndex = 1;
 
-  // Messages open in windowed mode
-  windows["messages"].isOpen = true;
-  windows["messages"].isMaximized = false;
-  windows["messages"].zIndex = 2;
+  state.focusedWindowId = DESKTOP_DEFAULT_FOCUSED;
+  state.nextZIndex = DESKTOP_DEFAULT_APPS.length + 1;
+  return state;
+}
 
+/**
+ * Modifies saved state to focus a specific app (opens it if needed)
+ * Used when returning user navigates to a specific app URL
+ */
+function withFocusedApp(savedState: WindowManagerState, appId: string): WindowManagerState {
   return {
-    windows,
-    focusedWindowId: "messages",
-    nextZIndex: 3,
+    ...savedState,
+    windows: {
+      ...savedState.windows,
+      [appId]: {
+        ...savedState.windows[appId],
+        isOpen: true,
+        isMinimized: false,
+        zIndex: savedState.nextZIndex,
+      },
+    },
+    focusedWindowId: appId,
+    nextZIndex: savedState.nextZIndex + 1,
   };
 }
 
@@ -351,66 +385,37 @@ export function WindowManagerProvider({
   children,
   initialAppId,
 }: WindowManagerProviderProps) {
-  // Initialize state synchronously based on initialAppId to avoid flash
-  const getInitialStateWithApp = React.useCallback(() => {
-    if (initialAppId) {
-      const savedState = loadStateFromStorage();
-      if (savedState) {
-        return {
-          ...savedState,
-          windows: {
-            ...savedState.windows,
-            [initialAppId]: {
-              ...savedState.windows[initialAppId],
-              isOpen: true,
-              isMinimized: false,
-              zIndex: savedState.nextZIndex,
-            },
-          },
-          focusedWindowId: initialAppId,
-          nextZIndex: savedState.nextZIndex + 1,
-        };
-      } else {
-        // New visitor - open the requested app fullscreen
-        return getInitialStateForApp(initialAppId);
-      }
+  /**
+   * Compute initial state based on:
+   * 1. Whether user has saved state (localStorage)
+   * 2. Which app they're navigating to (initialAppId)
+   *
+   * Logic:
+   * - New visitor + specific app URL → that app fullscreen
+   * - New visitor + no specific app → default app (notes) fullscreen
+   * - Returning visitor + specific app URL → saved state with that app focused
+   * - Returning visitor + no specific app → saved state as-is
+   */
+  const computeInitialState = React.useCallback((): WindowManagerState => {
+    const savedState = loadStateFromStorage();
+    const targetApp = initialAppId || DEFAULT_APP;
+
+    if (savedState) {
+      // Returning visitor: use saved state, focus requested app
+      return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
     } else {
-      const savedState = loadStateFromStorage();
-      return savedState || getInitialState();
+      // New visitor: show target app fullscreen
+      return getNewVisitorState(targetApp);
     }
   }, [initialAppId]);
 
-  const [state, dispatch] = useReducer(windowReducer, null, getInitialStateWithApp);
+  const [state, dispatch] = useReducer(windowReducer, null, computeInitialState);
   const [isHydrated, setIsHydrated] = React.useState(false);
 
-  // Handle initialAppId changes after mount
+  // Mark as hydrated on mount
   useEffect(() => {
-    if (initialAppId) {
-      const savedState = loadStateFromStorage();
-      if (savedState) {
-        // Returning user - just open and focus the requested app
-        const newState: WindowManagerState = {
-          ...savedState,
-          windows: {
-            ...savedState.windows,
-            [initialAppId]: {
-              ...savedState.windows[initialAppId],
-              isOpen: true,
-              isMinimized: false,
-              zIndex: savedState.nextZIndex,
-            },
-          },
-          focusedWindowId: initialAppId,
-          nextZIndex: savedState.nextZIndex + 1,
-        };
-        dispatch({ type: "RESTORE_STATE", state: newState });
-      } else {
-        // New visitor - open the requested app fullscreen
-        dispatch({ type: "RESTORE_STATE", state: getInitialStateForApp(initialAppId) });
-      }
-    }
     setIsHydrated(true);
-  }, [initialAppId]);
+  }, []);
 
   // Save to localStorage on state change
   useEffect(() => {
