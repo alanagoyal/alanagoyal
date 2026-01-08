@@ -16,29 +16,27 @@ import { RestartOverlay } from "./restart-overlay";
 import wallpaper from "@/public/desktop/wallpaper.png";
 import type { SettingsPanel } from "@/components/apps/settings/settings-app";
 
+type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
+
 interface DesktopProps {
-  initialAppId?: string; // App to open and focus on load
-  initialNoteSlug?: string; // For notes app: which note to select
+  initialAppId?: string;
+  initialNoteSlug?: string;
 }
 
-// Inner component that uses the window manager context
 function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const { openWindow, restoreDesktopDefault } = useWindowManager();
-  const [isLocked, setIsLocked] = useState(false);
-  const [isSleeping, setIsSleeping] = useState(false);
-  const [isShuttingDown, setIsShuttingDown] = useState(false);
-  const [isRestarting, setIsRestarting] = useState(false);
+  const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
-  const [fromLogout, setFromLogout] = useState(false); // Track if we came from logout
+  const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
 
-  // Update URL when messages window is focused
+  const isActive = mode === "active";
+
+  // URL update handlers
   const handleMessagesFocus = useCallback(() => {
     window.history.replaceState(null, "", "/messages");
   }, []);
 
-  // Update URL when notes window is focused - preserve current note or use initial
   const handleNotesFocus = useCallback(() => {
-    // If already on a notes URL, keep it; otherwise use initial or default
     const currentPath = window.location.pathname;
     if (!currentPath.startsWith("/notes/")) {
       const slug = initialNoteSlug || "about-me";
@@ -46,65 +44,47 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
     }
   }, [initialNoteSlug]);
 
-  // Update URL when settings window is focused
   const handleSettingsFocus = useCallback(() => {
     window.history.replaceState(null, "", "/settings");
   }, []);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
-    setSettingsPanel(null); // Reset to default view
+    setSettingsPanel(null);
     openWindow("settings");
     window.history.replaceState(null, "", "/settings");
   }, [openWindow]);
 
   const handleOpenAbout = useCallback(() => {
-    setSettingsPanel("about"); // Navigate to About panel
+    setSettingsPanel("about");
     openWindow("settings");
     window.history.replaceState(null, "", "/settings");
   }, [openWindow]);
 
-  const handleSleep = useCallback(() => {
-    setIsSleeping(true);
+  const handleSleep = useCallback(() => setMode("sleeping"), []);
+  const handleRestart = useCallback(() => setMode("restarting"), []);
+  const handleShutdown = useCallback(() => setMode("shuttingDown"), []);
+  const handleLockScreen = useCallback(() => setMode("locked"), []);
+
+  const handleLogout = useCallback(() => {
+    setRestoreDefaultOnUnlock(true);
+    setMode("locked");
   }, []);
 
-  const handleWake = useCallback(() => {
-    setIsSleeping(false);
-    setIsLocked(true); // Wake up to lock screen
-  }, []);
+  const handleWake = useCallback(() => setMode("locked"), []);
 
-  const handleShutdown = useCallback(() => {
-    setIsShuttingDown(true);
-  }, []);
-
-  // Called when shutdown/restart boot sequence completes
   const handleBootComplete = useCallback(() => {
-    setIsShuttingDown(false);
-    setIsRestarting(false);
-    setFromLogout(true); // Show desktop default after login
-    setIsLocked(true);
-  }, []);
-
-  const handleRestart = useCallback(() => {
-    setIsRestarting(true);
-  }, []);
-
-  const handleLockScreen = useCallback(() => {
-    setIsLocked(true);
+    setRestoreDefaultOnUnlock(true);
+    setMode("locked");
   }, []);
 
   const handleUnlock = useCallback(() => {
-    setIsLocked(false);
-    if (fromLogout) {
+    setMode("active");
+    if (restoreDefaultOnUnlock) {
       restoreDesktopDefault();
-      setFromLogout(false);
+      setRestoreDefaultOnUnlock(false);
     }
-  }, [fromLogout, restoreDesktopDefault]);
-
-  const handleLogout = useCallback(() => {
-    setFromLogout(true);
-    setIsLocked(true);
-  }, []);
+  }, [restoreDefaultOnUnlock, restoreDesktopDefault]);
 
   return (
     <div className="fixed inset-0">
@@ -126,8 +106,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
         onLogout={handleLogout}
       />
 
-      {/* Hide windows when locked, sleeping, shut down, or restarting */}
-      {!isLocked && !isSleeping && !isShuttingDown && !isRestarting && (
+      {isActive && (
         <>
           <Window appId="notes" onFocus={handleNotesFocus}>
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
@@ -145,10 +124,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
         </>
       )}
 
-      {isLocked && <LockScreen onUnlock={handleUnlock} />}
-      {isSleeping && <SleepOverlay onWake={handleWake} />}
-      {isShuttingDown && <ShutdownOverlay onBootComplete={handleBootComplete} />}
-      {isRestarting && <RestartOverlay onBootComplete={handleBootComplete} />}
+      {mode === "locked" && <LockScreen onUnlock={handleUnlock} />}
+      {mode === "sleeping" && <SleepOverlay onWake={handleWake} />}
+      {mode === "shuttingDown" && <ShutdownOverlay onBootComplete={handleBootComplete} />}
+      {mode === "restarting" && <RestartOverlay onBootComplete={handleBootComplete} />}
     </div>
   );
 }
