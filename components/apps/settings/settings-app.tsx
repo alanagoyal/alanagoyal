@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Nav } from "./nav";
 import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 
-export type SettingsCategory = "general" | "appearance" | "bluetooth";
+export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth";
 export type SettingsPanel = "about" | "personal-info" | null;
 
 interface HistoryEntry {
@@ -16,11 +16,22 @@ interface HistoryEntry {
 interface SettingsAppProps {
   isMobile?: boolean;
   inShell?: boolean;
+  initialPanel?: SettingsPanel; // Allow opening directly to a panel
 }
 
-export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppProps) {
-  const [history, setHistory] = useState<HistoryEntry[]>([{ category: "general", panel: null }]);
+export function SettingsApp({ isMobile = false, inShell = false, initialPanel }: SettingsAppProps) {
+  const [history, setHistory] = useState<HistoryEntry[]>([
+    { category: "general", panel: initialPanel || null }
+  ]);
   const [historyIndex, setHistoryIndex] = useState(0);
+
+  // Handle initialPanel changes (e.g., from "About This Mac" menu)
+  useEffect(() => {
+    if (initialPanel) {
+      setHistory([{ category: "general", panel: initialPanel }]);
+      setHistoryIndex(0);
+    }
+  }, [initialPanel]);
   const [showSidebar, setShowSidebar] = useState(true);
 
   const currentState = history[historyIndex];
@@ -93,6 +104,7 @@ export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppPr
     if (!isMobile) {
       if (selectedCategory === "general") return "General";
       if (selectedCategory === "appearance") return "Appearance";
+      if (selectedCategory === "wifi") return "Wi-Fi";
       if (selectedCategory === "bluetooth") return "Bluetooth";
     }
     return undefined;

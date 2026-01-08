@@ -40,7 +40,7 @@ function getInitialState(): WindowManagerState {
   APPS.forEach((app) => {
     windows[app.id] = getDefaultWindowState(app.id);
   });
-  // Notes opens by default in fullscreen
+  // Notes opens by default in fullscreen (for new visitors)
   windows["notes"].isOpen = true;
   windows["notes"].isMaximized = true;
   windows["notes"].zIndex = 1;
@@ -49,6 +49,29 @@ function getInitialState(): WindowManagerState {
     windows,
     focusedWindowId: "notes",
     nextZIndex: 2,
+  };
+}
+
+// Desktop default: Notes and Messages both open in windowed mode
+function getDesktopDefaultState(): WindowManagerState {
+  const windows: Record<string, WindowState> = {};
+  APPS.forEach((app) => {
+    windows[app.id] = getDefaultWindowState(app.id);
+  });
+  // Notes open in windowed mode
+  windows["notes"].isOpen = true;
+  windows["notes"].isMaximized = false;
+  windows["notes"].zIndex = 1;
+
+  // Messages open in windowed mode
+  windows["messages"].isOpen = true;
+  windows["messages"].isMaximized = false;
+  windows["messages"].zIndex = 2;
+
+  return {
+    windows,
+    focusedWindowId: "messages",
+    nextZIndex: 3,
   };
 }
 
@@ -280,6 +303,7 @@ interface WindowManagerContextValue {
   getWindow: (appId: string) => WindowState | undefined;
   isWindowOpen: (appId: string) => boolean;
   getFocusedAppId: () => string | null;
+  restoreDesktopDefault: () => void;
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(
@@ -430,6 +454,10 @@ export function WindowManagerProvider({
     [state.focusedWindowId]
   );
 
+  const restoreDesktopDefault = useCallback(() => {
+    dispatch({ type: "RESTORE_STATE", state: getDesktopDefaultState() });
+  }, []);
+
   const value: WindowManagerContextValue = {
     state,
     openWindow,
@@ -444,6 +472,7 @@ export function WindowManagerProvider({
     getWindow,
     isWindowOpen,
     getFocusedAppId,
+    restoreDesktopDefault,
   };
 
   return (

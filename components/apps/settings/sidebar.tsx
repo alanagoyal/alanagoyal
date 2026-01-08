@@ -17,7 +17,23 @@ interface SidebarProps {
   isDesktop?: boolean;
 }
 
-const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; iconBg: string; keywords: string[] }[] = [
+const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; iconBg: string; keywords: string[]; desktopOnly?: boolean }[] = [
+  {
+    id: "wifi",
+    name: "Wi-Fi",
+    icon: <Wifi className="w-5 h-5 text-white" />,
+    iconBg: "bg-blue-500",
+    keywords: ["wifi", "wireless", "network", "internet", "connect"],
+    desktopOnly: true,
+  },
+  {
+    id: "bluetooth",
+    name: "Bluetooth",
+    icon: <Bluetooth className="w-5 h-5 text-white" />,
+    iconBg: "bg-blue-500",
+    keywords: ["bluetooth", "wireless", "devices", "airpods", "keyboard", "trackpad"],
+    desktopOnly: true,
+  },
   {
     id: "general",
     name: "General",
@@ -59,11 +75,13 @@ export function Sidebar({
 
   const query = searchQuery.toLowerCase();
 
-  // Filter categories based on search (name or keywords)
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(query) ||
-    category.keywords.some((keyword) => keyword.includes(query))
-  );
+  // Filter categories based on search (name or keywords) and platform
+  const filteredCategories = categories.filter((category) => {
+    // Exclude desktop-only categories on mobile
+    if (isMobile && category.desktopOnly) return false;
+    return category.name.toLowerCase().includes(query) ||
+      category.keywords.some((keyword) => keyword.includes(query));
+  });
 
   // Check if Apple Account matches search
   const showAppleAccount =

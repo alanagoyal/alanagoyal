@@ -1,12 +1,13 @@
 "use client";
 
-import { Settings, Paintbrush, Bluetooth } from "lucide-react";
+import { Settings, Paintbrush, Bluetooth, Wifi } from "lucide-react";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { GeneralPanel } from "./panels/general";
 import { AboutPanel } from "./panels/about";
 import { AppearancePanel } from "./panels/appearance";
 import { PersonalInfoPanel } from "./panels/personal-info";
 import { BluetoothPanel } from "./panels/bluetooth";
+import { WifiPanel } from "./panels/wifi";
 import { cn } from "@/lib/utils";
 
 interface ContentProps {
@@ -31,6 +32,12 @@ const categoryInfo: Record<
     icon: <Paintbrush className="w-8 h-8" />,
     title: "Appearance",
     description: "Customize the look and feel of your Mac.",
+    iconBg: "bg-blue-500",
+  },
+  wifi: {
+    icon: <Wifi className="w-8 h-8" />,
+    title: "Wi-Fi",
+    description: "Set up Wi-Fi to wirelessly connect your Mac to the internet.",
     iconBg: "bg-blue-500",
   },
   bluetooth: {
@@ -79,6 +86,16 @@ export function Content({
   // Get icon background color for mobile
   const iconBgColor = selectedCategory === "general" ? "bg-gray-500" : "bg-blue-500";
 
+  // Wi-Fi and Bluetooth have their own header layout on desktop
+  if (!isMobile && (selectedCategory === "wifi" || selectedCategory === "bluetooth")) {
+    return (
+      <div className="flex-1 overflow-y-auto bg-background p-6">
+        {selectedCategory === "wifi" && <WifiPanel isMobile={isMobile} />}
+        {selectedCategory === "bluetooth" && <BluetoothPanel isMobile={isMobile} />}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
       {isMobile ? (
@@ -106,7 +123,7 @@ export function Content({
           {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
         </div>
       ) : (
-        // Desktop layout
+        // Desktop layout for General and Appearance
         <>
           <div className="flex flex-col items-center py-8 px-4 border-b border-border/50">
             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted mb-3">
@@ -122,7 +139,6 @@ export function Content({
               <GeneralPanel onPanelSelect={onPanelSelect} isMobile={isMobile} />
             )}
             {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
-            {selectedCategory === "bluetooth" && <BluetoothPanel isMobile={isMobile} />}
           </div>
         </>
       )}
