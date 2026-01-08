@@ -490,18 +490,15 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
               key={item.id}
               onClick={() => handleSidebarSelect(item.id)}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left",
+                "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left rounded-md",
                 selectedSidebar === item.id
-                  ? "bg-blue-500 text-white"
+                  ? "bg-zinc-300 dark:bg-zinc-600 text-zinc-900 dark:text-white"
                   : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
               )}
             >
               <SidebarIcon
                 icon={item.icon}
-                className={cn(
-                  "w-4 h-4",
-                  selectedSidebar === item.id ? "text-white" : "text-blue-500"
-                )}
+                className="w-4 h-4 text-blue-500"
               />
               <span>{item.label}</span>
             </button>

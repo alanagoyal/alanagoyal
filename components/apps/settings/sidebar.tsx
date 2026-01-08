@@ -297,7 +297,7 @@ export function Sidebar({
                     className={cn(
                       "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
                       selectedPanel === "personal-info"
-                        ? "bg-blue-500 text-white"
+                        ? "bg-zinc-300 dark:bg-zinc-600"
                         : "hover:bg-background/50"
                     )}
                   >
@@ -310,10 +310,7 @@ export function Sidebar({
                     />
                     <div className="text-left">
                       <div className="font-medium text-sm">Alana Goyal</div>
-                      <div className={cn(
-                        "text-xs",
-                        selectedPanel === "personal-info" ? "text-white/70" : "text-muted-foreground"
-                      )}>Apple Account</div>
+                      <div className="text-xs text-muted-foreground">Apple Account</div>
                     </div>
                   </button>
                 </div>
@@ -331,14 +328,14 @@ export function Sidebar({
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                           isSelected
-                            ? "bg-blue-500 text-white"
+                            ? "bg-zinc-300 dark:bg-zinc-600 text-foreground"
                             : "hover:bg-background/50 text-foreground"
                         )}
                       >
                         <span
                           className={cn(
                             "flex items-center justify-center w-7 h-7 rounded-md",
-                            isSelected ? "bg-white/20" : category.iconBg
+                            category.iconBg
                           )}
                         >
                           {category.icon}
