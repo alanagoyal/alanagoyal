@@ -24,17 +24,6 @@ export const APPS: AppConfig[] = [
     menuBarTitle: "Messages",
   },
   {
-    id: "settings",
-    name: "Settings",
-    icon: "/settings.png",
-    description: "System preferences",
-    accentColor: "#8E8E93",
-    defaultPosition: { x: 200, y: 100 },
-    defaultSize: { width: 900, height: 600 },
-    minSize: { width: 700, height: 400 },
-    menuBarTitle: "System Settings",
-  },
-  {
     id: "iterm",
     name: "iTerm",
     icon: "/iterm.png",
@@ -44,6 +33,17 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 800, height: 500 },
     minSize: { width: 500, height: 300 },
     menuBarTitle: "iTerm",
+  },
+  {
+    id: "settings",
+    name: "Settings",
+    icon: "/settings.png",
+    description: "System preferences",
+    accentColor: "#8E8E93",
+    defaultPosition: { x: 200, y: 100 },
+    defaultSize: { width: 900, height: 600 },
+    minSize: { width: 700, height: 400 },
+    menuBarTitle: "System Settings",
   },
 ];
 
