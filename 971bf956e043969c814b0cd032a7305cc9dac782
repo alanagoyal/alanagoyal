@@ -1,0 +1,45 @@
+components/desktop/restart-overlay.tsx
+  8f284c76fb6649b0 1-48
+components/apps/settings/panels/bluetooth.tsx
+  8f284c76fb6649b0 4,7-27,36-105,159,164,187,189-195,197,199,201-202,204-209,211-216,219-268
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 3,5,12-15,17,24-33,54-63,65-106,109,119-135,139-156,159
+components/apps/settings/settings-app.tsx
+  8f284c76fb6649b0 3,8,19,22,24,27-34,107
+components/desktop/menu-bar.tsx
+  8f284c76fb6649b0 3,10-19,21-179,182,208-215,217-222,234-245
+components/apps/settings/sidebar.tsx
+  8f284c76fb6649b0 20-36,78-84
+components/apps/settings/content.tsx
+  8f284c76fb6649b0 3,10,37-42,89-98,126
+components/desktop/lock-screen.tsx
+  8f284c76fb6649b0 1-102
+components/desktop/sleep-overlay.tsx
+  8f284c76fb6649b0 1-29
+components/desktop/shutdown-overlay.tsx
+  8f284c76fb6649b0 1-62
+lib/window-context.tsx
+  8f284c76fb6649b0 43,55-74,306,457-460,475
+components/apps/settings/panels/wifi.tsx
+  8f284c76fb6649b0 1-162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "971bf956e043969c814b0cd032a7305cc9dac782",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1121,
+      "total_deletions": 204,
+      "accepted_lines": 966,
+      "overriden_lines": 0
+    }
+  }
+}
