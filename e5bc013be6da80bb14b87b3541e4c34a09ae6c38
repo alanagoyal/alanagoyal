@@ -1,0 +1,39 @@
+components/apps/settings/settings-app.tsx
+  8f284c76fb6649b0 20,23,25,29,31-32,35
+lib/messages/sound-effects.ts
+  8f284c76fb6649b0 9,15,19-23,28-29,33-37,97-108
+components/desktop/apple-menu.tsx
+  8f284c76fb6649b0 3,13,40
+components/desktop/status-menus.tsx
+  8f284c76fb6649b0 1-320
+components/desktop/menu-bar.tsx
+  8f284c76fb6649b0 12,14,18,29,39,62-66,69,72,75,82,90-109,112-120,122-126,129,131-132,141-157
+lib/system-settings-context.tsx
+  8f284c76fb6649b0 1-67
+lib/window-context.tsx
+  8f284c76fb6649b0 114-136,141-143
+lib/hooks/use-click-outside.ts
+  8f284c76fb6649b0 1-35
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 6,18,31,55,61-62,69,112,132,149-150,152-153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "e5bc013be6da80bb14b87b3541e4c34a09ae6c38",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 800,
+      "total_deletions": 260,
+      "accepted_lines": 575,
+      "overriden_lines": 0
+    }
+  }
+}
