@@ -19,14 +19,15 @@ const ScrollArea = React.forwardRef<
     mobileHeaderHeight?: boolean
     isMobile?: boolean
     bottomMargin?: string
+    viewportClassName?: string
   }
->(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, ...props }, ref) => (
+>(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, viewportClassName, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport className={cn("h-full w-full rounded-[inherit]", viewportClassName)}>
       {children}
     </ScrollAreaPrimitive.Viewport>
     <ScrollBar 

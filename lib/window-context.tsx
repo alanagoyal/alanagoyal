@@ -295,16 +295,55 @@ export function WindowManagerProvider({
   children,
   initialAppId,
 }: WindowManagerProviderProps) {
-  const [state, dispatch] = useReducer(windowReducer, getInitialState());
-  const [isHydrated, setIsHydrated] = React.useState(false);
-
-  // Load from localStorage on mount, but override with initialAppId if provided
-  useEffect(() => {
+  // Initialize state synchronously based on initialAppId to avoid flash
+  const getInitialStateWithApp = React.useCallback(() => {
     if (initialAppId) {
-      // When URL specifies an app, load localStorage for positions but ensure this app is open
       const savedState = loadStateFromStorage();
       if (savedState) {
-        // Start with saved state but ensure the specified app is open and focused
+        return {
+          ...savedState,
+          windows: {
+            ...savedState.windows,
+            [initialAppId]: {
+              ...savedState.windows[initialAppId],
+              isOpen: true,
+              isMinimized: false,
+              zIndex: savedState.nextZIndex,
+            },
+          },
+          focusedWindowId: initialAppId,
+          nextZIndex: savedState.nextZIndex + 1,
+        };
+      } else {
+        const initialState = getInitialState();
+        return {
+          ...initialState,
+          windows: {
+            ...initialState.windows,
+            [initialAppId]: {
+              ...initialState.windows[initialAppId],
+              isOpen: true,
+              zIndex: initialState.nextZIndex,
+            },
+          },
+          focusedWindowId: initialAppId,
+          nextZIndex: initialState.nextZIndex + 1,
+        };
+      }
+    } else {
+      const savedState = loadStateFromStorage();
+      return savedState || getInitialState();
+    }
+  }, [initialAppId]);
+
+  const [state, dispatch] = useReducer(windowReducer, null, getInitialStateWithApp);
+  const [isHydrated, setIsHydrated] = React.useState(false);
+
+  // Handle initialAppId changes after mount
+  useEffect(() => {
+    if (initialAppId) {
+      const savedState = loadStateFromStorage();
+      if (savedState) {
         const newState: WindowManagerState = {
           ...savedState,
           windows: {
@@ -320,29 +359,6 @@ export function WindowManagerProvider({
           nextZIndex: savedState.nextZIndex + 1,
         };
         dispatch({ type: "RESTORE_STATE", state: newState });
-      } else {
-        // No saved state, create initial with specified app open
-        const initialState = getInitialState();
-        const newState: WindowManagerState = {
-          ...initialState,
-          windows: {
-            ...initialState.windows,
-            [initialAppId]: {
-              ...initialState.windows[initialAppId],
-              isOpen: true,
-              zIndex: initialState.nextZIndex,
-            },
-          },
-          focusedWindowId: initialAppId,
-          nextZIndex: initialState.nextZIndex + 1,
-        };
-        dispatch({ type: "RESTORE_STATE", state: newState });
-      }
-    } else {
-      // No initialAppId - use localStorage or defaults
-      const savedState = loadStateFromStorage();
-      if (savedState) {
-        dispatch({ type: "RESTORE_STATE", state: savedState });
       }
     }
     setIsHydrated(true);

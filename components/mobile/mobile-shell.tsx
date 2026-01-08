@@ -18,9 +18,22 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load last used app from localStorage, but initialApp takes precedence
+  // Determine active app from URL, initialApp prop, or localStorage
   useEffect(() => {
-    if (initialApp) {
+    // First check URL to ensure sync across resize
+    const path = window.location.pathname;
+    let appFromUrl: string | null = null;
+    if (path.startsWith("/settings")) {
+      appFromUrl = "settings";
+    } else if (path.startsWith("/messages")) {
+      appFromUrl = "messages";
+    } else if (path.startsWith("/notes")) {
+      appFromUrl = "notes";
+    }
+
+    if (appFromUrl) {
+      setActiveAppId(appFromUrl);
+    } else if (initialApp) {
       setActiveAppId(initialApp);
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -64,12 +77,14 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
 
   // Render the active app with tab bar
   return (
-    <div className="min-h-dvh pb-20 bg-background">
-      {activeAppId === "notes" && (
-        <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
-      )}
-      {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
-      {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
+    <div className="h-dvh flex flex-col bg-background">
+      <div className="flex-1 min-h-0">
+        {activeAppId === "notes" && (
+          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
+        )}
+        {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
+        {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
+      </div>
       <TabBar activeAppId={activeAppId} onTabSelect={handleTabSelect} />
     </div>
   );

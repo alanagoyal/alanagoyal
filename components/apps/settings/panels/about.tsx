@@ -1,8 +1,104 @@
 "use client";
 
-import Image from "next/image";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function AboutPanel() {
+interface AboutPanelProps {
+  isMobile?: boolean;
+}
+
+// Calculate days until AppleCare+ expiration (January 4, 2027)
+function getDaysUntilExpiration(): number {
+  const expirationDate = new Date(2027, 0, 4); // January 4, 2027
+  const today = new Date();
+  const diffTime = expirationDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
+export function AboutPanel({ isMobile = false }: AboutPanelProps) {
+  const daysLeft = getDaysUntilExpiration();
+
+  if (isMobile) {
+    return (
+      <div className="px-4 py-4 space-y-6">
+        {/* Device Info */}
+        <div className="rounded-xl bg-background overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Name</span>
+            <div className="flex items-center gap-1">
+              <span className="text-base text-muted-foreground">alana's iphone</span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">iOS Version</span>
+            <div className="flex items-center gap-1">
+              <span className="text-base text-muted-foreground">18.2</span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Model Name</span>
+            <span className="text-base text-muted-foreground">iPhone 16 Pro</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Model Number</span>
+            <span className="text-base text-muted-foreground">MYMG3LL/A</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-base">Serial Number</span>
+            <span className="text-base text-muted-foreground">F482917XKL</span>
+          </div>
+        </div>
+
+        {/* AppleCare+ */}
+        <div>
+          <div className="rounded-xl bg-background overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+              <span className="text-base">AppleCare+</span>
+              <div className="flex items-center gap-1">
+                <span className="text-base text-muted-foreground">Expires 1/4/27</span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+            <div className="px-4 py-3">
+              <span className="text-base text-blue-500">Upgrade Coverage</span>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground px-2 pt-2">
+            There are {daysLeft} days left to add coverage for accidental damage.
+          </p>
+        </div>
+
+        {/* Storage Stats */}
+        <div className="rounded-xl bg-background overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Songs</span>
+            <span className="text-base text-muted-foreground">0</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Videos</span>
+            <span className="text-base text-muted-foreground">3,210</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Photos</span>
+            <span className="text-base text-muted-foreground">52,042</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <span className="text-base">Applications</span>
+            <span className="text-base text-muted-foreground">81</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-base">Capacity</span>
+            <span className="text-base text-muted-foreground">256 GB</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
     <div className="max-w-lg mx-auto py-6 px-4">
       {/* MacBook Image */}

@@ -11,7 +11,7 @@ interface TabBarProps {
 
 export function TabBar({ activeAppId, onTabSelect }: TabBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-black/10 dark:border-white/10 safe-area-inset-bottom">
+    <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-black/10 dark:border-white/10 safe-area-inset-bottom">
       <div className="flex items-center justify-around py-2 px-4">
         {APPS.map((app) => {
           const isActive = activeAppId === app.id;

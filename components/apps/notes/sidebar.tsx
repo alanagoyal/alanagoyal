@@ -459,11 +459,10 @@ export default function Sidebar({
   return (
     <div
       className={cn(
-        "flex flex-col",
+        "flex flex-col h-full",
         isMobile
           ? "w-full max-w-full bg-background"
-          : "w-[320px] border-r border-muted-foreground/20 bg-muted",
-        isDesktop ? "h-full" : "h-dvh"
+          : "w-[320px] border-r border-muted-foreground/20 bg-muted"
       )}
     >
       <Nav

@@ -789,7 +789,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       data-app="messages"
       tabIndex={-1}
       onMouseDown={() => containerRef.current?.focus()}
-      className={`flex ${isDesktop ? 'h-full' : 'h-dvh'} relative outline-none`}
+      className="flex h-full relative outline-none"
     >
       <CommandMenu
         ref={commandMenuRef}
@@ -808,7 +808,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         onSoundToggle={handleSoundToggle}
         container={isDesktop ? dialogContainer : undefined}
       />
-      <main className={`${isDesktop ? 'h-full' : 'h-dvh'} w-full bg-background flex flex-col overflow-hidden`}>
+      <main className="h-full w-full bg-background flex flex-col overflow-hidden">
         <div className="flex-1 flex min-h-0">
           <div
             className={`h-full flex-shrink-0 overflow-hidden ${

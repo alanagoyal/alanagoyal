@@ -5,7 +5,7 @@ import { Nav } from "./nav";
 import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 
-export type SettingsCategory = "general" | "appearance";
+export type SettingsCategory = "general" | "appearance" | "bluetooth";
 export type SettingsPanel = "about" | "personal-info" | null;
 
 interface HistoryEntry {
@@ -54,10 +54,24 @@ export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppPr
   };
 
   const handleBack = () => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-    } else if (isMobile && !showSidebar) {
-      setShowSidebar(true);
+    if (isMobile) {
+      // On mobile, back behavior is simpler:
+      // If on a sub-panel (like About), go back to the category
+      if (selectedPanel !== null) {
+        // Go back to category page
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ category: selectedCategory, panel: null });
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+      } else {
+        // On a main category page, go back to sidebar
+        setShowSidebar(true);
+      }
+    } else {
+      // Desktop uses history navigation
+      if (historyIndex > 0) {
+        setHistoryIndex(historyIndex - 1);
+      }
     }
   };
 
@@ -67,17 +81,37 @@ export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppPr
     }
   };
 
-  const canGoBack = historyIndex > 0 || (isMobile && !showSidebar);
+  // On mobile, always show back when not on sidebar
+  const canGoBack = isMobile ? !showSidebar : historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
 
   const getNavTitle = () => {
+    // Only show title for sub-panels on mobile, not main categories
+    if (selectedPanel === "about") return "About";
     if (selectedPanel === "personal-info") return "Personal Information";
+    // Don't show title for General/Appearance/Bluetooth on mobile (it's in the content card)
+    if (!isMobile) {
+      if (selectedCategory === "general") return "General";
+      if (selectedCategory === "appearance") return "Appearance";
+      if (selectedCategory === "bluetooth") return "Bluetooth";
+    }
     return undefined;
+  };
+
+  const getBackTitle = () => {
+    if (!isMobile) return "";
+
+    // When on a sub-panel, show the parent category name
+    if (selectedPanel === "about") return "General";
+    if (selectedPanel === "personal-info") return "Settings";
+
+    // When on a main category page, show "Settings" to go back to sidebar
+    return "Settings";
   };
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-background" data-app="settings">
+      <div className="h-full flex flex-col bg-muted/30" data-app="settings">
         {showSidebar ? (
           <Sidebar
             selectedCategory={selectedCategory}
@@ -97,6 +131,7 @@ export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppPr
               isMobile={isMobile}
               isDesktop={inShell}
               title={getNavTitle()}
+              backTitle={getBackTitle()}
             />
             <Content
               selectedCategory={selectedCategory}
@@ -131,6 +166,7 @@ export function SettingsApp({ isMobile = false, inShell = false }: SettingsAppPr
             isMobile={isMobile}
             isDesktop={inShell}
             title={getNavTitle()}
+            backTitle={getBackTitle()}
           />
           <Content
             selectedCategory={selectedCategory}

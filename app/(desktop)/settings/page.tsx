@@ -25,7 +25,7 @@ export default function SettingsPage() {
       } else if (path.startsWith("/messages")) {
         setCurrentApp("messages");
         setCurrentNoteSlug(undefined);
-      } else {
+      } else if (path.startsWith("/settings")) {
         setCurrentApp("settings");
         setCurrentNoteSlug(undefined);
       }
@@ -35,11 +35,13 @@ export default function SettingsPage() {
     checkUrl();
     setIsHydrated(true);
 
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       checkMobile();
       checkUrl();
-    });
-    return () => window.removeEventListener("resize", checkMobile);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Prevent flash during hydration - use neutral background

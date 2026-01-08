@@ -27,11 +27,10 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
         setCurrentApp("notes");
         const match = path.match(/^\/notes\/(.+)$/);
         setCurrentNoteSlug(match ? match[1] : slug || "about-me");
-      } else if (path === "/messages") {
+      } else if (path.startsWith("/messages")) {
         setCurrentApp("messages");
-      } else {
-        setCurrentApp("notes");
-        setCurrentNoteSlug(slug || "about-me");
+      } else if (path.startsWith("/settings")) {
+        setCurrentApp("settings");
       }
     };
 
@@ -39,11 +38,13 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
     checkUrl();
     setIsHydrated(true);
 
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       checkMobile();
       checkUrl();
-    });
-    return () => window.removeEventListener("resize", checkMobile);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [slug]);
 
   // Prevent flash during hydration - use neutral background
