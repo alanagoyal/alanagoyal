@@ -12,7 +12,7 @@ function WifiSignal({ strength = 3, className }: { strength?: 1 | 2 | 3; classNa
 }
 
 const knownNetworks = [
-  { name: "braintrust", connected: true },
+  { name: "basecase", connected: true },
 ];
 
 const personalHotspots = [
@@ -20,12 +20,9 @@ const personalHotspots = [
 ];
 
 const otherNetworks = [
-  { name: "Abi_Wifi" },
-  { name: "Bauhaus" },
-  { name: "braintrust_guest" },
-  { name: "BSL Visionary" },
-  { name: "btrax (guest)" },
   { name: "DIRECT-7A-HP OfficeJet Pro 9730e" },
+  { name: "Xfinity Wifi" },
+  { name: "Xfinity Mobile" },
 ];
 
 interface WifiPanelProps {
@@ -74,7 +71,7 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
           <div className="py-4 border-b border-border/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-medium">braintrust</span>
+                <span className="font-medium">basecase</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-sm text-green-600">
