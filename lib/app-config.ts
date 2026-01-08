@@ -34,6 +34,17 @@ export const APPS: AppConfig[] = [
     minSize: { width: 700, height: 400 },
     menuBarTitle: "System Settings",
   },
+  {
+    id: "iterm",
+    name: "iTerm",
+    icon: "/iterm.png",
+    description: "Terminal emulator",
+    accentColor: "#00D455",
+    defaultPosition: { x: 120, y: 70 },
+    defaultSize: { width: 800, height: 500 },
+    minSize: { width: 500, height: 300 },
+    menuBarTitle: "iTerm",
+  },
 ];
 
 export function getAppById(id: string): AppConfig | undefined {

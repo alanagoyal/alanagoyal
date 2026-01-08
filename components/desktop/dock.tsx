@@ -29,6 +29,10 @@ export function Dock() {
       if (!currentPath.startsWith("/notes/")) {
         window.history.replaceState(null, "", "/notes/about-me");
       }
+    } else if (appId === "settings") {
+      window.history.replaceState(null, "", "/settings");
+    } else if (appId === "iterm") {
+      window.history.replaceState(null, "", "/iterm");
     }
   };
 

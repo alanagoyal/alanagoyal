@@ -230,3 +230,8 @@ html, body {
 .notes-app * {
   caret-color: #e2a727;
 }
+
+/* Green caret for iTerm app */
+.iterm-app * {
+  caret-color: #22c55e;
+}

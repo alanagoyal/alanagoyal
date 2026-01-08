@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
+import { ITermApp } from "@/components/apps/iterm/iterm-app";
 
 const DEFAULT_APP = "notes";
 
@@ -25,6 +26,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId("messages");
     } else if (path.startsWith("/notes")) {
       setActiveAppId("notes");
+    } else if (path.startsWith("/iterm")) {
+      setActiveAppId("iterm");
     } else if (initialApp) {
       setActiveAppId(initialApp);
     }
@@ -42,6 +45,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       )}
       {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
       {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
+      {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
     </div>
   );
 }
