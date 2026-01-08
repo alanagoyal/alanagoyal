@@ -10,6 +10,7 @@ import { Window } from "./window";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
+import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -48,6 +49,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
   const handleSettingsFocus = useCallback(() => {
     window.history.replaceState(null, "", "/settings");
+  }, []);
+
+  const handleITermFocus = useCallback(() => {
+    window.history.replaceState(null, "", "/iterm");
   }, []);
 
   // Menu bar handlers
@@ -132,6 +137,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
           <Window appId="settings" onFocus={handleSettingsFocus}>
             <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
+          </Window>
+
+          <Window appId="iterm" onFocus={handleITermFocus}>
+            <ITermApp inShell={true} />
           </Window>
 
           <Dock />
