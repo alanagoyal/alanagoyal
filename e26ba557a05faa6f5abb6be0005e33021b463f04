@@ -1,0 +1,33 @@
+components/desktop/restart-overlay.tsx
+  8f284c76fb6649b0 3,12
+components/desktop/apple-menu.tsx
+  8f284c76fb6649b0 1-162
+components/desktop/shutdown-overlay.tsx
+  8f284c76fb6649b0 3-4,11,14-15,24
+components/desktop/boot-sequence.tsx
+  8f284c76fb6649b0 1-62
+components/desktop/menu-bar.tsx
+  8f284c76fb6649b0 3,11
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 19-20,22-23,28,30,32,34,53,59,64-67,69-71,74,77-78,82-83,85,87,109,127-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "e26ba557a05faa6f5abb6be0005e33021b463f04",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 264,
+      "total_deletions": 277,
+      "accepted_lines": 264,
+      "overriden_lines": 0
+    }
+  }
+}
