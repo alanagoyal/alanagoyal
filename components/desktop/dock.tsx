@@ -33,6 +33,8 @@ export function Dock() {
       window.history.replaceState(null, "", "/settings");
     } else if (appId === "iterm") {
       window.history.replaceState(null, "", "/iterm");
+    } else if (appId === "finder") {
+      window.history.replaceState(null, "", "/finder");
     }
   };
 

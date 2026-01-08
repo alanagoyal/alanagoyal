@@ -5,6 +5,7 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
+import { FinderApp } from "@/components/apps/finder/finder-app";
 
 const DEFAULT_APP = "notes";
 
@@ -28,6 +29,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId("notes");
     } else if (path.startsWith("/iterm")) {
       setActiveAppId("iterm");
+    } else if (path.startsWith("/finder")) {
+      setActiveAppId("finder");
     } else if (initialApp) {
       setActiveAppId(initialApp);
     }
@@ -46,6 +49,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
       {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
       {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
+      {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
     </div>
   );
 }

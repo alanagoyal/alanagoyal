@@ -10,7 +10,7 @@ const nextConfig = {
       // Legacy note slugs redirect to /notes/*
       // Only match paths that have at least one character and aren't reserved
       {
-        source: '/:path((?!notes|api|messages|settings|iterm|headshot|_next|static|public|icons|favicon\\.ico|sitemap\\.xml|robots\\.txt).+)',
+        source: '/:path((?!notes|api|messages|settings|iterm|finder|headshot|_next|static|public|icons|favicon\\.ico|sitemap\\.xml|robots\\.txt).+)',
         destination: '/notes/:path',
         permanent: true,
       },

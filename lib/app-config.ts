@@ -2,6 +2,17 @@ import { AppConfig } from "@/types/apps";
 
 export const APPS: AppConfig[] = [
   {
+    id: "finder",
+    name: "Finder",
+    icon: "/finder.png",
+    description: "File browser",
+    accentColor: "#007AFF",
+    defaultPosition: { x: 80, y: 40 },
+    defaultSize: { width: 900, height: 600 },
+    minSize: { width: 600, height: 400 },
+    menuBarTitle: "Finder",
+  },
+  {
     id: "notes",
     name: "Notes",
     icon: "/notes.png",

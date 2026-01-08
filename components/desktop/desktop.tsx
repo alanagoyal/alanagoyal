@@ -11,6 +11,7 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
+import { FinderApp } from "@/components/apps/finder/finder-app";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -26,7 +27,7 @@ interface DesktopProps {
 }
 
 function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
-  const { openWindow, restoreDesktopDefault } = useWindowManager();
+  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
@@ -54,6 +55,33 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const handleITermFocus = useCallback(() => {
     window.history.replaceState(null, "", "/iterm");
   }, []);
+
+  const handleFinderFocus = useCallback(() => {
+    window.history.replaceState(null, "", "/finder");
+  }, []);
+
+  // Handler for opening apps from Finder
+  const handleOpenApp = useCallback((appId: string) => {
+    const windowState = getWindow(appId);
+    if (windowState?.isOpen) {
+      if (windowState.isMinimized) {
+        restoreWindow(appId);
+      } else {
+        focusWindow(appId);
+      }
+    } else {
+      openWindow(appId);
+    }
+    // Update URL based on app
+    if (appId === "notes") {
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith("/notes/")) {
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+      }
+    } else {
+      window.history.replaceState(null, "", `/${appId}`);
+    }
+  }, [getWindow, restoreWindow, focusWindow, openWindow, initialNoteSlug]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
@@ -141,6 +169,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
           <Window appId="iterm" onFocus={handleITermFocus}>
             <ITermApp inShell={true} />
+          </Window>
+
+          <Window appId="finder" onFocus={handleFinderFocus}>
+            <FinderApp inShell={true} onOpenApp={handleOpenApp} />
           </Window>
 
           <Dock />
