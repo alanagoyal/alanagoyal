@@ -1,0 +1,23 @@
+components/desktop/status-menus.tsx
+  8f284c76fb6649b0 243,247,249,253,262,266,268,272
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "9bd49162a90e3898cfbb5ee214f5383b4731ba2c",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 14,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
