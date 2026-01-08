@@ -1,0 +1,23 @@
+lib/github.ts
+  8f284c76fb6649b0 2-4,25-26,29-61,72,89,111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "b4b210f65cd18e952617e14a35090400396eb227",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 41,
+      "total_deletions": 5,
+      "accepted_lines": 41,
+      "overriden_lines": 0
+    }
+  }
+}
