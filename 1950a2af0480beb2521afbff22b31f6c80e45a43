@@ -1,0 +1,31 @@
+config/site.ts
+  8f284c76fb6649b0 2
+app/(desktop)/notes/[slug]/page.tsx
+  8f284c76fb6649b0 58
+app/(desktop)/notes/page.tsx
+  8f284c76fb6649b0 6
+app/notes/layout.tsx
+  8f284c76fb6649b0 10,12,14-17
+app/layout.tsx
+  8f284c76fb6649b0 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "1950a2af0480beb2521afbff22b31f6c80e45a43",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 96,
+      "total_deletions": 72,
+      "accepted_lines": 92,
+      "overriden_lines": 0
+    }
+  }
+}
