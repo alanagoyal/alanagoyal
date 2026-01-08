@@ -17,21 +17,22 @@ interface SettingsAppProps {
   isMobile?: boolean;
   inShell?: boolean;
   initialPanel?: SettingsPanel; // Allow opening directly to a panel
+  initialCategory?: SettingsCategory; // Allow opening directly to a category
 }
 
-export function SettingsApp({ isMobile = false, inShell = false, initialPanel }: SettingsAppProps) {
+export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory }: SettingsAppProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([
-    { category: "general", panel: initialPanel || null }
+    { category: initialCategory || "general", panel: initialPanel || null }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // Handle initialPanel changes (e.g., from "About This Mac" menu)
+  // Handle initialPanel/initialCategory changes (e.g., from menu bar)
   useEffect(() => {
-    if (initialPanel) {
-      setHistory([{ category: "general", panel: initialPanel }]);
+    if (initialPanel || initialCategory) {
+      setHistory([{ category: initialCategory || "general", panel: initialPanel || null }]);
       setHistoryIndex(0);
     }
-  }, [initialPanel]);
+  }, [initialPanel, initialCategory]);
   const [showSidebar, setShowSidebar] = useState(true);
 
   const currentState = history[historyIndex];

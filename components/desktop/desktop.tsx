@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager } from "@/lib/window-context";
+import { SystemSettingsProvider } from "@/lib/system-settings-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
@@ -14,7 +15,7 @@ import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
 import wallpaper from "@/public/desktop/wallpaper.png";
-import type { SettingsPanel } from "@/components/apps/settings/settings-app";
+import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
@@ -27,6 +28,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const { openWindow, restoreDesktopDefault } = useWindowManager();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
+  const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
 
   const isActive = mode === "active";
@@ -50,12 +52,21 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
+    setSettingsCategory("general");
+    setSettingsPanel(null);
+    openWindow("settings");
+    window.history.replaceState(null, "", "/settings");
+  }, [openWindow]);
+
+  const handleOpenWifiSettings = useCallback(() => {
+    setSettingsCategory("wifi");
     setSettingsPanel(null);
     openWindow("settings");
     window.history.replaceState(null, "", "/settings");
   }, [openWindow]);
 
   const handleOpenAbout = useCallback(() => {
+    setSettingsCategory("general");
     setSettingsPanel("about");
     openWindow("settings");
     window.history.replaceState(null, "", "/settings");
@@ -98,6 +109,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
       />
       <MenuBar
         onOpenSettings={handleOpenSettings}
+        onOpenWifiSettings={handleOpenWifiSettings}
         onOpenAbout={handleOpenAbout}
         onSleep={handleSleep}
         onRestart={handleRestart}
@@ -117,7 +129,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
           </Window>
 
           <Window appId="settings" onFocus={handleSettingsFocus}>
-            <SettingsApp inShell={true} initialPanel={settingsPanel} />
+            <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
           </Window>
 
           <Dock />
@@ -134,8 +146,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
 export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
   return (
-    <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-      <DesktopContent initialNoteSlug={initialNoteSlug} />
-    </WindowManagerProvider>
+    <SystemSettingsProvider>
+      <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+        <DesktopContent initialNoteSlug={initialNoteSlug} />
+      </WindowManagerProvider>
+    </SystemSettingsProvider>
   );
 }

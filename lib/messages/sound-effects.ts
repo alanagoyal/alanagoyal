@@ -6,21 +6,35 @@ class SoundEffectPlayer {
   private reactionSound: HTMLAudioElement | null = null;
   private enabled: boolean = true;
   private isMobile: boolean = false;
+  private volume: number = 0.5;
 
   private constructor() {
     if (typeof window !== 'undefined') {
       // Check if device is mobile
       this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
+
       // Get sound preference from localStorage, default to !isMobile if not set
       const storedEnabled = localStorage.getItem('soundEnabled');
       this.enabled = storedEnabled !== null ? storedEnabled === 'true' : !this.isMobile;
-      
+
+      // Get volume from localStorage
+      const storedVolume = localStorage.getItem('soundVolume');
+      this.volume = storedVolume !== null ? parseFloat(storedVolume) : 0.5;
+
       this.sentSound = new Audio('/messages/sound-effects/sent.m4a');
       this.receivedSound = new Audio('/messages/sound-effects/received.m4a');
       this.unreadSound = new Audio('/messages/sound-effects/unread.m4a');
       this.reactionSound = new Audio('/messages/sound-effects/reaction.m4a');
+
+      this.applyVolume();
     }
+  }
+
+  private applyVolume() {
+    if (this.sentSound) this.sentSound.volume = this.volume;
+    if (this.receivedSound) this.receivedSound.volume = this.volume;
+    if (this.unreadSound) this.unreadSound.volume = this.volume;
+    if (this.reactionSound) this.reactionSound.volume = this.volume;
   }
 
   public static getInstance(): SoundEffectPlayer {
@@ -79,6 +93,18 @@ class SoundEffectPlayer {
 
   public setEnabled(enabled: boolean) {
     this.enabled = enabled;
+  }
+
+  public getVolume(): number {
+    return this.volume;
+  }
+
+  public setVolume(volume: number) {
+    this.volume = Math.max(0, Math.min(1, volume));
+    this.applyVolume();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soundVolume', this.volume.toString());
+    }
   }
 }
 

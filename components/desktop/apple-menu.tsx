@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   Monitor,
   Settings,
@@ -10,6 +10,7 @@ import {
   Lock,
   LogOut,
 } from "lucide-react";
+import { useClickOutside } from "@/lib/hooks/use-click-outside";
 
 interface AppleMenuProps {
   isOpen: boolean;
@@ -36,18 +37,7 @@ export function AppleMenu({
 }: AppleMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, onClose]);
+  useClickOutside(menuRef, onClose, isOpen);
 
   if (!isOpen) return null;
 

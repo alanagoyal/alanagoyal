@@ -111,10 +111,36 @@ function saveStateToStorage(state: WindowManagerState): void {
   }
 }
 
+// Max z-index before we normalize (keep well below menu bar's z-index)
+const MAX_Z_INDEX = 500;
+
+// Normalize z-indexes to prevent unbounded growth
+function normalizeZIndexes(state: WindowManagerState): WindowManagerState {
+  if (state.nextZIndex <= MAX_Z_INDEX) return state;
+
+  // Sort windows by current z-index to preserve order
+  const sortedWindows = Object.values(state.windows).sort((a, b) => a.zIndex - b.zIndex);
+
+  // Reassign z-indexes starting from 1
+  const newWindows: Record<string, WindowState> = {};
+  sortedWindows.forEach((win, index) => {
+    newWindows[win.appId] = { ...win, zIndex: index + 1 };
+  });
+
+  return {
+    ...state,
+    windows: newWindows,
+    nextZIndex: sortedWindows.length + 1,
+  };
+}
+
 function windowReducer(
   state: WindowManagerState,
   action: WindowAction
 ): WindowManagerState {
+  // Normalize z-indexes if they've grown too large
+  state = normalizeZIndexes(state);
+
   switch (action.type) {
     case "OPEN_WINDOW": {
       const { appId } = action;
