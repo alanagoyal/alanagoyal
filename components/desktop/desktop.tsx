@@ -94,6 +94,8 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
     if (restoreDefaultOnUnlock) {
       restoreDesktopDefault();
       setRestoreDefaultOnUnlock(false);
+      // Update URL to match default focused app (messages)
+      window.history.replaceState(null, "", "/messages");
     }
   }, [restoreDefaultOnUnlock, restoreDesktopDefault]);
 
