@@ -43,6 +43,10 @@ export function Window({ appId, children, onFocus }: WindowProps) {
 
   const isFocused = state.focusedWindowId === appId;
 
+  // Track if window was focused before current interaction
+  // Used to implement "click-to-focus" - first click only focuses, doesn't trigger actions
+  const wasFocusedBeforeMouseDown = useRef(true);
+
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
       // Don't drag if clicking on interactive elements
@@ -229,8 +233,20 @@ export function Window({ appId, children, onFocus }: WindowProps) {
       )}
       style={windowStyle}
       onMouseDown={() => {
+        // Store focus state before this interaction
+        wasFocusedBeforeMouseDown.current = isFocused;
         focusWindow(appId);
         onFocus?.();
+      }}
+      onClickCapture={(e) => {
+        // If window wasn't focused before this click, only focus - don't trigger actions
+        // Exception: always allow window control buttons (close, minimize, maximize)
+        if (!wasFocusedBeforeMouseDown.current) {
+          const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
+          if (!isWindowControl) {
+            e.stopPropagation();
+          }
+        }
       }}
     >
       {/* Inner wrapper - visual styling with rounded corners and overflow hidden */}
