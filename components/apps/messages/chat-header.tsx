@@ -346,32 +346,26 @@ export function ChatHeader({
   const inShell = isDesktop && windowFocus;
 
   // Track drag state to prevent click after drag
-  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const didDrag = useRef(false);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     if (!inShell) return;
 
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    const startX = e.clientX;
+    const startY = e.clientY;
     didDrag.current = false;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (dragStartPos.current) {
-        const dx = Math.abs(moveEvent.clientX - dragStartPos.current.x);
-        const dy = Math.abs(moveEvent.clientY - dragStartPos.current.y);
-        if (dx > 5 || dy > 5) {
-          didDrag.current = true;
-        }
+      const dx = Math.abs(moveEvent.clientX - startX);
+      const dy = Math.abs(moveEvent.clientY - startY);
+      if (dx > 5 || dy > 5) {
+        didDrag.current = true;
       }
     };
 
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      // Reset drag start position after a short delay to allow click to check didDrag
-      setTimeout(() => {
-        dragStartPos.current = null;
-      }, 0);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
