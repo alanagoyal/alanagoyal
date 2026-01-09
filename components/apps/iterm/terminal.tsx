@@ -541,23 +541,23 @@ Note: Projects folder contains my real GitHub repositories!`;
   return (
     <div
       ref={terminalRef}
-      className="h-full w-full max-w-full bg-white dark:bg-zinc-900 font-mono text-sm overflow-y-auto overflow-x-hidden p-2 cursor-text"
+      className="h-full w-full max-w-full bg-white dark:bg-zinc-900 font-mono text-base sm:text-xs overflow-y-auto overflow-x-hidden p-2 cursor-text text-zinc-900 dark:text-white"
       onClick={handleTerminalClick}
     >
       {history.map((entry, i) => (
         <div key={i} className="whitespace-pre-wrap break-words overflow-hidden">
           {entry.type === "input" ? (
             <span>
-              <span className="text-zinc-900 dark:text-white">{entry.prompt}</span>
-              <span className="text-zinc-900 dark:text-white">{entry.content}</span>
+              <span>{entry.prompt}</span>
+              <span>{entry.content}</span>
             </span>
           ) : (
-            <span className="text-zinc-700 dark:text-white">{entry.content}</span>
+            <span>{entry.content}</span>
           )}
         </div>
       ))}
       <div className="flex items-center max-w-full">
-        <span className="text-zinc-900 dark:text-white whitespace-pre-wrap break-all">{getPrompt()}</span>
+        <span className="whitespace-pre-wrap break-all">{getPrompt()}</span>
         <input
           ref={inputRef}
           type="text"
@@ -567,7 +567,7 @@ Note: Projects folder contains my real GitHub repositories!`;
             setCompletionSuggestions(null); // Clear suggestions when typing
           }}
           onKeyDown={handleKeyDown}
-          className="flex-1 min-w-0 bg-transparent text-zinc-900 dark:text-white outline-none border-none text-base"
+          className="flex-1 min-w-0 bg-transparent outline-none border-none text-base sm:text-xs text-inherit"
           autoFocus
           spellCheck={false}
           autoComplete="off"
@@ -575,7 +575,7 @@ Note: Projects folder contains my real GitHub repositories!`;
         />
       </div>
       {completionSuggestions && (
-        <div className="text-zinc-700 dark:text-white whitespace-pre-wrap break-words overflow-hidden">
+        <div className="whitespace-pre-wrap break-words overflow-hidden">
           {completionSuggestions}
         </div>
       )}
