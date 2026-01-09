@@ -1,0 +1,9 @@
+components/apps/messages/chat-header.tsx
+  8f284c76fb6649b0 354-355,359-360,362
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "199683c09e043a9aa53b720ecfe0fe13cbffc3ab",
+  "prompts": {}
+}
