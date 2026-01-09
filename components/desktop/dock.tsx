@@ -10,29 +10,29 @@ function DockTooltip({ label }: { label: string }) {
   return (
     <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none">
       <svg
-        viewBox="0 0 100 40"
-        className="h-8 min-w-16"
+        viewBox="0 0 100 44"
+        className="h-9 min-w-16"
         style={{ width: `${Math.max(64, label.length * 9 + 24)}px` }}
         preserveAspectRatio="none"
       >
         <path
-          d="M 8 0
-             H 92
-             C 96 0 100 4 100 8
-             V 24
-             C 100 28 96 32 92 32
+          d="M 12 0
+             H 88
+             Q 100 0 100 12
+             V 20
+             Q 100 32 88 32
              H 56
              L 50 38
              L 44 32
-             H 8
-             C 4 32 0 28 0 24
-             V 8
-             C 0 4 4 0 8 0
+             H 12
+             Q 0 32 0 20
+             V 12
+             Q 0 0 12 0
              Z"
-          fill="rgba(30, 30, 30, 0.9)"
+          fill="rgba(30, 30, 30, 0.7)"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium pb-1.5 whitespace-nowrap px-3">
+      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium pb-2 whitespace-nowrap px-3">
         {label}
       </span>
     </div>
