@@ -1,0 +1,36 @@
+components/apps/messages/chat-header.tsx
+  1dd546a868d2c30f 220,347-348,634-635,637-638,643,808,814-815,818,839,843
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "3422bd9fc7ffd232ced7295e5a6c66a6c085e95a",
+  "prompts": {
+    "1dd546a868d2c30f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "78ec0448-27e9-47f1-b270-d8f4f2b85f26",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 177,
+      "total_deletions": 162,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    },
+    "8e4d56d454afbd08": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21e2dfb1-105a-4644-a53c-4773b2aa660b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
