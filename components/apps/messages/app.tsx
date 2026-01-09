@@ -791,13 +791,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       onMouseDown={() => containerRef.current?.focus()}
       className="flex h-full relative outline-none"
     >
-      {/* Full-width drag bar at top - z-0 so nav (z-[1]) stays clickable */}
-      {isDesktop && windowFocus && (
-        <div
-          className="absolute top-0 left-0 right-0 h-[52px] z-0"
-          onMouseDown={windowFocus.onDragStart}
-        />
-      )}
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
@@ -856,12 +849,51 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
             </Sidebar>
           </div>
           <div
-            className={`flex-1 min-h-0 overflow-hidden ${
+            className={`flex-1 min-h-0 overflow-hidden relative ${
               isMobileView && !activeConversation && !isNewConversation
                 ? "hidden"
                 : "block"
             }`}
           >
+            {/* Drag overlay - matches nav height, doesn't affect layout */}
+            {isDesktop && windowFocus && (
+              <div
+                className="absolute top-0 left-0 right-0 h-[52px] z-[60] select-none"
+                onMouseDown={(e) => {
+                  const overlay = e.currentTarget as HTMLElement;
+                  const startX = e.clientX;
+                  const startY = e.clientY;
+                  let didDrag = false;
+
+                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                    const dx = Math.abs(moveEvent.clientX - startX);
+                    const dy = Math.abs(moveEvent.clientY - startY);
+                    if (!didDrag && (dx > 5 || dy > 5)) {
+                      didDrag = true;
+                      windowFocus.onDragStart(e);
+                    }
+                  };
+
+                  const handleMouseUp = (upEvent: MouseEvent) => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+
+                    if (!didDrag) {
+                      // It was a click - find and click the element below
+                      overlay.style.pointerEvents = 'none';
+                      const elementBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+                      overlay.style.pointerEvents = '';
+                      if (elementBelow && elementBelow !== overlay) {
+                        (elementBelow as HTMLElement).click();
+                      }
+                    }
+                  };
+
+                  document.addEventListener('mousemove', handleMouseMove);
+                  document.addEventListener('mouseup', handleMouseUp);
+                }}
+              />
+            )}
             <ChatArea
               isNewChat={isNewConversation}
               activeConversation={

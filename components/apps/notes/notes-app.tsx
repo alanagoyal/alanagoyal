@@ -136,13 +136,6 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         onMouseDown={() => containerRef.current?.focus()}
         className="notes-app h-full flex bg-background text-foreground relative outline-none"
       >
-        {/* Full-width drag bar at top - z-0 so nav (z-[1]) stays clickable */}
-        {inShell && windowFocus && (
-          <div
-            className="absolute top-0 left-0 right-0 h-[52px] z-0"
-            onMouseDown={windowFocus.onDragStart}
-          />
-        )}
         <Sidebar
           notes={notes}
           onNoteSelect={handleNoteSelect}
@@ -152,7 +145,46 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           onNoteCreated={setSelectedNote}
           dialogContainer={dialogContainer}
         />
-        <div className="flex-grow h-full overflow-hidden">
+        <div className="flex-grow h-full overflow-hidden relative">
+          {/* Drag overlay - matches nav height, doesn't affect layout */}
+          {inShell && windowFocus && (
+            <div
+              className="absolute top-0 left-0 right-0 h-[52px] z-10 select-none"
+              onMouseDown={(e) => {
+                const overlay = e.currentTarget as HTMLElement;
+                const startX = e.clientX;
+                const startY = e.clientY;
+                let didDrag = false;
+
+                const handleMouseMove = (moveEvent: MouseEvent) => {
+                  const dx = Math.abs(moveEvent.clientX - startX);
+                  const dy = Math.abs(moveEvent.clientY - startY);
+                  if (!didDrag && (dx > 5 || dy > 5)) {
+                    didDrag = true;
+                    windowFocus.onDragStart(e);
+                  }
+                };
+
+                const handleMouseUp = (upEvent: MouseEvent) => {
+                  document.removeEventListener('mousemove', handleMouseMove);
+                  document.removeEventListener('mouseup', handleMouseUp);
+
+                  if (!didDrag) {
+                    // It was a click - find and click the element below
+                    overlay.style.pointerEvents = 'none';
+                    const elementBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+                    overlay.style.pointerEvents = '';
+                    if (elementBelow && elementBelow !== overlay) {
+                      (elementBelow as HTMLElement).click();
+                    }
+                  }
+                };
+
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+              }}
+            />
+          )}
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
             {selectedNote ? (
               <div className="w-full p-3">
