@@ -4,7 +4,7 @@ export const APPS: AppConfig[] = [
   {
     id: "finder",
     name: "Finder",
-    icon: "/finder.png",
+    icon: "/finder.svg",
     description: "File browser",
     accentColor: "#007AFF",
     defaultPosition: { x: 80, y: 40 },
@@ -15,7 +15,7 @@ export const APPS: AppConfig[] = [
   {
     id: "notes",
     name: "Notes",
-    icon: "/notes.png",
+    icon: "/notes.svg",
     description: "Personal notes and thoughts",
     accentColor: "#FFCC00",
     defaultPosition: { x: 100, y: 50 },
@@ -26,7 +26,7 @@ export const APPS: AppConfig[] = [
   {
     id: "messages",
     name: "Messages",
-    icon: "/messages.png",
+    icon: "/messages.svg",
     description: "Chat with AI personas",
     accentColor: "#34C759",
     defaultPosition: { x: 150, y: 80 },
@@ -37,7 +37,7 @@ export const APPS: AppConfig[] = [
   {
     id: "iterm",
     name: "iTerm",
-    icon: "/iterm.png",
+    icon: "/iterm.svg",
     description: "Terminal emulator",
     accentColor: "#00D455",
     defaultPosition: { x: 120, y: 70 },
@@ -48,7 +48,7 @@ export const APPS: AppConfig[] = [
   {
     id: "settings",
     name: "Settings",
-    icon: "/settings.png",
+    icon: "/settings.svg",
     description: "System preferences",
     accentColor: "#8E8E93",
     defaultPosition: { x: 200, y: 100 },
