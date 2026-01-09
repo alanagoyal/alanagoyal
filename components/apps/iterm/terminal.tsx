@@ -567,7 +567,7 @@ Note: Projects folder contains my real GitHub repositories!`;
             setCompletionSuggestions(null); // Clear suggestions when typing
           }}
           onKeyDown={handleKeyDown}
-          className="flex-1 min-w-0 bg-transparent text-zinc-900 dark:text-white outline-none border-none"
+          className="flex-1 min-w-0 bg-transparent text-zinc-900 dark:text-white outline-none border-none text-base"
           autoFocus
           spellCheck={false}
           autoComplete="off"
