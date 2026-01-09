@@ -782,6 +782,48 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     setSoundEnabled(soundEffects.isEnabled());
   }, []);
 
+  // Handle drag-to-move in the chat area header zone (desktop only)
+  const handleChatAreaMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDesktop || !windowFocus) return;
+
+    // Only handle in drag zone (top 52px)
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (e.clientY - rect.top > 52) return;
+
+    // Don't handle drag in edit mode or on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-recipient-pills]')) return;
+    if (target.closest('button, input, a, [role="button"], select, textarea')) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let didDrag = false;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const dx = Math.abs(moveEvent.clientX - startX);
+      const dy = Math.abs(moveEvent.clientY - startY);
+      if (!didDrag && (dx > 5 || dy > 5)) {
+        didDrag = true;
+        windowFocus.onDragStart(e);
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (didDrag) {
+        // Block the click event that would follow
+        document.addEventListener('click', (clickEvent) => {
+          clickEvent.stopPropagation();
+          clickEvent.preventDefault();
+        }, { capture: true, once: true });
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [isDesktop, windowFocus]);
+
   // Calculate total unread count
   const totalUnreadCount = conversations.reduce((total, conv) => {
     return total + (conv.unreadCount || 0);
@@ -863,56 +905,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                 ? "hidden"
                 : "block"
             }`}
-            onMouseDown={(e) => {
-              // Only handle drag in desktop mode with window focus
-              if (!isDesktop || !windowFocus) return;
-
-              // Check if we're in the drag zone (top 52px)
-              const rect = e.currentTarget.getBoundingClientRect();
-              const relativeY = e.clientY - rect.top;
-              if (relativeY > 52) return;
-
-              // If in edit mode (pills area visible), don't handle drag at all
-              const target = e.target as HTMLElement;
-              const isPillArea = target.closest('[data-recipient-pills]');
-              if (isPillArea) return;
-
-              // Check if clicking on an interactive element - if so, don't intercept
-              const isInteractive = target.closest('button, input, a, [role="button"], select, textarea');
-              if (isInteractive) return;
-
-              // Track potential drag - don't prevent default yet
-              const startX = e.clientX;
-              const startY = e.clientY;
-              let didDrag = false;
-
-              const handleMouseMove = (moveEvent: MouseEvent) => {
-                const dx = Math.abs(moveEvent.clientX - startX);
-                const dy = Math.abs(moveEvent.clientY - startY);
-                if (!didDrag && (dx > 5 || dy > 5)) {
-                  didDrag = true;
-                  windowFocus.onDragStart(e);
-                }
-              };
-
-              const handleMouseUp = () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-
-                if (didDrag) {
-                  // Block the click event that would follow
-                  const blockClick = (clickEvent: MouseEvent) => {
-                    clickEvent.stopPropagation();
-                    clickEvent.preventDefault();
-                  };
-                  document.addEventListener('click', blockClick, { capture: true, once: true });
-                }
-                // If didn't drag, let click happen naturally (enters edit mode)
-              };
-
-              document.addEventListener('mousemove', handleMouseMove);
-              document.addEventListener('mouseup', handleMouseUp);
-            }}
+            onMouseDown={handleChatAreaMouseDown}
           >
             <ChatArea
               isNewChat={isNewConversation}

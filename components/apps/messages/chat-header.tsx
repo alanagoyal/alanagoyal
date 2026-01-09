@@ -172,7 +172,7 @@ function RecipientSearch({
   return (
     <div
       ref={searchRef}
-      className={cn("relative overflow-visible", isMobileView ? "w-full" : "min-w-[250px] flex-1")}
+      className={cn("relative", isMobileView ? "w-full" : "min-w-[250px] flex-1")}
       data-chat-header="true"
     >
       <div className="flex items-center w-full">
@@ -191,7 +191,7 @@ function RecipientSearch({
             }
           }}
           placeholder="Type to add recipients..."
-          className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full"
+          className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full select-text"
           data-chat-header="true"
         />
         <button
@@ -683,7 +683,7 @@ export function ChatHeader({
   };
 
   return (
-    <div className="z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
+    <div className="z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b select-none">
       {/* Mobile view */}
       {isMobileView ? (
         <div
