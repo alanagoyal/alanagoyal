@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager } from "@/lib/window-context";
-import { SystemSettingsProvider } from "@/lib/system-settings-context";
+import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
@@ -28,6 +28,7 @@ interface DesktopProps {
 
 function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
+  const { focusMode } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
@@ -160,7 +161,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
           </Window>
 
           <Window appId="messages" onFocus={handleMessagesFocus}>
-            <MessagesApp inShell={true} />
+            <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
           </Window>
 
           <Window appId="settings" onFocus={handleSettingsFocus}>

@@ -172,7 +172,7 @@ function RecipientSearch({
   return (
     <div
       ref={searchRef}
-      className={cn("relative", isMobileView ? "w-full" : "flex-1")}
+      className={cn("relative overflow-visible", isMobileView ? "w-full" : "min-w-[250px] flex-1")}
       data-chat-header="true"
     >
       <div className="flex items-center w-full">
@@ -214,7 +214,7 @@ function RecipientSearch({
       {showResults && displayPeople.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
+          className="absolute left-0 min-w-[250px] max-w-[300px] top-full mt-1 bg-background rounded-lg shadow-lg z-50"
           data-dropdown="true"
           tabIndex={-1}
           onMouseDown={(e) => e.preventDefault()}
@@ -683,7 +683,7 @@ export function ChatHeader({
   };
 
   return (
-    <div className="sticky top-0 z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
+    <div className="z-10 flex flex-col w-full bg-background/50 backdrop-blur-md border-b">
       {/* Mobile view */}
       {isMobileView ? (
         <div
@@ -811,11 +811,11 @@ export function ChatHeader({
         >
           {/* Desktop new chat or edit view */}
           {(isNewChat && !showCompactNewChat) || isEditMode ? (
-            <div className="flex items-start gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-2 flex-1 min-w-0" data-recipient-pills onClick={(e) => e.stopPropagation()}>
               <span className="text-sm text-muted-foreground flex-shrink-0 leading-8 pt-4">
                 To:
               </span>
-              <div className="flex flex-wrap gap-1 flex-1 items-center min-h-8 py-4">
+              <div className="flex flex-wrap gap-1 flex-1 items-center min-h-8 py-4 min-w-0">
                 {renderRecipients()}
                 {recipientInput.split(",").filter((r) => r.trim()).length <
                   4 && (

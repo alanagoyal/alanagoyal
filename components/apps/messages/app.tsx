@@ -14,9 +14,10 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 interface AppProps {
   isDesktop?: boolean;
   inShell?: boolean; // When true, prevent URL updates (for mobile shell)
+  focusModeActive?: boolean; // When true, mute all notifications and sounds
 }
 
-export default function App({ isDesktop = false, inShell = false }: AppProps) {
+export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
@@ -56,7 +57,14 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  // Ref to track focusModeActive for use in callbacks
+  const focusModeRef = useRef(focusModeActive);
   const windowFocus = useWindowFocus();
+
+  // Keep focusModeRef in sync with prop
+  useEffect(() => {
+    focusModeRef.current = focusModeActive;
+  }, [focusModeActive]);
   // Use window's dialog container when in desktop shell, otherwise use local ref
   const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
@@ -277,13 +285,14 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
           // Use MessageQueue's tracked active conversation state to determine unread status
           // This fixes the bug where messages were always marked unread due to stale state
+          // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           const shouldIncrementUnread =
             conversationId !== currentActiveConversation &&
-            message.sender !== "me" &&
-            !conversation.hideAlerts;
+            message.sender !== "me";
 
-          // Play received sound if message is in inactive conversation, not from us, and alerts aren't hidden
-          if (shouldIncrementUnread && !conversation.hideAlerts) {
+          // Play received sound if: should increment unread AND not muted AND not in focus mode
+          // hideAlerts and focusMode only affect sounds, not the blue dot indicator
+          if (shouldIncrementUnread && !conversation.hideAlerts && !focusModeRef.current) {
             soundEffects.playUnreadSound();
           }
 
@@ -789,7 +798,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       data-app="messages"
       tabIndex={-1}
       onMouseDown={() => containerRef.current?.focus()}
-      className="flex h-full relative outline-none"
+      className="flex h-full relative outline-none overflow-hidden"
     >
       <CommandMenu
         ref={commandMenuRef}
@@ -854,46 +863,57 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
                 ? "hidden"
                 : "block"
             }`}
+            onMouseDown={(e) => {
+              // Only handle drag in desktop mode with window focus
+              if (!isDesktop || !windowFocus) return;
+
+              // Check if we're in the drag zone (top 52px)
+              const rect = e.currentTarget.getBoundingClientRect();
+              const relativeY = e.clientY - rect.top;
+              if (relativeY > 52) return;
+
+              // If in edit mode (pills area visible), don't handle drag at all
+              const target = e.target as HTMLElement;
+              const isPillArea = target.closest('[data-recipient-pills]');
+              if (isPillArea) return;
+
+              // Check if clicking on an interactive element - if so, don't intercept
+              const isInteractive = target.closest('button, input, a, [role="button"], select, textarea');
+              if (isInteractive) return;
+
+              // Track potential drag - don't prevent default yet
+              const startX = e.clientX;
+              const startY = e.clientY;
+              let didDrag = false;
+
+              const handleMouseMove = (moveEvent: MouseEvent) => {
+                const dx = Math.abs(moveEvent.clientX - startX);
+                const dy = Math.abs(moveEvent.clientY - startY);
+                if (!didDrag && (dx > 5 || dy > 5)) {
+                  didDrag = true;
+                  windowFocus.onDragStart(e);
+                }
+              };
+
+              const handleMouseUp = () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+
+                if (didDrag) {
+                  // Block the click event that would follow
+                  const blockClick = (clickEvent: MouseEvent) => {
+                    clickEvent.stopPropagation();
+                    clickEvent.preventDefault();
+                  };
+                  document.addEventListener('click', blockClick, { capture: true, once: true });
+                }
+                // If didn't drag, let click happen naturally (enters edit mode)
+              };
+
+              document.addEventListener('mousemove', handleMouseMove);
+              document.addEventListener('mouseup', handleMouseUp);
+            }}
           >
-            {/* Drag overlay - matches nav height, doesn't affect layout */}
-            {isDesktop && windowFocus && (
-              <div
-                className="absolute top-0 left-0 right-0 h-[52px] z-[60] select-none"
-                onMouseDown={(e) => {
-                  const overlay = e.currentTarget as HTMLElement;
-                  const startX = e.clientX;
-                  const startY = e.clientY;
-                  let didDrag = false;
-
-                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                    const dx = Math.abs(moveEvent.clientX - startX);
-                    const dy = Math.abs(moveEvent.clientY - startY);
-                    if (!didDrag && (dx > 5 || dy > 5)) {
-                      didDrag = true;
-                      windowFocus.onDragStart(e);
-                    }
-                  };
-
-                  const handleMouseUp = (upEvent: MouseEvent) => {
-                    document.removeEventListener('mousemove', handleMouseMove);
-                    document.removeEventListener('mouseup', handleMouseUp);
-
-                    if (!didDrag) {
-                      // It was a click - find and click the element below
-                      overlay.style.pointerEvents = 'none';
-                      const elementBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-                      overlay.style.pointerEvents = '';
-                      if (elementBelow && elementBelow !== overlay) {
-                        (elementBelow as HTMLElement).click();
-                      }
-                    }
-                  };
-
-                  document.addEventListener('mousemove', handleMouseMove);
-                  document.addEventListener('mouseup', handleMouseUp);
-                }}
-              />
-            )}
             <ChatArea
               isNewChat={isNewConversation}
               activeConversation={
@@ -924,6 +944,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               onMessageDraftChange={handleMessageDraftChange}
               unreadCount={totalUnreadCount}
               isDesktop={isDesktop}
+              focusModeActive={focusModeActive}
             />
           </div>
         </div>

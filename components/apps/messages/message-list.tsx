@@ -13,6 +13,7 @@ interface MessageListProps {
   onReactionComplete?: () => void;
   messageInputRef?: React.RefObject<{ focus: () => void }>;
   isMobileView?: boolean;
+  focusModeActive?: boolean;
 }
 
 export function MessageList({
@@ -24,6 +25,7 @@ export function MessageList({
   onReactionComplete,
   messageInputRef,
   isMobileView,
+  focusModeActive = false,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
@@ -100,7 +102,7 @@ export function MessageList({
         conversationId === prevConversationId &&
         messages.length > prevMessageCount
       ) {
-        if (lastMessage.sender !== "me" && lastMessage.sender !== "system") {
+        if (lastMessage.sender !== "me" && lastMessage.sender !== "system" && !conversation?.hideAlerts && !focusModeActive) {
           soundEffects.playReceivedSound();
         }
       }

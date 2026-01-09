@@ -28,6 +28,7 @@ interface ChatAreaProps {
   onMessageDraftChange?: (conversationId: string, message: string) => void;
   unreadCount?: number;
   isDesktop?: boolean;
+  focusModeActive?: boolean;
 }
 
 export function ChatArea({
@@ -49,6 +50,7 @@ export function ChatArea({
   onMessageDraftChange,
   unreadCount = 0,
   isDesktop = false,
+  focusModeActive = false,
 }: ChatAreaProps) {
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
 
@@ -98,8 +100,8 @@ export function ChatArea({
   };
 
   return (
-    <div className="h-full relative flex flex-col">
-      <div className="absolute top-0 left-0 right-0 z-50">
+    <div className="h-full relative flex flex-col overflow-x-hidden">
+      <div className="absolute top-0 left-0 right-0 z-50 overflow-visible">
         <ChatHeader
           isNewChat={showRecipientInput}
           recipientInput={recipientInput}
@@ -153,6 +155,7 @@ export function ChatArea({
                 conversationId={conversationId}
                 messageInputRef={messageInputRef}
                 isMobileView={isMobileView}
+                focusModeActive={focusModeActive}
               />
               <div className="w-3 bg-background" />
             </div>
