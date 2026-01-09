@@ -6,7 +6,7 @@ import { Note } from "@/lib/notes/types";
 export async function createNote(
   sessionId: string | null,
   router: any,
-  addNewPinnedNote: (slug: string) => void,
+  addNewPinnedNote: (slug: string, silent?: boolean) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
   isMobile: boolean,
@@ -36,7 +36,7 @@ export async function createNote(
 
     if (isDesktop) {
       // In desktop mode, use callbacks instead of router
-      addNewPinnedNote(slug);
+      addNewPinnedNote(slug, true);
       await refreshSessionNotes();
       setSelectedNoteSlug(slug);
       // Fetch the full note and call the callback
@@ -49,7 +49,7 @@ export async function createNote(
         }
       }
     } else if (!isMobile) {
-      addNewPinnedNote(slug);
+      addNewPinnedNote(slug, true);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);

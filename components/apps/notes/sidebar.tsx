@@ -233,7 +233,7 @@ export default function Sidebar({
   );
 
   const handlePinToggle = useCallback(
-    (slug: string) => {
+    (slug: string, silent: boolean = false) => {
       let isPinning = false;
       setPinnedNotes((prev) => {
         const newPinned = new Set(prev);
@@ -259,9 +259,11 @@ export default function Sidebar({
         if (note) onNoteSelect(note);
       }
 
-      toast({
-        description: isPinning ? "Note pinned" : "Note unpinned",
-      });
+      if (!silent) {
+        toast({
+          description: isPinning ? "Note pinned" : "Note unpinned",
+        });
+      }
     },
     [router, isMobile, isDesktop, clearSearch, notes, onNoteSelect]
   );
