@@ -27,6 +27,7 @@ interface ChatAreaProps {
   messageDraft?: string;
   onMessageDraftChange?: (conversationId: string, message: string) => void;
   unreadCount?: number;
+  isDesktop?: boolean;
 }
 
 export function ChatArea({
@@ -47,6 +48,7 @@ export function ChatArea({
   messageDraft = "",
   onMessageDraftChange,
   unreadCount = 0,
+  isDesktop = false,
 }: ChatAreaProps) {
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
 
@@ -117,6 +119,7 @@ export function ChatArea({
           unreadCount={unreadCount}
           showCompactNewChat={showCompactNewChat}
           setShowCompactNewChat={setShowCompactNewChat}
+          isDesktop={isDesktop}
         />
       </div>
       <ScrollArea

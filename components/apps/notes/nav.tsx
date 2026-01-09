@@ -33,11 +33,10 @@ export function Nav({
         "px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none",
         isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
         isMobile ? "bg-background" : "bg-muted",
-        inShell && !windowFocus.isMaximized && "cursor-grab active:cursor-grabbing"
       )}
       onMouseDown={inShell ? windowFocus.onDragStart : undefined}
     >
-      <div className="window-controls flex items-center gap-1.5 p-2">
+      <div className="window-controls flex items-center gap-1.5 p-2 relative z-20">
         {inShell ? (
           // Desktop shell - use window controls from context
           <>
@@ -73,14 +72,16 @@ export function Nav({
           </>
         )}
       </div>
-      <NewNote
-        addNewPinnedNote={addNewPinnedNote}
-        clearSearch={clearSearch}
-        setSelectedNoteSlug={setSelectedNoteSlug}
-        isMobile={isMobile}
-        isDesktop={isDesktop}
-        onNoteCreated={onNoteCreated}
-      />
+      <div className="relative z-20">
+        <NewNote
+          addNewPinnedNote={addNewPinnedNote}
+          clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
+          isMobile={isMobile}
+          isDesktop={isDesktop}
+          onNoteCreated={onNoteCreated}
+        />
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUserContacts, addUserContact } from "@/lib/messages/contacts";
 import { ContactDrawer } from "./contact-drawer";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
@@ -35,6 +36,7 @@ interface ChatHeaderProps {
   unreadCount?: number;
   showCompactNewChat?: boolean;
   setShowCompactNewChat?: (show: boolean) => void;
+  isDesktop?: boolean;
 }
 
 interface RecipientPillProps {
@@ -331,6 +333,7 @@ export function ChatHeader({
   unreadCount,
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
+  isDesktop = false,
 }: ChatHeaderProps) {
   const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
@@ -338,6 +341,45 @@ export function ChatHeader({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+
+  const windowFocus = useWindowFocus();
+  const inShell = isDesktop && windowFocus;
+
+  // Track drag state to prevent click after drag
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+  const didDrag = useRef(false);
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    if (!inShell) return;
+
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    didDrag.current = false;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (dragStartPos.current) {
+        const dx = Math.abs(moveEvent.clientX - dragStartPos.current.x);
+        const dy = Math.abs(moveEvent.clientY - dragStartPos.current.y);
+        if (dx > 5 || dy > 5) {
+          didDrag.current = true;
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      // Reset drag start position after a short delay to allow click to check didDrag
+      setTimeout(() => {
+        dragStartPos.current = null;
+      }, 0);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    // Also call the window focus drag handler
+    windowFocus?.onDragStart?.(e as unknown as React.MouseEvent<Element, MouseEvent>);
+  }, [inShell, windowFocus]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -486,6 +528,12 @@ export function ChatHeader({
   ]);
 
   const handleHeaderClick = (e: React.MouseEvent) => {
+    // If we just dragged, don't trigger click action
+    if (didDrag.current) {
+      didDrag.current = false;
+      return;
+    }
+
     // Prevent clicks on dropdown or pill remove buttons from triggering header click
     const isDropdownClick = (e.target as Element).closest('[data-dropdown]');
     const isPillRemoveClick = (e.target as Element).closest('button[aria-label^="Remove"]');
@@ -500,7 +548,7 @@ export function ChatHeader({
       const recipients =
         activeConversation?.recipients.map((r) => r.name).join(",") || "";
       setRecipientInput(recipients + ",");
-    } 
+    }
     // Desktop: clicking header in new chat compact mode enters edit mode
     else if (isNewChat && showCompactNewChat && !isMobileView) {
       setShowCompactNewChat?.(false);
@@ -805,6 +853,7 @@ export function ChatHeader({
         <div
           className="flex items-center justify-between px-4 relative h-16"
           onClick={handleHeaderClick}
+          onMouseDown={inShell ? handleDragStart : undefined}
           data-chat-header="true"
         >
           {/* Desktop new chat or edit view */}

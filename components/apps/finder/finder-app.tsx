@@ -583,10 +583,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
   // Render nav bar
   const renderNav = () => (
     <div
-      className={cn(
-        "flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none",
-        inDesktopShell && !windowFocus.isMaximized && "cursor-grab active:cursor-grabbing"
-      )}
+      className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none"
       onMouseDown={inDesktopShell ? windowFocus.onDragStart : undefined}
     >
       {/* Traffic lights (desktop) */}

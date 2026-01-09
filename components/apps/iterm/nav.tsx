@@ -18,7 +18,6 @@ export function Nav({ isMobile, isDesktop = false }: NavProps) {
     <div
       className={cn(
         "px-4 py-2 flex items-center justify-between select-none bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700",
-        inShell && !windowFocus.isMaximized && "cursor-grab active:cursor-grabbing"
       )}
       onMouseDown={inShell ? windowFocus.onDragStart : undefined}
     >

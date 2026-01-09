@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hoo
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { cn } from "@/lib/utils";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -791,6 +792,13 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       onMouseDown={() => containerRef.current?.focus()}
       className="flex h-full relative outline-none"
     >
+      {/* Full-width drag bar at top */}
+      {isDesktop && windowFocus && (
+        <div
+          className="absolute top-0 left-0 right-0 h-[52px] z-10"
+          onMouseDown={windowFocus.onDragStart}
+        />
+      )}
       <CommandMenu
         ref={commandMenuRef}
         conversations={conversations}
@@ -884,6 +892,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               }
               onMessageDraftChange={handleMessageDraftChange}
               unreadCount={totalUnreadCount}
+              isDesktop={isDesktop}
             />
           </div>
         </div>

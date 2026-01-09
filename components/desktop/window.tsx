@@ -225,7 +225,6 @@ export function Window({ appId, children, onFocus }: WindowProps) {
       ref={windowRef}
       className={cn(
         "fixed",
-        isDragging && "cursor-grabbing",
         !isFocused && !isMaximized && "opacity-95"
       )}
       style={windowStyle}

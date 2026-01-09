@@ -6,6 +6,7 @@ import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { cn } from "@/lib/utils";
 import Sidebar from "./sidebar";
 import Note from "./note";
 
@@ -136,6 +137,13 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         onMouseDown={() => containerRef.current?.focus()}
         className="notes-app h-full flex bg-background text-foreground relative outline-none"
       >
+        {/* Full-width drag bar at top */}
+        {inShell && windowFocus && (
+          <div
+            className="absolute top-0 left-0 right-0 h-[52px] z-10"
+            onMouseDown={windowFocus.onDragStart}
+          />
+        )}
         <Sidebar
           notes={notes}
           onNoteSelect={handleNoteSelect}
