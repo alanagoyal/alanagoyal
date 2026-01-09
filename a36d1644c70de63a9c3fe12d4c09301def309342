@@ -1,0 +1,31 @@
+components/desktop/status-menus.tsx
+  8f284c76fb6649b0 13-15,18,21-30,240-246,251-252,258-266,311-378
+components/apps/messages/messages-app.tsx
+  8f284c76fb6649b0 8,12,15
+components/apps/messages/app.tsx
+  8f284c76fb6649b0 17,20,60-61,63-67,288,292-293,295-296
+lib/system-settings-context.tsx
+  8f284c76fb6649b0 6-8,14-17,23-24,29-30,41-50,68-81,83
+components/desktop/desktop.tsx
+  8f284c76fb6649b0 6,31,164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "a36d1644c70de63a9c3fe12d4c09301def309342",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 160,
+      "total_deletions": 13,
+      "accepted_lines": 158,
+      "overriden_lines": 0
+    }
+  }
+}
