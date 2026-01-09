@@ -1,0 +1,35 @@
+components/apps/messages/app.tsx
+  8f284c76fb6649b0 13,795-801,895
+components/apps/messages/chat-area.tsx
+  8f284c76fb6649b0 30,51,122
+components/apps/messages/chat-header.tsx
+  8f284c76fb6649b0 10,39,336,345-346,348-383,531-536,856
+components/apps/notes/notes-app.tsx
+  8f284c76fb6649b0 9,140-146
+components/apps/finder/finder-app.tsx
+  8f284c76fb6649b0 586
+components/apps/notes/nav.tsx
+  8f284c76fb6649b0 39,75-76,84
+components/apps/messages/nav.tsx
+  8f284c76fb6649b0 63,97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "ca68279daaba547b162645ac5b6d6c5ba45c4e78",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 102,
+      "total_deletions": 39,
+      "accepted_lines": 77,
+      "overriden_lines": 0
+    }
+  }
+}
