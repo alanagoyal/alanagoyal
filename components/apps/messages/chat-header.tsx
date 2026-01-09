@@ -845,7 +845,10 @@ export function ChatHeader({
       ) : (
         // Desktop View
         <div
-          className="flex items-center justify-between px-4 relative h-16"
+          className={cn(
+            "flex items-start justify-between px-4 relative",
+            (isNewChat && !showCompactNewChat) || isEditMode ? "min-h-16 py-3" : "h-16 items-center"
+          )}
           onClick={handleHeaderClick}
           onMouseDown={inShell ? handleDragStart : undefined}
           data-chat-header="true"
@@ -854,7 +857,7 @@ export function ChatHeader({
           <div className="flex items-center gap-2 flex-1">
             {(isNewChat && !showCompactNewChat) || isEditMode ? (
               <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-1 flex-wrap py-6">
+                <div className="flex items-center gap-1 flex-wrap">
                   <span className="text-base sm:text-sm text-muted-foreground">
                     To:
                   </span>

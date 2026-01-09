@@ -791,10 +791,10 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       onMouseDown={() => containerRef.current?.focus()}
       className="flex h-full relative outline-none"
     >
-      {/* Full-width drag bar at top */}
+      {/* Full-width drag bar at top - z-0 so nav (z-[1]) stays clickable */}
       {isDesktop && windowFocus && (
         <div
-          className="absolute top-0 left-0 right-0 h-[52px] z-10"
+          className="absolute top-0 left-0 right-0 h-[52px] z-0"
           onMouseDown={windowFocus.onDragStart}
         />
       )}

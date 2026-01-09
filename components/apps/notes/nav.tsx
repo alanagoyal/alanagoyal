@@ -36,7 +36,7 @@ export function Nav({
       )}
       onMouseDown={inShell ? windowFocus.onDragStart : undefined}
     >
-      <div className="window-controls flex items-center gap-1.5 p-2 relative z-20">
+      <div className="window-controls flex items-center gap-1.5 p-2">
         {inShell ? (
           // Desktop shell - use window controls from context
           <>
@@ -72,7 +72,7 @@ export function Nav({
           </>
         )}
       </div>
-      <div className="relative z-20">
+      <div>
         <NewNote
           addNewPinnedNote={addNewPinnedNote}
           clearSearch={clearSearch}

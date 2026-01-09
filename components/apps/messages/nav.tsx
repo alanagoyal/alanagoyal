@@ -60,7 +60,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
         )}
         onMouseDown={inShell ? windowFocus.onDragStart : undefined}
       >
-        <div className="window-controls flex items-center gap-1.5 p-2 relative z-20">
+        <div className="window-controls flex items-center gap-1.5 p-2">
           {inShell ? (
             // Desktop shell - use window controls from context
             <>
@@ -94,7 +94,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
           ) : null}
         </div>
         <button
-          className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg relative z-20 ${
+          className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${
             isMobileView ? "p-2" : ""
           }`}
           onClick={onNewChat}
