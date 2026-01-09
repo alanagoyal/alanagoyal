@@ -1,0 +1,42 @@
+components/apps/messages/app.tsx
+  8f284c76fb6649b0 17,20,60-61,63-67,288,291,293-295,947
+  8e4d56d454afbd08 801,866-873,875-878,880-887,898-906,908-911
+components/apps/messages/chat-area.tsx
+  8e4d56d454afbd08 103-104
+  8f284c76fb6649b0 31,53,158
+components/desktop/status-menus.tsx
+  8f284c76fb6649b0 13-15,18,21-30,240-246,251-252,258-266,269,311-378
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "e98d063cd4251bd262e1c8c292b15dabd99bb2a7",
+  "prompts": {
+    "8e4d56d454afbd08": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21e2dfb1-105a-4644-a53c-4773b2aa660b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 119,
+      "overriden_lines": 0
+    }
+  }
+}
