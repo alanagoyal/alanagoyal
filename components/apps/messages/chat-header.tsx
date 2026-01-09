@@ -378,7 +378,7 @@ export function ChatHeader({
     document.addEventListener('mouseup', handleMouseUp);
 
     // Also call the window focus drag handler
-    windowFocus?.onDragStart?.(e as unknown as React.MouseEvent<Element, MouseEvent>);
+    windowFocus?.onDragStart?.(e);
   }, [inShell, windowFocus]);
 
   useEffect(() => {

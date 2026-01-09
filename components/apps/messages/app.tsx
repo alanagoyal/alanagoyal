@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hoo
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
-import { cn } from "@/lib/utils";
 
 interface AppProps {
   isDesktop?: boolean;

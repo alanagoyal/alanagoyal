@@ -6,7 +6,6 @@ import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
-import { cn } from "@/lib/utils";
 import Sidebar from "./sidebar";
 import Note from "./note";
 
