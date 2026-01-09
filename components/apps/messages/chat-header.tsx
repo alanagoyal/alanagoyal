@@ -185,15 +185,6 @@ function RecipientSearch({
             setShowResults(true);
           }}
           onKeyDown={handleKeyDown}
-          onBlur={(e) => {
-            const isDropdown = e.relatedTarget?.closest(
-              '[data-chat-header-dropdown="true"]'
-            );
-
-            if (!isDropdown) {
-              updateRecipients();
-            }
-          }}
           onFocus={() => {
             if (!hasReachedMaxRecipients(recipientInput)) {
               setShowResults(true);
@@ -226,6 +217,7 @@ function RecipientSearch({
           className="absolute left-0 min-w-[250px] w-max top-full mt-1 bg-background rounded-lg shadow-lg z-50"
           data-dropdown="true"
           tabIndex={-1}
+          onMouseDown={(e) => e.preventDefault()}
         >
           <ScrollArea
             style={{
@@ -345,36 +337,6 @@ export function ChatHeader({
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
 
-  // Track drag state to prevent click after drag
-  const didDrag = useRef(false);
-
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    if (!inShell) return;
-
-    const startX = e.clientX;
-    const startY = e.clientY;
-    didDrag.current = false;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const dx = Math.abs(moveEvent.clientX - startX);
-      const dy = Math.abs(moveEvent.clientY - startY);
-      if (dx > 5 || dy > 5) {
-        didDrag.current = true;
-      }
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    // Also call the window focus drag handler
-    windowFocus?.onDragStart?.(e);
-  }, [inShell, windowFocus]);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -382,9 +344,9 @@ export function ChatHeader({
       const isPillRemoveClick = target.closest('button[aria-label^="Remove"]');
       const isHeaderClick = target.closest('[data-chat-header="true"]');
 
-      // Don't handle dropdown clicks
+      // Don't handle dropdown clicks - just return without stopping propagation
+      // so the dropdown's own handlers can process the click
       if (isDropdownClick) {
-        event.stopPropagation();
         return;
       }
 
@@ -396,7 +358,7 @@ export function ChatHeader({
       // Handle clicks outside the header
       if (!isHeaderClick) {
         const currentRecipients = recipientInput.split(",").filter(r => r.trim());
-        
+
         // Only exit edit mode if recipients are valid
         if (isEditMode || isNewChat) {
           if (isValidRecipientCount(currentRecipients)) {
@@ -444,8 +406,8 @@ export function ChatHeader({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside, true);
+    return () => document.removeEventListener("mousedown", handleClickOutside, true);
   }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
 
   // Computed values
@@ -522,12 +484,6 @@ export function ChatHeader({
   ]);
 
   const handleHeaderClick = (e: React.MouseEvent) => {
-    // If we just dragged, don't trigger click action
-    if (didDrag.current) {
-      didDrag.current = false;
-      return;
-    }
-
     // Prevent clicks on dropdown or pill remove buttons from triggering header click
     const isDropdownClick = (e.target as Element).closest('[data-dropdown]');
     const isPillRemoveClick = (e.target as Element).closest('button[aria-label^="Remove"]');
@@ -675,12 +631,16 @@ export function ChatHeader({
     }
   }, [isNewChat]);
 
+  // Only set recipientInput when ENTERING edit mode, not on every activeConversation change
+  const prevIsEditMode = useRef(isEditMode);
   useEffect(() => {
-    if (isEditMode && activeConversation?.recipients) {
+    // Only run when isEditMode changes from false to true
+    if (isEditMode && !prevIsEditMode.current && activeConversation?.recipients) {
       setRecipientInput(
         activeConversation.recipients.map((r) => r.name).join(",") + ","
       );
     }
+    prevIsEditMode.current = isEditMode;
   }, [isEditMode, activeConversation]);
 
   // Render helpers
@@ -845,70 +805,62 @@ export function ChatHeader({
       ) : (
         // Desktop View
         <div
-          className={cn(
-            "flex items-start justify-between px-4 relative",
-            (isNewChat && !showCompactNewChat) || isEditMode ? "min-h-16 py-3" : "h-16 items-center"
-          )}
+          className="flex items-center justify-between px-4 relative min-h-16"
           onClick={handleHeaderClick}
-          onMouseDown={inShell ? handleDragStart : undefined}
           data-chat-header="true"
         >
           {/* Desktop new chat or edit view */}
-          <div className="flex items-center gap-2 flex-1">
-            {(isNewChat && !showCompactNewChat) || isEditMode ? (
-              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-base sm:text-sm text-muted-foreground">
-                    To:
-                  </span>
-                  <div className="flex flex-wrap gap-1 flex-1 items-center">
-                    {renderRecipients()}
-                    {recipientInput.split(",").filter((r) => r.trim()).length <
-                      4 && (
-                      <RecipientSearch
-                        searchValue={searchValue}
-                        setSearchValue={setSearchValue}
-                        showResults={showResults}
-                        selectedIndex={selectedIndex}
-                        handleKeyDown={handleKeyDown}
-                        handlePersonSelect={handlePersonSelect}
-                        handleAddContact={handleAddContact}
-                        setSelectedIndex={setSelectedIndex}
-                        setShowResults={setShowResults}
-                        updateRecipients={updateRecipients}
-                        isMobileView={isMobileView}
-                        recipientInput={recipientInput}
-                        isValidating={isValidating}
-                      />
-                    )}
-                  </div>
-                </div>
+          {(isNewChat && !showCompactNewChat) || isEditMode ? (
+            <div className="flex items-start gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
+              <span className="text-sm text-muted-foreground flex-shrink-0 leading-8 pt-4">
+                To:
+              </span>
+              <div className="flex flex-wrap gap-1 flex-1 items-center min-h-8 py-4">
+                {renderRecipients()}
+                {recipientInput.split(",").filter((r) => r.trim()).length <
+                  4 && (
+                  <RecipientSearch
+                    searchValue={searchValue}
+                    setSearchValue={setSearchValue}
+                    showResults={showResults}
+                    selectedIndex={selectedIndex}
+                    handleKeyDown={handleKeyDown}
+                    handlePersonSelect={handlePersonSelect}
+                    handleAddContact={handleAddContact}
+                    setSelectedIndex={setSelectedIndex}
+                    setShowResults={setShowResults}
+                    updateRecipients={updateRecipients}
+                    isMobileView={isMobileView}
+                    recipientInput={recipientInput}
+                    isValidating={isValidating}
+                  />
+                )}
               </div>
-            ) : (
-              // Desktop compact view
-              <div
-                className="flex"
-                onClick={handleHeaderClick}
-                data-chat-header="true"
-              >
-                <span className="text-sm">
-                  <span className="text-muted-foreground">To: </span>
-                  {(() => {
-                    if (!isNewChat && activeConversation?.name) {
-                      return activeConversation.name;
-                    }
-                    const recipients =
-                      activeConversation?.recipients.map((r) => r.name) || [];
-                    return recipients.length <= 3
-                      ? recipients.join(", ")
-                      : `${recipients[0]}, ${recipients[1]}, ${
-                          recipients[2]
-                        } +${recipients.length - 3}`;
-                  })()}
-                </span>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            // Desktop compact view
+            <div
+              className="flex items-center flex-1"
+              onClick={handleHeaderClick}
+              data-chat-header="true"
+            >
+              <span className="text-sm">
+                <span className="text-muted-foreground">To: </span>
+                {(() => {
+                  if (!isNewChat && activeConversation?.name) {
+                    return activeConversation.name;
+                  }
+                  const recipients =
+                    activeConversation?.recipients.map((r) => r.name) || [];
+                  return recipients.length <= 3
+                    ? recipients.join(", ")
+                    : `${recipients[0]}, ${recipients[1]}, ${
+                        recipients[2]
+                      } +${recipients.length - 3}`;
+                })()}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
