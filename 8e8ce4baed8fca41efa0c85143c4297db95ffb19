@@ -1,0 +1,38 @@
+components/apps/notes/sidebar.tsx
+  8e4d56d454afbd08 236,262,266
+lib/notes/create-note.ts
+  8e4d56d454afbd08 9,39,52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.29",
+  "base_commit_sha": "8e8ce4baed8fca41efa0c85143c4297db95ffb19",
+  "prompts": {
+    "1dd546a868d2c30f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "78ec0448-27e9-47f1-b270-d8f4f2b85f26",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 27,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    },
+    "8e4d56d454afbd08": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21e2dfb1-105a-4644-a53c-4773b2aa660b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 7,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
