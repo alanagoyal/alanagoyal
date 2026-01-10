@@ -262,7 +262,7 @@ export class MessageQueue {
           messages: task.conversation.messages,
           shouldWrapUp,
           isOneOnOne: task.conversation.recipients.length === 1,
-          shouldReact: Math.random() < 0.25,
+          shouldReact: Math.random() < 0.3,
         }),
         signal: task.abortController.signal,
       });

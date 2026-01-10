@@ -235,7 +235,7 @@ export async function POST(req: Request) {
     ];
 
     const response = await getClient().chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.2",
       messages: [...chatMessages],
       tool_choice: "required",
       tools: [
@@ -255,10 +255,10 @@ export async function POST(req: Request) {
                 reaction: {
                   type: "string",
                   enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-                  description: "optional reaction to the last message",
+                  description: shouldReact ? "reaction to the last message" : "optional reaction to the last message",
                 },
               },
-              required: ["sender", "content"],
+              required: shouldReact ? ["sender", "content", "reaction"] : ["sender", "content"],
             },
           },
         },
