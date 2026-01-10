@@ -234,7 +234,7 @@ export const MessageInput = forwardRef<
   // Destroy editor when switching to new chat
   useEffect(() => {
     const isNewChat = conversationId === undefined;
-    const shouldDestroyEditor = editor && !isNewChat;
+    const shouldDestroyEditor = editor && isNewChat;
 
     if (shouldDestroyEditor) {
       editor.destroy();
