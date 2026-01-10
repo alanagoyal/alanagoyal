@@ -1,0 +1,38 @@
+SPEC.md
+  9b05998bf92bf634 253,262-264
+components/apps/settings/nav.tsx
+  8f284c76fb6649b0 5,19-23,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "c81c1f8762ede3c1ffd9e23540f586dd943604a9",
+  "prompts": {
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "9b05998bf92bf634": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3c26b80-07a8-4964-adfe-6b846c5958dc",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 7,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
