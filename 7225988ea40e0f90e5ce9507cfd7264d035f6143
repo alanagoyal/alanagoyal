@@ -1,0 +1,23 @@
+.gitignore
+  b450bc62c09811b3 32-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "7225988ea40e0f90e5ce9507cfd7264d035f6143",
+  "prompts": {
+    "b450bc62c09811b3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "250650e8-a522-49d9-b1a6-5db59dc554c9",
+        "model": "gpt-5.2"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
