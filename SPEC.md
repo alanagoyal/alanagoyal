@@ -250,7 +250,7 @@ The final repository MUST contain git history from both repos:
 - URLs are shareable and bookmarkable
 - Existing links continue to work
 
-**Window Resizing:**
+**Window Resizing:** - COMPLETE
 - Drag window edges/corners to resize
 - Respect minimum window sizes from app config
 - Persist window size to localStorage
@@ -259,8 +259,10 @@ The final repository MUST contain git history from both repos:
 
 ## Phase 3 Scope
 
+**Apple Menu:** - COMPLETE
+- Apple menu dropdown with system actions
+
 **Deferred:**
-- Apple menu dropdown ("About This Site")
 - Window animations/transitions
 - Edge snapping
 

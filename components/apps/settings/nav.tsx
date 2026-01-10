@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface NavProps {
   canGoBack: boolean;
@@ -15,6 +16,11 @@ interface NavProps {
 }
 
 export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDesktop = false, title, backTitle }: NavProps) {
+  const windowFocus = useWindowFocus();
+
+  // When in desktop shell, use window controls from context
+  const inShell = isDesktop && windowFocus;
+
   // Mobile layout: iOS-style header matching Messages chat-header
   if (isMobile) {
     return (
@@ -52,6 +58,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
       className={cn(
         "px-4 py-2 flex items-center gap-2 select-none border-b border-border/50 bg-muted/50"
       )}
+      onMouseDown={inShell ? windowFocus.onDragStart : undefined}
     >
       <button
         onClick={onBack}
