@@ -1,0 +1,27 @@
+components/apps/notes/notes-app.tsx
+  66815eb8647b6322 160,232
+components/apps/notes/note-content.tsx
+  66815eb8647b6322 19-20,25-26,73-77,126,201,212-213,216,218
+components/apps/notes/note.tsx
+  66815eb8647b6322 19,109-119,122-128,130-142,146-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "4d82027741e63172125611f1b7deac318c6a929c",
+  "prompts": {
+    "66815eb8647b6322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d16be9d1-3485-411c-96fc-ec5517b18b77",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 126,
+      "total_deletions": 86,
+      "accepted_lines": 56,
+      "overriden_lines": 0
+    }
+  }
+}
