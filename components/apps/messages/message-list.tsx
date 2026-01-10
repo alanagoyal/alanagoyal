@@ -117,7 +117,7 @@ export function MessageList({
         return () => clearTimeout(timer);
       }
     }
-  }, [messages, conversationId, prevConversationId, prevMessageCount]);
+  }, [messages, conversationId, prevConversationId, prevMessageCount, conversation?.hideAlerts, focusModeActive]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
