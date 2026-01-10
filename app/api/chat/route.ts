@@ -1,4 +1,5 @@
 import { OpenAI } from "openai";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Recipient, Message, ReactionType } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
@@ -35,64 +36,77 @@ interface ChatResponse {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const {
-    recipients,
-    messages,
-    shouldWrapUp,
-    isOneOnOne,
-    shouldReact,
-  } = body;
+  try {
+    const body = await req.json().catch(() => ({}));
+    const {
+      recipients: recipientsRaw,
+      messages: messagesRaw,
+      shouldWrapUp = false,
+      isOneOnOne = false,
+      shouldReact = false,
+    } = body as Record<string, unknown>;
 
-  const lastMessage =
-    messages?.length > 0 ? messages[messages.length - 1] : null;
-  const lastAiMessage = messages
-    ?.slice()
-    .reverse()
-    .find((m: Message) => m.sender !== "me");
-
-  // Find consecutive user messages
-  let consecutiveUserMessages = 0;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].sender === "me") {
-      consecutiveUserMessages++;
-    } else {
-      break;
-    }
-  }
-
-  const wasInterrupted =
-    consecutiveUserMessages > 0 &&
-    lastAiMessage &&
-    messages.indexOf(lastAiMessage) ===
-      messages.length - (consecutiveUserMessages + 1);
-
-  const availableParticipants = recipients.filter(
-    (r: Recipient) => r.name !== lastMessage?.sender
-  );
-
-  // Count consecutive messages from each participant
-  const recentMessages = messages?.slice(-4) || [];
-  const participantCounts = new Map<string, number>();
-  for (const msg of recentMessages) {
-    if (msg.sender !== "me") {
-      participantCounts.set(
-        msg.sender,
-        (participantCounts.get(msg.sender) || 0) + 1
+    if (!Array.isArray(recipientsRaw) || recipientsRaw.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid recipients" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
-  }
 
-  // Prioritize participants who haven't spoken recently
-  const sortedParticipants = availableParticipants.sort(
-    (a: Recipient, b: Recipient) => {
-      const aCount = participantCounts.get(a.name) || 0;
-      const bCount = participantCounts.get(b.name) || 0;
-      return aCount - bCount;
+    const recipients = recipientsRaw as Recipient[];
+    const messages = (Array.isArray(messagesRaw) ? messagesRaw : []) as Message[];
+
+    const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+    const lastAiMessage = messages
+      .slice()
+      .reverse()
+      .find((m: Message) => m.sender !== "me");
+
+    // Find consecutive user messages
+    let consecutiveUserMessages = 0;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]?.sender === "me") {
+        consecutiveUserMessages++;
+      } else {
+        break;
+      }
     }
-  );
 
-  const prompt = `
+    const wasInterrupted =
+      consecutiveUserMessages > 0 &&
+      !!lastAiMessage &&
+      messages.indexOf(lastAiMessage) ===
+        messages.length - (consecutiveUserMessages + 1);
+
+    const availableParticipants = recipients.filter(
+      (r: Recipient) => r.name !== lastMessage?.sender
+    );
+
+    // Count consecutive messages from each participant
+    const recentMessages = messages.slice(-4);
+    const participantCounts = new Map<string, number>();
+    for (const msg of recentMessages) {
+      if (msg.sender !== "me") {
+        participantCounts.set(
+          msg.sender,
+          (participantCounts.get(msg.sender) || 0) + 1
+        );
+      }
+    }
+
+    // Prioritize participants who haven't spoken recently
+    const sortedParticipants = availableParticipants.sort(
+      (a: Recipient, b: Recipient) => {
+        const aCount = participantCounts.get(a.name) || 0;
+        const bCount = participantCounts.get(b.name) || 0;
+        return aCount - bCount;
+      }
+    );
+
+    const prompt = `
     ${
       isOneOnOne
         ? `
@@ -176,11 +190,10 @@ export async function POST(req: Request) {
     }
   `;
 
-  try {
-    const chatMessages = [
-      { role: "system", content: prompt },
-      ...(messages || []).map((msg: Message) => ({
-        role: "user",
+    const chatMessages: ChatCompletionMessageParam[] = [
+      { role: "system" as const, content: prompt },
+      ...messages.map((msg: Message) => ({
+        role: "user" as const,
         content: `${msg.sender}: ${msg.content}${
           msg.reactions?.length
             ? ` [reactions: ${msg.reactions
