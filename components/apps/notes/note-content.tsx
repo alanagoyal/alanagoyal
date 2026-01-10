@@ -210,7 +210,6 @@ export default function NoteContent({
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          autoFocus
         />
       ) : (
         <div className="text-base md:text-sm">
