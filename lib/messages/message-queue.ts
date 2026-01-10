@@ -43,6 +43,8 @@ type MessageQueueCallbacks = {
     messageId: string,
     updates: Partial<Message>
   ) => void;
+  /** Returns true if incoming sounds should be muted for this conversation */
+  shouldMuteIncomingSound?: (hideAlerts: boolean | undefined) => boolean;
 };
 
 // Maximum number of consecutive AI messages allowed to prevent infinite loops
@@ -296,8 +298,11 @@ export class MessageQueue {
           timestamp: new Date().toISOString(),
         });
 
-        // Play reaction sound effect when AI adds a reaction
-        soundEffects.playReactionSound();
+        // Play reaction sound effect when AI adds a reaction (unless muted)
+        const shouldMute = this.callbacks.shouldMuteIncomingSound?.(task.conversation.hideAlerts) ?? false;
+        if (!shouldMute) {
+          soundEffects.playReactionSound();
+        }
 
         // Use onMessageUpdated callback to update just the reactions
         if (this.callbacks.onMessageUpdated) {

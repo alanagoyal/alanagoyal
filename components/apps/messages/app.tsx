@@ -381,6 +381,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         console.error("Error generating message:", error);
         setTypingStatus(null);
       },
+      shouldMuteIncomingSound: (hideAlerts: boolean | undefined) => {
+        return shouldMuteIncomingSound(hideAlerts, focusModeRef.current);
+      },
     })
   );
 
