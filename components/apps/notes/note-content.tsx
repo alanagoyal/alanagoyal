@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -26,6 +26,15 @@ export default function NoteContent({
   setIsEditing: (editing: boolean) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea to fit content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea && isEditing) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [note.content, isEditing]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
@@ -204,7 +213,7 @@ export default function NoteContent({
           ref={textareaRef}
           id="note-content"
           value={note.content || ""}
-          className="min-h-dvh focus:outline-none leading-normal resize-none"
+          className="min-h-[100px] focus:outline-none leading-normal resize-none overflow-hidden"
           placeholder="Start writing..."
           onChange={handleChange}
           onPaste={handlePaste}
