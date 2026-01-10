@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       recipients: recipientsRaw,
       messages: messagesRaw,
       shouldWrapUp = false,
-      isOneOnOne = false,
+      isOneOnOne: isOneOnOneRaw = false,
       shouldReact = false,
     } = body as Record<string, unknown>;
 
@@ -58,6 +58,19 @@ export async function POST(req: Request) {
 
     const recipients = recipientsRaw as Recipient[];
     const messages = (Array.isArray(messagesRaw) ? messagesRaw : []) as Message[];
+    const isOneOnOneRequested = isOneOnOneRaw === true;
+    const isOneOnOne = isOneOnOneRequested && recipients.length === 1;
+    if (isOneOnOneRequested && recipients.length !== 1) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid recipients for one-on-one chat (expected exactly 1)",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
     const lastAiMessage = messages
