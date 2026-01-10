@@ -375,6 +375,13 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     })
   );
 
+  // Cleanup message queue interval on unmount to prevent resource leaks
+  useEffect(() => {
+    return () => {
+      messageQueue.current.dispose();
+    };
+  }, []);
+
   // Update sound enabled state when it changes in soundEffects
   useEffect(() => {
     setSoundEnabled(soundEffects.isEnabled());
