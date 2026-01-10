@@ -4,6 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/lib/messages/sound-effects";
 
+/**
+ * Determines if incoming message sounds should be muted.
+ * Sounds are muted if:
+ * - The conversation has "Hide Alerts" enabled (per-conversation mute)
+ * - Focus mode is active (system-wide mute)
+ */
+function shouldMuteIncomingSound(hideAlerts: boolean | undefined, focusModeActive: boolean): boolean {
+  return Boolean(hideAlerts) || focusModeActive;
+}
+
 interface MessageListProps {
   messages: Message[];
   conversation?: Conversation;
@@ -93,16 +103,18 @@ export function MessageList({
     setPrevConversationId(conversationId);
   }, [messages, wasAtBottom, conversationId, isAtBottom]);
 
-  // Update lastSentMessageId when a new message is added
+  // Handle new message effects (sounds, animations)
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      // Only play sound if this is a new message in the same conversation
-      if (
+      const isNewMessageInSameConversation =
         conversationId === prevConversationId &&
-        messages.length > prevMessageCount
-      ) {
-        if (lastMessage.sender !== "me" && lastMessage.sender !== "system" && !conversation?.hideAlerts && !focusModeActive) {
+        messages.length > prevMessageCount;
+
+      // Play sound for incoming messages in the active conversation (unless muted)
+      if (isNewMessageInSameConversation) {
+        const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
+        if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
           soundEffects.playReceivedSound();
         }
       }

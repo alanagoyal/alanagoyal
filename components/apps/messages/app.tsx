@@ -17,6 +17,18 @@ interface AppProps {
   focusModeActive?: boolean; // When true, mute all notifications and sounds
 }
 
+/**
+ * Determines if incoming message sounds should be muted.
+ * Sounds are muted if:
+ * - The conversation has "Hide Alerts" enabled (per-conversation mute)
+ * - Focus mode is active (system-wide mute)
+ *
+ * Note: This does NOT affect outgoing sounds or the unread indicator (blue dot).
+ */
+function shouldMuteIncomingSound(hideAlerts: boolean | undefined, focusModeActive: boolean): boolean {
+  return Boolean(hideAlerts) || focusModeActive;
+}
+
 export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
@@ -283,16 +295,14 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
             return prev;
           }
 
-          // Use MessageQueue's tracked active conversation state to determine unread status
-          // This fixes the bug where messages were always marked unread due to stale state
+          // Determine if this message should increment unread count (show blue dot)
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           const shouldIncrementUnread =
             conversationId !== currentActiveConversation &&
             message.sender !== "me";
 
-          // Play received sound if: should increment unread AND not muted AND not in focus mode
-          // hideAlerts and focusMode only affect sounds, not the blue dot indicator
-          if (shouldIncrementUnread && !conversation.hideAlerts && !focusModeRef.current) {
+          // Play sound for messages in inactive conversations (unless muted)
+          if (shouldIncrementUnread && !shouldMuteIncomingSound(conversation.hideAlerts, focusModeRef.current)) {
             soundEffects.playUnreadSound();
           }
 
