@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { WindowManagerProvider, useWindowManager } from "@/lib/window-context";
+import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } from "@/lib/window-context";
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
@@ -128,8 +128,8 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
     if (restoreDefaultOnUnlock) {
       restoreDesktopDefault();
       setRestoreDefaultOnUnlock(false);
-      // Update URL to match default focused app (messages)
-      window.history.replaceState(null, "", "/messages");
+      // Update URL to match default focused app
+      window.history.replaceState(null, "", `/${DESKTOP_DEFAULT_FOCUSED_APP}`);
     }
   }, [restoreDefaultOnUnlock, restoreDesktopDefault]);
 

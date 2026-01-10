@@ -43,8 +43,17 @@ function getDefaultWindowState(appId: string): WindowState {
 const DEFAULT_APP = "notes";
 
 // Desktop default configuration (shown after logout/restart/shutdown)
-const DESKTOP_DEFAULT_APPS = ["notes", "messages"] as const;
-const DESKTOP_DEFAULT_FOCUSED = "messages";
+// Windows listed in z-index order (first = back, last = front)
+const DESKTOP_DEFAULT_CONFIG = {
+  windows: [
+    { appId: "messages", position: { x: 450, y: 30 } },
+    { appId: "notes", position: { x: 150, y: 70 } },
+  ],
+  focusedAppId: "notes",
+} as const;
+
+// Export for use in desktop.tsx URL handling
+export const DESKTOP_DEFAULT_FOCUSED_APP = DESKTOP_DEFAULT_CONFIG.focusedAppId;
 
 /**
  * Creates a fresh state with all windows closed
@@ -78,18 +87,21 @@ function getNewVisitorState(appId: string = DEFAULT_APP): WindowManagerState {
 /**
  * Desktop default state: multiple apps open in windowed mode
  * Used after logout/restart/shutdown to show a "fresh desktop" view
+ * Notes in front (left of center), Messages behind (right, peeking out)
  */
 function getDesktopDefaultState(): WindowManagerState {
   const state = getBaseState();
+  const { windows, focusedAppId } = DESKTOP_DEFAULT_CONFIG;
 
-  DESKTOP_DEFAULT_APPS.forEach((appId, index) => {
+  windows.forEach(({ appId, position }, index) => {
     state.windows[appId].isOpen = true;
     state.windows[appId].isMaximized = false;
     state.windows[appId].zIndex = index + 1;
+    state.windows[appId].position = position;
   });
 
-  state.focusedWindowId = DESKTOP_DEFAULT_FOCUSED;
-  state.nextZIndex = DESKTOP_DEFAULT_APPS.length + 1;
+  state.focusedWindowId = focusedAppId;
+  state.nextZIndex = windows.length + 1;
   return state;
 }
 
