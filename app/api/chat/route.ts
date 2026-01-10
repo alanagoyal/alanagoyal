@@ -136,6 +136,23 @@ export async function POST(req: Request) {
       }
     );
 
+    // For one-on-one chats, always use the single recipient as the sender
+    // For group chats, use the sorted available participants
+    const senderCandidates = isOneOnOne ? recipients : sortedParticipants;
+
+    // Validate that we have at least one sender candidate
+    if (senderCandidates.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "No available participants to send a message",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const prompt = `
     ${
       isOneOnOne
@@ -249,7 +266,7 @@ export async function POST(req: Request) {
               properties: {
                 sender: {
                   type: "string",
-                  enum: sortedParticipants.map((r: Recipient) => r.name),
+                  enum: senderCandidates.map((r: Recipient) => r.name),
                 },
                 content: { type: "string" },
                 reaction: {
