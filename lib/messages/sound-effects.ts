@@ -109,3 +109,18 @@ class SoundEffectPlayer {
 }
 
 export const soundEffects = SoundEffectPlayer.getInstance();
+
+/**
+ * Determines if incoming sounds should be muted.
+ * Sounds are muted if:
+ * - The conversation has "Hide Alerts" enabled (per-conversation mute)
+ * - Focus mode is active (system-wide mute)
+ *
+ * Note: This does NOT affect outgoing sounds or the unread indicator (blue dot).
+ */
+export function shouldMuteIncomingSound(
+  hideAlerts: boolean | undefined,
+  focusModeActive: boolean
+): boolean {
+  return Boolean(hideAlerts) || focusModeActive;
+}

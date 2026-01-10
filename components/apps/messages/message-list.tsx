@@ -2,17 +2,7 @@ import { Message, Conversation, Reaction } from "@/types/messages";
 import { MessageBubble } from "./message-bubble";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { soundEffects } from "@/lib/messages/sound-effects";
-
-/**
- * Determines if incoming message sounds should be muted.
- * Sounds are muted if:
- * - The conversation has "Hide Alerts" enabled (per-conversation mute)
- * - Focus mode is active (system-wide mute)
- */
-function shouldMuteIncomingSound(hideAlerts: boolean | undefined, focusModeActive: boolean): boolean {
-  return Boolean(hideAlerts) || focusModeActive;
-}
+import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 
 interface MessageListProps {
   messages: Message[];

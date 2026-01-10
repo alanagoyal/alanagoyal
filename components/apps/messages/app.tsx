@@ -8,25 +8,13 @@ import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
-import { soundEffects } from "@/lib/messages/sound-effects";
+import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface AppProps {
   isDesktop?: boolean;
   inShell?: boolean; // When true, prevent URL updates (for mobile shell)
   focusModeActive?: boolean; // When true, mute all notifications and sounds
-}
-
-/**
- * Determines if incoming message sounds should be muted.
- * Sounds are muted if:
- * - The conversation has "Hide Alerts" enabled (per-conversation mute)
- * - Focus mode is active (system-wide mute)
- *
- * Note: This does NOT affect outgoing sounds or the unread indicator (blue dot).
- */
-function shouldMuteIncomingSound(hideAlerts: boolean | undefined, focusModeActive: boolean): boolean {
-  return Boolean(hideAlerts) || focusModeActive;
 }
 
 export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
