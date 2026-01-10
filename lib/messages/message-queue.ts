@@ -395,7 +395,7 @@ export class MessageQueue {
         ) {
           const lastAiSender = data.sender;
           const otherRecipients = task.conversation.recipients.filter(
-            (r) => r !== lastAiSender
+            (r) => r.name !== lastAiSender
           );
           if (otherRecipients.length > 0) {
             const updatedConversationWithNextSender = {
