@@ -48,14 +48,46 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
 
         // Use initialSlug if provided, otherwise "about-me", otherwise first note
         const targetSlug = initialSlug || "about-me";
-        const defaultNote = data.find((n: NoteType) => n.slug === targetSlug) || data[0];
+        const defaultNote = data.find((n: NoteType) => n.slug === targetSlug);
+
         if (defaultNote && !selectedNote) {
-          // Fetch full note data using RPC
+          // Note found in public notes - fetch full data
           const { data: fullNote } = await supabase
             .rpc("select_note", { note_slug_arg: defaultNote.slug })
             .single();
           if (fullNote) {
             setSelectedNote(fullNote as NoteType);
+          }
+        } else if (!defaultNote && initialSlug && !selectedNote) {
+          // Note not in public notes - try to fetch directly (may be a private/session note)
+          const { data: fullNote } = await supabase
+            .rpc("select_note", { note_slug_arg: initialSlug })
+            .single();
+          if (fullNote) {
+            setSelectedNote(fullNote as NoteType);
+          } else {
+            // Note doesn't exist - fall back to first public note and update URL
+            const fallbackNote = data[0];
+            if (fallbackNote) {
+              const { data: fallbackFullNote } = await supabase
+                .rpc("select_note", { note_slug_arg: fallbackNote.slug })
+                .single();
+              if (fallbackFullNote) {
+                setSelectedNote(fallbackFullNote as NoteType);
+                window.history.replaceState(null, "", `/notes/${fallbackNote.slug}`);
+              }
+            }
+          }
+        } else if (!selectedNote) {
+          // No initialSlug provided and no note selected - use first note
+          const fallbackNote = data[0];
+          if (fallbackNote) {
+            const { data: fullNote } = await supabase
+              .rpc("select_note", { note_slug_arg: fallbackNote.slug })
+              .single();
+            if (fullNote) {
+              setSelectedNote(fullNote as NoteType);
+            }
           }
         }
       }
