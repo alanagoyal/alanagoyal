@@ -16,6 +16,7 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
   const supabase = createClient();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
+  const [isEditing, setIsEditing] = useState(!initialNote.content);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Partial<typeof note>>({});
   const noteRef = useRef(initialNote);
@@ -105,11 +106,49 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
 
   const canEdit = sessionId === note.session_id;
 
+  const handleContentAreaClick = (e: React.MouseEvent) => {
+    // Don't trigger edit if clicking interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('a, button, input, textarea, [role="checkbox"]')) {
+      return;
+    }
+    if (canEdit && !note.public) {
+      setIsEditing(true);
+    }
+  };
+
   return (
-    <div className="h-full overflow-y-auto bg-background">
-      <SessionId setSessionId={setSessionId} />
-      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
-      <NoteContent note={note} saveNote={saveNote} canEdit={canEdit} />
+    <div
+      className="h-full flex flex-col bg-background"
+      onClick={() => {
+        // Exit edit mode when clicking anywhere outside the textarea
+        if (isEditing) {
+          setIsEditing(false);
+        }
+      }}
+    >
+      <div className="flex-shrink-0">
+        <SessionId setSessionId={setSessionId} />
+        <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto relative">
+        {/* Click target for entering edit mode - covers visible area */}
+        {canEdit && !note.public && !isEditing && (
+          <div
+            className="absolute inset-0 z-0 cursor-text"
+            onClick={() => setIsEditing(true)}
+          />
+        )}
+        <div className="relative z-10" onClick={handleContentAreaClick}>
+          <NoteContent
+            note={note}
+            saveNote={saveNote}
+            canEdit={canEdit}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+          />
+        </div>
+      </div>
     </div>
   );
 }

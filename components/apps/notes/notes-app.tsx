@@ -157,7 +157,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           ) : (
             <div className="h-full">
               {selectedNote && (
-                <div className="p-3">
+                <div className="h-full p-3">
                   <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} />
                 </div>
               )}
@@ -229,7 +229,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           )}
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
             {selectedNote ? (
-              <div className="w-full p-3">
+              <div className="w-full min-h-full p-3">
                 <Note key={selectedNote.id} note={selectedNote} />
               </div>
             ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,12 +16,15 @@ export default function NoteContent({
   note,
   saveNote,
   canEdit,
+  isEditing,
+  setIsEditing,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  isEditing: boolean;
+  setIsEditing: (editing: boolean) => void;
 }) {
-  const [isEditing, setIsEditing] = useState(!note.content && canEdit);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -67,6 +70,11 @@ export default function NoteContent({
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsEditing(false);
+      return;
+    }
     if (e.key === 'Tab') {
       e.preventDefault();
       const textarea = e.currentTarget;
@@ -115,7 +123,7 @@ export default function NoteContent({
         }, 0);
       }
     }
-  }, [saveNote]);
+  }, [saveNote, setIsEditing]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
@@ -190,7 +198,7 @@ export default function NoteContent({
   }, []);
 
   return (
-    <div className="px-2">
+    <div className="px-2" onClick={isEditing ? (e) => e.stopPropagation() : undefined}>
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
           ref={textareaRef}
@@ -201,20 +209,13 @@ export default function NoteContent({
           onChange={handleChange}
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
-          onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
+          onClick={(e) => e.stopPropagation()}
+          autoFocus
         />
       ) : (
-        <div
-          className="h-full text-base md:text-sm"
-          onClick={(e) => {
-            if (canEdit && !note.public) {
-              setIsEditing(true);
-            }
-          }}
-        >
+        <div className="text-base md:text-sm">
           <ReactMarkdown
-            className="markdown-body min-h-dvh"
+            className="markdown-body"
             remarkPlugins={[remarkGfm]}
             components={{
               li: renderListItem,
