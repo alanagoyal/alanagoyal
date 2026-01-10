@@ -119,7 +119,7 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
 
   return (
     <div
-      className="h-full flex flex-col bg-background"
+      className="h-full overflow-y-auto bg-background"
       onClick={() => {
         // Exit edit mode when clicking anywhere outside the textarea
         if (isEditing) {
@@ -127,11 +127,9 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
         }
       }}
     >
-      <div className="flex-shrink-0">
-        <SessionId setSessionId={setSessionId} />
-        <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
-      </div>
-      <div className="flex-1 min-h-0 overflow-y-auto relative">
+      <SessionId setSessionId={setSessionId} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
+      <div className="relative">
         {/* Click target for entering edit mode - covers visible area */}
         {canEdit && !note.public && !isEditing && (
           <div
