@@ -29,6 +29,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# local tooling cache (created by this environment)
+/.npm-cache/
+
 # env files
 .env*
 
