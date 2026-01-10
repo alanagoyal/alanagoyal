@@ -1,0 +1,23 @@
+app/api/chat/route.ts
+  b450bc62c09811b3 49-65,75-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "17091604d98352bb5ee1a0d41ce4bd0588726ea1",
+  "prompts": {
+    "b450bc62c09811b3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "250650e8-a522-49d9-b1a6-5db59dc554c9",
+        "model": "gpt-5.2"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 20,
+      "total_deletions": 3,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
