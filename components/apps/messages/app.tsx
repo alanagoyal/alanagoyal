@@ -317,13 +317,13 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
           const currentActiveConversation =
             messageQueue.current.getActiveConversation();
 
+          // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           return prev.map((conv) =>
             conv.id === conversationId
               ? {
                   ...conv,
                   unreadCount:
-                    conversationId === currentActiveConversation ||
-                    conv.hideAlerts
+                    conversationId === currentActiveConversation
                       ? conv.unreadCount
                       : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) => {
