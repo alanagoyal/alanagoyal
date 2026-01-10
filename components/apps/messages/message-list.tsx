@@ -1,6 +1,6 @@
 import { Message, Conversation, Reaction } from "@/types/messages";
 import { MessageBubble } from "./message-bubble";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 
@@ -46,7 +46,7 @@ export function MessageList({
   const isTypingInThisConversation =
     typingStatus && typingStatus.conversationId === conversationId;
 
-  const isAtBottom = () => {
+  const isAtBottom = useCallback(() => {
     const viewport = messageListRef.current?.closest(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
@@ -54,7 +54,7 @@ export function MessageList({
 
     const { scrollTop, scrollHeight, clientHeight } = viewport;
     return Math.abs(scrollHeight - clientHeight - scrollTop) < 336;
-  };
+  }, []);
 
   // Track scroll position
   useEffect(() => {
