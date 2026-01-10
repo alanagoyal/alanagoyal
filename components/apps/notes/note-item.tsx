@@ -38,7 +38,7 @@ interface NoteItemProps {
   openSwipeItemSlug: string | null;
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
   showDivider?: boolean;
-  isDesktop?: boolean;
+  useCallbackNavigation?: boolean;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -55,7 +55,7 @@ export const NoteItem = React.memo(function NoteItem({
   openSwipeItemSlug,
   setOpenSwipeItemSlug,
   showDivider = false,
-  isDesktop = false,
+  useCallbackNavigation = false,
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
@@ -105,8 +105,10 @@ export const NoteItem = React.memo(function NoteItem({
       </h2>
       <p
         className={`text-xs pl-2 break-words line-clamp-1 ${
-          (!isMobile && isSearching && isHighlighted) ||
-          (!isSearching && item.slug === selectedNoteSlug)
+          !isMobile && (
+            (isSearching && isHighlighted) ||
+            (!isSearching && item.slug === selectedNoteSlug)
+          )
             ? "text-muted-foreground dark:text-white/80"
             : "text-muted-foreground"
         }`}
@@ -123,8 +125,10 @@ export const NoteItem = React.memo(function NoteItem({
     <li
       tabIndex={0}
       className={`h-[70px] w-full ${
-        (!isMobile && isSearching && isHighlighted) ||
-        (!isSearching && item.slug === selectedNoteSlug)
+        !isMobile && (
+          (isSearching && isHighlighted) ||
+          (!isSearching && item.slug === selectedNoteSlug)
+        )
           ? "bg-[#FFE390] dark:bg-[#9D7D28] dark:text-white rounded-md"
           : ""
       } ${
@@ -138,7 +142,7 @@ export const NoteItem = React.memo(function NoteItem({
         data-note-slug={item.slug}
         className={`h-full w-full px-4`}
       >
-        {isDesktop ? (
+        {useCallbackNavigation ? (
           <button
             onClick={() => onNoteSelect(item)}
             tabIndex={-1}

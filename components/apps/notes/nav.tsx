@@ -9,7 +9,7 @@ interface NavProps {
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
   isScrolled: boolean;
-  isDesktop?: boolean;
+  useCallbackNavigation?: boolean;
   onNoteCreated?: (note: Note) => void;
 }
 
@@ -19,13 +19,13 @@ export function Nav({
   setSelectedNoteSlug,
   isMobile,
   isScrolled,
-  isDesktop = false,
+  useCallbackNavigation = false,
   onNoteCreated,
 }: NavProps) {
   const windowFocus = useWindowFocus();
 
   // When in desktop shell, use window controls from context
-  const inShell = isDesktop && windowFocus;
+  const inShell = useCallbackNavigation && windowFocus;
 
   return (
     <div
@@ -78,7 +78,7 @@ export function Nav({
           clearSearch={clearSearch}
           setSelectedNoteSlug={setSelectedNoteSlug}
           isMobile={isMobile}
-          isDesktop={isDesktop}
+          useCallbackNavigation={useCallbackNavigation}
           onNoteCreated={onNoteCreated}
         />
       </div>

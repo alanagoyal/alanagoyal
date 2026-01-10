@@ -10,7 +10,7 @@ export async function createNote(
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
   isMobile: boolean,
-  isDesktop: boolean = false,
+  useCallbackNavigation: boolean = false,
   onNoteCreated?: (note: Note) => void
 ) {
   const supabase = createClient();
@@ -34,8 +34,8 @@ export async function createNote(
 
     if (error) throw error;
 
-    if (isDesktop) {
-      // In desktop mode, use callbacks instead of router
+    if (useCallbackNavigation) {
+      // Use callbacks instead of router navigation
       addNewPinnedNote(slug, true);
       await refreshSessionNotes();
       setSelectedNoteSlug(slug);
@@ -48,29 +48,21 @@ export async function createNote(
           onNoteCreated(fullNote as Note);
         }
       }
-    } else if (!isMobile) {
+    } else {
+      // Use router navigation (standalone browser mode)
       addNewPinnedNote(slug, true);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);
         router.refresh();
       });
-    } else {
-      // On mobile, update localStorage directly without triggering React state.
-      // This prevents the note from flashing in the sidebar before navigation.
-      // The sidebar will read the updated pinnedNotes from localStorage when it remounts.
-      const storedPinnedNotes = localStorage.getItem("pinnedNotes");
-      const pinnedNotes = storedPinnedNotes ? JSON.parse(storedPinnedNotes) : [];
-      if (!pinnedNotes.includes(slug)) {
-        pinnedNotes.push(slug);
-        localStorage.setItem("pinnedNotes", JSON.stringify(pinnedNotes));
-      }
-      router.push(`/notes/${slug}`);
     }
 
-    toast({
-      description: "Private note created",
-    });
+    if (!isMobile) {
+      toast({
+        description: "Private note created",
+      });
+    }
   } catch (error) {
     console.error("Error creating note:", error);
   }

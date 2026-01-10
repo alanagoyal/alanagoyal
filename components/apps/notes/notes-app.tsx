@@ -88,6 +88,15 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     }
   }, [isMobile]);
 
+  // Handler for new note creation - sets note and navigates to it on mobile
+  const handleNoteCreated = useCallback((note: NoteType) => {
+    setSelectedNote(note);
+    if (isMobile) {
+      setShowSidebar(false);
+      window.history.replaceState(null, "", `/notes/${note.slug}`);
+    }
+  }, [isMobile]);
+
   // Show empty background while loading to prevent flash
   if (loading) {
     return <div className="h-full bg-background" />;
@@ -110,7 +119,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
               onNoteSelect={handleNoteSelect}
               isMobile={true}
               selectedSlug={selectedNote?.slug}
-              isDesktop={true} // Use callback navigation on mobile, not Link navigation
+              useCallbackNavigation
+              onNoteCreated={handleNoteCreated}
             />
           ) : (
             <div className="h-full">
@@ -141,8 +151,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           onNoteSelect={handleNoteSelect}
           isMobile={false}
           selectedSlug={selectedNote?.slug}
-          isDesktop={true}
-          onNoteCreated={setSelectedNote}
+          useCallbackNavigation
+          onNoteCreated={handleNoteCreated}
           dialogContainer={dialogContainer}
         />
         <div className="flex-grow h-full overflow-hidden relative">

@@ -14,14 +14,14 @@ export default function NewNote({
   clearSearch,
   setSelectedNoteSlug,
   isMobile,
-  isDesktop = false,
+  useCallbackNavigation = false,
   onNoteCreated,
 }: {
   addNewPinnedNote: (slug: string) => void;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
   isMobile: boolean;
-  isDesktop?: boolean;
+  useCallbackNavigation?: boolean;
   onNoteCreated?: (note: Note) => void;
 }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export default function NewNote({
       refreshSessionNotes,
       setSelectedNoteSlug,
       isMobile,
-      isDesktop,
+      useCallbackNavigation,
       onNoteCreated
     );
   }, [
@@ -50,7 +50,7 @@ export default function NewNote({
     refreshSessionNotes,
     setSelectedNoteSlug,
     isMobile,
-    isDesktop,
+    useCallbackNavigation,
     onNoteCreated,
   ]);
 

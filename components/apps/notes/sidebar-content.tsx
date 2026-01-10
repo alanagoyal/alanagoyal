@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { NoteItem } from "./note-item";
 import { Note } from "@/lib/notes/types";
@@ -19,7 +19,8 @@ interface SidebarContentProps {
   setOpenSwipeItemSlug: React.Dispatch<React.SetStateAction<string | null>>;
   clearSearch: () => void;
   setSelectedNoteSlug: (slug: string | null) => void;
-  isDesktop?: boolean;
+  useCallbackNavigation?: boolean;
+  isMobile?: boolean;
 }
 
 export function SidebarContent({
@@ -38,9 +39,15 @@ export function SidebarContent({
   setOpenSwipeItemSlug,
   clearSearch,
   setSelectedNoteSlug,
-  isDesktop = false,
+  useCallbackNavigation = false,
+  isMobile = false,
 }: SidebarContentProps) {
   const router = useRouter();
+
+  // Flatten groupedNotes to find notes by slug
+  const allNotes = useMemo(() => {
+    return Object.values(groupedNotes).flat();
+  }, [groupedNotes]);
 
   const handlePinToggleWithClear = useCallback(
     (slug: string) => {
@@ -53,10 +60,16 @@ export function SidebarContent({
   const handleEdit = useCallback(
     (slug: string) => {
       clearSearch();
-      router.push(`/notes/${slug}`);
-      setSelectedNoteSlug(slug);
+      if (isMobile) {
+        // On mobile, use onNoteSelect to properly navigate and hide sidebar
+        const note = allNotes.find((n) => n.slug === slug);
+        if (note) onNoteSelect(note);
+      } else {
+        router.push(`/notes/${slug}`);
+        setSelectedNoteSlug(slug);
+      }
     },
-    [clearSearch, router, setSelectedNoteSlug]
+    [clearSearch, router, setSelectedNoteSlug, isMobile, allNotes, onNoteSelect]
   );
 
   const handleDelete = useCallback(
@@ -96,7 +109,7 @@ export function SidebarContent({
                         openSwipeItemSlug={openSwipeItemSlug}
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                         showDivider={index < groupedNotes[categoryKey].length - 1}
-                        isDesktop={isDesktop}
+                        useCallbackNavigation={useCallbackNavigation}
                       />
                     )
                   )}
@@ -123,7 +136,7 @@ export function SidebarContent({
               openSwipeItemSlug={openSwipeItemSlug}
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
-              isDesktop={isDesktop}
+              useCallbackNavigation={useCallbackNavigation}
             />
           ))}
         </ul>

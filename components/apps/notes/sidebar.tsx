@@ -46,7 +46,7 @@ export default function Sidebar({
   onNoteSelect,
   isMobile,
   selectedSlug: externalSelectedSlug,
-  isDesktop = false,
+  useCallbackNavigation = false,
   onNoteCreated,
   dialogContainer,
 }: {
@@ -54,7 +54,7 @@ export default function Sidebar({
   onNoteSelect: (note: any) => void;
   isMobile: boolean;
   selectedSlug?: string | null;
-  isDesktop?: boolean;
+  useCallbackNavigation?: boolean;
   onNoteCreated?: (note: any) => void;
   dialogContainer?: HTMLElement | null;
 }) {
@@ -214,7 +214,7 @@ export default function Sidebar({
         const nextNote = flattened[nextIndex];
 
         if (nextNote) {
-          if (isDesktop) {
+          if (useCallbackNavigation) {
             onNoteSelect(nextNote);
           } else {
             router.push(`/notes/${nextNote.slug}`);
@@ -229,7 +229,7 @@ export default function Sidebar({
         }
       }
     },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults, isDesktop, onNoteSelect]
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults, useCallbackNavigation, onNoteSelect]
   );
 
   const handlePinToggle = useCallback(
@@ -252,28 +252,31 @@ export default function Sidebar({
 
       clearSearch();
 
-      if (!isMobile && !isDesktop) {
+      if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${slug}`);
-      } else if (isDesktop) {
+      } else if (useCallbackNavigation && !isMobile) {
+        // Only auto-select on desktop, not mobile (pin should stay on sidebar)
         const note = notes.find((n) => n.slug === slug);
         if (note) onNoteSelect(note);
       }
 
-      if (!silent) {
+      if (!silent && !isMobile) {
         toast({
           description: isPinning ? "Note pinned" : "Note unpinned",
         });
       }
     },
-    [router, isMobile, isDesktop, clearSearch, notes, onNoteSelect]
+    [router, isMobile, useCallbackNavigation, clearSearch, notes, onNoteSelect]
   );
 
   const handleNoteDelete = useCallback(
     async (noteToDelete: Note) => {
       if (noteToDelete.public) {
-        toast({
-          description: "Oops! You can't delete public notes",
-        });
+        if (!isMobile) {
+          toast({
+            description: "Oops! You can't delete public notes",
+          });
+        }
         return;
       }
 
@@ -307,21 +310,24 @@ export default function Sidebar({
           nextNote = allNotes[deletedNoteIndex - 1];
         }
 
-        if (!isMobile && !isDesktop) {
+        if (!isMobile && !useCallbackNavigation) {
           router.push(nextNote ? `/notes/${nextNote.slug}` : "/notes/about-me");
-        } else if (isDesktop && nextNote) {
+        } else if (useCallbackNavigation && !isMobile && nextNote) {
+          // Only auto-select next note on desktop, not mobile
           onNoteSelect(nextNote);
         }
 
         clearSearch();
         refreshSessionNotes();
-        if (!isDesktop) {
+        if (!useCallbackNavigation) {
           router.refresh();
         }
 
-        toast({
-          description: "Note deleted",
-        });
+        if (!isMobile) {
+          toast({
+            description: "Note deleted",
+          });
+        }
       } catch (error) {
         console.error("Error deleting note:", error);
       }
@@ -331,7 +337,7 @@ export default function Sidebar({
       sessionId,
       flattenedNotes,
       isMobile,
-      isDesktop,
+      useCallbackNavigation,
       clearSearch,
       refreshSessionNotes,
       router,
@@ -342,7 +348,7 @@ export default function Sidebar({
   const goToHighlightedNote = useCallback(() => {
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
-      if (isDesktop) {
+      if (useCallbackNavigation) {
         onNoteSelect(selectedNote);
       } else {
         router.push(`/notes/${selectedNote.slug}`);
@@ -353,7 +359,7 @@ export default function Sidebar({
       }, 0);
       clearSearch();
     }
-  }, [localSearchResults, highlightedIndex, router, clearSearch, isDesktop, onNoteSelect]);
+  }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, onNoteSelect]);
 
   const { setTheme, theme } = useTheme();
 
@@ -450,12 +456,12 @@ export default function Sidebar({
   const handleNoteSelect = useCallback(
     (note: any) => {
       onNoteSelect(note);
-      if (!isMobile && !isDesktop) {
+      if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${note.slug}`);
       }
       clearSearch();
     },
-    [clearSearch, onNoteSelect, isMobile, isDesktop, router]
+    [clearSearch, onNoteSelect, isMobile, useCallbackNavigation, router]
   );
 
   return (
@@ -473,7 +479,7 @@ export default function Sidebar({
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
         isScrolled={isScrolled}
-        isDesktop={isDesktop}
+        useCallbackNavigation={useCallbackNavigation}
         onNoteCreated={onNoteCreated}
       />
       <div className="flex-1 min-h-0 overflow-hidden">
@@ -532,7 +538,8 @@ export default function Sidebar({
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               clearSearch={clearSearch}
               setSelectedNoteSlug={setSelectedNoteSlug}
-              isDesktop={isDesktop}
+              useCallbackNavigation={useCallbackNavigation}
+              isMobile={isMobile}
             />
           </div>
         </div>
