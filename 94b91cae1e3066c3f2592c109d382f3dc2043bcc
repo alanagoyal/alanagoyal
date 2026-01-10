@@ -1,0 +1,36 @@
+components/apps/messages/app.tsx
+  a159a08a343c5347 378-384
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "94b91cae1e3066c3f2592c109d382f3dc2043bcc",
+  "prompts": {
+    "8757f0e64fe3114d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "fae53d86-71ac-4c82-90e4-5bf8bcbd23f0",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "a159a08a343c5347": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5cdea395-7e51-4dc1-b847-2fb20bdb5b43",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    }
+  }
+}
