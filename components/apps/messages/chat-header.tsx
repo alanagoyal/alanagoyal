@@ -389,12 +389,14 @@ export function ChatHeader({
             };
             document.addEventListener('click', blockNextClick, true);
           } else {
-            // Show error toast if trying to save invalid state
-            toast({ 
-              description: currentRecipients.length === 0 
-                ? "You need at least one recipient" 
-                : "You can add up to four recipients"
-            });
+            // Show error toast if trying to save invalid state (not on mobile)
+            if (!isMobileView) {
+              toast({
+                description: currentRecipients.length === 0
+                  ? "You need at least one recipient"
+                  : "You can add up to four recipients"
+              });
+            }
             return;
           }
         }
@@ -449,12 +451,16 @@ export function ChatHeader({
       const recipientNames = recipientInput.split(",").filter((r) => r.trim());
 
       if (isEditMode && recipientNames.length === 0) {
-        toast({ description: "You need at least one recipient" });
+        if (!isMobileView) {
+          toast({ description: "You need at least one recipient" });
+        }
         return;
       }
 
       if (isNewChat && !isMobileView && recipientNames.length === 0) {
-        toast({ description: "Please add at least one recipient" });
+        if (!isMobileView) {
+          toast({ description: "Please add at least one recipient" });
+        }
         return;
       }
 
@@ -521,7 +527,9 @@ export function ChatHeader({
     if (currentRecipients.includes(person.name)) return;
 
     if (hasReachedMaxRecipients(recipientInput)) {
-      toast({ description: "You can add up to four recipients" });
+      if (!isMobileView) {
+        toast({ description: "You can add up to four recipients" });
+      }
       return;
     }
 
@@ -555,9 +563,11 @@ export function ChatHeader({
         const data = await response.json();
 
         if (data.validation === false) {
-          toast({
-            description: "Please enter a valid contact name",
-          });
+          if (!isMobileView) {
+            toast({
+              description: "Please enter a valid contact name",
+            });
+          }
           return;
         }
 
@@ -567,9 +577,11 @@ export function ChatHeader({
         });
         setShowResults(true); // Keep the dropdown open for more selections
       } catch {
-        toast({
-          description: "Failed to validate contact name",
-        });
+        if (!isMobileView) {
+          toast({
+            description: "Failed to validate contact name",
+          });
+        }
       } finally {
         setIsValidating(false);
       }
@@ -657,9 +669,11 @@ export function ChatHeader({
         onRemove={(index) => {
           // Prevent removing if it's the last recipient
           if (totalRecipients <= 1) {
-            toast({ 
-              description: "You must have at least one recipient" 
-            });
+            if (!isMobileView) {
+              toast({
+                description: "You must have at least one recipient"
+              });
+            }
             return;
           }
 

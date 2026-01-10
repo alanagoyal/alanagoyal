@@ -672,10 +672,12 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return newConversations;
     });
 
-    // Show toast notification
-    toast({
-      description: "Conversation deleted",
-    });
+    // Show toast notification (not on mobile)
+    if (!isMobileView) {
+      toast({
+        description: "Conversation deleted",
+      });
+    }
   };
 
   // Method to handle conversation pin/unpin
@@ -689,8 +691,8 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     setConversations(conversations);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
 
-    // Show toast notification
-    if (updatedConversation) {
+    // Show toast notification (not on mobile)
+    if (updatedConversation && !isMobileView) {
       let toastMessage = "";
       if (updateType === "pin") {
         toastMessage = updatedConversation.pinned
