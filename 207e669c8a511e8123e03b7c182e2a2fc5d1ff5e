@@ -1,0 +1,25 @@
+components/desktop/desktop.tsx
+  9b05998bf92bf634 5,131-132
+lib/window-context.tsx
+  9b05998bf92bf634 46-56,90,94,96,100,103-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "207e669c8a511e8123e03b7c182e2a2fc5d1ff5e",
+  "prompts": {
+    "9b05998bf92bf634": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3c26b80-07a8-4964-adfe-6b846c5958dc",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 41,
+      "total_deletions": 29,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
