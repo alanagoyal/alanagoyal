@@ -46,7 +46,23 @@ export async function POST(req: Request) {
       shouldReact = false,
     } = body as Record<string, unknown>;
 
-    if (!Array.isArray(recipientsRaw) || recipientsRaw.length === 0) {
+    const isRecipientLike = (value: unknown): value is Recipient => {
+      if (!value || typeof value !== "object") return false;
+      const maybeName = (value as { name?: unknown }).name;
+      return typeof maybeName === "string" && maybeName.trim().length > 0;
+    };
+
+    const isMessageLike = (value: unknown): value is Message => {
+      if (!value || typeof value !== "object") return false;
+      const v = value as { sender?: unknown; content?: unknown };
+      return typeof v.sender === "string" && typeof v.content === "string";
+    };
+
+    const recipients = (Array.isArray(recipientsRaw) ? recipientsRaw : []).filter(
+      isRecipientLike
+    );
+
+    if (recipients.length === 0) {
       return new Response(
         JSON.stringify({ error: "Missing or invalid recipients" }),
         {
@@ -56,8 +72,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const recipients = recipientsRaw as Recipient[];
-    const messages = (Array.isArray(messagesRaw) ? messagesRaw : []) as Message[];
+    const messages = (Array.isArray(messagesRaw) ? messagesRaw : []).filter(
+      isMessageLike
+    );
     const isOneOnOneRequested = isOneOnOneRaw === true;
     const isOneOnOne = isOneOnOneRequested && recipients.length === 1;
     if (isOneOnOneRequested && recipients.length !== 1) {
