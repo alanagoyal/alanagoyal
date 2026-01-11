@@ -106,16 +106,16 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
 
   const canEdit = sessionId === note.session_id;
 
-  const handleContentAreaClick = (e: React.MouseEvent) => {
+  const handleContentAreaClick = useCallback((e: React.MouseEvent) => {
     // Don't trigger edit if clicking interactive elements
     const target = e.target as HTMLElement;
-    if (target.closest('a, button, input, textarea, [role="checkbox"]')) {
+    if (target.closest('a, button, input, textarea')) {
       return;
     }
     if (canEdit && !note.public) {
       setIsEditing(true);
     }
-  };
+  }, [canEdit, note.public]);
 
   return (
     <div

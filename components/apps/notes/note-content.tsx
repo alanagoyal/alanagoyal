@@ -27,6 +27,14 @@ export default function NoteContent({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const stopPropagation = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleFocus = useCallback(() => {
+    setIsEditing(true);
+  }, [setIsEditing]);
+
   // Auto-resize textarea to fit content
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -192,12 +200,12 @@ export default function NoteContent({
         {...props}
         target={isExternal ? "_blank" : undefined}
         rel={isExternal ? "noopener noreferrer" : undefined}
-        onClick={(e) => e.stopPropagation()}
+        onClick={stopPropagation}
       >
         {props.children}
       </a>
     );
-  }, []);
+  }, [stopPropagation]);
 
   const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
     return (
@@ -207,7 +215,7 @@ export default function NoteContent({
   }, []);
 
   return (
-    <div className="px-2" onClick={isEditing ? (e) => e.stopPropagation() : undefined}>
+    <div className="px-2" onClick={isEditing ? stopPropagation : undefined}>
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
           ref={textareaRef}
@@ -218,7 +226,8 @@ export default function NoteContent({
           onChange={handleChange}
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
-          onClick={(e) => e.stopPropagation()}
+          onClick={stopPropagation}
+          onFocus={handleFocus}
         />
       ) : (
         <div className="text-base md:text-sm">
