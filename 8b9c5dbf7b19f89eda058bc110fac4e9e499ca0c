@@ -1,0 +1,9 @@
+next.config.mjs
+  66815eb8647b6322 9-23,25-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "8b9c5dbf7b19f89eda058bc110fac4e9e499ca0c",
+  "prompts": {}
+}
