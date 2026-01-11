@@ -120,12 +120,13 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     }
   }, [isMobile]);
 
-  // Handler for new note creation - sets note and navigates to it on mobile
+  // Handler for new note creation - sets note and updates URL
   const handleNoteCreated = useCallback((note: NoteType) => {
     setSelectedNote(note);
+    // Update URL to reflect the new note
+    window.history.replaceState(null, "", `/notes/${note.slug}`);
     if (isMobile) {
       setShowSidebar(false);
-      window.history.replaceState(null, "", `/notes/${note.slug}`);
     }
   }, [isMobile]);
 

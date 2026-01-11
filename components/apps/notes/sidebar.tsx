@@ -362,39 +362,12 @@ export default function Sidebar({
 
   const { setTheme, theme } = useTheme();
 
-  // Refs to hold current handlers for file menu
-  const handlersRef = useRef({
-    handlePinToggle,
-    handleNoteDelete,
-    highlightedNote,
-    sessionId,
-    refreshSessionNotes,
-    isMobile,
-    useCallbackNavigation,
-    onNoteCreated,
-  });
-
-  // Keep refs up to date
-  useEffect(() => {
-    handlersRef.current = {
-      handlePinToggle,
-      handleNoteDelete,
-      highlightedNote,
-      sessionId,
-      refreshSessionNotes,
-      isMobile,
-      useCallbackNavigation,
-      onNoteCreated,
-    };
-  });
-
-  // Register file menu actions for desktop menubar (only once on mount)
+  // Register file menu actions for desktop menubar
   useEffect(() => {
     if (!fileMenu) return;
 
     fileMenu.registerNotesActions({
       onNewNote: () => {
-        const { sessionId, handlePinToggle, refreshSessionNotes, isMobile, useCallbackNavigation, onNoteCreated } = handlersRef.current;
         createNote(
           sessionId,
           router,
@@ -407,13 +380,11 @@ export default function Sidebar({
         );
       },
       onPinNote: () => {
-        const { highlightedNote, handlePinToggle } = handlersRef.current;
         if (highlightedNote) {
           handlePinToggle(highlightedNote.slug);
         }
       },
       onDeleteNote: () => {
-        const { highlightedNote, handleNoteDelete } = handlersRef.current;
         if (highlightedNote) {
           handleNoteDelete(highlightedNote);
         }
@@ -423,7 +394,7 @@ export default function Sidebar({
     return () => {
       fileMenu.unregisterNotesActions();
     };
-  }, [fileMenu, router, setSelectedNoteSlug]);
+  }, [fileMenu, router, setSelectedNoteSlug, sessionId, handlePinToggle, refreshSessionNotes, isMobile, useCallbackNavigation, onNoteCreated, highlightedNote, handleNoteDelete]);
 
   // Update file menu state when highlighted note or pinned status changes
   useEffect(() => {
