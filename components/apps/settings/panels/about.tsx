@@ -186,27 +186,16 @@ export function AboutPanel({ isMobile = false }: AboutPanelProps) {
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg overflow-hidden">
-                <svg
-                  viewBox="0 0 40 40"
-                  className="w-full h-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Sonoma gradient background */}
-                  <defs>
-                    <linearGradient id="sonoma" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FF6B6B" />
-                      <stop offset="25%" stopColor="#FFB347" />
-                      <stop offset="50%" stopColor="#FFEB3B" />
-                      <stop offset="75%" stopColor="#98D8C8" />
-                      <stop offset="100%" stopColor="#6B5B95" />
-                    </linearGradient>
-                  </defs>
-                  <rect width="40" height="40" rx="8" fill="url(#sonoma)" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/desktop/os.png"
+                  alt="macOS Sierra"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <span className="text-sm">macOS Sonoma</span>
+              <span className="text-sm">macOS Sierra</span>
             </div>
-            <span className="text-sm text-muted-foreground">Version 14.0</span>
+            <span className="text-sm text-muted-foreground">Version 10.12</span>
           </div>
         </div>
       </div>

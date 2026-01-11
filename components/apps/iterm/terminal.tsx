@@ -393,9 +393,9 @@ Note: Projects folder contains my real GitHub repositories!`;
         output = `
                     'c.          ${USERNAME}@${HOSTNAME}
                  ,xNMM.          -----------------------
-               .OMMMMo           OS: macOS Sonoma 14.0
+               .OMMMMo           OS: macOS Sierra 10.12
                OMMM0,            Host: MacBook Air (M2, 2022)
-     .;loddo:' loolloddol;.      Kernel: Darwin 23.0.0
+     .;loddo:' loolloddol;.      Kernel: Darwin 16.0.0
    cKMMMMMMMMMMNWMMMMMMMMMM0:    Uptime: ${Math.floor(Math.random() * 100) + 1} days
  .KMMMMMMMMMMMMMMMMMMMMMMMWd.    Shell: zsh 5.9
  XMMMMMMMMMMMMMMMMMMMMMMMX.      Terminal: iTerm2
