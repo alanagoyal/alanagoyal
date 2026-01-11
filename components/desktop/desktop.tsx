@@ -129,9 +129,13 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
       restoreDesktopDefault();
       setRestoreDefaultOnUnlock(false);
       // Update URL to match default focused app
-      window.history.replaceState(null, "", `/${DESKTOP_DEFAULT_FOCUSED_APP}`);
+      if (DESKTOP_DEFAULT_FOCUSED_APP === "notes") {
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+      } else {
+        window.history.replaceState(null, "", `/${DESKTOP_DEFAULT_FOCUSED_APP}`);
+      }
     }
-  }, [restoreDefaultOnUnlock, restoreDesktopDefault]);
+  }, [restoreDefaultOnUnlock, restoreDesktopDefault, initialNoteSlug]);
 
   return (
     <div className="fixed inset-0">
