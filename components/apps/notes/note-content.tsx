@@ -26,6 +26,7 @@ export default function NoteContent({
   setIsEditing: (editing: boolean) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const clickRelativeYRef = useRef<number | null>(null);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,6 +35,47 @@ export default function NoteContent({
   const handleFocus = useCallback(() => {
     setIsEditing(true);
   }, [setIsEditing]);
+
+  // Capture click position when clicking on markdown to enter edit mode
+  const handleMarkdownClick = useCallback((e: React.MouseEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    // Store relative Y position (0-1) within the content area
+    clickRelativeYRef.current = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+  }, []);
+
+  // Auto-focus textarea when entering edit mode, cursor at end of clicked line
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.focus();
+
+      if (clickRelativeYRef.current !== null) {
+        const relativeY = clickRelativeYRef.current;
+        clickRelativeYRef.current = null;
+
+        const content = textarea.value;
+        const lines = content.split('\n');
+
+        // Estimate which line was clicked based on relative Y position
+        const estimatedLine = Math.floor(relativeY * lines.length);
+        const targetLine = Math.min(estimatedLine, lines.length - 1);
+
+        // Calculate character position at END of that line
+        let charPosition = 0;
+        for (let i = 0; i <= targetLine; i++) {
+          charPosition += lines[i].length;
+          if (i < targetLine) charPosition += 1; // +1 for newline
+        }
+
+        textarea.setSelectionRange(charPosition, charPosition);
+      } else {
+        // No click position (e.g., new note), place at end
+        const length = textarea.value.length;
+        textarea.setSelectionRange(length, length);
+      }
+    }
+  }, [isEditing]);
 
   // Auto-resize textarea to fit content
   useEffect(() => {
@@ -230,7 +272,7 @@ export default function NoteContent({
           onFocus={handleFocus}
         />
       ) : (
-        <div className="text-base md:text-sm">
+        <div className="text-base md:text-sm" onClick={handleMarkdownClick}>
           <ReactMarkdown
             className="markdown-body"
             remarkPlugins={[remarkGfm]}
