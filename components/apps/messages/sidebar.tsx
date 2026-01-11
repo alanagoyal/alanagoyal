@@ -30,7 +30,6 @@ interface SidebarProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   typingStatus: { conversationId: string; recipient: string } | null;
-  isCommandMenuOpen: boolean;
   onScroll?: (isScrolled: boolean) => void;
   onSoundToggle: () => void;
 }
@@ -46,7 +45,6 @@ export function Sidebar({
   searchTerm,
   onSearchChange,
   typingStatus,
-  isCommandMenuOpen,
   onScroll,
   onSoundToggle,
 }: SidebarProps) {
@@ -135,9 +133,6 @@ export function Sidebar({
       } else {
         if (!target.closest('[data-app="messages"]')) return;
       }
-
-      // Don't handle navigation if command menu is open
-      if (isCommandMenuOpen) return;
 
       // Check if the active element is within a chat header input or dropdown
       const activeElement = document.activeElement;
@@ -306,7 +301,6 @@ export function Sidebar({
     onSelectConversation,
     onUpdateConversation,
     onDeleteConversation,
-    isCommandMenuOpen,
     windowFocus,
     setTheme,
     effectiveTheme,

@@ -12,7 +12,6 @@ import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CommandMenu } from "./command-menu";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
@@ -80,9 +79,6 @@ export default function Sidebar({
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void } | null>(
-    null
-  );
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
 
@@ -374,6 +370,8 @@ export default function Sidebar({
     sessionId,
     refreshSessionNotes,
     isMobile,
+    useCallbackNavigation,
+    onNoteCreated,
   });
 
   // Keep refs up to date
@@ -385,6 +383,8 @@ export default function Sidebar({
       sessionId,
       refreshSessionNotes,
       isMobile,
+      useCallbackNavigation,
+      onNoteCreated,
     };
   });
 
@@ -394,14 +394,16 @@ export default function Sidebar({
 
     fileMenu.registerNotesActions({
       onNewNote: () => {
-        const { sessionId, handlePinToggle, refreshSessionNotes, isMobile } = handlersRef.current;
+        const { sessionId, handlePinToggle, refreshSessionNotes, isMobile, useCallbackNavigation, onNoteCreated } = handlersRef.current;
         createNote(
           sessionId,
           router,
           handlePinToggle,
           refreshSessionNotes,
           setSelectedNoteSlug,
-          isMobile
+          isMobile,
+          useCallbackNavigation,
+          onNoteCreated
         );
       },
       onPinNote: () => {
@@ -491,9 +493,6 @@ export default function Sidebar({
         } else {
           shortcuts[key]();
         }
-      } else if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        commandMenuRef.current?.setOpen(true);
       } else if (
         event.key === "Enter" &&
         localSearchResults &&
@@ -513,7 +512,6 @@ export default function Sidebar({
     localSearchResults,
     setHighlightedIndex,
     handleNoteDelete,
-    commandMenuRef,
     goToHighlightedNote,
     setTheme,
     theme,
@@ -566,18 +564,6 @@ export default function Sidebar({
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
           <SessionId setSessionId={setSessionId} />
-          <CommandMenu
-            notes={notes}
-            sessionId={sessionId}
-            addNewPinnedNote={handlePinToggle}
-            navigateNotes={navigateNotes}
-            togglePinned={handlePinToggle}
-            deleteNote={handleNoteDelete}
-            highlightedNote={highlightedNote}
-            setSelectedNoteSlug={setSelectedNoteSlug}
-            isMobile={isMobile}
-            container={dialogContainer}
-          />
           <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
             <SearchBar
               notes={notes}

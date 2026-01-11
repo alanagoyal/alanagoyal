@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
-import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
@@ -50,12 +49,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(soundEffects.isEnabled());
 
-  // Add command menu ref
-  const commandMenuRef = useRef<{ setOpen: (open: boolean) => void }>(null);
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
   // Ref to track focusModeActive for use in callbacks
@@ -928,23 +924,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       onMouseDown={() => containerRef.current?.focus()}
       className="flex h-full relative outline-none overflow-hidden"
     >
-      <CommandMenu
-        ref={commandMenuRef}
-        conversations={conversations}
-        activeConversation={activeConversation}
-        onNewChat={() => {
-          setIsNewConversation(true);
-          setActiveConversation(null);
-          updateUrl("/messages");
-        }}
-        onSelectConversation={selectConversation}
-        onDeleteConversation={handleDeleteConversation}
-        onUpdateConversation={handleUpdateConversation}
-        onOpenChange={setIsCommandMenuOpen}
-        soundEnabled={soundEnabled}
-        onSoundToggle={handleSoundToggle}
-        container={isDesktop ? dialogContainer : undefined}
-      />
       <main className="h-full w-full bg-background flex flex-col overflow-hidden">
         <div className="flex-1 flex min-h-0">
           <div
@@ -968,7 +947,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               typingStatus={typingStatus}
-              isCommandMenuOpen={isCommandMenuOpen}
               onScroll={setIsScrolled}
               onSoundToggle={handleSoundToggle}
             >
