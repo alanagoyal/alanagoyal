@@ -1,0 +1,23 @@
+components/desktop/desktop.tsx
+  e7aeadfbdf26aa31 132-134,136,138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ca58742bc5e4f6d24c4534ea06b2c7acb6140974",
+  "prompts": {
+    "e7aeadfbdf26aa31": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "b2a2e3ff-abed-48f2-9a61-05fe9bba617d",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 2,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
