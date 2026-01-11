@@ -6,15 +6,28 @@ const nextConfig = {
     return [];
   },
   async redirects() {
-    return [
-      // Legacy note slugs redirect to /notes/*
-      // Only match paths that have at least one character and aren't reserved
-      {
-        source: '/:path((?!notes|api|messages|settings|iterm|finder|headshot|_next|static|public|icons|favicon\\.ico|sitemap\\.xml|robots\\.txt).+)',
-        destination: '/notes/:path',
-        permanent: true,
-      },
+    // Legacy note slugs that were publicly shared before /notes/* prefix
+    const legacyNoteSlugs = [
+      'quick-links',
+      'principles',
+      'on-repeat',
+      'fav-blogs',
+      'bookmarks',
+      'about-me',
+      'cool-websites',
+      'groceries',
+      'fav-spots',
+      'inspo',
+      'how-this-works',
+      'reading-list',
+      'fav-products',
     ];
+
+    return legacyNoteSlugs.map((slug) => ({
+      source: `/${slug}`,
+      destination: `/notes/${slug}`,
+      permanent: true,
+    }));
   },
 };
 
