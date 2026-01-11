@@ -193,6 +193,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
         if (!Array.isArray(parsedConversations)) {
           console.error("Invalid conversations format in localStorage");
+          setConversations(allConversations);
           return;
         }
 
