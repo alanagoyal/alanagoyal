@@ -10,8 +10,12 @@ import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { cn } from "@/lib/utils";
 import { AppleMenu } from "./apple-menu";
 import { BatteryMenu, WifiMenu, ControlCenterMenu } from "./status-menus";
+import { AppMenu } from "./app-menu";
+import { FileMenu } from "./file-menu";
+import { AboutDialog } from "./about-dialog";
+import { useFileMenuActions } from "@/lib/file-menu-context";
 
-type OpenMenu = "apple" | "battery" | "wifi" | "controlCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | null;
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -34,9 +38,11 @@ export function MenuBar({
   onLockScreen,
   onLogout,
 }: MenuBarProps) {
-  const { getFocusedAppId } = useWindowManager();
+  const fileMenuActions = useFileMenuActions();
+  const { getFocusedAppId, closeWindow } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
 
   const focusedAppId = getFocusedAppId();
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
@@ -58,6 +64,25 @@ export function MenuBar({
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Q shortcut to quit/close the focused app
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle Q key when not in an input field
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "q" && focusedAppId) {
+        e.preventDefault();
+        closeWindow(focusedAppId);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [focusedAppId, closeWindow]);
 
   const toggleMenu = (menu: OpenMenu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -83,9 +108,30 @@ export function MenuBar({
             )}
           />
         </button>
-        <span className="text-sm font-semibold text-black dark:text-white">
+        <button
+          onClick={() => toggleMenu("appMenu")}
+          className={cn(
+            "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
+            openMenu === "appMenu"
+              ? "bg-blue-500 text-white"
+              : "text-black dark:text-white hover:bg-white/10"
+          )}
+        >
           {focusedApp?.menuBarTitle || "Finder"}
-        </span>
+        </button>
+        {(focusedAppId === "notes" || focusedAppId === "messages") && (
+          <button
+            onClick={() => toggleMenu("fileMenu")}
+            className={cn(
+              "text-sm px-2 py-0.5 rounded transition-colors",
+              openMenu === "fileMenu"
+                ? "bg-blue-500 text-white"
+                : "text-black dark:text-white hover:bg-white/10"
+            )}
+          >
+            File
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
@@ -155,6 +201,41 @@ export function MenuBar({
         isOpen={openMenu === "controlCenter"}
         onClose={closeMenu}
         onOpenSettings={onOpenSettings}
+      />
+
+      <AppMenu
+        isOpen={openMenu === "appMenu"}
+        onClose={closeMenu}
+        appName={focusedApp?.menuBarTitle || "Finder"}
+        onAbout={() => setAboutDialogOpen(true)}
+        onQuit={() => {
+          if (focusedAppId) {
+            closeWindow(focusedAppId);
+          }
+        }}
+      />
+
+      <FileMenu
+        isOpen={openMenu === "fileMenu"}
+        onClose={closeMenu}
+        appId={focusedAppId || ""}
+        onNewNote={fileMenuActions.onNewNote}
+        onPinNote={fileMenuActions.onPinNote}
+        onDeleteNote={fileMenuActions.onDeleteNote}
+        noteIsPinned={fileMenuActions.noteIsPinned}
+        onNewChat={fileMenuActions.onNewChat}
+        onPinChat={fileMenuActions.onPinChat}
+        onHideAlerts={fileMenuActions.onHideAlerts}
+        onDeleteChat={fileMenuActions.onDeleteChat}
+        chatIsPinned={fileMenuActions.chatIsPinned}
+        hideAlertsActive={fileMenuActions.hideAlertsActive}
+      />
+
+      <AboutDialog
+        isOpen={aboutDialogOpen}
+        onClose={() => setAboutDialogOpen(false)}
+        appName={focusedApp?.menuBarTitle || "Finder"}
+        appId={focusedAppId || "finder"}
       />
     </div>
   );

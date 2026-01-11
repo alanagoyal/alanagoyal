@@ -75,8 +75,8 @@ export function BatteryMenu({ isOpen, onClose, onOpenSettings }: BatteryMenuProp
     <div ref={menuRef} className={cn(menuContainerClass, "w-56")} style={{ right: "130px" }}>
       {/* Battery header */}
       <div className="flex items-center justify-between px-3 py-1.5">
-        <span className="text-sm font-semibold">Battery</span>
-        <span className="text-sm">97%</span>
+        <span className="text-xs font-semibold">Battery</span>
+        <span className="text-xs">97%</span>
       </div>
 
       <div className="px-3 py-1">
@@ -100,7 +100,7 @@ export function BatteryMenu({ isOpen, onClose, onOpenSettings }: BatteryMenuProp
         )}>
           <Battery className={cn("w-4 h-4", lowPowerMode ? "text-white" : "text-gray-600 dark:text-gray-300")} />
         </div>
-        <span className="text-sm">Low Power</span>
+        <span className="text-xs">Low Power</span>
       </button>
 
       <MenuDivider />
@@ -140,7 +140,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
     <div ref={menuRef} className={cn(menuContainerClass, "w-56")} style={{ right: "100px" }}>
       {/* Wi-Fi header with toggle */}
       <div className="flex items-center justify-between px-3 py-1.5">
-        <span className="text-sm font-semibold">Wi-Fi</span>
+        <span className="text-xs font-semibold">Wi-Fi</span>
         <Toggle enabled={wifiEnabled} onChange={setWifiEnabled} />
       </div>
 
@@ -157,7 +157,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500">
               <Smartphone className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm flex-1">alana&apos;s iphone</span>
+            <span className="text-xs flex-1">alana&apos;s iphone</span>
             <div className="flex items-center gap-1 text-muted-foreground group-hover:text-white/70">
               <div className="flex items-end gap-px h-2.5">
                 <div className="w-0.5 h-1 bg-current rounded-full" />
@@ -180,7 +180,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500">
               <Wifi className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm flex-1">basecase</span>
+            <span className="text-xs flex-1">basecase</span>
             <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
           </div>
 
@@ -189,7 +189,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           {/* Other Networks */}
           <button
             onClick={() => setShowOtherNetworks(!showOtherNetworks)}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-sm hover:bg-blue-500 hover:text-white transition-colors group"
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-blue-500 hover:text-white transition-colors group"
           >
             <span>Other Networks</span>
             <ChevronRight className={cn(
@@ -206,7 +206,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
                   className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group"
                 >
                   <Wifi className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
-                  <span className="text-sm flex-1 truncate">{network.name}</span>
+                  <span className="text-xs flex-1 truncate">{network.name}</span>
                   <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
                 </div>
               ))}
@@ -222,7 +222,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           onOpenWifiSettings?.();
           onClose();
         }}
-        className="w-full px-3 py-1.5 text-sm text-left hover:bg-blue-500 hover:text-white transition-colors"
+        className="w-full px-3 py-1.5 text-xs text-left hover:bg-blue-500 hover:text-white transition-colors"
       >
         Wi-Fi Settings...
       </button>

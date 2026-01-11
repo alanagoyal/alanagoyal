@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hoo
 import { CommandMenu } from "./command-menu"; // Import CommandMenu component
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { useFileMenu } from "@/lib/file-menu-context";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -60,6 +61,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   // Ref to track focusModeActive for use in callbacks
   const focusModeRef = useRef(focusModeActive);
   const windowFocus = useWindowFocus();
+  const fileMenu = useFileMenu();
 
   // Keep focusModeRef in sync with prop
   useEffect(() => {
@@ -718,6 +720,79 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       }
     }
   };
+
+  // Refs to hold current state for file menu actions
+  const fileMenuStateRef = useRef({
+    conversations,
+    activeConversation,
+    handleDeleteConversation,
+    handleUpdateConversation,
+  });
+
+  // Keep refs up to date
+  useEffect(() => {
+    fileMenuStateRef.current = {
+      conversations,
+      activeConversation,
+      handleDeleteConversation,
+      handleUpdateConversation,
+    };
+  });
+
+  // Register file menu actions for desktop menubar (only once on mount)
+  useEffect(() => {
+    if (!fileMenu) return;
+
+    fileMenu.registerMessagesActions({
+      onNewChat: () => {
+        setIsNewConversation(true);
+        setActiveConversation(null);
+        updateUrl("/messages");
+      },
+      onPinChat: () => {
+        const { activeConversation, conversations, handleUpdateConversation } = fileMenuStateRef.current;
+        if (!activeConversation) return;
+        const updatedConversations = conversations.map((conv) => {
+          if (conv.id === activeConversation) {
+            return { ...conv, pinned: !conv.pinned };
+          }
+          return conv;
+        });
+        handleUpdateConversation(updatedConversations, "pin");
+      },
+      onHideAlerts: () => {
+        const { activeConversation, conversations, handleUpdateConversation } = fileMenuStateRef.current;
+        if (!activeConversation) return;
+        const updatedConversations = conversations.map((conv) => {
+          if (conv.id === activeConversation) {
+            return { ...conv, hideAlerts: !conv.hideAlerts };
+          }
+          return conv;
+        });
+        handleUpdateConversation(updatedConversations, "mute");
+      },
+      onDeleteChat: () => {
+        const { activeConversation, handleDeleteConversation } = fileMenuStateRef.current;
+        if (activeConversation) {
+          handleDeleteConversation(activeConversation);
+        }
+      },
+    });
+
+    return () => {
+      fileMenu.unregisterMessagesActions();
+    };
+  }, [fileMenu, updateUrl]);
+
+  // Update file menu state when active conversation changes
+  useEffect(() => {
+    if (!fileMenu) return;
+    const activeConv = conversations.find((c) => c.id === activeConversation);
+    fileMenu.updateMessagesState({
+      chatIsPinned: activeConv?.pinned ?? false,
+      hideAlertsActive: activeConv?.hideAlerts ?? false,
+    });
+  }, [fileMenu, conversations, activeConversation]);
 
   // Method to handle reaction
   const handleReaction = useCallback(

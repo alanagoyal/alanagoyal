@@ -134,7 +134,7 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-3 py-1.5 text-sm text-left hover:bg-blue-500 hover:text-white transition-colors group"
+      className="w-full flex items-center gap-3 px-3 py-1.5 text-xs text-left hover:bg-blue-500 hover:text-white transition-colors group"
     >
       <span className="text-muted-foreground group-hover:text-white">{icon}</span>
       <span>{label}</span>

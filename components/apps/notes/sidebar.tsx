@@ -25,6 +25,8 @@ import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
+import { useFileMenu } from "@/lib/file-menu-context";
+import { createNote } from "@/lib/notes/create-note";
 
 const labels = {
   pinned: (
@@ -82,6 +84,7 @@ export default function Sidebar({
     null
   );
   const windowFocus = useWindowFocus();
+  const fileMenu = useFileMenu();
 
   const selectedNoteRef = useRef<HTMLDivElement>(null);
 
@@ -362,6 +365,70 @@ export default function Sidebar({
   }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, onNoteSelect]);
 
   const { setTheme, theme } = useTheme();
+
+  // Refs to hold current handlers for file menu
+  const handlersRef = useRef({
+    handlePinToggle,
+    handleNoteDelete,
+    highlightedNote,
+    sessionId,
+    refreshSessionNotes,
+    isMobile,
+  });
+
+  // Keep refs up to date
+  useEffect(() => {
+    handlersRef.current = {
+      handlePinToggle,
+      handleNoteDelete,
+      highlightedNote,
+      sessionId,
+      refreshSessionNotes,
+      isMobile,
+    };
+  });
+
+  // Register file menu actions for desktop menubar (only once on mount)
+  useEffect(() => {
+    if (!fileMenu) return;
+
+    fileMenu.registerNotesActions({
+      onNewNote: () => {
+        const { sessionId, handlePinToggle, refreshSessionNotes, isMobile } = handlersRef.current;
+        createNote(
+          sessionId,
+          router,
+          handlePinToggle,
+          refreshSessionNotes,
+          setSelectedNoteSlug,
+          isMobile
+        );
+      },
+      onPinNote: () => {
+        const { highlightedNote, handlePinToggle } = handlersRef.current;
+        if (highlightedNote) {
+          handlePinToggle(highlightedNote.slug);
+        }
+      },
+      onDeleteNote: () => {
+        const { highlightedNote, handleNoteDelete } = handlersRef.current;
+        if (highlightedNote) {
+          handleNoteDelete(highlightedNote);
+        }
+      },
+    });
+
+    return () => {
+      fileMenu.unregisterNotesActions();
+    };
+  }, [fileMenu, router, setSelectedNoteSlug]);
+
+  // Update file menu state when highlighted note or pinned status changes
+  useEffect(() => {
+    if (!fileMenu) return;
+    const isPinned = highlightedNote ? pinnedNotes.has(highlightedNote.slug) : false;
+    fileMenu.updateNotesState({ noteIsPinned: isPinned });
+  }, [fileMenu, highlightedNote, pinnedNotes]);
 
   useEffect(() => {
     const shortcuts = {
