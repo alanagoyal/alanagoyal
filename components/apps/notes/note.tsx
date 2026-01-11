@@ -129,7 +129,7 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
     >
       <SessionId setSessionId={setSessionId} />
       <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
-      <div className="relative">
+      <div className="relative" onClick={(e) => e.stopPropagation()}>
         {/* Click target for entering edit mode - covers visible area */}
         {canEdit && !note.public && !isEditing && (
           <div
