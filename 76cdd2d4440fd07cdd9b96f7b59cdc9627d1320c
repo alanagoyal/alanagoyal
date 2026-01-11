@@ -1,0 +1,23 @@
+next.config.mjs
+  66815eb8647b6322 9-23,25-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "76cdd2d4440fd07cdd9b96f7b59cdc9627d1320c",
+  "prompts": {
+    "66815eb8647b6322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d16be9d1-3485-411c-96fc-ec5517b18b77",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 8,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  }
+}
