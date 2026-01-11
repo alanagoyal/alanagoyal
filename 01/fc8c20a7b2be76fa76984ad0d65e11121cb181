@@ -1,0 +1,50 @@
+components/apps/settings/panels/bluetooth.tsx
+  b4fd463f89368ebf 101,196,212,222,228,238,240
+components/apps/settings/content.tsx
+  b4fd463f89368ebf 132-133
+components/apps/settings/panels/wifi.tsx
+  b4fd463f89368ebf 45,61,74,77,83,92,99,111,120,136,143
+components/apps/settings/panels/general.tsx
+  b4fd463f89368ebf 62
+components/apps/settings/panels/appearance.tsx
+  b4fd463f89368ebf 191,266
+components/apps/settings/sidebar.tsx
+  b4fd463f89368ebf 312-313,329
+components/apps/settings/panels/personal-info.tsx
+  b4fd463f89368ebf 12,14,19-20
+components/apps/settings/panels/about.tsx
+  b4fd463f89368ebf 156-157,164-165,168-169,172-173,176-177,184,196,198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "01fc8c20a7b2be76fa76984ad0d65e11121cb181",
+  "prompts": {
+    "6326dc4f9bf6c3e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "743fdba9-5f71-4f11-baf6-8c591735190a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 49,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "b4fd463f89368ebf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0091fbc6-c74f-4606-a01d-b171d21186aa",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 43,
+      "accepted_lines": 43,
+      "overriden_lines": 0
+    }
+  }
+}
