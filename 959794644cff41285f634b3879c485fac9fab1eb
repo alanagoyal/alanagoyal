@@ -1,0 +1,36 @@
+components/apps/notes/note-content.tsx
+  66815eb8647b6322 29,39-79,275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "959794644cff41285f634b3879c485fac9fab1eb",
+  "prompts": {
+    "66815eb8647b6322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d16be9d1-3485-411c-96fc-ec5517b18b77",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 76,
+      "total_deletions": 33,
+      "accepted_lines": 77,
+      "overriden_lines": 0
+    },
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
