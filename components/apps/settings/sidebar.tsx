@@ -309,8 +309,8 @@ export function Sidebar({
                       className="rounded-full"
                     />
                     <div className="text-left">
-                      <div className="font-medium text-sm">Alana Goyal</div>
-                      <div className="text-xs text-muted-foreground">Apple Account</div>
+                      <div className="font-medium text-xs">Alana Goyal</div>
+                      <div className="text-[10px] text-muted-foreground">Apple Account</div>
                     </div>
                   </button>
                 </div>
@@ -326,7 +326,7 @@ export function Sidebar({
                         key={category.id}
                         onClick={() => onCategorySelect(category.id)}
                         className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                          "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-colors",
                           isSelected
                             ? "bg-zinc-300 dark:bg-zinc-600 text-foreground"
                             : "hover:bg-background/50 text-foreground"

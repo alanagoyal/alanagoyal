@@ -98,7 +98,7 @@ function BatteryIndicator({ level }: { level: number }) {
           style={{ width: `${Math.max(0, level - 10)}%` }}
         />
       </div>
-      <span className="text-xs">{level}%</span>
+      <span className="text-[10px]">{level}%</span>
     </div>
   );
 }
@@ -193,7 +193,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <span className="font-medium">Bluetooth</span>
+            <span className="text-xs font-medium">Bluetooth</span>
             <button
               onClick={() => setIsEnabled(!isEnabled)}
               className={cn(
@@ -209,7 +209,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
               />
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Connect to accessories you can use for activities such as streaming music, typing, and gaming.{" "}
             <span className="text-blue-500 cursor-pointer hover:underline">Learn more...</span>
           </p>
@@ -219,13 +219,13 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
       {isEnabled && (
         <>
           {/* Discoverable text */}
-          <p className="text-sm text-muted-foreground py-4 border-b border-border/50">
+          <p className="text-xs text-muted-foreground py-4 border-b border-border/50">
             This Mac is discoverable as "Alana's MacBook Air" while Bluetooth Settings is open.
           </p>
 
           {/* My Devices section */}
           <div className="py-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">My Devices</h3>
+            <h3 className="text-xs font-medium text-muted-foreground mb-3">My Devices</h3>
             <div className="space-y-1">
               {myDevicesDesktop.map((device) => (
                 <div
@@ -235,9 +235,9 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
                   <div className="flex items-center gap-3">
                     <DeviceIcon type={device.type} className="text-muted-foreground" />
                     <div className="flex flex-col">
-                      <span className="text-sm">{device.name}</span>
+                      <span className="text-xs">{device.name}</span>
                       <span className={cn(
-                        "text-xs",
+                        "text-[10px]",
                         device.connected ? "text-foreground" : "text-muted-foreground"
                       )}>
                         {device.connected ? (

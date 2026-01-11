@@ -188,7 +188,7 @@ function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: Them
       )}
     >
       <DesktopPreview theme={theme} />
-      <span className="text-xs">{label}</span>
+      <span className="text-[10px]">{label}</span>
     </button>
   );
 }
@@ -263,7 +263,7 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
     <div className="space-y-4">
       <div className="rounded-xl bg-muted/50 p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm">Appearance</span>
+          <span className="text-xs">Appearance</span>
           <div className="flex gap-2">
             <ThemeCard
               theme="system"

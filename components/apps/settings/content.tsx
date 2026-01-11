@@ -129,8 +129,8 @@ export function Content({
             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted mb-3">
               {info.icon}
             </div>
-            <h1 className="text-xl font-semibold mb-1">{info.title}</h1>
-            <p className="text-sm text-muted-foreground text-center max-w-md">
+            <h1 className="text-base font-semibold mb-1">{info.title}</h1>
+            <p className="text-xs text-muted-foreground text-center max-w-md">
               {info.description}
             </p>
           </div>

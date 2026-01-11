@@ -153,35 +153,35 @@ export function AboutPanel({ isMobile = false }: AboutPanelProps) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold">MacBook Air</h2>
-        <p className="text-sm text-muted-foreground">M2, 2022</p>
+        <h2 className="text-xl font-semibold">MacBook Air</h2>
+        <p className="text-xs text-muted-foreground">M2, 2022</p>
       </div>
 
       {/* Specs Table */}
       <div className="rounded-xl bg-muted/50 overflow-hidden mb-6">
         <div className="divide-y divide-border/50">
           <div className="flex justify-between px-4 py-3">
-            <span className="text-sm text-muted-foreground">Name</span>
-            <span className="text-sm">Alana&apos;s MacBook Air</span>
+            <span className="text-xs text-muted-foreground">Name</span>
+            <span className="text-xs">Alana&apos;s MacBook Air</span>
           </div>
           <div className="flex justify-between px-4 py-3">
-            <span className="text-sm text-muted-foreground">Chip</span>
-            <span className="text-sm">Apple M2</span>
+            <span className="text-xs text-muted-foreground">Chip</span>
+            <span className="text-xs">Apple M2</span>
           </div>
           <div className="flex justify-between px-4 py-3">
-            <span className="text-sm text-muted-foreground">Memory</span>
-            <span className="text-sm">24 GB</span>
+            <span className="text-xs text-muted-foreground">Memory</span>
+            <span className="text-xs">24 GB</span>
           </div>
           <div className="flex justify-between px-4 py-3">
-            <span className="text-sm text-muted-foreground">Serial number</span>
-            <span className="text-sm">L76NXH926Q</span>
+            <span className="text-xs text-muted-foreground">Serial number</span>
+            <span className="text-xs">L76NXH926Q</span>
           </div>
         </div>
       </div>
 
       {/* macOS Section */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-3">macOS</h3>
+        <h3 className="text-xs font-medium mb-3">macOS</h3>
         <div className="rounded-xl bg-muted/50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
@@ -193,9 +193,9 @@ export function AboutPanel({ isMobile = false }: AboutPanelProps) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-sm">macOS Sierra</span>
+              <span className="text-xs">macOS Sierra</span>
             </div>
-            <span className="text-sm text-muted-foreground">Version 10.12</span>
+            <span className="text-xs text-muted-foreground">Version 10.12</span>
           </div>
         </div>
       </div>

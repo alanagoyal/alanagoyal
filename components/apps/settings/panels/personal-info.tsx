@@ -9,15 +9,15 @@ export function PersonalInfoPanel() {
       <div className="rounded-xl bg-muted/50 overflow-hidden">
         <div className="divide-y divide-border/50">
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm">Name</span>
+            <span className="text-xs">Name</span>
             <div className="flex items-center gap-1 text-muted-foreground">
-              <span className="text-sm">Alana Goyal</span>
+              <span className="text-xs">Alana Goyal</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm">Birthday</span>
-            <span className="text-sm text-muted-foreground">1/12/1996</span>
+            <span className="text-xs">Birthday</span>
+            <span className="text-xs text-muted-foreground">1/12/1996</span>
           </div>
         </div>
       </div>

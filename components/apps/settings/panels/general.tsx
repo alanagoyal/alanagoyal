@@ -59,7 +59,7 @@ export function GeneralPanel({ onPanelSelect, isMobile = false }: GeneralPanelPr
                   <HardDrive className="w-5 h-5" />
                 )}
               </span>
-              <span className={isMobile ? "text-base" : "text-sm"}>{item.name}</span>
+              <span className={isMobile ? "text-base" : "text-xs"}>{item.name}</span>
             </div>
             {item.navigable && (
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
