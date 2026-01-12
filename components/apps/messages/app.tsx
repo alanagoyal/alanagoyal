@@ -67,6 +67,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
   const STORAGE_KEY = "dialogueConversations";
+  const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
 
   // Memoized conversation selection method
   const selectConversation = useCallback(
@@ -178,11 +179,27 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   // Get conversations from local storage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
+    const deletedInitialRaw = localStorage.getItem(DELETED_INITIAL_KEY);
     const urlParams = new URLSearchParams(window.location.search);
     const urlConversationId = urlParams.get("id");
 
-    // Start with initial conversations
-    let allConversations = [...initialConversations];
+    // Load set of deleted initial conversation IDs
+    let deletedInitialIds: Set<string> = new Set();
+    if (deletedInitialRaw) {
+      try {
+        const parsed = JSON.parse(deletedInitialRaw);
+        if (Array.isArray(parsed)) {
+          deletedInitialIds = new Set(parsed);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
+    // Start with initial conversations, excluding deleted ones
+    let allConversations = initialConversations.filter(
+      (conv) => !deletedInitialIds.has(conv.id)
+    );
 
     if (saved) {
       try {
@@ -637,6 +654,27 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Method to handle conversation deletion
   const handleDeleteConversation = (id: string) => {
+    // Check if this is an initial conversation and track its deletion
+    const initialIds = new Set(initialConversations.map((conv) => conv.id));
+    if (initialIds.has(id)) {
+      const deletedInitialRaw = localStorage.getItem(DELETED_INITIAL_KEY);
+      let deletedInitialIds: string[] = [];
+      if (deletedInitialRaw) {
+        try {
+          const parsed = JSON.parse(deletedInitialRaw);
+          if (Array.isArray(parsed)) {
+            deletedInitialIds = parsed;
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      if (!deletedInitialIds.includes(id)) {
+        deletedInitialIds.push(id);
+        localStorage.setItem(DELETED_INITIAL_KEY, JSON.stringify(deletedInitialIds));
+      }
+    }
+
     setConversations((prevConversations) => {
       const newConversations = prevConversations.filter(
         (conv) => conv.id !== id
