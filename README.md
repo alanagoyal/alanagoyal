@@ -1,22 +1,79 @@
-# [notes](https://alanagoyal.com/notes)
+# [alanagoyal.com](https://alanagoyal.com)
 
-i'm obsessed with re-creating apple products. this one is a notes-inspired website that doubles as my personal website.
+i'm obsessed with re-creating apple products. this is a macos-inspired personal website featuring a full desktop environment with multiple apps.
+
+## features
+
+### desktop environment
+
+a macos sierra 10.12 themed desktop with:
+- **window management**: draggable, resizable windows with minimize, maximize, and close
+- **dock**: app launcher with hover tooltips
+- **menu bar**: functional apple menu, file menu, app menu, and status menus (wifi, bluetooth, control center)
+- **system states**: lock screen, sleep mode, restart, and shutdown overlays
+
+### apps
+
+**notes** - apple notes clone for my personal website content
+- public notes viewable by everyone, private notes per browser session
+- github flavored markdown with interactive task lists
+- image paste/upload support
+- swipe gestures on mobile
+
+**messages** - imessage clone with ai-powered conversations
+- chat with ai contacts that have unique personalities (powered by gpt)
+- message reactions and sound effects
+- typing indicators and read/unread states
+- group chats and one-on-one conversations
+- pinned conversations and swipe gestures
+- @mentions and contact management
+- command menu (⌘K) with keyboard shortcuts
+- focus mode integration (mutes notifications)
+
+**iterm** - terminal emulator
+- real file system navigation
+- github integration (browse your repos)
+- basic shell commands (ls, cd, cat, pwd, clear, etc.)
+
+**finder** - file browser
+- sidebar navigation (recents, applications, desktop, documents, downloads, projects)
+- browse local files and github repositories
+- launch apps from applications folder
+
+**settings** - system preferences
+- wi-fi and bluetooth panels
+- appearance (light/dark/system theme)
+- airdrop and focus mode toggles
+- about this mac
+
+### mobile
+
+responsive mobile interface with:
+- swipe gestures for navigation
+- touch-optimized controls
+- full app functionality
 
 ## how it works
 
 ### architecture
 
-the app uses a session-based architecture with two types of notes:
+the app uses next.js app router with a route group for the desktop environment. on desktop screens, all apps render in windows on a shared desktop. on mobile, apps display fullscreen with navigation.
 
-**public notes**: viewable by everyone, managed by the site owner. these appear on the public site and in the sidebar for all visitors.
+**notes** use a session-based architecture:
+- **public notes**: managed by the site owner, visible to everyone
+- **private notes**: each browser session gets a unique id (stored in localstorage) linking to notes you create
 
-**private notes**: anyone can create and view their own private notes. each browser session gets a unique session id (stored in localstorage) that links to the notes you create. only you can see and edit your private notes.
+**messages** are client-side only:
+- conversations stored in localstorage
+- ai responses generated via braintrust proxy (openai-compatible)
+- no server-side message storage
 
 the app is built with:
-- **next.js 14** with app router for server-side rendering and static generation
+- **next.js** with app router
 - **typescript** for type safety
-- **supabase** for database and authentication
-- **react-markdown** with github flavored markdown support
+- **supabase** for notes database
+- **braintrust** for ai chat responses (openai-compatible proxy)
+- **react-markdown** with github flavored markdown
 - **tailwind css** for styling
 
 ### backend
@@ -81,9 +138,20 @@ supabase db push
 grab the project url and anon key from the api settings and put them in a new `.env.local` file in the root directory:
 
 ```
+# supabase (required for notes)
 NEXT_PUBLIC_SUPABASE_URL="<your-supabase-url>"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-anon-key>"
+
+# braintrust (required for messages ai)
+BRAINTRUST_API_KEY="<your-braintrust-api-key>"
+
+# site config (optional)
+NEXT_PUBLIC_SITE_URL="https://yourdomain.com"
+REVALIDATE_TOKEN="<your-revalidate-token>"
+NEXT_PUBLIC_REVALIDATE_TOKEN="<your-revalidate-token>"
 ```
+
+note: `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration.
 
 ## install dependencies
 
