@@ -189,11 +189,8 @@ export function Terminal({ isMobile = false }: TerminalProps) {
 
     let output = "";
 
-    // Add input to history immediately
-    setHistory((prev) => [
-      ...prev,
-      { type: "input", content: input, prompt: getPrompt() },
-    ]);
+    // Capture prompt now (before any directory changes)
+    const prompt = getPrompt();
 
     if (trimmed) {
       setCommandHistory((prev) => [...prev, trimmed]);
@@ -414,12 +411,12 @@ Note: Projects folder contains my real GitHub repositories!`;
         output = `zsh: command not found: ${cmd}`;
     }
 
-    if (output) {
-      setHistory((prev) => [
-        ...prev,
-        { type: "output", content: output },
-      ]);
-    }
+    // Add input and output to history together (after all async work completes)
+    setHistory((prev) => [
+      ...prev,
+      { type: "input", content: input, prompt },
+      ...(output ? [{ type: "output" as const, content: output }] : []),
+    ]);
   }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
