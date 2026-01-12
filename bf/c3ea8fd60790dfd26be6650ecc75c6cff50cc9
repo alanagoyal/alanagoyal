@@ -1,0 +1,29 @@
+app/(desktop)/notes/[slug]/page.tsx
+  66815eb8647b6322 72
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  66815eb8647b6322 3-12,18,29,34,39-45,53-55,59-61
+next.config.mjs
+  66815eb8647b6322 2-11,18-19,36-38,42-43
+app/globals.css
+  66815eb8647b6322 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "bfc3ea8fd60790dfd26be6650ecc75c6cff50cc9",
+  "prompts": {
+    "66815eb8647b6322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d16be9d1-3485-411c-96fc-ec5517b18b77",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 47,
+      "total_deletions": 18,
+      "accepted_lines": 45,
+      "overriden_lines": 0
+    }
+  }
+}
