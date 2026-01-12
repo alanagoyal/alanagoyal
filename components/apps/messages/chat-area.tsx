@@ -110,9 +110,9 @@ export function ChatArea({
           isMobileView={isMobileView}
           activeConversation={activeConversation}
           onUpdateRecipients={
-            onUpdateConversationRecipients
+            onUpdateConversationRecipients && conversationId
               ? (recipients) =>
-                  onUpdateConversationRecipients(conversationId!, recipients)
+                  onUpdateConversationRecipients(conversationId, recipients)
               : undefined
           }
           onCreateConversation={onCreateConversation}
