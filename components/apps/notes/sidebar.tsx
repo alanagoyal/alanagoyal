@@ -18,7 +18,7 @@ import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/notes/types";
 import { toast } from "@/hooks/use-toast";
-import { SessionNotesContext } from "@/app/notes/session-notes";
+import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";

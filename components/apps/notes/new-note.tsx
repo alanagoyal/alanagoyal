@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icons } from "./icons";
 import SessionId from "./session-id";
 import { createNote } from "@/lib/notes/create-note";
-import { SessionNotesContext } from "@/app/notes/session-notes";
+import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Note } from "@/lib/notes/types";
 import { useWindowFocus } from "@/lib/window-focus-context";
 

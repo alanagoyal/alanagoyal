@@ -1,11 +1,21 @@
 "use client";
 
+/**
+ * Shared page component for /notes and /notes/[slug] routes.
+ *
+ * Routing behavior:
+ * - Desktop /notes:       Updates URL to /notes/about-me, shows desktop with default note
+ * - Desktop /notes/slug:  Shows desktop with specified note
+ * - Mobile /notes:        Shows sidebar only (no URL change)
+ * - Mobile /notes/slug:   Shows full note view
+ */
+
 import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 
 interface NotesDesktopPageProps {
-  slug?: string; // Optional - if not provided on mobile, shows sidebar only
+  slug?: string;
 }
 
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
@@ -16,17 +26,23 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      return window.innerWidth < 768;
     };
 
     // Check current URL to determine which app should be focused
     // This handles the case where user navigated via MobileShell's tab bar
-    const checkUrl = () => {
+    const checkUrl = (mobile: boolean) => {
       const path = window.location.pathname;
       if (path.startsWith("/notes")) {
         setCurrentApp("notes");
         const match = path.match(/^\/notes\/(.+)$/);
-        setCurrentNoteSlug(match ? match[1] : slug || "about-me");
+        const noteSlug = match ? match[1] : slug || "about-me";
+        setCurrentNoteSlug(noteSlug);
+
+        // On desktop, redirect /notes to /notes/about-me for URL consistency
+        if (!mobile && path === "/notes") {
+          window.history.replaceState(null, "", "/notes/about-me");
+        }
       } else if (path.startsWith("/messages")) {
         setCurrentApp("messages");
       } else if (path.startsWith("/settings")) {
@@ -34,13 +50,15 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
       }
     };
 
-    checkMobile();
-    checkUrl();
+    const mobile = checkMobile();
+    setIsMobile(mobile);
+    checkUrl(mobile);
     setIsHydrated(true);
 
     const handleResize = () => {
-      checkMobile();
-      checkUrl();
+      const mobile = checkMobile();
+      setIsMobile(mobile);
+      checkUrl(mobile);
     };
 
     window.addEventListener("resize", handleResize);

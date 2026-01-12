@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
-import { SessionNotesProvider } from "@/app/notes/session-notes";
+import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import Sidebar from "./sidebar";

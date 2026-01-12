@@ -1,5 +1,5 @@
 @import './tiptap.css';
-@import './notes/styles/github-markdown.css';
+@import './(desktop)/notes/styles/github-markdown.css';
 
 @tailwind base;
 @tailwind components;

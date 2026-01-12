@@ -69,6 +69,7 @@ export default async function NotePage({ params }: PageProps) {
   const cleanSlug = slug.replace(/^notes\//, "");
   const note = await getNote(cleanSlug);
 
+  // Invalid slug - redirect to error page
   if (!note) {
     return redirect("/notes/error");
   }

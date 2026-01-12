@@ -5,7 +5,7 @@ import NoteHeader from "./note-header";
 import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
-import { SessionNotesContext } from "@/app/notes/session-notes";
+import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 
 interface NoteProps {
   note: any;

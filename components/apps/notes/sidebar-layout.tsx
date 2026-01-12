@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
 import { useRouter, usePathname } from "next/navigation";
-import { SessionNotesProvider } from "@/app/notes/session-notes";
+import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import Sidebar from "./sidebar";
 
 interface SidebarLayoutProps {
