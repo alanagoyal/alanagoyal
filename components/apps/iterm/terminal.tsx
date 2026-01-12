@@ -541,7 +541,7 @@ Note: Projects folder contains my real GitHub repositories!`;
   return (
     <div
       ref={terminalRef}
-      className="h-full w-full max-w-full bg-white dark:bg-zinc-900 font-mono text-base sm:text-xs overflow-y-auto overflow-x-hidden p-2 cursor-text text-zinc-900 dark:text-white"
+      className="h-full w-full max-w-full bg-white dark:bg-zinc-900 font-mono text-xs overflow-y-auto overflow-x-hidden p-2 cursor-text text-zinc-900 dark:text-white"
       onClick={handleTerminalClick}
     >
       {history.map((entry, i) => (
@@ -567,7 +567,7 @@ Note: Projects folder contains my real GitHub repositories!`;
             setCompletionSuggestions(null); // Clear suggestions when typing
           }}
           onKeyDown={handleKeyDown}
-          className="flex-1 min-w-0 bg-transparent outline-none border-none text-base sm:text-xs text-inherit"
+          className="flex-1 min-w-0 bg-transparent outline-none border-none text-inherit"
           autoFocus
           spellCheck={false}
           autoComplete="off"
