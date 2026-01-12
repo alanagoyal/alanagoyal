@@ -347,8 +347,12 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
         const parts = relativePath.split("/");
         const repo = parts[0];
         const filePath = parts.slice(1).join("/");
-        const content = await fetchFileContent(repo, filePath);
-        setPreviewContent(content);
+        try {
+          const content = await fetchFileContent(repo, filePath);
+          setPreviewContent(content);
+        } catch (error) {
+          setPreviewContent(`Error: ${error instanceof Error ? error.message : "Failed to fetch file"}`);
+        }
       } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
         setPreviewContent("hello world!");
       }
