@@ -1,0 +1,23 @@
+components/apps/finder/finder-app.tsx
+  0233989e34b0313e 350,353-355
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "4ba3f5d092266ba941de62aadbd0214c1907668c",
+  "prompts": {
+    "0233989e34b0313e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ca896709-0570-47b1-a6d7-e4a707ae2da2",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 2,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
