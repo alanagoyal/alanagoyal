@@ -1,0 +1,38 @@
+README.md
+  939c17137c225ba5 1,3,5-54,60,62-64,66-69,74-76,141,144-151,154
+.gitignore
+  939c17137c225ba5 37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "58c09293aeb0f50b28cb2d82064e4a793f29ba1c",
+  "prompts": {
+    "5ba4225ebf9264a5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c607e824-8108-4f1f-9bfb-996635010061",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 5,
+      "accepted_lines": 14,
+      "overriden_lines": 0
+    },
+    "939c17137c225ba5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abd9cce9-2648-4b33-b8fc-4389b3c80e3c",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 83,
+      "total_deletions": 14,
+      "accepted_lines": 76,
+      "overriden_lines": 0
+    }
+  }
+}
