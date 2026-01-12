@@ -1,0 +1,23 @@
+lib/messages/contacts.ts
+  3a802a7272dc2edc 8-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "52e15b918848f9f63324eeabfe2843913dfea808",
+  "prompts": {
+    "3a802a7272dc2edc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "62f3d36e-b87c-47d0-bac3-e30e0668129d",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 1,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
