@@ -1,0 +1,53 @@
+next.config.mjs
+  66815eb8647b6322 26-28,32-33
+app/globals.css
+  66815eb8647b6322 2
+components/apps/iterm/terminal.tsx
+  b4fd463f89368ebf 544,570
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "4648cbdccac7892b4950ea1d4bf8fa5dfbba9753",
+  "prompts": {
+    "6326dc4f9bf6c3e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "743fdba9-5f71-4f11-baf6-8c591735190a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 111,
+      "total_deletions": 42,
+      "accepted_lines": 73,
+      "overriden_lines": 0
+    },
+    "66815eb8647b6322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d16be9d1-3485-411c-96fc-ec5517b18b77",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 7,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    },
+    "b4fd463f89368ebf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0091fbc6-c74f-4606-a01d-b171d21186aa",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 8,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
