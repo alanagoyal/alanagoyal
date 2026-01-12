@@ -388,6 +388,10 @@ export function ChatHeader({
               document.removeEventListener('click', blockNextClick, true);
             };
             document.addEventListener('click', blockNextClick, true);
+            // Safety cleanup: remove listener if click doesn't fire (e.g., user dragged away)
+            setTimeout(() => {
+              document.removeEventListener('click', blockNextClick, true);
+            }, 100);
           } else {
             // Show error toast if trying to save invalid state (not on mobile)
             if (!isMobileView) {
@@ -410,7 +414,7 @@ export function ChatHeader({
 
     document.addEventListener("mousedown", handleClickOutside, true);
     return () => document.removeEventListener("mousedown", handleClickOutside, true);
-  }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, toast]);
+  }, [isNewChat, isEditMode, isMobileView, recipientInput, onUpdateRecipients, onCreateConversation, setShowCompactNewChat, toast]);
 
   // Computed values
   const displayPeople = useMemo(() => {
