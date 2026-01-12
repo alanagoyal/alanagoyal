@@ -688,8 +688,9 @@ export function ChatHeader({
             .join(",");
           setRecipientInput(newRecipients + ",");
           
-          // Only update recipients if we're not in edit mode
-          if (!isEditMode && onUpdateRecipients) {
+          // Only update recipients if we're not in edit mode and not a new chat
+          // (new chats don't have a conversationId yet)
+          if (!isEditMode && !isNewChat && onUpdateRecipients) {
             onUpdateRecipients(
               newRecipients.split(",").filter((r) => r.trim())
             );
