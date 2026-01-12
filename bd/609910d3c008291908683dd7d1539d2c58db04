@@ -1,0 +1,37 @@
+components/apps/messages/chat-header.tsx
+  ebb8ff15f682ec24 417
+  f13dbb7fec198920 391-394
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "bd609910d3c008291908683dd7d1539d2c58db04",
+  "prompts": {
+    "ebb8ff15f682ec24": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "4bacc233-f608-430b-aa72-7838f7a68553",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "f13dbb7fec198920": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "f23e04e2-001b-4cb7-8f9a-a3540043d6ae",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
