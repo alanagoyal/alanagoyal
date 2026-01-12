@@ -1,14 +1,15 @@
-import type { Config } from "tailwindcss"
-const { fontFamily } = require("tailwindcss/defaultTheme")
+import type { Config } from "tailwindcss";
+const { fontFamily } = require("tailwindcss/defaultTheme");
 
-const config = {
+export default {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  safelist: ["mention-node"],
   prefix: "",
   theme: {
     container: {
@@ -20,7 +21,13 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["-apple-system", "SF Pro", "SF Pro Display", "SF Pro Text", ...fontFamily.sans],
+        sans: [
+          "-apple-system",
+          "SF Pro",
+          "SF Pro Display",
+          "SF Pro Text",
+          ...fontFamily.sans,
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -56,6 +63,13 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -79,6 +93,4 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
-export default config
+} satisfies Config;

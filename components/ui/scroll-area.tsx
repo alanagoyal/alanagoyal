@@ -18,17 +18,24 @@ const ScrollArea = React.forwardRef<
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
     isMobile?: boolean
+    bottomMargin?: string
+    viewportClassName?: string
   }
->(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
+>(({ className, children, withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, viewportClassName, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport className={cn("h-full w-full rounded-[inherit]", viewportClassName)}>
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar withVerticalMargins={withVerticalMargins} mobileHeaderHeight={mobileHeaderHeight} isMobile={isMobile} />
+    <ScrollBar 
+      withVerticalMargins={withVerticalMargins} 
+      mobileHeaderHeight={mobileHeaderHeight} 
+      isMobile={isMobile}
+      bottomMargin={bottomMargin}
+    />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
@@ -41,28 +48,30 @@ const ScrollBar = React.forwardRef<
     withVerticalMargins?: boolean
     mobileHeaderHeight?: boolean
     isMobile?: boolean
+    bottomMargin?: string
   }
->(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, ...props }, ref) => (
+>(({ className, orientation = "vertical", withVerticalMargins = false, mobileHeaderHeight = false, isMobile = false, bottomMargin, ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar
     ref={ref}
     orientation={orientation}
     className={cn(
       "flex touch-none select-none transition-all duration-300",
-      "opacity-80 hover:opacity-100",
+      "opacity-80 hover:opacity-100 z-40",
       "bg-transparent hover:border-l hover:border-gray-200 dark:hover:border-gray-700",
       orientation === "vertical" &&
         cn(
           isMobile ? "w-[8px]" : "w-[10px] hover:w-[14px]",
           withVerticalMargins && mobileHeaderHeight
-            ? "mt-24 mb-16"
+            ? "mt-24"
             : withVerticalMargins
-            ? "my-16"
+            ? "mt-16"
             : ""
         ),
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
       className
     )}
+    style={bottomMargin ? { marginBottom: bottomMargin } : { marginBottom: '64px' }}
     {...props}
   >
     <ScrollAreaPrimitive.ScrollAreaThumb 
