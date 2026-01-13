@@ -5,56 +5,73 @@ import { ChevronRight } from "lucide-react";
 interface Device {
   name: string;
   model: string;
-  type: "macbook-air" | "macbook-pro" | "iphone" | "ipad" | "watch";
-  isCurrentDevice?: boolean;
+  type: "macbook" | "iphone" | "ipad" | "apple-tv";
 }
 
 const devices: Device[] = [
-  { name: "Alana's MacBook Air", model: "This MacBook Air", type: "macbook-air", isCurrentDevice: true },
-  { name: "Alana Anderson's iPhone 6 plus", model: "iPhone 6s Plus", type: "iphone" },
-  { name: "Alana Anderson's iPhone 6 plus", model: "iPhone 7 Plus", type: "iphone" },
-  { name: "Alana Anderson's iPhone 6 plus", model: "iPhone XS Max", type: "iphone" },
-  { name: "Alana Anderson's MacBook Pro", model: "MacBook Pro 13\"", type: "macbook-pro" },
-  { name: "Alana Anderson's iPad", model: "iPad Air", type: "ipad" },
-  { name: "Alana's Apple Watch", model: "Apple Watch", type: "watch" },
-  { name: "alana's iphone", model: "iPhone 16 Pro", type: "iphone" },
-  { name: "Alana's MacBook Air", model: "MacBook Air 13\"", type: "macbook-air" },
+  { name: "Alana's MacBook Air", model: "This MacBook Air", type: "macbook" },
+  { name: "Alana's iPhone 16 Pro", model: "iPhone 16 Pro", type: "iphone" },
+  { name: "Alana's iPad", model: "iPad Air", type: "ipad" },
+  { name: "Family Room", model: "Apple TV", type: "apple-tv" },
+  { name: "Entertainment Room", model: "Apple TV", type: "apple-tv" },
+  { name: "Bedroom", model: "Apple TV", type: "apple-tv" },
 ];
 
 function DeviceIcon({ type }: { type: Device["type"] }) {
   switch (type) {
-    case "macbook-air":
-    case "macbook-pro":
+    case "macbook":
       return (
-        <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none">
-          <rect x="6" y="8" width="28" height="18" rx="1.5" stroke="currentColor" strokeWidth="1.5" className="text-gray-400" />
-          <rect x="8" y="10" width="24" height="14" rx="0.5" className="fill-sky-200" />
-          <path d="M4 26h32l-2 4H6l-2-4z" fill="currentColor" className="text-gray-300" />
+        <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+          <defs>
+            <linearGradient id="macbook-screen" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="40%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+            <linearGradient id="macbook-body" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e5e7eb" />
+              <stop offset="100%" stopColor="#d1d5db" />
+            </linearGradient>
+          </defs>
+          <rect x="7" y="8" width="34" height="22" rx="1.5" fill="#1f2937" />
+          <rect x="9" y="10" width="30" height="18" rx="1" fill="url(#macbook-screen)" />
+          <path d="M4 30h40l-3 5H7l-3-5z" fill="url(#macbook-body)" />
+          <rect x="18" y="29.5" width="12" height="1" rx="0.5" fill="#d1d5db" />
         </svg>
       );
     case "iphone":
       return (
-        <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none">
-          <rect x="11" y="4" width="18" height="32" rx="3" stroke="currentColor" strokeWidth="1.5" className="text-gray-400" />
-          <rect x="13" y="7" width="14" height="24" rx="1" className="fill-emerald-100" />
-          <circle cx="20" cy="33" r="1.5" stroke="currentColor" strokeWidth="1" className="text-gray-400" />
+        <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+          <defs>
+            <linearGradient id="iphone-screen" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#ec4899" />
+            </linearGradient>
+          </defs>
+          <rect x="14" y="4" width="20" height="40" rx="4" fill="#1f2937" />
+          <rect x="16" y="7" width="16" height="34" rx="2" fill="url(#iphone-screen)" />
         </svg>
       );
     case "ipad":
       return (
-        <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none">
-          <rect x="6" y="6" width="28" height="28" rx="3" stroke="currentColor" strokeWidth="1.5" className="text-gray-400" />
-          <rect x="8" y="8" width="24" height="24" rx="1" className="fill-emerald-100" />
-          <circle cx="20" cy="34" r="1" fill="currentColor" className="text-gray-400" />
+        <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+          <defs>
+            <linearGradient id="ipad-screen" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#ec4899" />
+            </linearGradient>
+          </defs>
+          <rect x="12" y="4" width="24" height="40" rx="3" fill="#1f2937" />
+          <rect x="14" y="7" width="20" height="34" rx="1.5" fill="url(#ipad-screen)" />
         </svg>
       );
-    case "watch":
+    case "apple-tv":
       return (
-        <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none">
-          <rect x="12" y="8" width="16" height="4" rx="1" fill="currentColor" className="text-gray-300" />
-          <rect x="12" y="28" width="16" height="4" rx="1" fill="currentColor" className="text-gray-300" />
-          <rect x="10" y="11" width="20" height="18" rx="4" stroke="currentColor" strokeWidth="1.5" className="text-gray-400" />
-          <rect x="12" y="13" width="16" height="14" rx="2" className="fill-rose-100" />
+        <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+          <rect x="8" y="8" width="32" height="32" rx="7" fill="#000000" />
+          <text x="24" y="26" textAnchor="middle" fontSize="8" fill="#6b7280" fontFamily="system-ui">tv</text>
         </svg>
       );
   }
@@ -93,14 +110,13 @@ export function PersonalInfoPanel() {
             {devices.map((device, index) => (
               <div
                 key={`${device.name}-${device.model}-${index}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                className="flex items-center gap-3 px-4 py-3"
               >
                 <DeviceIcon type={device.type} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium truncate">{device.name}</div>
                   <div className="text-xs text-muted-foreground">{device.model}</div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
             ))}
           </div>
