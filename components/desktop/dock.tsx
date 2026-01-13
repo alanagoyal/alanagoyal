@@ -34,10 +34,10 @@ function DockTooltip({ label }: { label: string }) {
              V 12
              Q 0 0 12 0
              Z"
-          fill="rgba(30, 30, 30, 0.7)"
+          className="fill-white/70 dark:fill-zinc-800/70"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium pb-2 whitespace-nowrap px-3">
+      <span className="absolute inset-0 flex items-center justify-center text-zinc-800 dark:text-white text-xs font-medium pb-2 whitespace-nowrap px-3">
         {label}
       </span>
     </div>
