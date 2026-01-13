@@ -14,8 +14,11 @@ interface ContentProps {
   selectedCategory: SettingsCategory;
   selectedPanel: SettingsPanel;
   onPanelSelect: (panel: SettingsPanel) => void;
+  onCategorySelect: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
   onBack: () => void;
   isMobile: boolean;
+  scrollToOSVersion?: boolean;
+  onScrollComplete?: () => void;
 }
 
 const categoryInfo: Record<
@@ -52,8 +55,11 @@ export function Content({
   selectedCategory,
   selectedPanel,
   onPanelSelect,
+  onCategorySelect,
   onBack,
   isMobile,
+  scrollToOSVersion,
+  onScrollComplete,
 }: ContentProps) {
   const info = categoryInfo[selectedCategory];
 
@@ -61,7 +67,7 @@ export function Content({
   if (selectedPanel === "about") {
     return (
       <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
-        <AboutPanel isMobile={isMobile} />
+        <AboutPanel isMobile={isMobile} onCategorySelect={onCategorySelect} />
       </div>
     );
   }
@@ -118,9 +124,15 @@ export function Content({
 
           {/* Panel content */}
           {selectedCategory === "general" && (
-            <GeneralPanel onPanelSelect={onPanelSelect} isMobile={isMobile} />
+            <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
           )}
-          {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
+          {selectedCategory === "appearance" && (
+            <AppearancePanel
+              isMobile={isMobile}
+              scrollToOSVersion={scrollToOSVersion}
+              onScrollComplete={onScrollComplete}
+            />
+          )}
         </div>
       ) : (
         // Desktop layout for General and Appearance
@@ -136,9 +148,15 @@ export function Content({
           </div>
           <div className="p-4">
             {selectedCategory === "general" && (
-              <GeneralPanel onPanelSelect={onPanelSelect} isMobile={isMobile} />
+              <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
             )}
-            {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
+            {selectedCategory === "appearance" && (
+              <AppearancePanel
+                isMobile={isMobile}
+                scrollToOSVersion={scrollToOSVersion}
+                onScrollComplete={onScrollComplete}
+              />
+            )}
           </div>
         </>
       )}

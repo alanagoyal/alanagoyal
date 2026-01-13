@@ -2,9 +2,13 @@
 
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSystemSettings } from "@/lib/system-settings-context";
+import { getThumbnailPath } from "@/lib/os-versions";
+import { SettingsCategory } from "../settings-app";
 
 interface AboutPanelProps {
   isMobile?: boolean;
+  onCategorySelect?: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
 }
 
 // Calculate days until AppleCare+ expiration (January 4, 2027)
@@ -16,8 +20,10 @@ function getDaysUntilExpiration(): number {
   return Math.max(0, diffDays);
 }
 
-export function AboutPanel({ isMobile = false }: AboutPanelProps) {
+export function AboutPanel({ isMobile = false, onCategorySelect }: AboutPanelProps) {
   const daysLeft = getDaysUntilExpiration();
+  const { currentOS, osVersionId } = useSystemSettings();
+  const thumbnailPath = getThumbnailPath(osVersionId);
 
   if (isMobile) {
     return (
@@ -183,20 +189,26 @@ export function AboutPanel({ isMobile = false }: AboutPanelProps) {
       <div className="mb-6">
         <h3 className="text-xs font-medium mb-3">macOS</h3>
         <div className="rounded-xl bg-muted/50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={() => onCategorySelect?.("appearance", { scrollToOSVersion: true })}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/70 transition-colors"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg overflow-hidden">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/desktop/os.png"
-                  alt="macOS Sierra"
+                  src={thumbnailPath}
+                  alt={`macOS ${currentOS.name}`}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-xs">macOS Sierra</span>
+              <span className="text-xs">macOS {currentOS.name}</span>
             </div>
-            <span className="text-xs text-muted-foreground">Version 10.12</span>
-          </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Version {currentOS.version}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </button>
         </div>
       </div>
     </div>

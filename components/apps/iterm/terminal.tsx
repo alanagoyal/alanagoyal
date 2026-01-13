@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { useSystemSettings } from "@/lib/system-settings-context";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -117,6 +118,7 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
 }
 
 export function Terminal({ isMobile = false }: TerminalProps) {
+  const { currentOS } = useSystemSettings();
   const [history, setHistory] = useState<HistoryEntry[]>([
     { type: "output", content: "Type 'help' for available commands" },
   ]);
@@ -403,9 +405,9 @@ Note: Projects folder contains my real GitHub repositories!`;
         output = `
                     'c.          ${USERNAME}@${HOSTNAME}
                  ,xNMM.          -----------------------
-               .OMMMMo           OS: macOS Sierra 10.12
+               .OMMMMo           OS: macOS ${currentOS.name} ${currentOS.version}
                OMMM0,            Host: MacBook Air (M2, 2022)
-     .;loddo:' loolloddol;.      Kernel: Darwin 16.0.0
+     .;loddo:' loolloddol;.      Kernel: Darwin ${currentOS.darwinVersion}
    cKMMMMMMMMMMNWMMMMMMMMMM0:    Uptime: ${Math.floor(Math.random() * 100) + 1} days
  .KMMMMMMMMMMMMMMMMMMMMMMMWd.    Shell: zsh 5.9
  XMMMMMMMMMMMMMMMMMMMMMMMX.      Terminal: iTerm2
@@ -430,7 +432,7 @@ Note: Projects folder contains my real GitHub repositories!`;
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {

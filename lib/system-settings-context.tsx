@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { soundEffects } from "@/lib/messages/sound-effects";
+import { OSVersion, getOSVersion, DEFAULT_OS_VERSION_ID } from "@/lib/os-versions";
 
 export type AirdropMode = "contacts" | "everyone";
 export type FocusMode = "off" | "doNotDisturb" | "sleep" | "reduceInterruptions";
@@ -15,6 +16,9 @@ interface SystemSettingsContextValue {
   setAirdropMode: (mode: AirdropMode) => void;
   focusMode: FocusMode;
   setFocusMode: (mode: FocusMode) => void;
+  osVersionId: string;
+  setOSVersionId: (id: string) => void;
+  currentOS: OSVersion;
 }
 
 const SystemSettingsContext = createContext<SystemSettingsContextValue | null>(null);
@@ -22,12 +26,14 @@ const SystemSettingsContext = createContext<SystemSettingsContextValue | null>(n
 const BRIGHTNESS_KEY = "system-brightness";
 const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
+const OS_VERSION_KEY = "system-os-version";
 
 export function SystemSettingsProvider({ children }: { children: React.ReactNode }) {
   const [brightness, setBrightnessState] = useState(100);
   const [volume, setVolumeState] = useState(50);
   const [airdropMode, setAirdropModeState] = useState<AirdropMode>("contacts");
   const [focusMode, setFocusModeState] = useState<FocusMode>("off");
+  const [osVersionId, setOSVersionIdState] = useState<string>(DEFAULT_OS_VERSION_ID);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -47,6 +53,11 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
       const storedFocus = localStorage.getItem(FOCUS_KEY);
       if (storedFocus === "off" || storedFocus === "doNotDisturb" || storedFocus === "sleep" || storedFocus === "reduceInterruptions") {
         setFocusModeState(storedFocus);
+      }
+
+      const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
+      if (storedOSVersion) {
+        setOSVersionIdState(storedOSVersion);
       }
     }
   }, []);
@@ -79,8 +90,17 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
+  const setOSVersionId = useCallback((id: string) => {
+    setOSVersionIdState(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(OS_VERSION_KEY, id);
+    }
+  }, []);
+
+  const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
+
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, airdropMode, setAirdropMode, focusMode, setFocusMode }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, airdropMode, setAirdropMode, focusMode, setFocusMode, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (

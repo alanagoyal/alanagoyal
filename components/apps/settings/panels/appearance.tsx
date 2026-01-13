@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { useSystemSettings } from "@/lib/system-settings-context";
+import { OS_VERSIONS, getThumbnailPath } from "@/lib/os-versions";
 
 type ThemeOption = "system" | "light" | "dark";
 
@@ -193,12 +196,70 @@ function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: Them
   );
 }
 
-interface AppearancePanelProps {
-  isMobile?: boolean;
+function OSVersionCard({
+  osId,
+  name,
+  version,
+  isSelected,
+  onClick,
+}: {
+  osId: string;
+  name: string;
+  version: string;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  const thumbnailPath = getThumbnailPath(osId);
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "relative flex flex-col items-center p-3 rounded-xl transition-all",
+        "hover:bg-muted/50",
+        isSelected && "ring-2 ring-blue-500 bg-blue-500/10"
+      )}
+    >
+      {isSelected && (
+        <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+          <Check className="w-3 h-3 text-white" />
+        </div>
+      )}
+      <div className="w-16 h-16 rounded-full overflow-hidden bg-muted mb-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={thumbnailPath}
+          alt={`macOS ${name}`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <span className="text-xs font-medium">{name}</span>
+      <span className="text-[10px] text-muted-foreground">{version}</span>
+    </button>
+  );
 }
 
-export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
+interface AppearancePanelProps {
+  isMobile?: boolean;
+  scrollToOSVersion?: boolean;
+  onScrollComplete?: () => void;
+}
+
+export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollComplete }: AppearancePanelProps) {
   const { theme, setTheme } = useTheme();
+  const { osVersionId, setOSVersionId } = useSystemSettings();
+  const osVersionRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to OS version section when requested
+  useEffect(() => {
+    if (scrollToOSVersion && osVersionRef.current) {
+      // Small delay to ensure the panel is rendered
+      setTimeout(() => {
+        osVersionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        onScrollComplete?.();
+      }, 100);
+    }
+  }, [scrollToOSVersion, onScrollComplete]);
 
   const handleThemeChange = (newTheme: ThemeOption) => {
     setTheme(newTheme);
@@ -254,6 +315,27 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
             </button>
           </div>
         </div>
+
+        {/* macOS Version section */}
+        <div ref={osVersionRef} className="pt-4">
+          <p className="text-sm text-muted-foreground uppercase tracking-wide px-2">
+            macOS Version
+          </p>
+        </div>
+        <div className="rounded-xl bg-background p-4">
+          <div className="grid grid-cols-3 gap-2">
+            {OS_VERSIONS.map((os) => (
+              <OSVersionCard
+                key={os.id}
+                osId={os.id}
+                name={os.name}
+                version={os.version}
+                isSelected={os.id === osVersionId}
+                onClick={() => setOSVersionId(os.id)}
+                              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -284,6 +366,23 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
               onClick={() => handleThemeChange("dark")}
             />
           </div>
+        </div>
+      </div>
+
+      {/* macOS Version section */}
+      <div ref={osVersionRef} className="rounded-xl bg-muted/50 p-4">
+        <h3 className="text-xs font-medium mb-3">macOS Version</h3>
+        <div className="grid grid-cols-4 gap-3">
+          {OS_VERSIONS.map((os) => (
+            <OSVersionCard
+              key={os.id}
+              osId={os.id}
+              name={os.name}
+              version={os.version}
+              isSelected={os.id === osVersionId}
+              onClick={() => setOSVersionId(os.id)}
+                          />
+          ))}
         </div>
       </div>
     </div>
