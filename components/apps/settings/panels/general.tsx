@@ -30,7 +30,7 @@ const items = [
     name: "Storage",
     icon: <HardDrive className="w-5 h-5 text-white" />,
     iconBg: "bg-gray-500",
-    navigable: false,
+    navigable: true,
   },
 ];
 
@@ -41,6 +41,8 @@ export function GeneralPanel({ onPanelSelect, onCategorySelect, isMobile = false
     } else if (itemId === "software-update") {
       // Navigate to Appearance category and scroll to OS version
       onCategorySelect?.("appearance", { scrollToOSVersion: true });
+    } else if (itemId === "storage") {
+      onPanelSelect("storage");
     }
   };
 
