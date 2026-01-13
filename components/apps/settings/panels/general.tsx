@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface GeneralPanelProps {
   onPanelSelect: (panel: SettingsPanel) => void;
-  onCategorySelect?: (category: SettingsCategory) => void;
+  onCategorySelect?: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
   isMobile?: boolean;
 }
 
@@ -39,8 +39,8 @@ export function GeneralPanel({ onPanelSelect, onCategorySelect, isMobile = false
     if (itemId === "about") {
       onPanelSelect("about");
     } else if (itemId === "software-update") {
-      // Navigate to Appearance category
-      onCategorySelect?.("appearance");
+      // Navigate to Appearance category and scroll to OS version
+      onCategorySelect?.("appearance", { scrollToOSVersion: true });
     }
   };
 

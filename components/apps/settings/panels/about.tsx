@@ -10,7 +10,7 @@ import { SettingsCategory } from "../settings-app";
 
 interface AboutPanelProps {
   isMobile?: boolean;
-  onCategorySelect?: (category: SettingsCategory) => void;
+  onCategorySelect?: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
 }
 
 // Calculate days until AppleCare+ expiration (January 4, 2027)
@@ -199,7 +199,7 @@ export function AboutPanel({ isMobile = false, onCategorySelect }: AboutPanelPro
         <h3 className="text-xs font-medium mb-3">macOS</h3>
         <div className="rounded-xl bg-muted/50 overflow-hidden">
           <button
-            onClick={() => onCategorySelect?.("appearance")}
+            onClick={() => onCategorySelect?.("appearance", { scrollToOSVersion: true })}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/70 transition-colors"
           >
             <div className="flex items-center gap-3">

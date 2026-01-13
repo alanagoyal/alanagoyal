@@ -14,9 +14,11 @@ interface ContentProps {
   selectedCategory: SettingsCategory;
   selectedPanel: SettingsPanel;
   onPanelSelect: (panel: SettingsPanel) => void;
-  onCategorySelect: (category: SettingsCategory) => void;
+  onCategorySelect: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
   onBack: () => void;
   isMobile: boolean;
+  scrollToOSVersion?: boolean;
+  onScrollComplete?: () => void;
 }
 
 const categoryInfo: Record<
@@ -56,6 +58,8 @@ export function Content({
   onCategorySelect,
   onBack,
   isMobile,
+  scrollToOSVersion,
+  onScrollComplete,
 }: ContentProps) {
   const info = categoryInfo[selectedCategory];
 
@@ -122,7 +126,13 @@ export function Content({
           {selectedCategory === "general" && (
             <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
           )}
-          {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
+          {selectedCategory === "appearance" && (
+            <AppearancePanel
+              isMobile={isMobile}
+              scrollToOSVersion={scrollToOSVersion}
+              onScrollComplete={onScrollComplete}
+            />
+          )}
         </div>
       ) : (
         // Desktop layout for General and Appearance
@@ -140,7 +150,13 @@ export function Content({
             {selectedCategory === "general" && (
               <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
             )}
-            {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
+            {selectedCategory === "appearance" && (
+              <AppearancePanel
+                isMobile={isMobile}
+                scrollToOSVersion={scrollToOSVersion}
+                onScrollComplete={onScrollComplete}
+              />
+            )}
           </div>
         </>
       )}

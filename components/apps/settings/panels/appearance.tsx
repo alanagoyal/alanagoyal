@@ -293,12 +293,26 @@ function OSVersionCard({
 
 interface AppearancePanelProps {
   isMobile?: boolean;
+  scrollToOSVersion?: boolean;
+  onScrollComplete?: () => void;
 }
 
-export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
+export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollComplete }: AppearancePanelProps) {
   const { theme, setTheme } = useTheme();
   const { osVersionId, setOSVersionId } = useSystemSettings();
   const cacheVersion = usePreviewCache();
+  const osVersionRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to OS version section when requested
+  useEffect(() => {
+    if (scrollToOSVersion && osVersionRef.current) {
+      // Small delay to ensure the panel is rendered
+      setTimeout(() => {
+        osVersionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        onScrollComplete?.();
+      }, 100);
+    }
+  }, [scrollToOSVersion, onScrollComplete]);
 
   const handleThemeChange = (newTheme: ThemeOption) => {
     setTheme(newTheme);
@@ -356,9 +370,11 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
         </div>
 
         {/* macOS Version section */}
-        <p className="text-sm text-muted-foreground uppercase tracking-wide px-2 pt-4">
-          macOS Version
-        </p>
+        <div ref={osVersionRef} className="pt-4">
+          <p className="text-sm text-muted-foreground uppercase tracking-wide px-2">
+            macOS Version
+          </p>
+        </div>
         <div className="rounded-xl bg-background p-4">
           <div className="grid grid-cols-3 gap-2">
             {OS_VERSIONS.map((os) => (
@@ -408,7 +424,7 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
       </div>
 
       {/* macOS Version section */}
-      <div className="rounded-xl bg-muted/50 p-4">
+      <div ref={osVersionRef} className="rounded-xl bg-muted/50 p-4">
         <h3 className="text-xs font-medium mb-3">macOS Version</h3>
         <div className="grid grid-cols-4 gap-3">
           {OS_VERSIONS.map((os) => (
