@@ -45,3 +45,5 @@ next-env.d.ts
 
 # internal documentation
 IMPLEMENTATION.md
+ARCHITECTURE.md
+SPEC.md
