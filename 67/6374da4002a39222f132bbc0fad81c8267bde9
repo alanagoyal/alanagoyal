@@ -1,0 +1,36 @@
+components/desktop/lock-screen.tsx
+  7284defb0a088132 68-69,74-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "676374da4002a39222f132bbc0fad81c8267bde9",
+  "prompts": {
+    "7284defb0a088132": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7da24670-1e47-4ffa-8e08-7123e982324b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "acf20994459d98f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "028b248f-eb91-4c77-aab7-29339d99d0bf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 2,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
