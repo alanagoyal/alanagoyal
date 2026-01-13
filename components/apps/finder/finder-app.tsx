@@ -967,7 +967,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
                   {selectedFile?.split("/").pop()}
                 </h3>
                 <button
-                  onClick={() => setPreviewContent(null)}
+                  onClick={() => { setPreviewContent(null); setSelectedFile(null); }}
                   className="text-sm text-blue-500 hover:text-blue-600"
                 >
                   Close Preview
