@@ -29,7 +29,7 @@ const items = [
     name: "Storage",
     icon: <HardDrive className="w-5 h-5 text-white" />,
     iconBg: "bg-gray-500",
-    navigable: false,
+    navigable: true,
   },
 ];
 
@@ -40,7 +40,7 @@ export function GeneralPanel({ onPanelSelect, isMobile = false }: GeneralPanelPr
         {items.map((item, index) => (
           <button
             key={item.id}
-            onClick={() => item.navigable && onPanelSelect(item.id === "about" ? "about" : null)}
+            onClick={() => item.navigable && onPanelSelect(item.id === "about" ? "about" : item.id === "storage" ? "storage" : null)}
             disabled={!item.navigable}
             className={cn(
               "w-full flex items-center justify-between px-4 py-3 transition-colors",

@@ -8,6 +8,7 @@ import { AppearancePanel } from "./panels/appearance";
 import { PersonalInfoPanel } from "./panels/personal-info";
 import { BluetoothPanel } from "./panels/bluetooth";
 import { WifiPanel } from "./panels/wifi";
+import { StoragePanel } from "./panels/storage";
 import { cn } from "@/lib/utils";
 
 interface ContentProps {
@@ -70,6 +71,14 @@ export function Content({
     return (
       <div className="flex-1 overflow-y-auto bg-background">
         <PersonalInfoPanel />
+      </div>
+    );
+  }
+
+  if (selectedPanel === "storage") {
+    return (
+      <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
+        <StoragePanel isMobile={isMobile} />
       </div>
     );
   }

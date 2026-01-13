@@ -4,13 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SettingsCategory } from "./settings-app";
+import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { SidebarNav } from "./sidebar-nav";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
   selectedCategory: SettingsCategory;
-  selectedPanel: "about" | "personal-info" | null;
+  selectedPanel: SettingsPanel;
   onCategorySelect: (category: SettingsCategory) => void;
   onAccountClick: () => void;
   isMobile: boolean;

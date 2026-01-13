@@ -6,7 +6,7 @@ import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 
 export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth";
-export type SettingsPanel = "about" | "personal-info" | null;
+export type SettingsPanel = "about" | "personal-info" | "storage" | null;
 
 interface HistoryEntry {
   category: SettingsCategory;
@@ -101,6 +101,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     // Only show title for sub-panels on mobile, not main categories
     if (selectedPanel === "about") return "About";
     if (selectedPanel === "personal-info") return "Personal Information";
+    if (selectedPanel === "storage") return "Storage";
     // Don't show title for General/Appearance/Bluetooth on mobile (it's in the content card)
     if (!isMobile) {
       if (selectedCategory === "general") return "General";
@@ -117,6 +118,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     // When on a sub-panel, show the parent category name
     if (selectedPanel === "about") return "General";
     if (selectedPanel === "personal-info") return "Settings";
+    if (selectedPanel === "storage") return "General";
 
     // When on a main category page, show "Settings" to go back to sidebar
     return "Settings";
