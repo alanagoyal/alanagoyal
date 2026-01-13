@@ -109,3 +109,12 @@ export function getWallpaperPath(id: string): string {
   const os = getOSVersion(id);
   return `/desktop/versions/${os.wallpaperFile}`;
 }
+
+export function getThumbnailPath(id: string): string {
+  const os = getOSVersion(id);
+  // Thumbnail filename: original name with -thumb before extension
+  const parts = os.wallpaperFile.split(".");
+  const ext = parts.pop();
+  const name = parts.join(".");
+  return `/desktop/versions/thumbnails/${name}-thumb.${ext}`;
+}

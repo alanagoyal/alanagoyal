@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { useSystemSettings } from "@/lib/system-settings-context";
-import { OS_VERSIONS, getWallpaperPath } from "@/lib/os-versions";
-import { createCircularWallpaperPreview } from "@/lib/wallpaper-utils";
+import { OS_VERSIONS, getThumbnailPath } from "@/lib/os-versions";
 
 type ThemeOption = "system" | "light" | "dark";
 
@@ -197,67 +196,20 @@ function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: Them
   );
 }
 
-// Cache for circular wallpaper previews
-const previewCache = new Map<string, string>();
-let preloadStarted = false;
-
-// Preload all wallpaper previews in parallel
-function preloadAllPreviews(onUpdate: () => void) {
-  if (preloadStarted) return;
-  preloadStarted = true;
-
-  OS_VERSIONS.forEach((os) => {
-    if (previewCache.has(os.id)) return;
-
-    const wallpaperPath = getWallpaperPath(os.id);
-    createCircularWallpaperPreview(wallpaperPath)
-      .then((dataUrl) => {
-        previewCache.set(os.id, dataUrl);
-        onUpdate();
-      })
-      .catch((err) => {
-        console.error("Failed to create circular preview for", os.id, err);
-      });
-  });
-}
-
-// Hook to trigger re-renders when cache updates
-function usePreviewCache(): number {
-  const [updateCount, setUpdateCount] = useState(0);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    preloadAllPreviews(() => {
-      if (mountedRef.current) {
-        setUpdateCount((c) => c + 1);
-      }
-    });
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  return updateCount;
-}
-
 function OSVersionCard({
   osId,
   name,
   version,
   isSelected,
   onClick,
-  cacheVersion,
 }: {
   osId: string;
   name: string;
   version: string;
   isSelected: boolean;
   onClick: () => void;
-  cacheVersion: number;
 }) {
-  const preview = previewCache.get(osId) ?? null;
-  void cacheVersion;
+  const thumbnailPath = getThumbnailPath(osId);
 
   return (
     <button
@@ -274,16 +226,12 @@ function OSVersionCard({
         </div>
       )}
       <div className="w-16 h-16 rounded-full overflow-hidden bg-muted mb-2">
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={preview}
-            alt={`macOS ${name}`}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full animate-pulse bg-muted-foreground/20" />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={thumbnailPath}
+          alt={`macOS ${name}`}
+          className="w-full h-full object-cover"
+        />
       </div>
       <span className="text-xs font-medium">{name}</span>
       <span className="text-[10px] text-muted-foreground">{version}</span>
@@ -300,7 +248,6 @@ interface AppearancePanelProps {
 export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollComplete }: AppearancePanelProps) {
   const { theme, setTheme } = useTheme();
   const { osVersionId, setOSVersionId } = useSystemSettings();
-  const cacheVersion = usePreviewCache();
   const osVersionRef = useRef<HTMLDivElement>(null);
 
   // Scroll to OS version section when requested
@@ -385,8 +332,7 @@ export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollC
                 version={os.version}
                 isSelected={os.id === osVersionId}
                 onClick={() => setOSVersionId(os.id)}
-                cacheVersion={cacheVersion}
-              />
+                              />
             ))}
           </div>
         </div>
@@ -435,8 +381,7 @@ export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollC
               version={os.version}
               isSelected={os.id === osVersionId}
               onClick={() => setOSVersionId(os.id)}
-              cacheVersion={cacheVersion}
-            />
+                          />
           ))}
         </div>
       </div>
