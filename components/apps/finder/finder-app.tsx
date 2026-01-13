@@ -40,7 +40,7 @@ const SIDEBAR_ITEMS: { id: SidebarItem; label: string; icon: string }[] = [
   { id: "recents", label: "Recents", icon: "clock" },
   { id: "applications", label: "Applications", icon: "grid" },
   { id: "desktop", label: "Desktop", icon: "desktop" },
-  { id: "documents", label: "Documents", icon: "folder" },
+  { id: "documents", label: "Documents", icon: "document" },
   { id: "downloads", label: "Downloads", icon: "download" },
   { id: "projects", label: "Projects", icon: "code" },
   { id: "trash", label: "Trash", icon: "trash" },
@@ -189,6 +189,11 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
     folder: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+      </svg>
+    ),
+    document: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" />
       </svg>
     ),
     download: (
