@@ -7,15 +7,16 @@ interface StoragePanelProps {
 }
 
 // Storage categories with colors matching macOS
+// Sizes must sum to usedSize (613.71 GB)
 const storageCategories = [
-  { id: "documents", label: "Documents", color: "bg-red-500", size: 45.2 },
-  { id: "apps", label: "Apps", color: "bg-purple-500", size: 28.7 },
-  { id: "system", label: "macOS", color: "bg-zinc-500", size: 15.8 },
-  { id: "other", label: "Other", color: "bg-zinc-400", size: 124.0 },
+  { id: "documents", label: "Documents", color: "bg-red-500", size: 156.32 },
+  { id: "apps", label: "Apps", color: "bg-purple-500", size: 87.45 },
+  { id: "system", label: "macOS", color: "bg-zinc-500", size: 52.18 },
+  { id: "other", label: "Other", color: "bg-zinc-400", size: 317.76 },
 ];
 
 const totalSize = 994.66; // GB
-const usedSize = 613.71; // GB
+const usedSize = 613.71; // GB (must equal sum of category sizes)
 const availableSize = totalSize - usedSize;
 
 export function StoragePanel({ isMobile = false }: StoragePanelProps) {
