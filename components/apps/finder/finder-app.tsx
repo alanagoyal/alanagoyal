@@ -216,7 +216,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getInitialPath = (tab: SidebarItem | undefined): string => {
-    if (!tab) return PROJECTS_DIR;
+    if (!tab) return "recents";
     switch (tab) {
       case "recents": return "recents";
       case "applications": return "applications";
@@ -225,11 +225,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
       case "downloads": return `${HOME_DIR}/Downloads`;
       case "projects": return PROJECTS_DIR;
       case "trash": return "trash";
-      default: return PROJECTS_DIR;
+      default: return "recents";
     }
   };
 
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(initialTab || "projects");
+  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(initialTab || "recents");
   const [currentPath, setCurrentPath] = useState(getInitialPath(initialTab));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);

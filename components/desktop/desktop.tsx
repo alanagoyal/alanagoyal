@@ -35,7 +35,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
-  const [finderTab, setFinderTab] = useState<FinderTab>("projects");
+  const [finderTab, setFinderTab] = useState<FinderTab>("recents");
 
   const isActive = mode === "active";
 
@@ -64,9 +64,9 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
     window.history.replaceState(null, "", "/finder");
   }, []);
 
-  // Handler for Finder dock icon click - resets to default projects view
+  // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {
-    setFinderTab("projects");
+    setFinderTab("recents");
     const windowState = getWindow("finder");
     if (windowState?.isOpen) {
       if (windowState.isMinimized) {
