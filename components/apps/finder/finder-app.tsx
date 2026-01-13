@@ -379,6 +379,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
 
   // Handle file/folder click
   const handleFileClick = useCallback((file: FileItem) => {
+    // Don't select files in trash (they don't exist)
+    if (file.type === "file" && file.path.startsWith("trash/")) return;
     setSelectedFile(file.path);
   }, []);
 
@@ -397,6 +399,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
         window.location.href = file.path;
       }
     } else if (file.type === "file") {
+      // Don't preview files in trash (they don't exist)
+      if (file.path.startsWith("trash/")) return;
       // Preview file content
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
@@ -646,9 +650,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
           onDoubleClick={() => handleFileDoubleClick(file)}
           className={cn(
             "flex flex-col items-center gap-1 p-2 rounded-lg text-center",
-            selectedFile === file.path
-              ? "bg-blue-500/20 ring-1 ring-blue-500"
-              : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            file.type === "file" && file.path.startsWith("trash/")
+              ? "cursor-default"
+              : selectedFile === file.path
+                ? "bg-blue-500/20 ring-1 ring-blue-500"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
           )}
         >
           <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-12 h-12" />
@@ -683,9 +689,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
             onDoubleClick={() => handleFileDoubleClick(file)}
             className={cn(
               "w-full flex items-center px-4 py-1 text-left text-sm",
-              selectedFile === file.path
-                ? "bg-blue-500 text-white"
-                : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+              file.type === "file" && file.path.startsWith("trash/")
+                ? "cursor-default text-zinc-900 dark:text-zinc-100"
+                : selectedFile === file.path
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
             )}
           >
             <div className="flex-1 min-w-0 flex items-center gap-2">
