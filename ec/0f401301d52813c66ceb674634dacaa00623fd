@@ -1,0 +1,27 @@
+components/apps/settings/panels/appearance.tsx
+  4e03b2fb117e7846 8,212,229,231
+lib/os-versions.ts
+  4e03b2fb117e7846 112-120
+components/apps/settings/panels/about.tsx
+  4e03b2fb117e7846 6,26,198,200,202-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ec0f401301d52813c66ceb674634dacaa00623fd",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 195,
+      "total_deletions": 254,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
