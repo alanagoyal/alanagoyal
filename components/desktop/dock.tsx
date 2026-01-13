@@ -124,7 +124,8 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             </button>
           );
         })}
-        {/* Trash icon */}
+        {/* Trash icon - uses custom sizing because unlike square app icons,
+           the trash SVG has a tall aspect ratio with built-in padding */}
         <button
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
@@ -132,13 +133,13 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
           className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95"
         >
           {hoveredApp === "trash" && <DockTooltip label="Trash" />}
-          <div className="w-12 h-12 relative">
+          <div className="h-12 relative flex items-end">
             <Image
               src="/trash.svg"
               alt="Trash"
               width={48}
               height={48}
-              className="rounded-xl shadow-md"
+              className="h-[52px] w-auto translate-y-0.5"
             />
           </div>
           {/* Trash doesn't show open indicator */}
