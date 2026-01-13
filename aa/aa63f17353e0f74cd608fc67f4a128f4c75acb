@@ -1,0 +1,31 @@
+components/apps/settings/panels/storage.tsx
+  4e03b2fb117e7846 1-79
+components/apps/settings/content.tsx
+  4e03b2fb117e7846 11,78-85
+components/apps/settings/panels/general.tsx
+  4e03b2fb117e7846 32,43
+components/apps/settings/sidebar.tsx
+  4e03b2fb117e7846 7,13
+components/apps/settings/settings-app.tsx
+  4e03b2fb117e7846 9,104,121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "aaaa63f17353e0f74cd608fc67f4a128f4c75acb",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 5,
+      "accepted_lines": 95,
+      "overriden_lines": 0
+    }
+  }
+}
