@@ -1,0 +1,45 @@
+components/apps/settings/sidebar.tsx
+  4e03b2fb117e7846 7,13
+components/desktop/lock-screen.tsx
+  4e03b2fb117e7846 5-6,13,56,61
+lib/wallpaper-utils.ts
+  4e03b2fb117e7846 1-51
+components/apps/settings/settings-app.tsx
+  4e03b2fb117e7846 153,189
+components/desktop/desktop.tsx
+  4e03b2fb117e7846 20,32,144,150
+lib/os-versions.ts
+  4e03b2fb117e7846 1-111
+components/apps/iterm/terminal.tsx
+  4e03b2fb117e7846 4,120,395,397,422
+components/apps/settings/panels/appearance.tsx
+  4e03b2fb117e7846 3,7-9,200-293,300-301,357-376,409-426
+components/apps/settings/panels/about.tsx
+  4e03b2fb117e7846 3,6-9,13,25,27-35,201-203,206-208,210-211,213-216,218,220-224
+components/apps/settings/panels/general.tsx
+  4e03b2fb117e7846 4,9,26,37-46,53
+lib/system-settings-context.tsx
+  4e03b2fb117e7846 3,5,19-21,29,36,57-61,93-101,103
+components/apps/settings/content.tsx
+  4e03b2fb117e7846 17,56,66,123,141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "7b9ad1728f67b7b11f917b9e1d4938f1e9dcf1d9",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 651,
+      "total_deletions": 72,
+      "accepted_lines": 611,
+      "overriden_lines": 0
+    }
+  }
+}
