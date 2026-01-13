@@ -76,7 +76,7 @@ export const OS_VERSIONS: OSVersion[] = [
   {
     id: "sonoma",
     name: "Sonoma",
-    version: "14",
+    version: "14.0",
     darwinVersion: "23.0.0",
     wallpaperFile: "sonoma-wallpaper.png",
     releaseYear: 2023,
@@ -84,7 +84,7 @@ export const OS_VERSIONS: OSVersion[] = [
   {
     id: "sequoia",
     name: "Sequoia",
-    version: "15",
+    version: "15.0",
     darwinVersion: "24.0.0",
     wallpaperFile: "sequoia-wallpaper.png",
     releaseYear: 2024,
@@ -92,7 +92,7 @@ export const OS_VERSIONS: OSVersion[] = [
   {
     id: "tahoe",
     name: "Tahoe",
-    version: "26",
+    version: "26.0",
     darwinVersion: "25.0.0",
     wallpaperFile: "tahoe-wallpaper.png",
     releaseYear: 2025,
