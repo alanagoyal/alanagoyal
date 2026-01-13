@@ -33,7 +33,7 @@ const STATIC_FILES: Record<string, FileItem[]> = {
 };
 
 // Sidebar items
-type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects";
+export type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects" | "trash";
 
 const SIDEBAR_ITEMS: { id: SidebarItem; label: string; icon: string }[] = [
   { id: "recents", label: "Recents", icon: "clock" },
@@ -42,12 +42,23 @@ const SIDEBAR_ITEMS: { id: SidebarItem; label: string; icon: string }[] = [
   { id: "documents", label: "Documents", icon: "folder" },
   { id: "downloads", label: "Downloads", icon: "download" },
   { id: "projects", label: "Projects", icon: "code" },
+  { id: "trash", label: "Trash", icon: "trash" },
+];
+
+// Mock deleted files for Trash
+const TRASH_FILES: FileItem[] = [
+  { name: "old-notes.md", type: "file", path: "trash/old-notes.md" },
+  { name: "draft-v1.tsx", type: "file", path: "trash/draft-v1.tsx" },
+  { name: "unused-assets", type: "dir", path: "trash/unused-assets" },
+  { name: "backup-2024", type: "dir", path: "trash/backup-2024" },
+  { name: "config.old.json", type: "file", path: "trash/config.old.json" },
 ];
 
 interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
   onOpenApp?: (appId: string) => void;
+  initialTab?: SidebarItem;
 }
 
 // GitHub cache
@@ -189,16 +200,35 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
         <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
       </svg>
     ),
+    trash: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+      </svg>
+    ),
   };
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: FinderAppProps) {
+export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>("projects");
-  const [currentPath, setCurrentPath] = useState(PROJECTS_DIR);
+  const getInitialPath = (tab: SidebarItem | undefined): string => {
+    if (!tab) return PROJECTS_DIR;
+    switch (tab) {
+      case "recents": return "recents";
+      case "applications": return "applications";
+      case "desktop": return `${HOME_DIR}/Desktop`;
+      case "documents": return `${HOME_DIR}/Documents`;
+      case "downloads": return `${HOME_DIR}/Downloads`;
+      case "projects": return PROJECTS_DIR;
+      case "trash": return "trash";
+      default: return PROJECTS_DIR;
+    }
+  };
+
+  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(initialTab || "projects");
+  const [currentPath, setCurrentPath] = useState(getInitialPath(initialTab));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -216,6 +246,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
       case "documents": return `${HOME_DIR}/Documents`;
       case "downloads": return `${HOME_DIR}/Downloads`;
       case "projects": return PROJECTS_DIR;
+      case "trash": return "trash";
       default: return HOME_DIR;
     }
   }, []);
@@ -246,6 +277,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
             icon: app.icon,
           }));
         setFiles(apps);
+        setLoading(false);
+        return;
+      }
+
+      // Special handling for Trash
+      if (path === "trash") {
+        setFiles(TRASH_FILES);
         setLoading(false);
         return;
       }
@@ -310,6 +348,15 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
   useEffect(() => {
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
+
+  // Respond to initialTab changes from external navigation (e.g., dock clicks)
+  useEffect(() => {
+    if (initialTab) {
+      setSelectedSidebar(initialTab);
+      setCurrentPath(getInitialPath(initialTab));
+      setSelectedFile(null);
+    }
+  }, [initialTab]);
 
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
@@ -385,6 +432,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
   const getBreadcrumbs = useCallback(() => {
     if (currentPath === "recents") return ["Recents"];
     if (currentPath === "applications") return ["Applications"];
+    if (currentPath === "trash") return ["Trash"];
 
     const parts = currentPath.replace(HOME_DIR, USERNAME).split("/").filter(Boolean);
     return parts;
@@ -392,7 +440,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
 
   // Check if can go back
   const canGoBack = useCallback(() => {
-    if (currentPath === "recents" || currentPath === "applications") return false;
+    if (currentPath === "recents" || currentPath === "applications" || currentPath === "trash") return false;
     return currentPath !== HOME_DIR && currentPath !== PROJECTS_DIR;
   }, [currentPath]);
 

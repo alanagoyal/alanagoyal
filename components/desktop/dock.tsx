@@ -6,6 +6,11 @@ import { APPS } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 
+interface DockProps {
+  onTrashClick?: () => void;
+  onFinderClick?: () => void;
+}
+
 function DockTooltip({ label }: { label: string }) {
   return (
     <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none">
@@ -39,11 +44,17 @@ function DockTooltip({ label }: { label: string }) {
   );
 }
 
-export function Dock() {
+export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   const { openWindow, focusWindow, restoreWindow, isWindowOpen, getWindow } = useWindowManager();
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
   const handleAppClick = (appId: string) => {
+    // Special handling for Finder to reset tab to projects
+    if (appId === "finder" && onFinderClick) {
+      onFinderClick();
+      return;
+    }
+
     const windowState = getWindow(appId);
     if (windowState?.isOpen) {
       if (windowState.isMinimized) {
@@ -70,6 +81,12 @@ export function Dock() {
       window.history.replaceState(null, "", "/iterm");
     } else if (appId === "finder") {
       window.history.replaceState(null, "", "/finder");
+    }
+  };
+
+  const handleTrashClick = () => {
+    if (onTrashClick) {
+      onTrashClick();
     }
   };
 
@@ -107,6 +124,26 @@ export function Dock() {
             </button>
           );
         })}
+        {/* Trash icon */}
+        <button
+          onClick={handleTrashClick}
+          onMouseEnter={() => setHoveredApp("trash")}
+          onMouseLeave={() => setHoveredApp(null)}
+          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95"
+        >
+          {hoveredApp === "trash" && <DockTooltip label="Trash" />}
+          <div className="w-12 h-12 relative">
+            <Image
+              src="/trash.svg"
+              alt="Trash"
+              width={48}
+              height={48}
+              className="rounded-xl shadow-md"
+            />
+          </div>
+          {/* Trash doesn't show open indicator */}
+          <div className="w-1 h-1 rounded-full mt-1 opacity-0" />
+        </button>
       </div>
     </div>
   );
