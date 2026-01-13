@@ -288,6 +288,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
         return;
       }
 
+      // Handle trash subdirectories (show as empty for mock data)
+      if (path.startsWith("trash/")) {
+        setFiles([]);
+        setLoading(false);
+        return;
+      }
+
       // Projects directory - fetch from GitHub
       if (path === PROJECTS_DIR) {
         const repos = await fetchGitHubRepos();
@@ -408,13 +415,12 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
 
   // Handle back navigation
   const handleBack = useCallback(() => {
-    if (isMobile && !showSidebar) {
-      // Check if we can go up a directory
-      const parentPath = currentPath.split("/").slice(0, -1).join("/");
-      const sidebarPath = getPathForSidebar(selectedSidebar);
+    const parentPath = currentPath.split("/").slice(0, -1).join("/");
 
-      if (currentPath !== sidebarPath && parentPath.startsWith(HOME_DIR)) {
-        setCurrentPath(parentPath);
+    if (isMobile && !showSidebar) {
+      const sidebarPath = getPathForSidebar(selectedSidebar);
+      if (currentPath !== sidebarPath && (parentPath.startsWith(HOME_DIR) || currentPath.startsWith("trash/"))) {
+        setCurrentPath(parentPath || "trash");
       } else {
         setShowSidebar(true);
       }
@@ -422,8 +428,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     }
 
     // Desktop: go up a directory
-    const parentPath = currentPath.split("/").slice(0, -1).join("/");
-    if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR)) {
+    if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR) || currentPath.startsWith("trash/")) {
       setCurrentPath(parentPath || HOME_DIR);
     }
   }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebar]);
@@ -433,6 +438,12 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     if (currentPath === "recents") return ["Recents"];
     if (currentPath === "applications") return ["Applications"];
     if (currentPath === "trash") return ["Trash"];
+    // Handle trash subdirectories
+    if (currentPath.startsWith("trash/")) {
+      const parts = currentPath.split("/");
+      parts[0] = "Trash"; // Capitalize Trash
+      return parts;
+    }
 
     const parts = currentPath.replace(HOME_DIR, USERNAME).split("/").filter(Boolean);
     return parts;
@@ -441,6 +452,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
   // Check if can go back
   const canGoBack = useCallback(() => {
     if (currentPath === "recents" || currentPath === "applications" || currentPath === "trash") return false;
+    // Allow back navigation within trash subdirectories
+    if (currentPath.startsWith("trash/")) return true;
     return currentPath !== HOME_DIR && currentPath !== PROJECTS_DIR;
   }, [currentPath]);
 
@@ -485,6 +498,15 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
 
   // Get the back title for mobile navigation
   const getMobileBackTitle = () => {
+    // Handle trash subdirectories
+    if (currentPath.startsWith("trash/")) {
+      const parentPath = currentPath.split("/").slice(0, -1).join("/");
+      if (parentPath === "trash") {
+        return "Trash";
+      }
+      return currentPath.split("/").slice(-2, -1)[0] || "Back";
+    }
+
     // If we're in a nested folder within a sidebar section, show parent folder name
     const sidebarPath = getPathForSidebar(selectedSidebar);
     if (currentPath !== sidebarPath && currentPath.startsWith(HOME_DIR)) {
