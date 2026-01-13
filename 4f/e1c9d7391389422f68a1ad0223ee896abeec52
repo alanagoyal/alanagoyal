@@ -1,0 +1,31 @@
+lib/recents-context.tsx
+  e22d9db8d22d7736 1-91
+components/mobile/mobile-shell.tsx
+  e22d9db8d22d7736 4,46-47,55-56
+components/apps/iterm/terminal.tsx
+  e22d9db8d22d7736 5,122,343-345,359-361,430
+components/desktop/desktop.tsx
+  e22d9db8d22d7736 7,234-235,239-240
+components/apps/finder/finder-app.tsx
+  e22d9db8d22d7736 6,215,264,360-370,415-416,433
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "4fe1c9d7391389422f68a1ad0223ee896abeec52",
+  "prompts": {
+    "e22d9db8d22d7736": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afaff442-70c4-4f81-b2fc-49db9986311e",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 148,
+      "total_deletions": 30,
+      "accepted_lines": 129,
+      "overriden_lines": 0
+    }
+  }
+}
