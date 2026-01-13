@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { APPS } from "@/lib/app-config";
 
@@ -211,6 +212,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 
 export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
+  const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getInitialPath = (tab: SidebarItem | undefined): string => {
@@ -259,11 +261,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     setPreviewContent(null);
 
     try {
-      // Special handling for Recents
+      // Special handling for Recents - handled separately via useEffect
       if (path === "recents") {
-        setFiles([
-          { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
-        ]);
         setLoading(false);
         return;
       }
@@ -358,6 +357,18 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
 
+  // Update files when viewing Recents and recents change
+  useEffect(() => {
+    if (currentPath === "recents") {
+      const recentFiles: FileItem[] = recents.map(r => ({
+        name: r.name,
+        type: r.type,
+        path: r.path,
+      }));
+      setFiles(recentFiles);
+    }
+  }, [currentPath, recents]);
+
   // Respond to initialTab changes from external navigation (e.g., dock clicks)
   useEffect(() => {
     if (initialTab) {
@@ -401,6 +412,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     } else if (file.type === "file") {
       // Don't preview files in trash (they don't exist)
       if (file.path.startsWith("trash/")) return;
+      // Add to recents when viewing a file
+      addRecent({ path: file.path, name: file.name, type: file.type });
       // Preview file content
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
@@ -417,7 +430,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
         setPreviewContent("hello world!");
       }
     }
-  }, [onOpenApp]);
+  }, [onOpenApp, addRecent]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {

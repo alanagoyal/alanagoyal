@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } from "@/lib/window-context";
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
+import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
@@ -230,11 +231,13 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
   return (
     <SystemSettingsProvider>
-      <FileMenuProvider>
-        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} />
-        </WindowManagerProvider>
-      </FileMenuProvider>
+      <RecentsProvider>
+        <FileMenuProvider>
+          <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+            <DesktopContent initialNoteSlug={initialNoteSlug} />
+          </WindowManagerProvider>
+        </FileMenuProvider>
+      </RecentsProvider>
     </SystemSettingsProvider>
   );
 }

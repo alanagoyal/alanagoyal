@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { useSystemSettings } from "@/lib/system-settings-context";
+import { useRecents } from "@/lib/recents-context";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -118,6 +119,7 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
 
 export function Terminal({ isMobile = false }: TerminalProps) {
   const { currentOS } = useSystemSettings();
+  const { addRecent } = useRecents();
   const [history, setHistory] = useState<HistoryEntry[]>([
     { type: "output", content: "Type 'help' for available commands" },
   ]);
@@ -338,6 +340,9 @@ Note: Projects folder contains my real GitHub repositories!`;
         const staticFile = fileSystem[path];
         if (staticFile?.type === "file" && staticFile.content) {
           output = staticFile.content;
+          // Add to recents
+          const fileName = path.split("/").pop() || path;
+          addRecent({ path, name: fileName, type: "file" });
           break;
         }
         if (staticFile?.type === "dir") {
@@ -351,6 +356,9 @@ Note: Projects folder contains my real GitHub repositories!`;
           try {
             const content = await fetchFileContent(parsed.repo, parsed.filePath);
             output = content;
+            // Add to recents
+            const fileName = parsed.filePath.split("/").pop() || parsed.filePath;
+            addRecent({ path, name: fileName, type: "file" });
           } catch (error) {
             output = `cat: ${args[0]}: ${error instanceof Error ? error.message : "File not found"}`;
           }
@@ -419,7 +427,7 @@ Note: Projects folder contains my real GitHub repositories!`;
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {

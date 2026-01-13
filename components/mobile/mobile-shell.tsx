@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { RecentsProvider } from "@/lib/recents-context";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
@@ -42,14 +43,16 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   }
 
   return (
-    <div className="h-dvh flex flex-col bg-background">
-      {activeAppId === "notes" && (
-        <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
-      )}
-      {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
-      {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
-      {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
-      {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
-    </div>
+    <RecentsProvider>
+      <div className="h-dvh flex flex-col bg-background">
+        {activeAppId === "notes" && (
+          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
+        )}
+        {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
+        {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
+        {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
+        {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
+      </div>
+    </RecentsProvider>
   );
 }
