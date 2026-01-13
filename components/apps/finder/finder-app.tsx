@@ -667,11 +667,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
           onDoubleClick={() => handleFileDoubleClick(file)}
           className={cn(
             "flex flex-col items-center gap-1 p-2 rounded-lg text-center",
-            file.type === "file" && file.path.startsWith("trash/")
-              ? "cursor-default"
-              : selectedFile === file.path
-                ? "bg-zinc-200/70 dark:bg-zinc-700/70"
-                : ""
+            selectedFile === file.path && "bg-zinc-200/70 dark:bg-zinc-700/70"
           )}
         >
           <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-12 h-12" />
@@ -710,12 +706,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
             onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
             onDoubleClick={() => handleFileDoubleClick(file)}
             className={cn(
-              "w-full flex items-center px-4 py-1 text-left text-sm",
-              file.type === "file" && file.path.startsWith("trash/")
-                ? "cursor-default text-zinc-900 dark:text-zinc-100"
-                : selectedFile === file.path
-                  ? "bg-blue-500 text-white"
-                  : "text-zinc-900 dark:text-zinc-100"
+              "w-full flex items-center px-4 py-1 text-left text-sm text-zinc-900 dark:text-zinc-100",
+              selectedFile === file.path && "bg-blue-500 text-white"
             )}
           >
             <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -899,34 +891,32 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
                 className="fixed inset-0 z-10"
                 onClick={() => setShowViewDropdown(false)}
               />
-              <div className="absolute right-0 top-full mt-1 z-20 bg-zinc-800 rounded-lg shadow-lg py-1 min-w-32">
+              <div className="absolute right-0 top-full mt-1 z-20 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl rounded-md shadow-lg border border-black/10 dark:border-white/10 py-1 min-w-32">
                 <button
                   onClick={() => { setViewMode("icons"); setShowViewDropdown(false); }}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-zinc-700",
-                    viewMode === "icons" ? "text-white" : "text-zinc-300"
-                  )}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
                 >
-                  {viewMode === "icons" && (
+                  {viewMode === "icons" ? (
                     <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <path d="M5 12l5 5L20 7" />
                     </svg>
+                  ) : (
+                    <span className="w-4" />
                   )}
-                  <span className={viewMode !== "icons" ? "ml-6" : ""}>as Icons</span>
+                  <span>as Icons</span>
                 </button>
                 <button
                   onClick={() => { setViewMode("list"); setShowViewDropdown(false); }}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-zinc-700",
-                    viewMode === "list" ? "text-white" : "text-zinc-300"
-                  )}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
                 >
-                  {viewMode === "list" && (
+                  {viewMode === "list" ? (
                     <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <path d="M5 12l5 5L20 7" />
                     </svg>
+                  ) : (
+                    <span className="w-4" />
                   )}
-                  <span className={viewMode !== "list" ? "ml-6" : ""}>as List</span>
+                  <span>as List</span>
                 </button>
               </div>
             </>
