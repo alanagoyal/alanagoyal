@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -128,6 +129,18 @@ export function Terminal({ isMobile = false }: TerminalProps) {
   const [completionSuggestions, setCompletionSuggestions] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const windowFocus = useWindowFocus();
+
+  // Auto-focus input when window gains focus
+  useEffect(() => {
+    if (windowFocus?.isFocused) {
+      // Small delay to ensure the window is fully focused
+      const timeoutId = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [windowFocus?.isFocused]);
 
   const getPrompt = useCallback(() => {
     const displayDir = currentDir === HOME_DIR ? "~" : currentDir.replace(HOME_DIR, "~");
