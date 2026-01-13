@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } from "@/lib/window-context";
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
+import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
@@ -12,7 +13,7 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
-import { FinderApp } from "@/components/apps/finder/finder-app";
+import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -34,6 +35,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
+  const [finderTab, setFinderTab] = useState<FinderTab>("recents");
 
   const isActive = mode === "active";
 
@@ -61,6 +63,38 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const handleFinderFocus = useCallback(() => {
     window.history.replaceState(null, "", "/finder");
   }, []);
+
+  // Handler for Finder dock icon click - resets to Recents view
+  const handleFinderDockClick = useCallback(() => {
+    setFinderTab("recents");
+    const windowState = getWindow("finder");
+    if (windowState?.isOpen) {
+      if (windowState.isMinimized) {
+        restoreWindow("finder");
+      } else {
+        focusWindow("finder");
+      }
+    } else {
+      openWindow("finder");
+    }
+    window.history.replaceState(null, "", "/finder");
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+
+  // Handler for Trash dock icon click
+  const handleTrashClick = useCallback(() => {
+    setFinderTab("trash");
+    const windowState = getWindow("finder");
+    if (windowState?.isOpen) {
+      if (windowState.isMinimized) {
+        restoreWindow("finder");
+      } else {
+        focusWindow("finder");
+      }
+    } else {
+      openWindow("finder");
+    }
+    window.history.replaceState(null, "", "/finder");
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
@@ -179,10 +213,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
           </Window>
 
           <Window appId="finder" onFocus={handleFinderFocus}>
-            <FinderApp inShell={true} onOpenApp={handleOpenApp} />
+            <FinderApp inShell={true} onOpenApp={handleOpenApp} initialTab={finderTab} />
           </Window>
 
-          <Dock />
+          <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} />
         </>
       )}
 
@@ -197,11 +231,13 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
   return (
     <SystemSettingsProvider>
-      <FileMenuProvider>
-        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} />
-        </WindowManagerProvider>
-      </FileMenuProvider>
+      <RecentsProvider>
+        <FileMenuProvider>
+          <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+            <DesktopContent initialNoteSlug={initialNoteSlug} />
+          </WindowManagerProvider>
+        </FileMenuProvider>
+      </RecentsProvider>
     </SystemSettingsProvider>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { APPS } from "@/lib/app-config";
 
@@ -33,21 +34,32 @@ const STATIC_FILES: Record<string, FileItem[]> = {
 };
 
 // Sidebar items
-type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects";
+export type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects" | "trash";
 
 const SIDEBAR_ITEMS: { id: SidebarItem; label: string; icon: string }[] = [
   { id: "recents", label: "Recents", icon: "clock" },
   { id: "applications", label: "Applications", icon: "grid" },
   { id: "desktop", label: "Desktop", icon: "desktop" },
-  { id: "documents", label: "Documents", icon: "folder" },
+  { id: "documents", label: "Documents", icon: "document" },
   { id: "downloads", label: "Downloads", icon: "download" },
   { id: "projects", label: "Projects", icon: "code" },
+  { id: "trash", label: "Trash", icon: "trash" },
+];
+
+// Mock deleted files for Trash
+const TRASH_FILES: FileItem[] = [
+  { name: "old-notes.md", type: "file", path: "trash/old-notes.md" },
+  { name: "draft-v1.tsx", type: "file", path: "trash/draft-v1.tsx" },
+  { name: "unused-assets", type: "dir", path: "trash/unused-assets" },
+  { name: "backup-2024", type: "dir", path: "trash/backup-2024" },
+  { name: "config.old.json", type: "file", path: "trash/config.old.json" },
 ];
 
 interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
   onOpenApp?: (appId: string) => void;
+  initialTab?: SidebarItem;
 }
 
 // GitHub cache
@@ -131,7 +143,7 @@ function FileIcon({ type, name, icon, className }: { type: "file" | "dir" | "app
             alt={name}
             width={48}
             height={48}
-            className={cn("rounded-lg", className)}
+            className={className}
           />
         );
       }
@@ -179,6 +191,11 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
         <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
       </svg>
     ),
+    document: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" />
+      </svg>
+    ),
     download: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
@@ -189,21 +206,43 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
         <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
       </svg>
     ),
+    trash: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+      </svg>
+    ),
   };
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: FinderAppProps) {
+export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
+  const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>("projects");
-  const [currentPath, setCurrentPath] = useState(PROJECTS_DIR);
+  const getInitialPath = (tab: SidebarItem | undefined): string => {
+    if (!tab) return "recents";
+    switch (tab) {
+      case "recents": return "recents";
+      case "applications": return "applications";
+      case "desktop": return `${HOME_DIR}/Desktop`;
+      case "documents": return `${HOME_DIR}/Documents`;
+      case "downloads": return `${HOME_DIR}/Downloads`;
+      case "projects": return PROJECTS_DIR;
+      case "trash": return "trash";
+      default: return "recents";
+    }
+  };
+
+  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(initialTab || "recents");
+  const [currentPath, setCurrentPath] = useState(getInitialPath(initialTab));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true); // For mobile
+  const [viewMode, setViewMode] = useState<"icons" | "list">("list");
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
 
   const inDesktopShell = inShell && windowFocus;
 
@@ -216,6 +255,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
       case "documents": return `${HOME_DIR}/Documents`;
       case "downloads": return `${HOME_DIR}/Downloads`;
       case "projects": return PROJECTS_DIR;
+      case "trash": return "trash";
       default: return HOME_DIR;
     }
   }, []);
@@ -226,11 +266,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     setPreviewContent(null);
 
     try {
-      // Special handling for Recents
+      // Special handling for Recents - handled separately via useEffect
       if (path === "recents") {
-        setFiles([
-          { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
-        ]);
         setLoading(false);
         return;
       }
@@ -246,6 +283,20 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
             icon: app.icon,
           }));
         setFiles(apps);
+        setLoading(false);
+        return;
+      }
+
+      // Special handling for Trash
+      if (path === "trash") {
+        setFiles(TRASH_FILES);
+        setLoading(false);
+        return;
+      }
+
+      // Handle trash subdirectories (show as empty for mock data)
+      if (path.startsWith("trash/")) {
+        setFiles([]);
         setLoading(false);
         return;
       }
@@ -311,6 +362,27 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
 
+  // Update files when viewing Recents and recents change
+  useEffect(() => {
+    if (currentPath === "recents") {
+      const recentFiles: FileItem[] = recents.map(r => ({
+        name: r.name,
+        type: r.type,
+        path: r.path,
+      }));
+      setFiles(recentFiles);
+    }
+  }, [currentPath, recents]);
+
+  // Respond to initialTab changes from external navigation (e.g., dock clicks)
+  useEffect(() => {
+    if (initialTab) {
+      setSelectedSidebar(initialTab);
+      setCurrentPath(getInitialPath(initialTab));
+      setSelectedFile(null);
+    }
+  }, [initialTab]);
+
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
     setSelectedSidebar(item);
@@ -323,6 +395,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
 
   // Handle file/folder click
   const handleFileClick = useCallback((file: FileItem) => {
+    // Don't select files in trash (they don't exist)
+    if (file.type === "file" && file.path.startsWith("trash/")) return;
     setSelectedFile(file.path);
   }, []);
 
@@ -341,6 +415,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
         window.location.href = file.path;
       }
     } else if (file.type === "file") {
+      // Don't preview files in trash (they don't exist)
+      if (file.path.startsWith("trash/")) return;
+      // Add to recents when viewing a file
+      addRecent({ path: file.path, name: file.name, type: file.type });
       // Preview file content
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
@@ -357,17 +435,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
         setPreviewContent("hello world!");
       }
     }
-  }, [onOpenApp]);
+  }, [onOpenApp, addRecent]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
-    if (isMobile && !showSidebar) {
-      // Check if we can go up a directory
-      const parentPath = currentPath.split("/").slice(0, -1).join("/");
-      const sidebarPath = getPathForSidebar(selectedSidebar);
+    const parentPath = currentPath.split("/").slice(0, -1).join("/");
 
-      if (currentPath !== sidebarPath && parentPath.startsWith(HOME_DIR)) {
-        setCurrentPath(parentPath);
+    if (isMobile && !showSidebar) {
+      const sidebarPath = getPathForSidebar(selectedSidebar);
+      if (currentPath !== sidebarPath && (parentPath.startsWith(HOME_DIR) || currentPath.startsWith("trash/"))) {
+        setCurrentPath(parentPath || "trash");
       } else {
         setShowSidebar(true);
       }
@@ -375,8 +452,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     }
 
     // Desktop: go up a directory
-    const parentPath = currentPath.split("/").slice(0, -1).join("/");
-    if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR)) {
+    if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR) || currentPath.startsWith("trash/")) {
       setCurrentPath(parentPath || HOME_DIR);
     }
   }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebar]);
@@ -385,6 +461,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
   const getBreadcrumbs = useCallback(() => {
     if (currentPath === "recents") return ["Recents"];
     if (currentPath === "applications") return ["Applications"];
+    if (currentPath === "trash") return ["Trash"];
+    // Handle trash subdirectories
+    if (currentPath.startsWith("trash/")) {
+      const parts = currentPath.split("/");
+      parts[0] = "Trash"; // Capitalize Trash
+      return parts;
+    }
 
     const parts = currentPath.replace(HOME_DIR, USERNAME).split("/").filter(Boolean);
     return parts;
@@ -392,7 +475,9 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
 
   // Check if can go back
   const canGoBack = useCallback(() => {
-    if (currentPath === "recents" || currentPath === "applications") return false;
+    if (currentPath === "recents" || currentPath === "applications" || currentPath === "trash") return false;
+    // Allow back navigation within trash subdirectories
+    if (currentPath.startsWith("trash/")) return true;
     return currentPath !== HOME_DIR && currentPath !== PROJECTS_DIR;
   }, [currentPath]);
 
@@ -437,6 +522,15 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
 
   // Get the back title for mobile navigation
   const getMobileBackTitle = () => {
+    // Handle trash subdirectories
+    if (currentPath.startsWith("trash/")) {
+      const parentPath = currentPath.split("/").slice(0, -1).join("/");
+      if (parentPath === "trash") {
+        return "Trash";
+      }
+      return currentPath.split("/").slice(-2, -1)[0] || "Back";
+    }
+
     // If we're in a nested folder within a sidebar section, show parent folder name
     const sidebarPath = getPathForSidebar(selectedSidebar);
     if (currentPath !== sidebarPath && currentPath.startsWith(HOME_DIR)) {
@@ -457,7 +551,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     if (isMobile) {
       return (
         <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-zinc-100/50 dark:bg-zinc-800/50">
-          {/* Favorites card */}
           <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
             {SIDEBAR_ITEMS.map((item, index) => (
               <button
@@ -486,9 +579,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     return (
       <div className="flex flex-col w-48 border-r border-zinc-200 dark:border-zinc-700 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-xl">
         <div className="flex-1 overflow-y-auto py-2">
-          <div className="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            Favorites
-          </div>
           {SIDEBAR_ITEMS.map(item => (
             <button
               key={item.id}
@@ -496,13 +586,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
               className={cn(
                 "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left rounded-md",
                 selectedSidebar === item.id
-                  ? "bg-zinc-300 dark:bg-zinc-600 text-zinc-900 dark:text-white"
-                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  ? "bg-zinc-200/70 dark:bg-zinc-700/70 text-blue-500"
+                  : "text-zinc-900 dark:text-zinc-100"
               )}
             >
               <SidebarIcon
                 icon={item.icon}
-                className="w-4 h-4 text-blue-500"
+                className={cn(
+                  "w-4 h-4",
+                  selectedSidebar === item.id ? "text-blue-500" : "text-zinc-900 dark:text-zinc-100"
+                )}
               />
               <span>{item.label}</span>
             </button>
@@ -512,23 +605,78 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
     );
   };
 
-  // Render file grid (desktop)
+  // Generate a pseudo-random date from last 7 days based on filename (deterministic)
+  const getFileDate = (filename: string): string => {
+    // Use filename to generate a consistent "random" number
+    let hash = 0;
+    for (let i = 0; i < filename.length; i++) {
+      hash = ((hash << 5) - hash) + filename.charCodeAt(i);
+      hash = hash & hash;
+    }
+    const daysAgo = Math.abs(hash) % 7;
+    const hours = Math.abs(hash >> 3) % 12 + 1;
+    const minutes = Math.abs(hash >> 7) % 60;
+    const isPM = (hash >> 11) % 2 === 0;
+
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+
+    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Today at ${timeStr}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${timeStr}`;
+    } else {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} at ${timeStr}`;
+    }
+  };
+
+  // Get file kind description
+  const getFileKind = (file: FileItem): string => {
+    if (file.type === "dir") return "Folder";
+    if (file.type === "app") return "Application";
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    switch (ext) {
+      case "md": return "Markdown";
+      case "ts": case "tsx": return "TypeScript";
+      case "js": case "jsx": return "JavaScript";
+      case "json": return "JSON";
+      case "css": return "CSS";
+      case "html": return "HTML";
+      case "svg": return "SVG Image";
+      case "png": return "PNG Image";
+      case "jpg": case "jpeg": return "JPEG Image";
+      case "pdf": return "PDF Document";
+      default: return "Document";
+    }
+  };
+
+  // Render file grid (desktop icons view)
   const renderFileGrid = () => (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2 p-4">
       {files.map(file => (
         <button
           key={file.path}
-          onClick={() => handleFileClick(file)}
+          onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
           onDoubleClick={() => handleFileDoubleClick(file)}
           className={cn(
             "flex flex-col items-center gap-1 p-2 rounded-lg text-center",
-            selectedFile === file.path
-              ? "bg-blue-500/20 ring-1 ring-blue-500"
-              : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            selectedFile === file.path && "bg-zinc-200/70 dark:bg-zinc-700/70"
           )}
         >
           <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-12 h-12" />
-          <span className="text-xs text-zinc-700 dark:text-zinc-300 break-all line-clamp-2">
+          <span className={cn(
+            "text-xs break-all line-clamp-2 px-1 rounded",
+            selectedFile === file.path
+              ? "bg-blue-500 text-white"
+              : "text-zinc-700 dark:text-zinc-300"
+          )}>
             {file.name}
           </span>
         </button>
@@ -538,6 +686,59 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
           This folder is empty
         </div>
       )}
+    </div>
+  );
+
+  // Render desktop list view
+  const renderDesktopListView = () => (
+    <div className="flex flex-col">
+      {/* Column headers */}
+      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex-1 min-w-0">Name</div>
+        <div className="w-32 text-left">Kind</div>
+        <div className="w-52 text-left">Date Modified</div>
+      </div>
+      {/* File rows */}
+      <div className="flex-1">
+        {files.map(file => (
+          <button
+            key={file.path}
+            onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
+            onDoubleClick={() => handleFileDoubleClick(file)}
+            className={cn(
+              "w-full flex items-center px-4 py-1 text-left text-sm text-zinc-900 dark:text-zinc-100",
+              selectedFile === file.path && "bg-blue-500 text-white"
+            )}
+          >
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <FileIcon
+                type={file.type}
+                name={file.name}
+                icon={file.icon}
+                className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && file.type !== "app" && "brightness-0 invert")}
+              />
+              <span className="truncate">{file.name}</span>
+            </div>
+            <div className={cn(
+              "w-32 text-left truncate",
+              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+            )}>
+              {getFileKind(file)}
+            </div>
+            <div className={cn(
+              "w-52 text-left truncate",
+              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+            )}>
+              {getFileDate(file.name)}
+            </div>
+          </button>
+        ))}
+        {files.length === 0 && !loading && (
+          <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
+            This folder is empty
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -664,8 +865,64 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
         )}
       </div>
 
-      {/* Spacer */}
-      <div className="w-16" />
+      {/* View mode dropdown (desktop only) */}
+      {!isMobile && (
+        <div className="relative">
+          <button
+            onClick={() => setShowViewDropdown(!showViewDropdown)}
+            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+          >
+            {viewMode === "icons" ? (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              </svg>
+            )}
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          {showViewDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowViewDropdown(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 z-20 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl rounded-md shadow-lg border border-black/10 dark:border-white/10 py-1 min-w-32">
+                <button
+                  onClick={() => { setViewMode("icons"); setShowViewDropdown(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
+                >
+                  {viewMode === "icons" ? (
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                  ) : (
+                    <span className="w-4" />
+                  )}
+                  <span>as Icons</span>
+                </button>
+                <button
+                  onClick={() => { setViewMode("list"); setShowViewDropdown(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
+                >
+                  {viewMode === "list" ? (
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                  ) : (
+                    <span className="w-4" />
+                  )}
+                  <span>as List</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -710,7 +967,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
       {renderNav()}
       <div className="flex flex-1 min-h-0">
         {renderSidebar()}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" onClick={() => setSelectedFile(null)}>
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="text-zinc-500">Loading...</div>
@@ -722,7 +979,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
                   {selectedFile?.split("/").pop()}
                 </h3>
                 <button
-                  onClick={() => setPreviewContent(null)}
+                  onClick={() => { setPreviewContent(null); setSelectedFile(null); }}
                   className="text-sm text-blue-500 hover:text-blue-600"
                 >
                   Close Preview
@@ -732,6 +989,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp }: Find
                 {previewContent}
               </pre>
             </div>
+          ) : viewMode === "list" ? (
+            renderDesktopListView()
           ) : (
             renderFileGrid()
           )}
