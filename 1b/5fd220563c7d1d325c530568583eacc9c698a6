@@ -1,0 +1,23 @@
+.gitignore
+  7284defb0a088132 48-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "1b5fd220563c7d1d325c530568583eacc9c698a6",
+  "prompts": {
+    "7284defb0a088132": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7da24670-1e47-4ffa-8e08-7123e982324b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
