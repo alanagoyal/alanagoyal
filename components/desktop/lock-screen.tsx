@@ -64,11 +64,15 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
 
       {/* Date and Time - positioned near top */}
       <div className="mt-24 text-center relative z-10">
-        <div className="text-2xl font-medium text-white/90 tracking-wide drop-shadow-lg">
+        <div
+          className="text-2xl font-medium text-white/80 tracking-wide"
+          style={{ textShadow: "0 0 20px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.2)" }}
+        >
           {currentDate}
         </div>
-        <div className="text-[120px] font-semibold text-white leading-none tracking-tight drop-shadow-xl"
-          style={{ fontWeight: 500 }}
+        <div
+          className="text-[120px] text-white/70 leading-none tracking-tight"
+          style={{ fontWeight: 500, textShadow: "0 0 40px rgba(255,255,255,0.4), 0 0 80px rgba(255,255,255,0.2), 0 4px 8px rgba(0,0,0,0.3)" }}
         >
           {currentTime}
         </div>
