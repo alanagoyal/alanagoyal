@@ -551,7 +551,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     if (isMobile) {
       return (
         <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-zinc-100/50 dark:bg-zinc-800/50">
-          {/* Favorites card */}
           <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
             {SIDEBAR_ITEMS.map((item, index) => (
               <button
@@ -580,9 +579,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     return (
       <div className="flex flex-col w-48 border-r border-zinc-200 dark:border-zinc-700 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-xl">
         <div className="flex-1 overflow-y-auto py-2">
-          <div className="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            Favorites
-          </div>
           {SIDEBAR_ITEMS.map(item => (
             <button
               key={item.id}
