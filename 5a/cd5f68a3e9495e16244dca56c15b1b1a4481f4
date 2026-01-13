@@ -1,0 +1,23 @@
+components/apps/settings/panels/personal-info.tsx
+  d14e855acce97a25 8,12-17,22,24-39,44-53,58-67,70,72-74,113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "5acd5f68a3e9495e16244dca56c15b1b1a4481f4",
+  "prompts": {
+    "d14e855acce97a25": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "712fb0fd-d60d-45b8-96ce-092308ff88b9",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 86,
+      "total_deletions": 70,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
