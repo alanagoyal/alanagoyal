@@ -586,13 +586,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
               className={cn(
                 "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left rounded-md",
                 selectedSidebar === item.id
-                  ? "bg-zinc-300 dark:bg-zinc-600 text-zinc-900 dark:text-white"
-                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  ? "bg-zinc-200/70 dark:bg-zinc-700/70 text-blue-500"
+                  : "text-zinc-900 dark:text-zinc-100"
               )}
             >
               <SidebarIcon
                 icon={item.icon}
-                className="w-4 h-4 text-blue-500"
+                className={cn(
+                  "w-4 h-4",
+                  selectedSidebar === item.id ? "text-blue-500" : "text-zinc-900 dark:text-zinc-100"
+                )}
               />
               <span>{item.label}</span>
             </button>
@@ -667,8 +670,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
             file.type === "file" && file.path.startsWith("trash/")
               ? "cursor-default"
               : selectedFile === file.path
-                ? "bg-blue-500/20 ring-1 ring-blue-500"
-                : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                ? "bg-blue-500 text-white"
+                : ""
           )}
         >
           <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-12 h-12" />
@@ -707,7 +710,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
                 ? "cursor-default text-zinc-900 dark:text-zinc-100"
                 : selectedFile === file.path
                   ? "bg-blue-500 text-white"
-                  : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                  : "text-zinc-900 dark:text-zinc-100"
             )}
           >
             <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -715,7 +718,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
                 type={file.type}
                 name={file.name}
                 icon={file.icon}
-                className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && "brightness-0 invert")}
+                className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && file.type !== "app" && "brightness-0 invert")}
               />
               <span className="truncate">{file.name}</span>
             </div>
