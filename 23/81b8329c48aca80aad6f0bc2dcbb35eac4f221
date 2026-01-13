@@ -1,0 +1,23 @@
+components/apps/settings/panels/storage.tsx
+  4e03b2fb117e7846 9,12-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "2381b8329c48aca80aad6f0bc2dcbb35eac4f221",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 71,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}
