@@ -142,7 +142,7 @@ function FileIcon({ type, name, icon, className }: { type: "file" | "dir" | "app
             alt={name}
             width={48}
             height={48}
-            className={cn("rounded-lg", className)}
+            className={className}
           />
         );
       }
@@ -234,6 +234,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true); // For mobile
+  const [viewMode, setViewMode] = useState<"icons" | "list">("list");
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
 
   const inDesktopShell = inShell && windowFocus;
 
@@ -582,7 +584,59 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
     );
   };
 
-  // Render file grid (desktop)
+  // Generate a pseudo-random date from last 7 days based on filename (deterministic)
+  const getFileDate = (filename: string): string => {
+    // Use filename to generate a consistent "random" number
+    let hash = 0;
+    for (let i = 0; i < filename.length; i++) {
+      hash = ((hash << 5) - hash) + filename.charCodeAt(i);
+      hash = hash & hash;
+    }
+    const daysAgo = Math.abs(hash) % 7;
+    const hours = Math.abs(hash >> 3) % 12 + 1;
+    const minutes = Math.abs(hash >> 7) % 60;
+    const isPM = (hash >> 11) % 2 === 0;
+
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+
+    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Today at ${timeStr}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${timeStr}`;
+    } else {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} at ${timeStr}`;
+    }
+  };
+
+  // Get file kind description
+  const getFileKind = (file: FileItem): string => {
+    if (file.type === "dir") return "Folder";
+    if (file.type === "app") return "Application";
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    switch (ext) {
+      case "md": return "Markdown";
+      case "ts": case "tsx": return "TypeScript";
+      case "js": case "jsx": return "JavaScript";
+      case "json": return "JSON";
+      case "css": return "CSS";
+      case "html": return "HTML";
+      case "svg": return "SVG Image";
+      case "png": return "PNG Image";
+      case "jpg": case "jpeg": return "JPEG Image";
+      case "pdf": return "PDF Document";
+      default: return "Document";
+    }
+  };
+
+  // Render file grid (desktop icons view)
   const renderFileGrid = () => (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2 p-4">
       {files.map(file => (
@@ -608,6 +662,61 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
           This folder is empty
         </div>
       )}
+    </div>
+  );
+
+  // Render desktop list view
+  const renderDesktopListView = () => (
+    <div className="flex flex-col">
+      {/* Column headers */}
+      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex-1 min-w-0">Name</div>
+        <div className="w-32 text-left">Kind</div>
+        <div className="w-52 text-left">Date Modified</div>
+      </div>
+      {/* File rows */}
+      <div className="flex-1">
+        {files.map(file => (
+          <button
+            key={file.path}
+            onClick={() => handleFileClick(file)}
+            onDoubleClick={() => handleFileDoubleClick(file)}
+            className={cn(
+              "w-full flex items-center px-4 py-1 text-left text-sm",
+              selectedFile === file.path
+                ? "bg-blue-500 text-white"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+            )}
+          >
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <FileIcon
+                type={file.type}
+                name={file.name}
+                icon={file.icon}
+                className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && "brightness-0 invert")}
+              />
+              <span className="truncate">{file.name}</span>
+            </div>
+            <div className={cn(
+              "w-32 text-left truncate",
+              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+            )}>
+              {getFileKind(file)}
+            </div>
+            <div className={cn(
+              "w-52 text-left truncate",
+              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+            )}>
+              {getFileDate(file.name)}
+            </div>
+          </button>
+        ))}
+        {files.length === 0 && !loading && (
+          <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
+            This folder is empty
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -734,8 +843,66 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
         )}
       </div>
 
-      {/* Spacer */}
-      <div className="w-16" />
+      {/* View mode dropdown (desktop only) */}
+      {!isMobile && (
+        <div className="relative">
+          <button
+            onClick={() => setShowViewDropdown(!showViewDropdown)}
+            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+          >
+            {viewMode === "icons" ? (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              </svg>
+            )}
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          {showViewDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowViewDropdown(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 z-20 bg-zinc-800 rounded-lg shadow-lg py-1 min-w-32">
+                <button
+                  onClick={() => { setViewMode("icons"); setShowViewDropdown(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-zinc-700",
+                    viewMode === "icons" ? "text-white" : "text-zinc-300"
+                  )}
+                >
+                  {viewMode === "icons" && (
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                  )}
+                  <span className={viewMode !== "icons" ? "ml-6" : ""}>as Icons</span>
+                </button>
+                <button
+                  onClick={() => { setViewMode("list"); setShowViewDropdown(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-zinc-700",
+                    viewMode === "list" ? "text-white" : "text-zinc-300"
+                  )}
+                >
+                  {viewMode === "list" && (
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                  )}
+                  <span className={viewMode !== "list" ? "ml-6" : ""}>as List</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -802,6 +969,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
                 {previewContent}
               </pre>
             </div>
+          ) : viewMode === "list" ? (
+            renderDesktopListView()
           ) : (
             renderFileGrid()
           )}
