@@ -670,12 +670,17 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
             file.type === "file" && file.path.startsWith("trash/")
               ? "cursor-default"
               : selectedFile === file.path
-                ? "bg-blue-500 text-white"
+                ? "bg-zinc-200/70 dark:bg-zinc-700/70"
                 : ""
           )}
         >
           <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-12 h-12" />
-          <span className="text-xs text-zinc-700 dark:text-zinc-300 break-all line-clamp-2">
+          <span className={cn(
+            "text-xs break-all line-clamp-2 px-1 rounded",
+            selectedFile === file.path
+              ? "bg-blue-500 text-white"
+              : "text-zinc-700 dark:text-zinc-300"
+          )}>
             {file.name}
           </span>
         </button>
