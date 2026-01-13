@@ -25,6 +25,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     { category: initialCategory || "general", panel: initialPanel || null }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [scrollToOSVersion, setScrollToOSVersion] = useState(false);
 
   // Handle initialPanel/initialCategory changes (e.g., from menu bar)
   useEffect(() => {
@@ -47,12 +48,19 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex]);
 
-  const handleCategorySelect = (category: SettingsCategory) => {
+  const handleCategorySelect = (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => {
     navigate(category, null);
+    if (options?.scrollToOSVersion) {
+      setScrollToOSVersion(true);
+    }
     if (isMobile) {
       setShowSidebar(false);
     }
   };
+
+  const handleScrollComplete = useCallback(() => {
+    setScrollToOSVersion(false);
+  }, []);
 
   const handlePanelSelect = (panel: SettingsPanel) => {
     navigate(selectedCategory, panel);
@@ -152,8 +160,11 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
               selectedCategory={selectedCategory}
               selectedPanel={selectedPanel}
               onPanelSelect={handlePanelSelect}
+              onCategorySelect={handleCategorySelect}
               onBack={handleBack}
               isMobile={isMobile}
+              scrollToOSVersion={scrollToOSVersion}
+              onScrollComplete={handleScrollComplete}
             />
           </>
         )}
@@ -187,8 +198,11 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
             selectedCategory={selectedCategory}
             selectedPanel={selectedPanel}
             onPanelSelect={handlePanelSelect}
+            onCategorySelect={handleCategorySelect}
             onBack={handleBack}
             isMobile={isMobile}
+            scrollToOSVersion={scrollToOSVersion}
+            onScrollComplete={handleScrollComplete}
           />
         </div>
       </div>

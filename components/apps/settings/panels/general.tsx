@@ -1,11 +1,12 @@
 "use client";
 
 import { Info, Download, HardDrive, ChevronRight } from "lucide-react";
-import { SettingsPanel } from "../settings-app";
+import { SettingsPanel, SettingsCategory } from "../settings-app";
 import { cn } from "@/lib/utils";
 
 interface GeneralPanelProps {
   onPanelSelect: (panel: SettingsPanel) => void;
+  onCategorySelect?: (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => void;
   isMobile?: boolean;
 }
 
@@ -22,7 +23,7 @@ const items = [
     name: "Software Update",
     icon: <Download className="w-5 h-5 text-white" />,
     iconBg: "bg-gray-500",
-    navigable: false,
+    navigable: true,
   },
   {
     id: "storage" as const,
@@ -33,14 +34,25 @@ const items = [
   },
 ];
 
-export function GeneralPanel({ onPanelSelect, isMobile = false }: GeneralPanelProps) {
+export function GeneralPanel({ onPanelSelect, onCategorySelect, isMobile = false }: GeneralPanelProps) {
+  const handleItemClick = (itemId: string) => {
+    if (itemId === "about") {
+      onPanelSelect("about");
+    } else if (itemId === "software-update") {
+      // Navigate to Appearance category and scroll to OS version
+      onCategorySelect?.("appearance", { scrollToOSVersion: true });
+    } else if (itemId === "storage") {
+      onPanelSelect("storage");
+    }
+  };
+
   return (
     <div className={isMobile ? "" : "space-y-1"}>
       <div className={cn("rounded-xl overflow-hidden", isMobile ? "bg-background" : "bg-muted/50")}>
         {items.map((item, index) => (
           <button
             key={item.id}
-            onClick={() => item.navigable && onPanelSelect(item.id === "about" ? "about" : item.id === "storage" ? "storage" : null)}
+            onClick={() => item.navigable && handleItemClick(item.id)}
             disabled={!item.navigable}
             className={cn(
               "w-full flex items-center justify-between px-4 py-3 transition-colors",

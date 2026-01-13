@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import wallpaper from "@/public/desktop/wallpaper.png";
+import { useSystemSettings } from "@/lib/system-settings-context";
+import { getWallpaperPath } from "@/lib/os-versions";
 
 interface LockScreenProps {
   onUnlock: () => void;
 }
 
 export function LockScreen({ onUnlock }: LockScreenProps) {
+  const { currentOS } = useSystemSettings();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [currentDate, setCurrentDate] = useState<string>("");
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -51,11 +53,12 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       {/* Wallpaper background (not blurred) - covers everything */}
       <div className="absolute inset-0">
         <Image
-          src={wallpaper}
+          src={getWallpaperPath(currentOS.id)}
           alt="Lock screen wallpaper"
           fill
           className="object-cover"
           priority
+          unoptimized
         />
       </div>
 
