@@ -6,13 +6,15 @@ interface StoragePanelProps {
   isMobile?: boolean;
 }
 
-// Storage categories with colors matching macOS
+// Storage categories in rainbow order (left to right)
 // Sizes must sum to usedSize (613.71 GB)
 const storageCategories = [
-  { id: "documents", label: "Documents", color: "bg-red-500", size: 156.32 },
-  { id: "apps", label: "Apps", color: "bg-purple-500", size: 87.45 },
-  { id: "system", label: "macOS", color: "bg-zinc-500", size: 52.18 },
-  { id: "other", label: "Other", color: "bg-zinc-400", size: 317.76 },
+  { id: "documents", label: "Documents", color: "bg-red-500", size: 150.00 },
+  { id: "messages", label: "Messages", color: "bg-orange-500", size: 80.00 },
+  { id: "files", label: "Files", color: "bg-yellow-500", size: 120.00 },
+  { id: "notes", label: "Notes", color: "bg-green-500", size: 45.00 },
+  { id: "applications", label: "Applications", color: "bg-cyan-500", size: 90.00 },
+  { id: "system", label: "System Data", color: "bg-zinc-500", size: 128.71 },
 ];
 
 const totalSize = 994.66; // GB
