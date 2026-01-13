@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "4853108d77209ae9c95b03d1e08cf93f5b884ee6",
+  "prompts": {
+    "7284defb0a088132": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7da24670-1e47-4ffa-8e08-7123e982324b",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 4,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
