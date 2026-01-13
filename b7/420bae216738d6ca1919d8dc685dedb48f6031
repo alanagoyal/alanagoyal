@@ -1,0 +1,31 @@
+components/apps/settings/panels/general.tsx
+  4e03b2fb117e7846 9,42-43
+components/apps/settings/panels/appearance.tsx
+  4e03b2fb117e7846 296-297,300,304-315,373-374,376-377,427
+components/apps/settings/settings-app.tsx
+  4e03b2fb117e7846 28,51,53-55,61-63,164-165,202-203
+components/apps/settings/content.tsx
+  4e03b2fb117e7846 17,20-21,61-62,129,132-133,135,153,156-157,159
+components/apps/settings/panels/about.tsx
+  4e03b2fb117e7846 13,202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "b7420bae216738d6ca1919d8dc685dedb48f6031",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 14,
+      "accepted_lines": 51,
+      "overriden_lines": 0
+    }
+  }
+}
