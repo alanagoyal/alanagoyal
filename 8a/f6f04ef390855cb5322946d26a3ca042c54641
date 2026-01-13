@@ -1,0 +1,23 @@
+components/apps/iterm/terminal.tsx
+  4e03b2fb117e7846 4,132-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "8af6f04ef390855cb5322946d26a3ca042c54641",
+  "prompts": {
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 0,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
