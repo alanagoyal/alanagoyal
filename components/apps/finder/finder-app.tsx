@@ -663,7 +663,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
       {files.map(file => (
         <button
           key={file.path}
-          onClick={() => handleFileClick(file)}
+          onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
           onDoubleClick={() => handleFileDoubleClick(file)}
           className={cn(
             "flex flex-col items-center gap-1 p-2 rounded-lg text-center",
@@ -707,7 +707,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
         {files.map(file => (
           <button
             key={file.path}
-            onClick={() => handleFileClick(file)}
+            onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
             onDoubleClick={() => handleFileDoubleClick(file)}
             className={cn(
               "w-full flex items-center px-4 py-1 text-left text-sm",
@@ -977,7 +977,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
       {renderNav()}
       <div className="flex flex-1 min-h-0">
         {renderSidebar()}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" onClick={() => setSelectedFile(null)}>
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="text-zinc-500">Loading...</div>
