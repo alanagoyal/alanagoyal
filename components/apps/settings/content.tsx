@@ -14,6 +14,7 @@ interface ContentProps {
   selectedCategory: SettingsCategory;
   selectedPanel: SettingsPanel;
   onPanelSelect: (panel: SettingsPanel) => void;
+  onCategorySelect: (category: SettingsCategory) => void;
   onBack: () => void;
   isMobile: boolean;
 }
@@ -52,6 +53,7 @@ export function Content({
   selectedCategory,
   selectedPanel,
   onPanelSelect,
+  onCategorySelect,
   onBack,
   isMobile,
 }: ContentProps) {
@@ -61,7 +63,7 @@ export function Content({
   if (selectedPanel === "about") {
     return (
       <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
-        <AboutPanel isMobile={isMobile} />
+        <AboutPanel isMobile={isMobile} onCategorySelect={onCategorySelect} />
       </div>
     );
   }
@@ -118,7 +120,7 @@ export function Content({
 
           {/* Panel content */}
           {selectedCategory === "general" && (
-            <GeneralPanel onPanelSelect={onPanelSelect} isMobile={isMobile} />
+            <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
           )}
           {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
         </div>
@@ -136,7 +138,7 @@ export function Content({
           </div>
           <div className="p-4">
             {selectedCategory === "general" && (
-              <GeneralPanel onPanelSelect={onPanelSelect} isMobile={isMobile} />
+              <GeneralPanel onPanelSelect={onPanelSelect} onCategorySelect={onCategorySelect} isMobile={isMobile} />
             )}
             {selectedCategory === "appearance" && <AppearancePanel isMobile={isMobile} />}
           </div>

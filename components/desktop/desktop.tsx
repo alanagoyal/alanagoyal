@@ -17,7 +17,7 @@ import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
-import wallpaper from "@/public/desktop/wallpaper.png";
+import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
@@ -29,7 +29,7 @@ interface DesktopProps {
 
 function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
-  const { focusMode } = useSystemSettings();
+  const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
@@ -141,12 +141,13 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   return (
     <div className="fixed inset-0">
       <Image
-        src={wallpaper}
+        src={getWallpaperPath(currentOS.id)}
         alt="Desktop wallpaper"
         fill
         className="object-cover -z-10"
         priority
         quality={100}
+        unoptimized
       />
       <MenuBar
         onOpenSettings={handleOpenSettings}

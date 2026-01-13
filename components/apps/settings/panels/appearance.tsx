@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { useSystemSettings } from "@/lib/system-settings-context";
+import { OS_VERSIONS, getWallpaperPath } from "@/lib/os-versions";
+import { createCircularWallpaperPreview } from "@/lib/wallpaper-utils";
 
 type ThemeOption = "system" | "light" | "dark";
 
@@ -193,12 +197,108 @@ function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: Them
   );
 }
 
+// Cache for circular wallpaper previews
+const previewCache = new Map<string, string>();
+let preloadStarted = false;
+
+// Preload all wallpaper previews in parallel
+function preloadAllPreviews(onUpdate: () => void) {
+  if (preloadStarted) return;
+  preloadStarted = true;
+
+  OS_VERSIONS.forEach((os) => {
+    if (previewCache.has(os.id)) return;
+
+    const wallpaperPath = getWallpaperPath(os.id);
+    createCircularWallpaperPreview(wallpaperPath)
+      .then((dataUrl) => {
+        previewCache.set(os.id, dataUrl);
+        onUpdate();
+      })
+      .catch((err) => {
+        console.error("Failed to create circular preview for", os.id, err);
+      });
+  });
+}
+
+// Hook to trigger re-renders when cache updates
+function usePreviewCache(): number {
+  const [updateCount, setUpdateCount] = useState(0);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    preloadAllPreviews(() => {
+      if (mountedRef.current) {
+        setUpdateCount((c) => c + 1);
+      }
+    });
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  return updateCount;
+}
+
+function OSVersionCard({
+  osId,
+  name,
+  version,
+  isSelected,
+  onClick,
+  cacheVersion,
+}: {
+  osId: string;
+  name: string;
+  version: string;
+  isSelected: boolean;
+  onClick: () => void;
+  cacheVersion: number;
+}) {
+  const preview = previewCache.get(osId) ?? null;
+  void cacheVersion;
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "relative flex flex-col items-center p-3 rounded-xl transition-all",
+        "hover:bg-muted/50",
+        isSelected && "ring-2 ring-blue-500 bg-blue-500/10"
+      )}
+    >
+      {isSelected && (
+        <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+          <Check className="w-3 h-3 text-white" />
+        </div>
+      )}
+      <div className="w-16 h-16 rounded-full overflow-hidden bg-muted mb-2">
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={preview}
+            alt={`macOS ${name}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full animate-pulse bg-muted-foreground/20" />
+        )}
+      </div>
+      <span className="text-xs font-medium">{name}</span>
+      <span className="text-[10px] text-muted-foreground">{version}</span>
+    </button>
+  );
+}
+
 interface AppearancePanelProps {
   isMobile?: boolean;
 }
 
 export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
   const { theme, setTheme } = useTheme();
+  const { osVersionId, setOSVersionId } = useSystemSettings();
+  const cacheVersion = usePreviewCache();
 
   const handleThemeChange = (newTheme: ThemeOption) => {
     setTheme(newTheme);
@@ -254,6 +354,26 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
             </button>
           </div>
         </div>
+
+        {/* macOS Version section */}
+        <p className="text-sm text-muted-foreground uppercase tracking-wide px-2 pt-4">
+          macOS Version
+        </p>
+        <div className="rounded-xl bg-background p-4">
+          <div className="grid grid-cols-3 gap-2">
+            {OS_VERSIONS.map((os) => (
+              <OSVersionCard
+                key={os.id}
+                osId={os.id}
+                name={os.name}
+                version={os.version}
+                isSelected={os.id === osVersionId}
+                onClick={() => setOSVersionId(os.id)}
+                cacheVersion={cacheVersion}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -284,6 +404,24 @@ export function AppearancePanel({ isMobile = false }: AppearancePanelProps) {
               onClick={() => handleThemeChange("dark")}
             />
           </div>
+        </div>
+      </div>
+
+      {/* macOS Version section */}
+      <div className="rounded-xl bg-muted/50 p-4">
+        <h3 className="text-xs font-medium mb-3">macOS Version</h3>
+        <div className="grid grid-cols-4 gap-3">
+          {OS_VERSIONS.map((os) => (
+            <OSVersionCard
+              key={os.id}
+              osId={os.id}
+              name={os.name}
+              version={os.version}
+              isSelected={os.id === osVersionId}
+              onClick={() => setOSVersionId(os.id)}
+              cacheVersion={cacheVersion}
+            />
+          ))}
         </div>
       </div>
     </div>

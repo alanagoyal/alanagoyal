@@ -150,6 +150,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
               selectedCategory={selectedCategory}
               selectedPanel={selectedPanel}
               onPanelSelect={handlePanelSelect}
+              onCategorySelect={handleCategorySelect}
               onBack={handleBack}
               isMobile={isMobile}
             />
@@ -185,6 +186,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
             selectedCategory={selectedCategory}
             selectedPanel={selectedPanel}
             onPanelSelect={handlePanelSelect}
+            onCategorySelect={handleCategorySelect}
             onBack={handleBack}
             isMobile={isMobile}
           />
