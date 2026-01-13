@@ -1,0 +1,27 @@
+components/desktop/desktop.tsx
+  0b170302d63944ae 15,37,66-96,215,218
+components/apps/finder/finder-app.tsx
+  0b170302d63944ae 36,45-54,61,203-207,212,216-231,249,284-290,352-360,435,443
+components/desktop/dock.tsx
+  0b170302d63944ae 9-13,47,52-57,87-92,127-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ceff59aecc37a76503b9c1f83a269fe74e98ea6f",
+  "prompts": {
+    "0b170302d63944ae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d566dbf7-6546-4562-a816-00760ef4a6f3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 132,
+      "total_deletions": 14,
+      "accepted_lines": 127,
+      "overriden_lines": 0
+    }
+  }
+}
