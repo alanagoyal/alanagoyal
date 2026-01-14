@@ -1,0 +1,23 @@
+lib/app-config.ts
+  38e0cd020ecc952b 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "99f377b52868d5b47c892ffad1ff3078c6d582a0",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 11,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
