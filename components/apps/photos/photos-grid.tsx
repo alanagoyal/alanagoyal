@@ -124,23 +124,25 @@ export function PhotosGrid({
           </div>
         </div>
 
-        {/* Time Filter Toggle */}
-        <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
-          {(["years", "months", "all"] as TimeFilter[]).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => onTimeFilterChange(filter)}
-              className={cn(
-                "px-3 py-1 text-xs rounded-md transition-colors capitalize",
-                timeFilter === filter
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {filter === "all" ? "All Photos" : filter}
-            </button>
-          ))}
-        </div>
+        {/* Time Filter Toggle - hidden on mobile */}
+        {!isMobileView && (
+          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+            {(["years", "months", "all"] as TimeFilter[]).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => onTimeFilterChange(filter)}
+                className={cn(
+                  "px-3 py-1 text-xs rounded-md transition-colors capitalize",
+                  timeFilter === filter
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {filter === "all" ? "All Photos" : filter}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Photo Grid */}
