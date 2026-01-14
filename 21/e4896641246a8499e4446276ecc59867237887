@@ -1,0 +1,23 @@
+app/api/photos/upload/route.ts
+  38e0cd020ecc952b 3,13-61,154-158,166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "21e4896641246a8499e4446276ecc59867237887",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 79,
+      "total_deletions": 24,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    }
+  }
+}
