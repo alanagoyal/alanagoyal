@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Sidebar } from "./sidebar";
 import { PhotosGrid } from "./photos-grid";
+import { PhotoViewer } from "./photo-viewer";
 import { Nav } from "./nav";
 import { Photo, Collection, PhotosView, TimeFilter } from "@/types/photos";
 import { initialPhotos, initialCollections } from "@/data/photos/initial-photos";
@@ -24,6 +25,8 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
@@ -122,6 +125,22 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     );
   }, []);
 
+  const handlePhotoSelect = useCallback((photoId: string) => {
+    setSelectedPhotoId(photoId);
+  }, []);
+
+  const handleCloseViewer = useCallback(() => {
+    setSelectedPhotoId(null);
+  }, []);
+
+  // Get the selected photo and its index in the filtered list
+  const selectedPhoto = selectedPhotoId
+    ? filteredPhotos.find((p) => p.id === selectedPhotoId)
+    : null;
+  const selectedPhotoIndex = selectedPhoto
+    ? filteredPhotos.findIndex((p) => p.id === selectedPhotoId)
+    : -1;
+
   if (!isLayoutInitialized) {
     return <div className="h-full bg-background" />;
   }
@@ -165,10 +184,10 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
             </Sidebar>
           </div>
 
-          {/* Photos Grid */}
+          {/* Photos Grid - always mounted to preserve scroll */}
           <div
             className={`flex-1 min-h-0 overflow-hidden ${
-              showPhotosGrid ? "block" : "hidden"
+              showPhotosGrid && !selectedPhoto ? "block" : "hidden"
             }`}
           >
             <PhotosGrid
@@ -181,8 +200,25 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               collections={collections}
               isDesktop={isDesktop}
               onToggleFavorite={handleToggleFavorite}
+              onPhotoSelect={handlePhotoSelect}
+              hasInitiallyScrolled={hasInitiallyScrolled}
+              onInitialScroll={() => setHasInitiallyScrolled(true)}
             />
           </div>
+
+          {/* Photo Viewer */}
+          {selectedPhoto && showPhotosGrid && (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <PhotoViewer
+                photo={selectedPhoto}
+                currentIndex={selectedPhotoIndex}
+                totalPhotos={filteredPhotos.length}
+                onBack={handleCloseViewer}
+                isMobileView={isMobileView}
+                isDesktop={isDesktop}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>

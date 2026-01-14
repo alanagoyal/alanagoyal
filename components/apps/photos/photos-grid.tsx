@@ -19,6 +19,9 @@ interface PhotosGridProps {
   collections: Collection[];
   isDesktop?: boolean;
   onToggleFavorite?: (photoId: string) => void;
+  onPhotoSelect?: (photoId: string) => void;
+  hasInitiallyScrolled?: boolean;
+  onInitialScroll?: () => void;
 }
 
 export function PhotosGrid({
@@ -31,26 +34,26 @@ export function PhotosGrid({
   collections,
   isDesktop = false,
   onToggleFavorite,
+  onPhotoSelect,
+  hasInitiallyScrolled = false,
+  onInitialScroll,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
   const contentRef = useRef<HTMLDivElement>(null);
-  const hasScrolledRef = useRef(false);
 
   // Scroll to bottom on initial load (to show most recent photos)
   useEffect(() => {
-    if (contentRef.current && photos.length > 0 && !hasScrolledRef.current) {
-      // Small delay to ensure content is rendered
+    if (contentRef.current && photos.length > 0 && !hasInitiallyScrolled) {
       setTimeout(() => {
-        // Find the scrollable viewport (parent with overflow)
         const viewport = contentRef.current?.closest('[data-radix-scroll-area-viewport]');
         if (viewport) {
           viewport.scrollTop = viewport.scrollHeight;
-          hasScrolledRef.current = true;
+          onInitialScroll?.();
         }
       }, 100);
     }
-  }, [photos.length]);
+  }, [photos.length, hasInitiallyScrolled, onInitialScroll]);
 
   const groupedPhotos = useMemo(() => {
     // Sort oldest first (ascending)
@@ -168,7 +171,8 @@ export function PhotosGrid({
                   {groupPhotos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square relative overflow-hidden bg-muted group"
+                      className="aspect-square relative overflow-hidden bg-muted group cursor-pointer"
+                      onDoubleClick={() => onPhotoSelect?.(photo.id)}
                     >
                       <Image
                         src={`/photos/${photo.filename}`}
