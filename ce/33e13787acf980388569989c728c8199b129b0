@@ -1,0 +1,25 @@
+app/api/photos/upload/route.ts
+  38e0cd020ecc952b 146,152-175
+next.config.mjs
+  38e0cd020ecc952b 13-17,21-22,24,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ce33e13787acf980388569989c728c8199b129b0",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 34,
+      "total_deletions": 7,
+      "accepted_lines": 34,
+      "overriden_lines": 0
+    }
+  }
+}
