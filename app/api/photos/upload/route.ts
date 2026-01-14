@@ -143,15 +143,36 @@ export async function POST(request: NextRequest) {
       .getPublicUrl(uploadData.path);
 
     // Parse timestamp to ensure valid format
-    // If timestamp has no timezone info, assume it's PST (America/Los_Angeles)
+    // If timestamp has no timezone info, assume it's Pacific time (America/Los_Angeles)
     let timestampStr = timestamp as string;
 
     // Check if timestamp already has timezone info (Z, +, or -)
     const hasTimezone = /([Zz]|[+-]\d{2}:?\d{2})$/.test(timestampStr);
     if (!hasTimezone) {
-      // Append PST offset (-08:00 standard, -07:00 daylight)
-      // Use -08:00 as default; iOS sends local time which is what we want to preserve
-      timestampStr = timestampStr + "-08:00";
+      // Determine if the date falls in PDT (daylight) or PST (standard)
+      // PDT: Second Sunday of March to First Sunday of November
+      const tempDate = new Date(timestampStr);
+      const year = tempDate.getFullYear();
+      const month = tempDate.getMonth();
+      const day = tempDate.getDate();
+
+      // Calculate second Sunday of March
+      const marchFirst = new Date(year, 2, 1);
+      const marchFirstDay = marchFirst.getDay();
+      const secondSundayMarch = 8 + (7 - marchFirstDay) % 7;
+
+      // Calculate first Sunday of November
+      const novFirst = new Date(year, 10, 1);
+      const novFirstDay = novFirst.getDay();
+      const firstSundayNov = 1 + (7 - novFirstDay) % 7;
+
+      // Check if in DST (PDT) - between second Sunday of March and first Sunday of November
+      const isDST = (month > 2 && month < 10) ||
+                    (month === 2 && day >= secondSundayMarch) ||
+                    (month === 10 && day < firstSundayNov);
+
+      // PDT is -07:00, PST is -08:00
+      timestampStr = timestampStr + (isDST ? "-07:00" : "-08:00");
     }
 
     const photoTimestamp = new Date(timestampStr);
