@@ -53,6 +53,7 @@ export const MessageInput = forwardRef<
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { theme } = useTheme();
 
   // Tiptap editor definition
@@ -168,14 +169,13 @@ export const MessageInput = forwardRef<
     content: message,
     autofocus: !isMobileView && !isNewChat ? "end" : false,
     onUpdate: ({ editor }) => {
-      const element = editor.view.dom as HTMLElement;
-      const height = Math.min(200, Math.max(32, element.scrollHeight));
-      const containerHeight = height + 32; // Add padding (16px top + 16px bottom)
-      document.documentElement.style.setProperty(
-        "--dynamic-height",
-        `${containerHeight}px`
-      );
-      setMessage(editor.getHTML());
+      // Debounce setMessage to avoid re-renders on every keystroke
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      debounceRef.current = setTimeout(() => {
+        setMessage(editor.getHTML());
+      }, 16); // ~1 frame delay
     },
     onCreate: ({ editor }) => {
       if (!isMobileView && !isNewChat) {
@@ -328,6 +328,15 @@ export const MessageInput = forwardRef<
       document.removeEventListener("keydown", handleEscape);
     };
   }, [showEmojiPicker, editor]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div

@@ -164,7 +164,7 @@ export class MessageQueue {
         currentState.userMessageDebounceTimeout = null;
         this.addTask(conversation.id, task);
       }
-    }, 500);
+    }, 100);
 
     conversationState.userMessageDebounceTimeout = timeoutId;
   }
@@ -331,7 +331,7 @@ export class MessageQueue {
       }
 
       // Start typing animation and delay for the content
-      const typingDelay = task.priority === 100 ? 4000 : 7000; // Faster for user responses
+      const typingDelay = task.priority === 100 ? 3000 : 6000; // Faster for user responses
       this.callbacks.onTypingStatusChange(task.conversation.id, data.sender);
 
       // Check version before starting typing delay
