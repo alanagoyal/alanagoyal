@@ -14,6 +14,7 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
+import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -62,6 +63,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
   const handleFinderFocus = useCallback(() => {
     window.history.replaceState(null, "", "/finder");
+  }, []);
+
+  const handlePhotosFocus = useCallback(() => {
+    window.history.replaceState(null, "", "/photos");
   }, []);
 
   // Handler for Finder dock icon click - resets to Recents view
@@ -214,6 +219,10 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
 
           <Window appId="finder" onFocus={handleFinderFocus}>
             <FinderApp inShell={true} onOpenApp={handleOpenApp} initialTab={finderTab} />
+          </Window>
+
+          <Window appId="photos" onFocus={handlePhotosFocus}>
+            <PhotosApp inShell={true} />
           </Window>
 
           <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} />

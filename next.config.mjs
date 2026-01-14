@@ -10,7 +10,22 @@
  * - /{legacy-slug}       → redirects to /notes/{legacy-slug} (server-side, permanent)
  * - /{other}             → 404
  */
+
+// Extract Supabase hostname from environment variable
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : null;
+
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      // Supabase Storage for photos
+      ...(supabaseHostname ? [{
+        protocol: "https",
+        hostname: supabaseHostname,
+        pathname: "/storage/v1/object/public/**",
+      }] : []),
+    ],
+  },
   async rewrites() {
     return [];
   },

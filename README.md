@@ -40,6 +40,14 @@ a macos sierra 10.12 themed desktop with:
 - browse local files and github repositories
 - launch apps from applications folder
 
+**photos** - apple photos clone
+- photo library with grid view and full-screen viewer
+- collections: flowers, food, friends
+- favorites (per-browser, stored in localstorage)
+- time filters (today, this week, this month, this year, all)
+- keyboard navigation (arrow keys, escape to close)
+- upload via ios shortcut with ai auto-categorization
+
 **settings** - system preferences
 - wi-fi and bluetooth panels
 - appearance (light/dark/system theme)
@@ -67,6 +75,12 @@ the app uses next.js app router with a route group for the desktop environment. 
 - conversations stored in localstorage
 - ai responses generated via braintrust proxy (openai-compatible)
 - no server-side message storage
+
+**photos** use supabase storage:
+- images stored in supabase storage bucket
+- metadata (filename, timestamp, collections) in database
+- favorites are per-browser (stored in localstorage)
+- upload via api with ai auto-categorization (openai gpt-4o-mini)
 
 the app is built with:
 - **next.js** with app router
@@ -117,6 +131,28 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 or redeploy on vercel to refresh all pages.
 
+### ios shortcut for photos
+
+upload photos directly from your iphone using the share sheet:
+
+1. open the **shortcuts** app on ios
+2. create a new shortcut with these actions:
+   - **receive** images from share sheet
+   - **get details of image** → date taken
+   - **resize image** to max 2048px (fit)
+   - **convert image** to jpeg (quality 0.8)
+   - **encode** with base64
+   - **format date** → iso 8601
+   - **get contents of url**:
+     - url: `https://yourdomain.com/api/photos/upload`
+     - method: POST
+     - headers: `x-api-key: <your-PHOTOS_UPLOAD_API_KEY>`
+     - body: json `{ "image": [base64], "timestamp": [formatted date] }`
+3. name it "add to website"
+4. enable "show in share sheet" for images
+
+when you share a photo, the shortcut uploads it to supabase storage and ai automatically categorizes it into collections (flowers, food, friends).
+
 ## clone the repo
 
 `git clone https://github.com/alanagoyal/alanagoyal`
@@ -138,12 +174,17 @@ supabase db push
 grab the project url and anon key from the api settings and put them in a new `.env.local` file in the root directory:
 
 ```
-# supabase (required for notes)
+# supabase (required for notes and photos)
 NEXT_PUBLIC_SUPABASE_URL="<your-supabase-url>"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-anon-key>"
+SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
 
 # braintrust (required for messages ai)
 BRAINTRUST_API_KEY="<your-braintrust-api-key>"
+
+# photos upload (required for ios shortcut)
+PHOTOS_UPLOAD_API_KEY="<generate-random-key>"
+OPENAI_API_KEY="<your-openai-api-key>"
 
 # site config (optional)
 NEXT_PUBLIC_SITE_URL="https://yourdomain.com"
@@ -151,7 +192,10 @@ REVALIDATE_TOKEN="<your-revalidate-token>"
 NEXT_PUBLIC_REVALIDATE_TOKEN="<your-revalidate-token>"
 ```
 
-note: `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration.
+**notes:**
+- `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration
+- `SUPABASE_SERVICE_ROLE_KEY` is needed for photo uploads (bypasses RLS)
+- `OPENAI_API_KEY` is used for ai photo categorization
 
 ## install dependencies
 
