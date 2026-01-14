@@ -106,7 +106,7 @@ function SidebarItem({
         "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors text-left",
         isActive
           ? "bg-zinc-200/70 dark:bg-zinc-700/70 text-blue-500"
-          : "hover:bg-foreground/5 text-foreground",
+          : "text-foreground",
         isMobileView && "py-3"
       )}
     >
