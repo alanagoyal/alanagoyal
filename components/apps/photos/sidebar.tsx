@@ -33,6 +33,7 @@ export function Sidebar({
       <div className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea
           className="h-full"
+          bottomMargin="0"
           onScrollCapture={(e) => {
             const target = e.target as HTMLElement;
             onScroll?.(target.scrollTop > 0);

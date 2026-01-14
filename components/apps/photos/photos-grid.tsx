@@ -146,7 +146,7 @@ export function PhotosGrid({
       </div>
 
       {/* Photo Grid */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" bottomMargin="0">
         <div className="p-4" ref={contentRef} onClick={() => onGridSelect?.(null)}>
           {photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
