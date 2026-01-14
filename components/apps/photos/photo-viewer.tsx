@@ -10,6 +10,7 @@ import Image from "next/image";
 
 interface PhotoViewerProps {
   photo: Photo;
+  photos: Photo[]; // All photos for prefetching
   currentIndex: number;
   totalPhotos: number;
   onBack: () => void;
@@ -21,6 +22,7 @@ interface PhotoViewerProps {
 
 export function PhotoViewer({
   photo,
+  photos,
   currentIndex,
   totalPhotos,
   onBack,
@@ -32,6 +34,10 @@ export function PhotoViewer({
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Get adjacent photos for prefetching
+  const prevPhoto = currentIndex > 0 ? photos[currentIndex - 1] : null;
+  const nextPhoto = currentIndex < photos.length - 1 ? photos[currentIndex + 1] : null;
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -96,6 +102,28 @@ export function PhotoViewer({
             priority
           />
         </div>
+
+        {/* Prefetch adjacent photos (hidden) */}
+        {prevPhoto && (
+          <Image
+            src={`/photos/${prevPhoto.filename}`}
+            alt=""
+            width={1}
+            height={1}
+            className="sr-only"
+            priority
+          />
+        )}
+        {nextPhoto && (
+          <Image
+            src={`/photos/${nextPhoto.filename}`}
+            alt=""
+            width={1}
+            height={1}
+            className="sr-only"
+            priority
+          />
+        )}
       </div>
     </div>
   );

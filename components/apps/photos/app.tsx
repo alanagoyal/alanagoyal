@@ -231,6 +231,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
             <div className="flex-1 min-h-0 overflow-hidden">
               <PhotoViewer
                 photo={selectedPhoto}
+                photos={filteredPhotos}
                 currentIndex={selectedPhotoIndex}
                 totalPhotos={filteredPhotos.length}
                 onBack={handleCloseViewer}
