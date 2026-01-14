@@ -7,6 +7,7 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp } from "@/components/apps/finder/finder-app";
+import { PhotosApp } from "@/components/apps/photos/photos-app";
 
 const DEFAULT_APP = "notes";
 
@@ -32,6 +33,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId("iterm");
     } else if (path.startsWith("/finder")) {
       setActiveAppId("finder");
+    } else if (path.startsWith("/photos")) {
+      setActiveAppId("photos");
     } else if (initialApp) {
       setActiveAppId(initialApp);
     }
@@ -52,6 +55,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
         {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
         {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
+        {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
       </div>
     </RecentsProvider>
   );

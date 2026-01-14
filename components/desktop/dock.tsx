@@ -81,6 +81,8 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
       window.history.replaceState(null, "", "/iterm");
     } else if (appId === "finder") {
       window.history.replaceState(null, "", "/finder");
+    } else if (appId === "photos") {
+      window.history.replaceState(null, "", "/photos");
     }
   };
 

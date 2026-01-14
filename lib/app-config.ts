@@ -56,6 +56,17 @@ export const APPS: AppConfig[] = [
     minSize: { width: 700, height: 400 },
     menuBarTitle: "System Settings",
   },
+  {
+    id: "photos",
+    name: "Photos",
+    icon: "/photos.svg",
+    description: "Photo library",
+    accentColor: "#FF6B6B",
+    defaultPosition: { x: 130, y: 60 },
+    defaultSize: { width: 900, height: 650 },
+    minSize: { width: 600, height: 450 },
+    menuBarTitle: "Photos",
+  },
 ];
 
 export function getAppById(id: string): AppConfig | undefined {
