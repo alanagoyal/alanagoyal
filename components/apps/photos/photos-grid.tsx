@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
@@ -136,9 +135,9 @@ export function PhotosGrid({
         )}
       </div>
 
-      {/* Photo Grid - uses CSS flip trick to start scrolled to bottom */}
-      <ScrollArea className="flex-1 [&>div]:scale-y-[-1]" bottomMargin="0">
-        <div className="scale-y-[-1] p-4" onClick={() => onGridSelect?.(null)}>
+      {/* Photo Grid - flex-col-reverse makes scroll start at bottom naturally */}
+      <div className="flex-1 overflow-y-auto flex flex-col-reverse">
+        <div className="p-4" onClick={() => onGridSelect?.(null)}>
           {!loading && photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
               No photos
@@ -211,7 +210,7 @@ export function PhotosGrid({
             ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
