@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useLayoutEffect, useRef, useState } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
 import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,20 @@ export function PhotosGrid({
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPositioned, setIsPositioned] = useState(false);
+
+  // Scroll to bottom only if content overflows, otherwise stay at top
+  // useLayoutEffect ensures scroll happens before paint to prevent flash
+  useLayoutEffect(() => {
+    if (photos.length > 0 && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      if (container.scrollHeight > container.clientHeight) {
+        container.scrollTop = container.scrollHeight;
+      }
+      setIsPositioned(true);
+    }
+  }, [photos]);
 
   const groupedPhotos = useMemo(() => {
     // Photos are already sorted oldest first from parent
@@ -135,8 +149,14 @@ export function PhotosGrid({
         )}
       </div>
 
-      {/* Photo Grid - flex-col-reverse makes scroll start at bottom naturally */}
-      <div className="flex-1 overflow-y-auto flex flex-col-reverse">
+      {/* Photo Grid */}
+      <div
+        ref={scrollContainerRef}
+        className={cn(
+          "flex-1 overflow-y-auto",
+          !isPositioned && photos.length > 0 && "opacity-0"
+        )}
+      >
         <div className="p-4" onClick={() => onGridSelect?.(null)}>
           {!loading && photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
