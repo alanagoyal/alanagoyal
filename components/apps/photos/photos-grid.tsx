@@ -19,6 +19,7 @@ function preloadImage(url: string) {
 interface PhotosGridProps {
   photos: Photo[];
   loading?: boolean;
+  error?: string | null;
   timeFilter: TimeFilter;
   onTimeFilterChange: (filter: TimeFilter) => void;
   isMobileView: boolean;
@@ -35,6 +36,7 @@ interface PhotosGridProps {
 export function PhotosGrid({
   photos,
   loading = false,
+  error = null,
   timeFilter,
   onTimeFilterChange,
   isMobileView,
@@ -51,10 +53,17 @@ export function PhotosGrid({
   const inShell = isDesktop && windowFocus;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPositioned, setIsPositioned] = useState(false);
+  const prevPhotosRef = useRef<Photo[]>();
 
   // Scroll to bottom only if content overflows, otherwise stay at top
   // useLayoutEffect ensures scroll happens before paint to prevent flash
   useLayoutEffect(() => {
+    // Reset positioning when photos array changes (e.g., switching views)
+    if (photos !== prevPhotosRef.current) {
+      setIsPositioned(false);
+      prevPhotosRef.current = photos;
+    }
+
     if (photos.length > 0 && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
       if (container.scrollHeight > container.clientHeight) {
@@ -159,7 +168,11 @@ export function PhotosGrid({
         )}
       >
         <div className="p-4" onClick={() => onGridSelect?.(null)}>
-          {!loading && photos.length === 0 ? (
+          {error ? (
+            <div className="flex items-center justify-center h-64 text-red-500">
+              Failed to load photos
+            </div>
+          ) : !loading && photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
               No photos
             </div>

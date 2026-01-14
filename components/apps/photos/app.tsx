@@ -16,7 +16,7 @@ interface AppProps {
 
 export default function App({ isDesktop = false, inShell = false }: AppProps) {
   // Fetch photos from Supabase
-  const { photos, collections, loading, toggleFavorite } = usePhotos();
+  const { photos, collections, loading, error, toggleFavorite } = usePhotos();
 
   const [activeView, setActiveView] = useState<PhotosView>("library");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
@@ -159,6 +159,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
             <PhotosGrid
               photos={filteredPhotos}
               loading={loading}
+              error={error}
               timeFilter={timeFilter}
               onTimeFilterChange={setTimeFilter}
               isMobileView={isMobileView}

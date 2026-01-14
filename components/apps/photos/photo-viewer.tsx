@@ -57,9 +57,15 @@ export function PhotoViewer({
     }
   }, [currentIndex, photos]);
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation (only when Photos app is focused)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if Photos app is focused
+      const photosApp = document.querySelector('[data-app="photos"]');
+      if (!photosApp?.contains(document.activeElement) && document.activeElement !== photosApp) {
+        return;
+      }
+
       if (e.key === "ArrowLeft") {
         onPrevious();
       } else if (e.key === "ArrowRight") {
@@ -92,7 +98,7 @@ export function PhotoViewer({
           onMouseDown={(e) => e.stopPropagation()}
           className="flex items-center -ml-2"
         >
-          <ChevronLeft className="w-5 h-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+          <ChevronLeft className="w-5 h-5 text-foreground" />
         </button>
 
         {/* Date and counter */}
@@ -111,10 +117,8 @@ export function PhotoViewer({
         >
           <Heart
             className={cn(
-              "w-5 h-5 transition-colors",
-              photo.isFavorite
-                ? "fill-white text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
-                : "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              "w-5 h-5 transition-colors text-foreground",
+              photo.isFavorite && "fill-foreground"
             )}
           />
         </button>
