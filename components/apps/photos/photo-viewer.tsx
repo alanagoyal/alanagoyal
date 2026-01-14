@@ -5,6 +5,7 @@ import { Photo } from "@/types/photos";
 import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 
@@ -72,10 +73,8 @@ export function PhotoViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onPrevious, onNext, onBack]);
 
-  const formattedDate = format(
-    parseISO(photo.timestamp),
-    "MMMM d, yyyy 'at' h:mm:ss a"
-  );
+  const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
+  const formattedDate = format(pstDate, "MMMM d, yyyy 'at' h:mm:ss a");
 
   return (
     <div className="h-full flex flex-col bg-background">

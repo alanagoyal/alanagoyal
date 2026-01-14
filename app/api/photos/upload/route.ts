@@ -143,7 +143,18 @@ export async function POST(request: NextRequest) {
       .getPublicUrl(uploadData.path);
 
     // Parse timestamp to ensure valid format
-    const photoTimestamp = new Date(timestamp);
+    // If timestamp has no timezone info, assume it's PST (America/Los_Angeles)
+    let timestampStr = timestamp as string;
+
+    // Check if timestamp already has timezone info (Z, +, or -)
+    const hasTimezone = /([Zz]|[+-]\d{2}:?\d{2})$/.test(timestampStr);
+    if (!hasTimezone) {
+      // Append PST offset (-08:00 standard, -07:00 daylight)
+      // Use -08:00 as default; iOS sends local time which is what we want to preserve
+      timestampStr = timestampStr + "-08:00";
+    }
+
+    const photoTimestamp = new Date(timestampStr);
     if (isNaN(photoTimestamp.getTime())) {
       return NextResponse.json(
         { error: "Invalid timestamp format" },

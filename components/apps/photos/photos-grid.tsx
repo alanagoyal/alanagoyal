@@ -5,6 +5,7 @@ import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
 import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 
@@ -71,11 +72,11 @@ export function PhotosGrid({
 
     const groups: Record<string, Photo[]> = {};
     photos.forEach((photo) => {
-      const date = parseISO(photo.timestamp);
+      const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
       const key =
         timeFilter === "years"
-          ? format(date, "yyyy")
-          : format(date, "MMMM yyyy");
+          ? format(pstDate, "yyyy")
+          : format(pstDate, "MMMM yyyy");
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(photo);
@@ -87,8 +88,8 @@ export function PhotosGrid({
   const dateRange = useMemo(() => {
     if (photos.length === 0) return "";
     // Photos are sorted oldest first
-    const earliest = parseISO(photos[0].timestamp);
-    const latest = parseISO(photos[photos.length - 1].timestamp);
+    const earliest = toZonedTime(parseISO(photos[0].timestamp), "America/Los_Angeles");
+    const latest = toZonedTime(parseISO(photos[photos.length - 1].timestamp), "America/Los_Angeles");
     const earliestStr = format(earliest, "MMM d, yyyy");
     const latestStr = format(latest, "MMM d, yyyy");
     return earliestStr === latestStr ? earliestStr : `${earliestStr} - ${latestStr}`;
