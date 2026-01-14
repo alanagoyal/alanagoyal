@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Photo } from "@/types/photos";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,8 @@ interface PhotoViewerProps {
   currentIndex: number;
   totalPhotos: number;
   onBack: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
   isMobileView: boolean;
   isDesktop?: boolean;
 }
@@ -21,11 +24,30 @@ export function PhotoViewer({
   currentIndex,
   totalPhotos,
   onBack,
+  onPrevious,
+  onNext,
   isMobileView,
   isDesktop = false,
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        onPrevious();
+      } else if (e.key === "ArrowRight") {
+        onNext();
+      } else if (e.key === "Escape") {
+        onBack();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onPrevious, onNext, onBack]);
 
   const formattedDate = format(
     parseISO(photo.timestamp),

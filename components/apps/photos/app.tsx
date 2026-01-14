@@ -26,6 +26,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,6 +128,11 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   const handlePhotoSelect = useCallback((photoId: string) => {
     setSelectedPhotoId(photoId);
+    setSelectedInGridId(null); // Clear grid selection when opening viewer
+  }, []);
+
+  const handleGridSelect = useCallback((photoId: string | null) => {
+    setSelectedInGridId(photoId);
   }, []);
 
   const handleCloseViewer = useCallback(() => {
@@ -140,6 +146,18 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const selectedPhotoIndex = selectedPhoto
     ? filteredPhotos.findIndex((p) => p.id === selectedPhotoId)
     : -1;
+
+  const handlePreviousPhoto = useCallback(() => {
+    if (selectedPhotoIndex > 0) {
+      setSelectedPhotoId(filteredPhotos[selectedPhotoIndex - 1].id);
+    }
+  }, [selectedPhotoIndex, filteredPhotos]);
+
+  const handleNextPhoto = useCallback(() => {
+    if (selectedPhotoIndex < filteredPhotos.length - 1) {
+      setSelectedPhotoId(filteredPhotos[selectedPhotoIndex + 1].id);
+    }
+  }, [selectedPhotoIndex, filteredPhotos]);
 
   if (!isLayoutInitialized) {
     return <div className="h-full bg-background" />;
@@ -203,6 +221,8 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               onPhotoSelect={handlePhotoSelect}
               hasInitiallyScrolled={hasInitiallyScrolled}
               onInitialScroll={() => setHasInitiallyScrolled(true)}
+              selectedInGridId={selectedInGridId}
+              onGridSelect={handleGridSelect}
             />
           </div>
 
@@ -214,6 +234,8 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
                 currentIndex={selectedPhotoIndex}
                 totalPhotos={filteredPhotos.length}
                 onBack={handleCloseViewer}
+                onPrevious={handlePreviousPhoto}
+                onNext={handleNextPhoto}
                 isMobileView={isMobileView}
                 isDesktop={isDesktop}
               />

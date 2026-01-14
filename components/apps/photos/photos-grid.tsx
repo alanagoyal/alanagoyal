@@ -22,6 +22,8 @@ interface PhotosGridProps {
   onPhotoSelect?: (photoId: string) => void;
   hasInitiallyScrolled?: boolean;
   onInitialScroll?: () => void;
+  selectedInGridId?: string | null;
+  onGridSelect?: (photoId: string | null) => void;
 }
 
 export function PhotosGrid({
@@ -37,6 +39,8 @@ export function PhotosGrid({
   onPhotoSelect,
   hasInitiallyScrolled = false,
   onInitialScroll,
+  selectedInGridId,
+  onGridSelect,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
@@ -147,7 +151,7 @@ export function PhotosGrid({
 
       {/* Photo Grid */}
       <ScrollArea className="flex-1">
-        <div className="p-4" ref={contentRef}>
+        <div className="p-4" ref={contentRef} onClick={() => onGridSelect?.(null)}>
           {photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
               No photos
@@ -162,7 +166,7 @@ export function PhotosGrid({
                 )}
                 <div
                   className={cn(
-                    "grid gap-0.5",
+                    "grid gap-2",
                     isMobileView
                       ? "grid-cols-3"
                       : "grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
@@ -171,38 +175,47 @@ export function PhotosGrid({
                   {groupPhotos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square relative overflow-hidden bg-muted group cursor-pointer"
+                      className={cn(
+                        "aspect-square relative cursor-pointer rounded-sm",
+                        selectedInGridId === photo.id && "ring-[3px] ring-[#0A84FF]"
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onGridSelect?.(photo.id);
+                      }}
                       onDoubleClick={() => onPhotoSelect?.(photo.id)}
                     >
-                      <Image
-                        src={`/photos/${photo.filename}`}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 33vw, 16vw"
-                      />
-                      {/* Favorite heart button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleFavorite?.(photo.id);
-                        }}
-                        className={cn(
-                          "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity",
-                          photo.isFavorite
-                            ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
-                        )}
-                      >
-                        <Heart
-                          className={cn(
-                            "w-4 h-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]",
-                            photo.isFavorite
-                              ? "fill-white text-white"
-                              : "text-white"
-                          )}
+                      <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm">
+                        <Image
+                          src={`/photos/${photo.filename}`}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 33vw, 16vw"
                         />
-                      </button>
+                        {/* Favorite heart button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFavorite?.(photo.id);
+                          }}
+                          className={cn(
+                            "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity",
+                            photo.isFavorite
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          )}
+                        >
+                          <Heart
+                            className={cn(
+                              "w-4 h-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]",
+                              photo.isFavorite
+                                ? "fill-white text-white"
+                                : "text-white"
+                            )}
+                          />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
