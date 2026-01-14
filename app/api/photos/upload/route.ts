@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import OpenAI from "openai";
 
 // Create a Supabase client with service role for uploads
 function getServiceClient() {
@@ -7,6 +8,55 @@ function getServiceClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
   return createClient(supabaseUrl, serviceRoleKey);
+}
+
+// Available collections for categorization
+const COLLECTIONS = ["flowers", "food", "friends"] as const;
+
+// Use OpenAI Vision to categorize the image
+async function categorizeImage(base64Image: string): Promise<string[]> {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this image and determine which categories it belongs to. The available categories are: flowers, food, friends (photos of people/social gatherings).
+
+Return ONLY a JSON array of matching categories, e.g. ["flowers"] or ["food", "friends"] or [].
+If no categories match, return an empty array [].
+Do not include any other text, just the JSON array.`,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 50,
+    });
+
+    let content = response.choices[0]?.message?.content?.trim() || "[]";
+
+    // Strip markdown code blocks if present
+    content = content.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+
+    const categories = JSON.parse(content) as string[];
+
+    // Filter to only valid collections
+    return categories.filter((c) => COLLECTIONS.includes(c as typeof COLLECTIONS[number]));
+  } catch (error) {
+    console.error("Error categorizing image:", error);
+    return [];
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -101,6 +151,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use AI to categorize the image if no collections provided
+    const detectedCollections = collections?.length > 0
+      ? collections
+      : await categorizeImage(base64Data);
+
     // Insert metadata into database using RPC
     const { data: photoId, error: insertError } = await supabase.rpc(
       "insert_photo",
@@ -108,7 +163,7 @@ export async function POST(request: NextRequest) {
         filename_arg: finalFilename,
         url_arg: publicUrl,
         timestamp_arg: photoTimestamp.toISOString(),
-        collections_arg: collections || [],
+        collections_arg: detectedCollections,
       }
     );
 
