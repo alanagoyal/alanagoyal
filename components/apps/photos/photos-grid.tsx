@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, Heart } from "lucide-react";
@@ -9,8 +9,16 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 
+// Preload full-size image on hover for faster viewer loading
+function preloadImage(url: string) {
+  if (typeof window === "undefined") return;
+  const img = new window.Image();
+  img.src = url;
+}
+
 interface PhotosGridProps {
   photos: Photo[];
+  loading?: boolean;
   timeFilter: TimeFilter;
   onTimeFilterChange: (filter: TimeFilter) => void;
   isMobileView: boolean;
@@ -20,14 +28,13 @@ interface PhotosGridProps {
   isDesktop?: boolean;
   onToggleFavorite?: (photoId: string) => void;
   onPhotoSelect?: (photoId: string) => void;
-  hasInitiallyScrolled?: boolean;
-  onInitialScroll?: () => void;
   selectedInGridId?: string | null;
   onGridSelect?: (photoId: string | null) => void;
 }
 
 export function PhotosGrid({
   photos,
+  loading = false,
   timeFilter,
   onTimeFilterChange,
   isMobileView,
@@ -37,27 +44,11 @@ export function PhotosGrid({
   isDesktop = false,
   onToggleFavorite,
   onPhotoSelect,
-  hasInitiallyScrolled = false,
-  onInitialScroll,
   selectedInGridId,
   onGridSelect,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Scroll to bottom on initial load (to show most recent photos)
-  useEffect(() => {
-    if (contentRef.current && photos.length > 0 && !hasInitiallyScrolled) {
-      setTimeout(() => {
-        const viewport = contentRef.current?.closest('[data-radix-scroll-area-viewport]');
-        if (viewport) {
-          viewport.scrollTop = viewport.scrollHeight;
-          onInitialScroll?.();
-        }
-      }, 100);
-    }
-  }, [photos.length, hasInitiallyScrolled, onInitialScroll]);
 
   const groupedPhotos = useMemo(() => {
     // Photos are already sorted oldest first from parent
@@ -82,7 +73,7 @@ export function PhotosGrid({
 
   const dateRange = useMemo(() => {
     if (photos.length === 0) return "";
-    // Photos are already sorted oldest first
+    // Photos are sorted oldest first
     const earliest = parseISO(photos[0].timestamp);
     const latest = parseISO(photos[photos.length - 1].timestamp);
     const earliestStr = format(earliest, "MMM d, yyyy");
@@ -145,10 +136,10 @@ export function PhotosGrid({
         )}
       </div>
 
-      {/* Photo Grid */}
-      <ScrollArea className="flex-1" bottomMargin="0">
-        <div className="p-4" ref={contentRef} onClick={() => onGridSelect?.(null)}>
-          {photos.length === 0 ? (
+      {/* Photo Grid - uses CSS flip trick to start scrolled to bottom */}
+      <ScrollArea className="flex-1 [&>div]:scale-y-[-1]" bottomMargin="0">
+        <div className="scale-y-[-1] p-4" onClick={() => onGridSelect?.(null)}>
+          {!loading && photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
               No photos
             </div>
@@ -180,6 +171,7 @@ export function PhotosGrid({
                         onGridSelect?.(photo.id);
                       }}
                       onDoubleClick={() => onPhotoSelect?.(photo.id)}
+                      onMouseEnter={() => preloadImage(photo.url)}
                     >
                       <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm">
                         <Image

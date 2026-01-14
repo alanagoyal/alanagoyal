@@ -26,7 +26,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const [showGrid, setShowGrid] = useState(false);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
-  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
@@ -49,7 +48,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
 
-  // Filter and sort photos based on active view (oldest first)
+  // Filter and sort photos based on active view (oldest first, newest at bottom)
   const filteredPhotos = useMemo(() => {
     let filtered: Photo[];
     if (activeView === "library") {
@@ -60,7 +59,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       // Collection view
       filtered = photos.filter((p) => p.collections.includes(activeView));
     }
-    // Sort oldest first to match grid display order
+    // Sort oldest first so newest photos appear at bottom (like Messages)
     return [...filtered].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
@@ -159,6 +158,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
           >
             <PhotosGrid
               photos={filteredPhotos}
+              loading={loading}
               timeFilter={timeFilter}
               onTimeFilterChange={setTimeFilter}
               isMobileView={isMobileView}
@@ -168,8 +168,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               isDesktop={isDesktop}
               onToggleFavorite={toggleFavorite}
               onPhotoSelect={handlePhotoSelect}
-              hasInitiallyScrolled={hasInitiallyScrolled}
-              onInitialScroll={() => setHasInitiallyScrolled(true)}
               selectedInGridId={selectedInGridId}
               onGridSelect={handleGridSelect}
             />

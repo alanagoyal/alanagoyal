@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Photo } from "@/types/photos";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+
+// Preload an image using native browser caching
+function preloadImage(url: string) {
+  if (typeof window === "undefined") return;
+  const img = new window.Image();
+  img.src = url;
+}
 
 interface PhotoViewerProps {
   photo: Photo;
@@ -33,11 +40,19 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get adjacent photos for prefetching
-  const prevPhoto = currentIndex > 0 ? photos[currentIndex - 1] : null;
-  const nextPhoto = currentIndex < photos.length - 1 ? photos[currentIndex + 1] : null;
+  // Preload adjacent photos (3 in each direction) when current photo changes
+  useEffect(() => {
+    const preloadRange = 3;
+    for (let i = 1; i <= preloadRange; i++) {
+      if (currentIndex - i >= 0) {
+        preloadImage(photos[currentIndex - i].url);
+      }
+      if (currentIndex + i < photos.length) {
+        preloadImage(photos[currentIndex + i].url);
+      }
+    }
+  }, [currentIndex, photos]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -100,30 +115,9 @@ export function PhotoViewer({
             className="object-contain"
             sizes="100vw"
             priority
+            unoptimized
           />
         </div>
-
-        {/* Prefetch adjacent photos (hidden) */}
-        {prevPhoto && (
-          <Image
-            src={prevPhoto.url}
-            alt=""
-            width={1}
-            height={1}
-            className="sr-only"
-            priority
-          />
-        )}
-        {nextPhoto && (
-          <Image
-            src={nextPhoto.url}
-            alt=""
-            width={1}
-            height={1}
-            className="sr-only"
-            priority
-          />
-        )}
       </div>
     </div>
   );
