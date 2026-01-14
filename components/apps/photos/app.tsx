@@ -184,6 +184,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
                 onBack={handleCloseViewer}
                 onPrevious={handlePreviousPhoto}
                 onNext={handleNextPhoto}
+                onToggleFavorite={toggleFavorite}
                 isMobileView={isMobileView}
                 isDesktop={isDesktop}
               />

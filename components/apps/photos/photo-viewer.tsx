@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Photo } from "@/types/photos";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { format, parseISO } from "date-fns";
@@ -23,6 +23,7 @@ interface PhotoViewerProps {
   onBack: () => void;
   onPrevious: () => void;
   onNext: () => void;
+  onToggleFavorite?: (photoId: string) => void;
   isMobileView: boolean;
   isDesktop?: boolean;
 }
@@ -35,6 +36,7 @@ export function PhotoViewer({
   onBack,
   onPrevious,
   onNext,
+  onToggleFavorite,
   isMobileView,
   isDesktop = false,
 }: PhotoViewerProps) {
@@ -88,9 +90,9 @@ export function PhotoViewer({
         {/* Back button */}
         <button
           onClick={onBack}
-          className="flex items-center text-[#0A84FF] hover:text-[#0A84FF]/80 -ml-2"
+          className="flex items-center -ml-2"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
         </button>
 
         {/* Date and counter */}
@@ -101,8 +103,20 @@ export function PhotoViewer({
           </p>
         </div>
 
-        {/* Spacer for centering */}
-        <div className="w-6" />
+        {/* Favorite button */}
+        <button
+          onClick={() => onToggleFavorite?.(photo.id)}
+          className="p-1 -mr-1"
+        >
+          <Heart
+            className={cn(
+              "w-5 h-5 transition-colors",
+              photo.isFavorite
+                ? "fill-white text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                : "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+            )}
+          />
+        </button>
       </div>
 
       {/* Photo */}
