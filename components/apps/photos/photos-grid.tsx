@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft } from "lucide-react";
@@ -32,10 +32,28 @@ export function PhotosGrid({
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
+
+  // Scroll to bottom on initial load (to show most recent photos)
+  useEffect(() => {
+    if (contentRef.current && photos.length > 0 && !hasScrolledRef.current) {
+      // Small delay to ensure content is rendered
+      setTimeout(() => {
+        // Find the scrollable viewport (parent with overflow)
+        const viewport = contentRef.current?.closest('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+          hasScrolledRef.current = true;
+        }
+      }, 100);
+    }
+  }, [photos.length]);
 
   const groupedPhotos = useMemo(() => {
+    // Sort oldest first (ascending)
     const sorted = [...photos].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
     if (timeFilter === "all") {
@@ -124,7 +142,7 @@ export function PhotosGrid({
 
       {/* Photo Grid */}
       <ScrollArea className="flex-1">
-        <div className="p-4">
+        <div className="p-4" ref={contentRef}>
           {photos.length === 0 ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">
               No photos
