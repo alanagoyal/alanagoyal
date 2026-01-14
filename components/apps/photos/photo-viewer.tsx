@@ -90,6 +90,7 @@ export function PhotoViewer({
         {/* Back button */}
         <button
           onClick={onBack}
+          onMouseDown={(e) => e.stopPropagation()}
           className="flex items-center -ml-2"
         >
           <ChevronLeft className="w-5 h-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
@@ -106,6 +107,7 @@ export function PhotoViewer({
         {/* Favorite button */}
         <button
           onClick={() => onToggleFavorite?.(photo.id)}
+          onMouseDown={(e) => e.stopPropagation()}
           className="p-1 -mr-1"
         >
           <Heart
