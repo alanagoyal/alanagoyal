@@ -95,16 +95,21 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
 
-  // Filter photos based on active view
+  // Filter and sort photos based on active view (oldest first)
   const filteredPhotos = useMemo(() => {
+    let filtered: Photo[];
     if (activeView === "library") {
-      return photos;
+      filtered = photos;
+    } else if (activeView === "favorites") {
+      filtered = photos.filter((p) => p.isFavorite);
+    } else {
+      // Collection view
+      filtered = photos.filter((p) => p.collections.includes(activeView));
     }
-    if (activeView === "favorites") {
-      return photos.filter((p) => p.isFavorite);
-    }
-    // Collection view
-    return photos.filter((p) => p.collections.includes(activeView));
+    // Sort oldest first to match grid display order
+    return [...filtered].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [photos, activeView]);
 
   const handleViewSelect = useCallback((view: PhotosView) => {

@@ -60,17 +60,13 @@ export function PhotosGrid({
   }, [photos.length, hasInitiallyScrolled, onInitialScroll]);
 
   const groupedPhotos = useMemo(() => {
-    // Sort oldest first (ascending)
-    const sorted = [...photos].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
+    // Photos are already sorted oldest first from parent
     if (timeFilter === "all") {
-      return { all: sorted };
+      return { all: photos };
     }
 
     const groups: Record<string, Photo[]> = {};
-    sorted.forEach((photo) => {
+    photos.forEach((photo) => {
       const date = parseISO(photo.timestamp);
       const key =
         timeFilter === "years"
@@ -86,11 +82,9 @@ export function PhotosGrid({
 
   const dateRange = useMemo(() => {
     if (photos.length === 0) return "";
-    const sorted = [...photos].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-    const earliest = parseISO(sorted[0].timestamp);
-    const latest = parseISO(sorted[sorted.length - 1].timestamp);
+    // Photos are already sorted oldest first
+    const earliest = parseISO(photos[0].timestamp);
+    const latest = parseISO(photos[photos.length - 1].timestamp);
     const earliestStr = format(earliest, "MMM d, yyyy");
     const latestStr = format(latest, "MMM d, yyyy");
     return earliestStr === latestStr ? earliestStr : `${earliestStr} - ${latestStr}`;
