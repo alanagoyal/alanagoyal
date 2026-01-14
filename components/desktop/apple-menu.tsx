@@ -100,7 +100,6 @@ export function AppleMenu({
       <MenuItem
         icon={<Lock className="w-4 h-4" />}
         label="Lock Screen"
-        shortcut="⌃⌘Q"
         onClick={() => {
           onLockScreen();
           onClose();
@@ -110,7 +109,6 @@ export function AppleMenu({
       <MenuItem
         icon={<LogOut className="w-4 h-4" />}
         label="Log Out Alana Goyal..."
-        shortcut="⇧⌘Q"
         onClick={() => {
           onLogout();
           onClose();
