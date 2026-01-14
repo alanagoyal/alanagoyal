@@ -71,27 +71,49 @@ export function MessageList({
     return () => viewport.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto-scroll only if we were at bottom
-  useEffect(() => {
-    if (!wasAtBottom && !isAtBottom()) return;
+  // Ref to track if we should auto-scroll (persists across ResizeObserver callbacks)
+  const shouldAutoScrollRef = useRef(true);
 
+  // Update shouldAutoScrollRef when wasAtBottom changes
+  useEffect(() => {
+    shouldAutoScrollRef.current = wasAtBottom || isAtBottom();
+  }, [wasAtBottom, isAtBottom]);
+
+  // Use ResizeObserver to scroll when content size changes (handles reactions, new messages, etc.)
+  useEffect(() => {
     const viewport = messageListRef.current?.closest(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
     if (!viewport) return;
 
-    const scrollToBottom = viewport.scrollHeight - viewport.clientHeight;
-    requestAnimationFrame(() => {
+    const scrollToBottom = () => {
+      const scrollTarget = viewport.scrollHeight - viewport.clientHeight;
       viewport.scrollTo({
-        top: scrollToBottom,
+        top: scrollTarget,
         behavior: "smooth",
       });
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (shouldAutoScrollRef.current) {
+        scrollToBottom();
+      }
     });
 
-    // Update previous state after scroll
+    // Observe the scrollable content container
+    const content = viewport.firstElementChild;
+    if (content) {
+      resizeObserver.observe(content);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [conversationId]);
+
+  // Update previous state tracking for sound effects
+  useEffect(() => {
     setPrevMessageCount(messages.length);
     setPrevConversationId(conversationId);
-  }, [messages, wasAtBottom, conversationId, isAtBottom]);
+  }, [messages, conversationId]);
 
   // Handle new message effects (sounds, animations)
   useEffect(() => {
