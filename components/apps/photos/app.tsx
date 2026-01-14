@@ -112,6 +112,16 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     setShowGrid(false);
   }, []);
 
+  const handleToggleFavorite = useCallback((photoId: string) => {
+    setPhotos((prev) =>
+      prev.map((photo) =>
+        photo.id === photoId
+          ? { ...photo, isFavorite: !photo.isFavorite }
+          : photo
+      )
+    );
+  }, []);
+
   if (!isLayoutInitialized) {
     return <div className="h-full bg-background" />;
   }
@@ -170,6 +180,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               activeView={activeView}
               collections={collections}
               isDesktop={isDesktop}
+              onToggleFavorite={handleToggleFavorite}
             />
           </div>
         </div>

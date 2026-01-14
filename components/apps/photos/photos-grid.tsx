@@ -3,7 +3,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { format, parseISO } from "date-fns";
@@ -18,6 +18,7 @@ interface PhotosGridProps {
   activeView: PhotosView;
   collections: Collection[];
   isDesktop?: boolean;
+  onToggleFavorite?: (photoId: string) => void;
 }
 
 export function PhotosGrid({
@@ -29,6 +30,7 @@ export function PhotosGrid({
   activeView,
   collections,
   isDesktop = false,
+  onToggleFavorite,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
@@ -166,7 +168,7 @@ export function PhotosGrid({
                   {groupPhotos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square relative overflow-hidden bg-muted"
+                      className="aspect-square relative overflow-hidden bg-muted group"
                     >
                       <Image
                         src={`/photos/${photo.filename}`}
@@ -175,6 +177,28 @@ export function PhotosGrid({
                         className="object-cover"
                         sizes="(max-width: 768px) 33vw, 16vw"
                       />
+                      {/* Favorite heart button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFavorite?.(photo.id);
+                        }}
+                        className={cn(
+                          "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity",
+                          photo.isFavorite
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100"
+                        )}
+                      >
+                        <Heart
+                          className={cn(
+                            "w-4 h-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]",
+                            photo.isFavorite
+                              ? "fill-white text-white"
+                              : "text-white"
+                          )}
+                        />
+                      </button>
                     </div>
                   ))}
                 </div>
