@@ -1,0 +1,45 @@
+components/apps/photos/photo-viewer.tsx
+  38e0cd020ecc952b 97,109,119
+.env.example
+  38e0cd020ecc952b 1,4-7
+docs/ios-shortcut-add-to-website.md
+  38e0cd020ecc952b 1-104
+supabase/migrations/20260114000000_photos.sql
+  38e0cd020ecc952b 1-98
+data/photos/initial-photos.ts
+  38e0cd020ecc952b 4-59
+types/photos/index.ts
+  38e0cd020ecc952b 4
+components/apps/photos/app.tsx
+  38e0cd020ecc952b 9,18-20,169
+scripts/migrate-photos-to-supabase.ts
+  38e0cd020ecc952b 1-181
+next.config.mjs
+  38e0cd020ecc952b 14-22
+components/apps/photos/photos-grid.tsx
+  38e0cd020ecc952b 186
+lib/photos/use-photos.ts
+  38e0cd020ecc952b 1-126
+app/api/photos/upload/route.ts
+  38e0cd020ecc952b 1-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "c1523349b410e6a2186faf4f675f772826ae067f",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 803,
+      "total_deletions": 187,
+      "accepted_lines": 728,
+      "overriden_lines": 0
+    }
+  }
+}
