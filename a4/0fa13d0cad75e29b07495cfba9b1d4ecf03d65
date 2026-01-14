@@ -1,0 +1,23 @@
+components/apps/messages/chat-area.tsx
+  0bb8d60945199955 8,74-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "a40fa13d0cad75e29b07495cfba9b1d4ecf03d65",
+  "prompts": {
+    "0bb8d60945199955": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ca1bc2a-1106-4e89-8876-82348326bcc2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 23,
+      "total_deletions": 0,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
