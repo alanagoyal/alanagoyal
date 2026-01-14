@@ -183,7 +183,7 @@ export function PhotosGrid({
                     >
                       <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm">
                         <Image
-                          src={`/photos/${photo.filename}`}
+                          src={photo.url}
                           alt=""
                           fill
                           className="object-cover"

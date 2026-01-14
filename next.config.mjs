@@ -11,6 +11,15 @@
  * - /{other}             → 404
  */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "mtgehbvilnyvunsyauxt.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   async rewrites() {
     return [];
   },

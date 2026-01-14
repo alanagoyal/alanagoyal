@@ -94,7 +94,7 @@ export function PhotoViewer({
       <div className="flex-1 flex items-center justify-center min-h-0 bg-muted/30">
         <div className="relative w-full h-full">
           <Image
-            src={`/photos/${photo.filename}`}
+            src={photo.url}
             alt=""
             fill
             className="object-contain"
@@ -106,7 +106,7 @@ export function PhotoViewer({
         {/* Prefetch adjacent photos (hidden) */}
         {prevPhoto && (
           <Image
-            src={`/photos/${prevPhoto.filename}`}
+            src={prevPhoto.url}
             alt=""
             width={1}
             height={1}
@@ -116,7 +116,7 @@ export function PhotoViewer({
         )}
         {nextPhoto && (
           <Image
-            src={`/photos/${nextPhoto.filename}`}
+            src={nextPhoto.url}
             alt=""
             width={1}
             height={1}

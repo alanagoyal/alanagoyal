@@ -5,8 +5,8 @@ import { Sidebar } from "./sidebar";
 import { PhotosGrid } from "./photos-grid";
 import { PhotoViewer } from "./photo-viewer";
 import { Nav } from "./nav";
-import { Photo, Collection, PhotosView, TimeFilter } from "@/types/photos";
-import { initialPhotos, initialCollections } from "@/data/photos/initial-photos";
+import { Photo, PhotosView, TimeFilter } from "@/types/photos";
+import { usePhotos } from "@/lib/photos/use-photos";
 import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface AppProps {
@@ -14,11 +14,10 @@ interface AppProps {
   inShell?: boolean;
 }
 
-const STORAGE_KEY = "photosAppState";
-
 export default function App({ isDesktop = false, inShell = false }: AppProps) {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
+  // Fetch photos from Supabase
+  const { photos, collections, loading, toggleFavorite } = usePhotos();
+
   const [activeView, setActiveView] = useState<PhotosView>("library");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [isMobileView, setIsMobileView] = useState(false);
@@ -31,51 +30,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Merge saved state with initial photos
-        const mergedPhotos = initialPhotos.map((photo) => {
-          const savedPhoto = parsed.photos?.find((p: { id: string }) => p.id === photo.id);
-          if (savedPhoto) {
-            return {
-              ...photo,
-              isFavorite: savedPhoto.isFavorite ?? photo.isFavorite,
-              collections: savedPhoto.collections ?? photo.collections,
-            };
-          }
-          return photo;
-        });
-        setPhotos(mergedPhotos);
-        setCollections(parsed.collections ?? initialCollections);
-      } catch {
-        setPhotos(initialPhotos);
-        setCollections(initialCollections);
-      }
-    } else {
-      setPhotos(initialPhotos);
-      setCollections(initialCollections);
-    }
-  }, []);
-
-  // Save to localStorage when state changes
-  useEffect(() => {
-    if (photos.length > 0) {
-      const stateToSave = {
-        photos: photos.map((p) => ({
-          id: p.id,
-          isFavorite: p.isFavorite,
-          collections: p.collections,
-        })),
-        collections,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    }
-  }, [photos, collections]);
 
   // Mobile view detection
   useEffect(() => {
@@ -119,16 +73,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   const handleBack = useCallback(() => {
     setShowGrid(false);
-  }, []);
-
-  const handleToggleFavorite = useCallback((photoId: string) => {
-    setPhotos((prev) =>
-      prev.map((photo) =>
-        photo.id === photoId
-          ? { ...photo, isFavorite: !photo.isFavorite }
-          : photo
-      )
-    );
   }, []);
 
   const handlePhotoSelect = useCallback((photoId: string) => {
@@ -222,7 +166,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
               activeView={activeView}
               collections={collections}
               isDesktop={isDesktop}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleFavorite={toggleFavorite}
               onPhotoSelect={handlePhotoSelect}
               hasInitiallyScrolled={hasInitiallyScrolled}
               onInitialScroll={() => setHasInitiallyScrolled(true)}

@@ -1,6 +1,7 @@
 export interface Photo {
   id: string;
   filename: string;
+  url: string;
   timestamp: string;
   isFavorite: boolean;
   collections: string[];
