@@ -1,0 +1,23 @@
+data/photos/initial-photos.ts
+  38e0cd020ecc952b 7,12,17-18,20,22-24,28-29,32,34-36,39-41,43-44,46,48-49,52-54,56-58,62,65,69-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "6becf0d41ea9711b3cb6d8c15c3c6b4240046453",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 59,
+      "total_deletions": 55,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    }
+  }
+}
