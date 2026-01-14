@@ -82,7 +82,7 @@ export function PhotoViewer({
       {/* Header - matches PhotosGrid header style */}
       <div
         className={cn(
-          "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20",
+          "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
           isMobileView ? "bg-background" : "bg-muted/50"
         )}
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
