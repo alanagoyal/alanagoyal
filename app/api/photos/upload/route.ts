@@ -15,6 +15,11 @@ const COLLECTIONS = ["flowers", "food", "friends"] as const;
 
 // Use OpenAI Vision to categorize the image
 async function categorizeImage(base64Image: string): Promise<string[]> {
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn("OPENAI_API_KEY not set, skipping categorization");
+    return [];
+  }
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   try {
