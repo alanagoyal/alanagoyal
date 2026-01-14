@@ -5,6 +5,7 @@ import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface ChatAreaProps {
   isNewChat: boolean;
@@ -69,6 +70,28 @@ export function ChatArea({
       navigator.virtualKeyboard.overlaysContent = true;
     }
   }, []);
+
+  // Get window focus state from context (available when in desktop shell)
+  const windowFocus = useWindowFocus();
+
+  // Track previous focus state to detect focus transitions
+  const wasFocusedRef = useRef(windowFocus?.isFocused ?? true);
+
+  // Focus the message input when the window gains focus and there's an active conversation
+  useEffect(() => {
+    const isFocused = windowFocus?.isFocused ?? true;
+    const wasFocused = wasFocusedRef.current;
+
+    // Detect transition from unfocused to focused
+    if (isFocused && !wasFocused && !isMobileView) {
+      // Focus the message input if there's an active conversation
+      if (activeConversation && messageInputRef.current) {
+        messageInputRef.current.focus();
+      }
+    }
+
+    wasFocusedRef.current = isFocused;
+  }, [windowFocus?.isFocused, activeConversation, isMobileView]);
 
   const conversationRecipients = activeConversation?.recipients || [];
 

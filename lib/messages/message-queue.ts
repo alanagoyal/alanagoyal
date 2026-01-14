@@ -262,7 +262,6 @@ export class MessageQueue {
           messages: task.conversation.messages,
           shouldWrapUp,
           isOneOnOne: task.conversation.recipients.length === 1,
-          shouldReact: Math.random() < 0.3,
         }),
         signal: task.abortController.signal,
       });
@@ -388,22 +387,13 @@ export class MessageQueue {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Only queue next AI message if we're still on the same conversation version
+        // Keep the full recipients list - the API will handle picking who speaks next
         if (
           !task.abortController.signal.aborted &&
           task.conversationVersion === conversationState.version &&
           isGroupChat
         ) {
-          const lastAiSender = data.sender;
-          const otherRecipients = task.conversation.recipients.filter(
-            (r) => r.name !== lastAiSender
-          );
-          if (otherRecipients.length > 0) {
-            const updatedConversationWithNextSender = {
-              ...updatedConversation,
-              recipients: otherRecipients,
-            };
-            this.enqueueAIMessage(updatedConversationWithNextSender);
-          }
+          this.enqueueAIMessage(updatedConversation);
         }
       } else {
         // Send notifications silenced message

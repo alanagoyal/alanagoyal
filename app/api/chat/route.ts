@@ -43,7 +43,6 @@ export async function POST(req: Request) {
       messages: messagesRaw,
       shouldWrapUp = false,
       isOneOnOne: isOneOnOneRaw = false,
-      shouldReact = false,
     } = body as Record<string, unknown>;
 
     const isRecipientLike = (value: unknown): value is Recipient => {
@@ -203,17 +202,9 @@ export async function POST(req: Request) {
     - One message only
     - Keep it personal
     - Flow naturally
+    - You can optionally react to the last message if it genuinely warrants one (use sparingly - only for messages that are funny, heartfelt, or notable)
     `
         : `
-    ${
-      shouldReact
-        ? `- You must react to the last message
-        - If you love the last message, react with "heart" 
-        - If you like the last message, react with "like"
-        - If the last message was funny, react with "laugh"
-        - If you strongly agree with the last message, react with "emphasize"`
-        : ""
-    }    
     - One quick message
     - Pick someone who hasn't talked in a bit
     - Don't refer to the user as "me" - you can ask their name if you want
@@ -225,6 +216,12 @@ export async function POST(req: Request) {
     - Share original insights and hot takes that may be controversial
     - Keep messages short (fewer than 20 words)
     - No emojis or weird formatting
+    - You can optionally react to the last message, but use reactions sparingly and naturally:
+      - "heart" for something genuinely sweet or meaningful
+      - "like" for agreement or approval
+      - "laugh" for something actually funny
+      - "emphasize" for strong agreement or important points
+      - Only react when it feels natural, not every message needs a reaction
 
     ${
       shouldWrapUp
@@ -272,10 +269,10 @@ export async function POST(req: Request) {
                 reaction: {
                   type: "string",
                   enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-                  description: shouldReact ? "reaction to the last message" : "optional reaction to the last message",
+                  description: "optional reaction to the last message - only include if the message genuinely warrants a reaction",
                 },
               },
-              required: shouldReact ? ["sender", "content", "reaction"] : ["sender", "content"],
+              required: ["sender", "content"],
             },
           },
         },
