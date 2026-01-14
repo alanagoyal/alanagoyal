@@ -1,0 +1,47 @@
+types/photos/index.ts
+  38e0cd020ecc952b 1-16
+components/desktop/dock.tsx
+  38e0cd020ecc952b 84-85
+data/photos/initial-photos.ts
+  38e0cd020ecc952b 1-122
+components/apps/photos/photos-app.tsx
+  38e0cd020ecc952b 1-16
+components/desktop/desktop.tsx
+  38e0cd020ecc952b 17,68-71,224-227
+components/mobile/mobile-shell.tsx
+  38e0cd020ecc952b 10,36-37,58
+app/(desktop)/photos/page.tsx
+  38e0cd020ecc952b 1-58
+components/apps/photos/photos-grid.tsx
+  38e0cd020ecc952b 1-170
+components/apps/photos/nav.tsx
+  38e0cd020ecc952b 1-58
+components/apps/photos/app.tsx
+  38e0cd020ecc952b 1-179
+components/apps/photos/index.ts
+  38e0cd020ecc952b 1
+lib/app-config.ts
+  38e0cd020ecc952b 59-69
+components/apps/photos/sidebar.tsx
+  38e0cd020ecc952b 1-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "2e5311df3e9ffaa31b69d97c104a118c5336a358",
+  "prompts": {
+    "38e0cd020ecc952b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30cd8b1d-9cae-4512-8494-5ca5bbab3891",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 762,
+      "total_deletions": 0,
+      "accepted_lines": 762,
+      "overriden_lines": 0
+    }
+  }
+}
