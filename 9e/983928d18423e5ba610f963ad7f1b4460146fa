@@ -1,0 +1,23 @@
+components/desktop/dock.tsx
+  8bdc472c1179e2e4 106,135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "9e983928d18423e5ba610f963ad7f1b4460146fa",
+  "prompts": {
+    "8bdc472c1179e2e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7326f88-4a8d-4578-8aee-976d7a251f81",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
