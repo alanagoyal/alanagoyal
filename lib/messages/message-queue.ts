@@ -34,11 +34,14 @@ type MessageQueueCallbacks = {
 const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 
 // Debounce time for user messages (wait for user to finish typing multiple messages)
-const USER_MESSAGE_DEBOUNCE_MS = 1500;
+const USER_MESSAGE_DEBOUNCE_MS = 500;
 
 // Typing indicator duration range (2-3 seconds with randomness)
 const TYPING_DELAY_MIN_MS = 2000;
 const TYPING_DELAY_MAX_MS = 3000;
+
+// Delay to show reaction before continuing with message
+const REACTION_DISPLAY_MS = 1000;
 
 // Delay between consecutive AI messages in group chats
 const AI_MESSAGE_DELAY_MS = 2000;
@@ -202,6 +205,14 @@ export class MessageQueue {
       const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
       const shouldWrapUp = consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES - 1;
 
+      // For 1-on-1 chats, show typing indicator immediately (we know the sender)
+      // For group chats, wait for API response to know who's typing
+      let typingStartTime: number | null = null;
+      if (!isGroupChat) {
+        this.callbacks.onTypingStatusChange(conversationId, conversation.recipients[0].name);
+        typingStartTime = Date.now();
+      }
+
       // Make API call
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -228,6 +239,12 @@ export class MessageQueue {
 
       const data = await response.json();
 
+      // For group chats, now show typing indicator with actual sender
+      if (isGroupChat) {
+        this.callbacks.onTypingStatusChange(conversationId, data.sender);
+        typingStartTime = Date.now();
+      }
+
       // Handle reaction if present
       if (data.reaction && conversation.messages.length > 0) {
         const lastMessage = conversation.messages[conversation.messages.length - 1];
@@ -253,8 +270,8 @@ export class MessageQueue {
           });
         }
 
-        // Brief delay to show reaction before typing
-        await this.delay(1500);
+        // Brief delay to show reaction before continuing
+        await this.delay(REACTION_DISPLAY_MS);
 
         // Check version again after delay
         if (currentVersion !== state.version) {
@@ -262,14 +279,19 @@ export class MessageQueue {
           state.status = "idle";
           return;
         }
+
+        // Reset typing timer - after reacting, still need time to type
+        typingStartTime = Date.now();
       }
 
-      // Show typing indicator
-      this.callbacks.onTypingStatusChange(conversationId, data.sender);
-
-      // Typing delay (1-2 seconds)
+      // Calculate remaining typing delay (ensure minimum time has passed since typing started)
       const typingDelay = TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
-      await this.delay(typingDelay);
+      const elapsedTime = typingStartTime ? Date.now() - typingStartTime : 0;
+      const remainingDelay = Math.max(0, typingDelay - elapsedTime);
+
+      if (remainingDelay > 0) {
+        await this.delay(remainingDelay);
+      }
 
       // Final version check before delivering message
       if (currentVersion !== state.version) {
