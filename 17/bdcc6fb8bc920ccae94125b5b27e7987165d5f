@@ -1,0 +1,45 @@
+components/desktop/desktop.tsx
+  f6827a58e70c6907 18,41,74-89,235,239,246-253
+lib/app-config.ts
+  f6827a58e70c6907 70-81
+components/apps/textedit/index.ts
+  f6827a58e70c6907 1
+components/apps/textedit/textedit-app.tsx
+  f6827a58e70c6907 1-62
+components/apps/textedit/nav.tsx
+  f6827a58e70c6907 1-43
+components/mobile/mobile-shell.tsx
+  f6827a58e70c6907 11,39-40,62
+components/desktop/dock.tsx
+  f6827a58e70c6907 86-87,100-104
+types/apps.ts
+  f6827a58e70c6907 13
+components/apps/iterm/iterm-app.tsx
+  f6827a58e70c6907 11,14,30
+components/apps/finder/finder-app.tsx
+  f6827a58e70c6907 63,67-80,236,440-442,449,451,454,456-462,465
+app/(desktop)/textedit/page.tsx
+  f6827a58e70c6907 1-32
+components/apps/iterm/terminal.tsx
+  f6827a58e70c6907 47-61,64,137,245,450-501,512
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "17bdcc6fb8bc920ccae94125b5b27e7987165d5f",
+  "prompts": {
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 297,
+      "total_deletions": 14,
+      "accepted_lines": 297,
+      "overriden_lines": 0
+    }
+  }
+}
