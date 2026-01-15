@@ -1,0 +1,23 @@
+components/window-controls.tsx
+  f43112b419a3b31d 116,124,132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "7dd81d72f0c24cff2939bad0367fdc8c2c943462",
+  "prompts": {
+    "f43112b419a3b31d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c57318c-7512-4b84-b07f-29bd4ead22bc",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
