@@ -1,0 +1,29 @@
+docs/design-system.md
+  8bdc472c1179e2e4 47,50,53,58-60,63,271
+components/apps/messages/conversation-item.tsx
+  8bdc472c1179e2e4 134
+components/apps/messages/sidebar.tsx
+  8bdc472c1179e2e4 381
+components/apps/photos/sidebar.tsx
+  8bdc472c1179e2e4 107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "6c1895a972e65d39d0ccd2a58026b29f56e77e12",
+  "prompts": {
+    "8bdc472c1179e2e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7326f88-4a8d-4578-8aee-976d7a251f81",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 9,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}
