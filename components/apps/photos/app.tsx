@@ -77,6 +77,8 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const handlePhotoSelect = useCallback((photoId: string) => {
     setSelectedPhotoId(photoId);
     setSelectedInGridId(null); // Clear grid selection when opening viewer
+    // Focus the container so keyboard navigation works immediately
+    containerRef.current?.focus();
   }, []);
 
   const handleGridSelect = useCallback((photoId: string | null) => {

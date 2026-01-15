@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
-import { ChevronLeft, Heart } from "lucide-react";
+import { ChevronLeft, Heart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+import { getViewerUrl } from "@/lib/photos/image-utils";
 
-// Preload an image using native browser caching
+// Preload an image for faster navigation
 function preloadImage(url: string) {
   if (typeof window === "undefined") return;
   const img = new window.Image();
-  img.src = url;
+  img.src = getViewerUrl(url);
 }
 
 interface PhotoViewerProps {
@@ -44,13 +45,50 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedPhotoId, setLoadedPhotoId] = useState<string | null>(null);
+
+  // Reset loading state when photo changes
+  useEffect(() => {
+    if (photo.id !== loadedPhotoId) {
+      setIsLoading(true);
+    }
+  }, [photo.id, loadedPhotoId]);
+
+  const handleImageLoad = useCallback(() => {
+    setIsLoading(false);
+    setLoadedPhotoId(photo.id);
+  }, [photo.id]);
+
+  // Prevent default touch move when swiping to avoid scroll interference
+  useEffect(() => {
+    const preventDefault = (e: TouchEvent) => {
+      if (isSwiping && e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchmove", preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", preventDefault);
+    };
+  }, [isSwiping]);
 
   // Swipe handlers for mobile navigation
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => onNext(),
-    onSwipedRight: () => onPrevious(),
-    trackMouse: false,
-    trackTouch: true,
+    onSwipeStart: () => setIsSwiping(true),
+    onSwiped: () => setIsSwiping(false),
+    onSwipedLeft: () => {
+      onNext();
+      setIsSwiping(false);
+    },
+    onSwipedRight: () => {
+      onPrevious();
+      setIsSwiping(false);
+    },
+    trackMouse: true,
     delta: 50,
     preventScrollOnSwipe: true,
   });
@@ -141,14 +179,25 @@ export function PhotoViewer({
         className="flex-1 flex items-center justify-center min-h-0 bg-muted/30"
       >
         <div className="relative w-full h-full">
+          {/* Loading spinner */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <Image
-            src={photo.url}
+            key={photo.id}
+            src={getViewerUrl(photo.url)}
             alt=""
             fill
-            className="object-contain"
-            sizes="100vw"
+            className={cn(
+              "object-contain transition-opacity duration-200",
+              isLoading ? "opacity-0" : "opacity-100"
+            )}
+            sizes="(max-width: 768px) 100vw, 80vw"
             priority
             unoptimized
+            onLoad={handleImageLoad}
           />
         </div>
       </div>
