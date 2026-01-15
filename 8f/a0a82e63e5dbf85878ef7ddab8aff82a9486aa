@@ -1,0 +1,23 @@
+docs/design-system.md
+  8697e35618a1955e 1-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "8fa0a82e63e5dbf85878ef7ddab8aff82a9486aa",
+  "prompts": {
+    "8697e35618a1955e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e279488-fe66-4daf-86cc-f9551da70416",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 277,
+      "total_deletions": 2,
+      "accepted_lines": 275,
+      "overriden_lines": 0
+    }
+  }
+}
