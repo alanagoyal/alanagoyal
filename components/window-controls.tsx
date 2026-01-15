@@ -75,9 +75,9 @@ function ZoomIcon({ isMaximized }: { isMaximized: boolean }) {
     // Exit fullscreen: triangles pointing inward toward center
     <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="currentColor">
       {/* Upper-left triangle pointing toward center */}
-      <polygon points="4,0 0,4 4,4" />
+      <polygon points="4.5,0.5 0.5,4.5 4.5,4.5" />
       {/* Lower-right triangle pointing toward center */}
-      <polygon points="6,6 10,6 6,10" />
+      <polygon points="5.5,5.5 9.5,5.5 5.5,9.5" />
     </svg>
   ) : (
     // Enter fullscreen: triangles pointing outward away from center
