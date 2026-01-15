@@ -1,0 +1,27 @@
+app/api/chat/route.ts
+  8bdc472c1179e2e4 38-53,202,211-217,220,231-239,243,248-252
+lib/messages/message-queue.ts
+  8bdc472c1179e2e4 4,7-10,33,36-45,76-77,79-80,90-93,95-98,101,103,105,108-116,118,121-130,132-133,135-137,140-141,143,145-146,148-150,153-154,156-157,159,161-164,166,169-172,174-176,180-185,187,190-192,194,196-198,201-203,205,213,215,222-223,225,231-233,249,251,256-260,262,267-268,270-272,274-275,277,281,289,292-302,310,313,315-316,320-321,325-326
+components/apps/messages/app.tsx
+  8bdc472c1179e2e4 610-611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "6adde84ccdc69129b8e03f11ad3887642c1474e9",
+  "prompts": {
+    "8bdc472c1179e2e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7326f88-4a8d-4578-8aee-976d7a251f81",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 220,
+      "total_deletions": 332,
+      "accepted_lines": 197,
+      "overriden_lines": 0
+    }
+  }
+}
