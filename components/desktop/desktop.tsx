@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } from "@/lib/window-context";
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
@@ -28,9 +28,47 @@ type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarti
 interface DesktopProps {
   initialAppId?: string;
   initialNoteSlug?: string;
+  initialTextEditFile?: string;
 }
 
-function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
+// Constants for file paths
+const HOME_DIR = "/Users/alanagoyal";
+const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+
+// Fetch file content from GitHub API
+async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
+  try {
+    const response = await fetch(
+      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch file");
+    const data = await response.json();
+    return data.content;
+  } catch {
+    return "";
+  }
+}
+
+// Fetch file content given a full path
+async function fetchFileContent(filePath: string): Promise<string> {
+  // Check if it's a GitHub file (in Projects directory)
+  if (filePath.startsWith(PROJECTS_DIR + "/")) {
+    const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
+    const parts = relativePath.split("/");
+    const repo = parts[0];
+    const repoFilePath = parts.slice(1).join("/");
+    return fetchFileContentFromGitHub(repo, repoFilePath);
+  }
+
+  // Static file: hello.md on Desktop
+  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
+    return "hello world!";
+  }
+
+  return "";
+}
+
+function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
   const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
@@ -39,6 +77,17 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
   const [textEditFile, setTextEditFile] = useState<{ path: string; content: string } | null>(null);
+
+  // Load initial file content for TextEdit on mount
+  useEffect(() => {
+    async function loadInitialFile() {
+      if (initialTextEditFile && !textEditFile) {
+        const content = await fetchFileContent(initialTextEditFile);
+        setTextEditFile({ path: initialTextEditFile, content });
+      }
+    }
+    loadInitialFile();
+  }, [initialTextEditFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isActive = mode === "active";
 
@@ -72,8 +121,12 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   }, []);
 
   const handleTextEditFocus = useCallback(() => {
-    window.history.replaceState(null, "", "/textedit");
-  }, []);
+    if (textEditFile?.path) {
+      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
+    } else {
+      window.history.replaceState(null, "", "/textedit");
+    }
+  }, [textEditFile]);
 
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback((filePath: string, content: string) => {
@@ -84,7 +137,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
     } else {
       openWindow("textedit");
     }
-    window.history.replaceState(null, "", "/textedit");
+    window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
   }, [getWindow, focusWindow, openWindow]);
 
   // Handler for Finder dock icon click - resets to Recents view
@@ -263,13 +316,13 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   );
 }
 
-export function Desktop({ initialAppId, initialNoteSlug }: DesktopProps) {
+export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile }: DesktopProps) {
   return (
     <SystemSettingsProvider>
       <RecentsProvider>
         <FileMenuProvider>
           <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-            <DesktopContent initialNoteSlug={initialNoteSlug} />
+            <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
           </WindowManagerProvider>
         </FileMenuProvider>
       </RecentsProvider>

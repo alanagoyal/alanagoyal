@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 
-export default function TextEditPage() {
+function TextEditPageContent() {
+  const searchParams = useSearchParams();
+  const initialFilePath = searchParams.get("file");
+
   const [isMobile, setIsMobile] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -28,5 +32,13 @@ export default function TextEditPage() {
     return <MobileShell initialApp="textedit" />;
   }
 
-  return <Desktop initialAppId="textedit" />;
+  return <Desktop initialAppId="textedit" initialTextEditFile={initialFilePath || undefined} />;
+}
+
+export default function TextEditPage() {
+  return (
+    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+      <TextEditPageContent />
+    </Suspense>
+  );
 }
