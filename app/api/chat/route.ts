@@ -51,6 +51,14 @@ function getRecentTopics(messages: Message[]): string[] {
     .map(m => `- ${m.sender}: "${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}"`)
 }
 
+// Count reactions in recent messages to avoid over-reacting
+function getRecentReactionCount(messages: Message[], lookback: number = 5): number {
+  return messages
+    .slice(-lookback)
+    .filter(m => m.reactions && m.reactions.length > 0)
+    .length;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -215,6 +223,8 @@ ${getRecentTopics(messages).join('\n') || '(none yet)'}
 
 Questions already asked (DO NOT ask these again):
 ${getAskedQuestions(messages).join('\n') || '(none yet)'}
+
+Recent reactions in conversation: ${getRecentReactionCount(messages)} in last 5 messages
     `
     }
 
@@ -225,31 +235,33 @@ ${getAskedQuestions(messages).join('\n') || '(none yet)'}
     - One message only
     - Keep it personal
     - Flow naturally
-    - You can optionally react to the last message if it genuinely warrants one (use sparingly - only for messages that are funny, heartfelt, or notable)
+    - REACTIONS: Maybe 1 in 10 messages. Only react if the message stands out:
+      - "laugh" for something funny
+      - "heart" for something sweet
+      - Skip if there's been a reaction recently
     `
         : `
 === CRITICAL RULES ===
 1. NEVER repeat or rephrase any question listed above
 2. NEVER make a statement that echoes what someone else already said
 3. Say something NEW and DIFFERENT - add fresh perspective or topic
-4. If you can't think of something new, make a brief observation or reaction instead
+4. If you can't think of something new, make a brief observation instead
 5. Keep messages SHORT (under 15 words)
 6. If someone specific was asked a question, respond as them
 7. No emojis or weird formatting
-8. You can optionally react to the last message (sparingly):
-   - "heart" for something genuinely sweet or meaningful
-   - "like" for agreement or approval
-   - "laugh" for something actually funny
-   - "emphasize" for strong agreement
+
+=== REACTIONS ===
+- Maybe 1 in 10 messages - only for messages that stand out
+- Skip if there's been a reaction recently
+- "laugh" for something funny, "heart" for something sweet, "emphasize" for an important point
 
 ${
       shouldWrapUp
         ? `
-=== THIS IS YOUR FINAL MESSAGE ===
-- Make a STATEMENT, not a question
-- Do NOT expect any response
-- End naturally (e.g., "Gotta run", "Talk later", brief closing thought)
-- Do NOT ask the user or anyone else anything`
+=== WRAP UP NATURALLY ===
+- Don't ask any questions that need a response
+- A statement, observation, or agreement works well
+- Don't say goodbye or announce you're leaving - just let the conversation settle`
         : ""
     }
     `
@@ -291,7 +303,7 @@ ${
                 reaction: {
                   type: "string",
                   enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-                  description: "optional reaction to the last message - only include if the message genuinely warrants a reaction",
+                  description: "Optional - maybe 1 in 10 messages. Only include for messages that genuinely stand out.",
                 },
               },
               required: ["sender", "content"],
