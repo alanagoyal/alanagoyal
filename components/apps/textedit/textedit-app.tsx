@@ -48,11 +48,11 @@ export function TextEditApp({
       )}
     >
       <Nav isMobile={isMobile} isDesktop={inShell} fileName={fileName} />
-      <div className="flex-1 min-h-0 overflow-auto p-4">
+      <div className="flex-1 min-h-0">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed"
+          className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto"
           placeholder="Start typing..."
           spellCheck={false}
         />
