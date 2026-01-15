@@ -80,15 +80,9 @@ export function PhotoViewer({
   const swipeHandlers = useSwipeable({
     onSwipeStart: () => setIsSwiping(true),
     onSwiped: () => setIsSwiping(false),
-    onSwipedLeft: () => {
-      onNext();
-      setIsSwiping(false);
-    },
-    onSwipedRight: () => {
-      onPrevious();
-      setIsSwiping(false);
-    },
-    trackMouse: true,
+    onSwipedLeft: () => onNext(),
+    onSwipedRight: () => onPrevious(),
+    trackMouse: false,
     delta: 50,
     preventScrollOnSwipe: true,
   });

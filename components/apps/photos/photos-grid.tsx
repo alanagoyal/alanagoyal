@@ -231,9 +231,17 @@ export function PhotosGrid({
                         {/* Favorite heart button */}
                         <div
                           role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleFavorite?.(photo.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onToggleFavorite?.(photo.id);
+                            }
                           }}
                           className={cn(
                             "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity pointer-events-auto",
