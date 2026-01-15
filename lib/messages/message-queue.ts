@@ -205,14 +205,6 @@ export class MessageQueue {
       const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
       const shouldWrapUp = consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES - 1;
 
-      // For 1-on-1 chats, show typing indicator immediately (we know the sender)
-      // For group chats, wait for API response to know who's typing
-      let typingStartTime: number | null = null;
-      if (!isGroupChat) {
-        this.callbacks.onTypingStatusChange(conversationId, conversation.recipients[0].name);
-        typingStartTime = Date.now();
-      }
-
       // Make API call
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -239,11 +231,9 @@ export class MessageQueue {
 
       const data = await response.json();
 
-      // For group chats, now show typing indicator with actual sender
-      if (isGroupChat) {
-        this.callbacks.onTypingStatusChange(conversationId, data.sender);
-        typingStartTime = Date.now();
-      }
+      // Show typing indicator after API response
+      this.callbacks.onTypingStatusChange(conversationId, data.sender);
+      let typingStartTime = Date.now();
 
       // Handle reaction if present
       if (data.reaction && conversation.messages.length > 0) {
