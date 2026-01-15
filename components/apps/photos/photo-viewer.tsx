@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
-import { ChevronLeft, Heart, Loader2 } from "lucide-react";
+import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { toZonedTime } from "date-fns-tz";
@@ -46,20 +46,6 @@ export function PhotoViewer({
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
   const [isSwiping, setIsSwiping] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadedPhotoId, setLoadedPhotoId] = useState<string | null>(null);
-
-  // Reset loading state when photo changes
-  useEffect(() => {
-    if (photo.id !== loadedPhotoId) {
-      setIsLoading(true);
-    }
-  }, [photo.id, loadedPhotoId]);
-
-  const handleImageLoad = useCallback(() => {
-    setIsLoading(false);
-    setLoadedPhotoId(photo.id);
-  }, [photo.id]);
 
   // Prevent default touch move when swiping to avoid scroll interference
   useEffect(() => {
@@ -173,25 +159,15 @@ export function PhotoViewer({
         className="flex-1 flex items-center justify-center min-h-0 bg-muted/30"
       >
         <div className="relative w-full h-full">
-          {/* Loading spinner */}
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
-          )}
           <Image
             key={photo.id}
             src={getViewerUrl(photo.url)}
             alt=""
             fill
-            className={cn(
-              "object-contain transition-opacity duration-200",
-              isLoading ? "opacity-0" : "opacity-100"
-            )}
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, 80vw"
             priority
             unoptimized
-            onLoad={handleImageLoad}
           />
         </div>
       </div>
