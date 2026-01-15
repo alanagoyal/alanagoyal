@@ -8,12 +8,13 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+import { getThumbnailUrl, getViewerUrl } from "@/lib/photos/image-utils";
 
-// Preload full-size image on hover for faster viewer loading
+// Preload viewer-size image on hover for faster viewer loading
 function preloadImage(url: string) {
   if (typeof window === "undefined") return;
   const img = new window.Image();
-  img.src = url;
+  img.src = getViewerUrl(url);
 }
 
 interface PhotosGridProps {
@@ -193,35 +194,57 @@ export function PhotosGrid({
                   )}
                 >
                   {groupPhotos.map((photo) => (
-                    <div
+                    <button
                       key={photo.id}
+                      type="button"
                       className={cn(
                         "aspect-square relative cursor-pointer rounded-sm",
-                        selectedInGridId === photo.id && "ring-[3px] ring-[#0A84FF]"
+                        !isMobileView && selectedInGridId === photo.id && "ring-[3px] ring-[#0A84FF]"
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onGridSelect?.(photo.id);
+                        if (isMobileView) {
+                          // Mobile: single tap opens viewer
+                          onPhotoSelect?.(photo.id);
+                        } else {
+                          // Desktop: single click selects
+                          onGridSelect?.(photo.id);
+                        }
                       }}
-                      onDoubleClick={() => onPhotoSelect?.(photo.id)}
+                      onDoubleClick={() => {
+                        // Desktop: double click opens viewer
+                        if (!isMobileView) {
+                          onPhotoSelect?.(photo.id);
+                        }
+                      }}
                       onMouseEnter={() => preloadImage(photo.url)}
                     >
-                      <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm">
+                      <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm pointer-events-none">
                         <Image
-                          src={photo.url}
+                          src={getThumbnailUrl(photo.url)}
                           alt=""
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 33vw, 16vw"
+                          unoptimized
                         />
                         {/* Favorite heart button */}
-                        <button
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleFavorite?.(photo.id);
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onToggleFavorite?.(photo.id);
+                            }
+                          }}
                           className={cn(
-                            "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity",
+                            "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity pointer-events-auto",
                             photo.isFavorite
                               ? "opacity-100"
                               : "opacity-0 group-hover:opacity-100"
@@ -235,9 +258,9 @@ export function PhotosGrid({
                                 : "text-white"
                             )}
                           />
-                        </button>
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
