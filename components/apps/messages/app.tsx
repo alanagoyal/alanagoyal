@@ -607,7 +607,8 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       });
 
       updateUrl(`?id=${newConversation.id}`);
-      messageQueue.current.enqueueAIMessage(conversationWithMessage);
+      // Use enqueueUserMessage - the queue will handle group vs 1-on-1 logic
+      messageQueue.current.enqueueUserMessage(conversationWithMessage);
       return;
     }
 

@@ -35,6 +35,22 @@ interface ChatResponse {
   reaction?: ReactionType;
 }
 
+// Extract questions already asked to prevent repetition
+function getAskedQuestions(messages: Message[]): string[] {
+  return messages
+    .filter(m => m.content.includes('?') && m.sender !== 'me' && m.sender !== 'system')
+    .map(m => `- "${m.content.split('?')[0]}?" (${m.sender})`)
+    .slice(-5);
+}
+
+// Extract recent topics discussed
+function getRecentTopics(messages: Message[]): string[] {
+  return messages
+    .filter(m => m.sender !== 'system')
+    .slice(-6)
+    .map(m => `- ${m.sender}: "${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}"`)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -183,7 +199,7 @@ export async function POST(req: Request) {
     `
         : ""
     }
-    Match your character's style: 
+    Match your character's style:
     ${sortedParticipants
       .map((r: Recipient) => {
         const contact = initialContacts.find((p) => p.name === r.name);
@@ -192,9 +208,16 @@ export async function POST(req: Request) {
           : `${r.name}: Just be yourself.`;
       })
       .join("\n")}
+
+=== CONVERSATION CONTEXT ===
+Recent messages:
+${getRecentTopics(messages).join('\n') || '(none yet)'}
+
+Questions already asked (DO NOT ask these again):
+${getAskedQuestions(messages).join('\n') || '(none yet)'}
     `
     }
-    
+
     Quick tips:
     ${
       isOneOnOne
@@ -205,29 +228,28 @@ export async function POST(req: Request) {
     - You can optionally react to the last message if it genuinely warrants one (use sparingly - only for messages that are funny, heartfelt, or notable)
     `
         : `
-    - One quick message
-    - Pick someone who hasn't talked in a bit
-    - Don't refer to the user as "me" - you can ask their name if you want
-    - If someone specific was tagged or asked a question, reply as them
-    - Review the previous messages in the conversation
-    - DO NOT repeat yourself or other participants
-    - Advance the conversation by asking questions
-    - DO NOT contradict your previous statements
-    - Share original insights and hot takes that may be controversial
-    - Keep messages short (fewer than 20 words)
-    - No emojis or weird formatting
-    - You can optionally react to the last message, but use reactions sparingly and naturally:
-      - "heart" for something genuinely sweet or meaningful
-      - "like" for agreement or approval
-      - "laugh" for something actually funny
-      - "emphasize" for strong agreement or important points
-      - Only react when it feels natural, not every message needs a reaction
+=== CRITICAL RULES ===
+1. NEVER repeat or rephrase any question listed above
+2. NEVER make a statement that echoes what someone else already said
+3. Say something NEW and DIFFERENT - add fresh perspective or topic
+4. If you can't think of something new, make a brief observation or reaction instead
+5. Keep messages SHORT (under 15 words)
+6. If someone specific was asked a question, respond as them
+7. No emojis or weird formatting
+8. You can optionally react to the last message (sparingly):
+   - "heart" for something genuinely sweet or meaningful
+   - "like" for agreement or approval
+   - "laugh" for something actually funny
+   - "emphasize" for strong agreement
 
-    ${
+${
       shouldWrapUp
         ? `
-    - This is the last message
-    - Don't ask a question to another recipient unless it's to "me" the user`
+=== THIS IS YOUR FINAL MESSAGE ===
+- Make a STATEMENT, not a question
+- Do NOT expect any response
+- End naturally (e.g., "Gotta run", "Talk later", brief closing thought)
+- Do NOT ask the user or anyone else anything`
         : ""
     }
     `
