@@ -1,0 +1,29 @@
+components/apps/photos/app.tsx
+  0f55afbc8ca4cf09 80-81
+components/apps/photos/photos-grid.tsx
+  0f55afbc8ca4cf09 11,13,17,197,199,222,224,229,232-233,239,253,255
+lib/photos/image-utils.ts
+  0f55afbc8ca4cf09 1-40
+components/apps/photos/photo-viewer.tsx
+  0f55afbc8ca4cf09 3,6,12,14,18,48-62,64-77,81-91,182-187,189-190,193-197,200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "01c1bb587cf28bc89af418d334f4390928d45638",
+  "prompts": {
+    "0f55afbc8ca4cf09": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b9d47f16-2f10-402b-9cdf-30735a24cfe3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 138,
+      "total_deletions": 43,
+      "accepted_lines": 119,
+      "overriden_lines": 0
+    }
+  }
+}
