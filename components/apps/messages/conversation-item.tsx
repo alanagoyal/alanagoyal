@@ -131,7 +131,7 @@ export function ConversationItem({
         .join(", ")}`}
       aria-current={activeConversation === conversation.id ? "true" : undefined}
       className={`w-full h-[70px] py-2 text-left relative flex items-center ${
-        activeConversation === conversation.id
+        activeConversation === conversation.id && !isMobileView
           ? "bg-[#0A7CFF] text-white rounded-md"
           : ""
       } ${

@@ -44,18 +44,23 @@ Existing app accents (for reference):
 
 ### Selected State
 
-Sidebars should NOT have hover states on items. Use solid background for selected state only:
+Sidebars should NOT have hover states on items. Use solid background for selected state on **desktop only**:
 
 ```tsx
-// Correct - no hover, solid selected state
+// Correct - selected state only on desktop
 <div className={cn(
   "px-2 py-1.5 rounded-lg",
-  isSelected && "bg-[#0A7CFF] text-white"
+  isSelected && !isMobileView && "bg-[#0A7CFF] text-white"
 )}>
 
 // Incorrect - avoid hover states in sidebars
 <div className="hover:bg-muted/50"> // Don't do this
+
+// Incorrect - applying selected background on mobile
+<div className={isSelected && "bg-[#0A7CFF]"}> // Don't do this on mobile
 ```
+
+**Why no selected state on mobile?** On mobile, tapping a sidebar item navigates to the detail view (full-screen), so there's no split view where selection needs to be indicated. The selected state is only meaningful on desktop where sidebar and content are visible simultaneously.
 
 ### List Items
 
@@ -263,7 +268,7 @@ Use `text-red-600` for delete/destructive action text:
 When creating a new app, ensure:
 
 - [ ] Sidebar uses `bg-muted` on desktop, `bg-background` on mobile
-- [ ] Selected states use `#0A7CFF` background with white text
+- [ ] Selected states use `#0A7CFF` background with white text (desktop only, no background on mobile)
 - [ ] No hover states on sidebar items
 - [ ] Icons use `text-muted-foreground` or `text-foreground`
 - [ ] Nav bar includes window controls (desktop) or back button (mobile)
