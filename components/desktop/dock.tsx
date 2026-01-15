@@ -103,7 +103,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               onClick={() => handleAppClick(app.id)}
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
-              className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95"
+              className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none"
             >
               {hoveredApp === app.id && <DockTooltip label={app.name} />}
               <div className="w-12 h-12 relative">
@@ -132,7 +132,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95"
+          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none"
         >
           {hoveredApp === "trash" && <DockTooltip label="Trash" />}
           <div className="h-12 relative flex items-end">
