@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
+import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
 
 const USERNAME = "alanagoyal";
@@ -244,7 +245,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
   const [viewMode, setViewMode] = useState<"icons" | "list">("list");
   const [showViewDropdown, setShowViewDropdown] = useState(false);
 
-  const inDesktopShell = inShell && windowFocus;
+  const inDesktopShell = !!(inShell && windowFocus);
 
   // Get path for sidebar item
   const getPathForSidebar = useCallback((item: SidebarItem): string => {
@@ -789,33 +790,17 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
   const renderNav = () => (
     <div
       className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none"
-      onMouseDown={inDesktopShell ? windowFocus.onDragStart : undefined}
+      onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
     >
       {/* Traffic lights (desktop) */}
-      <div className="window-controls flex items-center gap-1.5">
-        {inDesktopShell ? (
-          <>
-            <button
-              onClick={windowFocus.closeWindow}
-              className="cursor-pointer w-3 h-3 rounded-full bg-red-500 hover:bg-red-700"
-            />
-            <button
-              onClick={windowFocus.minimizeWindow}
-              className="cursor-pointer w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-700"
-            />
-            <button
-              onClick={windowFocus.toggleMaximize}
-              className="cursor-pointer w-3 h-3 rounded-full bg-green-500 hover:bg-green-700"
-            />
-          </>
-        ) : !isMobile ? (
-          <>
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-          </>
-        ) : null}
-      </div>
+      <WindowControls
+        inShell={inDesktopShell}
+        showWhenNotInShell={!isMobile}
+        onClose={inDesktopShell ? windowFocus?.closeWindow : undefined}
+        onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
+        onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
+        isMaximized={windowFocus?.isMaximized ?? false}
+      />
 
       {/* Navigation arrows (desktop) */}
       {!isMobile && (
