@@ -1,0 +1,37 @@
+components/window-controls.tsx
+  6894f7fc280bf3fc 1-26,28-44,46-70,74,81-82,89-109,111-117,121-140
+  f43112b419a3b31d 27,45,71-73,75-80,83-88,110,118-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "c0c1e894807fc64f4b7012d81551784ad8b93a72",
+  "prompts": {
+    "6894f7fc280bf3fc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "eb0e4dbb-a950-42ef-a96a-351e36d11206",
+        "model": "gpt-5.2-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 276,
+      "total_deletions": 271,
+      "accepted_lines": 119,
+      "overriden_lines": 0
+    },
+    "f43112b419a3b31d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c57318c-7512-4b84-b07f-29bd4ead22bc",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 40,
+      "total_deletions": 46,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  }
+}
