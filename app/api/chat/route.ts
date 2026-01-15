@@ -35,6 +35,30 @@ interface ChatResponse {
   reaction?: ReactionType;
 }
 
+// Extract questions already asked to prevent repetition
+function getAskedQuestions(messages: Message[]): string[] {
+  return messages
+    .filter(m => m.content.includes('?') && m.sender !== 'me' && m.sender !== 'system')
+    .map(m => `- "${m.content.split('?')[0]}?" (${m.sender})`)
+    .slice(-5);
+}
+
+// Extract recent topics discussed
+function getRecentTopics(messages: Message[]): string[] {
+  return messages
+    .filter(m => m.sender !== 'system')
+    .slice(-6)
+    .map(m => `- ${m.sender}: "${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}"`)
+}
+
+// Count reactions in recent messages to avoid over-reacting
+function getRecentReactionCount(messages: Message[], lookback: number = 5): number {
+  return messages
+    .slice(-lookback)
+    .filter(m => m.reactions && m.reactions.length > 0)
+    .length;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -183,7 +207,7 @@ export async function POST(req: Request) {
     `
         : ""
     }
-    Match your character's style: 
+    Match your character's style:
     ${sortedParticipants
       .map((r: Recipient) => {
         const contact = initialContacts.find((p) => p.name === r.name);
@@ -192,9 +216,18 @@ export async function POST(req: Request) {
           : `${r.name}: Just be yourself.`;
       })
       .join("\n")}
+
+=== CONVERSATION CONTEXT ===
+Recent messages:
+${getRecentTopics(messages).join('\n') || '(none yet)'}
+
+Questions already asked (DO NOT ask these again):
+${getAskedQuestions(messages).join('\n') || '(none yet)'}
+
+Recent reactions in conversation: ${getRecentReactionCount(messages)} in last 5 messages
     `
     }
-    
+
     Quick tips:
     ${
       isOneOnOne
@@ -202,32 +235,33 @@ export async function POST(req: Request) {
     - One message only
     - Keep it personal
     - Flow naturally
-    - You can optionally react to the last message if it genuinely warrants one (use sparingly - only for messages that are funny, heartfelt, or notable)
+    - REACTIONS: Maybe 1 in 10 messages. Only react if the message stands out:
+      - "laugh" for something funny
+      - "heart" for something sweet
+      - Skip if there's been a reaction recently
     `
         : `
-    - One quick message
-    - Pick someone who hasn't talked in a bit
-    - Don't refer to the user as "me" - you can ask their name if you want
-    - If someone specific was tagged or asked a question, reply as them
-    - Review the previous messages in the conversation
-    - DO NOT repeat yourself or other participants
-    - Advance the conversation by asking questions
-    - DO NOT contradict your previous statements
-    - Share original insights and hot takes that may be controversial
-    - Keep messages short (fewer than 20 words)
-    - No emojis or weird formatting
-    - You can optionally react to the last message, but use reactions sparingly and naturally:
-      - "heart" for something genuinely sweet or meaningful
-      - "like" for agreement or approval
-      - "laugh" for something actually funny
-      - "emphasize" for strong agreement or important points
-      - Only react when it feels natural, not every message needs a reaction
+=== CRITICAL RULES ===
+1. NEVER repeat or rephrase any question listed above
+2. NEVER make a statement that echoes what someone else already said
+3. Say something NEW and DIFFERENT - add fresh perspective or topic
+4. If you can't think of something new, make a brief observation instead
+5. Keep messages SHORT (under 15 words)
+6. If someone specific was asked a question, respond as them
+7. No emojis or weird formatting
 
-    ${
+=== REACTIONS ===
+- Maybe 1 in 10 messages - only for messages that stand out
+- Skip if there's been a reaction recently
+- "laugh" for something funny, "heart" for something sweet, "emphasize" for an important point
+
+${
       shouldWrapUp
         ? `
-    - This is the last message
-    - Don't ask a question to another recipient unless it's to "me" the user`
+=== WRAP UP NATURALLY ===
+- Don't ask any questions that need a response
+- A statement, observation, or agreement works well
+- Don't say goodbye or announce you're leaving - just let the conversation settle`
         : ""
     }
     `
@@ -269,7 +303,7 @@ export async function POST(req: Request) {
                 reaction: {
                   type: "string",
                   enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-                  description: "optional reaction to the last message - only include if the message genuinely warrants a reaction",
+                  description: "Optional - maybe 1 in 10 messages. Only include for messages that genuinely stand out.",
                 },
               },
               required: ["sender", "content"],
