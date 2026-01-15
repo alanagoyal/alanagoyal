@@ -1,0 +1,38 @@
+app/(desktop)/textedit/page.tsx
+  f6827a58e70c6907 3-4,8-11,35-43
+components/desktop/desktop.tsx
+  f6827a58e70c6907 3,31,34-68,71,81-91,124-126,128-129,140,319,325
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "fac60f2da744206a143dce017e79fa21bed32c89",
+  "prompts": {
+    "5b02a1d1fb97acb5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba25ad17-2f68-4a21-adc9-3dffcadd9848",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 55,
+      "total_deletions": 42,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    },
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 10,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    }
+  }
+}
