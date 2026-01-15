@@ -1,0 +1,23 @@
+app/layout.tsx
+  736abfd933935420 8,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "7ae38df4fd384c1a7735f5b05d1b092dd4f3d938",
+  "prompts": {
+    "736abfd933935420": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3461c97-4a17-47b4-980f-fe66622b2f9a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
