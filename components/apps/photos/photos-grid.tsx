@@ -197,13 +197,24 @@ export function PhotosGrid({
                       key={photo.id}
                       className={cn(
                         "aspect-square relative cursor-pointer rounded-sm",
-                        selectedInGridId === photo.id && "ring-[3px] ring-[#0A84FF]"
+                        !isMobileView && selectedInGridId === photo.id && "ring-[3px] ring-[#0A84FF]"
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onGridSelect?.(photo.id);
+                        if (isMobileView) {
+                          // Mobile: single tap opens viewer
+                          onPhotoSelect?.(photo.id);
+                        } else {
+                          // Desktop: single click selects
+                          onGridSelect?.(photo.id);
+                        }
                       }}
-                      onDoubleClick={() => onPhotoSelect?.(photo.id)}
+                      onDoubleClick={() => {
+                        // Desktop: double click opens viewer
+                        if (!isMobileView) {
+                          onPhotoSelect?.(photo.id);
+                        }
+                      }}
                       onMouseEnter={() => preloadImage(photo.url)}
                     >
                       <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm">

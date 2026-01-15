@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
 import { ChevronLeft, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,16 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
+
+  // Swipe handlers for mobile navigation
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => onNext(),
+    onSwipedRight: () => onPrevious(),
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50,
+    preventScrollOnSwipe: true,
+  });
 
   // Preload adjacent photos (3 in each direction) when current photo changes
   useEffect(() => {
@@ -124,8 +135,11 @@ export function PhotoViewer({
         </button>
       </div>
 
-      {/* Photo */}
-      <div className="flex-1 flex items-center justify-center min-h-0 bg-muted/30">
+      {/* Photo with swipe support */}
+      <div
+        {...swipeHandlers}
+        className="flex-1 flex items-center justify-center min-h-0 bg-muted/30"
+      >
         <div className="relative w-full h-full">
           <Image
             src={photo.url}
