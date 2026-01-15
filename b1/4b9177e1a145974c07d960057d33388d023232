@@ -1,0 +1,36 @@
+components/apps/textedit/textedit-app.tsx
+  f7d0db2278a789c5 51,55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "b14b9177e1a145974c07d960057d33388d023232",
+  "prompts": {
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "f7d0db2278a789c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aede4ba3-e1cf-4cb1-a392-310f1419f700",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
