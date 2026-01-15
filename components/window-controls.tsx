@@ -52,9 +52,8 @@ function WindowControlButton({
 
 function CloseIcon() {
   return (
-    <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M2.5 2.5L7.5 7.5" />
-      <path d="M7.5 2.5L2.5 7.5" />
+    <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="currentColor">
+      <path d="M2.5 1.5L5 4L7.5 1.5L8.5 2.5L6 5L8.5 7.5L7.5 8.5L5 6L2.5 8.5L1.5 7.5L4 5L1.5 2.5Z" />
     </svg>
   );
 }
