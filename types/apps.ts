@@ -10,4 +10,5 @@ export interface AppConfig {
   defaultSize: Size;
   minSize: Size;
   menuBarTitle: string;
+  showOnDockByDefault?: boolean; // defaults to true if not specified
 }

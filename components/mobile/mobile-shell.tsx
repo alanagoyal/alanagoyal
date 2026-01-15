@@ -8,6 +8,7 @@ import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
+import { TextEditApp } from "@/components/apps/textedit";
 
 const DEFAULT_APP = "notes";
 
@@ -35,6 +36,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId("finder");
     } else if (path.startsWith("/photos")) {
       setActiveAppId("photos");
+    } else if (path.startsWith("/textedit")) {
+      setActiveAppId("textedit");
     } else if (initialApp) {
       setActiveAppId(initialApp);
     }
@@ -56,6 +59,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
         {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
         {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
+        {activeAppId === "textedit" && <TextEditApp isMobile={true} inShell={false} />}
       </div>
     </RecentsProvider>
   );

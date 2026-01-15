@@ -83,6 +83,8 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
       window.history.replaceState(null, "", "/finder");
     } else if (appId === "photos") {
       window.history.replaceState(null, "", "/photos");
+    } else if (appId === "textedit") {
+      window.history.replaceState(null, "", "/textedit");
     }
   };
 
@@ -95,7 +97,11 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
       <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg">
-        {APPS.map((app) => {
+        {APPS.filter((app) => {
+          // Show app if it should appear by default OR if it's currently open
+          const showByDefault = app.showOnDockByDefault !== false;
+          return showByDefault || isWindowOpen(app.id);
+        }).map((app) => {
           const isOpen = isWindowOpen(app.id);
           return (
             <button

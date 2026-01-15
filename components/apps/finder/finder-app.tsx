@@ -60,7 +60,24 @@ interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
   onOpenApp?: (appId: string) => void;
+  onOpenTextFile?: (filePath: string, content: string) => void;
   initialTab?: SidebarItem;
+}
+
+// Text file extensions that should open in TextEdit
+const TEXT_FILE_EXTENSIONS = [
+  "md", "txt", "ts", "tsx", "js", "jsx", "json",
+  "css", "html", "py", "yml", "yaml", "xml",
+  "sh", "bash", "zsh", "env", "gitignore", "eslintrc",
+  "prettierrc", "editorconfig", "toml", "ini", "cfg",
+  "rst", "csv", "log", "sql", "graphql", "vue", "svelte",
+];
+
+function isTextFile(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  // Also treat files without extension but starting with a dot as text files
+  if (!ext && filename.startsWith(".")) return true;
+  return TEXT_FILE_EXTENSIONS.includes(ext);
 }
 
 // GitHub cache
@@ -216,7 +233,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initialTab }: FinderAppProps) {
+export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
   const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -420,23 +437,32 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, initia
       if (file.path.startsWith("trash/")) return;
       // Add to recents when viewing a file
       addRecent({ path: file.path, name: file.name, type: file.type });
-      // Preview file content
+
+      // Get file content
+      let content = "";
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
         const parts = relativePath.split("/");
         const repo = parts[0];
         const filePath = parts.slice(1).join("/");
         try {
-          const content = await fetchFileContent(repo, filePath);
-          setPreviewContent(content);
+          content = await fetchFileContent(repo, filePath);
         } catch (error) {
-          setPreviewContent(`Error: ${error instanceof Error ? error.message : "Failed to fetch file"}`);
+          content = `Error: ${error instanceof Error ? error.message : "Failed to fetch file"}`;
         }
       } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
-        setPreviewContent("hello world!");
+        content = "hello world!";
+      }
+
+      // If text file and onOpenTextFile is available, open in TextEdit
+      if (isTextFile(file.name) && onOpenTextFile) {
+        onOpenTextFile(file.path, content);
+      } else {
+        // Fallback to preview panel
+        setPreviewContent(content);
       }
     }
-  }, [onOpenApp, addRecent]);
+  }, [onOpenApp, onOpenTextFile, addRecent]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {

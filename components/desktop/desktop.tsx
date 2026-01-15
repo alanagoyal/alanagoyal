@@ -15,6 +15,7 @@ import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
+import { TextEditApp } from "@/components/apps/textedit";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -37,6 +38,7 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
+  const [textEditFile, setTextEditFile] = useState<{ path: string; content: string } | null>(null);
 
   const isActive = mode === "active";
 
@@ -68,6 +70,22 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
   const handlePhotosFocus = useCallback(() => {
     window.history.replaceState(null, "", "/photos");
   }, []);
+
+  const handleTextEditFocus = useCallback(() => {
+    window.history.replaceState(null, "", "/textedit");
+  }, []);
+
+  // Handler for opening text files in TextEdit
+  const handleOpenTextFile = useCallback((filePath: string, content: string) => {
+    setTextEditFile({ path: filePath, content });
+    const windowState = getWindow("textedit");
+    if (windowState?.isOpen) {
+      focusWindow("textedit");
+    } else {
+      openWindow("textedit");
+    }
+    window.history.replaceState(null, "", "/textedit");
+  }, [getWindow, focusWindow, openWindow]);
 
   // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {
@@ -214,15 +232,23 @@ function DesktopContent({ initialNoteSlug }: { initialNoteSlug?: string }) {
           </Window>
 
           <Window appId="iterm" onFocus={handleITermFocus}>
-            <ITermApp inShell={true} />
+            <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
           <Window appId="finder" onFocus={handleFinderFocus}>
-            <FinderApp inShell={true} onOpenApp={handleOpenApp} initialTab={finderTab} />
+            <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} initialTab={finderTab} />
           </Window>
 
           <Window appId="photos" onFocus={handlePhotosFocus}>
             <PhotosApp inShell={true} />
+          </Window>
+
+          <Window appId="textedit" onFocus={handleTextEditFocus}>
+            <TextEditApp
+              inShell={true}
+              initialFilePath={textEditFile?.path}
+              initialContent={textEditFile?.content}
+            />
           </Window>
 
           <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} />
