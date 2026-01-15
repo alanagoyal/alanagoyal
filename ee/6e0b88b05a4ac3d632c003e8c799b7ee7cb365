@@ -1,0 +1,23 @@
+app/api/photos/upload/route.ts
+  f43112b419a3b31d 34,36-39,50,53,55,57,59-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ee6e0b88b05a4ac3d632c003e8c799b7ee7cb365",
+  "prompts": {
+    "f43112b419a3b31d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c57318c-7512-4b84-b07f-29bd4ead22bc",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 13,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
