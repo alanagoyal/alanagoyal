@@ -1,0 +1,25 @@
+app/api/og/route.tsx
+  736abfd933935420 2,5-8,38-41,45-47,60
+app/(desktop)/notes/api/og/route.tsx
+  736abfd933935420 2,13-16,46-49,53-55,57-62,64-65,67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "af51b7bfc7be765f73f6d5f679e81b91178e73d2",
+  "prompts": {
+    "736abfd933935420": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3461c97-4a17-47b4-980f-fe66622b2f9a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 80,
+      "total_deletions": 83,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}
