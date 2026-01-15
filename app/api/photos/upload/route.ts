@@ -31,11 +31,12 @@ async function categorizeImage(base64Image: string): Promise<string[]> {
           content: [
             {
               type: "text",
-              text: `Analyze this image and determine which categories it belongs to. The available categories are: flowers, food, friends (photos of people/social gatherings).
+              text: `Analyze this image and determine which single category best describes it. The available categories are: flowers, food, friends (photos of people/social gatherings).
 
-Return ONLY a JSON array of matching categories, e.g. ["flowers"] or ["food", "friends"] or [].
-If no categories match, return an empty array [].
-Do not include any other text, just the JSON array.`,
+Choose ONLY ONE category - the one that best fits the primary subject of the image.
+Return ONLY the category name as a string, e.g. "flowers" or "food" or "friends".
+If no categories match, return "none".
+Do not include any other text, just the category name.`,
             },
             {
               type: "image_url",
@@ -46,18 +47,20 @@ Do not include any other text, just the JSON array.`,
           ],
         },
       ],
-      max_tokens: 50,
+      max_tokens: 20,
     });
 
-    let content = response.choices[0]?.message?.content?.trim() || "[]";
+    let content = response.choices[0]?.message?.content?.trim() || "none";
 
-    // Strip markdown code blocks if present
+    // Strip markdown code blocks and quotes if present
     content = content.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    content = content.replace(/^["']|["']$/g, "").toLowerCase();
 
-    const categories = JSON.parse(content) as string[];
-
-    // Filter to only valid collections
-    return categories.filter((c) => COLLECTIONS.includes(c as typeof COLLECTIONS[number]));
+    // Return as array with single category if valid, otherwise empty
+    if (COLLECTIONS.includes(content as typeof COLLECTIONS[number])) {
+      return [content];
+    }
+    return [];
   } catch (error) {
     console.error("Error categorizing image:", error);
     return [];
