@@ -104,7 +104,7 @@ function SidebarItem({
       onClick={onClick}
       className={cn(
         "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors text-left",
-        isActive
+        isActive && !isMobileView
           ? "bg-zinc-200/70 dark:bg-zinc-700/70 text-blue-500"
           : "text-foreground",
         isMobileView && "py-3"

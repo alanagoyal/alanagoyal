@@ -378,7 +378,7 @@ export function Sidebar({
                                       onSelectConversation(conversation.id)
                                     }
                                     className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 relative ${
-                                      activeConversation === conversation.id
+                                      activeConversation === conversation.id && !isMobileView
                                         ? "bg-[#0A7CFF] text-white"
                                         : ""
                                     }`}
