@@ -1,0 +1,23 @@
+lib/messages/message-queue.ts
+  0f55afbc8ca4cf09 234,236
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "e7c383d1f6ed93cbce7237b7b0f118a102ea6a3e",
+  "prompts": {
+    "0f55afbc8ca4cf09": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b9d47f16-2f10-402b-9cdf-30735a24cfe3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 84,
+      "total_deletions": 33,
+      "accepted_lines": 69,
+      "overriden_lines": 0
+    }
+  }
+}
