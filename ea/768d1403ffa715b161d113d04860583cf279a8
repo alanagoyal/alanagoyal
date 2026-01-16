@@ -1,0 +1,23 @@
+components/desktop/desktop.tsx
+  f6827a58e70c6907 34-106,110,118-125,127,129-130,132-139,141,143-165,167,170-171,175,186,190-194,197,199,202,205,207,210,212,215,217,220,222,225,227,231-233,235,237-260,262,266-270,428-429,431-447,451
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "ea768d1403ffa715b161d113d04860583cf279a8",
+  "prompts": {
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 248,
+      "total_deletions": 136,
+      "accepted_lines": 201,
+      "overriden_lines": 0
+    }
+  }
+}
