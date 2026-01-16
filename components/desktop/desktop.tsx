@@ -69,7 +69,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
 }
 
 function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
-  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault, isWindowOpen } = useWindowManager();
+  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
@@ -88,18 +88,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     }
     loadInitialFile();
   }, [initialTextEditFile]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Clear TextEdit file state and URL when window is closed
-  const textEditIsOpen = isWindowOpen("textedit");
-  useEffect(() => {
-    if (!textEditIsOpen && textEditFile) {
-      setTextEditFile(null);
-      // Only update URL if we're currently on the textedit page
-      if (window.location.pathname === "/textedit") {
-        window.history.replaceState(null, "", "/textedit");
-      }
-    }
-  }, [textEditIsOpen, textEditFile]);
 
   const isActive = mode === "active";
 
