@@ -5,6 +5,20 @@ import { useWindowManager } from "./window-context";
 
 const TEXTEDIT_STORAGE_KEY = "textedit-open-files";
 
+// Synchronously check if there are stored TextEdit files (for initial render)
+function hasStoredTextEditFiles(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem(TEXTEDIT_STORAGE_KEY);
+    if (!saved) return false;
+    const data = JSON.parse(saved);
+    const windows = Array.isArray(data) ? data : data.windows;
+    return Array.isArray(windows) && windows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
 const PROJECTS_DIR = `${HOME_DIR}/Projects`;
@@ -82,6 +96,12 @@ export function useTextEditWindows({ initialTextEditFile }: UseTextEditWindowsPr
   const [windows, setWindows] = useState<TextEditWindowState[]>([]);
   const [focusedWindowId, setFocusedWindowId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
+
+  // Track if there are stored files (checked synchronously on first render to avoid layout shift)
+  // This is true if: there's an initialTextEditFile from URL, OR there are stored files in localStorage
+  const [hasStoredFiles] = useState<boolean>(() => {
+    return !!initialTextEditFile || hasStoredTextEditFiles();
+  });
 
   // Load TextEdit windows from localStorage on mount
   useEffect(() => {
@@ -338,12 +358,16 @@ export function useTextEditWindows({ initialTextEditFile }: UseTextEditWindowsPr
 
   const visibleWindows = windows.filter(w => !w.isMinimized);
 
+  // Use hasStoredFiles for initial render (before async loading completes) to avoid layout shift
+  // After initialization, use actual windows state
+  const hasOpenWindows = initialized ? windows.length > 0 : hasStoredFiles;
+
   return {
     windows,
     visibleWindows,
     focusedWindowId,
     focusedWindow,
-    hasOpenWindows: windows.length > 0,
+    hasOpenWindows,
     handleFocus,
     handleOpen,
     handleClose,
