@@ -6,7 +6,6 @@ import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } 
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
 import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
-import { useTextEditWindows } from "@/lib/use-textedit-windows";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
@@ -32,8 +31,83 @@ interface DesktopProps {
   initialTextEditFile?: string;
 }
 
+interface TextEditFile {
+  path: string;
+  content: string;
+}
+
+interface TextEditState {
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  openFilePath?: string;
+}
+
+const TEXTEDIT_STATE_KEY = "textedit-window-state";
+
+function loadTextEditState(): TextEditState {
+  if (typeof window === "undefined") return { position: { x: 160, y: 90 }, size: { width: 700, height: 500 } };
+  try {
+    const saved = localStorage.getItem(TEXTEDIT_STATE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.position && parsed.size) return parsed;
+    }
+  } catch {}
+  return { position: { x: 160, y: 90 }, size: { width: 700, height: 500 } };
+}
+
+function saveTextEditState(state: Partial<TextEditState>): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = loadTextEditState();
+    localStorage.setItem(TEXTEDIT_STATE_KEY, JSON.stringify({ ...existing, ...state }));
+  } catch {}
+}
+
+function clearTextEditOpenFile(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = loadTextEditState();
+    delete existing.openFilePath;
+    localStorage.setItem(TEXTEDIT_STATE_KEY, JSON.stringify(existing));
+  } catch {}
+}
+
+// Constants for file paths
+const HOME_DIR = "/Users/alanagoyal";
+const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+
+// Fetch file content from GitHub API
+async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
+  try {
+    const response = await fetch(
+      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch file");
+    const data = await response.json();
+    return data.content;
+  } catch {
+    return "";
+  }
+}
+
+// Fetch file content given a full path
+async function fetchFileContent(filePath: string): Promise<string> {
+  if (filePath.startsWith(PROJECTS_DIR + "/")) {
+    const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
+    const parts = relativePath.split("/");
+    const repo = parts[0];
+    const repoFilePath = parts.slice(1).join("/");
+    return fetchFileContentFromGitHub(repo, repoFilePath);
+  }
+  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
+    return "hello world!";
+  }
+  return "";
+}
+
 function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
-  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault, state } = useWindowManager();
+  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault, state, claimZIndex } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
@@ -41,35 +115,66 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
 
-  // TextEdit window management via custom hook
-  const textEdit = useTextEditWindows({ initialTextEditFile });
+  // TextEdit - single file state
+  const [textEditFile, setTextEditFile] = useState<TextEditFile | null>(null);
+  const [textEditPosition, setTextEditPosition] = useState(() => loadTextEditState().position);
+  const [textEditSize, setTextEditSize] = useState(() => loadTextEditState().size);
+  const [textEditZIndex, setTextEditZIndex] = useState(0);
+  const [textEditFocused, setTextEditFocused] = useState(false);
+  const [textEditMaximized, setTextEditMaximized] = useState(false);
+  const [textEditInitialized, setTextEditInitialized] = useState(false);
 
-  // Cmd+W keyboard shortcut to close focused TextEdit window
+  // Persist TextEdit position/size to localStorage
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "w" && e.metaKey && textEdit.focusedWindowId) {
-        e.preventDefault();
-        textEdit.handleClose(textEdit.focusedWindowId);
-      }
-    };
+    saveTextEditState({ position: textEditPosition, size: textEditSize });
+  }, [textEditPosition, textEditSize]);
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [textEdit.focusedWindowId, textEdit]);
-
-  // Update URL when focused window changes
+  // Persist open file path to localStorage
   useEffect(() => {
-    const focusedAppId = state.focusedWindowId;
+    if (textEditFile) {
+      saveTextEditState({ openFilePath: textEditFile.path });
+    }
+  }, [textEditFile?.path]);
 
-    // If a TextEdit window is focused, update URL to that file
-    if (textEdit.focusedWindowId && textEdit.focusedWindow) {
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEdit.focusedWindow.filePath)}`);
+  const isTextEditOpen = textEditFile !== null;
+
+  // Load file from URL or localStorage on mount (only once)
+  useEffect(() => {
+    if (textEditInitialized) return;
+
+    // Priority: URL param > localStorage
+    const fileToLoad = initialTextEditFile || loadTextEditState().openFilePath;
+    if (fileToLoad) {
+      setTextEditInitialized(true);
+      const isFromUrl = !!initialTextEditFile;
+      fetchFileContent(fileToLoad).then(content => {
+        setTextEditFile({ path: fileToLoad, content });
+        setTextEditZIndex(claimZIndex());
+
+        if (isFromUrl) {
+          setTextEditFocused(true);
+        } else {
+          // Re-focus the currently focused app so it stays above TextEdit
+          const focusedAppId = state.focusedWindowId;
+          if (focusedAppId) {
+            focusWindow(focusedAppId);
+          }
+        }
+      });
+    }
+  }, [initialTextEditFile, textEditInitialized, claimZIndex, state.focusedWindowId, focusWindow]);
+
+  // Update URL when focus changes
+  useEffect(() => {
+    // If TextEdit is focused, update URL to that file
+    if (textEditFocused && textEditFile) {
+      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
       return;
     }
 
+    const focusedAppId = state.focusedWindowId;
     if (!focusedAppId) return;
 
-    // Update URL based on which app is now focused
     if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
@@ -78,86 +183,91 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     } else {
       window.history.replaceState(null, "", `/${focusedAppId}`);
     }
-  }, [state.focusedWindowId, textEdit.focusedWindowId, textEdit.focusedWindow, initialNoteSlug]);
+  }, [state.focusedWindowId, textEditFocused, textEditFile, initialNoteSlug]);
 
   const isActive = mode === "active";
 
+  // Clear TextEdit focus when app window is focused
+  const clearTextEditFocus = useCallback(() => {
+    setTextEditFocused(false);
+  }, []);
+
   // URL update handlers
   const handleMessagesFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     window.history.replaceState(null, "", "/messages");
-  }, [textEdit]);
+  }, [clearTextEditFocus]);
 
   const handleNotesFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     const currentPath = window.location.pathname;
     if (!currentPath.startsWith("/notes/")) {
-      const slug = initialNoteSlug || "about-me";
-      window.history.replaceState(null, "", `/notes/${slug}`);
+      window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
     }
-  }, [initialNoteSlug, textEdit]);
+  }, [initialNoteSlug, clearTextEditFocus]);
 
   const handleSettingsFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     window.history.replaceState(null, "", "/settings");
-  }, [textEdit]);
+  }, [clearTextEditFocus]);
 
   const handleITermFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     window.history.replaceState(null, "", "/iterm");
-  }, [textEdit]);
+  }, [clearTextEditFocus]);
 
   const handleFinderFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     window.history.replaceState(null, "", "/finder");
-  }, [textEdit]);
+  }, [clearTextEditFocus]);
 
   const handlePhotosFocus = useCallback(() => {
-    textEdit.clearFocus();
+    clearTextEditFocus();
     window.history.replaceState(null, "", "/photos");
-  }, [textEdit]);
+  }, [clearTextEditFocus]);
 
-  // Handler for focusing a TextEdit window (with URL update)
-  const handleTextEditWindowFocus = useCallback((windowId: string) => {
-    const targetWindow = textEdit.windows.find(w => w.id === windowId);
-    if (targetWindow) {
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(targetWindow.filePath)}`);
-    }
-    textEdit.handleFocus(windowId);
-  }, [textEdit]);
-
-  // Handler for opening text files in TextEdit (with URL update)
+  // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback((filePath: string, content: string) => {
-    textEdit.handleOpen(filePath, content);
+    setTextEditFile({ path: filePath, content });
+    setTextEditZIndex(claimZIndex());
+    setTextEditFocused(true);
     window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
-  }, [textEdit]);
+  }, [claimZIndex]);
 
-  // Handler for closing a TextEdit window (with URL update)
-  const handleTextEditWindowClose = useCallback((windowId: string) => {
-    const newVisibleWindows = textEdit.visibleWindows.filter(w => w.id !== windowId);
-    textEdit.handleClose(windowId);
+  // Handler for TextEdit focus
+  const handleTextEditFocus = useCallback(() => {
+    setTextEditZIndex(claimZIndex());
+    setTextEditFocused(true);
+  }, [claimZIndex]);
 
-    // Update URL after close
-    if (textEdit.focusedWindowId === windowId && newVisibleWindows.length > 0) {
-      const nextFocused = newVisibleWindows.reduce((a, b) => a.zIndex > b.zIndex ? a : b);
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(nextFocused.filePath)}`);
+  // Handler for closing TextEdit
+  const handleTextEditClose = useCallback(() => {
+    setTextEditFile(null);
+    setTextEditFocused(false);
+    setTextEditMaximized(false);
+    clearTextEditOpenFile();
+    // Focus the topmost app window and update URL
+    const openWindows = Object.values(state.windows)
+      .filter(w => w.isOpen && !w.isMinimized)
+      .sort((a, b) => b.zIndex - a.zIndex);
+    if (openWindows.length > 0) {
+      const appId = openWindows[0].appId;
+      focusWindow(appId);
+      if (appId === "notes") {
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+      } else {
+        window.history.replaceState(null, "", `/${appId}`);
+      }
     }
-  }, [textEdit]);
+  }, [state.windows, focusWindow, initialNoteSlug]);
 
-  // Handler for TextEdit dock click (with URL update)
+  // Handler for TextEdit dock click
   const handleTextEditDockClick = useCallback(() => {
-    if (textEdit.windows.length === 0) return;
-    // Get the window that will be focused/restored
-    const minimizedWindows = textEdit.windows.filter(w => w.isMinimized);
-    if (minimizedWindows.length > 0) {
-      const toRestore = minimizedWindows.reduce((a, b) => a.zIndex > b.zIndex ? a : b);
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(toRestore.filePath)}`);
-    } else if (textEdit.visibleWindows.length > 0) {
-      const frontmostWindow = textEdit.visibleWindows.reduce((a, b) => a.zIndex > b.zIndex ? a : b);
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(frontmostWindow.filePath)}`);
-    }
-    textEdit.handleDockClick();
-  }, [textEdit]);
+    if (!textEditFile) return;
+    setTextEditZIndex(claimZIndex());
+    setTextEditFocused(true);
+    window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
+  }, [textEditFile, claimZIndex]);
 
   // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {
@@ -315,28 +425,30 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
             <PhotosApp inShell={true} />
           </Window>
 
-          {/* TextEdit windows - each file gets its own window (only visible ones) */}
-          {textEdit.visibleWindows.map((win) => (
+          {/* TextEdit - single file window (minimize closes since there's no dock minimized state) */}
+          {textEditFile && (
             <TextEditWindow
-              key={win.id}
-              filePath={win.filePath}
-              content={win.content}
-              position={win.position}
-              size={win.size}
-              zIndex={win.zIndex}
-              isFocused={textEdit.focusedWindowId === win.id}
-              isMaximized={win.isMaximized}
-              onFocus={() => handleTextEditWindowFocus(win.id)}
-              onClose={() => handleTextEditWindowClose(win.id)}
-              onMinimize={() => textEdit.handleMinimize(win.id)}
-              onToggleMaximize={() => textEdit.handleToggleMaximize(win.id)}
-              onMove={(pos) => textEdit.handleMove(win.id, pos)}
-              onResize={(size, pos) => textEdit.handleResize(win.id, size, pos)}
-              onContentChange={(content) => textEdit.handleContentChange(win.id, content)}
+              filePath={textEditFile.path}
+              content={textEditFile.content}
+              position={textEditPosition}
+              size={textEditSize}
+              zIndex={textEditZIndex}
+              isFocused={textEditFocused}
+              isMaximized={textEditMaximized}
+              onFocus={handleTextEditFocus}
+              onClose={handleTextEditClose}
+              onMinimize={handleTextEditClose}
+              onToggleMaximize={() => setTextEditMaximized(m => !m)}
+              onMove={setTextEditPosition}
+              onResize={(size, pos) => {
+                setTextEditSize(size);
+                if (pos) setTextEditPosition(pos);
+              }}
+              onContentChange={(content) => setTextEditFile(f => f ? { ...f, content } : null)}
             />
-          ))}
+          )}
 
-          <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} onTextEditClick={handleTextEditDockClick} hasOpenTextEditWindows={textEdit.hasOpenWindows} />
+          <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} onTextEditClick={handleTextEditDockClick} hasOpenTextEditWindows={isTextEditOpen} />
         </>
       )}
 
