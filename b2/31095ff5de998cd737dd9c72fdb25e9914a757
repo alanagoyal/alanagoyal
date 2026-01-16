@@ -1,0 +1,27 @@
+components/desktop/about-dialog.tsx
+  f6827a58e70c6907 6,152-156
+components/window-controls.tsx
+  f6827a58e70c6907 15,105,123-128,130,145-147
+components/apps/finder/finder-app.tsx
+  f6827a58e70c6907 488-491
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "b231095ff5de998cd737dd9c72fdb25e9914a757",
+  "prompts": {
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 49,
+      "total_deletions": 37,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    }
+  }
+}
