@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { APPS } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
@@ -10,6 +9,8 @@ import { cn } from "@/lib/utils";
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
+  onTextEditClick?: () => void;
+  hasOpenTextEditWindows?: boolean;
 }
 
 function DockTooltip({ label }: { label: string }) {
@@ -45,7 +46,7 @@ function DockTooltip({ label }: { label: string }) {
   );
 }
 
-export function Dock({ onTrashClick, onFinderClick }: DockProps) {
+export function Dock({ onTrashClick, onFinderClick, onTextEditClick, hasOpenTextEditWindows }: DockProps) {
   const { openWindow, focusWindow, restoreWindow, isWindowOpen, getWindow } = useWindowManager();
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
@@ -53,6 +54,12 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
     // Special handling for Finder to reset tab to projects
     if (appId === "finder" && onFinderClick) {
       onFinderClick();
+      return;
+    }
+
+    // Special handling for TextEdit - managed separately from window manager
+    if (appId === "textedit" && onTextEditClick) {
+      onTextEditClick();
       return;
     }
 
@@ -84,8 +91,6 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
       window.history.replaceState(null, "", "/finder");
     } else if (appId === "photos") {
       window.history.replaceState(null, "", "/photos");
-    } else if (appId === "textedit") {
-      window.history.replaceState(null, "", "/textedit");
     }
   };
 
@@ -97,63 +102,47 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <motion.div
-        layout
-        transition={{
-          type: "spring",
-          stiffness: 200,
-          damping: 25,
-        }}
-        className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg"
-      >
-        <AnimatePresence>
-          {APPS.filter((app) => {
-            // Show app if it should appear by default OR if it's currently open
-            const showByDefault = app.showOnDockByDefault !== false;
-            return showByDefault || isWindowOpen(app.id);
-          }).map((app) => {
-            const isOpen = isWindowOpen(app.id);
-            return (
-              <motion.button
-                key={app.id}
-                layout
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 25,
-                  opacity: { delay: 0.15 },
-                  y: { delay: 0.15 },
-                }}
-                onClick={() => handleAppClick(app.id)}
-                onMouseEnter={() => setHoveredApp(app.id)}
-                onMouseLeave={() => setHoveredApp(null)}
-                className="group relative flex flex-col items-center p-1 hover:scale-110 active:scale-95 outline-none"
-              >
-                {hoveredApp === app.id && <DockTooltip label={app.name} />}
-                <div className="w-12 h-12 relative">
-                  <Image
-                    src={app.icon}
-                    alt={app.name}
-                    width={48}
-                    height={48}
-                    className="rounded-xl shadow-md"
-                  />
-                </div>
-                <div
-                  className={cn(
-                    "w-1 h-1 rounded-full mt-1 transition-opacity",
-                    isOpen
-                      ? "bg-black/60 dark:bg-white/60 opacity-100"
-                      : "opacity-0"
-                  )}
+      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg">
+        {APPS.filter((app) => {
+          // Show app if it should appear by default OR if it's currently open
+          const showByDefault = app.showOnDockByDefault !== false;
+          // Special case for TextEdit - use prop since it's managed separately
+          if (app.id === "textedit") {
+            return showByDefault || hasOpenTextEditWindows;
+          }
+          return showByDefault || isWindowOpen(app.id);
+        }).map((app) => {
+          // Special case for TextEdit - use prop since it's managed separately
+          const isOpen = app.id === "textedit" ? hasOpenTextEditWindows : isWindowOpen(app.id);
+          return (
+            <button
+              key={app.id}
+              onClick={() => handleAppClick(app.id)}
+              onMouseEnter={() => setHoveredApp(app.id)}
+              onMouseLeave={() => setHoveredApp(null)}
+              className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none"
+            >
+              {hoveredApp === app.id && <DockTooltip label={app.name} />}
+              <div className="w-12 h-12 relative">
+                <Image
+                  src={app.icon}
+                  alt={app.name}
+                  width={48}
+                  height={48}
+                  className="rounded-xl shadow-md"
                 />
-              </motion.button>
-            );
-          })}
-        </AnimatePresence>
+              </div>
+              <div
+                className={cn(
+                  "w-1 h-1 rounded-full mt-1 transition-opacity",
+                  isOpen
+                    ? "bg-black/60 dark:bg-white/60 opacity-100"
+                    : "opacity-0"
+                )}
+              />
+            </button>
+          );
+        })}
         {/* Trash icon - uses custom sizing because unlike square app icons,
            the trash SVG has a tall aspect ratio with built-in padding */}
         <button
@@ -175,7 +164,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
           {/* Trash doesn't show open indicator */}
           <div className="w-1 h-1 rounded-full mt-1 opacity-0" />
         </button>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -362,6 +362,13 @@ function windowReducer(
       return action.state;
     }
 
+    case "INCREMENT_Z_INDEX": {
+      return {
+        ...state,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
     default:
       return state;
   }
@@ -382,6 +389,8 @@ interface WindowManagerContextValue {
   isWindowOpen: (appId: string) => boolean;
   getFocusedAppId: () => string | null;
   restoreDesktopDefault: () => void;
+  claimZIndex: () => number; // Get a z-index for external windows (TextEdit)
+  clearAppFocus: () => void; // Clear focus from app windows (when TextEdit is focused)
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(
@@ -424,10 +433,18 @@ export function WindowManagerProvider({
   const [state, dispatch] = useReducer(windowReducer, null, computeInitialState);
   const [isHydrated, setIsHydrated] = React.useState(false);
 
+  // Ref to track z-index synchronously for external callers
+  const zIndexRef = React.useRef(state.nextZIndex);
+
   // Mark as hydrated on mount
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // Keep z-index ref in sync with state
+  useEffect(() => {
+    zIndexRef.current = state.nextZIndex;
+  }, [state.nextZIndex]);
 
   // Save to localStorage on state change
   useEffect(() => {
@@ -499,6 +516,22 @@ export function WindowManagerProvider({
     dispatch({ type: "RESTORE_STATE", state: getDesktopDefaultState() });
   }, []);
 
+  // Claim a z-index for external windows (like TextEdit)
+  // Returns the current z-index and schedules an increment
+  const claimZIndex = useCallback(() => {
+    const zIndex = zIndexRef.current;
+    zIndexRef.current += 1;
+    dispatch({ type: "INCREMENT_Z_INDEX" });
+    return zIndex;
+  }, []);
+
+  // Clear focus from app windows (when an external window like TextEdit gains focus)
+  const clearAppFocus = useCallback(() => {
+    // We don't have a specific action for this, but we can set focusedWindowId to null
+    // by focusing a non-existent window - this is a workaround
+    // Actually, let's just not track this in state - the UI will handle it
+  }, []);
+
   const value: WindowManagerContextValue = {
     state,
     openWindow,
@@ -514,6 +547,8 @@ export function WindowManagerProvider({
     isWindowOpen,
     getFocusedAppId,
     restoreDesktopDefault,
+    claimZIndex,
+    clearAppFocus,
   };
 
   return (

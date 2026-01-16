@@ -34,4 +34,5 @@ export type WindowAction =
   | { type: "MINIMIZE_WINDOW"; appId: string }
   | { type: "MAXIMIZE_WINDOW"; appId: string }
   | { type: "RESTORE_WINDOW"; appId: string }
-  | { type: "RESTORE_STATE"; state: WindowManagerState };
+  | { type: "RESTORE_STATE"; state: WindowManagerState }
+  | { type: "INCREMENT_Z_INDEX" };

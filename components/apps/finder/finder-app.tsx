@@ -457,6 +457,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       // If text file and onOpenTextFile is available, open in TextEdit
       if (isTextFile(file.name) && onOpenTextFile) {
         onOpenTextFile(file.path, content);
+        setSelectedFile(null); // Clear selection after opening file
       } else {
         // Fallback to preview panel
         setPreviewContent(content);
