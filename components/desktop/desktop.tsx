@@ -69,7 +69,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
 }
 
 function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
-  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault } = useWindowManager();
+  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault, state } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
@@ -88,6 +88,36 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     }
     loadInitialFile();
   }, [initialTextEditFile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update URL when focused window changes (handles programmatic focus after window close)
+  useEffect(() => {
+    const focusedAppId = state.focusedWindowId;
+    if (!focusedAppId) return;
+
+    // Update URL based on which app is now focused
+    if (focusedAppId === "textedit") {
+      if (textEditFile?.path) {
+        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
+      } else {
+        window.history.replaceState(null, "", "/textedit");
+      }
+    } else if (focusedAppId === "notes") {
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith("/notes/")) {
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+      }
+    } else {
+      window.history.replaceState(null, "", `/${focusedAppId}`);
+    }
+  }, [state.focusedWindowId, textEditFile, initialNoteSlug]);
+
+  // Clear TextEdit file state when its window closes
+  const textEditWindowState = getWindow("textedit");
+  useEffect(() => {
+    if (textEditWindowState && !textEditWindowState.isOpen && textEditFile) {
+      setTextEditFile(null);
+    }
+  }, [textEditWindowState?.isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isActive = mode === "active";
 
