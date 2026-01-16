@@ -12,6 +12,7 @@ interface WindowControlsProps {
   maximizeLabel?: string;
   restoreLabel?: string;
   className?: string;
+  closeOnly?: boolean; // Show grey circles instead of yellow/green for minimize/maximize
 }
 
 interface WindowControlButtonProps {
@@ -101,6 +102,7 @@ export function WindowControls({
   maximizeLabel = "Maximize window",
   restoreLabel = "Restore window",
   className,
+  closeOnly = false,
 }: WindowControlsProps) {
   if (!inShell && !showWhenNotInShell) {
     return null;
@@ -118,22 +120,31 @@ export function WindowControls({
         ariaLabel={isCloseInteractive ? closeLabel : undefined}
         interactive={isCloseInteractive}
       />
-      <WindowControlButton
-        colorClass="bg-yellow-500"
-        icon={<MinimizeIcon />}
-        iconColorClass="text-black/50"
-        onClick={inShell ? onMinimize : undefined}
-        ariaLabel={inShell ? minimizeLabel : undefined}
-        interactive={inShell}
-      />
-      <WindowControlButton
-        colorClass="bg-green-500"
-        icon={<ZoomIcon isMaximized={inShell ? isMaximized : false} />}
-        iconColorClass="text-black/50"
-        onClick={inShell ? onToggleMaximize : undefined}
-        ariaLabel={inShell ? (isMaximized ? restoreLabel : maximizeLabel) : undefined}
-        interactive={inShell}
-      />
+      {closeOnly ? (
+        <>
+          <div className="w-3 h-3 rounded-full bg-zinc-600" />
+          <div className="w-3 h-3 rounded-full bg-zinc-600" />
+        </>
+      ) : (
+        <>
+          <WindowControlButton
+            colorClass="bg-yellow-500"
+            icon={<MinimizeIcon />}
+            iconColorClass="text-black/50"
+            onClick={inShell ? onMinimize : undefined}
+            ariaLabel={inShell ? minimizeLabel : undefined}
+            interactive={inShell}
+          />
+          <WindowControlButton
+            colorClass="bg-green-500"
+            icon={<ZoomIcon isMaximized={inShell ? isMaximized : false} />}
+            iconColorClass="text-black/50"
+            onClick={inShell ? onToggleMaximize : undefined}
+            ariaLabel={inShell ? (isMaximized ? restoreLabel : maximizeLabel) : undefined}
+            interactive={inShell}
+          />
+        </>
+      )}
     </div>
   );
 }
