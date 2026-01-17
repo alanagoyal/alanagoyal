@@ -1,0 +1,39 @@
+lib/app-config.ts
+  7d2642ce9abdfadf 81-82
+components/desktop/dock.tsx
+  7d2642ce9abdfadf 4-5,47-49,55-57,61-117,119-165,167,173-180,184,203-205,208-212,219-224,226,228
+lib/window-context.tsx
+  7d2642ce9abdfadf 21-50,88-90,93,98-99,101,107,151-154,179,182-183,190-191,224-225,418-665,673,685-699,701,820-824,838-858,861-873,875-890,892-893,895-925,929,941-955,957
+components/apps/textedit/textedit-window.tsx
+  7d2642ce9abdfadf 17,35,51-52,54
+types/apps.ts
+  7d2642ce9abdfadf 14-15
+types/window.ts
+  7d2642ce9abdfadf 14,21,28,32,41-52
+components/desktop/desktop.tsx
+  7d2642ce9abdfadf 5,34-38,40,42,45-46,49,52,55-57,61-63,107-118,128-130,132,135,138-150,153,157-158,160,162-170,172,175,177,181,183,187,191,195,199,203,209-212,214,217,219-220,378-408
+app/globals.css
+  7d2642ce9abdfadf 238-268
+components/desktop/menu-bar.tsx
+  7d2642ce9abdfadf 3,42,47,49,69-81,90,92,98,224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "a07fd9ae6ada03e42cc9e84c62d46ad0a9093141",
+  "prompts": {
+    "7d2642ce9abdfadf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22eae141-f70d-4409-a7d2-ba4805b0d857",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 806,
+      "total_deletions": 269,
+      "accepted_lines": 750,
+      "overriden_lines": 0
+    }
+  }
+}
