@@ -141,7 +141,7 @@ export function AboutDialog({
       <div className="fixed inset-0 bg-black/30" onClick={onClose} />
       <div
         ref={dialogRef}
-        className="relative z-[101] w-72 rounded-xl bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-white/10 overflow-hidden"
+        className="relative z-[101] w-72 rounded-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden"
         style={dialogStyle}
       >
         {/* Window controls - drag handle area */}
@@ -170,11 +170,11 @@ export function AboutDialog({
           )}
 
           <div className="flex flex-col items-center gap-0.5">
-            <h2 className="text-lg font-semibold text-white">{appName}</h2>
-            <p className="text-xs text-white/70">Version 4.13 (3146.41.14)</p>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{appName}</h2>
+            <p className="text-xs text-zinc-500 dark:text-white/70">Version 4.13 (3146.41.14)</p>
           </div>
 
-          <p className="text-xs text-white/50">
+          <p className="text-xs text-zinc-400 dark:text-white/50">
             Copyright © 2011–2025 Apple Inc.
             <br />
             All rights reserved.
