@@ -1,16 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { APPS } from "@/lib/app-config";
+import { useState, useEffect, useRef } from "react";
+import { APPS, getAppById } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
-  onTextEditClick?: () => void;
-  hasOpenTextEditWindows?: boolean;
 }
 
 function DockTooltip({ label }: { label: string }) {
@@ -46,23 +44,144 @@ function DockTooltip({ label }: { label: string }) {
   );
 }
 
-export function Dock({ onTrashClick, onFinderClick, onTextEditClick, hasOpenTextEditWindows }: DockProps) {
-  const { openWindow, focusWindow, restoreWindow, isWindowOpen, getWindow } = useWindowManager();
+// Animation states for dock icons
+type AnimationState = "entering" | "exiting" | "stable";
+
+export function Dock({ onTrashClick, onFinderClick }: DockProps) {
+  const {
+    openWindow,
+    focusWindow,
+    restoreWindow,
+    getWindow,
+    hasOpenWindows,
+    bringAppToFront,
+  } = useWindowManager();
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
+  // Track which apps are visible and their animation states
+  const [visibleApps, setVisibleApps] = useState<Set<string>>(new Set());
+  const [animationStates, setAnimationStates] = useState<Record<string, AnimationState>>({});
+  const initialRenderRef = useRef(true);
+  const exitingAppsRef = useRef<Set<string>>(new Set());
+
+  // Calculate which apps should currently be in the dock
+  const currentAppsToShow = APPS.filter((app) => {
+    const showByDefault = app.showOnDockByDefault !== false;
+    return showByDefault || hasOpenWindows(app.id);
+  }).map((app) => app.id);
+
+  // Handle app visibility changes with animations
+  useEffect(() => {
+    const currentApps = new Set(currentAppsToShow);
+
+    if (initialRenderRef.current) {
+      // On initial render, all apps are stable (no animation)
+      initialRenderRef.current = false;
+      setVisibleApps(currentApps);
+      const states: Record<string, AnimationState> = {};
+      currentApps.forEach((appId) => {
+        states[appId] = "stable";
+      });
+      setAnimationStates(states);
+      return;
+    }
+
+    // Find apps that are entering (new apps not in visible set)
+    const enteringApps: string[] = [];
+    currentApps.forEach((appId) => {
+      if (!visibleApps.has(appId) && !exitingAppsRef.current.has(appId)) {
+        enteringApps.push(appId);
+      }
+    });
+
+    // Find apps that are exiting (apps in visible set but not in current)
+    const exitingApps: string[] = [];
+    visibleApps.forEach((appId) => {
+      if (!currentApps.has(appId) && !exitingAppsRef.current.has(appId)) {
+        exitingApps.push(appId);
+      }
+    });
+
+    if (enteringApps.length > 0 || exitingApps.length > 0) {
+      // Update animation states
+      setAnimationStates((prev) => {
+        const next = { ...prev };
+        enteringApps.forEach((appId) => {
+          next[appId] = "entering";
+        });
+        exitingApps.forEach((appId) => {
+          next[appId] = "exiting";
+          exitingAppsRef.current.add(appId);
+        });
+        return next;
+      });
+
+      // Add entering apps to visible set
+      if (enteringApps.length > 0) {
+        setVisibleApps((prev) => {
+          const next = new Set(prev);
+          enteringApps.forEach((appId) => next.add(appId));
+          return next;
+        });
+      }
+
+      // After animation, mark entering apps as stable
+      if (enteringApps.length > 0) {
+        setTimeout(() => {
+          setAnimationStates((prev) => {
+            const next = { ...prev };
+            enteringApps.forEach((appId) => {
+              if (next[appId] === "entering") {
+                next[appId] = "stable";
+              }
+            });
+            return next;
+          });
+        }, 300);
+      }
+
+      // After animation, remove exiting apps from visible set
+      if (exitingApps.length > 0) {
+        setTimeout(() => {
+          setVisibleApps((prev) => {
+            const next = new Set(prev);
+            exitingApps.forEach((appId) => {
+              next.delete(appId);
+              exitingAppsRef.current.delete(appId);
+            });
+            return next;
+          });
+          setAnimationStates((prev) => {
+            const next = { ...prev };
+            exitingApps.forEach((appId) => {
+              delete next[appId];
+            });
+            return next;
+          });
+        }, 300);
+      }
+    }
+  }, [currentAppsToShow.join(","), visibleApps]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAppClick = (appId: string) => {
-    // Special handling for Finder to reset tab to projects
+    // Special handling for Finder to reset tab to recents
     if (appId === "finder" && onFinderClick) {
       onFinderClick();
       return;
     }
 
-    // Special handling for TextEdit - managed separately from window manager
-    if (appId === "textedit" && onTextEditClick) {
-      onTextEditClick();
+    const app = getAppById(appId);
+
+    // For multi-window apps, bring all windows to front
+    if (app?.multiWindow) {
+      if (hasOpenWindows(appId)) {
+        bringAppToFront(appId);
+      }
+      // If no windows open, do nothing (can't open TextEdit without a file)
       return;
     }
 
+    // Single-window app handling
     const windowState = getWindow(appId);
     if (windowState?.isOpen) {
       if (windowState.isMinimized) {
@@ -73,25 +192,6 @@ export function Dock({ onTrashClick, onFinderClick, onTextEditClick, hasOpenText
     } else {
       openWindow(appId);
     }
-
-    // Update URL based on which app was clicked
-    if (appId === "messages") {
-      window.history.replaceState(null, "", "/messages");
-    } else if (appId === "notes") {
-      // Keep current note URL if on notes, otherwise use default
-      const currentPath = window.location.pathname;
-      if (!currentPath.startsWith("/notes/")) {
-        window.history.replaceState(null, "", "/notes/about-me");
-      }
-    } else if (appId === "settings") {
-      window.history.replaceState(null, "", "/settings");
-    } else if (appId === "iterm") {
-      window.history.replaceState(null, "", "/iterm");
-    } else if (appId === "finder") {
-      window.history.replaceState(null, "", "/finder");
-    } else if (appId === "photos") {
-      window.history.replaceState(null, "", "/photos");
-    }
   };
 
   const handleTrashClick = () => {
@@ -100,29 +200,32 @@ export function Dock({ onTrashClick, onFinderClick, onTextEditClick, hasOpenText
     }
   };
 
+  // Get ordered list of apps to render (maintaining order from APPS array)
+  const appsToRender = APPS.filter((app) => visibleApps.has(app.id));
+
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg">
-        {APPS.filter((app) => {
-          // Show app if it should appear by default OR if it's currently open
-          const showByDefault = app.showOnDockByDefault !== false;
-          // Special case for TextEdit - use prop since it's managed separately
-          if (app.id === "textedit") {
-            return showByDefault || hasOpenTextEditWindows;
-          }
-          return showByDefault || isWindowOpen(app.id);
-        }).map((app) => {
-          // Special case for TextEdit - use prop since it's managed separately
-          const isOpen = app.id === "textedit" ? hasOpenTextEditWindows : isWindowOpen(app.id);
+      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300">
+        {appsToRender.map((app) => {
+          const isOpen = hasOpenWindows(app.id);
+          const animState = animationStates[app.id] || "stable";
+
           return (
             <button
               key={app.id}
               onClick={() => handleAppClick(app.id)}
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
-              className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none"
+              className={cn(
+                "group relative flex flex-col items-center p-1 outline-none transition-all duration-300",
+                animState === "entering" && "animate-dock-enter",
+                animState === "exiting" && "animate-dock-exit",
+                animState === "stable" && "hover:scale-110 active:scale-95"
+              )}
             >
-              {hoveredApp === app.id && <DockTooltip label={app.name} />}
+              {hoveredApp === app.id && animState === "stable" && (
+                <DockTooltip label={app.name} />
+              )}
               <div className="w-12 h-12 relative">
                 <Image
                   src={app.icon}

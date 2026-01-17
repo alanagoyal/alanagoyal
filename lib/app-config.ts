@@ -78,6 +78,8 @@ export const APPS: AppConfig[] = [
     minSize: { width: 400, height: 300 },
     menuBarTitle: "TextEdit",
     showOnDockByDefault: false,
+    multiWindow: true,
+    cascadeOffset: 30,
   },
 ];
 

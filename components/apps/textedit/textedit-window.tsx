@@ -14,6 +14,7 @@ import {
 } from "@/lib/use-window-behavior";
 
 interface TextEditWindowProps {
+  windowId: string; // Unique window identifier for multi-window support
   filePath: string;
   content: string;
   position: Position;
@@ -31,6 +32,7 @@ interface TextEditWindowProps {
 }
 
 export function TextEditWindow({
+  windowId,
   filePath,
   content,
   position,
@@ -46,8 +48,10 @@ export function TextEditWindow({
   onResize,
   onContentChange,
 }: TextEditWindowProps) {
+  // windowId is used for identification in multi-window scenarios
+  void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
-  const fileName = filePath.split("/").pop() || "Untitled";
+  const fileName = filePath?.split("/").pop() || "Untitled";
 
   const { handleDragStart, handleResizeStart } = useWindowBehavior({
     position,

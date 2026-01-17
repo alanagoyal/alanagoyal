@@ -18,6 +18,36 @@ import { APPS, getAppById } from "./app-config";
 
 const STORAGE_KEY = "desktop-window-state";
 
+// =============================================================================
+// Multi-Window Helpers
+// =============================================================================
+
+/**
+ * Generate a window ID for multi-window apps
+ * Format: "appId-instanceNumber" (e.g., "textedit-0", "textedit-1")
+ */
+function generateWindowId(appId: string, instanceNumber: number): string {
+  return `${appId}-${instanceNumber}`;
+}
+
+/**
+ * Parse a window ID to get the base app ID
+ * "textedit-0" → "textedit", "notes" → "notes"
+ */
+function getAppIdFromWindowId(windowId: string): string {
+  const multiWindowApp = APPS.find(
+    (a) => a.multiWindow && windowId.startsWith(`${a.id}-`)
+  );
+  return multiWindowApp ? multiWindowApp.id : windowId;
+}
+
+/**
+ * Check if an app supports multiple windows
+ */
+function isMultiWindowApp(appId: string): boolean {
+  return getAppById(appId)?.multiWindow ?? false;
+}
+
 function getDefaultWindowState(appId: string): WindowState {
   const app = getAppById(appId);
   if (!app) {
@@ -55,18 +85,26 @@ const DESKTOP_DEFAULT_CONFIG = {
 // Export for use in desktop.tsx URL handling
 export const DESKTOP_DEFAULT_FOCUSED_APP = DESKTOP_DEFAULT_CONFIG.focusedAppId;
 
+// Export helper for parsing multi-window IDs
+export { getAppIdFromWindowId };
+
 /**
  * Creates a fresh state with all windows closed
+ * Multi-window apps start with no windows (they're created on demand)
  */
 function getBaseState(): WindowManagerState {
   const windows: Record<string, WindowState> = {};
   APPS.forEach((app) => {
-    windows[app.id] = getDefaultWindowState(app.id);
+    // Multi-window apps don't get default windows - they're created on demand
+    if (!app.multiWindow) {
+      windows[app.id] = getDefaultWindowState(app.id);
+    }
   });
   return {
     windows,
     focusedWindowId: null,
     nextZIndex: 1,
+    nextInstanceNumber: {},
   };
 }
 
@@ -110,6 +148,10 @@ function getDesktopDefaultState(): WindowManagerState {
  * Used when returning user navigates to a specific app URL
  */
 function withFocusedApp(savedState: WindowManagerState, appId: string): WindowManagerState {
+  // For multi-window apps, we can't pre-focus without an instanceId
+  if (isMultiWindowApp(appId)) {
+    return savedState;
+  }
   return {
     ...savedState,
     windows: {
@@ -134,16 +176,19 @@ function loadStateFromStorage(): WindowManagerState | null {
       const parsed = JSON.parse(saved);
       // Validate structure
       if (parsed.windows && typeof parsed.nextZIndex === "number") {
-        // Merge with current APPS config to pick up any new apps
+        // Merge with current APPS config to pick up any new single-window apps
         const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
         APPS.forEach((app) => {
-          if (!mergedWindows[app.id]) {
+          // Only add default windows for single-window apps
+          if (!app.multiWindow && !mergedWindows[app.id]) {
             mergedWindows[app.id] = getDefaultWindowState(app.id);
           }
         });
         return {
           ...parsed,
           windows: mergedWindows,
+          // Ensure nextInstanceNumber exists (migration from old state)
+          nextInstanceNumber: parsed.nextInstanceNumber || {},
         };
       }
     }
@@ -176,7 +221,8 @@ function normalizeZIndexes(state: WindowManagerState): WindowManagerState {
   // Reassign z-indexes starting from 1
   const newWindows: Record<string, WindowState> = {};
   sortedWindows.forEach((win, index) => {
-    newWindows[win.appId] = { ...win, zIndex: index + 1 };
+    // Use win.id as key (handles both single-window "notes" and multi-window "textedit-0")
+    newWindows[win.id] = { ...win, zIndex: index + 1 };
   });
 
   return {
@@ -369,6 +415,254 @@ function windowReducer(
       };
     }
 
+    // ==========================================================================
+    // Multi-Window Actions
+    // ==========================================================================
+
+    case "OPEN_MULTI_WINDOW": {
+      const { appId, instanceId, metadata } = action;
+      const app = getAppById(appId);
+      if (!app?.multiWindow) return state;
+
+      // Check if a window with this instanceId already exists
+      const existingWindow = Object.values(state.windows).find(
+        (w) => w.appId === appId && w.instanceId === instanceId
+      );
+      if (existingWindow) {
+        // Focus existing window instead of creating new
+        return windowReducer(state, {
+          type: "FOCUS_MULTI_WINDOW",
+          windowId: existingWindow.id,
+        });
+      }
+
+      // Calculate cascaded position based on existing open windows of this app
+      const existingAppWindows = Object.values(state.windows).filter(
+        (w) => w.appId === appId && w.isOpen
+      );
+      const cascadeOffset = app.cascadeOffset ?? 30;
+      const basePosition = app.defaultPosition;
+      const newPosition = {
+        x: basePosition.x + existingAppWindows.length * cascadeOffset,
+        y: basePosition.y + existingAppWindows.length * cascadeOffset,
+      };
+
+      // Get next instance number for this app
+      const instanceNumber = state.nextInstanceNumber[appId] ?? 0;
+      const windowId = generateWindowId(appId, instanceNumber);
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            id: windowId,
+            appId,
+            instanceId,
+            isOpen: true,
+            isMinimized: false,
+            isMaximized: false,
+            position: newPosition,
+            size: app.defaultSize,
+            zIndex: state.nextZIndex,
+            metadata,
+          },
+        },
+        focusedWindowId: windowId,
+        nextZIndex: state.nextZIndex + 1,
+        nextInstanceNumber: {
+          ...state.nextInstanceNumber,
+          [appId]: instanceNumber + 1,
+        },
+      };
+    }
+
+    case "CLOSE_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      // Remove the window
+      const newWindows = { ...state.windows };
+      delete newWindows[windowId];
+
+      // Find next window to focus (highest z-index among open, non-minimized)
+      const openWindows = Object.values(newWindows)
+        .filter((w) => w.isOpen && !w.isMinimized)
+        .sort((a, b) => b.zIndex - a.zIndex);
+      const nextFocused = openWindows[0]?.id || null;
+
+      return {
+        ...state,
+        windows: newWindows,
+        focusedWindowId: nextFocused,
+      };
+    }
+
+    case "FOCUS_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window || !window.isOpen) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            isMinimized: false,
+            zIndex: state.nextZIndex,
+          },
+        },
+        focusedWindowId: windowId,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
+    case "MOVE_MULTI_WINDOW": {
+      const { windowId, position } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            position,
+          },
+        },
+      };
+    }
+
+    case "RESIZE_MULTI_WINDOW": {
+      const { windowId, size, position } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            size,
+            ...(position && { position }),
+          },
+        },
+      };
+    }
+
+    case "MINIMIZE_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window || !window.isOpen) return state;
+
+      // Find next window to focus (non-minimized)
+      const openWindows = Object.values(state.windows)
+        .filter((w) => w.isOpen && !w.isMinimized && w.id !== windowId)
+        .sort((a, b) => b.zIndex - a.zIndex);
+      const nextFocused = openWindows[0]?.id || null;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            isMinimized: true,
+          },
+        },
+        focusedWindowId: nextFocused,
+      };
+    }
+
+    case "MAXIMIZE_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            isMaximized: true,
+            zIndex: state.nextZIndex,
+          },
+        },
+        focusedWindowId: windowId,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
+    case "RESTORE_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            isMinimized: false,
+            isMaximized: false,
+            zIndex: state.nextZIndex,
+          },
+        },
+        focusedWindowId: windowId,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
+    case "BRING_APP_TO_FRONT": {
+      const { appId } = action;
+      // Get all open windows for this app, sorted by current z-index (ascending)
+      const appWindows = Object.values(state.windows)
+        .filter((w) => w.appId === appId && w.isOpen)
+        .sort((a, b) => a.zIndex - b.zIndex);
+
+      if (appWindows.length === 0) return state;
+
+      // Assign new z-indexes preserving relative order, un-minimize all
+      let nextZ = state.nextZIndex;
+      const newWindows = { ...state.windows };
+      appWindows.forEach((w) => {
+        newWindows[w.id] = { ...w, zIndex: nextZ++, isMinimized: false };
+      });
+
+      // Focus the topmost window (last in sorted array)
+      const topWindow = appWindows[appWindows.length - 1];
+
+      return {
+        ...state,
+        windows: newWindows,
+        focusedWindowId: topWindow.id,
+        nextZIndex: nextZ,
+      };
+    }
+
+    case "UPDATE_WINDOW_METADATA": {
+      const { windowId, metadata } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            metadata: { ...window.metadata, ...metadata },
+          },
+        },
+      };
+    }
+
     default:
       return state;
   }
@@ -376,6 +670,7 @@ function windowReducer(
 
 interface WindowManagerContextValue {
   state: WindowManagerState;
+  // Single-window app methods
   openWindow: (appId: string) => void;
   closeWindow: (appId: string) => void;
   focusWindow: (appId: string) => void;
@@ -387,10 +682,25 @@ interface WindowManagerContextValue {
   toggleMaximize: (appId: string) => void;
   getWindow: (appId: string) => WindowState | undefined;
   isWindowOpen: (appId: string) => boolean;
+  // Multi-window app methods
+  openMultiWindow: (appId: string, instanceId: string, metadata?: Record<string, unknown>) => void;
+  closeMultiWindow: (windowId: string) => void;
+  focusMultiWindow: (windowId: string) => void;
+  moveMultiWindow: (windowId: string, position: Position) => void;
+  resizeMultiWindow: (windowId: string, size: Size, position?: Position) => void;
+  minimizeMultiWindow: (windowId: string) => void;
+  maximizeMultiWindow: (windowId: string) => void;
+  restoreMultiWindow: (windowId: string) => void;
+  toggleMaximizeMultiWindow: (windowId: string) => void;
+  bringAppToFront: (appId: string) => void;
+  updateWindowMetadata: (windowId: string, metadata: Record<string, unknown>) => void;
+  // Query helpers
+  getWindowsByApp: (appId: string) => WindowState[];
+  hasOpenWindows: (appId: string) => boolean;
   getFocusedAppId: () => string | null;
+  // State management
   restoreDesktopDefault: () => void;
-  claimZIndex: () => number; // Get a z-index for external windows (TextEdit)
-  clearAppFocus: () => void; // Clear focus from app windows (when TextEdit is focused)
+  claimZIndex: () => number;
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(
@@ -507,17 +817,17 @@ export function WindowManagerProvider({
     [state.windows]
   );
 
-  const getFocusedAppId = useCallback(
-    () => state.focusedWindowId,
-    [state.focusedWindowId]
-  );
+  // Returns the base app ID (parses multi-window IDs like "textedit-0" -> "textedit")
+  const getFocusedAppId = useCallback(() => {
+    if (!state.focusedWindowId) return null;
+    return getAppIdFromWindowId(state.focusedWindowId);
+  }, [state.focusedWindowId]);
 
   const restoreDesktopDefault = useCallback(() => {
     dispatch({ type: "RESTORE_STATE", state: getDesktopDefaultState() });
   }, []);
 
-  // Claim a z-index for external windows (like TextEdit)
-  // Returns the current z-index and schedules an increment
+  // Claim a z-index for external windows
   const claimZIndex = useCallback(() => {
     const zIndex = zIndexRef.current;
     zIndexRef.current += 1;
@@ -525,15 +835,98 @@ export function WindowManagerProvider({
     return zIndex;
   }, []);
 
-  // Clear focus from app windows (when an external window like TextEdit gains focus)
-  const clearAppFocus = useCallback(() => {
-    // We don't have a specific action for this, but we can set focusedWindowId to null
-    // by focusing a non-existent window - this is a workaround
-    // Actually, let's just not track this in state - the UI will handle it
+  // ==========================================================================
+  // Multi-Window Methods
+  // ==========================================================================
+
+  const openMultiWindow = useCallback(
+    (appId: string, instanceId: string, metadata?: Record<string, unknown>) => {
+      dispatch({ type: "OPEN_MULTI_WINDOW", appId, instanceId, metadata });
+    },
+    []
+  );
+
+  const closeMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "CLOSE_MULTI_WINDOW", windowId });
   }, []);
+
+  const focusMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "FOCUS_MULTI_WINDOW", windowId });
+  }, []);
+
+  const moveMultiWindow = useCallback((windowId: string, position: Position) => {
+    dispatch({ type: "MOVE_MULTI_WINDOW", windowId, position });
+  }, []);
+
+  const resizeMultiWindow = useCallback(
+    (windowId: string, size: Size, position?: Position) => {
+      dispatch({ type: "RESIZE_MULTI_WINDOW", windowId, size, position });
+    },
+    []
+  );
+
+  const minimizeMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "MINIMIZE_MULTI_WINDOW", windowId });
+  }, []);
+
+  const maximizeMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "MAXIMIZE_MULTI_WINDOW", windowId });
+  }, []);
+
+  const restoreMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "RESTORE_MULTI_WINDOW", windowId });
+  }, []);
+
+  const toggleMaximizeMultiWindow = useCallback(
+    (windowId: string) => {
+      const window = state.windows[windowId];
+      if (window?.isMaximized) {
+        dispatch({ type: "RESTORE_MULTI_WINDOW", windowId });
+      } else {
+        dispatch({ type: "MAXIMIZE_MULTI_WINDOW", windowId });
+      }
+    },
+    [state.windows]
+  );
+
+  const bringAppToFront = useCallback((appId: string) => {
+    dispatch({ type: "BRING_APP_TO_FRONT", appId });
+  }, []);
+
+  const updateWindowMetadata = useCallback(
+    (windowId: string, metadata: Record<string, unknown>) => {
+      dispatch({ type: "UPDATE_WINDOW_METADATA", windowId, metadata });
+    },
+    []
+  );
+
+  // Get all windows for a specific app (for multi-window apps)
+  const getWindowsByApp = useCallback(
+    (appId: string) =>
+      Object.values(state.windows).filter((w) => w.appId === appId),
+    [state.windows]
+  );
+
+  // Check if an app has any open windows (works for both single and multi-window)
+  const hasOpenWindows = useCallback(
+    (appId: string) => {
+      const app = getAppById(appId);
+      if (app?.multiWindow) {
+        // For multi-window apps, check if any window with this appId is open
+        return Object.values(state.windows).some(
+          (w) => w.appId === appId && w.isOpen
+        );
+      } else {
+        // For single-window apps, use existing logic
+        return state.windows[appId]?.isOpen ?? false;
+      }
+    },
+    [state.windows]
+  );
 
   const value: WindowManagerContextValue = {
     state,
+    // Single-window methods
     openWindow,
     closeWindow,
     focusWindow,
@@ -545,10 +938,25 @@ export function WindowManagerProvider({
     toggleMaximize,
     getWindow,
     isWindowOpen,
+    // Multi-window methods
+    openMultiWindow,
+    closeMultiWindow,
+    focusMultiWindow,
+    moveMultiWindow,
+    resizeMultiWindow,
+    minimizeMultiWindow,
+    maximizeMultiWindow,
+    restoreMultiWindow,
+    toggleMaximizeMultiWindow,
+    bringAppToFront,
+    updateWindowMetadata,
+    // Query helpers
+    getWindowsByApp,
+    hasOpenWindows,
     getFocusedAppId,
+    // State management
     restoreDesktopDefault,
     claimZIndex,
-    clearAppFocus,
   };
 
   return (

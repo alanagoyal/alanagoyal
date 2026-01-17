@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import Image from "next/image";
-import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP } from "@/lib/window-context";
+import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
 import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
 import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
@@ -31,46 +31,36 @@ interface DesktopProps {
   initialTextEditFile?: string;
 }
 
-interface TextEditFile {
-  path: string;
-  content: string;
-}
+// =============================================================================
+// TextEdit Content Persistence
+// =============================================================================
+// File contents are stored separately from window state so they persist
+// even when windows are closed and reopened
 
-interface TextEditState {
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  openFilePath?: string;
-}
+const TEXTEDIT_CONTENTS_KEY = "textedit-file-contents";
 
-const TEXTEDIT_STATE_KEY = "textedit-window-state";
-
-function loadTextEditState(): TextEditState {
-  if (typeof window === "undefined") return { position: { x: 160, y: 90 }, size: { width: 700, height: 500 } };
+function loadTextEditContents(): Record<string, string> {
+  if (typeof window === "undefined") return {};
   try {
-    const saved = localStorage.getItem(TEXTEDIT_STATE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.position && parsed.size) return parsed;
-    }
-  } catch {}
-  return { position: { x: 160, y: 90 }, size: { width: 700, height: 500 } };
+    const saved = localStorage.getItem(TEXTEDIT_CONTENTS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
 }
 
-function saveTextEditState(state: Partial<TextEditState>): void {
+function saveTextEditContent(filePath: string, content: string): void {
   if (typeof window === "undefined") return;
   try {
-    const existing = loadTextEditState();
-    localStorage.setItem(TEXTEDIT_STATE_KEY, JSON.stringify({ ...existing, ...state }));
+    const contents = loadTextEditContents();
+    contents[filePath] = content;
+    localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
   } catch {}
 }
 
-function clearTextEditOpenFile(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const existing = loadTextEditState();
-    delete existing.openFilePath;
-    localStorage.setItem(TEXTEDIT_STATE_KEY, JSON.stringify(existing));
-  } catch {}
+function getTextEditContent(filePath: string): string | undefined {
+  const contents = loadTextEditContents();
+  return contents[filePath];
 }
 
 // Constants for file paths
@@ -107,167 +97,127 @@ async function fetchFileContent(filePath: string): Promise<string> {
 }
 
 function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
-  const { openWindow, focusWindow, restoreWindow, getWindow, restoreDesktopDefault, state, claimZIndex } = useWindowManager();
+  const {
+    openWindow,
+    focusWindow,
+    restoreWindow,
+    getWindow,
+    restoreDesktopDefault,
+    state,
+    // Multi-window methods
+    openMultiWindow,
+    closeMultiWindow,
+    focusMultiWindow,
+    moveMultiWindow,
+    resizeMultiWindow,
+    toggleMaximizeMultiWindow,
+    bringAppToFront,
+    updateWindowMetadata,
+    getWindowsByApp,
+    hasOpenWindows,
+    getFocusedAppId,
+  } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
-
-  // TextEdit - single file state
-  const [textEditFile, setTextEditFile] = useState<TextEditFile | null>(null);
-  const [textEditPosition, setTextEditPosition] = useState(() => loadTextEditState().position);
-  const [textEditSize, setTextEditSize] = useState(() => loadTextEditState().size);
-  const [textEditZIndex, setTextEditZIndex] = useState(0);
-  const [textEditFocused, setTextEditFocused] = useState(false);
-  const [textEditMaximized, setTextEditMaximized] = useState(false);
   const [textEditInitialized, setTextEditInitialized] = useState(false);
 
-  // Persist TextEdit position/size to localStorage
-  useEffect(() => {
-    saveTextEditState({ position: textEditPosition, size: textEditSize });
-  }, [textEditPosition, textEditSize]);
+  // Get TextEdit windows from window manager
+  const textEditWindows = getWindowsByApp("textedit");
+  const isTextEditOpen = hasOpenWindows("textedit");
 
-  // Persist open file path to localStorage
-  useEffect(() => {
-    if (textEditFile) {
-      saveTextEditState({ openFilePath: textEditFile.path });
-    }
-  }, [textEditFile?.path]);
-
-  const isTextEditOpen = textEditFile !== null;
-
-  // Load file from URL or localStorage on mount (only once)
+  // Load TextEdit file from URL on mount (only once)
   useEffect(() => {
     if (textEditInitialized) return;
+    if (!initialTextEditFile) return;
 
-    // Priority: URL param > localStorage
-    const fileToLoad = initialTextEditFile || loadTextEditState().openFilePath;
-    if (fileToLoad) {
-      setTextEditInitialized(true);
-      const isFromUrl = !!initialTextEditFile;
-      fetchFileContent(fileToLoad).then(content => {
-        setTextEditFile({ path: fileToLoad, content });
-        setTextEditZIndex(claimZIndex());
-
-        if (isFromUrl) {
-          setTextEditFocused(true);
-        } else {
-          // Re-focus the currently focused app so it stays above TextEdit
-          const focusedAppId = state.focusedWindowId;
-          if (focusedAppId) {
-            focusWindow(focusedAppId);
-          }
-        }
+    setTextEditInitialized(true);
+    // Check if there's cached content, otherwise fetch
+    const cachedContent = getTextEditContent(initialTextEditFile);
+    if (cachedContent !== undefined) {
+      openMultiWindow("textedit", initialTextEditFile, {
+        filePath: initialTextEditFile,
+        content: cachedContent,
+      });
+    } else {
+      fetchFileContent(initialTextEditFile).then((content) => {
+        openMultiWindow("textedit", initialTextEditFile, {
+          filePath: initialTextEditFile,
+          content,
+        });
       });
     }
-  }, [initialTextEditFile, textEditInitialized, claimZIndex, state.focusedWindowId, focusWindow]);
+  }, [initialTextEditFile, textEditInitialized, openMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
-    // If TextEdit is focused, update URL to that file
-    if (textEditFocused && textEditFile) {
-      window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
-      return;
-    }
+    const focusedWindowId = state.focusedWindowId;
+    if (!focusedWindowId) return;
 
-    const focusedAppId = state.focusedWindowId;
-    if (!focusedAppId) return;
+    const focusedAppId = getAppIdFromWindowId(focusedWindowId);
 
-    if (focusedAppId === "notes") {
-      const currentPath = window.location.pathname;
+    if (focusedAppId === "textedit") {
+      // For TextEdit, include the file path in URL
+      const windowState = state.windows[focusedWindowId];
+      const filePath = windowState?.metadata?.filePath as string;
+      if (filePath) {
+        globalThis.window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+      }
+    } else if (focusedAppId === "notes") {
+      const currentPath = globalThis.window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
-        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        globalThis.window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
       }
     } else {
-      window.history.replaceState(null, "", `/${focusedAppId}`);
+      globalThis.window.history.replaceState(null, "", `/${focusedAppId}`);
     }
-  }, [state.focusedWindowId, textEditFocused, textEditFile, initialNoteSlug]);
+  }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
   const isActive = mode === "active";
 
-  // Clear TextEdit focus when app window is focused
-  const clearTextEditFocus = useCallback(() => {
-    setTextEditFocused(false);
+  // URL update handlers (URL is also updated by the effect above when focus changes)
+  const handleMessagesFocus = useCallback(() => {
+    // URL will be updated by the focus change effect
   }, []);
 
-  // URL update handlers
-  const handleMessagesFocus = useCallback(() => {
-    clearTextEditFocus();
-    window.history.replaceState(null, "", "/messages");
-  }, [clearTextEditFocus]);
-
   const handleNotesFocus = useCallback(() => {
-    clearTextEditFocus();
-    const currentPath = window.location.pathname;
-    if (!currentPath.startsWith("/notes/")) {
-      window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
-    }
-  }, [initialNoteSlug, clearTextEditFocus]);
+    // URL will be updated by the focus change effect
+  }, []);
 
   const handleSettingsFocus = useCallback(() => {
-    clearTextEditFocus();
-    window.history.replaceState(null, "", "/settings");
-  }, [clearTextEditFocus]);
+    // URL will be updated by the focus change effect
+  }, []);
 
   const handleITermFocus = useCallback(() => {
-    clearTextEditFocus();
-    window.history.replaceState(null, "", "/iterm");
-  }, [clearTextEditFocus]);
+    // URL will be updated by the focus change effect
+  }, []);
 
   const handleFinderFocus = useCallback(() => {
-    clearTextEditFocus();
-    window.history.replaceState(null, "", "/finder");
-  }, [clearTextEditFocus]);
+    // URL will be updated by the focus change effect
+  }, []);
 
   const handlePhotosFocus = useCallback(() => {
-    clearTextEditFocus();
-    window.history.replaceState(null, "", "/photos");
-  }, [clearTextEditFocus]);
+    // URL will be updated by the focus change effect
+  }, []);
 
   // Handler for opening text files in TextEdit
-  const handleOpenTextFile = useCallback((filePath: string, content: string) => {
-    setTextEditFile({ path: filePath, content });
-    setTextEditZIndex(claimZIndex());
-    setTextEditFocused(true);
-    window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
-  }, [claimZIndex]);
+  const handleOpenTextFile = useCallback(
+    (filePath: string, content: string) => {
+      // Save content to localStorage for persistence
+      saveTextEditContent(filePath, content);
+      // Open multi-window (will focus existing if same file already open)
+      openMultiWindow("textedit", filePath, { filePath, content });
+    },
+    [openMultiWindow]
+  );
 
-  // Handler for TextEdit focus
-  const handleTextEditFocus = useCallback(() => {
-    setTextEditZIndex(claimZIndex());
-    setTextEditFocused(true);
-  }, [claimZIndex]);
-
-  // Handler for closing TextEdit
-  const handleTextEditClose = useCallback(() => {
-    setTextEditFile(null);
-    setTextEditFocused(false);
-    setTextEditMaximized(false);
-    clearTextEditOpenFile();
-    // Focus the topmost app window and update URL
-    const openWindows = Object.values(state.windows)
-      .filter(w => w.isOpen && !w.isMinimized)
-      .sort((a, b) => b.zIndex - a.zIndex);
-    if (openWindows.length > 0) {
-      const appId = openWindows[0].appId;
-      focusWindow(appId);
-      if (appId === "notes") {
-        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
-      } else {
-        window.history.replaceState(null, "", `/${appId}`);
-      }
-    }
-  }, [state.windows, focusWindow, initialNoteSlug]);
-
-  // Handler for TextEdit dock click
+  // Handler for TextEdit dock click - brings all windows to front
   const handleTextEditDockClick = useCallback(() => {
-    if (!textEditFile) return;
-    setTextEditZIndex(claimZIndex());
-    setTextEditFocused(true);
-    window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(textEditFile.path)}`);
-  }, [textEditFile, claimZIndex]);
+    bringAppToFront("textedit");
+  }, [bringAppToFront]);
 
   // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {
@@ -425,30 +375,42 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
             <PhotosApp inShell={true} />
           </Window>
 
-          {/* TextEdit - single file window (minimize closes since there's no dock minimized state) */}
-          {textEditFile && (
-            <TextEditWindow
-              filePath={textEditFile.path}
-              content={textEditFile.content}
-              position={textEditPosition}
-              size={textEditSize}
-              zIndex={textEditZIndex}
-              isFocused={textEditFocused}
-              isMaximized={textEditMaximized}
-              onFocus={handleTextEditFocus}
-              onClose={handleTextEditClose}
-              onMinimize={handleTextEditClose}
-              onToggleMaximize={() => setTextEditMaximized(m => !m)}
-              onMove={setTextEditPosition}
-              onResize={(size, pos) => {
-                setTextEditSize(size);
-                if (pos) setTextEditPosition(pos);
-              }}
-              onContentChange={(content) => setTextEditFile(f => f ? { ...f, content } : null)}
-            />
-          )}
+          {/* TextEdit - multi-window support */}
+          {textEditWindows
+            .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+            .map((windowState) => {
+              const filePath = windowState.metadata!.filePath as string;
+              const content = (windowState.metadata?.content as string) ?? "";
+              return (
+                <TextEditWindow
+                  key={windowState.id}
+                  windowId={windowState.id}
+                  filePath={filePath}
+                  content={content}
+                  position={windowState.position}
+                  size={windowState.size}
+                  zIndex={windowState.zIndex}
+                  isFocused={state.focusedWindowId === windowState.id}
+                  isMaximized={windowState.isMaximized}
+                  onFocus={() => focusMultiWindow(windowState.id)}
+                  onClose={() => closeMultiWindow(windowState.id)}
+                  onMinimize={() => closeMultiWindow(windowState.id)}
+                  onToggleMaximize={() => toggleMaximizeMultiWindow(windowState.id)}
+                  onMove={(pos) => moveMultiWindow(windowState.id, pos)}
+                  onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
+                  onContentChange={(newContent) => {
+                    // Update metadata and save to localStorage
+                    updateWindowMetadata(windowState.id, { content: newContent });
+                    saveTextEditContent(filePath, newContent);
+                  }}
+                />
+              );
+            })}
 
-          <Dock onTrashClick={handleTrashClick} onFinderClick={handleFinderDockClick} onTextEditClick={handleTextEditDockClick} hasOpenTextEditWindows={isTextEditOpen} />
+          <Dock
+            onTrashClick={handleTrashClick}
+            onFinderClick={handleFinderDockClick}
+          />
         </>
       )}
 
