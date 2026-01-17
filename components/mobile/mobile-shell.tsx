@@ -9,15 +9,17 @@ import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { TextEditApp } from "@/components/apps/textedit";
+import { getTextEditContent } from "@/lib/file-storage";
 
 const DEFAULT_APP = "notes";
 
 interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
+  initialTextEditFile?: string;
 }
 
-export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
+export function MobileShell({ initialApp, initialNoteSlug, initialTextEditFile }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -59,7 +61,14 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
         {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
         {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
-        {activeAppId === "textedit" && <TextEditApp isMobile={true} inShell={false} />}
+        {activeAppId === "textedit" && (
+          <TextEditApp
+            isMobile={true}
+            inShell={false}
+            initialFilePath={initialTextEditFile}
+            initialContent={initialTextEditFile ? getTextEditContent(initialTextEditFile) ?? "" : ""}
+          />
+        )}
       </div>
     </RecentsProvider>
   );

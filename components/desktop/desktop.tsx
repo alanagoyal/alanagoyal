@@ -16,6 +16,7 @@ import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { TextEditWindow } from "@/components/apps/textedit";
+import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -89,6 +90,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     getFocusedAppId,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
+  const isMobile = useMobileDetect();
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
@@ -361,8 +363,11 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
           {/* TextEdit - multi-window support */}
           {/* Don't render until URL-based initialization is complete to prevent flash */}
+          {/* On small screens, only show the topmost window */}
           {textEditInitialized && textEditWindows
             .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+            .sort((a, b) => b.zIndex - a.zIndex)
+            .slice(0, isMobile ? 1 : undefined)
             .map((windowState) => {
               const filePath = windowState.metadata!.filePath as string;
               const content = (windowState.metadata?.content as string) ?? "";

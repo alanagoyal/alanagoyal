@@ -44,6 +44,7 @@ export function TextEditApp({
 
   // Initialize file contents from files prop
   useEffect(() => {
+    if (files.length === 0) return; // Don't update state for empty files array
     const newContents: Record<string, string> = {};
     files.forEach(file => {
       // Preserve existing edits, or use original content
