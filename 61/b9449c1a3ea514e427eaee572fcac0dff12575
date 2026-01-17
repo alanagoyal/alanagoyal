@@ -1,0 +1,33 @@
+components/apps/finder/finder-app.tsx
+  7d2642ce9abdfadf 10,439-442,640-671
+components/desktop/desktop.tsx
+  7d2642ce9abdfadf 34,81,97-99,108-109,111,120,127,186-194,196,363-364,382
+lib/window-context.tsx
+  7d2642ce9abdfadf 214-217
+components/apps/textedit/textedit-window.tsx
+  7d2642ce9abdfadf 15,68
+components/desktop/window.tsx
+  7d2642ce9abdfadf 4,84
+lib/file-storage.ts
+  7d2642ce9abdfadf 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "61b9449c1a3ea514e427eaee572fcac0dff12575",
+  "prompts": {
+    "7d2642ce9abdfadf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22eae141-f70d-4409-a7d2-ba4805b0d857",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 152,
+      "total_deletions": 70,
+      "accepted_lines": 127,
+      "overriden_lines": 0
+    }
+  }
+}
