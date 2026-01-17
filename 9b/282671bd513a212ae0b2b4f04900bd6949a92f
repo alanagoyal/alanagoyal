@@ -1,0 +1,29 @@
+components/apps/textedit/textedit-app.tsx
+  7d2642ce9abdfadf 47
+components/mobile/mobile-shell.tsx
+  7d2642ce9abdfadf 12,19,22,64,68-69,71
+components/desktop/desktop.tsx
+  7d2642ce9abdfadf 19,93,366,369-370
+app/(desktop)/textedit/page.tsx
+  7d2642ce9abdfadf 32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "9b282671bd513a212ae0b2b4f04900bd6949a92f",
+  "prompts": {
+    "7d2642ce9abdfadf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22eae141-f70d-4409-a7d2-ba4805b0d857",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 3,
+      "accepted_lines": 14,
+      "overriden_lines": 0
+    }
+  }
+}
