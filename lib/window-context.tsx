@@ -211,6 +211,10 @@ function saveStateToStorage(state: WindowManagerState): void {
 // See lib/desktop/z-index.ts for the full layering system
 const MAX_Z_INDEX = 50;
 
+// Z-index for maximized/fullscreen windows - always above normal windows
+// Export so Window components can use consistently
+export const MAXIMIZED_Z_INDEX = 80;
+
 // Normalize z-indexes to prevent unbounded growth
 function normalizeZIndexes(state: WindowManagerState): WindowManagerState {
   if (state.nextZIndex <= MAX_Z_INDEX) return state;

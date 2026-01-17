@@ -31,37 +31,7 @@ interface DesktopProps {
   initialTextEditFile?: string;
 }
 
-// =============================================================================
-// TextEdit Content Persistence
-// =============================================================================
-// File contents are stored separately from window state so they persist
-// even when windows are closed and reopened
-
-const TEXTEDIT_CONTENTS_KEY = "textedit-file-contents";
-
-function loadTextEditContents(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  try {
-    const saved = localStorage.getItem(TEXTEDIT_CONTENTS_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveTextEditContent(filePath: string, content: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const contents = loadTextEditContents();
-    contents[filePath] = content;
-    localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
-  } catch {}
-}
-
-function getTextEditContent(filePath: string): string | undefined {
-  const contents = loadTextEditContents();
-  return contents[filePath];
-}
+import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
 
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
@@ -108,6 +78,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     openMultiWindow,
     closeMultiWindow,
     focusMultiWindow,
+    minimizeMultiWindow,
     moveMultiWindow,
     resizeMultiWindow,
     toggleMaximizeMultiWindow,
@@ -123,7 +94,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
-  const [textEditInitialized, setTextEditInitialized] = useState(false);
+  // Track whether URL-based TextEdit initialization is complete
+  // If no initialTextEditFile, consider it already initialized
+  const [textEditInitialized, setTextEditInitialized] = useState(!initialTextEditFile);
 
   // Get TextEdit windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
@@ -132,9 +105,11 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   // Load TextEdit file from URL on mount (only once)
   useEffect(() => {
     if (textEditInitialized) return;
-    if (!initialTextEditFile) return;
+    if (!initialTextEditFile) {
+      setTextEditInitialized(true);
+      return;
+    }
 
-    setTextEditInitialized(true);
     // Check if there's cached content, otherwise fetch
     const cachedContent = getTextEditContent(initialTextEditFile);
     if (cachedContent !== undefined) {
@@ -142,12 +117,14 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
         filePath: initialTextEditFile,
         content: cachedContent,
       });
+      setTextEditInitialized(true);
     } else {
       fetchFileContent(initialTextEditFile).then((content) => {
         openMultiWindow("textedit", initialTextEditFile, {
           filePath: initialTextEditFile,
           content,
         });
+        setTextEditInitialized(true);
       });
     }
   }, [initialTextEditFile, textEditInitialized, openMultiWindow]);
@@ -206,10 +183,17 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback(
     (filePath: string, content: string) => {
-      // Save content to localStorage for persistence
-      saveTextEditContent(filePath, content);
+      // Check for cached (edited) content first - preserve user edits
+      const cachedContent = getTextEditContent(filePath);
+      const contentToUse = cachedContent !== undefined ? cachedContent : content;
+
+      // Only save if no cached version exists (don't overwrite edits)
+      if (cachedContent === undefined) {
+        saveTextEditContent(filePath, content);
+      }
+
       // Open multi-window (will focus existing if same file already open)
-      openMultiWindow("textedit", filePath, { filePath, content });
+      openMultiWindow("textedit", filePath, { filePath, content: contentToUse });
     },
     [openMultiWindow]
   );
@@ -376,7 +360,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
           </Window>
 
           {/* TextEdit - multi-window support */}
-          {textEditWindows
+          {/* Don't render until URL-based initialization is complete to prevent flash */}
+          {textEditInitialized && textEditWindows
             .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
             .map((windowState) => {
               const filePath = windowState.metadata!.filePath as string;
@@ -394,7 +379,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
                   isMaximized={windowState.isMaximized}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
-                  onMinimize={() => closeMultiWindow(windowState.id)}
+                  onMinimize={() => minimizeMultiWindow(windowState.id)}
                   onToggleMaximize={() => toggleMaximizeMultiWindow(windowState.id)}
                   onMove={(pos) => moveMultiWindow(windowState.id, pos)}
                   onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}

@@ -7,6 +7,7 @@ import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
+import { getFileModifiedDate } from "@/lib/file-storage";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -435,6 +436,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     } else if (file.type === "file") {
       // Don't preview files in trash (they don't exist)
       if (file.path.startsWith("trash/")) return;
+
+      // Clear selection immediately when opening a file
+      setSelectedFile(null);
+
       // Add to recents when viewing a file
       addRecent({ path: file.path, name: file.name, type: file.type });
 
@@ -457,7 +462,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       // If text file and onOpenTextFile is available, open in TextEdit
       if (isTextFile(file.name) && onOpenTextFile) {
         onOpenTextFile(file.path, content);
-        setSelectedFile(null); // Clear selection after opening file
       } else {
         // Fallback to preview panel
         setPreviewContent(content);
@@ -633,9 +637,38 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     );
   };
 
-  // Generate a pseudo-random date from last 7 days based on filename (deterministic)
-  const getFileDate = (filename: string): string => {
-    // Use filename to generate a consistent "random" number
+  // Format a date as a display string
+  const formatDateString = (date: Date): string => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const isPM = hours >= 12;
+    const displayHours = hours % 12 || 12;
+    const timeStr = `${displayHours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Today at ${timeStr}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${timeStr}`;
+    } else {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} at ${timeStr}`;
+    }
+  };
+
+  // Get file date - uses real modified date if available, otherwise generates pseudo-random
+  const getFileDate = (file: FileItem): string => {
+    // Check for real modified date first (from TextEdit edits)
+    const realModifiedDate = getFileModifiedDate(file.path);
+    if (realModifiedDate) {
+      return formatDateString(new Date(realModifiedDate));
+    }
+
+    // Fall back to pseudo-random date based on filename (deterministic)
+    const filename = file.name;
     let hash = 0;
     for (let i = 0; i < filename.length; i++) {
       hash = ((hash << 5) - hash) + filename.charCodeAt(i);
@@ -757,7 +790,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
               "w-52 text-left truncate",
               selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
             )}>
-              {getFileDate(file.name)}
+              {getFileDate(file)}
             </div>
           </button>
         ))}

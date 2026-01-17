@@ -12,6 +12,7 @@ import {
   CORNER_SIZE,
   EDGE_SIZE,
 } from "@/lib/use-window-behavior";
+import { MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 
 interface TextEditWindowProps {
   windowId: string; // Unique window identifier for multi-window support
@@ -64,7 +65,7 @@ export function TextEditWindow({
   });
 
   const windowStyle = isMaximized
-    ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex }
+    ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
     : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
 
   return (

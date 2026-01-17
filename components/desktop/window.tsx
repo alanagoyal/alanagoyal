@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { useWindowManager } from "@/lib/window-context";
+import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
@@ -81,7 +81,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         bottom: 0,
         width: "auto",
         height: "auto",
-        zIndex: zIndexOverride ?? 80,
+        zIndex: zIndexOverride ?? MAXIMIZED_Z_INDEX,
       }
     : {
         top: position.y,
