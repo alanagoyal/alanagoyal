@@ -44,8 +44,24 @@ interface HistoryEntry {
   prompt?: string;
 }
 
+// Text file extensions that should open in TextEdit
+const TEXT_FILE_EXTENSIONS = [
+  "md", "txt", "ts", "tsx", "js", "jsx", "json",
+  "css", "html", "py", "yml", "yaml", "xml",
+  "sh", "bash", "zsh", "env", "gitignore", "eslintrc",
+  "prettierrc", "editorconfig", "toml", "ini", "cfg",
+  "rst", "csv", "log", "sql", "graphql", "vue", "svelte",
+];
+
+function isTextFile(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  if (!ext && filename.startsWith(".")) return true;
+  return TEXT_FILE_EXTENSIONS.includes(ext);
+}
+
 interface TerminalProps {
   isMobile?: boolean;
+  onOpenTextFile?: (filePath: string, content: string) => void;
 }
 
 // GitHub data cache
@@ -118,7 +134,7 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
   }
 }
 
-export function Terminal({ isMobile = false }: TerminalProps) {
+export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   const { currentOS } = useSystemSettings();
   const { addRecent } = useRecents();
   const [history, setHistory] = useState<HistoryEntry[]>([
@@ -226,6 +242,7 @@ export function Terminal({ isMobile = false }: TerminalProps) {
   cd <dir>      - Change directory
   ls [dir]      - List directory contents
   cat <file>    - Display file contents
+  open <file>   - Open file in TextEdit
   echo <text>   - Print text to terminal
   whoami        - Display current user
   hostname      - Display hostname
@@ -430,6 +447,58 @@ Note: Projects folder contains my real GitHub repositories!`;
        .coeli:.teleoc.           `;
         break;
 
+      case "open": {
+        if (!args[0]) {
+          output = "open: missing operand";
+          break;
+        }
+
+        const path = resolvePath(args[0]);
+
+        // Check if it's a text file
+        const fileName = path.split("/").pop() || "";
+        if (!isTextFile(fileName)) {
+          output = `open: ${args[0]}: Cannot open non-text files`;
+          break;
+        }
+
+        // Get file content
+        let content = "";
+
+        // Check static file system first
+        const staticFile = fileSystem[path];
+        if (staticFile?.type === "file" && staticFile.content) {
+          content = staticFile.content;
+        } else if (staticFile?.type === "dir") {
+          output = `open: ${args[0]}: Is a directory`;
+          break;
+        } else {
+          // Check GitHub
+          const parsed = parseGitHubPath(path);
+          if (parsed && parsed.filePath) {
+            try {
+              content = await fetchFileContent(parsed.repo, parsed.filePath);
+            } catch (error) {
+              output = `open: ${args[0]}: ${error instanceof Error ? error.message : "File not found"}`;
+              break;
+            }
+          } else {
+            output = `open: ${args[0]}: No such file or directory`;
+            break;
+          }
+        }
+
+        // Open in TextEdit
+        if (onOpenTextFile) {
+          onOpenTextFile(path, content);
+          // Add to recents
+          addRecent({ path, name: fileName, type: "file" });
+        } else {
+          output = `open: TextEdit is not available`;
+        }
+        break;
+      }
+
       default:
         output = `zsh: command not found: ${cmd}`;
     }
@@ -440,7 +509,7 @@ Note: Projects folder contains my real GitHub repositories!`;
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenTextFile]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {

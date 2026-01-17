@@ -67,6 +67,20 @@ export const APPS: AppConfig[] = [
     minSize: { width: 700, height: 400 },
     menuBarTitle: "System Settings",
   },
+  {
+    id: "textedit",
+    name: "TextEdit",
+    icon: "/textedit.svg",
+    description: "Plain text editor",
+    accentColor: "#8E8E93",
+    defaultPosition: { x: 160, y: 90 },
+    defaultSize: { width: 700, height: 500 },
+    minSize: { width: 400, height: 300 },
+    menuBarTitle: "TextEdit",
+    showOnDockByDefault: false,
+    multiWindow: true,
+    cascadeOffset: 30,
+  },
 ];
 
 export function getAppById(id: string): AppConfig | undefined {

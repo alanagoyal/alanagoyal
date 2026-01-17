@@ -59,15 +59,17 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
 
   const addRecent = useCallback((file: Omit<RecentFile, "accessedAt">) => {
     setRecents(prev => {
-      // Remove existing entry with same path (if any)
-      const filtered = prev.filter(r => r.path !== file.path);
+      // If file is already in recents, don't move it (avoid jarring reorder)
+      if (prev.some(r => r.path === file.path)) {
+        return prev;
+      }
       // Add new entry at the beginning with current timestamp
       const newRecent: RecentFile = {
         ...file,
         accessedAt: Date.now(),
       };
       // Keep only MAX_RECENTS items
-      return [newRecent, ...filtered].slice(0, MAX_RECENTS);
+      return [newRecent, ...prev].slice(0, MAX_RECENTS);
     });
   }, []);
 

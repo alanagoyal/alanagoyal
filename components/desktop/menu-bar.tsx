@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useWindowManager } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -39,13 +39,14 @@ export function MenuBar({
   onLogout,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
-  const { getFocusedAppId, closeWindow } = useWindowManager();
+  const { getFocusedAppId, closeWindow, closeMultiWindow, state } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
 
-  const focusedAppId = getFocusedAppId();
+  const focusedAppId = getFocusedAppId(); // This returns the base app ID (e.g., "textedit")
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
+  const focusedWindowId = state.focusedWindowId; // This is the actual window ID (e.g., "textedit-0")
 
   useEffect(() => {
     const updateTime = () => {
@@ -65,7 +66,19 @@ export function MenuBar({
     return () => clearInterval(interval);
   }, []);
 
-  // Q shortcut to quit/close the focused app
+  // Helper to close the focused window (handles both single and multi-window apps)
+  const closeFocusedWindow = useCallback(() => {
+    if (!focusedWindowId) return;
+
+    // Check if this is a multi-window app
+    if (focusedApp?.multiWindow) {
+      closeMultiWindow(focusedWindowId);
+    } else if (focusedAppId) {
+      closeWindow(focusedAppId);
+    }
+  }, [focusedWindowId, focusedApp, focusedAppId, closeMultiWindow, closeWindow]);
+
+  // Q shortcut to quit/close the focused app/window
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle Q key when not in an input field
@@ -74,15 +87,15 @@ export function MenuBar({
         return;
       }
 
-      if (e.key.toLowerCase() === "q" && focusedAppId) {
+      if (e.key.toLowerCase() === "q" && focusedWindowId) {
         e.preventDefault();
-        closeWindow(focusedAppId);
+        closeFocusedWindow();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [focusedAppId, closeWindow]);
+  }, [focusedWindowId, closeFocusedWindow]);
 
   const toggleMenu = (menu: OpenMenu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -208,11 +221,7 @@ export function MenuBar({
         onClose={closeMenu}
         appName={focusedApp?.menuBarTitle || "Finder"}
         onAbout={() => setAboutDialogOpen(true)}
-        onQuit={() => {
-          if (focusedAppId) {
-            closeWindow(focusedAppId);
-          }
-        }}
+        onQuit={closeFocusedWindow}
       />
 
       <FileMenu
