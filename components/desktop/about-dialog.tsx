@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { getAppById } from "@/lib/app-config";
+import { WindowControls } from "@/components/window-controls";
 
 interface AboutDialogProps {
   isOpen: boolean;
@@ -148,12 +149,12 @@ export function AboutDialog({
           className="flex items-center gap-2 px-3 py-3 cursor-default select-none"
           onMouseDown={handleDragStart}
         >
-          <button
-            onClick={onClose}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+          <WindowControls
+            inShell={false}
+            onClose={onClose}
+            closeLabel="Close"
+            closeOnly
           />
-          <div className="w-3 h-3 rounded-full bg-zinc-600" />
-          <div className="w-3 h-3 rounded-full bg-zinc-600" />
         </div>
 
         {/* Content */}

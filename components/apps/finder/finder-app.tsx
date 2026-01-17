@@ -516,11 +516,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   // Render mobile sidebar nav (traffic lights only, like Settings SidebarNav)
   const renderMobileSidebarNav = () => (
     <div className="px-4 py-2 flex items-center justify-between select-none bg-zinc-100/50 dark:bg-zinc-800/50">
-      <div className="window-controls flex items-center gap-1.5 p-2">
-        <div className="w-3 h-3 rounded-full bg-red-500" />
-        <div className="w-3 h-3 rounded-full bg-yellow-500" />
-        <div className="w-3 h-3 rounded-full bg-green-500" />
-      </div>
+      <WindowControls
+        inShell={false}
+        closeOnly
+        className="p-2"
+      />
       {/* Spacer to match Settings */}
       <div className="flex flex-col items-center justify-center">
         <div className="p-2">
