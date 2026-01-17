@@ -1,0 +1,23 @@
+app/globals.css
+  7d2642ce9abdfadf 242,254,259,263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "e8d20207ce2cf9d2d8a7fcd25c898fd4f187e4d3",
+  "prompts": {
+    "7d2642ce9abdfadf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22eae141-f70d-4409-a7d2-ba4805b0d857",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 16,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
