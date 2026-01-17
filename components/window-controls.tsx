@@ -122,8 +122,8 @@ export function WindowControls({
       />
       {closeOnly ? (
         <>
-          <div className="w-3 h-3 rounded-full bg-zinc-600" />
-          <div className="w-3 h-3 rounded-full bg-zinc-600" />
+          <div className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+          <div className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600" />
         </>
       ) : (
         <>
