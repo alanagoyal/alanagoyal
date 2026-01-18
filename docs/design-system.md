@@ -330,6 +330,7 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 | Notes | Yes (search) | Yes | `sidebar.tsx` |
 | Messages | Yes (search, message input) | Yes | `sidebar.tsx` |
 | iTerm | Yes (terminal input) | Yes | `terminal.tsx` |
+| TextEdit | Yes (textarea) | Yes | `textedit-app.tsx`, `textedit-window.tsx` |
 | Photos | No | Not needed | - |
 | Finder | No | Not needed | - |
 | Settings | No | Not needed | - |

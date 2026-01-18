@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Nav } from "./nav";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface TextEditFile {
   path: string;
@@ -34,6 +35,22 @@ export function TextEditApp({
   initialContent = "",
 }: TextEditAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const windowFocus = useWindowFocus();
+
+  // Escape key handler to unfocus and allow global shortcuts (like 'q' to quit)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if this app should handle the shortcut
+      if (windowFocus && !windowFocus.isFocused) return;
+
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement)?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [windowFocus]);
 
   // For standalone/mobile mode, use local state
   const [localContent, setLocalContent] = useState(initialContent);

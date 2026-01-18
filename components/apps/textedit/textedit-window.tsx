@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import {
@@ -63,6 +63,33 @@ export function TextEditWindow({
     onResize,
     onFocus,
   });
+
+  // Keyboard shortcuts: Escape to unfocus, 'q' to quit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if this window is focused
+      if (!isFocused) return;
+
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement)?.blur();
+        return;
+      }
+
+      // 'q' to close window (only when not typing)
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "q") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFocused, onClose]);
 
   const windowStyle = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
