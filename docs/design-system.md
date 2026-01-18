@@ -263,6 +263,77 @@ Use `text-red-600` for delete/destructive action text:
 <button className="text-red-600">Delete</button>
 ```
 
+## Keyboard Shortcuts
+
+### Global Shortcuts
+
+The menu bar (`menu-bar.tsx`) handles the global `q` shortcut to quit/close the focused app:
+
+```tsx
+// Global handler - only fires when NOT in an input field
+if (e.key.toLowerCase() === "q" && focusedAppId) {
+  closeWindow(focusedAppId);
+}
+```
+
+This handler automatically skips when the user is typing in an INPUT, TEXTAREA, or contentEditable element.
+
+### Escape to Unfocus Pattern
+
+Apps with text inputs must handle the **Escape** key to blur the active element. This allows the global `q` shortcut to work after pressing Escape.
+
+**When to add Escape handling:**
+- Apps with text inputs (search bars, message inputs, terminal inputs)
+- Apps with rich text editors (contentEditable, ProseMirror)
+
+**When NOT needed:**
+- Apps without text inputs (Photos, Finder, Settings) - the `q` key works directly
+
+**Implementation pattern:**
+
+```tsx
+// For apps with existing keyboard handlers (like Notes, Messages)
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Check window focus first
+  if (windowFocus && !windowFocus.isFocused) return;
+
+  // Escape always blurs to allow global shortcuts
+  if (event.key === "Escape") {
+    (document.activeElement as HTMLElement)?.blur();
+    return;
+  }
+
+  // ... other shortcuts
+};
+```
+
+```tsx
+// For input-specific handlers (like iTerm terminal)
+const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  // ... other key handling
+
+  if (e.key === "Escape") {
+    (document.activeElement as HTMLElement)?.blur();
+  }
+};
+```
+
+**User flow:**
+1. User is typing in an input field
+2. User presses **Escape** → input loses focus
+3. User presses **q** → app closes (handled by global menu bar)
+
+### Apps with Keyboard Shortcuts
+
+| App | Has Text Inputs | Escape Handler | Location |
+|-----|-----------------|----------------|----------|
+| Notes | Yes (search) | Yes | `sidebar.tsx` |
+| Messages | Yes (search, message input) | Yes | `sidebar.tsx` |
+| iTerm | Yes (terminal input) | Yes | `terminal.tsx` |
+| Photos | No | Not needed | - |
+| Finder | No | Not needed | - |
+| Settings | No | Not needed | - |
+
 ## Checklist for New Apps
 
 When creating a new app, ensure:
@@ -278,3 +349,4 @@ When creating a new app, ensure:
 - [ ] Dividers use `border-muted-foreground/20`
 - [ ] Responsive patterns use `isMobileView` prop
 - [ ] ScrollArea used for scrollable content
+- [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
