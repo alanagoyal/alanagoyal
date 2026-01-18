@@ -1,0 +1,27 @@
+components/apps/messages/sidebar.tsx
+  e7c10fa3751cb936 185-190
+components/apps/iterm/terminal.tsx
+  e7c10fa3751cb936 558-560
+docs/design-system.md
+  e7c10fa3751cb936 266-336,352
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "3bde9de3bf5a1ff39d1aefa449d828bc736c5103",
+  "prompts": {
+    "e7c10fa3751cb936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f7195db-721b-4bd5-872c-d3ba9fd608e7",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 128,
+      "total_deletions": 2,
+      "accepted_lines": 126,
+      "overriden_lines": 0
+    }
+  }
+}
