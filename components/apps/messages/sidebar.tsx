@@ -182,6 +182,12 @@ export function Sidebar({
         return;
       }
 
+      // Escape key to unfocus and allow global shortcuts (like 'q' to quit)
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement)?.blur();
+        return;
+      }
+
       // Focus search on forward slash
       if (
         e.key === "/" &&

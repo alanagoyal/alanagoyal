@@ -624,6 +624,9 @@ Note: Projects folder contains my real GitHub repositories!`;
     } else if (e.key === "l" && e.ctrlKey) {
       e.preventDefault();
       setHistory([]);
+    } else if (e.key === "Escape") {
+      // Blur input to allow global keyboard shortcuts (like 'q' to quit)
+      (document.activeElement as HTMLElement)?.blur();
     }
   }, [currentInput, executeCommand, commandHistory, historyIndex, currentDir, getPrompt, isExecuting, fileSystem, resolvePath, isGitHubPath, parseGitHubPath]);
 
