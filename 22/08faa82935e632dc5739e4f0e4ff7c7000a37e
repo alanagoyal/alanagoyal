@@ -1,0 +1,84 @@
+components/apps/textedit/textedit-app.tsx
+  f7d0db2278a789c5 162,166
+  f6827a58e70c6907 1-6,9-37,54-63,65-71,73-119,123-161,163-165,167-173
+  e7c10fa3751cb936 7,38-53
+docs/design-system.md
+  e7c10fa3751cb936 266-337,353
+  8bdc472c1179e2e4 47,50,53,58-60,63,343
+  8697e35618a1955e 1-46,48-49,51-52,54-57,61-62,65-265,338-342,344-352
+components/apps/textedit/textedit-window.tsx
+  e7c10fa3751cb936 3,67-93
+  f6827a58e70c6907 1-2,4-14,16-17,19-35,37-51,54-66,94-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "2208faa82935e632dc5739e4f0e4ff7c7000a37e",
+  "prompts": {
+    "8697e35618a1955e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e279488-fe66-4daf-86cc-f9551da70416",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 277,
+      "total_deletions": 2,
+      "accepted_lines": 271,
+      "overriden_lines": 0
+    },
+    "8bdc472c1179e2e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7326f88-4a8d-4578-8aee-976d7a251f81",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 5,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "e7c10fa3751cb936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f7195db-721b-4bd5-872c-d3ba9fd608e7",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 3,
+      "accepted_lines": 118,
+      "overriden_lines": 0
+    },
+    "f6827a58e70c6907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aaa9e7b-28d1-41eb-b447-ad27dc9278d5",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 248,
+      "total_deletions": 136,
+      "accepted_lines": 306,
+      "overriden_lines": 0
+    },
+    "f7d0db2278a789c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aede4ba3-e1cf-4cb1-a392-310f1419f700",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
