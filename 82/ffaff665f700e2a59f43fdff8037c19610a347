@@ -1,0 +1,27 @@
+components/apps/textedit/textedit-app.tsx
+  e7c10fa3751cb936 7,38-53
+components/apps/textedit/textedit-window.tsx
+  e7c10fa3751cb936 3,62-88
+docs/design-system.md
+  e7c10fa3751cb936 333
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "82ffaff665f700e2a59f43fdff8037c19610a347",
+  "prompts": {
+    "e7c10fa3751cb936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f7195db-721b-4bd5-872c-d3ba9fd608e7",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 3,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
