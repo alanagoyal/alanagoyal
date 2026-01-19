@@ -199,8 +199,7 @@ Strongly consider using wait or wrap_up rather than continuing to speak.`;
   // Guidance based on who just spoke
   let speakerGuidance = "";
   if (state.lastSpeaker && state.lastSpeaker !== "me") {
-    speakerGuidance = `\n⚠️ ${state.lastSpeaker} just spoke. A different participant should speak next, or use wait/wrap_up.
-If you speak, you MUST respond to what ${state.lastSpeaker} said - don't start a new topic or repeat greetings.`;
+    speakerGuidance = `\n⚠️ ${state.lastSpeaker} just spoke. A different participant should speak next, or use wait/wrap_up.`;
   }
 
   return `You are participating in a group text chat.
@@ -227,16 +226,18 @@ CRITICAL RULES:
 1. Do NOT repeat what you or others have already said
 2. Do NOT ask the same question someone already asked (e.g., "what are you building?")
 3. Do NOT use generic greetings like "yo", "hey", "fresh start" if someone else already greeted
-4. If another AI just spoke, RESPOND to what they said - don't ignore them
-5. If you just spoke, use wait to let others talk
-6. After 2-3 AI messages without human response, prefer wait or wrap_up
+4. Do NOT start with "[Name]'s right" or "I agree with [Name]" - just say your piece naturally
+5. Use VARIED reactions that match the message: laugh for funny, heart for touching, like for agree - don't just use emphasize for everything
+6. Talk like casual friends texting, not like a panel discussion or formal debate
+7. If you just spoke, use wait to let others talk
+8. After 2-3 AI messages without human response, prefer wait or wrap_up
 
 GUIDELINES:
-- Speak authentically as your character, not a parody
-- Build on or challenge each other's ideas - actually engage with the last message
-- Keep messages SHORT like real texts (1-2 sentences max, not paragraphs)
-- No essays or walls of text - this is a casual text chat, not email
-- If the human returns with a simple greeting after a gap, ONE AI greets back, then wait for the human
+- Talk like friends in a group text - casual, natural, no formalities
+- Keep messages SHORT like real texts (1-2 sentences max)
+- You can disagree, joke around, or go on tangents - that's what friends do
+- Don't be a panel of experts agreeing with each other - be real people chatting
+- If the human returns with a greeting after a gap, ONE AI greets back, then wait
 
 Choose your action: speak, wait, or wrap_up.`;
 }
@@ -261,8 +262,8 @@ function buildOneOnOneTools(recipientName: string) {
             },
             reaction: {
               type: "string",
-              enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-              description: "Optional reaction to the previous message",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+              description: "Only if warranted: 'laugh' for funny, 'heart' for touching, 'like' for agree, 'emphasize' for important, 'dislike' for disagree, 'question' for confused. Don't react to every message.",
             },
           },
           required: ["participant", "message"],
@@ -312,12 +313,12 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
             },
             message: {
               type: "string",
-              description: "Your message. Keep it SHORT (1-2 sentences like a real text). MUST: (1) be different from anything already said, (2) respond to the previous speaker if an AI just spoke, (3) not repeat greetings or questions.",
+              description: "Your message. Keep it SHORT (1-2 sentences). Talk casually like friends texting. Don't start with 'X is right' or 'I agree' - just say your piece.",
             },
             reaction: {
               type: "string",
-              enum: ["heart", "like", "dislike", "laugh", "emphasize"],
-              description: "Optional reaction to the previous message",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+              description: "Only if warranted: 'laugh' for funny, 'heart' for touching, 'like' for agree, 'emphasize' for important, 'dislike' for disagree, 'question' for confused. Don't react to every message.",
             },
           },
           required: ["participant", "message"],
