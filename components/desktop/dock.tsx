@@ -118,7 +118,8 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               <div
                 className={cn(
                   "w-1 h-1 rounded-full mt-1 transition-opacity",
-                  isOpen
+                  // Finder always shows dot (can be closed but not quit)
+                  isOpen || app.id === "finder"
                     ? "bg-black/60 dark:bg-white/60 opacity-100"
                     : "opacity-0"
                 )}

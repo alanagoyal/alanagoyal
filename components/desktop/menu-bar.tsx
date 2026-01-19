@@ -74,7 +74,8 @@ export function MenuBar({
         return;
       }
 
-      if (e.key.toLowerCase() === "q" && focusedAppId) {
+      // Finder can be closed but not quit
+      if (e.key.toLowerCase() === "q" && focusedAppId && focusedAppId !== "finder") {
         e.preventDefault();
         closeWindow(focusedAppId);
       }
@@ -206,6 +207,7 @@ export function MenuBar({
       <AppMenu
         isOpen={openMenu === "appMenu"}
         onClose={closeMenu}
+        appId={focusedAppId || "finder"}
         appName={focusedApp?.menuBarTitle || "Finder"}
         onAbout={() => setAboutDialogOpen(true)}
         onQuit={() => {
