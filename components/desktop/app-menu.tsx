@@ -7,6 +7,7 @@ import { useClickOutside } from "@/lib/hooks/use-click-outside";
 interface AppMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  appId: string;
   appName: string;
   onAbout: () => void;
   onQuit: () => void;
@@ -15,10 +16,13 @@ interface AppMenuProps {
 export function AppMenu({
   isOpen,
   onClose,
+  appId,
   appName,
   onAbout,
   onQuit,
 }: AppMenuProps) {
+  // Finder can be closed but not quit
+  const canQuit = appId !== "finder";
   const menuRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(menuRef, onClose, isOpen);
@@ -39,17 +43,21 @@ export function AppMenu({
         }}
       />
 
-      <MenuDivider />
+      {canQuit && (
+        <>
+          <MenuDivider />
 
-      <MenuItem
-        icon={<X className="w-4 h-4" />}
-        label={`Quit ${appName}`}
-        shortcut="Q"
-        onClick={() => {
-          onQuit();
-          onClose();
-        }}
-      />
+          <MenuItem
+            icon={<X className="w-4 h-4" />}
+            label={`Quit ${appName}`}
+            shortcut="Q"
+            onClick={() => {
+              onQuit();
+              onClose();
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -87,7 +87,8 @@ export function MenuBar({
         return;
       }
 
-      if (e.key.toLowerCase() === "q" && focusedWindowId) {
+      // Finder can be closed but not quit
+      if (e.key.toLowerCase() === "q" && focusedWindowId && focusedAppId !== "finder") {
         e.preventDefault();
         closeFocusedWindow();
       }
@@ -95,7 +96,7 @@ export function MenuBar({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [focusedWindowId, closeFocusedWindow]);
+  }, [focusedWindowId, focusedAppId, closeFocusedWindow]);
 
   const toggleMenu = (menu: OpenMenu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -219,6 +220,7 @@ export function MenuBar({
       <AppMenu
         isOpen={openMenu === "appMenu"}
         onClose={closeMenu}
+        appId={focusedAppId || "finder"}
         appName={focusedApp?.menuBarTitle || "Finder"}
         onAbout={() => setAboutDialogOpen(true)}
         onQuit={closeFocusedWindow}
