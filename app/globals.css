@@ -235,3 +235,30 @@ html, body {
 .iterm-app * {
   caret-color: #22c55e;
 }
+
+/* Dock icon enter/exit animations */
+@keyframes dockEnter {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes dockExit {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-dock-enter {
+  animation: dockEnter 0.3s ease-out forwards;
+}
+
+.animate-dock-exit {
+  animation: dockExit 0.25s ease-in forwards;
+}

@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 interface ITermAppProps {
   isMobile?: boolean;
   inShell?: boolean;
+  onOpenTextFile?: (filePath: string, content: string) => void;
 }
 
-export function ITermApp({ isMobile = false, inShell = false }: ITermAppProps) {
+export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -26,7 +27,7 @@ export function ITermApp({ isMobile = false, inShell = false }: ITermAppProps) {
     >
       <Nav isMobile={isMobile} isDesktop={inShell} />
       <div className="flex-1 min-h-0 overflow-hidden">
-        <Terminal isMobile={isMobile} />
+        <Terminal isMobile={isMobile} onOpenTextFile={onOpenTextFile} />
       </div>
     </div>
   );
