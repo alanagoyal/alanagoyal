@@ -1,0 +1,27 @@
+components/desktop/menu-bar.tsx
+  e7c10fa3751cb936 77-78,210
+components/desktop/app-menu.tsx
+  e7c10fa3751cb936 10,19,24-25,46-47,59-60
+components/desktop/dock.tsx
+  e7c10fa3751cb936 121-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "2e2b970f7daa382c2326602ba16b9b7e1d6d9d97",
+  "prompts": {
+    "e7c10fa3751cb936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f7195db-721b-4bd5-872c-d3ba9fd608e7",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 23,
+      "total_deletions": 12,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
