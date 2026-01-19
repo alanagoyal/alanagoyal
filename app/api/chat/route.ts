@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       tool_choice: "required",
       tools,
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 150,
     });
 
     const toolCall = response.choices[0]?.message?.tool_calls?.[0];
@@ -153,7 +153,7 @@ ${conversation || "(no messages yet)"}
 STATE:
 - Last human message: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
 
-Respond naturally. Keep it concise and personal.`;
+Respond naturally. Keep it SHORT like a real text message (1-2 sentences, not paragraphs).`;
 }
 
 function buildGroupPrompt(
@@ -234,7 +234,8 @@ CRITICAL RULES:
 GUIDELINES:
 - Speak authentically as your character, not a parody
 - Build on or challenge each other's ideas - actually engage with the last message
-- Keep responses concise but substantive
+- Keep messages SHORT like real texts (1-2 sentences max, not paragraphs)
+- No essays or walls of text - this is a casual text chat, not email
 - If the human returns with a simple greeting after a gap, ONE AI greets back, then wait for the human
 
 Choose your action: speak, wait, or wrap_up.`;
@@ -311,7 +312,7 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
             },
             message: {
               type: "string",
-              description: "Your message. MUST: (1) be different from anything already said, (2) respond to the previous speaker if an AI just spoke, (3) not repeat greetings or questions. Do NOT just say 'hey' or 'what are you building' again.",
+              description: "Your message. Keep it SHORT (1-2 sentences like a real text). MUST: (1) be different from anything already said, (2) respond to the previous speaker if an AI just spoke, (3) not repeat greetings or questions.",
             },
             reaction: {
               type: "string",
