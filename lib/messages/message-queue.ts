@@ -8,6 +8,7 @@ type ConversationState = {
   debounceTimeout: NodeJS.Timeout | null;
   pendingConversation: Conversation | null;
   lastActivity: number;
+  recentWaitCount: number;
 };
 
 type MessageQueueState = {
@@ -99,6 +100,7 @@ export class MessageQueue {
         debounceTimeout: null,
         pendingConversation: null,
         lastActivity: Date.now(),
+        recentWaitCount: 0,
       };
       this.state.conversations.set(conversationId, state);
     } else {
@@ -142,6 +144,8 @@ export class MessageQueue {
       clearTimeout(state.debounceTimeout);
     }
 
+    // Reset wait count when user sends a new message
+    state.recentWaitCount = 0;
     state.pendingConversation = conversation;
 
     state.debounceTimeout = setTimeout(() => {
@@ -224,6 +228,7 @@ export class MessageQueue {
           recipients: conversation.recipients,
           messages: conversation.messages,
           isOneOnOne: !isGroupChat,
+          recentWaitCount: state.recentWaitCount,
         }),
         signal: state.currentAbortController.signal,
       });
@@ -241,14 +246,54 @@ export class MessageQueue {
       const data = await response.json();
       const action = data.action;
 
-      // Handle "wait" action - just stop
+      // Handle "wait" action - increment count and stop
       if (action === "wait") {
+        state.recentWaitCount++;
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
         return;
       }
 
-      // For "speak" and "wrap_up", we have a message to deliver
+      // Handle "react" action - apply reaction then continue
+      if (action === "react") {
+        const reactor = data.participant;
+        const reactionType = data.reaction;
+
+        if (reactor && reactionType && conversation.messages.length > 0) {
+          const lastMessage = conversation.messages[conversation.messages.length - 1];
+          if (!lastMessage.reactions) {
+            lastMessage.reactions = [];
+          }
+          lastMessage.reactions.push({
+            type: reactionType,
+            sender: reactor,
+            timestamp: new Date().toISOString(),
+          });
+
+          const shouldMute =
+            this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
+          if (!shouldMute) {
+            soundEffects.playReactionSound();
+          }
+
+          if (this.callbacks.onMessageUpdated) {
+            this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
+              reactions: lastMessage.reactions,
+            });
+          }
+        }
+
+        // After reacting, continue the conversation
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+
+        if (currentVersion === state.version && isGroupChat) {
+          this.scheduleAIMessage(conversation);
+        }
+        return;
+      }
+
+      // For "respond" and "wrap_up", we have a message to deliver
       const sender = data.participant;
       const content = data.message;
 
@@ -258,52 +303,11 @@ export class MessageQueue {
 
       // Show typing indicator
       this.callbacks.onTypingStatusChange(conversationId, sender);
-      let typingStartTime = Date.now();
-
-      // Handle reaction if present
-      if (data.reaction && conversation.messages.length > 0) {
-        const lastMessage = conversation.messages[conversation.messages.length - 1];
-        if (!lastMessage.reactions) {
-          lastMessage.reactions = [];
-        }
-        lastMessage.reactions.push({
-          type: data.reaction,
-          sender: sender,
-          timestamp: new Date().toISOString(),
-        });
-
-        const shouldMute =
-          this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
-        if (!shouldMute) {
-          soundEffects.playReactionSound();
-        }
-
-        if (this.callbacks.onMessageUpdated) {
-          this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
-            reactions: lastMessage.reactions,
-          });
-        }
-
-        await this.delay(REACTION_DISPLAY_MS);
-
-        if (currentVersion !== state.version) {
-          this.callbacks.onTypingStatusChange(null, null);
-          state.status = "idle";
-          return;
-        }
-
-        typingStartTime = Date.now();
-      }
 
       // Typing delay
       const typingDelay =
         TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
-      const elapsedTime = Date.now() - typingStartTime;
-      const remainingDelay = Math.max(0, typingDelay - elapsedTime);
-
-      if (remainingDelay > 0) {
-        await this.delay(remainingDelay);
-      }
+      await this.delay(typingDelay);
 
       if (currentVersion !== state.version) {
         this.callbacks.onTypingStatusChange(null, null);
@@ -337,14 +341,14 @@ export class MessageQueue {
           };
           this.callbacks.onMessageGenerated(conversationId, silencedMessage);
         }
-      } else if (action === "speak" && isGroupChat) {
+      } else if (action === "respond" && isGroupChat) {
         // Continue the conversation
         this.scheduleAIMessage({
           ...conversation,
           messages: [...conversation.messages, newMessage],
         });
       }
-      // For 1-on-1 with "speak", just wait for next user message
+      // For 1-on-1 with "respond", just wait for next user message
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
         console.error("Error processing message:", error);

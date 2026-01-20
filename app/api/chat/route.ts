@@ -41,6 +41,7 @@ export async function POST(req: Request) {
       recipients: recipientsRaw,
       messages: messagesRaw,
       isOneOnOne: isOneOnOneRaw = false,
+      recentWaitCount: recentWaitCountRaw = 0,
     } = body as Record<string, unknown>;
 
     const isRecipientLike = (value: unknown): value is Recipient => {
@@ -71,6 +72,7 @@ export async function POST(req: Request) {
     );
 
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
+    const recentWaitCount = typeof recentWaitCountRaw === "number" ? recentWaitCountRaw : 0;
 
     // Get conversation state
     const state = getConversationState(messages);
@@ -91,7 +93,7 @@ export async function POST(req: Request) {
     // Build the prompt
     const prompt = isOneOnOne
       ? buildOneOnOnePrompt(recipients[0], conversation, state)
-      : buildGroupPrompt(recipients, participantDescriptions, conversation, state, contributions);
+      : buildGroupPrompt(recipients, participantDescriptions, conversation, state, contributions, recentWaitCount);
 
     const chatMessages: ChatCompletionMessageParam[] = [
       { role: "system", content: prompt },
@@ -100,20 +102,26 @@ export async function POST(req: Request) {
     // Define tools based on chat type
     const tools = isOneOnOne
       ? buildOneOnOneTools(recipients[0].name)
-      : buildGroupTools(participantNames, state.messagesSinceHuman, state.lastSpeaker);
+      : buildGroupTools(participantNames, state.messagesSinceHuman, state.lastSpeaker, recentWaitCount);
 
     const response = await getClient().chat.completions.create({
-      model: "gpt-5.2",
+      model: "gpt-4o",
       messages: chatMessages,
       tool_choice: "required",
       tools,
+      parallel_tool_calls: false,
       temperature: 0.7,
       max_tokens: 150,
     });
 
     const toolCall = response.choices[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
-      throw new Error("No tool call in response");
+      console.error("No tool call in response. Message:", JSON.stringify(response.choices[0]?.message, null, 2));
+      // Fallback: if model refused to use tools, default to wait
+      return new Response(
+        JSON.stringify({ action: "wait" }),
+        { headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const action = toolCall.function.name;
@@ -166,80 +174,63 @@ function buildGroupPrompt(
     lastHumanTime: string | null;
     lastSpeaker: string | null;
   },
-  contributions: Map<string, string[]>
+  contributions: Map<string, string[]>,
+  recentWaitCount: number
 ): string {
-  // Determine urgency level for wrap-up
-  const shouldWrapUp = state.messagesSinceHuman >= 3;
-  const mustWrapUp = state.messagesSinceHuman >= 5;
+  const participantNames = recipients.map(r => r.name).join(", ");
 
-  let actionGuidance = "";
-  if (mustWrapUp) {
-    actionGuidance = `
-ACTION REQUIRED: There have been ${state.messagesSinceHuman} AI messages without human response.
-You MUST use wrap_up to end this thread gracefully, or wait to give the human space.
-Do NOT use speak - the human needs a chance to respond.`;
-  } else if (shouldWrapUp) {
-    actionGuidance = `
-NOTE: There have been ${state.messagesSinceHuman} AI messages since the human last spoke.
-Strongly consider using wait or wrap_up rather than continuing to speak.`;
-  }
+  // Detect if this looks like a thread reset (greeting after gap)
+  const isGreeting = state.lastHumanMessage &&
+    /^(hey|hi|hello|yo|sup|what'?s up|howdy)[\s!?.]*$/i.test(state.lastHumanMessage.trim());
+  const hadPriorConversation = state.messagesSinceHuman > 0 ||
+    Array.from(contributions.values()).some(msgs => msgs.length > 0);
+  const isThreadReset = isGreeting && hadPriorConversation;
 
-  // Build self-awareness section - what has each participant already said?
-  const contributionsSummary = Array.from(contributions.entries())
+  // Build explicit "what each person just said" section - this is critical for avoiding repetition
+  const recentContributions = Array.from(contributions.entries())
     .map(([name, msgs]) => {
       if (msgs.length === 0) {
-        return `- ${name}: Has not spoken yet in this thread`;
+        return `• ${name}: (hasn't spoken yet)`;
       }
       const lastMsg = msgs[msgs.length - 1];
-      const truncated = lastMsg.length > 100 ? lastMsg.substring(0, 100) + "..." : lastMsg;
-      return `- ${name}: Said ${msgs.length} message(s). Last message: "${truncated}"`;
+      const truncated = lastMsg.length > 80 ? lastMsg.substring(0, 80) + "..." : lastMsg;
+      return `• ${name}: "${truncated}"`;
     })
     .join("\n");
 
-  // Guidance based on who just spoke
-  let speakerGuidance = "";
-  if (state.lastSpeaker && state.lastSpeaker !== "me") {
-    speakerGuidance = `\n⚠️ ${state.lastSpeaker} just spoke. A different participant should speak next, or use wait/wrap_up.`;
+  // Determine action guidance
+  let actionGuidance = "";
+  if (state.messagesSinceHuman >= 3) {
+    actionGuidance = `\n⚠️ ${state.messagesSinceHuman} AI messages since human spoke. Use WAIT or WRAP_UP now.`;
+  } else if (recentWaitCount >= 2) {
+    actionGuidance = `\n⚠️ You've waited ${recentWaitCount} times. Use WRAP_UP now.`;
   }
 
-  return `You are participating in a group text chat.
+  return `You are ${participantNames} in a group text with a human ("me").
 
-PARTICIPANTS:
-- me (human)
+PERSONAS:
 ${participantDescriptions}
 
-This is a shared conversational space. AI participants may speak to each other as well as to the human. The human is a participant, not a moderator.
-
 CONVERSATION:
-${conversation || "(no messages yet)"}
+${conversation || "(empty)"}
 
-WHAT EACH PARTICIPANT HAS SAID (for self-awareness - DO NOT REPEAT):
-${contributionsSummary}
+═══════════════════════════════════════════════════
+WHAT EACH PARTICIPANT JUST SAID (DO NOT REPEAT):
+${recentContributions}
+═══════════════════════════════════════════════════
 
-STATE:
-- Last speaker: ${state.lastSpeaker || "none"}${speakerGuidance}
-- Last human message: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
-- Messages since human last spoke: ${state.messagesSinceHuman}
-${actionGuidance}
+CURRENT STATE:
+• Human said: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
+• AI messages since: ${state.messagesSinceHuman}
+• Last speaker: ${state.lastSpeaker || "none"}${isThreadReset ? "\n• Fresh greeting - new thread" : ""}${actionGuidance}
 
-CRITICAL RULES:
-1. Do NOT repeat what you or others have already said
-2. Do NOT ask the same question someone already asked (e.g., "what are you building?")
-3. Do NOT use generic greetings like "yo", "hey", "fresh start" if someone else already greeted
-4. Do NOT start with "[Name]'s right" or "I agree with [Name]" - just say your piece naturally
-5. Use VARIED reactions that match the message: laugh for funny, heart for touching, like for agree - don't just use emphasize for everything
-6. Talk like casual friends texting, not like a panel discussion or formal debate
-7. If you just spoke, use wait to let others talk
-8. After 2-3 AI messages without human response, prefer wait or wrap_up
+RULES:
+1. NEVER repeat or paraphrase what's shown above - say something NEW or use wait/wrap_up
+2. Short messages only (1-2 sentences)
+3. After 2-3 AI messages, use wait or wrap_up
+4. If human said "hi/hey", ONE brief response then wait
 
-GUIDELINES:
-- Talk like friends in a group text - casual, natural, no formalities
-- Keep messages SHORT like real texts (1-2 sentences max)
-- You can disagree, joke around, or go on tangents - that's what friends do
-- Don't be a panel of experts agreeing with each other - be real people chatting
-- If the human returns with a greeting after a gap, ONE AI greets back, then wait
-
-Choose your action: speak, wait, or wrap_up.`;
+ACTIONS: react, respond, wait, wrap_up`;
 }
 
 function buildOneOnOneTools(recipientName: string) {
@@ -247,7 +238,29 @@ function buildOneOnOneTools(recipientName: string) {
     {
       type: "function" as const,
       function: {
-        name: "speak",
+        name: "react",
+        description: "React to the last message without saying anything. Use sparingly.",
+        parameters: {
+          type: "object",
+          properties: {
+            participant: {
+              type: "string",
+              enum: [recipientName],
+            },
+            reaction: {
+              type: "string",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+              description: "'laugh' for funny, 'heart' for touching, 'like' for agree, 'emphasize' for important",
+            },
+          },
+          required: ["participant", "reaction"],
+        },
+      },
+    },
+    {
+      type: "function" as const,
+      function: {
+        name: "respond",
         description: "Send a message in the conversation",
         parameters: {
           type: "object",
@@ -258,12 +271,7 @@ function buildOneOnOneTools(recipientName: string) {
             },
             message: {
               type: "string",
-              description: "Your message",
-            },
-            reaction: {
-              type: "string",
-              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
-              description: "Only if warranted: 'laugh' for funny, 'heart' for touching, 'like' for agree, 'emphasize' for important, 'dislike' for disagree, 'question' for confused. Don't react to every message.",
+              description: "Keep it SHORT (1-2 sentences). Casual like friends texting.",
             },
           },
           required: ["participant", "message"],
@@ -273,52 +281,51 @@ function buildOneOnOneTools(recipientName: string) {
   ];
 }
 
-function buildGroupTools(participantNames: string[], messagesSinceHuman: number, lastSpeaker: string | null) {
+function buildGroupTools(participantNames: string[], messagesSinceHuman: number, lastSpeaker: string | null, recentWaitCount: number) {
   // Filter out the last speaker from eligible participants (they shouldn't speak twice in a row)
   const eligibleSpeakers = lastSpeaker && lastSpeaker !== "me"
     ? participantNames.filter(name => name !== lastSpeaker)
     : participantNames;
 
-  const lastSpeakerNote = lastSpeaker && lastSpeaker !== "me"
-    ? ` ${lastSpeaker} just spoke, so pick someone else.`
-    : "";
-
-  const speakDescription = messagesSinceHuman >= 5
-    ? "Send a message. WARNING: There have been many AI messages without human response. Prefer wait or wrap_up instead."
-    : messagesSinceHuman >= 3
-    ? `Send a message. Note: Consider if the human needs space to respond.${lastSpeakerNote}`
-    : `Send a message as one of the AI participants. Only use if you have something new and substantive to add.${lastSpeakerNote}`;
-
-  const waitDescription = messagesSinceHuman >= 3
-    ? "RECOMMENDED: Stay silent and give the human a chance to respond. Use this when AI participants have been talking and the human hasn't had a chance to jump in."
-    : "Stay silent and let someone else continue. Use when the conversation has a natural pause, the ground has been covered, or the human might want to jump in.";
-
-  const wrapUpDescription = messagesSinceHuman >= 5
-    ? "RECOMMENDED: Send a brief closing message and end the thread gracefully. The human hasn't responded to several messages - time to wrap up."
-    : "Send a final message and signal the conversation is winding down. Use when the discussion has reached a natural conclusion or there have been several AI messages without human input.";
+  // Dynamic context for tool descriptions
+  const shouldEncourageWrapUp = recentWaitCount >= 2 || messagesSinceHuman >= 4;
 
   return [
     {
       type: "function" as const,
       function: {
-        name: "speak",
-        description: speakDescription,
+        name: "react",
+        description: "Add an emoji reaction to the last message (no text). Use sparingly.",
+        parameters: {
+          type: "object",
+          properties: {
+            participant: {
+              type: "string",
+              enum: participantNames,
+            },
+            reaction: {
+              type: "string",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+            },
+          },
+          required: ["participant", "reaction"],
+        },
+      },
+    },
+    {
+      type: "function" as const,
+      function: {
+        name: "respond",
+        description: "Send a short text message (1-2 sentences).",
         parameters: {
           type: "object",
           properties: {
             participant: {
               type: "string",
               enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
-              description: `Who is speaking.${lastSpeakerNote}`,
             },
             message: {
               type: "string",
-              description: "Your message. Keep it SHORT (1-2 sentences). Talk casually like friends texting. Don't start with 'X is right' or 'I agree' - just say your piece.",
-            },
-            reaction: {
-              type: "string",
-              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
-              description: "Only if warranted: 'laugh' for funny, 'heart' for touching, 'like' for agree, 'emphasize' for important, 'dislike' for disagree, 'question' for confused. Don't react to every message.",
             },
           },
           required: ["participant", "message"],
@@ -329,7 +336,9 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
       type: "function" as const,
       function: {
         name: "wait",
-        description: waitDescription,
+        description: shouldEncourageWrapUp
+          ? "Stay silent. You've waited before - consider wrap_up instead."
+          : "Stay silent and let the human respond.",
         parameters: {
           type: "object",
           properties: {},
@@ -340,18 +349,18 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
       type: "function" as const,
       function: {
         name: "wrap_up",
-        description: wrapUpDescription,
+        description: shouldEncourageWrapUp
+          ? "End with a brief friendly closing. Recommended now."
+          : "End conversation with a brief friendly closing.",
         parameters: {
           type: "object",
           properties: {
             participant: {
               type: "string",
               enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
-              description: `Who is speaking the final message.${lastSpeakerNote}`,
             },
             message: {
               type: "string",
-              description: "A brief concluding thought - NOT a question. Something like 'Anyway, good chatting!' or 'Let us know what you end up building!'",
             },
           },
           required: ["participant", "message"],
