@@ -41,7 +41,6 @@ export async function POST(req: Request) {
       recipients: recipientsRaw,
       messages: messagesRaw,
       isOneOnOne: isOneOnOneRaw = false,
-      recentWaitCount: recentWaitCountRaw = 0,
     } = body as Record<string, unknown>;
 
     const isRecipientLike = (value: unknown): value is Recipient => {
@@ -72,7 +71,6 @@ export async function POST(req: Request) {
     );
 
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
-    const recentWaitCount = typeof recentWaitCountRaw === "number" ? recentWaitCountRaw : 0;
 
     // Get conversation state
     const state = getConversationState(messages);
@@ -129,8 +127,6 @@ export async function POST(req: Request) {
         ...args,
       };
     });
-
-    console.log("Chat API returning actions:", JSON.stringify(actions));
 
     return new Response(
       JSON.stringify({ actions }),
@@ -206,6 +202,12 @@ HOW TO DECIDE:
 - wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.`;
 }
 
+/**
+ * Build tools for 1:1 chats.
+ * Only react and respond are needed - 1:1 chats are naturally turn-based
+ * (user sends message, AI responds). No wait/wrap_up needed since the AI
+ * should always respond when the user messages them directly.
+ */
 function buildOneOnOneTools(recipientName: string) {
   return [
     {

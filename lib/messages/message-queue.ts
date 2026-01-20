@@ -8,7 +8,6 @@ type ConversationState = {
   debounceTimeout: NodeJS.Timeout | null;
   pendingConversation: Conversation | null;
   lastActivity: number;
-  recentWaitCount: number;
 };
 
 type MessageQueueState = {
@@ -100,7 +99,6 @@ export class MessageQueue {
         debounceTimeout: null,
         pendingConversation: null,
         lastActivity: Date.now(),
-        recentWaitCount: 0,
       };
       this.state.conversations.set(conversationId, state);
     } else {
@@ -144,8 +142,6 @@ export class MessageQueue {
       clearTimeout(state.debounceTimeout);
     }
 
-    // Reset wait count when user sends a new message
-    state.recentWaitCount = 0;
     state.pendingConversation = conversation;
 
     state.debounceTimeout = setTimeout(() => {
@@ -228,7 +224,6 @@ export class MessageQueue {
           recipients: conversation.recipients,
           messages: conversation.messages,
           isOneOnOne: !isGroupChat,
-          recentWaitCount: state.recentWaitCount,
         }),
         signal: state.currentAbortController.signal,
       });
@@ -298,9 +293,8 @@ export class MessageQueue {
         return;
       }
 
-      // Handle "wait" action - increment count and stop
+      // Handle "wait" action - stop and let user respond
       if (waitAction && !messageAction) {
-        state.recentWaitCount++;
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
         return;

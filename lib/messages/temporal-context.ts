@@ -87,33 +87,12 @@ export function formatConversationReversed(messages: Message[]): {
   const mostRecentMsg = filtered[filtered.length - 1];
   const mostRecent = formatMessageLine(mostRecentMsg);
 
-  // History is everything except the most recent, in reverse order
+  // History is everything except the most recent, in reverse order.
+  // If there's only one message, history will be empty string.
   const historyMessages = filtered.slice(0, -1).reverse();
   const history = historyMessages.map(formatMessageLine).join("\n");
 
   return { mostRecent, history };
-}
-
-/**
- * Get what each AI participant has said in the conversation
- */
-export function getParticipantContributions(
-  messages: Message[],
-  participantNames: string[]
-): Map<string, string[]> {
-  const contributions = new Map<string, string[]>();
-
-  for (const name of participantNames) {
-    contributions.set(name, []);
-  }
-
-  for (const msg of messages) {
-    if (msg.sender !== "me" && msg.sender !== "system" && contributions.has(msg.sender)) {
-      contributions.get(msg.sender)!.push(msg.content);
-    }
-  }
-
-  return contributions;
 }
 
 /**
