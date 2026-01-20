@@ -6,8 +6,8 @@ import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
 import {
   formatConversation,
+  formatConversationReversed,
   getConversationState,
-  getParticipantContributions,
 } from "@/lib/messages/temporal-context";
 
 let client: OpenAI | null = null;
@@ -77,6 +77,7 @@ export async function POST(req: Request) {
     // Get conversation state
     const state = getConversationState(messages);
     const conversation = formatConversation(messages);
+    const conversationReversed = formatConversationReversed(messages);
 
     // Build participant descriptions
     const participantDescriptions = recipients
@@ -86,49 +87,53 @@ export async function POST(req: Request) {
       })
       .join("\n");
 
-    // Get participant contributions for self-awareness
-    const participantNames = recipients.map((r) => r.name);
-    const contributions = getParticipantContributions(messages, participantNames);
-
     // Build the prompt
     const prompt = isOneOnOne
       ? buildOneOnOnePrompt(recipients[0], conversation, state)
-      : buildGroupPrompt(recipients, participantDescriptions, conversation, state, contributions, recentWaitCount);
+      : buildGroupPrompt(recipients, participantDescriptions, conversationReversed, state);
 
     const chatMessages: ChatCompletionMessageParam[] = [
       { role: "system", content: prompt },
     ];
 
     // Define tools based on chat type
+    const participantNames = recipients.map((r) => r.name);
     const tools = isOneOnOne
       ? buildOneOnOneTools(recipients[0].name)
-      : buildGroupTools(participantNames, state.messagesSinceHuman, state.lastSpeaker, recentWaitCount);
+      : buildGroupTools(participantNames, state.lastSpeaker);
 
     const response = await getClient().chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.2",
       messages: chatMessages,
       tool_choice: "required",
       tools,
       parallel_tool_calls: false,
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 500,
     });
 
-    const toolCall = response.choices[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      console.error("No tool call in response. Message:", JSON.stringify(response.choices[0]?.message, null, 2));
-      // Fallback: if model refused to use tools, default to wait
+    const toolCalls = response.choices[0]?.message?.tool_calls;
+    if (!toolCalls || toolCalls.length === 0) {
+      console.error("No tool calls in response. Message:", JSON.stringify(response.choices[0]?.message, null, 2));
       return new Response(
-        JSON.stringify({ action: "wait" }),
+        JSON.stringify({ actions: [{ action: "wait" }] }),
         { headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const action = toolCall.function.name;
-    const args = JSON.parse(toolCall.function.arguments || "{}");
+    // Return all actions (supports react + respond in same turn)
+    const actions = toolCalls.map((tc) => {
+      const args = JSON.parse(tc.function.arguments || "{}");
+      return {
+        action: tc.function.name,
+        ...args,
+      };
+    });
+
+    console.log("Chat API returning actions:", JSON.stringify(actions));
 
     return new Response(
-      JSON.stringify({ action, ...args }),
+      JSON.stringify({ actions }),
       { headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -167,70 +172,38 @@ Respond naturally. Keep it SHORT like a real text message (1-2 sentences, not pa
 function buildGroupPrompt(
   recipients: Recipient[],
   participantDescriptions: string,
-  conversation: string,
+  conversationReversed: { mostRecent: string | null; history: string },
   state: {
     messagesSinceHuman: number;
     lastHumanMessage: string | null;
     lastHumanTime: string | null;
     lastSpeaker: string | null;
-  },
-  contributions: Map<string, string[]>,
-  recentWaitCount: number
+  }
 ): string {
   const participantNames = recipients.map(r => r.name).join(", ");
 
-  // Detect if this looks like a thread reset (greeting after gap)
-  const isGreeting = state.lastHumanMessage &&
-    /^(hey|hi|hello|yo|sup|what'?s up|howdy)[\s!?.]*$/i.test(state.lastHumanMessage.trim());
-  const hadPriorConversation = state.messagesSinceHuman > 0 ||
-    Array.from(contributions.values()).some(msgs => msgs.length > 0);
-  const isThreadReset = isGreeting && hadPriorConversation;
-
-  // Build explicit "what each person just said" section - this is critical for avoiding repetition
-  const recentContributions = Array.from(contributions.entries())
-    .map(([name, msgs]) => {
-      if (msgs.length === 0) {
-        return `• ${name}: (hasn't spoken yet)`;
-      }
-      const lastMsg = msgs[msgs.length - 1];
-      const truncated = lastMsg.length > 80 ? lastMsg.substring(0, 80) + "..." : lastMsg;
-      return `• ${name}: "${truncated}"`;
-    })
-    .join("\n");
-
-  // Determine action guidance
-  let actionGuidance = "";
-  if (state.messagesSinceHuman >= 3) {
-    actionGuidance = `\n⚠️ ${state.messagesSinceHuman} AI messages since human spoke. Use WAIT or WRAP_UP now.`;
-  } else if (recentWaitCount >= 2) {
-    actionGuidance = `\n⚠️ You've waited ${recentWaitCount} times. Use WRAP_UP now.`;
-  }
-
-  return `You are ${participantNames} in a group text with a human ("me").
+  return `You are participating in a group chat with ${participantNames} and one other random, anonymous person (labeled "anon" in the conversation history below, but don't call them that - just talk to them naturally without using any name).
 
 PERSONAS:
 ${participantDescriptions}
 
-CONVERSATION:
-${conversation || "(empty)"}
+MOST RECENT MESSAGE:
+${conversationReversed.mostRecent || "(no messages yet)"}
 
-═══════════════════════════════════════════════════
-WHAT EACH PARTICIPANT JUST SAID (DO NOT REPEAT):
-${recentContributions}
-═══════════════════════════════════════════════════
+CONVERSATION HISTORY (newest first):
+${conversationReversed.history || "(no prior messages)"}
 
-CURRENT STATE:
-• Human said: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
-• AI messages since: ${state.messagesSinceHuman}
-• Last speaker: ${state.lastSpeaker || "none"}${isThreadReset ? "\n• Fresh greeting - new thread" : ""}${actionGuidance}
+STATE:
+- Messages since anon last spoke: ${state.messagesSinceHuman}
+- Last speaker: ${state.lastSpeaker === "me" ? "anon" : state.lastSpeaker || "none"}
 
-RULES:
-1. NEVER repeat or paraphrase what's shown above - say something NEW or use wait/wrap_up
-2. Short messages only (1-2 sentences)
-3. After 2-3 AI messages, use wait or wrap_up
-4. If human said "hi/hey", ONE brief response then wait
+Based on the most recent message and the conversation history, determine the best next action(s). You can combine actions (e.g. react AND respond).
 
-ACTIONS: react, respond, wait, wrap_up`;
+HOW TO DECIDE:
+- react: React to a message when you feel strongly about it. Laugh if it's really funny, heart if you love what they said, question if you don't understand. Use reactions sparingly - only about 1 in 5 messages should get a reaction. You can react and respond in the same turn if you do react.
+- respond: Respond when a question or comment is directed at one of the participants (e.g. "hey Sarah, what do you think?"). Keep the conversation engaging and light, based on what your chosen persona would actually say. Remember it's a texting convo - keep messages brief unless asked for a longer response. Don't be repetitive - don't repeat yourself or other members of the chat. Move the convo forward. Participants should talk to each other, not just to anon - ask each other questions, riff on what others said, build on the conversation naturally like real friends would.
+- wait: Wait if the most recent message is directed at anon (the human user) - let them respond. Also wait if the message didn't ask anything or require a response.
+- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.`;
 }
 
 function buildOneOnOneTools(recipientName: string) {
@@ -281,21 +254,18 @@ function buildOneOnOneTools(recipientName: string) {
   ];
 }
 
-function buildGroupTools(participantNames: string[], messagesSinceHuman: number, lastSpeaker: string | null, recentWaitCount: number) {
+function buildGroupTools(participantNames: string[], lastSpeaker: string | null) {
   // Filter out the last speaker from eligible participants (they shouldn't speak twice in a row)
   const eligibleSpeakers = lastSpeaker && lastSpeaker !== "me"
     ? participantNames.filter(name => name !== lastSpeaker)
     : participantNames;
-
-  // Dynamic context for tool descriptions
-  const shouldEncourageWrapUp = recentWaitCount >= 2 || messagesSinceHuman >= 4;
 
   return [
     {
       type: "function" as const,
       function: {
         name: "react",
-        description: "Add an emoji reaction to the last message (no text). Use sparingly.",
+        description: "Add an emoji reaction to the last message (no text).",
         parameters: {
           type: "object",
           properties: {
@@ -336,9 +306,7 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
       type: "function" as const,
       function: {
         name: "wait",
-        description: shouldEncourageWrapUp
-          ? "Stay silent. You've waited before - consider wrap_up instead."
-          : "Stay silent and let the human respond.",
+        description: "Stay silent and let anon respond.",
         parameters: {
           type: "object",
           properties: {},
@@ -349,9 +317,7 @@ function buildGroupTools(participantNames: string[], messagesSinceHuman: number,
       type: "function" as const,
       function: {
         name: "wrap_up",
-        description: shouldEncourageWrapUp
-          ? "End with a brief friendly closing. Recommended now."
-          : "End conversation with a brief friendly closing.",
+        description: "End conversation with a brief friendly closing.",
         parameters: {
           type: "object",
           properties: {

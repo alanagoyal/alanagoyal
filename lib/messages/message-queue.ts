@@ -1,4 +1,4 @@
-import { Conversation, Message } from "@/types/messages";
+import { Conversation, Message, ReactionType } from "@/types/messages";
 import { soundEffects } from "./sound-effects";
 
 type ConversationState = {
@@ -244,20 +244,18 @@ export class MessageQueue {
       }
 
       const data = await response.json();
-      const action = data.action;
+      const actions: Array<{ action: string; participant?: string; message?: string; reaction?: string }> =
+        data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
-      // Handle "wait" action - increment count and stop
-      if (action === "wait") {
-        state.recentWaitCount++;
-        this.callbacks.onTypingStatusChange(null, null);
-        state.status = "idle";
-        return;
-      }
+      // Process actions - reactions first, then messages
+      const reactionActions = actions.filter(a => a.action === "react");
+      const messageAction = actions.find(a => a.action === "respond" || a.action === "wrap_up");
+      const waitAction = actions.find(a => a.action === "wait");
 
-      // Handle "react" action - apply reaction then continue
-      if (action === "react") {
-        const reactor = data.participant;
-        const reactionType = data.reaction;
+      // Handle reactions first
+      for (const reactionAction of reactionActions) {
+        const reactor = reactionAction.participant;
+        const reactionType = reactionAction.reaction as ReactionType;
 
         if (reactor && reactionType && conversation.messages.length > 0) {
           const lastMessage = conversation.messages[conversation.messages.length - 1];
@@ -281,9 +279,16 @@ export class MessageQueue {
               reactions: lastMessage.reactions,
             });
           }
-        }
 
-        // After reacting, continue the conversation
+          // Brief pause between reactions if multiple
+          if (reactionActions.length > 1) {
+            await this.delay(REACTION_DISPLAY_MS);
+          }
+        }
+      }
+
+      // If only reactions (no message action), continue the conversation
+      if (reactionActions.length > 0 && !messageAction && !waitAction) {
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
 
@@ -293,12 +298,29 @@ export class MessageQueue {
         return;
       }
 
+      // Handle "wait" action - increment count and stop
+      if (waitAction && !messageAction) {
+        state.recentWaitCount++;
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
+
       // For "respond" and "wrap_up", we have a message to deliver
-      const sender = data.participant;
-      const content = data.message;
+      if (!messageAction) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
+
+      const sender = messageAction.participant;
+      const content = messageAction.message;
 
       if (!sender || !content) {
-        throw new Error("Invalid response: missing participant or message");
+        console.warn("Malformed response - missing participant or message:", messageAction);
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
       }
 
       // Show typing indicator
@@ -327,7 +349,7 @@ export class MessageQueue {
       this.callbacks.onTypingStatusChange(null, null);
 
       // Handle next steps based on action
-      if (action === "wrap_up") {
+      if (messageAction.action === "wrap_up") {
         // Show "notifications silenced" after wrap_up
         await this.delay(AI_MESSAGE_DELAY_MS);
 
@@ -341,7 +363,7 @@ export class MessageQueue {
           };
           this.callbacks.onMessageGenerated(conversationId, silencedMessage);
         }
-      } else if (action === "respond" && isGroupChat) {
+      } else if (messageAction.action === "respond" && isGroupChat) {
         // Continue the conversation
         this.scheduleAIMessage({
           ...conversation,

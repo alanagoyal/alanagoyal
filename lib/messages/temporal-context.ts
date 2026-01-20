@@ -40,7 +40,7 @@ export function formatRelativeTime(timestamp: string): string {
 }
 
 /**
- * Format the conversation with timestamps
+ * Format the conversation with timestamps (chronological order)
  */
 export function formatConversation(messages: Message[]): string {
   return messages
@@ -53,6 +53,45 @@ export function formatConversation(messages: Message[]): string {
       return `[${time}] ${msg.sender}: ${msg.content}${reactions}`;
     })
     .join("\n");
+}
+
+/**
+ * Format a single message line with "me" replaced by "anon"
+ */
+function formatMessageLine(msg: Message): string {
+  const time = formatRelativeTime(msg.timestamp);
+  const sender = msg.sender === "me" ? "anon" : msg.sender;
+  const reactions = msg.reactions?.length
+    ? ` [${msg.reactions.map((r) => {
+        const reactorName = r.sender === "me" ? "anon" : r.sender;
+        return `${reactorName}: ${r.type}`;
+      }).join(", ")}]`
+    : "";
+  return `[${time}] ${sender}: ${msg.content}${reactions}`;
+}
+
+/**
+ * Format conversation in reverse chronological order (newest first)
+ * with "me" replaced by "anon" for the human user
+ */
+export function formatConversationReversed(messages: Message[]): {
+  mostRecent: string | null;
+  history: string;
+} {
+  const filtered = messages.filter((m) => m.sender !== "system");
+
+  if (filtered.length === 0) {
+    return { mostRecent: null, history: "" };
+  }
+
+  const mostRecentMsg = filtered[filtered.length - 1];
+  const mostRecent = formatMessageLine(mostRecentMsg);
+
+  // History is everything except the most recent, in reverse order
+  const historyMessages = filtered.slice(0, -1).reverse();
+  const history = historyMessages.map(formatMessageLine).join("\n");
+
+  return { mostRecent, history };
 }
 
 /**
