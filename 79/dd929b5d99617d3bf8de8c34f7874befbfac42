@@ -1,0 +1,23 @@
+components/mobile/mobile-shell.tsx
+  69865ed3820b2c4b 5,55-56,75-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "79dd929b5d99617d3bf8de8c34f7874befbfac42",
+  "prompts": {
+    "69865ed3820b2c4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d6f7ea2-7217-457a-bb22-090dbd20783a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 26,
+      "total_deletions": 23,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
