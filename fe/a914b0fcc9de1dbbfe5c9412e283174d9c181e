@@ -1,0 +1,25 @@
+app/api/chat/route.ts
+  a922d57e536299e4 44,75,96,105,108,112,119-123,177-178,180,182-187,189-190,193,196-197,201-206,209,211,215,217-220,222-233,241-242,253-270,274,284,290-291,297-298,309-325,339-341,352-354
+lib/messages/message-queue.ts
+  a922d57e536299e4 11,103,147-148,231,249,251,257-262,268-272,278,284-296,310,344,351
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "fea914b0fcc9de1dbbfe5c9412e283174d9c181e",
+  "prompts": {
+    "a922d57e536299e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1a307e6-c64b-42d6-9da5-2043f5105ff3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 284,
+      "total_deletions": 271,
+      "accepted_lines": 147,
+      "overriden_lines": 0
+    }
+  }
+}
