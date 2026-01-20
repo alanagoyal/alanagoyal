@@ -1,0 +1,27 @@
+components/apps/iterm/nav.tsx
+  a922d57e536299e4 6,19-29,40
+components/apps/iterm/terminal.tsx
+  a922d57e536299e4 13-68,187-189,193-196,200,203,236-240
+components/desktop/menu-bar.tsx
+  a922d57e536299e4 17,74-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "e1f684eca112ae121e08b9f3177f00deee562c39",
+  "prompts": {
+    "a922d57e536299e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1a307e6-c64b-42d6-9da5-2043f5105ff3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 111,
+      "total_deletions": 29,
+      "accepted_lines": 89,
+      "overriden_lines": 0
+    }
+  }
+}
