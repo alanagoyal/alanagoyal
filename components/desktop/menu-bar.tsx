@@ -14,6 +14,7 @@ import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
+import { clearItermStorage } from "@/components/apps/iterm/terminal";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | null;
 
@@ -69,6 +70,11 @@ export function MenuBar({
   // Helper to close the focused window (handles both single and multi-window apps)
   const closeFocusedWindow = useCallback(() => {
     if (!focusedWindowId) return;
+
+    // Clear iTerm storage when quitting iTerm
+    if (focusedAppId === "iterm") {
+      clearItermStorage();
+    }
 
     // Check if this is a multi-window app
     if (focusedApp?.multiWindow) {

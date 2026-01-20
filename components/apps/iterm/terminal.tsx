@@ -10,6 +10,62 @@ const HOSTNAME = "Alanas-MacBook-Air";
 const HOME_DIR = "/Users/alanagoyal";
 const PROJECTS_DIR = "/Users/alanagoyal/Projects";
 
+// Storage key for persisting terminal state
+const ITERM_STORAGE_KEY = "iterm-terminal-state";
+
+interface HistoryEntry {
+  type: "input" | "output";
+  content: string;
+  prompt?: string;
+}
+
+interface ItermStorageState {
+  history: HistoryEntry[];
+  commandHistory: string[];
+  currentDir: string;
+}
+
+// Clear terminal storage (called when app is quit)
+export function clearItermStorage() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(ITERM_STORAGE_KEY);
+  }
+}
+
+// Load terminal state from localStorage
+function loadItermStorage(): ItermStorageState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(ITERM_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Invalid data, ignore
+  }
+  return null;
+}
+
+// Maximum number of history entries to persist (prevents localStorage bloat)
+const MAX_HISTORY_ENTRIES = 500;
+const MAX_COMMAND_HISTORY_ENTRIES = 100;
+
+// Save terminal state to localStorage
+function saveItermStorage(state: ItermStorageState) {
+  if (typeof window === "undefined") return;
+  try {
+    // Truncate history to prevent localStorage bloat
+    const truncatedState: ItermStorageState = {
+      history: state.history.slice(-MAX_HISTORY_ENTRIES),
+      commandHistory: state.commandHistory.slice(-MAX_COMMAND_HISTORY_ENTRIES),
+      currentDir: state.currentDir,
+    };
+    localStorage.setItem(ITERM_STORAGE_KEY, JSON.stringify(truncatedState));
+  } catch {
+    // Storage full or unavailable, ignore
+  }
+}
+
 // File system node types
 interface FileNode {
   type: "dir" | "file";
@@ -37,12 +93,6 @@ const BASE_FILE_SYSTEM: Record<string, FileNode> = {
   "/System": { type: "dir", contents: ["Library"] },
   "/Library": { type: "dir", contents: ["Fonts", "Preferences"] },
 };
-
-interface HistoryEntry {
-  type: "input" | "output";
-  content: string;
-  prompt?: string;
-}
 
 // Text file extensions that should open in TextEdit
 const TEXT_FILE_EXTENSIONS = [
@@ -134,15 +184,24 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
   }
 }
 
+// Load persisted state once at module level to avoid repeated parsing
+const initialStoredState = typeof window !== "undefined" ? loadItermStorage() : null;
+
 export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   const { currentOS } = useSystemSettings();
   const { addRecent } = useRecents();
-  const [history, setHistory] = useState<HistoryEntry[]>([
-    { type: "output", content: "Type 'help' for available commands" },
-  ]);
+
+  // Initialize state from persisted storage (loaded once above)
+  const [history, setHistory] = useState<HistoryEntry[]>(
+    initialStoredState?.history ?? [{ type: "output", content: "Type 'help' for available commands" }]
+  );
   const [currentInput, setCurrentInput] = useState("");
-  const [currentDir, setCurrentDir] = useState(HOME_DIR);
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [currentDir, setCurrentDir] = useState(
+    initialStoredState?.currentDir ?? HOME_DIR
+  );
+  const [commandHistory, setCommandHistory] = useState<string[]>(
+    initialStoredState?.commandHistory ?? []
+  );
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isExecuting, setIsExecuting] = useState(false);
   const [fileSystem, setFileSystem] = useState<Record<string, FileNode>>(BASE_FILE_SYSTEM);
@@ -173,6 +232,11 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [history]);
+
+  // Persist terminal state to localStorage
+  useEffect(() => {
+    saveItermStorage({ history, commandHistory, currentDir });
+  }, [history, commandHistory, currentDir]);
 
   // Focus input on click
   const handleTerminalClick = useCallback(() => {
