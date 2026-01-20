@@ -1,7 +1,6 @@
-import { Conversation, Message } from "@/types/messages";
+import { Conversation, Message, ReactionType } from "@/types/messages";
 import { soundEffects } from "./sound-effects";
 
-// Simplified conversation state - no task queue, just track current processing
 type ConversationState = {
   status: "idle" | "processing";
   version: number;
@@ -30,20 +29,20 @@ type MessageQueueCallbacks = {
   shouldMuteIncomingSound?: (hideAlerts: boolean | undefined) => boolean;
 };
 
-// Maximum consecutive AI messages before wrapping up (showing "notifications silenced")
-const MAX_CONSECUTIVE_AI_MESSAGES = 5;
+// Safety limit - model should wrap_up before this, but this is a fallback
+const MAX_CONSECUTIVE_AI_MESSAGES = 10;
 
-// Debounce time for user messages (wait for user to finish typing multiple messages)
+// Debounce time for user messages
 const USER_MESSAGE_DEBOUNCE_MS = 500;
 
-// Typing indicator duration range (2-3 seconds with randomness)
+// Typing indicator duration range
 const TYPING_DELAY_MIN_MS = 2000;
 const TYPING_DELAY_MAX_MS = 3000;
 
-// Delay to show reaction before continuing with message
+// Delay to show reaction before continuing
 const REACTION_DISPLAY_MS = 1000;
 
-// Delay between consecutive AI messages in group chats
+// Delay between consecutive AI messages
 const AI_MESSAGE_DELAY_MS = 2000;
 
 export class MessageQueue {
@@ -53,8 +52,8 @@ export class MessageQueue {
   private callbacks: MessageQueueCallbacks;
   private activeConversation: string | null = null;
   private cleanupInterval: NodeJS.Timeout;
-  private static CLEANUP_INTERVAL = 1000 * 60 * 30; // 30 minutes
-  private static CONVERSATION_TTL = 1000 * 60 * 60 * 24; // 24 hours
+  private static CLEANUP_INTERVAL = 1000 * 60 * 30;
+  private static CONVERSATION_TTL = 1000 * 60 * 60 * 24;
 
   constructor(callbacks: MessageQueueCallbacks) {
     this.callbacks = callbacks;
@@ -108,7 +107,6 @@ export class MessageQueue {
     return state;
   }
 
-  // Count consecutive AI messages from the end of the conversation
   private countConsecutiveAiMessages(messages: Message[]): number {
     let count = 0;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -121,42 +119,31 @@ export class MessageQueue {
     return count;
   }
 
-  // Cancel any in-progress work for a conversation
   private cancelProcessing(conversationId: string) {
     const state = this.state.conversations.get(conversationId);
     if (!state) return;
 
-    // Abort any in-flight request
     if (state.currentAbortController) {
       state.currentAbortController.abort();
       state.currentAbortController = null;
     }
 
-    // Clear typing indicator immediately
     this.callbacks.onTypingStatusChange(null, null);
-
-    // Increment version to invalidate any pending work
     state.version++;
     state.status = "idle";
   }
 
-  // Main entry point for user messages
-  // Debounces rapid messages and cancels pending AI work
   public enqueueUserMessage(conversation: Conversation) {
     const state = this.getOrCreateState(conversation.id);
 
-    // Cancel any in-progress AI work
     this.cancelProcessing(conversation.id);
 
-    // Clear existing debounce timer
     if (state.debounceTimeout) {
       clearTimeout(state.debounceTimeout);
     }
 
-    // Store latest conversation state
     state.pendingConversation = conversation;
 
-    // Start debounce timer
     state.debounceTimeout = setTimeout(() => {
       const currentState = this.state.conversations.get(conversation.id);
       if (currentState?.pendingConversation) {
@@ -169,28 +156,55 @@ export class MessageQueue {
     }, USER_MESSAGE_DEBOUNCE_MS);
   }
 
-  // Schedule an AI message (used for group chat continuation)
   private scheduleAIMessage(conversation: Conversation) {
     const state = this.getOrCreateState(conversation.id);
     const currentVersion = state.version;
 
-    // Don't schedule if we've reached the limit
+    // Safety limit - don't schedule if we've hit the max
     const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
     if (consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES) {
+      // Force a wrap-up via silenced message
+      this.showSilencedMessage(conversation.id, conversation, currentVersion);
       return;
     }
 
-    // Wait before sending next AI message
     setTimeout(() => {
       const currentState = this.state.conversations.get(conversation.id);
-      // Only proceed if version hasn't changed (no user interruption)
       if (currentState && currentState.version === currentVersion) {
         this.processMessage(conversation.id, conversation);
       }
     }, AI_MESSAGE_DELAY_MS);
   }
 
-  // Core message processing logic
+  private async showSilencedMessage(
+    conversationId: string,
+    conversation: Conversation,
+    currentVersion: number
+  ) {
+    const state = this.state.conversations.get(conversationId);
+    if (!state || state.version !== currentVersion) return;
+
+    await this.delay(AI_MESSAGE_DELAY_MS);
+
+    if (state.version !== currentVersion) return;
+
+    // Find the last AI participant who spoke
+    const lastAiMessage = [...conversation.messages]
+      .reverse()
+      .find((m) => m.sender !== "me" && m.sender !== "system");
+
+    if (lastAiMessage) {
+      const silencedMessage: Message = {
+        id: crypto.randomUUID(),
+        content: `${lastAiMessage.sender} has notifications silenced`,
+        sender: "system",
+        type: "silenced",
+        timestamp: new Date().toISOString(),
+      };
+      this.callbacks.onMessageGenerated(conversationId, silencedMessage);
+    }
+  }
+
   private async processMessage(conversationId: string, conversation: Conversation) {
     const state = this.getOrCreateState(conversationId);
 
@@ -202,17 +216,13 @@ export class MessageQueue {
 
     try {
       const isGroupChat = conversation.recipients.length > 1;
-      const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
-      const shouldWrapUp = consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES - 1;
 
-      // Make API call
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipients: conversation.recipients,
           messages: conversation.messages,
-          shouldWrapUp,
           isOneOnOne: !isGroupChat,
         }),
         signal: state.currentAbortController.signal,
@@ -222,7 +232,6 @@ export class MessageQueue {
         throw new Error("Failed to fetch");
       }
 
-      // SINGLE version check after API call
       if (currentVersion !== state.version) {
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
@@ -230,99 +239,132 @@ export class MessageQueue {
       }
 
       const data = await response.json();
+      const actions: Array<{ action: string; participant?: string; message?: string; reaction?: string }> =
+        data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
-      // Show typing indicator after API response
-      this.callbacks.onTypingStatusChange(conversationId, data.sender);
-      let typingStartTime = Date.now();
+      // Process actions - reactions first, then messages
+      const reactionActions = actions.filter(a => a.action === "react");
+      const messageAction = actions.find(a => a.action === "respond" || a.action === "wrap_up");
+      const waitAction = actions.find(a => a.action === "wait");
 
-      // Handle reaction if present
-      if (data.reaction && conversation.messages.length > 0) {
-        const lastMessage = conversation.messages[conversation.messages.length - 1];
-        if (!lastMessage.reactions) {
-          lastMessage.reactions = [];
-        }
-        lastMessage.reactions.push({
-          type: data.reaction,
-          sender: data.sender,
-          timestamp: new Date().toISOString(),
-        });
+      // Handle reactions first
+      for (const reactionAction of reactionActions) {
+        const reactor = reactionAction.participant;
+        const reactionType = reactionAction.reaction as ReactionType;
 
-        // Play reaction sound (unless muted)
-        const shouldMute = this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
-        if (!shouldMute) {
-          soundEffects.playReactionSound();
-        }
-
-        // Update UI with reaction
-        if (this.callbacks.onMessageUpdated) {
-          this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
-            reactions: lastMessage.reactions,
+        if (reactor && reactionType && conversation.messages.length > 0) {
+          const lastMessage = conversation.messages[conversation.messages.length - 1];
+          if (!lastMessage.reactions) {
+            lastMessage.reactions = [];
+          }
+          lastMessage.reactions.push({
+            type: reactionType,
+            sender: reactor,
+            timestamp: new Date().toISOString(),
           });
+
+          const shouldMute =
+            this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
+          if (!shouldMute) {
+            soundEffects.playReactionSound();
+          }
+
+          if (this.callbacks.onMessageUpdated) {
+            this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
+              reactions: lastMessage.reactions,
+            });
+          }
+
+          // Brief pause between reactions if multiple
+          if (reactionActions.length > 1) {
+            await this.delay(REACTION_DISPLAY_MS);
+          }
         }
-
-        // Brief delay to show reaction before continuing
-        await this.delay(REACTION_DISPLAY_MS);
-
-        // Check version again after delay
-        if (currentVersion !== state.version) {
-          this.callbacks.onTypingStatusChange(null, null);
-          state.status = "idle";
-          return;
-        }
-
-        // Reset typing timer - after reacting, still need time to type
-        typingStartTime = Date.now();
       }
 
-      // Calculate remaining typing delay (ensure minimum time has passed since typing started)
-      const typingDelay = TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
-      const elapsedTime = typingStartTime ? Date.now() - typingStartTime : 0;
-      const remainingDelay = Math.max(0, typingDelay - elapsedTime);
+      // If only reactions (no message action), continue the conversation
+      if (reactionActions.length > 0 && !messageAction && !waitAction) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
 
-      if (remainingDelay > 0) {
-        await this.delay(remainingDelay);
+        if (currentVersion === state.version && isGroupChat) {
+          this.scheduleAIMessage(conversation);
+        }
+        return;
       }
 
-      // Final version check before delivering message
+      // Handle "wait" action - stop and let user respond
+      if (waitAction && !messageAction) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
+
+      // For "respond" and "wrap_up", we have a message to deliver
+      if (!messageAction) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
+
+      const sender = messageAction.participant;
+      const content = messageAction.message;
+
+      if (!sender || !content) {
+        console.warn("Malformed response - missing participant or message:", messageAction);
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
+
+      // Show typing indicator
+      this.callbacks.onTypingStatusChange(conversationId, sender);
+
+      // Typing delay
+      const typingDelay =
+        TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
+      await this.delay(typingDelay);
+
       if (currentVersion !== state.version) {
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
         return;
       }
 
-      // Create and deliver message
+      // Deliver the message
       const newMessage: Message = {
         id: crypto.randomUUID(),
-        content: data.content,
-        sender: data.sender,
+        content: content,
+        sender: sender,
         timestamp: new Date().toISOString(),
       };
 
       this.callbacks.onMessageGenerated(conversationId, newMessage);
       this.callbacks.onTypingStatusChange(null, null);
 
-      // Continue conversation ONLY for group chats that haven't wrapped up
-      if (isGroupChat && !shouldWrapUp) {
-        this.scheduleAIMessage({
-          ...conversation,
-          messages: [...conversation.messages, newMessage],
-        });
-      } else if (shouldWrapUp) {
-        // Show "notifications silenced" for the wrap-up
+      // Handle next steps based on action
+      if (messageAction.action === "wrap_up") {
+        // Show "notifications silenced" after wrap_up
         await this.delay(AI_MESSAGE_DELAY_MS);
 
         if (currentVersion === state.version) {
           const silencedMessage: Message = {
             id: crypto.randomUUID(),
-            content: `${data.sender} has notifications silenced`,
+            content: `${sender} has notifications silenced`,
             sender: "system",
             type: "silenced",
             timestamp: new Date().toISOString(),
           };
           this.callbacks.onMessageGenerated(conversationId, silencedMessage);
         }
+      } else if (messageAction.action === "respond" && isGroupChat) {
+        // Continue the conversation
+        this.scheduleAIMessage({
+          ...conversation,
+          messages: [...conversation.messages, newMessage],
+        });
       }
-      // For 1-on-1: Do nothing - wait for next user message
+      // For 1-on-1 with "respond", just wait for next user message
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
         console.error("Error processing message:", error);

@@ -123,20 +123,23 @@ export function MessageList({
         conversationId === prevConversationId &&
         messages.length > prevMessageCount;
 
-      // Play sound for incoming messages in the active conversation (unless muted)
+      // Only process effects for new messages in the same conversation
       if (isNewMessageInSameConversation) {
+        // Play sound for incoming messages in the active conversation (unless muted)
         const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
         if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
           soundEffects.playReceivedSound();
         }
-      }
-      if (lastMessage.sender === "me") {
-        setLastSentMessageId(lastMessage.id);
-        // Clear the lastSentMessageId after animation duration
-        const timer = setTimeout(() => {
-          setLastSentMessageId(null);
-        }, 1000); // Adjust this timing to match your animation duration
-        return () => clearTimeout(timer);
+
+        // Trigger "delivered" animation for sent messages
+        if (lastMessage.sender === "me") {
+          setLastSentMessageId(lastMessage.id);
+          // Clear the lastSentMessageId after animation duration
+          const timer = setTimeout(() => {
+            setLastSentMessageId(null);
+          }, 1000);
+          return () => clearTimeout(timer);
+        }
       }
     }
   }, [messages, conversationId, prevConversationId, prevMessageCount, conversation?.hideAlerts, focusModeActive]);
