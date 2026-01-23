@@ -152,12 +152,23 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
   if (isMultiWindowApp(appId)) {
     return savedState;
   }
+
+  // Un-maximize any other maximized windows so the focused app is visible
+  // (maximized windows use MAXIMIZED_Z_INDEX which would cover the focused app)
+  const windowUpdates: Record<string, WindowState> = {};
+  for (const [windowId, windowState] of Object.entries(savedState.windows)) {
+    if (windowId !== appId && windowState.isMaximized) {
+      windowUpdates[windowId] = { ...windowState, isMaximized: false };
+    }
+  }
+  const updatedWindows = { ...savedState.windows, ...windowUpdates };
+
   return {
     ...savedState,
     windows: {
-      ...savedState.windows,
+      ...updatedWindows,
       [appId]: {
-        ...savedState.windows[appId],
+        ...updatedWindows[appId],
         isOpen: true,
         isMinimized: false,
         zIndex: savedState.nextZIndex,
