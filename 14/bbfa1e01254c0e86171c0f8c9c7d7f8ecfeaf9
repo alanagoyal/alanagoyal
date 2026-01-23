@@ -1,0 +1,40 @@
+components/desktop/window.tsx
+  e7c4a55ee4c0b4d8 99-104,107-116,119
+components/apps/calendar/sample-events.ts
+  e7c4a55ee4c0b4d8 65
+components/apps/calendar/calendar-app.tsx
+  ded99f3513810278 142-147,153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "14bbfa1e01254c0e86171c0f8c9c7d7f8ecfeaf9",
+  "prompts": {
+    "ded99f3513810278": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98999a52-bcc7-4ad5-af7c-1e5ce603fa2e",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 1,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "e7c4a55ee4c0b4d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "367ded10-9381-460b-b5a7-e4b49cde24d3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 66,
+      "total_deletions": 46,
+      "accepted_lines": 28,
+      "overriden_lines": 0
+    }
+  }
+}
