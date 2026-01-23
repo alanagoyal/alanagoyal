@@ -1,0 +1,31 @@
+components/apps/calendar/week-view.tsx
+  e7c4a55ee4c0b4d8 3-4,33-57,65,71
+components/apps/calendar/event-form.tsx
+  e7c4a55ee4c0b4d8 4,11-12,50-55,67,77,86-87,104,108,115,122-124,130-136,139-140,143-145,148,150-172,174-175,178,185-187,189,194,198-201,207-210,222-224,227,232-235,239,243-245,250-253,269-270,273,279,281,285
+components/apps/calendar/types.ts
+  e7c4a55ee4c0b4d8 10
+components/apps/calendar/month-view.tsx
+  e7c4a55ee4c0b4d8 71,73
+components/apps/calendar/calendar-dock-icon.tsx
+  e7c4a55ee4c0b4d8 35,40-41,43-46,51-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "2626b1fbfb3a111db8f8e91a39b73f543b53c61d",
+  "prompts": {
+    "e7c4a55ee4c0b4d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "367ded10-9381-460b-b5a7-e4b49cde24d3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 168,
+      "total_deletions": 109,
+      "accepted_lines": 138,
+      "overriden_lines": 0
+    }
+  }
+}
