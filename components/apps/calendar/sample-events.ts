@@ -62,7 +62,7 @@ function getRestaurantForSaturday(date: Date): typeof DATE_NIGHT_RESTAURANTS[0] 
 }
 
 // Generate sample events for a range of days around today
-export function generateSampleEvents(daysRange: number = 60): CalendarEvent[] {
+export function generateSampleEvents(daysRange: number = 365): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -139,12 +139,18 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         case "t":
           setCurrentDate(new Date());
           break;
+        case "arrowleft":
+          handleNavigate("prev");
+          break;
+        case "arrowright":
+          handleNavigate("next");
+          break;
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [eventFormOpen, inShell, windowFocus]);
+  }, [eventFormOpen, inShell, windowFocus, handleNavigate]);
 
   // Don't render until loaded to avoid hydration issues
   if (!isLoaded) {
