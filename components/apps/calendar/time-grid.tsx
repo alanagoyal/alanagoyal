@@ -213,7 +213,7 @@ export function TimeGrid({
                     style={{ top: currentTimeTop + gridPaddingTop }}
                   >
                     <div className="relative">
-                      <div className="absolute -left-1 w-2 h-2 rounded-full bg-red-500" />
+                      <div className="absolute -left-1 w-2 h-2 rounded-full bg-red-500 -top-[3px]" />
                       <div className="h-[2px] bg-red-500" />
                     </div>
                   </div>
