@@ -81,6 +81,17 @@ export const APPS: AppConfig[] = [
     multiWindow: true,
     cascadeOffset: 30,
   },
+  {
+    id: "calendar",
+    name: "Calendar",
+    icon: "/calendar-icon",
+    description: "Calendar and events",
+    accentColor: "#FF3B30",
+    defaultPosition: { x: 170, y: 60 },
+    defaultSize: { width: 900, height: 700 },
+    minSize: { width: 700, height: 500 },
+    menuBarTitle: "Calendar",
+  },
 ];
 
 export function getAppById(id: string): AppConfig | undefined {

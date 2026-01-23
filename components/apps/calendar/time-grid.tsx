@@ -1,0 +1,256 @@
+"use client";
+
+import { useRef, useCallback, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import {
+  getDayHours,
+  formatHour,
+  getEventsForDay,
+  getEventTimePosition,
+  pixelToTime,
+  formatTimeValue,
+  isToday,
+  format,
+} from "./utils";
+import { CalendarEvent, Calendar } from "./types";
+
+interface TimeGridProps {
+  dates: Date[];
+  events: CalendarEvent[];
+  calendars: Calendar[];
+  onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  hourHeight?: number;
+  showDayHeaders?: boolean;
+}
+
+export function TimeGrid({
+  dates,
+  events,
+  calendars,
+  onCreateEvent,
+  hourHeight = 60,
+  showDayHeaders = false,
+}: TimeGridProps) {
+  const hours = getDayHours();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [dragState, setDragState] = useState<{
+    columnIndex: number;
+    startY: number;
+    currentY: number;
+  } | null>(null);
+
+  // Get calendar color by id
+  const getCalendarColor = (calendarId: string): string => {
+    const calendar = calendars.find((c) => c.id === calendarId);
+    return calendar?.color || "#007AFF";
+  };
+
+  // Handle mouse down on time grid for drag creation
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, columnIndex: number) => {
+      const gridRect = gridRef.current?.getBoundingClientRect();
+      if (!gridRect) return;
+
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+
+      setDragState({
+        columnIndex,
+        startY: relativeY,
+        currentY: relativeY,
+      });
+    },
+    []
+  );
+
+  // Handle mouse move during drag
+  useEffect(() => {
+    if (!dragState) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const gridRect = gridRef.current?.getBoundingClientRect();
+      if (!gridRect) return;
+
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+      setDragState((prev) => (prev ? { ...prev, currentY: relativeY } : null));
+    };
+
+    const handleMouseUp = () => {
+      if (dragState) {
+        const minY = Math.min(dragState.startY, dragState.currentY);
+        const maxY = Math.max(dragState.startY, dragState.currentY);
+
+        const startTime = pixelToTime(minY, hourHeight);
+        const endTime = pixelToTime(maxY, hourHeight);
+
+        // Ensure minimum 15 min duration
+        if (endTime.hour * 60 + endTime.minute <= startTime.hour * 60 + startTime.minute) {
+          endTime.minute = startTime.minute + 15;
+          if (endTime.minute >= 60) {
+            endTime.hour += 1;
+            endTime.minute -= 60;
+          }
+        }
+
+        const date = dates[dragState.columnIndex];
+        onCreateEvent(
+          date,
+          formatTimeValue(startTime.hour, startTime.minute),
+          formatTimeValue(endTime.hour, endTime.minute)
+        );
+      }
+      setDragState(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragState, dates, onCreateEvent, hourHeight]);
+
+  // Handle double-click to create event
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent, columnIndex: number) => {
+      const gridRect = gridRef.current?.getBoundingClientRect();
+      if (!gridRect) return;
+
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+      const time = pixelToTime(relativeY, hourHeight);
+
+      const endMinutes = time.hour * 60 + time.minute + 60; // Default 1 hour
+      const endHour = Math.floor(endMinutes / 60);
+      const endMin = endMinutes % 60;
+
+      const date = dates[columnIndex];
+      onCreateEvent(
+        date,
+        formatTimeValue(time.hour, time.minute),
+        formatTimeValue(Math.min(23, endHour), endMin)
+      );
+    },
+    [dates, onCreateEvent, hourHeight]
+  );
+
+  // Calculate current time indicator position
+  const now = new Date();
+  const currentTimeTop = (now.getHours() * 60 + now.getMinutes()) * (hourHeight / 60);
+
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Day headers for week view */}
+      {showDayHeaders && (
+        <div className="flex border-b border-border bg-muted/30 sticky top-0 z-10">
+          <div className="w-16 shrink-0" /> {/* Time label spacer */}
+          {dates.map((date, idx) => (
+            <div
+              key={idx}
+              className="flex-1 text-center py-2 border-l border-border first:border-l-0"
+            >
+              <div className="text-xs text-muted-foreground">
+                {format(date, "EEE")}
+              </div>
+              <div
+                className={cn(
+                  "text-lg font-medium",
+                  isToday(date) &&
+                    "bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto"
+                )}
+              >
+                {format(date, "d")}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Scrollable time grid */}
+      <div ref={gridRef} className="flex-1 overflow-y-auto relative">
+        <div className="flex relative" style={{ minHeight: hourHeight * 24 }}>
+          {/* Time labels */}
+          <div className="w-16 shrink-0 relative">
+            {hours.map((hour) => (
+              <div
+                key={hour}
+                className="absolute right-2 text-xs text-muted-foreground -translate-y-1/2"
+                style={{ top: hour * hourHeight }}
+              >
+                {formatHour(hour)}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid columns */}
+          {dates.map((date, columnIndex) => {
+            const dayEvents = getEventsForDay(events, date).filter(
+              (e) => !e.isAllDay
+            );
+
+            return (
+              <div
+                key={columnIndex}
+                className="flex-1 relative border-l border-border first:border-l-0"
+                onMouseDown={(e) => handleMouseDown(e, columnIndex)}
+                onDoubleClick={(e) => handleDoubleClick(e, columnIndex)}
+              >
+                {/* Hour lines */}
+                {hours.map((hour) => (
+                  <div
+                    key={hour}
+                    className="absolute left-0 right-0 border-t border-border/50"
+                    style={{ top: hour * hourHeight }}
+                  />
+                ))}
+
+                {/* Current time indicator */}
+                {isToday(date) && (
+                  <div
+                    className="absolute left-0 right-0 z-20 pointer-events-none"
+                    style={{ top: currentTimeTop }}
+                  >
+                    <div className="relative">
+                      <div className="absolute -left-1 w-2 h-2 rounded-full bg-red-500" />
+                      <div className="h-[2px] bg-red-500" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Events */}
+                {dayEvents.map((event) => {
+                  const { top, height } = getEventTimePosition(event);
+                  const color = getCalendarColor(event.calendarId);
+
+                  return (
+                    <div
+                      key={event.id}
+                      className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs text-white overflow-hidden cursor-default"
+                      style={{
+                        top,
+                        height,
+                        backgroundColor: color,
+                      }}
+                    >
+                      <div className="font-medium truncate">{event.title}</div>
+                    </div>
+                  );
+                })}
+
+                {/* Drag selection preview */}
+                {dragState && dragState.columnIndex === columnIndex && (
+                  <div
+                    className="absolute left-1 right-1 bg-blue-500/30 border border-blue-500 rounded pointer-events-none"
+                    style={{
+                      top: Math.min(dragState.startY, dragState.currentY),
+                      height: Math.abs(dragState.currentY - dragState.startY),
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
