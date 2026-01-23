@@ -1,0 +1,23 @@
+lib/window-context.tsx
+  d2049e98db30068e 185,215,736
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "40e277f92b77a43a8b287a613c9e2d45c51964d7",
+  "prompts": {
+    "d2049e98db30068e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c68a5f7a-1559-46ee-b3a4-2251a9dc1958",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
