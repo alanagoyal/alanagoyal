@@ -182,7 +182,7 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = sessionStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       // Validate structure
@@ -212,7 +212,7 @@ function loadStateFromStorage(): WindowManagerState | null {
 function saveStateToStorage(state: WindowManagerState): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     console.error("Failed to save window state:", e);
   }
@@ -733,7 +733,7 @@ export function WindowManagerProvider({
 }: WindowManagerProviderProps) {
   /**
    * Compute initial state based on:
-   * 1. Whether user has saved state (localStorage)
+   * 1. Whether user has saved state (sessionStorage)
    * 2. Which app they're navigating to (initialAppId)
    *
    * Logic:
