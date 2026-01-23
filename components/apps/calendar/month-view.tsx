@@ -68,9 +68,9 @@ export function MonthView({
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* Calendar grid - scrollable */}
       <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-7 h-full" style={{ gridAutoRows: "1fr" }}>
+        <div className="grid grid-cols-7">
           {weeks.map((week, weekIdx) =>
             week.map((day, dayIdx) => {
               const dayEvents = getEventsForDay(events, day);

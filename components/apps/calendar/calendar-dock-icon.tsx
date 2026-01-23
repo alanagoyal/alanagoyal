@@ -32,39 +32,29 @@ export function CalendarDockIcon({ size = 48 }: CalendarDockIconProps) {
     return () => clearTimeout(timeout);
   }, []);
 
-  const dayOfWeek = format(date, "EEE").toUpperCase();
+  const dayOfWeek = format(date, "EEE"); // Short day name (e.g., "Fri")
   const dayNumber = format(date, "d");
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden shadow-md bg-white"
-      style={{ width: size, height: size }}
+      className="relative rounded-xl overflow-hidden shadow-md bg-white flex flex-col items-center justify-center"
+      style={{ width: size, height: size, paddingTop: size * 0.04 }}
     >
-      {/* Red header bar */}
-      <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center bg-[#FF3B30]"
-        style={{ height: size * 0.28 }}
+      {/* Day name in red */}
+      <span
+        className="text-[#FF3B30] font-medium leading-none"
+        style={{ fontSize: size * 0.22 }}
       >
-        <span
-          className="text-white font-semibold tracking-wide"
-          style={{ fontSize: size * 0.18 }}
-        >
-          {dayOfWeek}
-        </span>
-      </div>
+        {dayOfWeek}
+      </span>
 
-      {/* White body with date */}
-      <div
-        className="absolute bottom-0 left-0 right-0 flex items-center justify-center bg-white"
-        style={{ height: size * 0.72 }}
+      {/* Date number in black */}
+      <span
+        className="text-[#1c1c1e] font-normal leading-none"
+        style={{ fontSize: size * 0.56, marginTop: -size * 0.04 }}
       >
-        <span
-          className="text-[#1c1c1e] font-light"
-          style={{ fontSize: size * 0.52, lineHeight: 1 }}
-        >
-          {dayNumber}
-        </span>
-      </div>
+        {dayNumber}
+      </span>
     </div>
   );
 }

@@ -7,6 +7,7 @@ export interface CalendarEvent {
   endTime?: string; // HH:mm
   isAllDay: boolean;
   calendarId: string;
+  location?: string;
 }
 
 export interface Calendar {

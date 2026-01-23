@@ -1,6 +1,7 @@
 "use client";
 
-import { getWeekDays, formatDateHeader } from "./utils";
+import { cn } from "@/lib/utils";
+import { getWeekDays, formatDateHeader, isToday, format } from "./utils";
 import { TimeGrid } from "./time-grid";
 import { AllDayRow } from "./all-day-row";
 import { CalendarEvent, Calendar } from "./types";
@@ -29,7 +30,31 @@ export function WeekView({
         </h1>
       </div>
 
-      {/* All-day events */}
+      {/* Day headers - fixed position */}
+      <div className="flex border-b border-border bg-muted/30">
+        <div className="w-16 shrink-0" /> {/* Time label spacer */}
+        {weekDays.map((date, idx) => (
+          <div
+            key={idx}
+            className="flex-1 text-center py-2 border-l border-border first:border-l-0"
+          >
+            <div className="text-xs text-muted-foreground">
+              {format(date, "EEE")}
+            </div>
+            <div
+              className={cn(
+                "text-lg font-medium",
+                isToday(date) &&
+                  "bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto"
+              )}
+            >
+              {format(date, "d")}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* All-day events - fixed position, below day headers */}
       <AllDayRow
         dates={weekDays}
         events={events}
@@ -37,13 +62,13 @@ export function WeekView({
         showTimeLabel={true}
       />
 
-      {/* Time grid with day headers */}
+      {/* Time grid - scrollable, no day headers */}
       <TimeGrid
         dates={weekDays}
         events={events}
         calendars={calendars}
         onCreateEvent={onCreateEvent}
-        showDayHeaders={true}
+        showDayHeaders={false}
       />
     </div>
   );
