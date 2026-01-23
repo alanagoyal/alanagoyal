@@ -100,6 +100,52 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setView("month");
   }, []);
 
+  // Keyboard shortcuts for view switching
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in an input or if event form is open
+      if (
+        eventFormOpen ||
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      // Don't trigger with modifier keys
+      if (e.metaKey || e.ctrlKey || e.altKey) {
+        return;
+      }
+
+      // Only handle if calendar window is focused (when in shell)
+      if (inShell && windowFocus && !windowFocus.isFocused) {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case "d":
+          setView("day");
+          break;
+        case "w":
+          setView("week");
+          break;
+        case "m":
+          setView("month");
+          break;
+        case "y":
+          setView("year");
+          break;
+        case "t":
+          setCurrentDate(new Date());
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [eventFormOpen, inShell, windowFocus]);
+
   // Don't render until loaded to avoid hydration issues
   if (!isLoaded) {
     return <div className="h-full bg-background" />;
