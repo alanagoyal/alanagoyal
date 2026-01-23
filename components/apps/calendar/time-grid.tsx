@@ -170,7 +170,7 @@ export function TimeGrid({
 
       {/* Scrollable time grid */}
       <div ref={gridRef} className="flex-1 overflow-y-auto relative">
-        <div className="flex relative" style={{ minHeight: hourHeight * 24 + gridPaddingTop * 2, paddingTop: gridPaddingTop }}>
+        <div className="flex relative" style={{ minHeight: hourHeight * 24 + gridPaddingTop * 2 }}>
           {/* Time labels */}
           <div className="w-16 shrink-0 relative">
             {hours.map((hour) => (

@@ -51,7 +51,7 @@ export function AllDayRow({
         return (
           <div
             key={idx}
-            className="flex-1 py-1 px-0.5 border-l border-border first:border-l-0 min-h-[28px]"
+            className="flex-1 py-1 px-0.5 border-l border-border first:border-l-0 min-h-[28px] overflow-hidden"
           >
             {dayEvents.map((event) => {
               const color = getCalendarColor(event.calendarId);
