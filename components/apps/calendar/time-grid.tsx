@@ -45,13 +45,16 @@ export function TimeGrid({
     return calendar?.color || "#007AFF";
   };
 
+  // Top padding offset for time grid
+  const gridPaddingTop = 8;
+
   // Handle mouse down on time grid for drag creation
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, columnIndex: number) => {
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
 
       setDragState({
         columnIndex,
@@ -70,7 +73,7 @@ export function TimeGrid({
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
       setDragState((prev) => (prev ? { ...prev, currentY: relativeY } : null));
     };
 
@@ -116,7 +119,7 @@ export function TimeGrid({
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0);
+      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
       const time = pixelToTime(relativeY, hourHeight);
 
       const endMinutes = time.hour * 60 + time.minute + 60; // Default 1 hour
@@ -167,14 +170,14 @@ export function TimeGrid({
 
       {/* Scrollable time grid */}
       <div ref={gridRef} className="flex-1 overflow-y-auto relative">
-        <div className="flex relative" style={{ minHeight: hourHeight * 24 }}>
+        <div className="flex relative" style={{ minHeight: hourHeight * 24 + gridPaddingTop * 2, paddingTop: gridPaddingTop }}>
           {/* Time labels */}
           <div className="w-16 shrink-0 relative">
             {hours.map((hour) => (
               <div
                 key={hour}
                 className="absolute right-2 text-xs text-muted-foreground -translate-y-1/2"
-                style={{ top: hour * hourHeight }}
+                style={{ top: hour * hourHeight + gridPaddingTop }}
               >
                 {formatHour(hour)}
               </div>
@@ -199,7 +202,7 @@ export function TimeGrid({
                   <div
                     key={hour}
                     className="absolute left-0 right-0 border-t border-border/50"
-                    style={{ top: hour * hourHeight }}
+                    style={{ top: hour * hourHeight + gridPaddingTop }}
                   />
                 ))}
 
@@ -207,7 +210,7 @@ export function TimeGrid({
                 {isToday(date) && (
                   <div
                     className="absolute left-0 right-0 z-20 pointer-events-none"
-                    style={{ top: currentTimeTop }}
+                    style={{ top: currentTimeTop + gridPaddingTop }}
                   >
                     <div className="relative">
                       <div className="absolute -left-1 w-2 h-2 rounded-full bg-red-500" />
@@ -226,7 +229,7 @@ export function TimeGrid({
                       key={event.id}
                       className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs text-white overflow-hidden cursor-default"
                       style={{
-                        top,
+                        top: top + gridPaddingTop,
                         height,
                         backgroundColor: color,
                       }}
@@ -241,7 +244,7 @@ export function TimeGrid({
                   <div
                     className="absolute left-1 right-1 bg-blue-500/30 border border-blue-500 rounded pointer-events-none"
                     style={{
-                      top: Math.min(dragState.startY, dragState.currentY),
+                      top: Math.min(dragState.startY, dragState.currentY) + gridPaddingTop,
                       height: Math.abs(dragState.currentY - dragState.startY),
                     }}
                   />
