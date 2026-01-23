@@ -1,0 +1,59 @@
+components/apps/calendar/time-grid.tsx
+  e7c4a55ee4c0b4d8 1-256
+components/apps/calendar/event-form.tsx
+  e7c4a55ee4c0b4d8 1-246
+lib/app-config.ts
+  e7c4a55ee4c0b4d8 84-94
+components/apps/calendar/types.ts
+  e7c4a55ee4c0b4d8 1-25
+components/apps/calendar/day-view.tsx
+  e7c4a55ee4c0b4d8 1-51
+components/apps/calendar/year-view.tsx
+  e7c4a55ee4c0b4d8 1-120
+components/apps/calendar/index.ts
+  e7c4a55ee4c0b4d8 1
+components/apps/calendar/month-view.tsx
+  e7c4a55ee4c0b4d8 1-165
+components/apps/calendar/utils.ts
+  e7c4a55ee4c0b4d8 1-199
+app/(desktop)/calendar/page.tsx
+  e7c4a55ee4c0b4d8 1-39
+components/desktop/desktop.tsx
+  e7c4a55ee4c0b4d8 18,186-189,369-372
+components/apps/calendar/all-day-row.tsx
+  e7c4a55ee4c0b4d8 1-87
+components/apps/calendar/data.ts
+  e7c4a55ee4c0b4d8 1-232
+components/desktop/dock.tsx
+  e7c4a55ee4c0b4d8 8,231-233,241
+components/apps/calendar/week-view.tsx
+  e7c4a55ee4c0b4d8 1-50
+components/apps/calendar/calendar-app.tsx
+  e7c4a55ee4c0b4d8 1-176
+components/apps/calendar/calendar-dock-icon.tsx
+  e7c4a55ee4c0b4d8 1-70
+components/mobile/mobile-shell.tsx
+  e7c4a55ee4c0b4d8 12,43-44,69
+components/apps/calendar/nav.tsx
+  e7c4a55ee4c0b4d8 1-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "44a7e6a0adb576e20f66c339db75fb36f7c5da09",
+  "prompts": {
+    "e7c4a55ee4c0b4d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "367ded10-9381-460b-b5a7-e4b49cde24d3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1879,
+      "total_deletions": 7,
+      "accepted_lines": 1872,
+      "overriden_lines": 0
+    }
+  }
+}
