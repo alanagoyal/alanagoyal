@@ -12,6 +12,58 @@ import { ViewType, CalendarEvent, Calendar } from "./types";
 import { navigateDate } from "./utils";
 import { loadEvents, saveEvents, loadCalendars } from "./data";
 
+// localStorage keys for view persistence
+const VIEW_STORAGE_KEY = "calendar-view";
+const DATE_STORAGE_KEY = "calendar-date";
+const SCROLL_STORAGE_KEY = "calendar-scroll";
+
+// Load persisted view state
+function loadViewState(): { view: ViewType; currentDate: Date; scrollTop: number } {
+  if (typeof window === "undefined") {
+    return { view: "month", currentDate: new Date(), scrollTop: 0 };
+  }
+
+  try {
+    const savedView = localStorage.getItem(VIEW_STORAGE_KEY) as ViewType | null;
+    const savedDate = localStorage.getItem(DATE_STORAGE_KEY);
+    const savedScroll = localStorage.getItem(SCROLL_STORAGE_KEY);
+
+    return {
+      view: savedView && ["day", "week", "month", "year"].includes(savedView) ? savedView : "month",
+      currentDate: savedDate ? new Date(savedDate) : new Date(),
+      scrollTop: savedScroll ? parseInt(savedScroll, 10) : 0,
+    };
+  } catch {
+    return { view: "month", currentDate: new Date(), scrollTop: 0 };
+  }
+}
+
+// Save view state to localStorage
+function saveViewState(view: ViewType, currentDate: Date, scrollTop?: number): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(VIEW_STORAGE_KEY, view);
+    localStorage.setItem(DATE_STORAGE_KEY, currentDate.toISOString());
+    if (scrollTop !== undefined) {
+      localStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+// Save just the scroll position (called frequently during scrolling)
+function saveScrollPosition(scrollTop: number): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
+  } catch {
+    // ignore storage errors
+  }
+}
+
 interface CalendarAppProps {
   isMobile?: boolean;
   inShell?: boolean;
@@ -29,6 +81,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [timeGridScrollTop, setTimeGridScrollTop] = useState(0);
 
   // Event form state
   const [eventFormOpen, setEventFormOpen] = useState(false);
@@ -40,11 +93,31 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     string | undefined
   >();
 
-  // Load events and calendars on mount
+  // Load events, calendars, and view state on mount
   useEffect(() => {
+    // Load persisted view state first to avoid layout shift
+    const { view: savedView, currentDate: savedDate, scrollTop } = loadViewState();
+    setView(savedView);
+    setCurrentDate(savedDate);
+    setTimeGridScrollTop(scrollTop);
+
+    // Load events and calendars
     setEvents(loadEvents());
     setCalendars(loadCalendars());
     setIsLoaded(true);
+  }, []);
+
+  // Persist view state whenever it changes
+  useEffect(() => {
+    if (isLoaded) {
+      saveViewState(view, currentDate);
+    }
+  }, [view, currentDate, isLoaded]);
+
+  // Handle scroll position changes from TimeGrid
+  const handleTimeGridScroll = useCallback((scrollTop: number) => {
+    setTimeGridScrollTop(scrollTop);
+    saveScrollPosition(scrollTop);
   }, []);
 
   // Navigation handlers
@@ -184,6 +257,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             events={events}
             calendars={calendars}
             onCreateEvent={handleCreateEvent}
+            initialScrollTop={timeGridScrollTop}
+            onScrollChange={handleTimeGridScroll}
           />
         )}
         {view === "week" && (
@@ -192,6 +267,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             events={events}
             calendars={calendars}
             onCreateEvent={handleCreateEvent}
+            initialScrollTop={timeGridScrollTop}
+            onScrollChange={handleTimeGridScroll}
           />
         )}
         {view === "month" && (

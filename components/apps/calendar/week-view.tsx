@@ -11,6 +11,8 @@ interface WeekViewProps {
   events: CalendarEvent[];
   calendars: Calendar[];
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  initialScrollTop?: number;
+  onScrollChange?: (scrollTop: number) => void;
 }
 
 export function WeekView({
@@ -18,6 +20,8 @@ export function WeekView({
   events,
   calendars,
   onCreateEvent,
+  initialScrollTop,
+  onScrollChange,
 }: WeekViewProps) {
   const weekDays = getWeekDays(currentDate);
 
@@ -69,6 +73,8 @@ export function WeekView({
         calendars={calendars}
         onCreateEvent={onCreateEvent}
         showDayHeaders={false}
+        initialScrollTop={initialScrollTop}
+        onScrollChange={onScrollChange}
       />
     </div>
   );

@@ -22,6 +22,8 @@ interface TimeGridProps {
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
   hourHeight?: number;
   showDayHeaders?: boolean;
+  initialScrollTop?: number;
+  onScrollChange?: (scrollTop: number) => void;
 }
 
 export function TimeGrid({
@@ -31,14 +33,32 @@ export function TimeGrid({
   onCreateEvent,
   hourHeight = 60,
   showDayHeaders = false,
+  initialScrollTop,
+  onScrollChange,
 }: TimeGridProps) {
   const hours = getDayHours();
   const gridRef = useRef<HTMLDivElement>(null);
+  const hasRestoredScroll = useRef(false);
   const [dragState, setDragState] = useState<{
     columnIndex: number;
     startY: number;
     currentY: number;
   } | null>(null);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (gridRef.current && initialScrollTop !== undefined && !hasRestoredScroll.current) {
+      gridRef.current.scrollTop = initialScrollTop;
+      hasRestoredScroll.current = true;
+    }
+  }, [initialScrollTop]);
+
+  // Handle scroll events
+  const handleScroll = useCallback(() => {
+    if (gridRef.current && onScrollChange) {
+      onScrollChange(gridRef.current.scrollTop);
+    }
+  }, [onScrollChange]);
 
   // Get calendar color by id
   const getCalendarColor = (calendarId: string): string => {
@@ -170,7 +190,7 @@ export function TimeGrid({
       )}
 
       {/* Scrollable time grid */}
-      <div ref={gridRef} className="flex-1 overflow-y-auto relative">
+      <div ref={gridRef} className="flex-1 overflow-y-auto relative" onScroll={handleScroll}>
         <div className="flex relative" style={{ minHeight: hourHeight * 24 + gridPaddingTop * 2 }}>
           {/* Time labels */}
           <div className="w-16 shrink-0 relative">

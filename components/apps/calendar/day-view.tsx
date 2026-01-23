@@ -10,6 +10,8 @@ interface DayViewProps {
   events: CalendarEvent[];
   calendars: Calendar[];
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  initialScrollTop?: number;
+  onScrollChange?: (scrollTop: number) => void;
 }
 
 export function DayView({
@@ -17,6 +19,8 @@ export function DayView({
   events,
   calendars,
   onCreateEvent,
+  initialScrollTop,
+  onScrollChange,
 }: DayViewProps) {
   const dates = [currentDate];
 
@@ -45,6 +49,8 @@ export function DayView({
         calendars={calendars}
         onCreateEvent={onCreateEvent}
         showDayHeaders={false}
+        initialScrollTop={initialScrollTop}
+        onScrollChange={onScrollChange}
       />
     </div>
   );
