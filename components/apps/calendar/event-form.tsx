@@ -5,6 +5,7 @@ import { MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -127,8 +128,10 @@ export function EventForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         container={container}
-        className="sm:max-w-[320px] p-0 gap-0 overflow-hidden"
+        className="sm:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
+        aria-describedby={undefined}
       >
+        <DialogTitle className="sr-only">Create New Event</DialogTitle>
         {/* Title input - inline style */}
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center gap-2">
