@@ -9,6 +9,7 @@ import {
   getEventTimePosition,
   pixelToTime,
   formatTimeValue,
+  formatEventTime,
   isToday,
   format,
 } from "./utils";
@@ -223,18 +224,29 @@ export function TimeGrid({
                 {dayEvents.map((event) => {
                   const { top, height } = getEventTimePosition(event);
                   const color = getCalendarColor(event.calendarId);
+                  const timeRange = event.startTime && event.endTime
+                    ? `${formatEventTime(event.startTime)} – ${formatEventTime(event.endTime)}`
+                    : null;
 
                   return (
                     <div
                       key={event.id}
-                      className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs text-white overflow-hidden cursor-default"
+                      className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs overflow-hidden cursor-default border-l-2"
                       style={{
                         top: top + gridPaddingTop,
                         height,
-                        backgroundColor: color,
+                        backgroundColor: `${color}20`,
+                        color: color,
+                        borderLeftColor: color,
                       }}
                     >
                       <div className="font-medium truncate">{event.title}</div>
+                      {timeRange && height > 30 && (
+                        <div className="truncate opacity-75">{timeRange}</div>
+                      )}
+                      {event.location && height > 45 && (
+                        <div className="truncate opacity-75">{event.location}</div>
+                      )}
                     </div>
                   );
                 })}

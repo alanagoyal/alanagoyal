@@ -177,6 +177,17 @@ export function formatTime(hour: number, minute: number): string {
   return `${h}:${m} ${ampm}`;
 }
 
+// Format event time string (HH:mm) to 12-hour format (e.g., "7am", "1:30pm")
+export function formatEventTime(timeStr: string): string {
+  const [hour, minute] = timeStr.split(":").map(Number);
+  const h = hour % 12 || 12;
+  const ampm = hour < 12 ? "am" : "pm";
+  if (minute === 0) {
+    return `${h}${ampm}`;
+  }
+  return `${h}:${minute.toString().padStart(2, "0")}${ampm}`;
+}
+
 // Format time as HH:mm
 export function formatTimeValue(hour: number, minute: number): string {
   return `${hour.toString().padStart(2, "0")}:${minute

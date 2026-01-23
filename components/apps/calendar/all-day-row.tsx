@@ -63,19 +63,22 @@ export function AllDayRow({
                 <div
                   key={event.id}
                   className={cn(
-                    "text-xs text-white px-1.5 py-0.5 truncate cursor-default flex items-center gap-1",
+                    "text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1",
                     isStart && isEnd && "rounded",
                     isStart && !isEnd && "rounded-l",
                     !isStart && isEnd && "rounded-r",
                     !isStart && !isEnd && "rounded-none"
                   )}
-                  style={{ backgroundColor: color }}
+                  style={{
+                    backgroundColor: `${color}20`,
+                    color: color,
+                  }}
                 >
                   <span
                     className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ backgroundColor: "rgba(255,255,255,0.5)" }}
+                    style={{ backgroundColor: color }}
                   />
-                  {isStart && <span className="truncate">{event.title}</span>}
+                  {isStart && <span className="truncate font-medium">{event.title}</span>}
                 </div>
               );
             })}

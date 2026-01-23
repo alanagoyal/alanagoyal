@@ -15,6 +15,7 @@ import {
   getEventsForDay,
   isToday,
   format,
+  formatEventTime,
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
 
@@ -251,35 +252,21 @@ export function MonthView({
                       return (
                         <div
                           key={event.id}
-                          className={cn(
-                            "text-xs px-1 py-0.5 truncate cursor-default flex items-center gap-1",
-                            event.isAllDay
-                              ? "text-white rounded"
-                              : "text-foreground"
-                          )}
-                          style={
-                            event.isAllDay
-                              ? { backgroundColor: color }
-                              : undefined
-                          }
+                          className="text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1 rounded"
+                          style={{
+                            backgroundColor: `${color}20`,
+                            color: color,
+                          }}
                         >
-                          {!event.isAllDay && (
-                            <span
-                              className="w-1.5 h-1.5 rounded-full shrink-0"
-                              style={{ backgroundColor: color }}
-                            />
-                          )}
-                          {event.isAllDay && (
-                            <span
-                              className="w-1.5 h-1.5 rounded-full shrink-0"
-                              style={{ backgroundColor: "rgba(255,255,255,0.5)" }}
-                            />
-                          )}
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: color }}
+                          />
                           {(isStart || !event.isAllDay) && (
-                            <span className="truncate">
+                            <span className="truncate font-medium">
                               {!event.isAllDay && event.startTime && (
-                                <span className="text-muted-foreground mr-1">
-                                  {event.startTime}
+                                <span className="opacity-75 mr-1">
+                                  {formatEventTime(event.startTime)}
                                 </span>
                               )}
                               {event.title}

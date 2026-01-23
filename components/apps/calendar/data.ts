@@ -1,11 +1,32 @@
 import { Calendar, CalendarEvent } from "./types";
+import { generateSampleEvents } from "./sample-events";
 
 // Default calendars
 export const DEFAULT_CALENDARS: Calendar[] = [
   {
     id: "holidays",
-    name: "Holidays",
-    color: "#007AFF", // Blue
+    name: "holidays",
+    color: "#A0A0A5", // gray
+  },
+  {
+    id: "exercise",
+    name: "exercise",
+    color: "#E25C5C", // muted red
+  },
+  {
+    id: "focus",
+    name: "focus",
+    color: "#E89B4C", // muted orange
+  },
+  {
+    id: "meetings",
+    name: "meetings",
+    color: "#D4B84A", // muted yellow
+  },
+  {
+    id: "dinner",
+    name: "dinner",
+    color: "#5BBF72", // muted green
   },
 ];
 
@@ -42,7 +63,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   // New Year's Day - January 1
   holidays.push({
     id: `holiday-newyear-${year}`,
-    title: "New Year's Day",
+    title: "new year's day",
     startDate: formatDate(new Date(year, 0, 1)),
     endDate: formatDate(new Date(year, 0, 1)),
     isAllDay: true,
@@ -53,7 +74,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const mlkDay = getNthWeekdayOfMonth(year, 0, 1, 3);
   holidays.push({
     id: `holiday-mlk-${year}`,
-    title: "Martin Luther King Jr. Day",
+    title: "martin luther king jr. day",
     startDate: formatDate(mlkDay),
     endDate: formatDate(mlkDay),
     isAllDay: true,
@@ -64,7 +85,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const presidentsDay = getNthWeekdayOfMonth(year, 1, 1, 3);
   holidays.push({
     id: `holiday-presidents-${year}`,
-    title: "Presidents' Day",
+    title: "presidents' day",
     startDate: formatDate(presidentsDay),
     endDate: formatDate(presidentsDay),
     isAllDay: true,
@@ -75,7 +96,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const memorialDay = getLastWeekdayOfMonth(year, 4, 1);
   holidays.push({
     id: `holiday-memorial-${year}`,
-    title: "Memorial Day",
+    title: "memorial day",
     startDate: formatDate(memorialDay),
     endDate: formatDate(memorialDay),
     isAllDay: true,
@@ -85,7 +106,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   // Independence Day - July 4
   holidays.push({
     id: `holiday-july4-${year}`,
-    title: "Independence Day",
+    title: "independence day",
     startDate: formatDate(new Date(year, 6, 4)),
     endDate: formatDate(new Date(year, 6, 4)),
     isAllDay: true,
@@ -96,7 +117,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const laborDay = getNthWeekdayOfMonth(year, 8, 1, 1);
   holidays.push({
     id: `holiday-labor-${year}`,
-    title: "Labor Day",
+    title: "labor day",
     startDate: formatDate(laborDay),
     endDate: formatDate(laborDay),
     isAllDay: true,
@@ -107,7 +128,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const columbusDay = getNthWeekdayOfMonth(year, 9, 1, 2);
   holidays.push({
     id: `holiday-columbus-${year}`,
-    title: "Columbus Day",
+    title: "columbus day",
     startDate: formatDate(columbusDay),
     endDate: formatDate(columbusDay),
     isAllDay: true,
@@ -117,7 +138,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   // Veterans Day - November 11
   holidays.push({
     id: `holiday-veterans-${year}`,
-    title: "Veterans Day",
+    title: "veterans day",
     startDate: formatDate(new Date(year, 10, 11)),
     endDate: formatDate(new Date(year, 10, 11)),
     isAllDay: true,
@@ -128,7 +149,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   const thanksgiving = getNthWeekdayOfMonth(year, 10, 4, 4);
   holidays.push({
     id: `holiday-thanksgiving-${year}`,
-    title: "Thanksgiving",
+    title: "thanksgiving",
     startDate: formatDate(thanksgiving),
     endDate: formatDate(thanksgiving),
     isAllDay: true,
@@ -138,7 +159,7 @@ function generateHolidaysForYear(year: number): CalendarEvent[] {
   // Christmas Day - December 25
   holidays.push({
     id: `holiday-christmas-${year}`,
-    title: "Christmas Day",
+    title: "christmas day",
     startDate: formatDate(new Date(year, 11, 25)),
     endDate: formatDate(new Date(year, 11, 25)),
     isAllDay: true,
@@ -155,36 +176,42 @@ export const US_HOLIDAYS: CalendarEvent[] = [
   ...generateHolidaysForYear(2027),
 ];
 
+// Generate sample events (generated once at module load)
+export const SAMPLE_EVENTS: CalendarEvent[] = generateSampleEvents();
+
+// All default events (holidays + sample events)
+export const DEFAULT_EVENTS: CalendarEvent[] = [...US_HOLIDAYS, ...SAMPLE_EVENTS];
+
 // localStorage keys
 const EVENTS_STORAGE_KEY = "calendar-events";
 const CALENDARS_STORAGE_KEY = "calendar-calendars";
 
 // Load events from localStorage
 export function loadEvents(): CalendarEvent[] {
-  if (typeof window === "undefined") return US_HOLIDAYS;
+  if (typeof window === "undefined") return DEFAULT_EVENTS;
 
   try {
     const stored = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (stored) {
       const userEvents = JSON.parse(stored) as CalendarEvent[];
-      // Merge with holidays (holidays always present)
-      const holidayIds = new Set(US_HOLIDAYS.map((h) => h.id));
-      const nonHolidayEvents = userEvents.filter((e) => !holidayIds.has(e.id));
-      return [...US_HOLIDAYS, ...nonHolidayEvents];
+      // Merge with default events (holidays + sample events always present)
+      const defaultIds = new Set(DEFAULT_EVENTS.map((e) => e.id));
+      const customEvents = userEvents.filter((e) => !defaultIds.has(e.id));
+      return [...DEFAULT_EVENTS, ...customEvents];
     }
   } catch {
     // ignore parse errors
   }
 
-  return US_HOLIDAYS;
+  return DEFAULT_EVENTS;
 }
 
-// Save events to localStorage (only non-holiday events)
+// Save events to localStorage (only custom user events, not default ones)
 export function saveEvents(events: CalendarEvent[]): void {
   if (typeof window === "undefined") return;
 
-  const holidayIds = new Set(US_HOLIDAYS.map((h) => h.id));
-  const userEvents = events.filter((e) => !holidayIds.has(e.id));
+  const defaultIds = new Set(DEFAULT_EVENTS.map((e) => e.id));
+  const userEvents = events.filter((e) => !defaultIds.has(e.id));
 
   try {
     localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(userEvents));

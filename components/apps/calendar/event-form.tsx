@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MapPin } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MapPin, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -76,9 +76,24 @@ export function EventForm({
   const [endTime, setEndTime] = useState(initialEndTime || "10:00");
   const [isAllDay, setIsAllDay] = useState(false);
   const [showLocationInput, setShowLocationInput] = useState(false);
+  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
+  const calendarDropdownRef = useRef<HTMLDivElement>(null);
   const [calendarId, setCalendarId] = useState(
-    calendars.find((c) => c.id !== "holidays")?.id || calendars[0]?.id || "holidays"
+    calendars.find((c) => c.id === "dinner")?.id ||
+    calendars.find((c) => c.id !== "holidays")?.id ||
+    calendars[0]?.id || "dinner"
   );
+
+  // Close calendar dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (calendarDropdownRef.current && !calendarDropdownRef.current.contains(e.target as Node)) {
+        setShowCalendarDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Reset form when dialog opens with new initial values
   useEffect(() => {
@@ -86,6 +101,7 @@ export function EventForm({
       setTitle("");
       setLocation("");
       setShowLocationInput(false);
+      setShowCalendarDropdown(false);
       setStartDate(
         initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
       );
@@ -96,7 +112,9 @@ export function EventForm({
       setEndTime(initialEndTime || "10:00");
       setIsAllDay(false);
       setCalendarId(
-        calendars.find((c) => c.id !== "holidays")?.id || calendars[0]?.id || "holidays"
+        calendars.find((c) => c.id === "dinner")?.id ||
+        calendars.find((c) => c.id !== "holidays")?.id ||
+        calendars[0]?.id || "dinner"
       );
     }
   }, [open, initialDate, initialStartTime, initialEndTime, calendars]);
@@ -143,10 +161,44 @@ export function EventForm({
               className="flex-1 text-lg font-medium bg-transparent border-none outline-none placeholder:text-foreground"
               autoFocus
             />
-            <div
-              className="w-3 h-3 rounded-full shrink-0"
-              style={{ backgroundColor: calendarColor }}
-            />
+            {/* Calendar color dropdown */}
+            <div className="relative" ref={calendarDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                className="flex items-center gap-1 p-1 rounded hover:bg-muted/50 transition-colors"
+              >
+                <div
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: calendarColor }}
+                />
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+              </button>
+              {showCalendarDropdown && (
+                <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                  {[...calendars.filter(c => c.id !== "holidays"), ...calendars.filter(c => c.id === "holidays")].map((calendar) => (
+                    <button
+                      key={calendar.id}
+                      type="button"
+                      onClick={() => {
+                        setCalendarId(calendar.id);
+                        setShowCalendarDropdown(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors",
+                        calendarId === calendar.id && "bg-muted/30"
+                      )}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: calendar.color }}
+                      />
+                      <span>{calendar.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
