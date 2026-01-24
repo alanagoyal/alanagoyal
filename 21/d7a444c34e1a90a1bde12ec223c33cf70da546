@@ -1,0 +1,27 @@
+lib/system-settings-context.tsx
+  0a6037c512b0d42f 31-40,43-45,47-52,56-64,66-68,70,72
+components/desktop/dock.tsx
+  0a6037c512b0d42f 50-54,67-77,80-82,90-91,93-98,100,104-128,133,138-139,199-200,214-215,255-258
+components/desktop/desktop.tsx
+  0a6037c512b0d42f 102-103,105-111,113-118,122,129,136,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "21d7a444c34e1a90a1bde12ec223c33cf70da546",
+  "prompts": {
+    "0a6037c512b0d42f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b41dc5bd-ca00-4ac2-9dd5-277fa18c5eb2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 156,
+      "total_deletions": 85,
+      "accepted_lines": 125,
+      "overriden_lines": 0
+    }
+  }
+}
