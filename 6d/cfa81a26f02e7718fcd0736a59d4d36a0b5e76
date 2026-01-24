@@ -1,0 +1,23 @@
+components/apps/calendar/time-grid.tsx
+  103a9700c34abd91 18-100,296,328,335-338,342,346-347
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "6dcfa81a26f02e7718fcd0736a59d4d36a0b5e76",
+  "prompts": {
+    "103a9700c34abd91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e69f9c9-0776-43b7-a8ca-ed6d5cdd5bbe",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 92,
+      "total_deletions": 2,
+      "accepted_lines": 92,
+      "overriden_lines": 0
+    }
+  }
+}
