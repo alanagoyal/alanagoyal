@@ -12,41 +12,59 @@ import { ViewType, CalendarEvent, Calendar } from "./types";
 import { navigateDate } from "./utils";
 import { loadCalendars } from "./data";
 
-// localStorage keys for view persistence
+// sessionStorage keys for view persistence (resets on new window/tab)
 const VIEW_STORAGE_KEY = "calendar-view";
 const DATE_STORAGE_KEY = "calendar-date";
 const SCROLL_STORAGE_KEY = "calendar-scroll";
 
-// Load persisted view state
+// Default hour height (must match TimeGrid default)
+const DEFAULT_HOUR_HEIGHT = 60;
+
+// Calculate scroll position to center around current time
+function getDefaultScrollTop(): number {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  // Calculate pixel position of current time
+  const currentTimePixels = (currentHour + currentMinute / 60) * DEFAULT_HOUR_HEIGHT;
+
+  // Center it in viewport (assume ~400px visible area, so offset by ~200px)
+  const centeredScroll = Math.max(0, currentTimePixels - 200);
+
+  return centeredScroll;
+}
+
+// Load persisted view state from sessionStorage
 function loadViewState(): { view: ViewType; currentDate: Date; scrollTop: number } {
   if (typeof window === "undefined") {
-    return { view: "month", currentDate: new Date(), scrollTop: 0 };
+    return { view: "week", currentDate: new Date(), scrollTop: getDefaultScrollTop() };
   }
 
   try {
-    const savedView = localStorage.getItem(VIEW_STORAGE_KEY) as ViewType | null;
-    const savedDate = localStorage.getItem(DATE_STORAGE_KEY);
-    const savedScroll = localStorage.getItem(SCROLL_STORAGE_KEY);
+    const savedView = sessionStorage.getItem(VIEW_STORAGE_KEY) as ViewType | null;
+    const savedDate = sessionStorage.getItem(DATE_STORAGE_KEY);
+    const savedScroll = sessionStorage.getItem(SCROLL_STORAGE_KEY);
 
     return {
-      view: savedView && ["day", "week", "month", "year"].includes(savedView) ? savedView : "month",
+      view: savedView && ["day", "week", "month", "year"].includes(savedView) ? savedView : "week",
       currentDate: savedDate ? new Date(savedDate) : new Date(),
-      scrollTop: savedScroll ? parseInt(savedScroll, 10) : 0,
+      scrollTop: savedScroll ? parseInt(savedScroll, 10) : getDefaultScrollTop(),
     };
   } catch {
-    return { view: "month", currentDate: new Date(), scrollTop: 0 };
+    return { view: "week", currentDate: new Date(), scrollTop: getDefaultScrollTop() };
   }
 }
 
-// Save view state to localStorage
+// Save view state to sessionStorage
 function saveViewState(view: ViewType, currentDate: Date, scrollTop?: number): void {
   if (typeof window === "undefined") return;
 
   try {
-    localStorage.setItem(VIEW_STORAGE_KEY, view);
-    localStorage.setItem(DATE_STORAGE_KEY, currentDate.toISOString());
+    sessionStorage.setItem(VIEW_STORAGE_KEY, view);
+    sessionStorage.setItem(DATE_STORAGE_KEY, currentDate.toISOString());
     if (scrollTop !== undefined) {
-      localStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
+      sessionStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
     }
   } catch {
     // ignore storage errors
@@ -58,7 +76,7 @@ function saveScrollPosition(scrollTop: number): void {
   if (typeof window === "undefined") return;
 
   try {
-    localStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
+    sessionStorage.setItem(SCROLL_STORAGE_KEY, scrollTop.toString());
   } catch {
     // ignore storage errors
   }
@@ -107,7 +125,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<ViewType>(isMobile ? "week" : "month");
+  const [view, setView] = useState<ViewType>("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -128,9 +146,9 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // Load events, calendars, and view state on mount
   useEffect(() => {
-    // Load persisted view state first to avoid layout shift
+    // Load persisted view state from sessionStorage (resets on new window)
     const { view: savedView, currentDate: savedDate, scrollTop } = loadViewState();
-    // On mobile, always use week view
+    // On mobile, always use week view; on desktop use saved view (defaults to week)
     setView(isMobile ? "week" : savedView);
     setCurrentDate(savedDate);
     setTimeGridScrollTop(scrollTop);
@@ -139,7 +157,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setEvents(loadUserEvents());
     setCalendars(loadCalendars());
     setIsLoaded(true);
-  }, []);
+  }, [isMobile]);
 
   // Persist view state whenever it changes
   useEffect(() => {
