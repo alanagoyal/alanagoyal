@@ -15,6 +15,89 @@ import {
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
 
+// Calculate layout for overlapping events
+interface EventLayout {
+  event: CalendarEvent;
+  column: number;
+  totalColumns: number;
+}
+
+function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
+  if (events.length === 0) return [];
+
+  // Parse time to minutes for easier comparison
+  const parseTime = (time: string): number => {
+    const [hour, min] = time.split(":").map(Number);
+    return hour * 60 + min;
+  };
+
+  // Sort events by start time, then by duration (longer first)
+  const sorted = [...events].sort((a, b) => {
+    const aStart = parseTime(a.startTime || "00:00");
+    const bStart = parseTime(b.startTime || "00:00");
+    if (aStart !== bStart) return aStart - bStart;
+    const aEnd = parseTime(a.endTime || "23:59");
+    const bEnd = parseTime(b.endTime || "23:59");
+    return (bEnd - bStart) - (aEnd - aStart); // Longer events first
+  });
+
+  // Track columns: each column has the end time of its last event
+  const columns: number[] = [];
+  const eventColumns: Map<string, number> = new Map();
+
+  for (const event of sorted) {
+    const start = parseTime(event.startTime || "00:00");
+    const end = parseTime(event.endTime || "23:59");
+
+    // Find first column where this event fits (no overlap)
+    let placed = false;
+    for (let col = 0; col < columns.length; col++) {
+      if (columns[col] <= start) {
+        columns[col] = end;
+        eventColumns.set(event.id, col);
+        placed = true;
+        break;
+      }
+    }
+
+    // If no column fits, create a new one
+    if (!placed) {
+      eventColumns.set(event.id, columns.length);
+      columns.push(end);
+    }
+  }
+
+  // Now determine total columns for each event based on overlapping events
+  const result: EventLayout[] = [];
+
+  for (const event of events) {
+    const start = parseTime(event.startTime || "00:00");
+    const end = parseTime(event.endTime || "23:59");
+    const column = eventColumns.get(event.id) || 0;
+
+    // Find all events that overlap with this one
+    let maxColumn = column;
+    for (const other of events) {
+      const otherStart = parseTime(other.startTime || "00:00");
+      const otherEnd = parseTime(other.endTime || "23:59");
+      const otherColumn = eventColumns.get(other.id) || 0;
+
+      // Check if they overlap
+      if (start < otherEnd && end > otherStart) {
+        maxColumn = Math.max(maxColumn, otherColumn);
+      }
+    }
+
+    result.push({
+      event,
+      column,
+      totalColumns: maxColumn + 1,
+    });
+  }
+
+  return result;
+}
+
 interface TimeGridProps {
   dates: Date[];
   events: CalendarEvent[];
@@ -210,6 +293,7 @@ export function TimeGrid({
             const dayEvents = getEventsForDay(events, date).filter(
               (e) => !e.isAllDay
             );
+            const eventLayouts = calculateEventLayout(dayEvents);
 
             return (
               <div
@@ -241,20 +325,26 @@ export function TimeGrid({
                 )}
 
                 {/* Events */}
-                {dayEvents.map((event) => {
+                {eventLayouts.map(({ event, column, totalColumns }) => {
                   const { top, height } = getEventTimePosition(event);
                   const color = getCalendarColor(event.calendarId);
                   const timeRange = event.startTime && event.endTime
                     ? `${formatEventTime(event.startTime)} – ${formatEventTime(event.endTime)}`
                     : null;
 
+                  // Calculate width and left position for overlapping events
+                  const width = `calc((100% - 8px) / ${totalColumns})`;
+                  const left = `calc(4px + (100% - 8px) * ${column} / ${totalColumns})`;
+
                   return (
                     <div
                       key={event.id}
-                      className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs overflow-hidden cursor-default border-l-2"
+                      className="absolute rounded px-1.5 py-0.5 text-xs overflow-hidden cursor-default border-l-2"
                       style={{
                         top: top + gridPaddingTop,
                         height,
+                        width,
+                        left,
                         backgroundColor: `${color}20`,
                         color: color,
                         borderLeftColor: color,
