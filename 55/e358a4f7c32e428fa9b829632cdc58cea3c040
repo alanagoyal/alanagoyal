@@ -1,0 +1,31 @@
+components/apps/calendar/time-grid.tsx
+  0a6037c512b0d42f 105,159,162-163,175,208,226,229-230
+components/apps/calendar/calendar-app.tsx
+  0a6037c512b0d42f 110,133-134,336,339-343
+components/apps/calendar/week-view.tsx
+  0a6037c512b0d42f 3,5,15,20-22,34-36,43,47-78
+components/apps/calendar/nav.tsx
+  0a6037c512b0d42f 42,47,66,76,79-81,87,97,99-100,102-104,118,132
+components/apps/calendar/year-view.tsx
+  0a6037c512b0d42f 121,164,168,178,187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "55e358a4f7c32e428fa9b829632cdc58cea3c040",
+  "prompts": {
+    "0a6037c512b0d42f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b41dc5bd-ca00-4ac2-9dd5-277fa18c5eb2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 133,
+      "total_deletions": 76,
+      "accepted_lines": 82,
+      "overriden_lines": 0
+    }
+  }
+}
