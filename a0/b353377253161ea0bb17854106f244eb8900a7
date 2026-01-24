@@ -1,0 +1,25 @@
+components/desktop/dock.tsx
+  0a6037c512b0d42f 188,211
+app/globals.css
+  0a6037c512b0d42f 244-245,247-248,257,260,265,269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "a0b353377253161ea0bb17854106f244eb8900a7",
+  "prompts": {
+    "0a6037c512b0d42f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b41dc5bd-ca00-4ac2-9dd5-277fa18c5eb2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 38,
+      "total_deletions": 50,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
