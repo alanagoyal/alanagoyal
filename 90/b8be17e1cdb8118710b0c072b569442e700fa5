@@ -1,0 +1,23 @@
+components/apps/calendar/calendar-app.tsx
+  0a6037c512b0d42f 15,20-38,41,45-47,50,52,55,59,64-65,67,79,149,151,160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "90b8be17e1cdb8118710b0c072b569442e700fa5",
+  "prompts": {
+    "0a6037c512b0d42f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b41dc5bd-ca00-4ac2-9dd5-277fa18c5eb2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 18,
+      "accepted_lines": 35,
+      "overriden_lines": 0
+    }
+  }
+}
