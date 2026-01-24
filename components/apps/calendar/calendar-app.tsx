@@ -107,7 +107,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<ViewType>("month");
+  const [view, setView] = useState<ViewType>(isMobile ? "week" : "month");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -130,7 +130,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   useEffect(() => {
     // Load persisted view state first to avoid layout shift
     const { view: savedView, currentDate: savedDate, scrollTop } = loadViewState();
-    setView(savedView);
+    // On mobile, always use week view
+    setView(isMobile ? "week" : savedView);
     setCurrentDate(savedDate);
     setTimeGridScrollTop(scrollTop);
 
@@ -332,11 +333,14 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             currentDate={currentDate}
             events={events}
             calendars={calendars}
-            onCreateEvent={handleCreateEvent}
+            onCreateEvent={isMobile ? undefined : handleCreateEvent}
             initialScrollTop={timeGridScrollTop}
             onScrollChange={handleTimeGridScroll}
-            selectedEventId={selectedEventId}
-            onSelectEvent={handleSelectEvent}
+            selectedEventId={isMobile ? null : selectedEventId}
+            onSelectEvent={isMobile ? undefined : handleSelectEvent}
+            isMobile={isMobile}
+            onNavigate={handleNavigate}
+            onToday={handleToday}
           />
         )}
         {view === "month" && (

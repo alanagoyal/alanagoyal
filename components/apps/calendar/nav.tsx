@@ -39,12 +39,12 @@ export function Nav({
   return (
     <div
       className={cn(
-        "px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none bg-muted border-b border-border/50"
+        "px-2 sm:px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted border-b border-border/50"
       )}
       onMouseDown={showWindowControls ? windowFocus?.onDragStart : undefined}
     >
       {/* Left section - window controls and add button */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <WindowControls
           inShell={!!showWindowControls}
           className="p-2"
@@ -63,64 +63,73 @@ export function Nav({
           closeLabel={showWindowControls ? "Close window" : "Close tab"}
         />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onNewEvent}
-          className="h-8 w-8"
-          title="New Event"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Center section - view switcher */}
-      <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50">
-        {VIEW_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onViewChange(option.value)}
-            className={cn(
-              "px-3 py-1 text-sm font-medium rounded-md transition-colors",
-              view === option.value
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNewEvent}
+            className="h-8 w-8"
+            title="New Event"
           >
-            {option.label}
-          </button>
-        ))}
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      {/* Right section - navigation */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onNavigate("prev")}
-          className="h-8 w-8"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+      {/* Center section - view switcher (hidden on mobile) */}
+      {!isMobile && (
+        <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50 shrink-0">
+          {VIEW_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => onViewChange(option.value)}
+              className={cn(
+                "px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-colors",
+                view === option.value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToday}
-          className="h-8 px-3 text-sm"
-        >
-          Today
-        </Button>
+      {/* Spacer */}
+      <div className="flex-1" />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onNavigate("next")}
-          className="h-8 w-8"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Right section - navigation (hidden on mobile, shown in view header instead) */}
+      {!isMobile && (
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onNavigate("prev")}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onToday}
+            className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
+          >
+            Today
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onNavigate("next")}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -118,7 +118,7 @@ export function YearView({
               </div>
 
               {/* Months grid */}
-              <div className="grid grid-cols-4 gap-x-6 gap-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-4">
                 {getYearMonths(year).map((monthDate, monthIdx) => (
                   <MiniMonth
                     key={monthIdx}
@@ -161,11 +161,11 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
       </button>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="grid grid-cols-7 mb-1">
         {WEEKDAY_LETTERS.map((letter, idx) => (
           <div
             key={idx}
-            className="text-center text-xs text-muted-foreground w-6"
+            className="text-center text-[10px] sm:text-xs text-muted-foreground"
           >
             {letter}
           </div>
@@ -175,7 +175,7 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
       {/* Days grid */}
       <div className="space-y-0.5">
         {weeks.map((week, weekIdx) => (
-          <div key={weekIdx} className="grid grid-cols-7 gap-1">
+          <div key={weekIdx} className="grid grid-cols-7">
             {week.map((day, dayIdx) => {
               const isCurrentMonth = isSameMonth(day, monthDate);
               const dayIsToday = isToday(day);
@@ -184,7 +184,7 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
                 <button
                   key={dayIdx}
                   className={cn(
-                    "text-xs w-6 h-6 flex items-center justify-center rounded-full transition-colors",
+                    "text-[10px] sm:text-xs aspect-square flex items-center justify-center rounded-full transition-colors",
                     !isCurrentMonth && "text-muted-foreground/50",
                     isCurrentMonth && "hover:bg-muted",
                     dayIsToday && "bg-red-500 text-white hover:bg-red-600"

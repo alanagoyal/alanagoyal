@@ -102,7 +102,7 @@ interface TimeGridProps {
   dates: Date[];
   events: CalendarEvent[];
   calendars: Calendar[];
-  onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  onCreateEvent?: (date: Date, startTime: string, endTime: string) => void;
   hourHeight?: number;
   showDayHeaders?: boolean;
   initialScrollTop?: number;
@@ -156,9 +156,11 @@ export function TimeGrid({
   // Top padding offset for time grid
   const gridPaddingTop = 8;
 
-  // Handle mouse down on time grid for drag creation
+  // Handle mouse down on time grid for drag creation (disabled if onCreateEvent not provided)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, columnIndex: number) => {
+      if (!onCreateEvent) return;
+
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
@@ -170,7 +172,7 @@ export function TimeGrid({
         currentY: relativeY,
       });
     },
-    []
+    [onCreateEvent]
   );
 
   // Handle mouse move during drag
@@ -203,7 +205,7 @@ export function TimeGrid({
         }
 
         const date = dates[dragState.columnIndex];
-        onCreateEvent(
+        onCreateEvent?.(
           date,
           formatTimeValue(startTime.hour, startTime.minute),
           formatTimeValue(endTime.hour, endTime.minute)
@@ -221,9 +223,11 @@ export function TimeGrid({
     };
   }, [dragState, dates, onCreateEvent, hourHeight]);
 
-  // Handle double-click to create event
+  // Handle double-click to create event (disabled if onCreateEvent not provided)
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent, columnIndex: number) => {
+      if (!onCreateEvent) return;
+
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
