@@ -1,14 +1,9 @@
 import {
-  startOfDay,
-  endOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  startOfYear,
-  endOfYear,
   eachDayOfInterval,
-  eachHourOfInterval,
   addDays,
   addWeeks,
   addMonths,
@@ -22,11 +17,190 @@ import {
   isSameMonth,
   isToday,
   parseISO,
-  differenceInMinutes,
-  setHours,
-  setMinutes,
 } from "date-fns";
 import { CalendarEvent, ViewType } from "./types";
+
+// Generate sample events for any day (on-demand, no pre-generation needed)
+function generateSampleEventsForDay(day: Date): CalendarEvent[] {
+  const dateStr = format(day, "yyyy-MM-dd");
+  const dayOfWeek = day.getDay();
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+  const isSaturday = dayOfWeek === 6;
+  const isSunday = dayOfWeek === 0;
+
+  const events: CalendarEvent[] = [];
+
+  // exercise - 7-8am every day
+  events.push({
+    id: `sample-exercise-${dateStr}`,
+    title: "exercise",
+    startDate: dateStr,
+    endDate: dateStr,
+    startTime: "07:00",
+    endTime: "08:00",
+    isAllDay: false,
+    calendarId: "exercise",
+  });
+
+  // focus time - 9am-1pm every day
+  events.push({
+    id: `sample-focus-${dateStr}`,
+    title: "focus time",
+    startDate: dateStr,
+    endDate: dateStr,
+    startTime: "09:00",
+    endTime: "13:00",
+    isAllDay: false,
+    calendarId: "focus",
+  });
+
+  if (isWeekday) {
+    events.push({
+      id: `sample-meeting1-${dateStr}`,
+      title: "busy",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "13:30",
+      endTime: "14:30",
+      isAllDay: false,
+      calendarId: "meetings",
+    });
+    events.push({
+      id: `sample-meeting2-${dateStr}`,
+      title: "busy",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "15:00",
+      endTime: "16:00",
+      isAllDay: false,
+      calendarId: "meetings",
+    });
+    events.push({
+      id: `sample-meeting3-${dateStr}`,
+      title: "busy",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "16:30",
+      endTime: "17:30",
+      isAllDay: false,
+      calendarId: "meetings",
+    });
+    events.push({
+      id: `sample-dinner-${dateStr}`,
+      title: "dinner",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "18:30",
+      endTime: "19:30",
+      isAllDay: false,
+      calendarId: "dinner",
+    });
+  } else {
+    events.push({
+      id: `sample-meeting1-${dateStr}`,
+      title: "busy",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "14:00",
+      endTime: "15:00",
+      isAllDay: false,
+      calendarId: "meetings",
+    });
+    events.push({
+      id: `sample-meeting2-${dateStr}`,
+      title: "busy",
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: "15:30",
+      endTime: "16:30",
+      isAllDay: false,
+      calendarId: "meetings",
+    });
+
+    if (isSaturday) {
+      events.push({
+        id: `sample-datenight-${dateStr}`,
+        title: "date night",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: "18:30",
+        endTime: "21:00",
+        isAllDay: false,
+        calendarId: "dinner",
+      });
+    } else if (isSunday) {
+      events.push({
+        id: `sample-dinner-sunday-${dateStr}`,
+        title: "dinner",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: "18:30",
+        endTime: "20:00",
+        isAllDay: false,
+        calendarId: "dinner",
+      });
+    }
+  }
+
+  return events;
+}
+
+// Generate holidays for a specific day (on-demand)
+function getHolidaysForDay(day: Date): CalendarEvent[] {
+  const year = day.getFullYear();
+  const month = day.getMonth();
+  const date = day.getDate();
+  const dateStr = format(day, "yyyy-MM-dd");
+  const holidays: CalendarEvent[] = [];
+
+  // Helper functions
+  const getNthWeekday = (y: number, m: number, weekday: number, n: number): number => {
+    const firstDay = new Date(y, m, 1);
+    const firstWeekday = firstDay.getDay();
+    return 1 + ((weekday - firstWeekday + 7) % 7) + (n - 1) * 7;
+  };
+
+  const getLastWeekday = (y: number, m: number, weekday: number): number => {
+    const lastDay = new Date(y, m + 1, 0);
+    const lastWeekday = lastDay.getDay();
+    const diff = (lastWeekday - weekday + 7) % 7;
+    return lastDay.getDate() - diff;
+  };
+
+  // Check each holiday
+  if (month === 0 && date === 1) {
+    holidays.push({ id: `holiday-newyear-${year}`, title: "new year's day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 0 && date === getNthWeekday(year, 0, 1, 3)) {
+    holidays.push({ id: `holiday-mlk-${year}`, title: "martin luther king jr. day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 1 && date === getNthWeekday(year, 1, 1, 3)) {
+    holidays.push({ id: `holiday-presidents-${year}`, title: "presidents' day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 4 && date === getLastWeekday(year, 4, 1)) {
+    holidays.push({ id: `holiday-memorial-${year}`, title: "memorial day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 6 && date === 4) {
+    holidays.push({ id: `holiday-july4-${year}`, title: "independence day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 8 && date === getNthWeekday(year, 8, 1, 1)) {
+    holidays.push({ id: `holiday-labor-${year}`, title: "labor day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 9 && date === getNthWeekday(year, 9, 1, 2)) {
+    holidays.push({ id: `holiday-columbus-${year}`, title: "columbus day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 10 && date === 11) {
+    holidays.push({ id: `holiday-veterans-${year}`, title: "veterans day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 10 && date === getNthWeekday(year, 10, 4, 4)) {
+    holidays.push({ id: `holiday-thanksgiving-${year}`, title: "thanksgiving", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+  if (month === 11 && date === 25) {
+    holidays.push({ id: `holiday-christmas-${year}`, title: "christmas day", startDate: dateStr, endDate: dateStr, isAllDay: true, calendarId: "holidays" });
+  }
+
+  return holidays;
+}
 
 // Navigation helpers
 export function navigateDate(
@@ -98,20 +272,25 @@ export function formatWeekDayHeader(date: Date): string {
   return format(date, "EEE d");
 }
 
-// Event helpers
+// Event helpers - merges user events with on-demand generated sample events and holidays
 export function getEventsForDay(
-  events: CalendarEvent[],
+  userEvents: CalendarEvent[],
   day: Date
 ): CalendarEvent[] {
   const dayStr = format(day, "yyyy-MM-dd");
 
-  return events.filter((event) => {
+  // User events that fall on this day
+  const userEventsForDay = userEvents.filter((event) => {
     const eventStart = event.startDate;
     const eventEnd = event.endDate;
-
-    // Check if the day falls within the event range
     return dayStr >= eventStart && dayStr <= eventEnd;
   });
+
+  // Generate sample events and holidays on-demand
+  const sampleEvents = generateSampleEventsForDay(day);
+  const holidays = getHolidaysForDay(day);
+
+  return [...holidays, ...sampleEvents, ...userEventsForDay];
 }
 
 export function getEventsForDateRange(

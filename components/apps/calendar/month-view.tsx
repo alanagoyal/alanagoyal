@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import {
   addWeeks,
-  subWeeks,
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
@@ -30,8 +29,24 @@ interface MonthViewProps {
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Number of weeks to render before and after current week
-const WEEKS_BUFFER = 52; // About 1 year each direction
+// Virtual scrolling configuration
+const WEEK_HEIGHT = 100; // Height of each week row in pixels
+const TOTAL_WEEKS = 1040; // 10 years each direction (520 weeks × 2)
+const CENTER_WEEK_INDEX = TOTAL_WEEKS / 2; // Index of "today's" week
+const OVERSCAN = 5; // Extra weeks to render above/below viewport
+
+// Base date for calculating week positions (far in the past)
+function getBaseDate(): Date {
+  const today = new Date();
+  return startOfWeek(addWeeks(today, -CENTER_WEEK_INDEX));
+}
+
+// Get the week data for a given index
+function getWeekForIndex(baseDate: Date, index: number): Date[] {
+  const weekStart = addWeeks(baseDate, index);
+  const weekEnd = endOfWeek(weekStart);
+  return eachDayOfInterval({ start: weekStart, end: weekEnd });
+}
 
 export function MonthView({
   currentDate,
@@ -42,28 +57,36 @@ export function MonthView({
   onMonthChange,
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [visibleMonth, setVisibleMonth] = useState(currentDate);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const initialScrollDone = useRef(false);
   const lastCurrentDate = useRef(currentDate);
 
-  // Generate continuous weeks
-  const weeks = useMemo(() => {
-    const result: Date[][] = [];
-    const startWeek = startOfWeek(subWeeks(currentDate, WEEKS_BUFFER));
+  // Base date for all week calculations
+  const baseDate = useMemo(() => getBaseDate(), []);
 
-    for (let i = 0; i < WEEKS_BUFFER * 2 + 1; i++) {
-      const weekStart = addWeeks(startWeek, i);
-      const weekEnd = endOfWeek(weekStart);
-      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-      result.push(days);
+  // Total scrollable height
+  const totalHeight = TOTAL_WEEKS * WEEK_HEIGHT;
+
+  // Calculate which weeks to render based on scroll position
+  const { visibleWeeks } = useMemo(() => {
+    const start = Math.max(0, Math.floor(scrollTop / WEEK_HEIGHT) - OVERSCAN);
+    const end = Math.min(
+      TOTAL_WEEKS - 1,
+      Math.ceil((scrollTop + viewportHeight) / WEEK_HEIGHT) + OVERSCAN
+    );
+
+    const weeks: { index: number; days: Date[] }[] = [];
+    for (let i = start; i <= end; i++) {
+      weeks.push({
+        index: i,
+        days: getWeekForIndex(baseDate, i),
+      });
     }
 
-    return result;
-  }, [currentDate]);
-
-  // Find the index of the current week
-  const currentWeekIndex = WEEKS_BUFFER;
+    return { visibleWeeks: weeks };
+  }, [scrollTop, viewportHeight, baseDate]);
 
   // Get calendar color by id
   const getCalendarColor = useCallback((calendarId: string): string => {
@@ -76,88 +99,88 @@ export function MonthView({
     onCreateEvent(date, "09:00", "10:00");
   }, [onCreateEvent]);
 
-  // Scroll to current week on initial render or when currentDate changes externally (e.g., Today button)
+  // Initialize viewport height
   useEffect(() => {
-    const dateChanged = lastCurrentDate.current.getTime() !== currentDate.getTime();
+    if (scrollRef.current) {
+      setViewportHeight(scrollRef.current.clientHeight);
 
-    if (!initialScrollDone.current || dateChanged) {
-      const weekEl = weekRefs.current.get(currentWeekIndex);
-      if (weekEl && scrollRef.current) {
-        // Scroll to center the current week in the viewport
-        const containerHeight = scrollRef.current.clientHeight;
-        const weekHeight = weekEl.clientHeight;
-        const scrollTop = weekEl.offsetTop - (containerHeight / 2) + (weekHeight / 2);
-        scrollRef.current.scrollTop = Math.max(0, scrollTop);
-        initialScrollDone.current = true;
-        lastCurrentDate.current = currentDate;
-
-        // Also update visible month to match
-        if (dateChanged) {
-          setVisibleMonth(currentDate);
-          onMonthChange?.(currentDate);
-        }
-      }
-    }
-  }, [currentWeekIndex, currentDate, onMonthChange]);
-
-  // Track visible month on scroll
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
-
-    const handleScroll = () => {
-      const scrollTop = scrollEl.scrollTop;
-      const viewportMiddle = scrollTop + scrollEl.clientHeight / 3;
-
-      // Find the week that's at the viewport middle
-      let closestWeekIdx = 0;
-      let closestDistance = Infinity;
-
-      weekRefs.current.forEach((el, idx) => {
-        const weekMiddle = el.offsetTop + el.clientHeight / 2;
-        const distance = Math.abs(weekMiddle - viewportMiddle);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestWeekIdx = idx;
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setViewportHeight(entry.contentRect.height);
         }
       });
 
-      // Get the month of the first day of that week
-      const week = weeks[closestWeekIdx];
-      if (week) {
-        // Find the most common month in this week (usually the one with more days)
-        const monthCounts = new Map<number, number>();
-        week.forEach(day => {
-          const month = getMonth(day);
-          monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
-        });
+      resizeObserver.observe(scrollRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
 
-        let dominantMonth = getMonth(week[0]);
-        let maxCount = 0;
-        monthCounts.forEach((count, month) => {
-          if (count > maxCount) {
-            maxCount = count;
-            dominantMonth = month;
-          }
-        });
+  // Scroll to current date on initial render or when currentDate changes
+  useEffect(() => {
+    const dateChanged = lastCurrentDate.current.getTime() !== currentDate.getTime();
 
-        const monthDate = week.find(d => getMonth(d) === dominantMonth) || week[0];
-        const newMonth = startOfMonth(monthDate);
+    if (scrollRef.current && (!initialScrollDone.current || dateChanged)) {
+      // Calculate which week index contains the current date
+      const weeksDiff = Math.floor(
+        (startOfWeek(currentDate).getTime() - baseDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+      );
+      const targetIndex = Math.max(0, Math.min(TOTAL_WEEKS - 1, weeksDiff));
 
-        if (format(newMonth, "yyyy-MM") !== format(visibleMonth, "yyyy-MM")) {
-          setVisibleMonth(newMonth);
-          onMonthChange?.(newMonth);
-        }
+      // Scroll to center that week in the viewport
+      const targetScrollTop = targetIndex * WEEK_HEIGHT - viewportHeight / 2 + WEEK_HEIGHT / 2;
+      scrollRef.current.scrollTop = Math.max(0, targetScrollTop);
+
+      initialScrollDone.current = true;
+      lastCurrentDate.current = currentDate;
+
+      if (dateChanged) {
+        setVisibleMonth(currentDate);
+        onMonthChange?.(currentDate);
       }
-    };
+    }
+  }, [currentDate, baseDate, viewportHeight, onMonthChange]);
 
-    scrollEl.addEventListener("scroll", handleScroll);
-    return () => scrollEl.removeEventListener("scroll", handleScroll);
-  }, [weeks, visibleMonth, onMonthChange]);
+  // Handle scroll
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+
+    const newScrollTop = scrollRef.current.scrollTop;
+    setScrollTop(newScrollTop);
+
+    // Determine visible month based on scroll position
+    const centerIndex = Math.floor((newScrollTop + viewportHeight / 3) / WEEK_HEIGHT);
+    const centerWeek = getWeekForIndex(baseDate, centerIndex);
+
+    if (centerWeek.length > 0) {
+      // Find dominant month in this week
+      const monthCounts = new Map<number, number>();
+      centerWeek.forEach(day => {
+        const month = getMonth(day);
+        monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
+      });
+
+      let dominantMonth = getMonth(centerWeek[0]);
+      let maxCount = 0;
+      monthCounts.forEach((count, month) => {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantMonth = month;
+        }
+      });
+
+      const monthDate = centerWeek.find(d => getMonth(d) === dominantMonth) || centerWeek[0];
+      const newMonth = startOfMonth(monthDate);
+
+      if (format(newMonth, "yyyy-MM") !== format(visibleMonth, "yyyy-MM")) {
+        setVisibleMonth(newMonth);
+        onMonthChange?.(newMonth);
+      }
+    }
+  }, [baseDate, viewportHeight, visibleMonth, onMonthChange]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Month/Year header - updates based on scroll position */}
+      {/* Month/Year header */}
       <div className="px-4 py-3 border-b border-border bg-background">
         <h1 className="text-2xl font-semibold">
           {format(visibleMonth, "MMMM yyyy")}
@@ -176,116 +199,124 @@ export function MonthView({
         ))}
       </div>
 
-      {/* Scrollable weeks container */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {weeks.map((week, weekIdx) => (
-          <div
-            key={weekIdx}
-            ref={(el) => {
-              if (el) weekRefs.current.set(weekIdx, el);
-            }}
-            className="grid grid-cols-7"
-          >
-            {week.map((day, dayIdx) => {
-              const dayEvents = getEventsForDay(events, day);
-              const dayIsToday = isToday(day);
-              const isFirstOfMonth = day.getDate() === 1;
-              const monthOfDay = getMonth(day);
-              const isCurrentViewMonth = monthOfDay === getMonth(visibleMonth);
+      {/* Virtualized scrollable weeks container */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto"
+        onScroll={handleScroll}
+      >
+        {/* Spacer div to create total scrollable height */}
+        <div style={{ height: totalHeight, position: "relative" }}>
+          {/* Only render visible weeks */}
+          {visibleWeeks.map(({ index, days }) => (
+            <div
+              key={index}
+              className="grid grid-cols-7 absolute left-0 right-0"
+              style={{
+                top: index * WEEK_HEIGHT,
+                height: WEEK_HEIGHT,
+              }}
+            >
+              {days.map((day, dayIdx) => {
+                const dayEvents = getEventsForDay(events, day);
+                const dayIsToday = isToday(day);
+                const isFirstOfMonth = day.getDate() === 1;
+                const monthOfDay = getMonth(day);
+                const isCurrentViewMonth = monthOfDay === getMonth(visibleMonth);
 
-              return (
-                <div
-                  key={dayIdx}
-                  className={cn(
-                    "border-b border-r border-border p-1 min-h-[100px] cursor-pointer hover:bg-muted/30 transition-colors"
-                  )}
-                  onDoubleClick={() => handleDoubleClick(day)}
-                  onClick={() => onDateClick?.(day)}
-                >
-                  {/* Day number */}
-                  <div className="flex justify-end mb-1">
-                    {isFirstOfMonth ? (
-                      <span
-                        className={cn(
-                          "text-sm flex items-center gap-1",
-                          dayIsToday
-                            ? "font-medium"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        <span className={cn(
-                          dayIsToday && "bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                        )}>
-                          {dayIsToday ? format(day, "d") : null}
-                        </span>
-                        {!dayIsToday && (
-                          <>
-                            {format(day, "MMM")} {format(day, "d")}
-                          </>
-                        )}
-                        {dayIsToday && (
-                          <span className="text-muted-foreground">
-                            {format(day, "MMM")}
-                          </span>
-                        )}
-                      </span>
-                    ) : (
-                      <span
-                        className={cn(
-                          "text-sm font-medium w-6 h-6 flex items-center justify-center",
-                          !isCurrentViewMonth && "text-muted-foreground",
-                          dayIsToday && "bg-red-500 text-white rounded-full"
-                        )}
-                      >
-                        {format(day, "d")}
-                      </span>
+                return (
+                  <div
+                    key={dayIdx}
+                    className={cn(
+                      "border-b border-r border-border p-1 cursor-pointer hover:bg-muted/30 transition-colors overflow-hidden"
                     )}
-                  </div>
-
-                  {/* Events */}
-                  <div className="space-y-0.5 overflow-hidden">
-                    {dayEvents.slice(0, 3).map((event) => {
-                      const color = getCalendarColor(event.calendarId);
-                      const dateStr = format(day, "yyyy-MM-dd");
-                      const isStart = event.startDate === dateStr;
-
-                      return (
-                        <div
-                          key={event.id}
-                          className="text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1 rounded"
-                          style={{
-                            backgroundColor: `${color}20`,
-                            color: color,
-                          }}
+                    style={{ height: WEEK_HEIGHT }}
+                    onDoubleClick={() => handleDoubleClick(day)}
+                    onClick={() => onDateClick?.(day)}
+                  >
+                    {/* Day number */}
+                    <div className="flex justify-end mb-1">
+                      {isFirstOfMonth ? (
+                        <span
+                          className={cn(
+                            "text-sm flex items-center gap-1",
+                            dayIsToday ? "font-medium" : "text-muted-foreground"
+                          )}
                         >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: color }}
-                          />
-                          {(isStart || !event.isAllDay) && (
-                            <span className="truncate font-medium">
-                              {!event.isAllDay && event.startTime && (
-                                <span className="opacity-75 mr-1">
-                                  {formatEventTime(event.startTime)}
-                                </span>
-                              )}
-                              {event.title}
+                          <span className={cn(
+                            dayIsToday && "bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          )}>
+                            {dayIsToday ? format(day, "d") : null}
+                          </span>
+                          {!dayIsToday && (
+                            <>
+                              {format(day, "MMM")} {format(day, "d")}
+                            </>
+                          )}
+                          {dayIsToday && (
+                            <span className="text-muted-foreground">
+                              {format(day, "MMM")}
                             </span>
                           )}
+                        </span>
+                      ) : (
+                        <span
+                          className={cn(
+                            "text-sm font-medium w-6 h-6 flex items-center justify-center",
+                            !isCurrentViewMonth && "text-muted-foreground",
+                            dayIsToday && "bg-red-500 text-white rounded-full"
+                          )}
+                        >
+                          {format(day, "d")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Events */}
+                    <div className="space-y-0.5 overflow-hidden">
+                      {dayEvents.slice(0, 3).map((event) => {
+                        const color = getCalendarColor(event.calendarId);
+                        const dateStr = format(day, "yyyy-MM-dd");
+                        const isStart = event.startDate === dateStr;
+
+                        return (
+                          <div
+                            key={event.id}
+                            className="text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1 rounded"
+                            style={{
+                              backgroundColor: `${color}20`,
+                              color: color,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: color }}
+                            />
+                            {(isStart || !event.isAllDay) && (
+                              <span className="truncate font-medium">
+                                {!event.isAllDay && event.startTime && (
+                                  <span className="opacity-75 mr-1">
+                                    {formatEventTime(event.startTime)}
+                                  </span>
+                                )}
+                                {event.title}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {dayEvents.length > 3 && (
+                        <div className="text-xs text-muted-foreground pl-1">
+                          +{dayEvents.length - 3} more
                         </div>
-                      );
-                    })}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-muted-foreground pl-1">
-                        +{dayEvents.length - 3} more
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

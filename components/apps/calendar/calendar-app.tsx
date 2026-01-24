@@ -10,7 +10,7 @@ import { YearView } from "./year-view";
 import { EventForm } from "./event-form";
 import { ViewType, CalendarEvent, Calendar } from "./types";
 import { navigateDate } from "./utils";
-import { loadEvents, saveEvents, loadCalendars } from "./data";
+import { loadCalendars } from "./data";
 
 // localStorage keys for view persistence
 const VIEW_STORAGE_KEY = "calendar-view";
@@ -64,6 +64,36 @@ function saveScrollPosition(scrollTop: number): void {
   }
 }
 
+// User events storage key
+const USER_EVENTS_KEY = "calendar-user-events";
+
+// Load user-created events from localStorage
+function loadUserEvents(): CalendarEvent[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const stored = localStorage.getItem(USER_EVENTS_KEY);
+    if (stored) {
+      return JSON.parse(stored) as CalendarEvent[];
+    }
+  } catch {
+    // ignore parse errors
+  }
+
+  return [];
+}
+
+// Save user events to localStorage
+function saveUserEvents(events: CalendarEvent[]): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(USER_EVENTS_KEY, JSON.stringify(events));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 interface CalendarAppProps {
   isMobile?: boolean;
   inShell?: boolean;
@@ -101,8 +131,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setCurrentDate(savedDate);
     setTimeGridScrollTop(scrollTop);
 
-    // Load events and calendars
-    setEvents(loadEvents());
+    // Load user events and calendars (sample events are generated on-demand)
+    setEvents(loadUserEvents());
     setCalendars(loadCalendars());
     setIsLoaded(true);
   }, []);
@@ -157,7 +187,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   const handleSaveEvent = useCallback((event: CalendarEvent) => {
     setEvents((prev) => {
       const updated = [...prev, event];
-      saveEvents(updated);
+      saveUserEvents(updated);
       return updated;
     });
   }, []);

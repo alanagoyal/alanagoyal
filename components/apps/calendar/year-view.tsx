@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   getYearMonths,
@@ -19,8 +19,9 @@ interface YearViewProps {
 
 const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 
-// Number of years to render before and after current year
-const YEARS_BUFFER = 10;
+// Simple approach: render a fixed range of years (no virtualization needed for year view)
+const YEARS_BEFORE = 10;
+const YEARS_AFTER = 10;
 
 export function YearView({
   currentDate,
@@ -35,29 +36,22 @@ export function YearView({
   const lastCurrentDate = useRef(currentDate);
 
   // Generate array of years to render
-  const years = useMemo(() => {
-    const currentYear = currentDate.getFullYear();
-    const result: number[] = [];
-    for (let i = -YEARS_BUFFER; i <= YEARS_BUFFER; i++) {
-      result.push(currentYear + i);
-    }
-    return result;
-  }, [currentDate]);
+  const currentYear = currentDate.getFullYear();
+  const years: number[] = [];
+  for (let i = -YEARS_BEFORE; i <= YEARS_AFTER; i++) {
+    years.push(currentYear + i);
+  }
 
-  // Find the index of the current year
-  const currentYearIndex = YEARS_BUFFER;
-
-  // Scroll to current year on initial render or when currentDate changes externally
+  // Scroll to current year on mount or when currentDate changes
   useEffect(() => {
     const dateChanged = lastCurrentDate.current.getTime() !== currentDate.getTime();
 
     if (!initialScrollDone.current || dateChanged) {
-      const yearEl = yearRefs.current.get(currentYearIndex);
+      const yearEl = yearRefs.current.get(currentDate.getFullYear());
       if (yearEl && scrollRef.current) {
-        // Scroll to center the current year in the viewport
         const containerHeight = scrollRef.current.clientHeight;
-        const yearHeight = yearEl.clientHeight;
-        const scrollTop = yearEl.offsetTop - (containerHeight / 2) + (yearHeight / 2);
+        const yearTop = yearEl.offsetTop;
+        const scrollTop = yearTop - containerHeight / 4;
         scrollRef.current.scrollTop = Math.max(0, scrollTop);
         initialScrollDone.current = true;
         lastCurrentDate.current = currentDate;
@@ -68,78 +62,75 @@ export function YearView({
         }
       }
     }
-  }, [currentYearIndex, currentDate, onYearChange]);
+  }, [currentDate, onYearChange]);
 
   // Track visible year on scroll
-  useEffect(() => {
+  const handleScroll = useCallback(() => {
     const scrollEl = scrollRef.current;
     if (!scrollEl) return;
 
-    const handleScroll = () => {
-      const scrollTop = scrollEl.scrollTop;
-      const viewportMiddle = scrollTop + scrollEl.clientHeight / 3;
+    const scrollTop = scrollEl.scrollTop;
+    const viewportTop = scrollTop + 100; // A bit below the top
 
-      // Find the year that's at the viewport middle
-      let closestYearIdx = 0;
-      let closestDistance = Infinity;
+    // Find the year that's at the viewport top
+    let closestYear = currentYear;
+    let closestDistance = Infinity;
 
-      yearRefs.current.forEach((el, idx) => {
-        const yearMiddle = el.offsetTop + el.clientHeight / 2;
-        const distance = Math.abs(yearMiddle - viewportMiddle);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestYearIdx = idx;
-        }
-      });
-
-      const year = years[closestYearIdx];
-      if (year && year !== visibleYear) {
-        setVisibleYear(year);
-        onYearChange?.(new Date(year, 0, 1));
+    yearRefs.current.forEach((el, year) => {
+      const yearTop = el.offsetTop;
+      const distance = Math.abs(yearTop - viewportTop);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestYear = year;
       }
-    };
+    });
 
-    scrollEl.addEventListener("scroll", handleScroll);
-    return () => scrollEl.removeEventListener("scroll", handleScroll);
-  }, [years, visibleYear, onYearChange]);
+    if (closestYear !== visibleYear) {
+      setVisibleYear(closestYear);
+      onYearChange?.(new Date(closestYear, 0, 1));
+    }
+  }, [currentYear, visibleYear, onYearChange]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Year header - updates based on scroll position */}
+      {/* Year header */}
       <div className="px-4 py-3 border-b border-border bg-background">
         <h1 className="text-2xl font-semibold">{visibleYear}</h1>
       </div>
 
       {/* Scrollable years container */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
-        {years.map((year, yearIdx) => (
-          <div
-            key={year}
-            ref={(el) => {
-              if (el) yearRefs.current.set(yearIdx, el);
-            }}
-            className="mb-8"
-          >
-            {/* Year label for non-current years (helps with orientation) */}
-            {year !== visibleYear && (
-              <div className="text-lg font-semibold text-muted-foreground mb-4">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto"
+        onScroll={handleScroll}
+      >
+        <div className="p-4 space-y-8">
+          {years.map((year) => (
+            <div
+              key={year}
+              ref={(el) => {
+                if (el) yearRefs.current.set(year, el);
+              }}
+            >
+              {/* Year label */}
+              <div className="text-lg font-semibold text-muted-foreground mb-3">
                 {year}
               </div>
-            )}
 
-            {/* Months grid for this year */}
-            <div className="grid grid-cols-4 gap-6">
-              {getYearMonths(year).map((monthDate, monthIdx) => (
-                <MiniMonth
-                  key={monthIdx}
-                  monthDate={monthDate}
-                  onMonthClick={onMonthClick}
-                  onDateClick={onDateClick}
-                />
-              ))}
+              {/* Months grid */}
+              <div className="grid grid-cols-4 gap-x-6 gap-y-4">
+                {getYearMonths(year).map((monthDate, monthIdx) => (
+                  <MiniMonth
+                    key={monthIdx}
+                    monthDate={monthDate}
+                    onMonthClick={onMonthClick}
+                    onDateClick={onDateClick}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
