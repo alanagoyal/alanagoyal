@@ -12,6 +12,8 @@ interface DayViewProps {
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
   initialScrollTop?: number;
   onScrollChange?: (scrollTop: number) => void;
+  selectedEventId?: string | null;
+  onSelectEvent?: (eventId: string | null) => void;
 }
 
 export function DayView({
@@ -21,6 +23,8 @@ export function DayView({
   onCreateEvent,
   initialScrollTop,
   onScrollChange,
+  selectedEventId,
+  onSelectEvent,
 }: DayViewProps) {
   const dates = [currentDate];
 
@@ -51,6 +55,8 @@ export function DayView({
         showDayHeaders={false}
         initialScrollTop={initialScrollTop}
         onScrollChange={onScrollChange}
+        selectedEventId={selectedEventId}
+        onSelectEvent={onSelectEvent}
       />
     </div>
   );

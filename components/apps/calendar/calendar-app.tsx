@@ -123,6 +123,9 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     string | undefined
   >();
 
+  // Selected event state
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
   // Load events, calendars, and view state on mount
   useEffect(() => {
     // Load persisted view state first to avoid layout shift
@@ -192,6 +195,24 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     });
   }, []);
 
+  // Event selection
+  const handleSelectEvent = useCallback((eventId: string | null) => {
+    setSelectedEventId(eventId);
+  }, []);
+
+  // Event deletion (only user events can be deleted)
+  const handleDeleteEvent = useCallback((eventId: string) => {
+    // Only delete if it's a user event (exists in our events state)
+    setEvents((prev) => {
+      const eventExists = prev.some((e) => e.id === eventId);
+      if (!eventExists) return prev; // Can't delete sample/holiday events
+      const updated = prev.filter((e) => e.id !== eventId);
+      saveUserEvents(updated);
+      return updated;
+    });
+    setSelectedEventId(null);
+  }, []);
+
   // Date click handler (for navigating from year/month view)
   const handleDateClick = useCallback((date: Date) => {
     setCurrentDate(date);
@@ -203,7 +224,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setView("month");
   }, []);
 
-  // Keyboard shortcuts for view switching
+  // Keyboard shortcuts for view switching and event deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input or if event form is open
@@ -216,13 +237,26 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         return;
       }
 
-      // Don't trigger with modifier keys
-      if (e.metaKey || e.ctrlKey || e.altKey) {
+      // Only handle if calendar window is focused (when in shell)
+      if (inShell && windowFocus && !windowFocus.isFocused) {
         return;
       }
 
-      // Only handle if calendar window is focused (when in shell)
-      if (inShell && windowFocus && !windowFocus.isFocused) {
+      // Handle delete key for selected event
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedEventId) {
+        e.preventDefault();
+        handleDeleteEvent(selectedEventId);
+        return;
+      }
+
+      // Handle escape to deselect
+      if (e.key === "Escape" && selectedEventId) {
+        setSelectedEventId(null);
+        return;
+      }
+
+      // Don't trigger view shortcuts with modifier keys
+      if (e.metaKey || e.ctrlKey || e.altKey) {
         return;
       }
 
@@ -253,7 +287,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [eventFormOpen, inShell, windowFocus, handleNavigate]);
+  }, [eventFormOpen, inShell, windowFocus, handleNavigate, selectedEventId, handleDeleteEvent]);
 
   // Don't render until loaded to avoid hydration issues
   if (!isLoaded) {
@@ -289,6 +323,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             onCreateEvent={handleCreateEvent}
             initialScrollTop={timeGridScrollTop}
             onScrollChange={handleTimeGridScroll}
+            selectedEventId={selectedEventId}
+            onSelectEvent={handleSelectEvent}
           />
         )}
         {view === "week" && (
@@ -299,6 +335,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             onCreateEvent={handleCreateEvent}
             initialScrollTop={timeGridScrollTop}
             onScrollChange={handleTimeGridScroll}
+            selectedEventId={selectedEventId}
+            onSelectEvent={handleSelectEvent}
           />
         )}
         {view === "month" && (

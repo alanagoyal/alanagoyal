@@ -107,6 +107,8 @@ interface TimeGridProps {
   showDayHeaders?: boolean;
   initialScrollTop?: number;
   onScrollChange?: (scrollTop: number) => void;
+  selectedEventId?: string | null;
+  onSelectEvent?: (eventId: string | null) => void;
 }
 
 export function TimeGrid({
@@ -118,6 +120,8 @@ export function TimeGrid({
   showDayHeaders = false,
   initialScrollTop,
   onScrollChange,
+  selectedEventId,
+  onSelectEvent,
 }: TimeGridProps) {
   const hours = getDayHours();
   const gridRef = useRef<HTMLDivElement>(null);
@@ -299,7 +303,14 @@ export function TimeGrid({
               <div
                 key={columnIndex}
                 className="flex-1 relative border-l border-border first:border-l-0"
-                onMouseDown={(e) => handleMouseDown(e, columnIndex)}
+                onMouseDown={(e) => {
+                  // If there's a selected event, just deselect it (don't start drag)
+                  if (selectedEventId) {
+                    onSelectEvent?.(null);
+                    return;
+                  }
+                  handleMouseDown(e, columnIndex);
+                }}
                 onDoubleClick={(e) => handleDoubleClick(e, columnIndex)}
               >
                 {/* Hour lines */}
@@ -336,19 +347,33 @@ export function TimeGrid({
                   const width = `calc((100% - 8px) / ${totalColumns})`;
                   const left = `calc(4px + (100% - 8px) * ${column} / ${totalColumns})`;
 
+                  const isSelected = selectedEventId === event.id;
+                  // Check if this is a user event (can be deleted)
+                  const isUserEvent = events.some((e) => e.id === event.id);
+
                   return (
                     <div
                       key={event.id}
-                      className="absolute rounded px-1.5 py-0.5 text-xs overflow-hidden cursor-default border-l-2"
+                      className={cn(
+                        "absolute rounded px-1.5 py-0.5 text-xs overflow-hidden border-l-2",
+                        isUserEvent ? "cursor-pointer" : "cursor-default"
+                      )}
                       style={{
                         top: top + gridPaddingTop,
                         height,
                         width,
                         left,
-                        backgroundColor: `${color}20`,
+                        backgroundColor: isSelected ? `${color}50` : `${color}20`,
                         color: color,
                         borderLeftColor: color,
                       }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isUserEvent) {
+                          onSelectEvent?.(isSelected ? null : event.id);
+                        }
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       <div className="font-medium truncate">{event.title}</div>
                       {timeRange && height > 30 && (
