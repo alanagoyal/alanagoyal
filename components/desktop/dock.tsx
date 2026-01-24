@@ -185,7 +185,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
-        }, 900);
+        }, 700);
       }
 
       // After animation, remove exiting apps from visible set
@@ -208,7 +208,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
-        }, 400);
+        }, 350);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- visibleApps is a Set; we track changes via currentAppsKey
