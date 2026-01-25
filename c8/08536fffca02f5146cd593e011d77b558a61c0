@@ -1,0 +1,27 @@
+components/apps/finder/finder-app.tsx
+  45f7f0557f2ce855 11,154-162
+components/apps/calendar/calendar-dock-icon.tsx
+  45f7f0557f2ce855 43-45,48-49
+components/desktop/about-dialog.tsx
+  45f7f0557f2ce855 7,164-166,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "c808536fffca02f5146cd593e011d77b558a61c0",
+  "prompts": {
+    "45f7f0557f2ce855": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6bad394e-5cc0-4851-8eee-84ce20bd4ccf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 10,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
