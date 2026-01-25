@@ -119,7 +119,8 @@ export function MonthView({
   useEffect(() => {
     const dateChanged = lastCurrentDate.current.getTime() !== currentDate.getTime();
 
-    if (scrollRef.current && (!initialScrollDone.current || dateChanged)) {
+    // Wait for viewportHeight to be measured before scrolling
+    if (scrollRef.current && viewportHeight > 0 && (!initialScrollDone.current || dateChanged)) {
       // Calculate which week index contains the current date
       const weeksDiff = Math.floor(
         (startOfWeek(currentDate).getTime() - baseDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
