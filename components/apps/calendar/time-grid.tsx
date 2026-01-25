@@ -158,6 +158,12 @@ export function TimeGrid({
   // Top padding offset for time grid
   const gridPaddingTop = 8;
 
+  // Maximum Y position (24 hours worth of pixels)
+  const maxGridY = 24 * hourHeight;
+
+  // Clamp Y position to valid grid bounds [0, maxGridY]
+  const clampY = useCallback((y: number) => Math.max(0, Math.min(maxGridY, y)), [maxGridY]);
+
   // Handle mouse down on time grid for drag creation (disabled if onCreateEvent not provided)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, columnIndex: number) => {
@@ -166,7 +172,8 @@ export function TimeGrid({
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const rawY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const relativeY = clampY(rawY);
 
       setDragState({
         columnIndex,
@@ -174,7 +181,7 @@ export function TimeGrid({
         currentY: relativeY,
       });
     },
-    [onCreateEvent]
+    [onCreateEvent, clampY]
   );
 
   // Handle mouse move during drag
@@ -185,7 +192,8 @@ export function TimeGrid({
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const rawY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const relativeY = clampY(rawY);
       setDragState((prev) => (prev ? { ...prev, currentY: relativeY } : null));
     };
 
@@ -198,18 +206,12 @@ export function TimeGrid({
         const endTime = pixelToTime(maxY, hourHeight);
 
         // Ensure minimum 15 min duration
-        if (endTime.hour * 60 + endTime.minute <= startTime.hour * 60 + startTime.minute) {
-          endTime.minute = startTime.minute + 15;
-          if (endTime.minute >= 60) {
-            endTime.hour += 1;
-            endTime.minute -= 60;
-          }
-        }
-
-        // Clamp hour to valid range (24:00 = midnight/end of day)
-        endTime.hour = Math.min(24, endTime.hour);
-        if (endTime.hour === 24) {
-          endTime.minute = 0;
+        const startMinutes = startTime.hour * 60 + startTime.minute;
+        const endMinutes = endTime.hour * 60 + endTime.minute;
+        if (endMinutes <= startMinutes) {
+          const newEndMinutes = Math.min(startMinutes + 15, 24 * 60);
+          endTime.hour = Math.floor(newEndMinutes / 60);
+          endTime.minute = newEndMinutes % 60;
         }
 
         const date = dates[dragState.columnIndex];
@@ -229,7 +231,7 @@ export function TimeGrid({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragState, dates, onCreateEvent, hourHeight]);
+  }, [dragState, dates, onCreateEvent, hourHeight, clampY]);
 
   // Handle double-click to create event (disabled if onCreateEvent not provided)
   const handleDoubleClick = useCallback(
@@ -239,27 +241,26 @@ export function TimeGrid({
       const gridRect = gridRef.current?.getBoundingClientRect();
       if (!gridRect) return;
 
-      const relativeY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const rawY = e.clientY - gridRect.top + (gridRef.current?.scrollTop || 0) - gridPaddingTop;
+      const relativeY = clampY(rawY);
       const time = pixelToTime(relativeY, hourHeight);
 
-      const endMinutes = time.hour * 60 + time.minute + 60; // Default 1 hour
-      let endHour = Math.floor(endMinutes / 60);
-      let endMin = endMinutes % 60;
+      // For start time, clamp to 23:00 max (can't start at midnight)
+      const startHour = Math.min(23, time.hour);
+      const startMinute = time.hour >= 24 ? 0 : time.minute;
 
-      // Clamp to end of day (24:00 = midnight)
-      if (endHour > 24 || (endHour === 24 && endMin > 0)) {
-        endHour = 24;
-        endMin = 0;
-      }
+      const endMinutes = Math.min(startHour * 60 + startMinute + 60, 24 * 60); // Default 1 hour, capped at midnight
+      const endHour = Math.floor(endMinutes / 60);
+      const endMin = endMinutes % 60;
 
       const date = dates[columnIndex];
       onCreateEvent(
         date,
-        formatTimeValue(time.hour, time.minute),
+        formatTimeValue(startHour, startMinute),
         formatTimeValue(endHour, endMin)
       );
     },
-    [dates, onCreateEvent, hourHeight]
+    [dates, onCreateEvent, hourHeight, clampY]
   );
 
   // Calculate current time indicator position

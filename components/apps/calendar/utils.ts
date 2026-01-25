@@ -336,18 +336,27 @@ export function roundToNearest15(minutes: number): number {
 }
 
 // Convert pixel position to time
+// Returns hour in range [0, 24] where 24:00 represents midnight/end of day
 export function pixelToTime(
   pixelY: number,
   hourHeight: number = 60
 ): { hour: number; minute: number } {
   const totalMinutes = (pixelY / hourHeight) * 60;
-  // Clamp to valid range before rounding to avoid negative values
+  // Clamp to valid range [0, 1440] (0:00 to 24:00)
   const clampedMinutes = Math.max(0, Math.min(24 * 60, totalMinutes));
   const roundedMinutes = roundToNearest15(clampedMinutes);
-  const hour = Math.floor(roundedMinutes / 60);
-  const minute = roundedMinutes % 60;
 
-  return { hour: Math.min(23, Math.max(0, hour)), minute };
+  // Calculate hour and minute
+  let hour = Math.floor(roundedMinutes / 60);
+  let minute = roundedMinutes % 60;
+
+  // Clamp hour to [0, 24], and if hour is 24, minute must be 0
+  hour = Math.min(24, Math.max(0, hour));
+  if (hour === 24) {
+    minute = 0;
+  }
+
+  return { hour, minute };
 }
 
 // Format time for display
