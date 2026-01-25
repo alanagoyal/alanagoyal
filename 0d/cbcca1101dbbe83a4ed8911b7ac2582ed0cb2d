@@ -1,0 +1,23 @@
+components/apps/calendar/year-view.tsx
+  45f7f0557f2ce855 112,114-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "0dcbcca1101dbbe83a4ed8911b7ac2582ed0cb2d",
+  "prompts": {
+    "45f7f0557f2ce855": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6bad394e-5cc0-4851-8eee-84ce20bd4ccf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 1,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
