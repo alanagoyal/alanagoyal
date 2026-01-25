@@ -341,7 +341,9 @@ export function pixelToTime(
   hourHeight: number = 60
 ): { hour: number; minute: number } {
   const totalMinutes = (pixelY / hourHeight) * 60;
-  const roundedMinutes = roundToNearest15(totalMinutes);
+  // Clamp to valid range before rounding to avoid negative values
+  const clampedMinutes = Math.max(0, Math.min(24 * 60, totalMinutes));
+  const roundedMinutes = roundToNearest15(clampedMinutes);
   const hour = Math.floor(roundedMinutes / 60);
   const minute = roundedMinutes % 60;
 
