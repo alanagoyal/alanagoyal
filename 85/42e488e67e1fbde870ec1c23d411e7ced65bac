@@ -1,0 +1,25 @@
+components/apps/calendar/utils.ts
+  45f7f0557f2ce855 339,345,349-359
+components/apps/calendar/time-grid.tsx
+  45f7f0557f2ce855 161-166,175-176,184,195-196,209-214,234,244-245,248-250,252-254,259,263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "8542e488e67e1fbde870ec1c23d411e7ced65bac",
+  "prompts": {
+    "45f7f0557f2ce855": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6bad394e-5cc0-4851-8eee-84ce20bd4ccf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 41,
+      "total_deletions": 31,
+      "accepted_lines": 41,
+      "overriden_lines": 0
+    }
+  }
+}
