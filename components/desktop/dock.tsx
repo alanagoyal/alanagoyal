@@ -252,10 +252,12 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   };
 
   // Get ordered list of apps to render (maintaining order from APPS array)
-  // Render currentAppsToShow directly, plus any apps that are animating out
+  // Render apps that should currently show OR are still in visibleApps (animating out)
+  // Using visibleApps instead of animationStates avoids a one-frame flicker where the
+  // app would disappear before the useEffect sets the "exiting" state
   const currentAppsSet = new Set(currentAppsToShow);
   const appsToRender = APPS.filter(
-    (app) => currentAppsSet.has(app.id) || animationStates[app.id] === "exiting"
+    (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
   );
 
   return (
