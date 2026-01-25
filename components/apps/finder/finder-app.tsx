@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
+import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -150,9 +151,17 @@ function FileIcon({ type, name, icon, className }: { type: "file" | "dir" | "app
       );
     }
     if (type === "app") {
+      // Special handling for Calendar app (dynamic icon showing current date)
+      const cleanName = name.replace(/\.app$/i, '');
+      if (cleanName === "Calendar" || cleanName.toLowerCase() === "calendar") {
+        // Extract size from className (e.g., "w-12" -> 48, "w-10" -> 40, "w-4" -> 16)
+        const sizeMatch = className?.match(/w-(\d+)/);
+        const size = sizeMatch ? parseInt(sizeMatch[1]) * 4 : 48;
+        return <CalendarDockIcon size={size} />;
+      }
+
       // Use the passed icon prop if available, otherwise look up by name
       const appIcon = icon || APPS.find(a => {
-        const cleanName = name.replace(/\.app$/i, '');
         return a.name === cleanName || a.id === cleanName.toLowerCase();
       })?.icon;
       if (appIcon) {

@@ -40,10 +40,13 @@ export function CalendarDockIcon({ size = 48 }: CalendarDockIconProps) {
   const dayOfWeek = format(date, "EEE"); // Short day name (e.g., "Fri")
   const dayNumber = format(date, "d");
 
+  // Scale border radius with size (roughly 22% of size, matching macOS icons)
+  const borderRadius = Math.round(size * 0.22);
+
   return (
     <div
-      className="relative rounded-xl overflow-hidden shadow-md bg-white flex flex-col items-center justify-center"
-      style={{ width: size, height: size, paddingTop: size * 0.04 }}
+      className="relative overflow-hidden shadow-md bg-white flex flex-col items-center justify-center"
+      style={{ width: size, height: size, paddingTop: size * 0.04, borderRadius }}
     >
       {/* Day name in red */}
       <span
