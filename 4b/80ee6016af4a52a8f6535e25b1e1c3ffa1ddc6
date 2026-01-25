@@ -1,0 +1,35 @@
+components/apps/calendar/day-view.tsx
+  45f7f0557f2ce855 17,29,62
+components/apps/calendar/calendar-app.tsx
+  45f7f0557f2ce855 147-149,214-222,224,228,236-245,371,384,408,411-414,421
+components/apps/calendar/utils.ts
+  45f7f0557f2ce855 362-365
+components/apps/calendar/week-view.tsx
+  45f7f0557f2ce855 20,35,126
+components/apps/calendar/calendar-dock-icon.tsx
+  45f7f0557f2ce855 21-22,27,32-37
+components/apps/calendar/event-form.tsx
+  45f7f0557f2ce855 26,43-44,49-52,71,73,105,108-122,140,142,148,174,283-307,356,384
+components/apps/calendar/time-grid.tsx
+  45f7f0557f2ce855 112,126,209-214,246-247,249-253,394-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "4b80ee6016af4a52a8f6535e25b1e1c3ffa1ddc6",
+  "prompts": {
+    "45f7f0557f2ce855": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6bad394e-5cc0-4851-8eee-84ce20bd4ccf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 161,
+      "total_deletions": 52,
+      "accepted_lines": 129,
+      "overriden_lines": 0
+    }
+  }
+}
