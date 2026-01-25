@@ -1,0 +1,23 @@
+README.md
+  2adf0bfb312db65f 43-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "696182fe9161968b2cd62bfdd5b8568e3979b8ce",
+  "prompts": {
+    "2adf0bfb312db65f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a81e7cb-ce78-4856-9e5b-dc2e71676055",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 305,
+      "total_deletions": 97,
+      "accepted_lines": 208,
+      "overriden_lines": 0
+    }
+  }
+}
