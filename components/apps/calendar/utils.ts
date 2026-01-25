@@ -17,8 +17,35 @@ import {
   isSameMonth,
   isToday,
   parseISO,
+  getWeek,
 } from "date-fns";
 import { CalendarEvent, ViewType } from "./types";
+
+// Date night restaurants (cycled through on Saturdays)
+const DATE_NIGHT_RESTAURANTS = [
+  { name: "3rd Cousin", address: "919 Cortland Ave, SF" },
+  { name: "Foreign Cinema", address: "2534 Mission St, SF" },
+  { name: "Flour + Water", address: "2401 Harrison St, SF" },
+  { name: "Frances", address: "3870 17th St, SF" },
+  { name: "Friends Only", address: "1501 California St, SF" },
+  { name: "Itria", address: "3266 24th St, SF" },
+  { name: "Kokkari", address: "200 Jackson St, SF" },
+  { name: "Lupa Trattoria", address: "4109 24th St, SF" },
+  { name: "La Ciccia", address: "291 30th St, SF" },
+  { name: "Rich Table", address: "199 Gough St, SF" },
+  { name: "Routier", address: "2801 California St, SF" },
+  { name: "Sorrel", address: "3228 Sacramento St, SF" },
+  { name: "Verjus", address: "550 Washington St, SF" },
+  { name: "Via Aurelia", address: "300 Toni Stone Xing, SF" },
+  { name: "Zuni Cafe", address: "1658 Market St, SF" },
+];
+
+// Get a consistent restaurant for a given Saturday (based on week number)
+function getRestaurantForSaturday(date: Date): (typeof DATE_NIGHT_RESTAURANTS)[0] {
+  const weekNumber = getWeek(date);
+  const index = weekNumber % DATE_NIGHT_RESTAURANTS.length;
+  return DATE_NIGHT_RESTAURANTS[index];
+}
 
 // Generate sample events for any day (on-demand, no pre-generation needed)
 function generateSampleEventsForDay(day: Date): CalendarEvent[] {
@@ -87,7 +114,7 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
     });
     events.push({
       id: `sample-meals-${dateStr}`,
-      title: "meals",
+      title: "dinner",
       startDate: dateStr,
       endDate: dateStr,
       startTime: "18:30",
@@ -118,6 +145,7 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
     });
 
     if (isSaturday) {
+      const restaurant = getRestaurantForSaturday(day);
       events.push({
         id: `sample-datenight-${dateStr}`,
         title: "date night",
@@ -127,11 +155,12 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
         endTime: "21:00",
         isAllDay: false,
         calendarId: "meals",
+        location: `${restaurant.name.toLowerCase()}, ${restaurant.address.toLowerCase()}`,
       });
     } else if (isSunday) {
       events.push({
         id: `sample-meals-sunday-${dateStr}`,
-        title: "meals",
+        title: "dinner",
         startDate: dateStr,
         endDate: dateStr,
         startTime: "18:30",
