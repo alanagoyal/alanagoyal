@@ -86,9 +86,9 @@ export function EventForm({
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
   const calendarDropdownRef = useRef<HTMLDivElement>(null);
   const [calendarId, setCalendarId] = useState(
-    calendars.find((c) => c.id === "dinner")?.id ||
+    calendars.find((c) => c.id === "meetings")?.id ||
     calendars.find((c) => c.id !== "holidays")?.id ||
-    calendars[0]?.id || "dinner"
+    calendars[0]?.id || "meetings"
   );
 
   // Close calendar dropdown when clicking outside
@@ -133,9 +133,9 @@ export function EventForm({
         setEndTime(initialEndTime || "10:00");
         setIsAllDay(false);
         setCalendarId(
-          calendars.find((c) => c.id === "dinner")?.id ||
+          calendars.find((c) => c.id === "meetings")?.id ||
           calendars.find((c) => c.id !== "holidays")?.id ||
-          calendars[0]?.id || "dinner"
+          calendars[0]?.id || "meetings"
         );
       }
     }

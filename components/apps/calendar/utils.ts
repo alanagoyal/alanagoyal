@@ -86,14 +86,14 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
       calendarId: "meetings",
     });
     events.push({
-      id: `sample-dinner-${dateStr}`,
-      title: "dinner",
+      id: `sample-meals-${dateStr}`,
+      title: "meals",
       startDate: dateStr,
       endDate: dateStr,
       startTime: "18:30",
       endTime: "19:30",
       isAllDay: false,
-      calendarId: "dinner",
+      calendarId: "meals",
     });
   } else {
     events.push({
@@ -126,18 +126,18 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
         startTime: "18:30",
         endTime: "21:00",
         isAllDay: false,
-        calendarId: "dinner",
+        calendarId: "meals",
       });
     } else if (isSunday) {
       events.push({
-        id: `sample-dinner-sunday-${dateStr}`,
-        title: "dinner",
+        id: `sample-meals-sunday-${dateStr}`,
+        title: "meals",
         startDate: dateStr,
         endDate: dateStr,
         startTime: "18:30",
         endTime: "20:00",
         isAllDay: false,
-        calendarId: "dinner",
+        calendarId: "meals",
       });
     }
   }

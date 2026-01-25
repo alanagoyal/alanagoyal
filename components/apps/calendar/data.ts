@@ -5,7 +5,7 @@ export const DEFAULT_CALENDARS: Calendar[] = [
   {
     id: "holidays",
     name: "holidays",
-    color: "#A0A0A5", // gray
+    color: "#5B9BD5", // blue
   },
   {
     id: "exercise",
@@ -23,8 +23,8 @@ export const DEFAULT_CALENDARS: Calendar[] = [
     color: "#D4B84A", // muted yellow
   },
   {
-    id: "dinner",
-    name: "dinner",
+    id: "meals",
+    name: "meals",
     color: "#5BBF72", // muted green
   },
 ];
