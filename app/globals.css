@@ -241,11 +241,11 @@ html, body {
   0% {
     transform: translateY(100%);
   }
-  35% {
-    transform: translateY(-35%);
+  55% {
+    transform: translateY(-15%);
   }
-  85% {
-    transform: translateY(8%);
+  80% {
+    transform: translateY(5%);
   }
   100% {
     transform: translateY(0);
@@ -254,29 +254,17 @@ html, body {
 
 @keyframes dockExit {
   0% {
-    transform: translateY(0);
-    width: 56px;
-    opacity: 1;
-    margin: 0;
-    padding: 4px;
-  }
-  50% {
-    transform: translateY(80%);
-    opacity: 0;
+    transform: translateY(0) scale(1);
   }
   100% {
-    transform: translateY(100%);
-    width: 0;
-    opacity: 0;
-    margin: 0;
-    padding: 0;
+    transform: translateY(100%) scale(0.8);
   }
 }
 
 .animate-dock-enter {
-  animation: dockEnter 0.9s ease-out forwards;
+  animation: dockEnter 0.7s ease-out forwards;
 }
 
 .animate-dock-exit {
-  animation: dockExit 0.4s ease-in-out forwards;
+  animation: dockExit 0.35s ease-in forwards;
 }

@@ -47,6 +47,11 @@ function DockTooltip({ label }: { label: string }) {
 // Animation states for dock icons
 type AnimationState = "entering" | "exiting" | "stable";
 
+// Get default dock apps (those that should show by default)
+const getDefaultDockApps = () => {
+  return APPS.filter((app) => app.showOnDockByDefault !== false).map((app) => app.id);
+};
+
 export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   const {
     openWindow,
@@ -59,10 +64,22 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
   // Track which apps are visible and their animation states
-  const [visibleApps, setVisibleApps] = useState<Set<string>>(new Set());
-  const [animationStates, setAnimationStates] = useState<Record<string, AnimationState>>({});
-  const initialRenderRef = useRef(true);
+  // Initialize with default dock apps so they don't animate on page load
+  const [visibleApps, setVisibleApps] = useState<Set<string>>(
+    () => new Set(getDefaultDockApps())
+  );
+  const [animationStates, setAnimationStates] = useState<Record<string, AnimationState>>(() => {
+    const states: Record<string, AnimationState> = {};
+    getDefaultDockApps().forEach((appId) => {
+      states[appId] = "stable";
+    });
+    return states;
+  });
   const exitingAppsRef = useRef<Set<string>>(new Set());
+
+  // Track apps that existed on initial mount - these skip enter animation on first appearance
+  // but will animate if closed and reopened (removed from this set on exit)
+  const initialAppsRef = useRef<Set<string> | null>(null);
 
   // Calculate which apps should currently be in the dock
   const currentAppsToShow = APPS.filter((app) => {
@@ -70,26 +87,57 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
     return showByDefault || hasOpenWindows(app.id);
   }).map((app) => app.id);
 
+  // Serialize for stable dependency comparison
+  const currentAppsKey = currentAppsToShow.join(",");
+
+  // Capture initial apps on first render (includes restored windows from sessionStorage)
+  // This runs during render to capture state before the first effect
+  if (initialAppsRef.current === null) {
+    initialAppsRef.current = new Set(currentAppsToShow);
+  }
+
   // Handle app visibility changes with animations
+  // State machine: apps transition through entering -> stable -> exiting -> removed
   useEffect(() => {
     const currentApps = new Set(currentAppsToShow);
 
-    if (initialRenderRef.current) {
-      // On initial render, all apps are stable (no animation)
-      initialRenderRef.current = false;
-      setVisibleApps(currentApps);
-      const states: Record<string, AnimationState> = {};
-      currentApps.forEach((appId) => {
-        states[appId] = "stable";
+    // Find apps from initial mount that need to be added with stable state (no animation)
+    // This handles restored windows from sessionStorage on page refresh
+    const stableApps: string[] = [];
+    currentApps.forEach((appId) => {
+      if (
+        !visibleApps.has(appId) &&
+        initialAppsRef.current?.has(appId)
+      ) {
+        stableApps.push(appId);
+      }
+    });
+
+    // Add stable apps immediately without animation
+    if (stableApps.length > 0) {
+      setVisibleApps((prev) => {
+        const next = new Set(prev);
+        stableApps.forEach((appId) => next.add(appId));
+        return next;
       });
-      setAnimationStates(states);
-      return;
+      setAnimationStates((prev) => {
+        const next = { ...prev };
+        stableApps.forEach((appId) => {
+          next[appId] = "stable";
+        });
+        return next;
+      });
     }
 
     // Find apps that are entering (new apps not in visible set)
+    // Exclude apps that existed on initial mount - they were handled above as stable
     const enteringApps: string[] = [];
     currentApps.forEach((appId) => {
-      if (!visibleApps.has(appId) && !exitingAppsRef.current.has(appId)) {
+      if (
+        !visibleApps.has(appId) &&
+        !exitingAppsRef.current.has(appId) &&
+        !initialAppsRef.current?.has(appId)
+      ) {
         enteringApps.push(appId);
       }
     });
@@ -137,7 +185,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
-        }, 900);
+        }, 700);
       }
 
       // After animation, remove exiting apps from visible set
@@ -148,6 +196,8 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             exitingApps.forEach((appId) => {
               next.delete(appId);
               exitingAppsRef.current.delete(appId);
+              // Also remove from initialAppsRef so app will animate when reopened
+              initialAppsRef.current?.delete(appId);
             });
             return next;
           });
@@ -158,10 +208,11 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
-        }, 400);
+        }, 350);
       }
     }
-  }, [currentAppsToShow.join(","), visibleApps]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- visibleApps is a Set; we track changes via currentAppsKey
+  }, [currentAppsKey]);
 
   const handleAppClick = (appId: string) => {
     // Special handling for Finder to reset tab to recents
@@ -201,7 +252,13 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   };
 
   // Get ordered list of apps to render (maintaining order from APPS array)
-  const appsToRender = APPS.filter((app) => visibleApps.has(app.id));
+  // Render apps that should currently show OR are still in visibleApps (animating out)
+  // Using visibleApps instead of animationStates avoids a one-frame flicker where the
+  // app would disappear before the useEffect sets the "exiting" state
+  const currentAppsSet = new Set(currentAppsToShow);
+  const appsToRender = APPS.filter(
+    (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
+  );
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
