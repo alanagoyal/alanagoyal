@@ -1,0 +1,27 @@
+components/apps/calendar/data.ts
+  45f7f0557f2ce855 8,26-27
+components/apps/calendar/event-form.tsx
+  45f7f0557f2ce855 89,91,136,138
+components/apps/calendar/utils.ts
+  45f7f0557f2ce855 89-90,96,129,133-134,140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "c20f509823f5a36318b8771a65fa3ba713683006",
+  "prompts": {
+    "45f7f0557f2ce855": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6bad394e-5cc0-4851-8eee-84ce20bd4ccf",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 22,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
