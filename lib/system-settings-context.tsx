@@ -28,38 +28,48 @@ const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
 const OS_VERSION_KEY = "system-os-version";
 
+// Helper to load settings from localStorage synchronously
+function getInitialSettings() {
+  if (typeof window === "undefined") {
+    return {
+      brightness: 100,
+      airdropMode: "contacts" as AirdropMode,
+      focusMode: "off" as FocusMode,
+      osVersionId: DEFAULT_OS_VERSION_ID,
+    };
+  }
+
+  const storedBrightness = localStorage.getItem(BRIGHTNESS_KEY);
+  const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
+  const storedFocus = localStorage.getItem(FOCUS_KEY);
+  const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
+
+  return {
+    brightness: storedBrightness ? parseFloat(storedBrightness) : 100,
+    airdropMode: (storedAirdrop === "contacts" || storedAirdrop === "everyone" ? storedAirdrop : "contacts") as AirdropMode,
+    focusMode: (storedFocus === "off" || storedFocus === "doNotDisturb" || storedFocus === "sleep" || storedFocus === "reduceInterruptions" ? storedFocus : "off") as FocusMode,
+    osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
+  };
+}
+
 export function SystemSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [brightness, setBrightnessState] = useState(100);
+  // Cache initial settings to avoid multiple localStorage reads
+  const initialSettingsRef = React.useRef<ReturnType<typeof getInitialSettings> | null>(null);
+  if (initialSettingsRef.current === null) {
+    initialSettingsRef.current = getInitialSettings();
+  }
+  const initial = initialSettingsRef.current;
+
+  // Load all settings synchronously from localStorage to prevent flash on hydration
+  const [brightness, setBrightnessState] = useState(initial.brightness);
   const [volume, setVolumeState] = useState(50);
-  const [airdropMode, setAirdropModeState] = useState<AirdropMode>("contacts");
-  const [focusMode, setFocusModeState] = useState<FocusMode>("off");
-  const [osVersionId, setOSVersionIdState] = useState<string>(DEFAULT_OS_VERSION_ID);
+  const [airdropMode, setAirdropModeState] = useState<AirdropMode>(initial.airdropMode);
+  const [focusMode, setFocusModeState] = useState<FocusMode>(initial.focusMode);
+  const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
 
-  // Load settings from localStorage on mount
+  // Load volume from soundEffects on mount (can't be done synchronously)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedBrightness = localStorage.getItem(BRIGHTNESS_KEY);
-      if (storedBrightness) {
-        setBrightnessState(parseFloat(storedBrightness));
-      }
-      // Volume is loaded from soundEffects
-      setVolumeState(soundEffects.getVolume() * 100);
-
-      const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
-      if (storedAirdrop === "contacts" || storedAirdrop === "everyone") {
-        setAirdropModeState(storedAirdrop);
-      }
-
-      const storedFocus = localStorage.getItem(FOCUS_KEY);
-      if (storedFocus === "off" || storedFocus === "doNotDisturb" || storedFocus === "sleep" || storedFocus === "reduceInterruptions") {
-        setFocusModeState(storedFocus);
-      }
-
-      const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
-      if (storedOSVersion) {
-        setOSVersionIdState(storedOSVersion);
-      }
-    }
+    setVolumeState(soundEffects.getVolume() * 100);
   }, []);
 
   const setBrightness = useCallback((value: number) => {

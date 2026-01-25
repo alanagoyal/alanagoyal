@@ -97,40 +97,47 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab>("recents");
-  // Track whether URL-based TextEdit initialization is complete
-  // If no initialTextEditFile, consider it already initialized
-  const [textEditInitialized, setTextEditInitialized] = useState(!initialTextEditFile);
-
   // Get TextEdit windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
-  const isTextEditOpen = hasOpenWindows("textedit");
 
-  // Load TextEdit file from URL on mount (only once)
+  // Track whether we've processed the URL file parameter
+  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
+
+  // Memoize the check for existing window to avoid effect re-runs
+  const existingTextEditWindow = initialTextEditFile
+    ? textEditWindows.find((w) => w.instanceId === initialTextEditFile)
+    : null;
+  const existingWindowId = existingTextEditWindow?.id;
+
+  // Open TextEdit file from URL on mount (only once)
   useEffect(() => {
-    if (textEditInitialized) return;
-    if (!initialTextEditFile) {
-      setTextEditInitialized(true);
+    if (urlFileProcessed || !initialTextEditFile) return;
+
+    if (existingWindowId) {
+      // Window already exists from sessionStorage, just focus it
+      focusMultiWindow(existingWindowId);
+      setUrlFileProcessed(true);
       return;
     }
 
-    // Check if there's cached content, otherwise fetch
+    // Window doesn't exist, need to create it
     const cachedContent = getTextEditContent(initialTextEditFile);
     if (cachedContent !== undefined) {
       openMultiWindow("textedit", initialTextEditFile, {
         filePath: initialTextEditFile,
         content: cachedContent,
       });
-      setTextEditInitialized(true);
+      setUrlFileProcessed(true);
     } else {
       fetchFileContent(initialTextEditFile).then((content) => {
         openMultiWindow("textedit", initialTextEditFile, {
           filePath: initialTextEditFile,
           content,
         });
-        setTextEditInitialized(true);
+        setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, textEditInitialized, openMultiWindow]);
+  }, [initialTextEditFile, urlFileProcessed, existingWindowId, focusMultiWindow, openMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
@@ -371,9 +378,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
           </Window>
 
           {/* TextEdit - multi-window support */}
-          {/* Don't render until URL-based initialization is complete to prevent flash */}
           {/* On small screens, only show the topmost window */}
-          {textEditInitialized && textEditWindows
+          {textEditWindows
             .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
             .sort((a, b) => b.zIndex - a.zIndex)
             .slice(0, isMobile ? 1 : undefined)
