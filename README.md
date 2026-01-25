@@ -40,6 +40,15 @@ a macos sierra 10.12 themed desktop with:
 - browse local files and github repositories
 - launch apps from applications folder
 
+**calendar** - apple calendar clone
+- day, week, month, and year views with smooth navigation
+- sample events: exercise, focus time, meetings, dinners
+- date night saturdays cycling through sf restaurants
+- create, edit, and delete your own events
+- drag-to-create events in day/week views
+- holidays automatically displayed
+- data persisted in localstorage
+
 **photos** - apple photos clone
 - photo library with grid view and full-screen viewer
 - collections: flowers, food, friends
