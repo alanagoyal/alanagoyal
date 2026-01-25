@@ -1,0 +1,23 @@
+components/apps/calendar/month-view.tsx
+  2adf0bfb312db65f 122-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "91819efd80a58d7e4e328f9d419ead2d99a920d5",
+  "prompts": {
+    "2adf0bfb312db65f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a81e7cb-ce78-4856-9e5b-dc2e71676055",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
