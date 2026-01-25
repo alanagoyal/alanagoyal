@@ -18,18 +18,23 @@ export function CalendarDockIcon({ size = 48 }: CalendarDockIconProps) {
     tomorrow.setHours(0, 0, 0, 0);
     const msUntilMidnight = tomorrow.getTime() - now.getTime();
 
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
     // Update immediately, then at midnight
     const timeout = setTimeout(() => {
       setDate(new Date());
       // Set interval for subsequent days
-      const interval = setInterval(() => {
+      intervalId = setInterval(() => {
         setDate(new Date());
       }, 24 * 60 * 60 * 1000);
-
-      return () => clearInterval(interval);
     }, msUntilMidnight);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, []);
 
   const dayOfWeek = format(date, "EEE"); // Short day name (e.g., "Fri")

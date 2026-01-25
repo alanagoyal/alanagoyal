@@ -109,6 +109,7 @@ interface TimeGridProps {
   onScrollChange?: (scrollTop: number) => void;
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
+  onEditEvent?: (eventId: string) => void;
 }
 
 export function TimeGrid({
@@ -122,6 +123,7 @@ export function TimeGrid({
   onScrollChange,
   selectedEventId,
   onSelectEvent,
+  onEditEvent,
 }: TimeGridProps) {
   const hours = getDayHours();
   const gridRef = useRef<HTMLDivElement>(null);
@@ -204,6 +206,12 @@ export function TimeGrid({
           }
         }
 
+        // Clamp hour to valid range (24:00 = midnight/end of day)
+        endTime.hour = Math.min(24, endTime.hour);
+        if (endTime.hour === 24) {
+          endTime.minute = 0;
+        }
+
         const date = dates[dragState.columnIndex];
         onCreateEvent?.(
           date,
@@ -235,14 +243,20 @@ export function TimeGrid({
       const time = pixelToTime(relativeY, hourHeight);
 
       const endMinutes = time.hour * 60 + time.minute + 60; // Default 1 hour
-      const endHour = Math.floor(endMinutes / 60);
-      const endMin = endMinutes % 60;
+      let endHour = Math.floor(endMinutes / 60);
+      let endMin = endMinutes % 60;
+
+      // Clamp to end of day (24:00 = midnight)
+      if (endHour > 24 || (endHour === 24 && endMin > 0)) {
+        endHour = 24;
+        endMin = 0;
+      }
 
       const date = dates[columnIndex];
       onCreateEvent(
         date,
         formatTimeValue(time.hour, time.minute),
-        formatTimeValue(Math.min(23, endHour), endMin)
+        formatTimeValue(endHour, endMin)
       );
     },
     [dates, onCreateEvent, hourHeight]
@@ -375,6 +389,12 @@ export function TimeGrid({
                         e.stopPropagation();
                         if (isUserEvent) {
                           onSelectEvent?.(isSelected ? null : event.id);
+                        }
+                      }}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (isUserEvent) {
+                          onEditEvent?.(event.id);
                         }
                       }}
                       onMouseDown={(e) => e.stopPropagation()}

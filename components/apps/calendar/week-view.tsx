@@ -17,6 +17,7 @@ interface WeekViewProps {
   onScrollChange?: (scrollTop: number) => void;
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
+  onEditEvent?: (eventId: string) => void;
   isMobile?: boolean;
   onNavigate?: (direction: "prev" | "next") => void;
   onToday?: () => void;
@@ -31,6 +32,7 @@ export function WeekView({
   onScrollChange,
   selectedEventId,
   onSelectEvent,
+  onEditEvent,
   isMobile = false,
   onNavigate,
   onToday,
@@ -121,6 +123,7 @@ export function WeekView({
         onScrollChange={onScrollChange}
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
+        onEditEvent={onEditEvent}
       />
     </div>
   );

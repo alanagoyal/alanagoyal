@@ -23,6 +23,7 @@ interface EventFormProps {
   initialStartTime?: string;
   initialEndTime?: string;
   container?: HTMLElement | null;
+  eventToEdit?: CalendarEvent | null;
 }
 
 // Generate time options in 15-minute increments
@@ -39,12 +40,16 @@ function generateTimeOptions(): string[] {
 }
 
 const TIME_OPTIONS = generateTimeOptions();
+// End time options include 24:00 (midnight/end of day)
+const END_TIME_OPTIONS = [...TIME_OPTIONS, "24:00"];
 
 // Format time for display (12-hour format)
 function formatTimeDisplay(time: string): string {
   const [hour, minute] = time.split(":").map(Number);
-  const h = hour % 12 || 12;
-  const ampm = hour < 12 ? "AM" : "PM";
+  // Handle 24:00 as midnight (end of day)
+  const displayHour = hour === 24 ? 0 : hour;
+  const h = displayHour % 12 || 12;
+  const ampm = displayHour < 12 ? "AM" : "PM";
   return `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
 }
 
@@ -63,7 +68,9 @@ export function EventForm({
   initialStartTime,
   initialEndTime,
   container,
+  eventToEdit,
 }: EventFormProps) {
+  const isEditing = !!eventToEdit;
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState(
@@ -95,35 +102,50 @@ export function EventForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset form when dialog opens with new initial values
+  // Reset form when dialog opens with new initial values or event to edit
   useEffect(() => {
     if (open) {
-      setTitle("");
-      setLocation("");
-      setShowLocationInput(false);
-      setShowCalendarDropdown(false);
-      setStartDate(
-        initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
-      );
-      setEndDate(
-        initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
-      );
-      setStartTime(initialStartTime || "09:00");
-      setEndTime(initialEndTime || "10:00");
-      setIsAllDay(false);
-      setCalendarId(
-        calendars.find((c) => c.id === "dinner")?.id ||
-        calendars.find((c) => c.id !== "holidays")?.id ||
-        calendars[0]?.id || "dinner"
-      );
+      if (eventToEdit) {
+        // Editing existing event - pre-populate form
+        setTitle(eventToEdit.title);
+        setLocation(eventToEdit.location || "");
+        setShowLocationInput(!!eventToEdit.location);
+        setShowCalendarDropdown(false);
+        setStartDate(eventToEdit.startDate);
+        setEndDate(eventToEdit.endDate);
+        setStartTime(eventToEdit.startTime || "09:00");
+        setEndTime(eventToEdit.endTime || "10:00");
+        setIsAllDay(eventToEdit.isAllDay);
+        setCalendarId(eventToEdit.calendarId);
+      } else {
+        // Creating new event
+        setTitle("");
+        setLocation("");
+        setShowLocationInput(false);
+        setShowCalendarDropdown(false);
+        setStartDate(
+          initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+        );
+        setEndDate(
+          initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+        );
+        setStartTime(initialStartTime || "09:00");
+        setEndTime(initialEndTime || "10:00");
+        setIsAllDay(false);
+        setCalendarId(
+          calendars.find((c) => c.id === "dinner")?.id ||
+          calendars.find((c) => c.id !== "holidays")?.id ||
+          calendars[0]?.id || "dinner"
+        );
+      }
     }
-  }, [open, initialDate, initialStartTime, initialEndTime, calendars]);
+  }, [open, initialDate, initialStartTime, initialEndTime, calendars, eventToEdit]);
 
   const handleSave = () => {
     const eventTitle = title.trim() || "New Event";
 
     const event: CalendarEvent = {
-      id: generateEventId(),
+      id: eventToEdit?.id || generateEventId(),
       title: eventTitle,
       startDate,
       endDate: isAllDay ? endDate : startDate,
@@ -149,7 +171,7 @@ export function EventForm({
         className="sm:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
         aria-describedby={undefined}
       >
-        <DialogTitle className="sr-only">Create New Event</DialogTitle>
+        <DialogTitle className="sr-only">{isEditing ? "Edit Event" : "Create New Event"}</DialogTitle>
         {/* Title input - inline style */}
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center gap-2">
@@ -258,7 +280,31 @@ export function EventForm({
               {!isAllDay && (
                 <select
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => {
+                    const newStartTime = e.target.value;
+
+                    // Calculate current duration in minutes
+                    const [oldStartH, oldStartM] = startTime.split(":").map(Number);
+                    const [oldEndH, oldEndM] = endTime.split(":").map(Number);
+                    const durationMinutes = (oldEndH * 60 + oldEndM) - (oldStartH * 60 + oldStartM);
+
+                    // Calculate new end time preserving duration
+                    const [newStartH, newStartM] = newStartTime.split(":").map(Number);
+                    const newEndMinutes = newStartH * 60 + newStartM + durationMinutes;
+                    let newEndH = Math.floor(newEndMinutes / 60);
+                    let newEndM = newEndMinutes % 60;
+
+                    // Clamp to end of day (24:00 max)
+                    if (newEndH > 24 || (newEndH === 24 && newEndM > 0)) {
+                      newEndH = 24;
+                      newEndM = 0;
+                    }
+
+                    const newEndTime = `${newEndH.toString().padStart(2, "0")}:${newEndM.toString().padStart(2, "0")}`;
+
+                    setStartTime(newStartTime);
+                    setEndTime(newEndTime);
+                  }}
                   className={cn(
                     "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
                     "focus:outline-none focus:ring-2 focus:ring-ring"
@@ -307,7 +353,7 @@ export function EventForm({
                       "focus:outline-none focus:ring-2 focus:ring-ring"
                     )}
                   >
-                    {TIME_OPTIONS.filter((time) => time > startTime).map(
+                    {END_TIME_OPTIONS.filter((time) => time > startTime).map(
                       (time) => (
                         <option key={time} value={time}>
                           {formatTimeDisplay(time)}
@@ -335,7 +381,7 @@ export function EventForm({
             onClick={handleSave}
             className="bg-muted hover:bg-muted/80 text-foreground"
           >
-            Add
+            {isEditing ? "Save" : "Add"}
           </Button>
         </div>
       </DialogContent>

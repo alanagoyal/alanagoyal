@@ -359,8 +359,10 @@ export function formatTime(hour: number, minute: number): string {
 // Format event time string (HH:mm) to 12-hour format (e.g., "7am", "1:30pm")
 export function formatEventTime(timeStr: string): string {
   const [hour, minute] = timeStr.split(":").map(Number);
-  const h = hour % 12 || 12;
-  const ampm = hour < 12 ? "am" : "pm";
+  // Handle 24:00 as midnight (end of day)
+  const displayHour = hour === 24 ? 0 : hour;
+  const h = displayHour % 12 || 12;
+  const ampm = displayHour < 12 ? "am" : "pm";
   if (minute === 0) {
     return `${h}${ampm}`;
   }
