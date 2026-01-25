@@ -109,7 +109,11 @@ export function YearView({
             <div
               key={year}
               ref={(el) => {
-                if (el) yearRefs.current.set(year, el);
+                if (el) {
+                  yearRefs.current.set(year, el);
+                } else {
+                  yearRefs.current.delete(year);
+                }
               }}
             >
               {/* Year label */}
