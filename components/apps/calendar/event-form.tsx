@@ -85,7 +85,6 @@ export function EventForm({
   const [startTime, setStartTime] = useState(initialStartTime || "09:00");
   const [endTime, setEndTime] = useState(initialEndTime || "10:00");
   const [isAllDay, setIsAllDay] = useState(false);
-  const [showLocationInput, setShowLocationInput] = useState(false);
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
   const calendarDropdownRef = useRef<HTMLDivElement>(null);
   const [calendarId, setCalendarId] = useState(
@@ -112,7 +111,6 @@ export function EventForm({
         // Editing existing event - pre-populate form
         setTitle(eventToEdit.title);
         setLocation(eventToEdit.location || "");
-        setShowLocationInput(!!eventToEdit.location);
         setShowCalendarDropdown(false);
         setStartDate(eventToEdit.startDate);
         setEndDate(eventToEdit.endDate);
@@ -124,7 +122,6 @@ export function EventForm({
         // Creating new event
         setTitle("");
         setLocation("");
-        setShowLocationInput(false);
         setShowCalendarDropdown(false);
         setStartDate(
           initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
@@ -233,26 +230,16 @@ export function EventForm({
 
         {/* Location */}
         <div className="px-4 py-2 border-t border-border/50">
-          {showLocationInput ? (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Add Location"
-                className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowLocationInput(true)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <MapPin className="w-4 h-4" />
-              <span>Add Location</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Add Location"
+              className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground"
+            />
+          </div>
         </div>
 
         {/* Date/Time section */}
