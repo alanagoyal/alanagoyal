@@ -377,16 +377,16 @@ export function EventForm({
         {/* Action buttons */}
         <div className="flex justify-end gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
           <Button
-            variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
+            className="bg-muted hover:bg-muted/80 text-foreground"
           >
             Cancel
           </Button>
           <Button
+            variant="outline"
             size="sm"
             onClick={handleSave}
-            className="bg-muted hover:bg-muted/80 text-foreground"
           >
             {isEditing ? "Save" : "Add"}
           </Button>
