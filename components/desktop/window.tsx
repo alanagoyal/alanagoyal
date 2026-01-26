@@ -96,14 +96,27 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
       ref={windowRef}
       className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
       style={windowStyle}
-      onMouseDown={() => {
-        wasFocusedBeforeMouseDown.current = isFocused;
+      onMouseDownCapture={(e) => {
+        // Capture mousedown before it reaches children
+        const wasAlreadyFocused = isFocused;
+        wasFocusedBeforeMouseDown.current = wasAlreadyFocused;
+
+        // Always focus the window
         focusWindow(appId);
         onFocus?.();
+
+        // If window wasn't focused, don't let the event reach children
+        // Exception: window controls and resize handles should always work
+        if (!wasAlreadyFocused) {
+          const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
+          const isResizeHandle = (e.target as HTMLElement).closest("[class*='cursor-']");
+          if (!isWindowControl && !isResizeHandle) {
+            e.stopPropagation();
+          }
+        }
       }}
       onClickCapture={(e) => {
-        // If window wasn't focused before this click, only focus - don't trigger actions
-        // Exception: always allow window control buttons
+        // Also capture click events for any handlers that use onClick instead of onMouseDown
         if (!wasFocusedBeforeMouseDown.current) {
           const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
           if (!isWindowControl) {

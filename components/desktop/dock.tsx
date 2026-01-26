@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { APPS, getAppById } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
+import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 
 interface DockProps {
   onTrashClick?: () => void;
@@ -284,13 +285,17 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
                 <DockTooltip label={app.name} />
               )}
               <div className="w-12 h-12 relative">
-                <Image
-                  src={app.icon}
-                  alt={app.name}
-                  width={48}
-                  height={48}
-                  className="rounded-xl shadow-md"
-                />
+                {app.id === "calendar" ? (
+                  <CalendarDockIcon size={48} />
+                ) : (
+                  <Image
+                    src={app.icon}
+                    alt={app.name}
+                    width={48}
+                    height={48}
+                    className="rounded-xl shadow-md"
+                  />
+                )}
               </div>
               <div
                 className={cn(

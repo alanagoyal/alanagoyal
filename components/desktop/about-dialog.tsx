@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { getAppById } from "@/lib/app-config";
 import { WindowControls } from "@/components/window-controls";
+import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 
 interface AboutDialogProps {
   isOpen: boolean;
@@ -160,13 +161,17 @@ export function AboutDialog({
         {/* Content */}
         <div className="flex flex-col items-center gap-3 px-6 pb-6 pt-2 text-center">
           {app && (
-            <Image
-              src={app.icon}
-              alt={app.name}
-              width={64}
-              height={64}
-              className="rounded-xl shadow-md"
-            />
+            appId === "calendar" ? (
+              <CalendarDockIcon size={64} />
+            ) : (
+              <Image
+                src={app.icon}
+                alt={app.name}
+                width={64}
+                height={64}
+                className="rounded-xl shadow-md"
+              />
+            )
           )}
 
           <div className="flex flex-col items-center gap-0.5">

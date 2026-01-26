@@ -46,6 +46,17 @@ export const APPS: AppConfig[] = [
     menuBarTitle: "Photos",
   },
   {
+    id: "calendar",
+    name: "Calendar",
+    icon: "/calendar-icon",
+    description: "Calendar and events",
+    accentColor: "#FF3B30",
+    defaultPosition: { x: 170, y: 60 },
+    defaultSize: { width: 900, height: 700 },
+    minSize: { width: 700, height: 500 },
+    menuBarTitle: "Calendar",
+  },
+  {
     id: "iterm",
     name: "iTerm",
     icon: "/iterm.svg",
