@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { addDays } from "date-fns";
 import { format, parseISO } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
 import { generateEventId } from "./data";
@@ -20,6 +21,7 @@ interface EventFormProps {
   onSave: (event: CalendarEvent) => void;
   calendars: Calendar[];
   initialDate?: Date;
+  initialEndDate?: Date;
   initialStartTime?: string;
   initialEndTime?: string;
   container?: HTMLElement | null;
@@ -65,6 +67,7 @@ export function EventForm({
   onSave,
   calendars,
   initialDate,
+  initialEndDate,
   initialStartTime,
   initialEndTime,
   container,
@@ -77,7 +80,7 @@ export function EventForm({
     initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
   );
   const [endDate, setEndDate] = useState(
-    initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+    (initialEndDate || initialDate) ? format(initialEndDate || initialDate!, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
   );
   const [startTime, setStartTime] = useState(initialStartTime || "09:00");
   const [endTime, setEndTime] = useState(initialEndTime || "10:00");
@@ -127,7 +130,7 @@ export function EventForm({
           initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
         );
         setEndDate(
-          initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+          (initialEndDate || initialDate) ? format(initialEndDate || initialDate!, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
         );
         setStartTime(initialStartTime || "09:00");
         setEndTime(initialEndTime || "10:00");
@@ -139,16 +142,20 @@ export function EventForm({
         );
       }
     }
-  }, [open, initialDate, initialStartTime, initialEndTime, calendars, eventToEdit]);
+  }, [open, initialDate, initialEndDate, initialStartTime, initialEndTime, calendars, eventToEdit]);
 
   const handleSave = () => {
     const eventTitle = title.trim() || "New Event";
+
+    // For timed events ending at 24:00, keep the time as 24:00 for correct rendering
+    // but set endDate to startDate (24:00 means end of the start day, not next day)
+    const eventEndDate = (!isAllDay && endTime === "24:00") ? startDate : endDate;
 
     const event: CalendarEvent = {
       id: eventToEdit?.id || generateEventId(),
       title: eventTitle,
       startDate,
-      endDate: isAllDay ? endDate : startDate,
+      endDate: eventEndDate,
       startTime: isAllDay ? undefined : startTime,
       endTime: isAllDay ? undefined : endTime,
       isAllDay,
@@ -339,7 +346,7 @@ export function EventForm({
                 <>
                   <input
                     type="date"
-                    value={startDate}
+                    value={endTime === "24:00" ? format(addDays(parseISO(startDate), 1), "yyyy-MM-dd") : endDate}
                     disabled
                     className={cn(
                       "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/30 opacity-50"

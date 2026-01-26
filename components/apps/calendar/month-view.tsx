@@ -58,10 +58,16 @@ export function MonthView({
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleMonth, setVisibleMonth] = useState(currentDate);
+  const visibleMonthRef = useRef(visibleMonth);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const initialScrollDone = useRef(false);
   const lastCurrentDate = useRef(currentDate);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    visibleMonthRef.current = visibleMonth;
+  }, [visibleMonth]);
 
   // Base date for all week calculations
   const baseDate = useMemo(() => getBaseDate(), []);
@@ -172,12 +178,13 @@ export function MonthView({
       const monthDate = centerWeek.find(d => getMonth(d) === dominantMonth) || centerWeek[0];
       const newMonth = startOfMonth(monthDate);
 
-      if (format(newMonth, "yyyy-MM") !== format(visibleMonth, "yyyy-MM")) {
+      // Use ref to avoid recreating callback when visibleMonth changes
+      if (format(newMonth, "yyyy-MM") !== format(visibleMonthRef.current, "yyyy-MM")) {
         setVisibleMonth(newMonth);
         onMonthChange?.(newMonth);
       }
     }
-  }, [baseDate, viewportHeight, visibleMonth, onMonthChange]);
+  }, [baseDate, viewportHeight, onMonthChange]);
 
   return (
     <div className="flex flex-col h-full">

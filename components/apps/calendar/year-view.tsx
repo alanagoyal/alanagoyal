@@ -32,8 +32,14 @@ export function YearView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const yearRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [visibleYear, setVisibleYear] = useState(currentDate.getFullYear());
+  const visibleYearRef = useRef(visibleYear);
   const initialScrollDone = useRef(false);
   const lastCurrentDate = useRef(currentDate);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    visibleYearRef.current = visibleYear;
+  }, [visibleYear]);
 
   // Generate array of years to render
   const currentYear = currentDate.getFullYear();
@@ -85,11 +91,12 @@ export function YearView({
       }
     });
 
-    if (closestYear !== visibleYear) {
+    // Use ref to avoid recreating callback when visibleYear changes
+    if (closestYear !== visibleYearRef.current) {
       setVisibleYear(closestYear);
       onYearChange?.(new Date(closestYear, 0, 1));
     }
-  }, [currentYear, visibleYear, onYearChange]);
+  }, [currentYear, onYearChange]);
 
   return (
     <div className="flex flex-col h-full">

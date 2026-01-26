@@ -12,6 +12,27 @@ import { ViewType, CalendarEvent, Calendar } from "./types";
 import { navigateDate } from "./utils";
 import { loadCalendars } from "./data";
 
+// Valid view types for type guard
+const VALID_VIEW_TYPES: ViewType[] = ["day", "week", "month", "year"];
+
+function isValidViewType(value: string | null): value is ViewType {
+  return value !== null && VALID_VIEW_TYPES.includes(value as ViewType);
+}
+
+// Validate that an object is a valid CalendarEvent
+function isValidCalendarEvent(obj: unknown): obj is CalendarEvent {
+  if (typeof obj !== "object" || obj === null) return false;
+  const e = obj as Record<string, unknown>;
+  return (
+    typeof e.id === "string" &&
+    typeof e.title === "string" &&
+    typeof e.startDate === "string" &&
+    typeof e.endDate === "string" &&
+    typeof e.isAllDay === "boolean" &&
+    typeof e.calendarId === "string"
+  );
+}
+
 // sessionStorage keys for view persistence (resets on new window/tab)
 const VIEW_STORAGE_KEY = "calendar-view";
 const DATE_STORAGE_KEY = "calendar-date";
@@ -42,16 +63,17 @@ function loadViewState(): { view: ViewType; currentDate: Date; scrollTop: number
   }
 
   try {
-    const savedView = sessionStorage.getItem(VIEW_STORAGE_KEY) as ViewType | null;
+    const savedView = sessionStorage.getItem(VIEW_STORAGE_KEY);
     const savedDate = sessionStorage.getItem(DATE_STORAGE_KEY);
     const savedScroll = sessionStorage.getItem(SCROLL_STORAGE_KEY);
 
     return {
-      view: savedView && ["day", "week", "month", "year"].includes(savedView) ? savedView : "week",
+      view: isValidViewType(savedView) ? savedView : "week",
       currentDate: savedDate ? new Date(savedDate) : new Date(),
       scrollTop: savedScroll ? parseInt(savedScroll, 10) : getDefaultScrollTop(),
     };
-  } catch {
+  } catch (error) {
+    console.warn("Failed to load calendar view state:", error);
     return { view: "week", currentDate: new Date(), scrollTop: getDefaultScrollTop() };
   }
 }
@@ -92,10 +114,21 @@ function loadUserEvents(): CalendarEvent[] {
   try {
     const stored = localStorage.getItem(USER_EVENTS_KEY);
     if (stored) {
-      return JSON.parse(stored) as CalendarEvent[];
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        // Filter to only valid events, logging any invalid ones
+        const validEvents = parsed.filter((item) => {
+          const isValid = isValidCalendarEvent(item);
+          if (!isValid) {
+            console.warn("Invalid calendar event in storage, skipping:", item);
+          }
+          return isValid;
+        });
+        return validEvents;
+      }
     }
-  } catch {
-    // ignore parse errors
+  } catch (error) {
+    console.warn("Failed to load calendar events:", error);
   }
 
   return [];
@@ -107,8 +140,8 @@ function saveUserEvents(events: CalendarEvent[]): void {
 
   try {
     localStorage.setItem(USER_EVENTS_KEY, JSON.stringify(events));
-  } catch {
-    // ignore storage errors
+  } catch (error) {
+    console.warn("Failed to save calendar events:", error);
   }
 }
 
@@ -134,6 +167,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   // Event form state
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [eventFormInitialDate, setEventFormInitialDate] = useState<Date | undefined>();
+  const [eventFormInitialEndDate, setEventFormInitialEndDate] = useState<Date | undefined>();
   const [eventFormInitialStartTime, setEventFormInitialStartTime] = useState<
     string | undefined
   >();
@@ -194,6 +228,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   // Event creation
   const handleNewEvent = useCallback(() => {
     setEventFormInitialDate(currentDate);
+    setEventFormInitialEndDate(currentDate);
     setEventFormInitialStartTime("09:00");
     setEventFormInitialEndTime("10:00");
     setEventFormOpen(true);
@@ -202,6 +237,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
   const handleCreateEvent = useCallback(
     (date: Date, startTime: string, endTime: string) => {
       setEventFormInitialDate(date);
+      setEventFormInitialEndDate(date);
       setEventFormInitialStartTime(startTime);
       setEventFormInitialEndTime(endTime);
       setEventFormOpen(true);
@@ -415,6 +451,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         onSave={handleSaveEvent}
         calendars={calendars}
         initialDate={eventFormInitialDate}
+        initialEndDate={eventFormInitialEndDate}
         initialStartTime={eventFormInitialStartTime}
         initialEndTime={eventFormInitialEndTime}
         container={dialogContainer}

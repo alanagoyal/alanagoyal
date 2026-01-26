@@ -31,29 +31,36 @@ function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
     return hour * 60 + min;
   };
 
+  // Pre-calculate start/end times for all events
+  const eventTimes = new Map<string, { start: number; end: number }>();
+  for (const event of events) {
+    eventTimes.set(event.id, {
+      start: parseTime(event.startTime || "00:00"),
+      end: parseTime(event.endTime || "23:59"),
+    });
+  }
+
   // Sort events by start time, then by duration (longer first)
   const sorted = [...events].sort((a, b) => {
-    const aStart = parseTime(a.startTime || "00:00");
-    const bStart = parseTime(b.startTime || "00:00");
-    if (aStart !== bStart) return aStart - bStart;
-    const aEnd = parseTime(a.endTime || "23:59");
-    const bEnd = parseTime(b.endTime || "23:59");
-    return (bEnd - bStart) - (aEnd - aStart); // Longer events first
+    const aTime = eventTimes.get(a.id)!;
+    const bTime = eventTimes.get(b.id)!;
+    if (aTime.start !== bTime.start) return aTime.start - bTime.start;
+    return (bTime.end - bTime.start) - (aTime.end - aTime.start);
   });
 
-  // Track columns: each column has the end time of its last event
-  const columns: number[] = [];
+  // Track columns: each column has the end time and events in it
+  const columns: { endTime: number; events: CalendarEvent[] }[] = [];
   const eventColumns: Map<string, number> = new Map();
 
   for (const event of sorted) {
-    const start = parseTime(event.startTime || "00:00");
-    const end = parseTime(event.endTime || "23:59");
+    const { start, end } = eventTimes.get(event.id)!;
 
     // Find first column where this event fits (no overlap)
     let placed = false;
     for (let col = 0; col < columns.length; col++) {
-      if (columns[col] <= start) {
-        columns[col] = end;
+      if (columns[col].endTime <= start) {
+        columns[col].endTime = end;
+        columns[col].events.push(event);
         eventColumns.set(event.id, col);
         placed = true;
         break;
@@ -63,39 +70,50 @@ function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
     // If no column fits, create a new one
     if (!placed) {
       eventColumns.set(event.id, columns.length);
-      columns.push(end);
+      columns.push({ endTime: end, events: [event] });
     }
   }
 
-  // Now determine total columns for each event based on overlapping events
-  const result: EventLayout[] = [];
+  // Build overlap groups using union-find for O(n) grouping
+  const parent = new Map<string, string>();
+  const find = (id: string): string => {
+    if (!parent.has(id)) parent.set(id, id);
+    if (parent.get(id) !== id) {
+      parent.set(id, find(parent.get(id)!));
+    }
+    return parent.get(id)!;
+  };
+  const union = (a: string, b: string) => {
+    parent.set(find(a), find(b));
+  };
 
-  for (const event of events) {
-    const start = parseTime(event.startTime || "00:00");
-    const end = parseTime(event.endTime || "23:59");
-    const column = eventColumns.get(event.id) || 0;
-
-    // Find all events that overlap with this one
-    let maxColumn = column;
-    for (const other of events) {
-      const otherStart = parseTime(other.startTime || "00:00");
-      const otherEnd = parseTime(other.endTime || "23:59");
-      const otherColumn = eventColumns.get(other.id) || 0;
-
-      // Check if they overlap
-      if (start < otherEnd && end > otherStart) {
-        maxColumn = Math.max(maxColumn, otherColumn);
+  // Union events that overlap (only check adjacent columns)
+  for (let col = 0; col < columns.length - 1; col++) {
+    for (const event of columns[col].events) {
+      const { start, end } = eventTimes.get(event.id)!;
+      for (const other of columns[col + 1].events) {
+        const otherTime = eventTimes.get(other.id)!;
+        if (start < otherTime.end && end > otherTime.start) {
+          union(event.id, other.id);
+        }
       }
     }
-
-    result.push({
-      event,
-      column,
-      totalColumns: maxColumn + 1,
-    });
   }
 
-  return result;
+  // Calculate max column for each overlap group
+  const groupMaxColumn = new Map<string, number>();
+  for (const event of events) {
+    const group = find(event.id);
+    const col = eventColumns.get(event.id) || 0;
+    groupMaxColumn.set(group, Math.max(groupMaxColumn.get(group) || 0, col));
+  }
+
+  // Build result
+  return events.map((event) => ({
+    event,
+    column: eventColumns.get(event.id) || 0,
+    totalColumns: (groupMaxColumn.get(find(event.id)) || 0) + 1,
+  }));
 }
 
 interface TimeGridProps {
@@ -203,15 +221,17 @@ export function TimeGrid({
         const maxY = Math.max(dragState.startY, dragState.currentY);
 
         const startTime = pixelToTime(minY, hourHeight);
-        const endTime = pixelToTime(maxY, hourHeight);
+        let endTime = pixelToTime(maxY, hourHeight);
 
         // Ensure minimum 15 min duration
         const startMinutes = startTime.hour * 60 + startTime.minute;
         const endMinutes = endTime.hour * 60 + endTime.minute;
         if (endMinutes <= startMinutes) {
           const newEndMinutes = Math.min(startMinutes + 15, 24 * 60);
-          endTime.hour = Math.floor(newEndMinutes / 60);
-          endTime.minute = newEndMinutes % 60;
+          endTime = {
+            hour: Math.floor(newEndMinutes / 60),
+            minute: newEndMinutes % 60,
+          };
         }
 
         const date = dates[dragState.columnIndex];
@@ -273,9 +293,9 @@ export function TimeGrid({
       {showDayHeaders && (
         <div className="flex border-b border-border bg-muted/30 sticky top-0 z-10">
           <div className="w-16 shrink-0" /> {/* Time label spacer */}
-          {dates.map((date, idx) => (
+          {dates.map((date) => (
             <div
-              key={idx}
+              key={date.toISOString()}
               className="flex-1 text-center py-2 border-l border-border first:border-l-0"
             >
               <div className="text-xs text-muted-foreground">

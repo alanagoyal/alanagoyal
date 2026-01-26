@@ -46,6 +46,9 @@ export function DayView({
         events={events}
         calendars={calendars}
         showTimeLabel={true}
+        selectedEventId={selectedEventId}
+        onSelectEvent={onSelectEvent}
+        onEditEvent={onEditEvent}
       />
 
       {/* Time grid */}

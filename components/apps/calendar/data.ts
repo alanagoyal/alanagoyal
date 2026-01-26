@@ -67,5 +67,5 @@ export function saveCalendars(calendars: Calendar[]): void {
 
 // Generate a unique ID for new events
 export function generateEventId(): string {
-  return `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `event-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }

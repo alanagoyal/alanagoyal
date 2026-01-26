@@ -83,9 +83,9 @@ export function WeekView({
       {/* Day headers - fixed position */}
       <div className="flex border-b border-border bg-muted/30">
         <div className="w-16 shrink-0" /> {/* Time label spacer */}
-        {weekDays.map((date, idx) => (
+        {weekDays.map((date) => (
           <div
-            key={idx}
+            key={date.toISOString()}
             className="flex-1 text-center py-2 border-l border-border first:border-l-0"
           >
             <div className="text-xs text-muted-foreground">
@@ -110,6 +110,9 @@ export function WeekView({
         events={events}
         calendars={calendars}
         showTimeLabel={true}
+        selectedEventId={selectedEventId}
+        onSelectEvent={onSelectEvent}
+        onEditEvent={onEditEvent}
       />
 
       {/* Time grid - scrollable, no day headers */}
