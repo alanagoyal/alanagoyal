@@ -2,10 +2,11 @@
  * @type {import('next').NextConfig}
  *
  * Routing behavior:
- * - /                    → redirects to /notes/about-me (see app/page.tsx)
- * - /notes               → on desktop: updates URL to /notes/about-me (client-side)
+ * - /                    → redirects to /notes/about-me, shows default desktop layout
+ * - /notes               → on desktop: updates URL to /notes/about-me, notes focused
  *                          on mobile: shows sidebar (no redirect)
- * - /notes/{slug}        → shows the note
+ * - /notes/{slug}        → shows the note (notes focused)
+ * - /{app}               → shows default desktop with that app focused
  * - /notes/{invalid}     → redirects to /notes/error
  * - /{legacy-slug}       → redirects to /notes/{legacy-slug} (server-side, permanent)
  * - /{other}             → 404

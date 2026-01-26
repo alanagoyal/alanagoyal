@@ -76,8 +76,8 @@ const DEFAULT_APP = "notes";
 // Windows listed in z-index order (first = back, last = front)
 const DESKTOP_DEFAULT_CONFIG = {
   windows: [
-    { appId: "messages", position: { x: 450, y: 30 } },
-    { appId: "notes", position: { x: 150, y: 70 } },
+    { appId: "messages", position: { x: 500, y: 60 } },
+    { appId: "notes", position: { x: 150, y: 40 }, size: { width: 1000, height: 700 } },
   ],
   focusedAppId: "notes",
 } as const;
@@ -109,20 +109,6 @@ function getBaseState(): WindowManagerState {
 }
 
 /**
- * New visitor state: single app open in fullscreen
- * Used when a new user visits /messages, /notes, /settings, etc.
- */
-function getNewVisitorState(appId: string = DEFAULT_APP): WindowManagerState {
-  const state = getBaseState();
-  state.windows[appId].isOpen = true;
-  state.windows[appId].isMaximized = true;
-  state.windows[appId].zIndex = 1;
-  state.focusedWindowId = appId;
-  state.nextZIndex = 2;
-  return state;
-}
-
-/**
  * Desktop default state: multiple apps open in windowed mode
  * Used after logout/restart/shutdown to show a "fresh desktop" view
  * Notes in front (left of center), Messages behind (right, peeking out)
@@ -131,11 +117,14 @@ function getDesktopDefaultState(): WindowManagerState {
   const state = getBaseState();
   const { windows, focusedAppId } = DESKTOP_DEFAULT_CONFIG;
 
-  windows.forEach(({ appId, position }, index) => {
-    state.windows[appId].isOpen = true;
-    state.windows[appId].isMaximized = false;
-    state.windows[appId].zIndex = index + 1;
-    state.windows[appId].position = position;
+  windows.forEach((config, index) => {
+    state.windows[config.appId].isOpen = true;
+    state.windows[config.appId].isMaximized = false;
+    state.windows[config.appId].zIndex = index + 1;
+    state.windows[config.appId].position = config.position;
+    if ('size' in config && config.size) {
+      state.windows[config.appId].size = config.size;
+    }
   });
 
   state.focusedWindowId = focusedAppId;
@@ -737,21 +726,21 @@ export function WindowManagerProvider({
    * 2. Which app they're navigating to (initialAppId)
    *
    * Logic:
-   * - New visitor + specific app URL → that app fullscreen
-   * - New visitor + no specific app → default app (notes) fullscreen
    * - Returning visitor + specific app URL → saved state with that app focused
    * - Returning visitor + no specific app → saved state as-is
+   * - New visitor + specific app URL → desktop default with that app focused
+   * - New visitor + no specific app → desktop default as-is
    */
   const computeInitialState = React.useCallback((): WindowManagerState => {
     const savedState = loadStateFromStorage();
-    const targetApp = initialAppId || DEFAULT_APP;
 
     if (savedState) {
-      // Returning visitor: use saved state, focus requested app
+      // Returning visitor: use saved state, focus requested app if specified
       return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
     } else {
-      // New visitor: show target app fullscreen
-      return getNewVisitorState(targetApp);
+      // New visitor: show desktop default layout, focus requested app if specified
+      const defaultState = getDesktopDefaultState();
+      return initialAppId ? withFocusedApp(defaultState, initialAppId) : defaultState;
     }
   }, [initialAppId]);
 
