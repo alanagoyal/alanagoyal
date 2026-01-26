@@ -1,0 +1,25 @@
+lib/window-context.tsx
+  2adf0bfb312db65f 79-80,120-127,731-732,738,741-743
+next.config.mjs
+  2adf0bfb312db65f 5-6,8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "badaee8c4ec9c307878d551f355f3c5d15a46e67",
+  "prompts": {
+    "2adf0bfb312db65f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a81e7cb-ce78-4856-9e5b-dc2e71676055",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 31,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
