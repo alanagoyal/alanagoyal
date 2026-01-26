@@ -48,7 +48,7 @@ export function Sidebar({
   onScroll,
   onSoundToggle,
 }: SidebarProps) {
-  const { theme, systemTheme, setTheme } = useTheme();
+  const { theme, systemTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
   const windowFocus = useWindowFocus();
 
@@ -154,13 +154,6 @@ export function Sidebar({
         ) {
           return;
         }
-      }
-
-      // Theme toggle shortcut
-      if (e.key === "t") {
-        e.preventDefault();
-        setTheme(effectiveTheme === "light" ? "dark" : "light");
-        return;
       }
 
       // Sound toggle shortcut
@@ -308,8 +301,6 @@ export function Sidebar({
     onUpdateConversation,
     onDeleteConversation,
     windowFocus,
-    setTheme,
-    effectiveTheme,
     onSoundToggle,
   ]);
 

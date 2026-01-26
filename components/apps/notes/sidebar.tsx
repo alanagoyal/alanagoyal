@@ -20,7 +20,6 @@ import { Note } from "@/lib/notes/types";
 import { toast } from "@/hooks/use-toast";
 import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Nav } from "./nav";
-import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
@@ -360,8 +359,6 @@ export default function Sidebar({
     }
   }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, onNoteSelect]);
 
-  const { setTheme, theme } = useTheme();
-
   // Register file menu actions for desktop menubar
   useEffect(() => {
     if (!fileMenu) return;
@@ -413,7 +410,6 @@ export default function Sidebar({
       d: () => highlightedNote && handleNoteDelete(highlightedNote),
       "/": () => searchInputRef.current?.focus(),
       Escape: () => (document.activeElement as HTMLElement)?.blur(),
-      t: () => setTheme(theme === "dark" ? "light" : "dark"),
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -484,8 +480,6 @@ export default function Sidebar({
     setHighlightedIndex,
     handleNoteDelete,
     goToHighlightedNote,
-    setTheme,
-    theme,
     windowFocus,
   ]);
 
