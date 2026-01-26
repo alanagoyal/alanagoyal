@@ -47,6 +47,58 @@ function getRestaurantForSaturday(date: Date): (typeof DATE_NIGHT_RESTAURANTS)[0
   return DATE_NIGHT_RESTAURANTS[index];
 }
 
+// Date night start times (2.5 hour duration)
+const DATE_NIGHT_TIMES = [
+  { start: "18:00", end: "20:30" },
+  { start: "18:15", end: "20:45" },
+  { start: "18:30", end: "21:00" },
+];
+
+// Get a consistent start time for date night (varies week to week)
+function getDateNightTime(date: Date): (typeof DATE_NIGHT_TIMES)[0] {
+  const weekNumber = getWeek(date);
+  const index = weekNumber % DATE_NIGHT_TIMES.length;
+  return DATE_NIGHT_TIMES[index];
+}
+
+// Meeting time patterns for weekdays - all 1-hour blocks with 30-min gaps between events
+// Focus time ends at 13:00, meetings start at 13:30 earliest
+// All patterns end by 17:30 to allow 30-min buffer before dinner/roundtable
+const WEEKDAY_MEETING_PATTERNS = [
+  [{ start: "13:30", end: "14:30" }, { start: "15:00", end: "16:00" }, { start: "16:30", end: "17:30" }],
+  [{ start: "14:00", end: "15:00" }, { start: "15:30", end: "16:30" }], // lighter day
+  [{ start: "13:30", end: "14:30" }, { start: "15:00", end: "16:00" }, { start: "16:30", end: "17:30" }],
+  [{ start: "14:30", end: "15:30" }, { start: "16:00", end: "17:00" }], // lighter day
+  [{ start: "13:30", end: "14:30" }, { start: "15:00", end: "16:00" }, { start: "16:30", end: "17:30" }],
+  [{ start: "14:00", end: "15:00" }, { start: "16:00", end: "17:00" }], // lighter day
+  [{ start: "13:30", end: "14:30" }, { start: "15:30", end: "16:30" }], // lighter day
+  [{ start: "13:30", end: "14:30" }, { start: "15:00", end: "16:00" }, { start: "16:30", end: "17:30" }],
+  [{ start: "14:30", end: "15:30" }, { start: "16:30", end: "17:30" }], // lighter day
+  [{ start: "14:00", end: "15:00" }, { start: "15:30", end: "16:30" }], // lighter day
+];
+
+// Meeting time patterns for weekends - all 1-hour blocks with 30-min gaps
+// All patterns end by 17:30 to allow 30-min buffer before date night/dinner
+const WEEKEND_MEETING_PATTERNS = [
+  [{ start: "14:00", end: "15:00" }, { start: "15:30", end: "16:30" }],
+  [{ start: "13:30", end: "14:30" }, { start: "15:00", end: "16:00" }],
+  [{ start: "15:00", end: "16:00" }, { start: "16:30", end: "17:30" }],
+  [{ start: "14:30", end: "15:30" }], // very light day
+  [{ start: "14:00", end: "15:00" }, { start: "16:00", end: "17:00" }],
+  [{ start: "13:30", end: "14:30" }, { start: "15:30", end: "16:30" }],
+  [{ start: "14:30", end: "15:30" }, { start: "16:30", end: "17:30" }],
+];
+
+// Get a deterministic pattern index based on the date (varies week to week)
+function getPatternIndex(day: Date, patternCount: number): number {
+  // Use week number + day of week to ensure different patterns each week
+  const startOfYear = new Date(day.getFullYear(), 0, 1);
+  const daysSinceStart = Math.floor((day.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.floor(daysSinceStart / 7);
+  const dayOfWeek = day.getDay();
+  return (weekNumber * 3 + dayOfWeek) % patternCount;
+}
+
 // Generate sample events for any day (on-demand, no pre-generation needed)
 function generateSampleEventsForDay(day: Date): CalendarEvent[] {
   const dateStr = format(day, "yyyy-MM-dd");
@@ -82,77 +134,99 @@ function generateSampleEventsForDay(day: Date): CalendarEvent[] {
   });
 
   if (isWeekday) {
-    events.push({
-      id: `sample-meeting1-${dateStr}`,
-      title: "busy",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "13:30",
-      endTime: "14:30",
-      isAllDay: false,
-      calendarId: "meetings",
+    // Select a meeting pattern based on the date
+    const patternIndex = getPatternIndex(day, WEEKDAY_MEETING_PATTERNS.length);
+    const meetingPattern = WEEKDAY_MEETING_PATTERNS[patternIndex];
+
+    meetingPattern.forEach((meeting, index) => {
+      events.push({
+        id: `sample-meeting${index + 1}-${dateStr}`,
+        title: "busy",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: meeting.start,
+        endTime: meeting.end,
+        isAllDay: false,
+        calendarId: "meetings",
+      });
     });
-    events.push({
-      id: `sample-meeting2-${dateStr}`,
-      title: "busy",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "15:00",
-      endTime: "16:00",
-      isAllDay: false,
-      calendarId: "meetings",
-    });
-    events.push({
-      id: `sample-meeting3-${dateStr}`,
-      title: "busy",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "16:30",
-      endTime: "17:30",
-      isAllDay: false,
-      calendarId: "meetings",
-    });
-    events.push({
-      id: `sample-meals-${dateStr}`,
-      title: "dinner",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "18:30",
-      endTime: "19:30",
-      isAllDay: false,
-      calendarId: "meals",
-    });
+
+    // Every 6 weeks on Tuesday: roundtable dinner instead of regular dinner
+    const isTuesday = dayOfWeek === 2;
+    const weekNumber = getWeek(day);
+    const isRoundtableWeek = weekNumber % 6 === 0;
+
+    if (isTuesday && isRoundtableWeek) {
+      events.push({
+        id: `sample-event-${dateStr}`,
+        title: "event",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: "18:00",
+        endTime: "21:00",
+        isAllDay: false,
+        calendarId: "events",
+        location: "flour + water, 2401 harrison st, sf",
+      });
+    } else {
+      events.push({
+        id: `sample-meals-${dateStr}`,
+        title: "dinner",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: "18:30",
+        endTime: "19:30",
+        isAllDay: false,
+        calendarId: "meals",
+      });
+    }
   } else {
-    events.push({
-      id: `sample-meeting1-${dateStr}`,
-      title: "busy",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "14:00",
-      endTime: "15:00",
-      isAllDay: false,
-      calendarId: "meetings",
-    });
-    events.push({
-      id: `sample-meeting2-${dateStr}`,
-      title: "busy",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "15:30",
-      endTime: "16:30",
-      isAllDay: false,
-      calendarId: "meetings",
-    });
+    // Check if it's an event Sunday (every 4 weeks)
+    const weekNumber = getWeek(day);
+    const isEventSunday = isSunday && weekNumber % 4 === 0;
+
+    if (isEventSunday) {
+      // Event replaces busy blocks on these Sundays
+      events.push({
+        id: `sample-sunday-event-${dateStr}`,
+        title: "event",
+        startDate: dateStr,
+        endDate: dateStr,
+        startTime: "14:00",
+        endTime: "16:00",
+        isAllDay: false,
+        calendarId: "events",
+        location: "665 3rd st, san francisco, ca 94107",
+      });
+    } else {
+      // Select a meeting pattern for weekends
+      const patternIndex = getPatternIndex(day, WEEKEND_MEETING_PATTERNS.length);
+      const meetingPattern = WEEKEND_MEETING_PATTERNS[patternIndex];
+
+      meetingPattern.forEach((meeting, index) => {
+        events.push({
+          id: `sample-meeting${index + 1}-${dateStr}`,
+          title: "busy",
+          startDate: dateStr,
+          endDate: dateStr,
+          startTime: meeting.start,
+          endTime: meeting.end,
+          isAllDay: false,
+          calendarId: "meetings",
+        });
+      });
+    }
 
     if (isSaturday) {
       const restaurant = getRestaurantForSaturday(day);
+      const dateNightTime = getDateNightTime(day);
       events.push({
         id: `sample-datenight-${dateStr}`,
         title: "date night",
         startDate: dateStr,
         endDate: dateStr,
-        startTime: "18:30",
-        endTime: "21:00",
+        startTime: dateNightTime.start,
+        endTime: dateNightTime.end,
         isAllDay: false,
         calendarId: "meals",
         location: `${restaurant.name.toLowerCase()}, ${restaurant.address.toLowerCase()}`,
@@ -356,7 +430,8 @@ export function getEventTimePosition(event: CalendarEvent): {
   const top = (startMinutes / 60) * hourHeight;
   const height = ((endMinutes - startMinutes) / 60) * hourHeight;
 
-  return { top, height: Math.max(height, 15) }; // Minimum 15px height
+  // Subtract 2px for visual gap between back-to-back events
+  return { top, height: Math.max(height - 2, 15) };
 }
 
 // Round time to nearest 15 minutes
