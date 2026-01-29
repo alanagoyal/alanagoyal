@@ -1,0 +1,23 @@
+components/apps/music/app.tsx
+  2443866c22d7de51 245,249-255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "52b5d9f39e75b7a114de56e2565b0e0a516b5e41",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 10,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
