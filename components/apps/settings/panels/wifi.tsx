@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Wifi, Lock, MoreHorizontal, Check, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { loadWifiEnabled, saveWifiEnabled } from "@/lib/sidebar-persistence";
 
 // Wi-Fi signal strength icon component
 function WifiSignal({ strength = 3, className }: { strength?: 1 | 2 | 3; className?: string }) {
@@ -30,7 +31,12 @@ interface WifiPanelProps {
 }
 
 export function WifiPanel({ isMobile = false }: WifiPanelProps) {
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(() => loadWifiEnabled());
+
+  // Persist toggle state
+  useEffect(() => {
+    saveWifiEnabled(isEnabled);
+  }, [isEnabled]);
 
   // Desktop layout (macOS style)
   return (

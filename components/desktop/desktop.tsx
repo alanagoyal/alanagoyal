@@ -93,10 +93,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   const { focusMode, currentOS } = useSystemSettings();
   const isMobile = useMobileDetect();
   const [mode, setMode] = useState<DesktopMode>("active");
-  const [settingsPanel, setSettingsPanel] = useState<SettingsPanel>(null);
-  const [settingsCategory, setSettingsCategory] = useState<SettingsCategory>("general");
+  const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
+  const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
-  const [finderTab, setFinderTab] = useState<FinderTab>("recents");
+  const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
   // Get TextEdit windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
 

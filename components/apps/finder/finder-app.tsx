@@ -9,6 +9,7 @@ import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
+import { finderSidebarPersistence } from "@/lib/sidebar-persistence";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -262,8 +263,14 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   };
 
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(initialTab || "recents");
-  const [currentPath, setCurrentPath] = useState(getInitialPath(initialTab));
+  // Load persisted sidebar state (initialTab prop takes precedence if provided)
+  const getInitialSidebar = (): SidebarItem => {
+    if (initialTab) return initialTab;
+    return finderSidebarPersistence.load();
+  };
+
+  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(getInitialSidebar);
+  const [currentPath, setCurrentPath] = useState(() => getInitialPath(getInitialSidebar()));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -389,6 +396,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   useEffect(() => {
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
+
+  // Persist sidebar selection
+  useEffect(() => {
+    finderSidebarPersistence.save(selectedSidebar);
+  }, [selectedSidebar]);
 
   // Update files when viewing Recents and recents change
   useEffect(() => {

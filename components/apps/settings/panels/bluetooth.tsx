@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Bluetooth, Info, Keyboard, Battery } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bluetooth, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { loadBluetoothEnabled, saveBluetoothEnabled } from "@/lib/sidebar-persistence";
 
 // Device type for different icons
 type DeviceType = "keyboard" | "trackpad" | "airpods" | "airpods-max" | "headphones";
@@ -108,7 +109,12 @@ interface BluetoothPanelProps {
 }
 
 export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(() => loadBluetoothEnabled());
+
+  // Persist toggle state
+  useEffect(() => {
+    saveBluetoothEnabled(isEnabled);
+  }, [isEnabled]);
 
   if (isMobile) {
     return (
