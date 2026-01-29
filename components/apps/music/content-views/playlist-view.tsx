@@ -26,17 +26,21 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
     }
   };
 
-  const handlePlayAll = () => {
-    const firstPlayable = playlist.tracks.find((t) => t.previewUrl);
-    if (firstPlayable) {
-      play(firstPlayable, playlist.tracks);
-    }
-  };
-
   const isPlayingPlaylist =
     playbackState.isPlaying &&
     playbackState.currentTrack &&
     playlist.tracks.some((t) => t.id === playbackState.currentTrack?.id);
+
+  const handlePlayAll = () => {
+    if (isPlayingPlaylist) {
+      pause();
+    } else {
+      const firstPlayable = playlist.tracks.find((t) => t.previewUrl);
+      if (firstPlayable) {
+        play(firstPlayable, playlist.tracks);
+      }
+    }
+  };
 
   const totalDuration = playlist.tracks.reduce((sum, t) => sum + t.duration, 0);
 

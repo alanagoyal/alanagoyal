@@ -88,8 +88,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   // Create audio element on mount
   useEffect(() => {
     if (typeof window !== "undefined" && !audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = playbackState.volume;
+      const audio = new Audio();
+      audio.volume = playbackState.volume;
+
+      // Update duration when audio metadata loads (gets actual preview duration)
+      audio.addEventListener("loadedmetadata", () => {
+        if (audio.duration && isFinite(audio.duration)) {
+          setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
+        }
+      });
+
+      audioRef.current = audio;
     }
 
     return () => {
@@ -161,8 +170,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: nextTrack,
             queueIndex: nextIndex,
             progress: 0,
-            duration: nextTrack.duration,
-          }));
+                      }));
         } else {
           // Skip tracks without preview
           setPlaybackState((prev) => ({
@@ -181,8 +189,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: firstTrack,
             queueIndex: 0,
             progress: 0,
-            duration: firstTrack.duration,
-          }));
+                      }));
         }
       } else {
         // Stop playing
@@ -220,7 +227,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       queue: newQueue,
       queueIndex: queueIndex >= 0 ? queueIndex : 0,
       progress: 0,
-      duration: track.duration,
     }));
   }, []);
 
@@ -290,8 +296,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         currentTrack: nextTrack,
         queueIndex: nextIndex,
         progress: 0,
-        duration: nextTrack.duration,
-      }));
+              }));
     }
   }, [playbackState]);
 
@@ -320,8 +325,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           currentTrack: prevTrack,
           queueIndex: prevIndex,
           progress: 0,
-          duration: prevTrack.duration,
-        }));
+                  }));
       }
     }
   }, [playbackState]);

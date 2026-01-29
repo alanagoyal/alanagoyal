@@ -57,6 +57,24 @@ export function HomeView({
     playbackState.currentTrack &&
     featuredPlaylist.tracks.some((t) => t.id === playbackState.currentTrack?.id);
 
+  const handlePlayPlaylist = (playlist: Playlist, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isPlayingThisPlaylist =
+      playbackState.isPlaying &&
+      playbackState.currentTrack &&
+      playlist.tracks.some((t) => t.id === playbackState.currentTrack?.id);
+
+    if (isPlayingThisPlaylist) {
+      pause();
+    } else {
+      onPlaylistSelect(playlist.id);
+      const firstPlayable = playlist.tracks.find((t) => t.previewUrl);
+      if (firstPlayable) {
+        play(firstPlayable, playlist.tracks);
+      }
+    }
+  };
+
   return (
     <ScrollArea className="h-full" bottomMargin="0">
       <div className={cn("p-6", isMobileView && "p-4")}>
@@ -134,7 +152,10 @@ export function HomeView({
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-800" />
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                    <div
+                      className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center"
+                      onClick={(e) => handlePlayPlaylist(playlist, e)}
+                    >
                       {isPlaying ? (
                         <Pause className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       ) : (
