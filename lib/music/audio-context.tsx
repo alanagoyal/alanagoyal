@@ -10,6 +10,7 @@ import {
   ReactNode,
 } from "react";
 import { PlaylistTrack, RepeatMode, PlaybackState } from "@/components/apps/music/types";
+import { useSystemSettings } from "@/lib/system-settings-context";
 
 interface AudioContextValue {
   // State
@@ -80,6 +81,7 @@ const defaultState: PlaybackState = {
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { volume: systemVolume } = useSystemSettings();
   const [playbackState, setPlaybackState] = useState<PlaybackState>(() => ({
     ...defaultState,
     ...loadStoredState(),
@@ -89,7 +91,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined" && !audioRef.current) {
       const audio = new Audio();
-      audio.volume = playbackState.volume;
+      audio.volume = (systemVolume / 100) * playbackState.volume;
 
       // Update duration when audio metadata loads (gets actual preview duration)
       audio.addEventListener("loadedmetadata", () => {
@@ -110,12 +112,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update audio volume when state changes
+  // Update audio volume when state or system volume changes
+  // Effective volume = system volume (0-100) * app volume (0-1)
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = playbackState.volume;
+      const effectiveVolume = (systemVolume / 100) * playbackState.volume;
+      audioRef.current.volume = effectiveVolume;
     }
-  }, [playbackState.volume]);
+  }, [playbackState.volume, systemVolume]);
 
   // Save settings to localStorage
   useEffect(() => {
@@ -341,10 +345,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     if (audioRef.current) {
-      audioRef.current.volume = clampedVolume;
+      audioRef.current.volume = (systemVolume / 100) * clampedVolume;
     }
     setPlaybackState((prev) => ({ ...prev, volume: clampedVolume }));
-  }, []);
+  }, [systemVolume]);
 
   const toggleShuffle = useCallback(() => {
     setPlaybackState((prev) => ({ ...prev, isShuffle: !prev.isShuffle }));
