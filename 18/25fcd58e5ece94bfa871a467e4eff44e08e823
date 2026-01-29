@@ -1,0 +1,37 @@
+components/apps/finder/finder-app.tsx
+  c1f5b177ef49752a 12,266-273,400-404
+components/apps/settings/panels/bluetooth.tsx
+  c1f5b177ef49752a 3,6,112-117
+components/apps/photos/app.tsx
+  c1f5b177ef49752a 11,22-24,29-31,55-73
+lib/sidebar-persistence.ts
+  c1f5b177ef49752a 1-333
+components/desktop/desktop.tsx
+  c1f5b177ef49752a 96-97,99
+components/apps/settings/panels/wifi.tsx
+  c1f5b177ef49752a 3,6,34-39
+lib/window-context.tsx
+  c1f5b177ef49752a 18,777-778
+components/apps/settings/settings-app.tsx
+  c1f5b177ef49752a 7,25-34,47-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "1825fcd58e5ece94bfa871a467e4eff44e08e823",
+  "prompts": {
+    "c1f5b177ef49752a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d02da79-effb-4e75-aca7-ac9ca1a7d524",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 499,
+      "total_deletions": 100,
+      "accepted_lines": 414,
+      "overriden_lines": 0
+    }
+  }
+}
