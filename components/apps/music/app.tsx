@@ -242,10 +242,17 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         {/* Main Content */}
         <div
           className={cn(
-            "flex-1 flex flex-col min-h-0 overflow-auto",
+            "flex-1 flex flex-col min-h-0 overflow-hidden relative",
             showMainContent ? "block" : "hidden"
           )}
         >
+          {/* Draggable header area for content - absolute so it doesn't affect layout */}
+          {!isMobileView && (
+            <div
+              className="absolute top-0 left-0 right-0 h-12 z-10 select-none"
+              onMouseDown={inShell && windowFocus ? windowFocus.onDragStart : undefined}
+            />
+          )}
           {renderContent()}
         </div>
       </main>
