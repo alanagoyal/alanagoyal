@@ -1,0 +1,29 @@
+lib/music/audio-context.tsx
+  2443866c22d7de51 91-101
+components/apps/music/content-views/playlist-view.tsx
+  2443866c22d7de51 34-44
+components/apps/music/content-views/home-view.tsx
+  2443866c22d7de51 60-77,157
+components/apps/music/data.ts
+  2443866c22d7de51 18,27,36,45,54,63,72,81,90,99,108,117,126,135,152,161,179,188,197,206,215,224,233,242,251,260,269,278,287,296,313,322,331,340,349,358,367,376,385,394,403,412,421,430,439,448,465,474,483,492,501,510,519,528,537,546,555,564,573,582,591,600,609,641-644,674-677
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "c5f6dcc8168b1e4e97f0955cde208004e4f65831",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 203,
+      "total_deletions": 84,
+      "accepted_lines": 196,
+      "overriden_lines": 0
+    }
+  }
+}
