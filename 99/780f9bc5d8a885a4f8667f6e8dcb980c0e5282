@@ -1,0 +1,86 @@
+components/apps/music/index.ts
+  2443866c22d7de51 1
+components/desktop/desktop.tsx
+  2443866c22d7de51 19,198-201,385-388
+app/api/music/recently-played/route.ts
+  2443866c22d7de51 1-18
+components/apps/music/types.ts
+  2443866c22d7de51 1-110
+components/apps/music/content-views/artists-view.tsx
+  2443866c22d7de51 1-90
+lib/app-config.ts
+  3b60d3603e2b326b 49-58
+app/api/music/now-playing/route.ts
+  2443866c22d7de51 1-18
+components/apps/music/content-views/index.ts
+  2443866c22d7de51 1-6
+components/mobile/mobile-shell.tsx
+  2443866c22d7de51 13,46-47,73
+components/apps/music/content-views/home-view.tsx
+  2443866c22d7de51 1-267
+lib/music/audio-context.tsx
+  2443866c22d7de51 1-403
+lib/music/use-music.ts
+  2443866c22d7de51 1-150
+components/apps/music/music-app.tsx
+  2443866c22d7de51 1-19
+app/(desktop)/music/page.tsx
+  2443866c22d7de51 1-39
+app/api/music/top/route.ts
+  2443866c22d7de51 1-28
+components/apps/music/content-views/songs-view.tsx
+  2443866c22d7de51 1-168
+components/ui/slider.tsx
+  2443866c22d7de51 1-100
+lib/music/spotify.ts
+  2443866c22d7de51 1-176
+components/apps/music/data.ts
+  2443866c22d7de51 1-697
+components/apps/music/content-views/playlist-view.tsx
+  2443866c22d7de51 1-212
+components/apps/music/content-views/recently-added-view.tsx
+  2443866c22d7de51 1-183
+components/apps/music/nav.tsx
+  2443866c22d7de51 1-38
+components/apps/music/app.tsx
+  2443866c22d7de51 1-257
+components/apps/music/now-playing-bar.tsx
+  2443866c22d7de51 1-205
+components/apps/music/sidebar.tsx
+  2443866c22d7de51 1-144
+components/apps/music/content-views/albums-view.tsx
+  2443866c22d7de51 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.37",
+  "base_commit_sha": "99780f9bc5d8a885a4f8667f6e8dcb980c0e5282",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 3656,
+      "total_deletions": 258,
+      "accepted_lines": 3398,
+      "overriden_lines": 0
+    },
+    "3b60d3603e2b326b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a1e7f530-3654-4917-9a98-6d97d3005573",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
