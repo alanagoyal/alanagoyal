@@ -16,6 +16,7 @@ import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
+import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
@@ -191,6 +192,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   }, []);
 
   const handleCalendarFocus = useCallback(() => {
+    // URL will be updated by the focus change effect
+  }, []);
+
+  const handleMusicFocus = useCallback(() => {
     // URL will be updated by the focus change effect
   }, []);
 
@@ -375,6 +380,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
           <Window appId="calendar" onFocus={handleCalendarFocus}>
             <CalendarApp inShell={true} />
+          </Window>
+
+          <Window appId="music" onFocus={handleMusicFocus}>
+            <MusicApp inShell={true} />
           </Window>
 
           {/* TextEdit - multi-window support */}

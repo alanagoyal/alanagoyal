@@ -10,6 +10,7 @@ import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
+import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditApp } from "@/components/apps/textedit";
 import { getTextEditContent } from "@/lib/file-storage";
 
@@ -42,6 +43,8 @@ export function MobileShell({ initialApp, initialNoteSlug, initialTextEditFile }
       setActiveAppId("photos");
     } else if (path.startsWith("/calendar")) {
       setActiveAppId("calendar");
+    } else if (path.startsWith("/music")) {
+      setActiveAppId("music");
     } else if (path.startsWith("/textedit")) {
       setActiveAppId("textedit");
     } else if (initialApp) {
@@ -67,6 +70,7 @@ export function MobileShell({ initialApp, initialNoteSlug, initialTextEditFile }
           {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
           {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
           {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
+          {activeAppId === "music" && <MusicApp isMobile={true} inShell={false} />}
           {activeAppId === "textedit" && (
             <TextEditApp
               isMobile={true}
