@@ -3,17 +3,17 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlaylistTrack, TopTracks } from "../types";
+import { PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
+import { formatDuration } from "@/lib/music/utils";
 
 interface SongsViewProps {
   songs: PlaylistTrack[];
-  topTracks: TopTracks | null;
   isMobileView: boolean;
 }
 
-export function SongsView({ songs, topTracks, isMobileView }: SongsViewProps) {
+export function SongsView({ songs, isMobileView }: SongsViewProps) {
   const { playbackState, play, pause, resume } = useAudio();
 
   const handleTrackPlay = (track: PlaylistTrack, queue: PlaylistTrack[]) => {
@@ -26,60 +26,11 @@ export function SongsView({ songs, topTracks, isMobileView }: SongsViewProps) {
     }
   };
 
-  // Convert Spotify tracks to PlaylistTrack format for display
-  const spotifyTracks = topTracks?.items || [];
-
   return (
     <ScrollArea className="h-full" bottomMargin="0">
       <div className={cn("p-6", isMobileView && "p-4")}>
-        {/* Top Tracks from Spotify */}
-        {spotifyTracks.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Your Top Tracks</h2>
-            <div className="space-y-1">
-              {spotifyTracks.map((track, index) => (
-                <div
-                  key={track.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                >
-                  <span className="w-5 text-center text-sm text-muted-foreground">
-                    {index + 1}
-                  </span>
-                  <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                    {track.album.images[0] && (
-                      <Image
-                        src={track.album.images[0].url}
-                        alt={track.album.name}
-                        fill
-                        className="object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{track.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {track.artists.map((a) => a.name).join(", ")}
-                    </p>
-                  </div>
-                  {!isMobileView && (
-                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-                      {track.album.name}
-                    </span>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {formatDuration(Math.floor(track.duration_ms / 1000))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Local Songs */}
         <div>
-          <h2 className="text-lg font-semibold mb-4">
-            {spotifyTracks.length > 0 ? "Library Songs" : "Songs"}
-          </h2>
+          <h2 className="text-lg font-semibold mb-4">Songs</h2>
 
           {/* Header row for desktop */}
           {!isMobileView && (
@@ -159,10 +110,4 @@ export function SongsView({ songs, topTracks, isMobileView }: SongsViewProps) {
       </div>
     </ScrollArea>
   );
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }

@@ -20,23 +20,10 @@ import {
 
 interface AppProps {
   isDesktop?: boolean;
-  inShell?: boolean;
 }
 
-export default function App({ isDesktop = false, inShell = false }: AppProps) {
-  const {
-    playlists,
-    featuredPlaylist,
-    albums,
-    artists,
-    songs,
-    nowPlaying,
-    recentlyPlayed,
-    topArtists,
-    topTracks,
-    loading,
-  } = useMusic();
-
+export default function App({ isDesktop = false }: AppProps) {
+  const { playlists, featuredPlaylist, albums, artists, songs } = useMusic();
   const { playbackState, pause, resume, next, previous } = useAudio();
 
   const [activeView, setActiveView] = useState<MusicView>("home");
@@ -48,6 +35,7 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
+  const inShell = !!(isDesktop && windowFocus);
 
   // Mobile view detection
   useEffect(() => {
@@ -76,10 +64,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
       setSelectedPlaylistId(null);
     }
     setShowContent(true);
-  }, []);
-
-  const handleBack = useCallback(() => {
-    setShowContent(false);
   }, []);
 
   // Keyboard shortcuts
@@ -139,21 +123,11 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const showMainContent = !isMobileView || showContent;
 
   const renderContent = () => {
-    if (loading && activeView === "home") {
-      return (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      );
-    }
-
     switch (activeView) {
       case "home":
         return (
           <HomeView
             featuredPlaylist={featuredPlaylist}
-            recentlyPlayed={recentlyPlayed}
-            nowPlaying={nowPlaying}
             playlists={playlists}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}
@@ -163,7 +137,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         return (
           <RecentlyAddedView
             songs={songs}
-            recentlyPlayed={recentlyPlayed}
             isMobileView={isMobileView}
           />
         );
@@ -171,7 +144,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         return (
           <ArtistsView
             artists={artists}
-            topArtists={topArtists}
             isMobileView={isMobileView}
           />
         );
@@ -181,7 +153,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         return (
           <SongsView
             songs={songs}
-            topTracks={topTracks}
             isMobileView={isMobileView}
           />
         );
@@ -191,8 +162,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
         ) : (
           <HomeView
             featuredPlaylist={featuredPlaylist}
-            recentlyPlayed={recentlyPlayed}
-            nowPlaying={nowPlaying}
             playlists={playlists}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}

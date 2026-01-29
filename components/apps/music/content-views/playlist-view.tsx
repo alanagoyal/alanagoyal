@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Playlist, PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause, Shuffle } from "lucide-react";
+import { formatDuration, formatTotalDuration } from "@/lib/music/utils";
 
 interface PlaylistViewProps {
   playlist: Playlist;
@@ -196,17 +197,3 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
   );
 }
 
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-function formatTotalDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours} hr ${mins} min`;
-  }
-  return `${mins} min`;
-}

@@ -15,6 +15,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { formatDuration } from "@/lib/music/utils";
 
 interface NowPlayingBarProps {
   isMobileView: boolean;
@@ -155,7 +156,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
           {!isMobileView && (
             <div className="w-full max-w-md flex items-center gap-2">
               <span className="text-xs text-muted-foreground w-10 text-right">
-                {formatTime(currentTime)}
+                {formatDuration(currentTime)}
               </span>
               <Slider
                 value={[progress * 100]}
@@ -165,7 +166,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                 className="flex-1"
               />
               <span className="text-xs text-muted-foreground w-10">
-                {formatTime(duration)}
+                {formatDuration(duration)}
               </span>
             </div>
           )}
@@ -196,10 +197,4 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
       </div>
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }

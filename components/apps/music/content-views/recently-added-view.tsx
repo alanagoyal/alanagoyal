@@ -3,19 +3,18 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlaylistTrack, RecentlyPlayed } from "../types";
+import { PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
+import { formatDuration } from "@/lib/music/utils";
 
 interface RecentlyAddedViewProps {
   songs: PlaylistTrack[];
-  recentlyPlayed: RecentlyPlayed | null;
   isMobileView: boolean;
 }
 
 export function RecentlyAddedView({
   songs,
-  recentlyPlayed,
   isMobileView,
 }: RecentlyAddedViewProps) {
   const { playbackState, play, pause, resume } = useAudio();
@@ -30,52 +29,9 @@ export function RecentlyAddedView({
     }
   };
 
-  const spotifyRecent = recentlyPlayed?.items || [];
-
   return (
     <ScrollArea className="h-full" bottomMargin="0">
       <div className={cn("p-6", isMobileView && "p-4")}>
-        {/* Recently Played from Spotify */}
-        {spotifyRecent.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Recently Played on Spotify</h2>
-            <div className="space-y-1">
-              {spotifyRecent.map((item, index) => (
-                <div
-                  key={`${item.track.id}-${index}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                >
-                  <span className="w-5 text-center text-sm text-muted-foreground">
-                    {index + 1}
-                  </span>
-                  <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                    {item.track.album.images[0] && (
-                      <Image
-                        src={item.track.album.images[0].url}
-                        alt={item.track.album.name}
-                        fill
-                        className="object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.track.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {item.track.artists.map((a) => a.name).join(", ")}
-                    </p>
-                  </div>
-                  {!isMobileView && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatPlayedAt(item.played_at)}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Library Songs as Recently Added */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Recently Added</h2>
 
@@ -157,27 +113,4 @@ export function RecentlyAddedView({
       </div>
     </ScrollArea>
   );
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-function formatPlayedAt(isoString: string): string {
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 60) {
-    return `${diffMins}m ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  } else {
-    return `${diffDays}d ago`;
-  }
 }

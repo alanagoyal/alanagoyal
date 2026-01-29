@@ -3,14 +3,13 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Playlist, PlaylistTrack, NowPlaying, RecentlyPlayed } from "../types";
+import { Playlist, PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
+import { formatDuration } from "@/lib/music/utils";
 
 interface HomeViewProps {
   featuredPlaylist: Playlist;
-  recentlyPlayed: RecentlyPlayed | null;
-  nowPlaying: NowPlaying | null;
   playlists: Playlist[];
   onPlaylistSelect: (playlistId: string) => void;
   isMobileView: boolean;
@@ -18,7 +17,6 @@ interface HomeViewProps {
 
 export function HomeView({
   featuredPlaylist,
-  recentlyPlayed,
   playlists,
   onPlaylistSelect,
   isMobileView,
@@ -102,44 +100,6 @@ export function HomeView({
             </div>
           </div>
         </div>
-
-        {/* Recently Played from Spotify */}
-        {recentlyPlayed && recentlyPlayed.items.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Recently Played</h2>
-            <div
-              className={cn(
-                "grid gap-4",
-                isMobileView ? "grid-cols-2" : "grid-cols-4 lg:grid-cols-6"
-              )}
-            >
-              {recentlyPlayed.items.slice(0, 6).map((item, index) => (
-                <div
-                  key={`${item.track.id}-${index}`}
-                  className="group cursor-pointer"
-                >
-                  <div className="relative aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
-                    {item.track.album.images[0] && (
-                      <Image
-                        src={item.track.album.images[0].url}
-                        alt={item.track.album.name}
-                        fill
-                        className="object-cover"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium truncate">{item.track.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {item.track.artists.map((a) => a.name).join(", ")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Your Playlists */}
         <div className="mb-8">
@@ -258,10 +218,4 @@ export function HomeView({
       </div>
     </ScrollArea>
   );
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
