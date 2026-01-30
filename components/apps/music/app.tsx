@@ -10,6 +10,7 @@ import { MusicView } from "./types";
 import { Sidebar } from "./sidebar";
 import { Nav } from "./nav";
 import { NowPlayingBar } from "./now-playing-bar";
+import { ChevronLeft } from "lucide-react";
 import {
   HomeView,
   ArtistsView,
@@ -83,6 +84,11 @@ export default function App({ isDesktop = false }: AppProps) {
     setShowContent(true);
   }, []);
 
+  // Handle back to sidebar on mobile
+  const handleBack = useCallback(() => {
+    setShowContent(false);
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -129,6 +135,22 @@ export default function App({ isDesktop = false }: AppProps) {
   const selectedPlaylist = selectedPlaylistId
     ? playlists.find((p) => p.id === selectedPlaylistId)
     : null;
+
+  // Get title and subtitle for mobile header
+  const mobileHeader = (() => {
+    switch (activeView) {
+      case "recently-added":
+        return { title: "Recently Added", subtitle: `${songs.length} songs` };
+      case "artists":
+        return { title: "Artists", subtitle: `${artists.length} artists` };
+      case "albums":
+        return { title: "Albums", subtitle: `${albums.length} albums` };
+      case "songs":
+        return { title: "Songs", subtitle: `${songs.length} songs` };
+      default:
+        return { title: "", subtitle: null };
+    }
+  })();
 
   if (!isLayoutInitialized) {
     return <div className="h-full bg-background" />;
@@ -232,6 +254,25 @@ export default function App({ isDesktop = false }: AppProps) {
             showMainContent ? "block" : "hidden"
           )}
         >
+          {/* Mobile content header with back button */}
+          {isMobileView && (
+            <div className="px-4 py-3 flex items-center gap-3 sticky top-0 z-[1] select-none bg-background">
+              <button
+                onClick={handleBack}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              {activeView !== "playlist" && activeView !== "home" && (
+                <div>
+                  <h1 className="text-lg font-semibold">{mobileHeader.title}</h1>
+                  {mobileHeader.subtitle && (
+                    <p className="text-xs text-muted-foreground">{mobileHeader.subtitle}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {/* Draggable header area for content - absolute so it doesn't affect layout */}
           {!isMobileView && (
             <div

@@ -77,7 +77,7 @@ export function HomeView({
 
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6", isMobileView && "p-4")}>
+      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
         {/* Featured Playlist Hero */}
         <div className="mb-8">
           <div
@@ -188,7 +188,7 @@ export function HomeView({
                   key={track.id}
                   onClick={() => handleTrackPlay(track, featuredPlaylist.tracks)}
                   className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
+                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors overflow-hidden",
                     isCurrentTrack
                       ? "bg-red-500/10"
                       : "hover:bg-muted"
@@ -215,7 +215,7 @@ export function HomeView({
                       unoptimized
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="w-0 flex-grow overflow-hidden">
                     <p
                       className={cn(
                         "text-sm font-medium truncate",

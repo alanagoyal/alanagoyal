@@ -46,7 +46,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
 
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6", isMobileView && "p-4")}>
+      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
         {/* Playlist Header */}
         <div
           className={cn(
@@ -142,7 +142,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                   key={track.id}
                   onClick={() => handleTrackPlay(track)}
                   className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group",
+                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group overflow-hidden",
                     isCurrentTrack ? "bg-red-500/10" : "hover:bg-muted"
                   )}
                 >
@@ -170,7 +170,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                       unoptimized
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="w-0 flex-grow overflow-hidden">
                     <p
                       className={cn(
                         "text-sm font-medium truncate",
@@ -188,7 +188,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                       {track.album}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground w-12 text-right">
+                  <span className="text-xs text-muted-foreground w-12 text-right flex-shrink-0">
                     {formatDuration(track.duration)}
                   </span>
                 </div>

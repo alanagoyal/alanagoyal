@@ -12,8 +12,8 @@ interface AlbumsViewProps {
 export function AlbumsView({ albums, isMobileView }: AlbumsViewProps) {
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6", isMobileView && "p-4")}>
-        <h2 className="text-lg font-semibold mb-4">Albums</h2>
+      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
+        {!isMobileView && <h2 className="text-lg font-semibold mb-4">Albums</h2>}
         <div
           className={cn(
             "grid gap-4",
