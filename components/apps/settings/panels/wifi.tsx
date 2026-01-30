@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Wifi, Lock, MoreHorizontal, Check, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSystemSettings } from "@/lib/system-settings-context";
 
 // Wi-Fi signal strength icon component
 function WifiSignal({ strength = 3, className }: { strength?: 1 | 2 | 3; className?: string }) {
@@ -30,7 +30,7 @@ interface WifiPanelProps {
 }
 
 export function WifiPanel({ isMobile = false }: WifiPanelProps) {
-  const [isEnabled, setIsEnabled] = useState(true);
+  const { wifiEnabled, setWifiEnabled } = useSystemSettings();
 
   // Desktop layout (macOS style)
   return (
@@ -44,16 +44,16 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium">Wi-Fi</span>
             <button
-              onClick={() => setIsEnabled(!isEnabled)}
+              onClick={() => setWifiEnabled(!wifiEnabled)}
               className={cn(
                 "w-10 h-6 rounded-full transition-colors relative shrink-0",
-                isEnabled ? "bg-blue-500" : "bg-gray-300"
+                wifiEnabled ? "bg-blue-500" : "bg-gray-300"
               )}
             >
               <div
                 className={cn(
                   "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                  isEnabled ? "translate-x-4" : "translate-x-0.5"
+                  wifiEnabled ? "translate-x-4" : "translate-x-0.5"
                 )}
               />
             </button>
@@ -65,7 +65,7 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
         </div>
       </div>
 
-      {isEnabled && (
+      {wifiEnabled && (
         <>
           {/* Connected network */}
           <div className="py-4 border-b border-border/50">

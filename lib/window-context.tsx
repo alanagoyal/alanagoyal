@@ -15,6 +15,7 @@ import {
   Size,
 } from "@/types/window";
 import { APPS, getAppById } from "./app-config";
+import { clearAppState } from "./sidebar-persistence";
 
 const STORAGE_KEY = "desktop-window-state";
 
@@ -773,6 +774,8 @@ export function WindowManagerProvider({
 
   const closeWindow = useCallback((appId: string) => {
     dispatch({ type: "CLOSE_WINDOW", appId });
+    // Clear sidebar/view state when app window is closed
+    clearAppState(appId);
   }, []);
 
   const focusWindow = useCallback((appId: string) => {

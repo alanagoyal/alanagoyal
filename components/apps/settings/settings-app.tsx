@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Nav } from "./nav";
 import { Sidebar } from "./sidebar";
 import { Content } from "./content";
+import { loadSettingsState, saveSettingsState } from "@/lib/sidebar-persistence";
 
 export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth";
 export type SettingsPanel = "about" | "personal-info" | "storage" | null;
@@ -21,9 +22,16 @@ interface SettingsAppProps {
 }
 
 export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory }: SettingsAppProps) {
-  const [history, setHistory] = useState<HistoryEntry[]>([
-    { category: initialCategory || "general", panel: initialPanel || null }
-  ]);
+  // Load persisted state (props take precedence if provided)
+  const getInitialState = (): HistoryEntry => {
+    if (initialCategory || initialPanel) {
+      return { category: initialCategory || "general", panel: initialPanel || null };
+    }
+    const saved = loadSettingsState();
+    return { category: saved.category, panel: saved.panel };
+  };
+
+  const [history, setHistory] = useState<HistoryEntry[]>(() => [getInitialState()]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [scrollToOSVersion, setScrollToOSVersion] = useState(false);
 
@@ -35,6 +43,14 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     }
   }, [initialPanel, initialCategory]);
   const [showSidebar, setShowSidebar] = useState(true);
+
+  // Persist settings state
+  useEffect(() => {
+    const currentState = history[historyIndex];
+    if (currentState) {
+      saveSettingsState(currentState.category, currentState.panel);
+    }
+  }, [history, historyIndex]);
 
   const currentState = history[historyIndex];
   const selectedCategory = currentState.category;

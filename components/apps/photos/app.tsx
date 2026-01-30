@@ -8,6 +8,7 @@ import { Nav } from "./nav";
 import { Photo, PhotosView, TimeFilter } from "@/types/photos";
 import { usePhotos } from "@/lib/photos/use-photos";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { loadPhotosView, savePhotosView, loadPhotosSelectedId, savePhotosSelectedId } from "@/lib/sidebar-persistence";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -18,13 +19,16 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   // Fetch photos from Supabase
   const { photos, collections, loading, error, toggleFavorite } = usePhotos();
 
-  const [activeView, setActiveView] = useState<PhotosView>("library");
+  // Load persisted view state (runs after hydration since page waits for isHydrated)
+  const [activeView, setActiveView] = useState<PhotosView>(() => loadPhotosView() as PhotosView);
+  const [isViewLoaded, setIsViewLoaded] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  // If there's a selected photo, show the grid (needed for mobile to display viewer)
+  const [showGrid, setShowGrid] = useState(() => loadPhotosSelectedId() !== null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(() => loadPhotosSelectedId());
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,6 +51,25 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
+
+  // Mark view as loaded after first render
+  useEffect(() => {
+    setIsViewLoaded(true);
+  }, []);
+
+  // Persist active view (only after initial load to avoid overwriting with default)
+  useEffect(() => {
+    if (isViewLoaded) {
+      savePhotosView(activeView);
+    }
+  }, [activeView, isViewLoaded]);
+
+  // Persist selected photo
+  useEffect(() => {
+    if (isViewLoaded) {
+      savePhotosSelectedId(selectedPhotoId);
+    }
+  }, [selectedPhotoId, isViewLoaded]);
 
   // Filter and sort photos based on active view (oldest first, newest at bottom)
   const filteredPhotos = useMemo(() => {
