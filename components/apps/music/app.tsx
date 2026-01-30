@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMusic } from "@/lib/music/use-music";
 import { useAudio } from "@/lib/music/audio-context";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { loadMusicState, saveMusicState } from "@/lib/sidebar-persistence";
 import { MusicView } from "./types";
 import { Sidebar } from "./sidebar";
 import { Nav } from "./nav";
@@ -22,16 +23,27 @@ interface AppProps {
   isDesktop?: boolean;
 }
 
+// Load initial state once outside component to avoid multiple calls
+const getInitialState = () => {
+  const saved = loadMusicState();
+  return {
+    view: saved.view,
+    playlistId: saved.playlistId,
+    showContent: saved.view !== "home",
+  };
+};
+
 export default function App({ isDesktop = false }: AppProps) {
   const { playlists, featuredPlaylist, albums, artists, songs } = useMusic();
   const { playbackState, pause, resume, next, previous } = useAudio();
 
-  const [activeView, setActiveView] = useState<MusicView>("home");
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
+  const [initialState] = useState(getInitialState);
+  const [activeView, setActiveView] = useState<MusicView>(initialState.view);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(initialState.playlistId);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(initialState.showContent);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
@@ -54,6 +66,11 @@ export default function App({ isDesktop = false }: AppProps) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
+
+  // Persist sidebar/view state
+  useEffect(() => {
+    saveMusicState(activeView, selectedPlaylistId);
+  }, [activeView, selectedPlaylistId]);
 
   // Handle view selection
   const handleViewSelect = useCallback((view: MusicView, playlistId?: string) => {

@@ -38,6 +38,7 @@ const STORAGE_KEYS = {
   CALENDAR_VIEW: "calendar-view",
   CALENDAR_DATE: "calendar-date",
   CALENDAR_SCROLL: "calendar-scroll",
+  MUSIC_STATE: "music-state",
 } as const;
 
 // ============================================================================
@@ -269,6 +270,75 @@ export function clearCalendarState(): void {
   }
 }
 
+// ============================================================================
+// Music Persistence
+// ============================================================================
+
+// Note: MusicView type is defined in components/apps/music/types.ts.
+// This array must match that type.
+const MUSIC_VIEWS = [
+  "home",
+  "recently-added",
+  "artists",
+  "albums",
+  "songs",
+  "playlist",
+] as const;
+
+type MusicView = (typeof MUSIC_VIEWS)[number];
+
+interface MusicState {
+  view: MusicView;
+  playlistId: string | null;
+}
+
+export function loadMusicState(): MusicState {
+  const defaultState: MusicState = { view: "home", playlistId: null };
+
+  if (typeof window === "undefined") return defaultState;
+
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEYS.MUSIC_STATE);
+    if (!saved) return defaultState;
+
+    const parsed = JSON.parse(saved);
+
+    // Validate view
+    const view: MusicView = MUSIC_VIEWS.includes(parsed.view)
+      ? parsed.view
+      : "home";
+
+    // playlistId can be any string or null
+    const playlistId: string | null =
+      typeof parsed.playlistId === "string" ? parsed.playlistId : null;
+
+    return { view, playlistId };
+  } catch {
+    return defaultState;
+  }
+}
+
+export function saveMusicState(view: MusicView, playlistId: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      STORAGE_KEYS.MUSIC_STATE,
+      JSON.stringify({ view, playlistId })
+    );
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearMusicState(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.MUSIC_STATE);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearAppState(appId: string): void {
   switch (appId) {
     case "finder":
@@ -282,6 +352,9 @@ export function clearAppState(appId: string): void {
       break;
     case "calendar":
       clearCalendarState();
+      break;
+    case "music":
+      clearMusicState();
       break;
   }
 }
