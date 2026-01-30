@@ -38,9 +38,6 @@ const STORAGE_KEYS = {
   CALENDAR_VIEW: "calendar-view",
   CALENDAR_DATE: "calendar-date",
   CALENDAR_SCROLL: "calendar-scroll",
-  // Local storage (persists across sessions)
-  WIFI_ENABLED: "settings-wifi-enabled",
-  BLUETOOTH_ENABLED: "settings-bluetooth-enabled",
 } as const;
 
 // ============================================================================
@@ -250,50 +247,7 @@ export function clearSettingsState(): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(STORAGE_KEYS.SETTINGS_STATE);
-    // Note: WiFi/Bluetooth toggles are NOT cleared - they persist until user changes them
-  } catch {
-    // Ignore storage errors
-  }
-}
-
-// ============================================================================
-// Settings Toggle Persistence (WiFi, Bluetooth)
-// Uses localStorage since these represent device settings that should persist
-// ============================================================================
-
-export function loadWifiEnabled(): boolean {
-  if (typeof window === "undefined") return true;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEYS.WIFI_ENABLED);
-    return saved === null ? true : saved === "true";
-  } catch {
-    return true;
-  }
-}
-
-export function saveWifiEnabled(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEYS.WIFI_ENABLED, String(enabled));
-  } catch {
-    // Ignore storage errors
-  }
-}
-
-export function loadBluetoothEnabled(): boolean {
-  if (typeof window === "undefined") return true;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEYS.BLUETOOTH_ENABLED);
-    return saved === null ? true : saved === "true";
-  } catch {
-    return true;
-  }
-}
-
-export function saveBluetoothEnabled(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEYS.BLUETOOTH_ENABLED, String(enabled));
+    // Note: WiFi/Bluetooth toggles are managed by SystemSettingsContext and persist until user changes them
   } catch {
     // Ignore storage errors
   }

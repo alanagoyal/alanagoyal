@@ -129,7 +129,7 @@ interface WifiMenuProps {
 
 export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [wifiEnabled, setWifiEnabled] = useState(true);
+  const { wifiEnabled, setWifiEnabled } = useSystemSettings();
   const [showOtherNetworks, setShowOtherNetworks] = useState(false);
 
   useClickOutside(menuRef, onClose, isOpen);
@@ -246,10 +246,8 @@ const focusModeConfig: Record<Exclude<FocusMode, "off">, { name: string; icon: R
 
 export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCenterMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [wifiEnabled, setWifiEnabled] = useState(true);
-  const [bluetoothEnabled, setBluetoothEnabled] = useState(true);
   const [showFocusMenu, setShowFocusMenu] = useState(false);
-  const { brightness, setBrightness, volume, setVolume, airdropMode, setAirdropMode, focusMode, setFocusMode } = useSystemSettings();
+  const { brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode } = useSystemSettings();
 
   useClickOutside(menuRef, onClose, isOpen);
 

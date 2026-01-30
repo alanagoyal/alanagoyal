@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Bluetooth, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { loadBluetoothEnabled, saveBluetoothEnabled } from "@/lib/sidebar-persistence";
+import { useSystemSettings } from "@/lib/system-settings-context";
 
 // Device type for different icons
 type DeviceType = "keyboard" | "trackpad" | "airpods" | "airpods-max" | "headphones";
@@ -109,12 +108,7 @@ interface BluetoothPanelProps {
 }
 
 export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
-  const [isEnabled, setIsEnabled] = useState(() => loadBluetoothEnabled());
-
-  // Persist toggle state
-  useEffect(() => {
-    saveBluetoothEnabled(isEnabled);
-  }, [isEnabled]);
+  const { bluetoothEnabled, setBluetoothEnabled } = useSystemSettings();
 
   if (isMobile) {
     return (
@@ -134,16 +128,16 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
           <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/50">
             <span className="text-base">Bluetooth</span>
             <button
-              onClick={() => setIsEnabled(!isEnabled)}
+              onClick={() => setBluetoothEnabled(!bluetoothEnabled)}
               className={cn(
                 "w-12 h-7 rounded-full transition-colors relative",
-                isEnabled ? "bg-green-500" : "bg-gray-300"
+                bluetoothEnabled ? "bg-green-500" : "bg-gray-300"
               )}
             >
               <div
                 className={cn(
                   "absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform",
-                  isEnabled ? "translate-x-5" : "translate-x-0.5"
+                  bluetoothEnabled ? "translate-x-5" : "translate-x-0.5"
                 )}
               />
             </button>
@@ -201,16 +195,16 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium">Bluetooth</span>
             <button
-              onClick={() => setIsEnabled(!isEnabled)}
+              onClick={() => setBluetoothEnabled(!bluetoothEnabled)}
               className={cn(
                 "w-10 h-6 rounded-full transition-colors relative shrink-0",
-                isEnabled ? "bg-blue-500" : "bg-gray-300"
+                bluetoothEnabled ? "bg-blue-500" : "bg-gray-300"
               )}
             >
               <div
                 className={cn(
                   "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                  isEnabled ? "translate-x-4" : "translate-x-0.5"
+                  bluetoothEnabled ? "translate-x-4" : "translate-x-0.5"
                 )}
               />
             </button>
@@ -222,7 +216,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
         </div>
       </div>
 
-      {isEnabled && (
+      {bluetoothEnabled && (
         <>
           {/* Discoverable text */}
           <p className="text-xs text-muted-foreground py-4 border-b border-border/50">

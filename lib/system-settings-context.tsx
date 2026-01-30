@@ -12,6 +12,10 @@ interface SystemSettingsContextValue {
   setBrightness: (value: number) => void;
   volume: number;
   setVolume: (value: number) => void;
+  wifiEnabled: boolean;
+  setWifiEnabled: (enabled: boolean) => void;
+  bluetoothEnabled: boolean;
+  setBluetoothEnabled: (enabled: boolean) => void;
   airdropMode: AirdropMode;
   setAirdropMode: (mode: AirdropMode) => void;
   focusMode: FocusMode;
@@ -24,6 +28,8 @@ interface SystemSettingsContextValue {
 const SystemSettingsContext = createContext<SystemSettingsContextValue | null>(null);
 
 const BRIGHTNESS_KEY = "system-brightness";
+const WIFI_KEY = "settings-wifi-enabled";
+const BLUETOOTH_KEY = "settings-bluetooth-enabled";
 const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
 const OS_VERSION_KEY = "system-os-version";
@@ -33,6 +39,8 @@ function getInitialSettings() {
   if (typeof window === "undefined") {
     return {
       brightness: 100,
+      wifiEnabled: true,
+      bluetoothEnabled: true,
       airdropMode: "contacts" as AirdropMode,
       focusMode: "off" as FocusMode,
       osVersionId: DEFAULT_OS_VERSION_ID,
@@ -40,12 +48,16 @@ function getInitialSettings() {
   }
 
   const storedBrightness = localStorage.getItem(BRIGHTNESS_KEY);
+  const storedWifi = localStorage.getItem(WIFI_KEY);
+  const storedBluetooth = localStorage.getItem(BLUETOOTH_KEY);
   const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
   const storedFocus = localStorage.getItem(FOCUS_KEY);
   const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
 
   return {
     brightness: storedBrightness ? parseFloat(storedBrightness) : 100,
+    wifiEnabled: storedWifi === null ? true : storedWifi === "true",
+    bluetoothEnabled: storedBluetooth === null ? true : storedBluetooth === "true",
     airdropMode: (storedAirdrop === "contacts" || storedAirdrop === "everyone" ? storedAirdrop : "contacts") as AirdropMode,
     focusMode: (storedFocus === "off" || storedFocus === "doNotDisturb" || storedFocus === "sleep" || storedFocus === "reduceInterruptions" ? storedFocus : "off") as FocusMode,
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
@@ -63,6 +75,8 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   // Load all settings synchronously from localStorage to prevent flash on hydration
   const [brightness, setBrightnessState] = useState(initial.brightness);
   const [volume, setVolumeState] = useState(50);
+  const [wifiEnabled, setWifiEnabledState] = useState(initial.wifiEnabled);
+  const [bluetoothEnabled, setBluetoothEnabledState] = useState(initial.bluetoothEnabled);
   const [airdropMode, setAirdropModeState] = useState<AirdropMode>(initial.airdropMode);
   const [focusMode, setFocusModeState] = useState<FocusMode>(initial.focusMode);
   const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
@@ -84,6 +98,20 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
     const clamped = Math.max(0, Math.min(100, value));
     setVolumeState(clamped);
     soundEffects.setVolume(clamped / 100);
+  }, []);
+
+  const setWifiEnabled = useCallback((enabled: boolean) => {
+    setWifiEnabledState(enabled);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(WIFI_KEY, String(enabled));
+    }
+  }, []);
+
+  const setBluetoothEnabled = useCallback((enabled: boolean) => {
+    setBluetoothEnabledState(enabled);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(BLUETOOTH_KEY, String(enabled));
+    }
   }, []);
 
   const setAirdropMode = useCallback((mode: AirdropMode) => {
@@ -110,7 +138,7 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, airdropMode, setAirdropMode, focusMode, setFocusMode, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
