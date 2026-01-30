@@ -1,0 +1,33 @@
+components/apps/music/content-views/home-view.tsx
+  2443866c22d7de51 80
+components/apps/music/content-views/playlist-view.tsx
+  2443866c22d7de51 63
+components/apps/music/content-views/artists-view.tsx
+  2443866c22d7de51 15
+components/apps/music/content-views/albums-view.tsx
+  2443866c22d7de51 15
+components/apps/music/content-views/songs-view.tsx
+  2443866c22d7de51 31
+components/apps/music/content-views/recently-added-view.tsx
+  2443866c22d7de51 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "b779c9c07c840c466cbff6032de1bbf73f1bad1c",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
