@@ -1,0 +1,25 @@
+components/apps/music/app.tsx
+  2443866c22d7de51 8,26-35,40-42,46,70-74
+lib/sidebar-persistence.ts
+  2443866c22d7de51 41,273-341,356-358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "f70c839310eba30e67b3216d87ff5535ef2dedcb",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 96,
+      "total_deletions": 6,
+      "accepted_lines": 93,
+      "overriden_lines": 0
+    }
+  }
+}
