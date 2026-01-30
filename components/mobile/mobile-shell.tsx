@@ -70,7 +70,7 @@ export function MobileShell({ initialApp, initialNoteSlug, initialTextEditFile }
           {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
           {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
           {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
-          {activeAppId === "music" && <MusicApp isMobile={true} inShell={false} />}
+          {activeAppId === "music" && <MusicApp isMobile={true} />}
           {activeAppId === "textedit" && (
             <TextEditApp
               isMobile={true}

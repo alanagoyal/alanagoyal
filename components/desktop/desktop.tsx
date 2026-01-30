@@ -383,7 +383,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
           </Window>
 
           <Window appId="music" onFocus={handleMusicFocus}>
-            <MusicApp inShell={true} />
+            <MusicApp />
           </Window>
 
           {/* TextEdit - multi-window support */}
