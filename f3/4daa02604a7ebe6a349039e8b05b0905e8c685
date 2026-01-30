@@ -1,0 +1,35 @@
+components/apps/music/content-views/albums-view.tsx
+  2443866c22d7de51 15-16
+components/apps/music/content-views/home-view.tsx
+  2443866c22d7de51 80,191,218
+components/apps/music/content-views/playlist-view.tsx
+  2443866c22d7de51 49,145,173,191
+components/apps/music/app.tsx
+  2443866c22d7de51 13,87-91,139-154,257-275
+components/apps/music/content-views/songs-view.tsx
+  2443866c22d7de51 31,33-34,36,59,87,105
+components/apps/music/content-views/artists-view.tsx
+  2443866c22d7de51 15,17
+components/apps/music/content-views/recently-added-view.tsx
+  2443866c22d7de51 34,36-37,39,62,90,108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "f34daa02604a7ebe6a349039e8b05b0905e8c685",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 207,
+      "total_deletions": 132,
+      "accepted_lines": 106,
+      "overriden_lines": 0
+    }
+  }
+}
