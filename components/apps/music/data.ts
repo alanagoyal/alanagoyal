@@ -4,7 +4,7 @@ import { Playlist } from "./types";
 export const DEFAULT_PLAYLISTS: Playlist[] = [
   {
     id: "hip-hop-classics",
-    name: "Hip Hop Classics",
+    name: "🪐",
     description: "Essential hip hop tracks",
     coverArt: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/e1/cb/32/e1cb3268-1ba1-2c11-2f47-92ee469fac6a/09UMGIM33420.rgb.jpg/600x600bb.jpg",
     is_featured: true,
@@ -139,7 +139,7 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
   },
   {
     id: "electronic-chill",
-    name: "Electronic Chill",
+    name: "🍓",
     description: "Melodic electronic vibes",
     coverArt: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/4f/74/90/4f7490f2-c725-0179-bc26-bce83d2cc44f/5039060800898.png/600x600bb.jpg",
     tracks: [
@@ -300,7 +300,7 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
   },
   {
     id: "country",
-    name: "Country",
+    name: "🤠",
     description: "Modern country hits",
     coverArt: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/82/eb/b3/82ebb3c6-2bd4-31fd-0eb9-57667f3590e1/00602455239419_Cover.jpg/600x600bb.jpg",
     tracks: [
@@ -452,7 +452,7 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
   },
   {
     id: "pop-hits",
-    name: "Pop Hits",
+    name: "🪄",
     description: "Today's top pop tracks",
     coverArt: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/18/75/d5/1875d587-3892-c732-8edb-e864c5a53b5b/21UMGIM11942.rgb.jpg/600x600bb.jpg",
     tracks: [
