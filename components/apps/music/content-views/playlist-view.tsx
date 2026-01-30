@@ -60,7 +60,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
 
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
+      <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         {/* Playlist Header */}
         <div
           className={cn(

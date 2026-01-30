@@ -77,7 +77,7 @@ export function HomeView({
 
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
+      <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         {/* Featured Playlist Hero */}
         <div className="mb-8">
           <div

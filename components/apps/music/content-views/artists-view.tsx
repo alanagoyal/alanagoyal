@@ -12,7 +12,7 @@ interface ArtistsViewProps {
 export function ArtistsView({ artists, isMobileView }: ArtistsViewProps) {
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
+      <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         <div>
           {!isMobileView && <h2 className="text-lg font-semibold mb-4">Artists</h2>}
           <div

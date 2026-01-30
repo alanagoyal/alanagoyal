@@ -31,7 +31,7 @@ export function RecentlyAddedView({
 
   return (
     <ScrollArea className="h-full" bottomMargin="0">
-      <div className={cn("p-6 pb-20", isMobileView && "p-4 pb-20")}>
+      <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         <div>
           {/* Title only on desktop - mobile shows it in nav header */}
           {!isMobileView && (
