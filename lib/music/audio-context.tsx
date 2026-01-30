@@ -40,6 +40,12 @@ function loadStoredState(): Partial<PlaybackState> {
         volume: parsed.volume ?? 0.7,
         isShuffle: parsed.isShuffle ?? false,
         repeatMode: parsed.repeatMode ?? "off",
+        currentTrack: parsed.currentTrack ?? null,
+        queue: parsed.queue ?? [],
+        originalQueue: parsed.originalQueue ?? [],
+        queueIndex: parsed.queueIndex ?? -1,
+        duration: parsed.duration ?? 0,
+        progress: parsed.progress ?? 0,
       };
     }
   } catch {
@@ -57,6 +63,12 @@ function saveState(state: PlaybackState) {
         volume: state.volume,
         isShuffle: state.isShuffle,
         repeatMode: state.repeatMode,
+        currentTrack: state.currentTrack,
+        queue: state.queue,
+        originalQueue: state.originalQueue,
+        queueIndex: state.queueIndex,
+        duration: state.duration,
+        progress: state.progress,
       })
     );
   } catch {
@@ -95,7 +107,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     ...loadStoredState(),
   }));
 
-  // Create audio element on mount
+  // Create audio element on mount and restore track if available
   useEffect(() => {
     if (typeof window !== "undefined" && !audioRef.current) {
       const audio = new Audio();
@@ -106,6 +118,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
         }
       });
+
+      // Restore track from persisted state (but don't auto-play)
+      if (playbackState.currentTrack?.previewUrl) {
+        audio.src = playbackState.currentTrack.previewUrl;
+        // Seek to saved progress after metadata loads
+        audio.addEventListener("loadedmetadata", () => {
+          if (playbackState.progress > 0 && audio.duration) {
+            audio.currentTime = playbackState.progress * audio.duration;
+          }
+        }, { once: true });
+      }
 
       audioRef.current = audio;
     }
@@ -127,10 +150,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [playbackState.volume, systemVolume]);
 
-  // Save settings to localStorage
+  // Save state to localStorage
   useEffect(() => {
     saveState(playbackState);
-  }, [playbackState.volume, playbackState.isShuffle, playbackState.repeatMode]);
+  }, [playbackState]);
 
   // Progress update interval
   useEffect(() => {
