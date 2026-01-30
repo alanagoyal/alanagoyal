@@ -13,10 +13,8 @@ import { PlaylistTrack, RepeatMode, PlaybackState } from "@/components/apps/musi
 import { useSystemSettings } from "@/lib/system-settings-context";
 
 interface AudioContextValue {
-  // State
   playbackState: PlaybackState;
-  // Actions
-  play: (track: PlaylistTrack, queue?: PlaylistTrack[]) => void;
+  play: (track: PlaylistTrack, queue: PlaylistTrack[]) => void;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -26,7 +24,6 @@ interface AudioContextValue {
   setVolume: (volume: number) => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
-  setQueue: (tracks: PlaylistTrack[], startIndex?: number) => void;
 }
 
 const AudioContext = createContext<AudioContextValue | null>(null);
@@ -51,7 +48,7 @@ function loadStoredState(): Partial<PlaybackState> {
   return {};
 }
 
-function saveState(state: Partial<PlaybackState>) {
+function saveState(state: PlaybackState) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(
@@ -67,10 +64,21 @@ function saveState(state: Partial<PlaybackState>) {
   }
 }
 
+// Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 const defaultState: PlaybackState = {
   isPlaying: false,
   currentTrack: null,
   queue: [],
+  originalQueue: [],
   queueIndex: -1,
   progress: 0,
   volume: 0.7,
@@ -93,7 +101,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const audio = new Audio();
       audio.volume = (systemVolume / 100) * playbackState.volume;
 
-      // Update duration when audio metadata loads (gets actual preview duration)
       audio.addEventListener("loadedmetadata", () => {
         if (audio.duration && isFinite(audio.duration)) {
           setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
@@ -113,7 +120,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Update audio volume when state or system volume changes
-  // Effective volume = system volume (0-100) * app volume (0-1)
   useEffect(() => {
     if (audioRef.current) {
       const effectiveVolume = (systemVolume / 100) * playbackState.volume;
@@ -123,11 +129,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   // Save settings to localStorage
   useEffect(() => {
-    saveState({
-      volume: playbackState.volume,
-      isShuffle: playbackState.isShuffle,
-      repeatMode: playbackState.repeatMode,
-    });
+    saveState(playbackState);
   }, [playbackState.volume, playbackState.isShuffle, playbackState.repeatMode]);
 
   // Progress update interval
@@ -156,13 +158,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const { repeatMode, queue, queueIndex } = playbackState;
 
       if (repeatMode === "one") {
-        // Repeat current track
         audio.currentTime = 0;
         audio.play().catch(() => {});
         return;
       }
 
-      // Try to play next track
       const nextIndex = queueIndex + 1;
       if (nextIndex < queue.length) {
         const nextTrack = queue[nextIndex];
@@ -174,16 +174,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: nextTrack,
             queueIndex: nextIndex,
             progress: 0,
-                      }));
+          }));
         } else {
-          // Skip tracks without preview
           setPlaybackState((prev) => ({
             ...prev,
             queueIndex: nextIndex,
           }));
         }
       } else if (repeatMode === "all" && queue.length > 0) {
-        // Restart queue
         const firstTrack = queue[0];
         if (firstTrack.previewUrl) {
           audio.src = firstTrack.previewUrl;
@@ -193,10 +191,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: firstTrack,
             queueIndex: 0,
             progress: 0,
-                      }));
+          }));
         }
       } else {
-        // Stop playing
         setPlaybackState((prev) => ({
           ...prev,
           isPlaying: false,
@@ -209,7 +206,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return () => audio.removeEventListener("ended", handleEnded);
   }, [playbackState.repeatMode, playbackState.queue, playbackState.queueIndex]);
 
-  const play = useCallback((track: PlaylistTrack, queue?: PlaylistTrack[]) => {
+  // Play a track
+  const play = useCallback((track: PlaylistTrack, tracks: PlaylistTrack[]) => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -218,20 +216,34 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const newQueue = queue || [track];
-    const queueIndex = queue ? queue.findIndex((t) => t.id === track.id) : 0;
-
     audio.src = track.previewUrl;
     audio.play().catch(console.error);
 
-    setPlaybackState((prev) => ({
-      ...prev,
-      isPlaying: true,
-      currentTrack: track,
-      queue: newQueue,
-      queueIndex: queueIndex >= 0 ? queueIndex : 0,
-      progress: 0,
-    }));
+    setPlaybackState((prev) => {
+      // If shuffle is on, create shuffled queue with selected track first
+      let queue: PlaylistTrack[];
+      let queueIndex: number;
+
+      if (prev.isShuffle) {
+        const otherTracks = tracks.filter((t) => t.id !== track.id);
+        queue = [track, ...shuffleArray(otherTracks)];
+        queueIndex = 0;
+      } else {
+        queue = tracks;
+        queueIndex = tracks.findIndex((t) => t.id === track.id);
+        if (queueIndex < 0) queueIndex = 0;
+      }
+
+      return {
+        ...prev,
+        isPlaying: true,
+        currentTrack: track,
+        queue,
+        originalQueue: tracks,
+        queueIndex,
+        progress: 0,
+      };
+    });
   }, []);
 
   const pause = useCallback(() => {
@@ -258,35 +270,22 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         currentTrack: null,
         progress: 0,
         queue: [],
+        originalQueue: [],
         queueIndex: -1,
       }));
     }
   }, []);
 
   const next = useCallback(() => {
-    const { queue, queueIndex, repeatMode, isShuffle } = playbackState;
+    const { queue, queueIndex, repeatMode } = playbackState;
     if (queue.length === 0) return;
 
-    let nextIndex: number;
-
-    if (isShuffle) {
-      // Pick random track that's not the current one
-      const availableIndices = queue
-        .map((_, i) => i)
-        .filter((i) => i !== queueIndex);
-      if (availableIndices.length === 0) {
-        nextIndex = queueIndex;
+    let nextIndex = queueIndex + 1;
+    if (nextIndex >= queue.length) {
+      if (repeatMode === "all") {
+        nextIndex = 0;
       } else {
-        nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-      }
-    } else {
-      nextIndex = queueIndex + 1;
-      if (nextIndex >= queue.length) {
-        if (repeatMode === "all") {
-          nextIndex = 0;
-        } else {
-          return; // End of queue
-        }
+        return;
       }
     }
 
@@ -300,7 +299,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         currentTrack: nextTrack,
         queueIndex: nextIndex,
         progress: 0,
-              }));
+      }));
     }
   }, [playbackState]);
 
@@ -309,14 +308,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     if (!audio || queue.length === 0) return;
 
-    // If more than 3 seconds in, restart current track
     if (audio.currentTime > 3) {
       audio.currentTime = 0;
       setPlaybackState((prev) => ({ ...prev, progress: 0 }));
       return;
     }
 
-    // Otherwise go to previous track
     const prevIndex = queueIndex - 1;
     if (prevIndex >= 0) {
       const prevTrack = queue[prevIndex];
@@ -329,7 +326,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           currentTrack: prevTrack,
           queueIndex: prevIndex,
           progress: 0,
-                  }));
+        }));
       }
     }
   }, [playbackState]);
@@ -350,8 +347,39 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setPlaybackState((prev) => ({ ...prev, volume: clampedVolume }));
   }, [systemVolume]);
 
+  // Toggle shuffle mode
   const toggleShuffle = useCallback(() => {
-    setPlaybackState((prev) => ({ ...prev, isShuffle: !prev.isShuffle }));
+    setPlaybackState((prev) => {
+      const newIsShuffle = !prev.isShuffle;
+      const currentTrack = prev.currentTrack;
+
+      // If we have an active queue, reshuffle or restore it
+      if (prev.originalQueue.length > 0 && currentTrack) {
+        let newQueue: PlaylistTrack[];
+        let newQueueIndex: number;
+
+        if (newIsShuffle) {
+          // Turning shuffle ON: shuffle remaining tracks, keep current at front
+          const otherTracks = prev.originalQueue.filter((t) => t.id !== currentTrack.id);
+          newQueue = [currentTrack, ...shuffleArray(otherTracks)];
+          newQueueIndex = 0;
+        } else {
+          // Turning shuffle OFF: restore original order
+          newQueue = prev.originalQueue;
+          newQueueIndex = prev.originalQueue.findIndex((t) => t.id === currentTrack.id);
+          if (newQueueIndex < 0) newQueueIndex = 0;
+        }
+
+        return {
+          ...prev,
+          isShuffle: newIsShuffle,
+          queue: newQueue,
+          queueIndex: newQueueIndex,
+        };
+      }
+
+      return { ...prev, isShuffle: newIsShuffle };
+    });
   }, []);
 
   const toggleRepeat = useCallback(() => {
@@ -362,23 +390,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       return { ...prev, repeatMode: nextMode };
     });
   }, []);
-
-  const setQueue = useCallback(
-    (tracks: PlaylistTrack[], startIndex = 0) => {
-      if (tracks.length === 0) return;
-
-      const shuffledTracks = playbackState.isShuffle
-        ? [...tracks].sort(() => Math.random() - 0.5)
-        : tracks;
-
-      setPlaybackState((prev) => ({
-        ...prev,
-        queue: shuffledTracks,
-        queueIndex: startIndex,
-      }));
-    },
-    [playbackState.isShuffle]
-  );
 
   return (
     <AudioContext.Provider
@@ -394,7 +405,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         setVolume,
         toggleShuffle,
         toggleRepeat,
-        setQueue,
       }}
     >
       {children}

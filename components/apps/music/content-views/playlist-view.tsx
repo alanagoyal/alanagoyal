@@ -42,6 +42,20 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
     }
   };
 
+  const handleShufflePlay = () => {
+    // Enable shuffle mode if not already on, then play
+    if (!playbackState.isShuffle) {
+      toggleShuffle();
+    }
+    const firstPlayable = playlist.tracks.find((t) => t.previewUrl);
+    if (firstPlayable) {
+      // Small delay to let shuffle state update
+      setTimeout(() => {
+        play(firstPlayable, playlist.tracks);
+      }, 0);
+    }
+  };
+
   const totalDuration = playlist.tracks.reduce((sum, t) => sum + t.duration, 0);
 
   return (
@@ -105,13 +119,9 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                 )}
               </button>
               <button
-                onClick={toggleShuffle}
-                className={cn(
-                  "p-2.5 rounded-full transition-colors",
-                  playbackState.isShuffle
-                    ? "bg-red-500 text-white"
-                    : "bg-muted hover:bg-muted/80"
-                )}
+                onClick={handleShufflePlay}
+                className="p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                title="Shuffle Play"
               >
                 <Shuffle className="w-4 h-4" />
               </button>
@@ -119,13 +129,13 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
           </div>
         </div>
 
-        {/* Track List */}
+        {/* Track List - always shows original order */}
         <div>
           {/* Header row for desktop */}
           {!isMobileView && (
             <div className="flex items-center gap-3 px-2 py-2 border-b border-border text-xs text-muted-foreground uppercase tracking-wide">
               <span className="w-5 text-center">#</span>
-              <span className="w-10" /> {/* Album art space */}
+              <span className="w-10" />
               <span className="flex-1">Title</span>
               <span className="w-[150px]">Album</span>
               <span className="w-12 text-right">Time</span>
@@ -200,4 +210,3 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
     </ScrollArea>
   );
 }
-

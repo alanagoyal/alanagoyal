@@ -42,13 +42,13 @@ export function HomeView({
     }
   };
 
-  const handleTrackPlay = (track: PlaylistTrack, queue: PlaylistTrack[]) => {
+  const handleTrackPlay = (track: PlaylistTrack, playlist: Playlist) => {
     if (playbackState.currentTrack?.id === track.id && playbackState.isPlaying) {
       pause();
     } else if (playbackState.currentTrack?.id === track.id) {
       resume();
     } else {
-      play(track, queue);
+      play(track, playlist.tracks);
     }
   };
 
@@ -186,7 +186,7 @@ export function HomeView({
               return (
                 <div
                   key={track.id}
-                  onClick={() => handleTrackPlay(track, featuredPlaylist.tracks)}
+                  onClick={() => handleTrackPlay(track, featuredPlaylist)}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors overflow-hidden",
                     isCurrentTrack

@@ -16,13 +16,13 @@ interface SongsViewProps {
 export function SongsView({ songs, isMobileView }: SongsViewProps) {
   const { playbackState, play, pause, resume } = useAudio();
 
-  const handleTrackPlay = (track: PlaylistTrack, queue: PlaylistTrack[]) => {
+  const handleTrackPlay = (track: PlaylistTrack) => {
     if (playbackState.currentTrack?.id === track.id && playbackState.isPlaying) {
       pause();
     } else if (playbackState.currentTrack?.id === track.id) {
       resume();
     } else {
-      play(track, queue);
+      play(track, songs);
     }
   };
 
@@ -54,7 +54,7 @@ export function SongsView({ songs, isMobileView }: SongsViewProps) {
               return (
                 <div
                   key={track.id}
-                  onClick={() => handleTrackPlay(track, songs)}
+                  onClick={() => handleTrackPlay(track)}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group overflow-hidden",
                     isCurrentTrack ? "bg-red-500/10" : "hover:bg-muted"

@@ -34,6 +34,7 @@ export interface PlaybackState {
   isPlaying: boolean;
   currentTrack: PlaylistTrack | null;
   queue: PlaylistTrack[];
+  originalQueue: PlaylistTrack[]; // Original order before shuffle
   queueIndex: number;
   progress: number; // 0-1
   volume: number; // 0-1

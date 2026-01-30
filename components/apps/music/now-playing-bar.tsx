@@ -103,6 +103,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                     ? "text-red-500"
                     : "text-muted-foreground hover:text-foreground"
                 )}
+                title={isShuffle ? "Shuffle On" : "Shuffle Off"}
               >
                 <Shuffle className="w-4 h-4" />
               </button>
