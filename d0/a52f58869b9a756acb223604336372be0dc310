@@ -1,0 +1,96 @@
+lib/sidebar-persistence.ts
+  c1f5b177ef49752a 250
+components/apps/settings/panels/bluetooth.tsx
+  c1f5b177ef49752a 5,111,131,134,140,198,201,207,219
+components/apps/settings/panels/wifi.tsx
+  c1f5b177ef49752a 5,33,47,50,56,68
+lib/system-settings-context.tsx
+  c1f5b177ef49752a 15-18,31-32,42-43,51-52,59-60,78-79,103-116,141
+components/desktop/status-menus.tsx
+  c1f5b177ef49752a 132,250
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "d0a52f58869b9a756acb223604336372be0dc310",
+  "prompts": {
+    "0a6037c512b0d42f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b41dc5bd-ca00-4ac2-9dd5-277fa18c5eb2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 18,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    },
+    "4e03b2fb117e7846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5a0401e-b904-46ca-a99e-bf23e6ebceab",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 71,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    },
+    "6326dc4f9bf6c3e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "743fdba9-5f71-4f11-baf6-8c591735190a",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 111,
+      "total_deletions": 42,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 841,
+      "overriden_lines": 0
+    },
+    "b4fd463f89368ebf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0091fbc6-c74f-4606-a01d-b171d21186aa",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    },
+    "c1f5b177ef49752a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d02da79-effb-4e75-aca7-ac9ca1a7d524",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 105,
+      "total_deletions": 12,
+      "accepted_lines": 335,
+      "overriden_lines": 0
+    }
+  }
+}
