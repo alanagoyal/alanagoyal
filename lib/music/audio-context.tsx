@@ -10,7 +10,7 @@ import {
   ReactNode,
 } from "react";
 import { PlaylistTrack, RepeatMode, PlaybackState } from "@/components/apps/music/types";
-import { useSystemSettings } from "@/lib/system-settings-context";
+import { useSystemSettingsSafe } from "@/lib/system-settings-context";
 
 interface AudioContextValue {
   playbackState: PlaybackState;
@@ -101,7 +101,7 @@ const defaultState: PlaybackState = {
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { volume: systemVolume } = useSystemSettings();
+  const { volume: systemVolume } = useSystemSettingsSafe();
   const [playbackState, setPlaybackState] = useState<PlaybackState>(() => ({
     ...defaultState,
     ...loadStoredState(),

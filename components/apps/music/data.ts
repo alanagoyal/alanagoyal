@@ -701,3 +701,6 @@ export function getAllSongs() {
 export function getFeaturedPlaylist() {
   return DEFAULT_PLAYLISTS.find((p) => p.is_featured) || DEFAULT_PLAYLISTS[0];
 }
+
+// Default track for media widget when nothing has been played
+export const DEFAULT_TRACK = DEFAULT_PLAYLISTS[0].tracks[0]; // "Soundtrack 2 My Life"

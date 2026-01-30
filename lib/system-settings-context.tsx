@@ -158,3 +158,27 @@ export function useSystemSettings(): SystemSettingsContextValue {
   }
   return context;
 }
+
+// Safe version that returns defaults when outside provider (for use in AudioProvider at root level)
+const defaultSettings: SystemSettingsContextValue = {
+  brightness: 100,
+  setBrightness: () => {},
+  volume: 100,
+  setVolume: () => {},
+  wifiEnabled: true,
+  setWifiEnabled: () => {},
+  bluetoothEnabled: true,
+  setBluetoothEnabled: () => {},
+  airdropMode: "contacts",
+  setAirdropMode: () => {},
+  focusMode: "off",
+  setFocusMode: () => {},
+  osVersionId: DEFAULT_OS_VERSION_ID,
+  setOSVersionId: () => {},
+  currentOS: getOSVersion(DEFAULT_OS_VERSION_ID),
+};
+
+export function useSystemSettingsSafe(): SystemSettingsContextValue {
+  const context = useContext(SystemSettingsContext);
+  return context || defaultSettings;
+}
