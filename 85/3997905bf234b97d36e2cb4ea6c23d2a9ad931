@@ -1,0 +1,29 @@
+components/desktop/status-menus.tsx
+  c1f5b177ef49752a 3,20-25,138,141-159,275-276,280-311
+lib/sidebar-persistence.ts
+  c1f5b177ef49752a 278-279,299-300
+components/apps/settings/panels/bluetooth.tsx
+  c1f5b177ef49752a 114-128
+components/apps/settings/panels/wifi.tsx
+  c1f5b177ef49752a 36-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "853997905bf234b97d36e2cb4ea6c23d2a9ad931",
+  "prompts": {
+    "c1f5b177ef49752a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d02da79-effb-4e75-aca7-ac9ca1a7d524",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 105,
+      "total_deletions": 12,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    }
+  }
+}
