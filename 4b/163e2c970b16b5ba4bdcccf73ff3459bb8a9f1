@@ -1,0 +1,33 @@
+components/apps/music/content-views/browse-view.tsx
+  2443866c22d7de51 1-317
+app/api/music/charts/route.ts
+  2443866c22d7de51 1-66
+components/apps/music/types.ts
+  2443866c22d7de51 24,31-52
+components/apps/music/app.tsx
+  2443866c22d7de51 16,143-144,177-178,269
+components/apps/music/content-views/index.ts
+  2443866c22d7de51 2
+components/apps/music/sidebar.tsx
+  2443866c22d7de51 6,54-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "4b163e2c970b16b5ba4bdcccf73ff3459bb8a9f1",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 610,
+      "total_deletions": 190,
+      "accepted_lines": 422,
+      "overriden_lines": 0
+    }
+  }
+}
