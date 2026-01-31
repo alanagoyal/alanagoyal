@@ -1,0 +1,25 @@
+components/apps/music/content-views/home-view.tsx
+  2443866c22d7de51 44,46-49,51-52,55-57,59-74,77
+components/apps/music/app.tsx
+  2443866c22d7de51 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "b9b64836b2dc28e62006f827ecd3f99be7d4db1b",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 31,
+      "total_deletions": 138,
+      "accepted_lines": 29,
+      "overriden_lines": 0
+    }
+  }
+}
