@@ -1,0 +1,27 @@
+lib/sidebar-persistence.ts
+  2443866c22d7de51 277-280,287
+lib/music/audio-context.tsx
+  2443866c22d7de51 33-44,50,68,73,98,103,110-120,125-138,143-148,156-157,159-163,166-177,179-180,188-192,204-210,221,223-230,232-252,277,296,314,366,381,397,403,418-421,427,430,433,448-451,457,461
+components/apps/music/types.ts
+  2443866c22d7de51 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "85ec563e71638e51e7a39004d56efb0f54d9392a",
+  "prompts": {
+    "2443866c22d7de51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f12a722f-46cd-4548-8db2-98734d7595c1",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 384,
+      "total_deletions": 278,
+      "accepted_lines": 210,
+      "overriden_lines": 0
+    }
+  }
+}
