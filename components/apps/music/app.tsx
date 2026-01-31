@@ -35,7 +35,7 @@ const getInitialState = () => {
 };
 
 export default function App({ isDesktop = false }: AppProps) {
-  const { playlists, featuredPlaylist, albums, artists, songs } = useMusic();
+  const { playlists, albums, artists, songs } = useMusic();
   const { playbackState, pause, resume, next, previous } = useAudio();
 
   const [initialState] = useState(getInitialState);
@@ -166,7 +166,6 @@ export default function App({ isDesktop = false }: AppProps) {
       case "home":
         return (
           <HomeView
-            featuredPlaylist={featuredPlaylist}
             playlists={playlists}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}
@@ -200,7 +199,6 @@ export default function App({ isDesktop = false }: AppProps) {
           <PlaylistView playlist={selectedPlaylist} isMobileView={isMobileView} />
         ) : (
           <HomeView
-            featuredPlaylist={featuredPlaylist}
             playlists={playlists}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}

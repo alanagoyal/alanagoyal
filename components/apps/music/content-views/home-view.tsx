@@ -3,59 +3,22 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Playlist, PlaylistTrack } from "../types";
+import { Playlist } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
-import { formatDuration } from "@/lib/music/utils";
 
 interface HomeViewProps {
-  featuredPlaylist: Playlist;
   playlists: Playlist[];
   onPlaylistSelect: (playlistId: string) => void;
   isMobileView: boolean;
 }
 
 export function HomeView({
-  featuredPlaylist,
   playlists,
   onPlaylistSelect,
   isMobileView,
 }: HomeViewProps) {
-  const { playbackState, play, pause, resume } = useAudio();
-
-  const handlePlayFeatured = () => {
-    if (featuredPlaylist.tracks.length === 0) return;
-
-    const currentlyPlayingFeatured =
-      playbackState.currentTrack &&
-      featuredPlaylist.tracks.some((t) => t.id === playbackState.currentTrack?.id);
-
-    if (currentlyPlayingFeatured && playbackState.isPlaying) {
-      pause();
-    } else if (currentlyPlayingFeatured) {
-      resume();
-    } else {
-      const firstPlayable = featuredPlaylist.tracks.find((t) => t.previewUrl);
-      if (firstPlayable) {
-        play(firstPlayable, featuredPlaylist.tracks);
-      }
-    }
-  };
-
-  const handleTrackPlay = (track: PlaylistTrack, playlist: Playlist) => {
-    if (playbackState.currentTrack?.id === track.id && playbackState.isPlaying) {
-      pause();
-    } else if (playbackState.currentTrack?.id === track.id) {
-      resume();
-    } else {
-      play(track, playlist.tracks);
-    }
-  };
-
-  const isPlayingFeatured =
-    playbackState.isPlaying &&
-    playbackState.currentTrack &&
-    featuredPlaylist.tracks.some((t) => t.id === playbackState.currentTrack?.id);
+  const { playbackState, play, pause } = useAudio();
 
   const handlePlayPlaylist = (playlist: Playlist, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -78,45 +41,40 @@ export function HomeView({
   return (
     <ScrollArea className="h-full" bottomMargin="0">
       <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
-        {/* Featured Playlist Hero */}
+        {/* Apple Music Promo Banner */}
         <div className="mb-8">
-          <div
+          <a
+            href="https://apple.com/music"
+            target="_blank"
+            rel="noopener noreferrer"
             className={cn(
-              "relative rounded-xl overflow-hidden bg-gradient-to-br from-red-500 to-pink-600",
-              isMobileView ? "h-48" : "h-64"
+              "relative block rounded-xl overflow-hidden bg-gradient-to-b from-[#fc3c44] to-[#e82934] hover:opacity-95 transition-opacity",
+              isMobileView ? "py-6 px-4" : "py-8 px-6"
             )}
           >
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <p className="text-xs uppercase tracking-wider text-white/80 mb-1">
-                Featured Playlist
+            <div className="flex flex-col items-center text-center text-white">
+              <p className="text-sm font-medium mb-4">
+                Get 3 months for $3.99/month.
               </p>
-              <h1 className="text-2xl font-bold text-white mb-1">
-                {featuredPlaylist.name}
-              </h1>
-              {featuredPlaylist.description && (
-                <p className="text-sm text-white/80 mb-4">
-                  {featuredPlaylist.description}
-                </p>
-              )}
-              <button
-                onClick={handlePlayFeatured}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-sm font-medium hover:scale-105 transition-transform"
-              >
-                {isPlayingFeatured ? (
-                  <>
-                    <Pause className="w-4 h-4" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    Play
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-1 mb-4">
+                {/* Apple Logo */}
+                <svg
+                  className={cn(isMobileView ? "w-8 h-8" : "w-10 h-10")}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                </svg>
+                <span className={cn("font-semibold", isMobileView ? "text-3xl" : "text-4xl")}>
+                  Music
+                </span>
+              </div>
+              <p className="text-sm font-medium">Try Apple Music</p>
+              <p className="text-xs text-white/80">
+                3 months for $3.99/month, then $10.99/month
+              </p>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* Your Playlists */}
@@ -173,69 +131,6 @@ export function HomeView({
           </div>
         </div>
 
-        {/* Featured Playlist Tracks Preview */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4">
-            {featuredPlaylist.name} - Tracks
-          </h2>
-          <div className="space-y-1">
-            {featuredPlaylist.tracks.slice(0, 5).map((track, index) => {
-              const isCurrentTrack = playbackState.currentTrack?.id === track.id;
-              const isPlaying = isCurrentTrack && playbackState.isPlaying;
-
-              return (
-                <div
-                  key={track.id}
-                  onClick={() => handleTrackPlay(track, featuredPlaylist)}
-                  className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors overflow-hidden",
-                    isCurrentTrack
-                      ? "bg-red-500/10"
-                      : "hover:bg-muted"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "w-5 text-center text-sm",
-                      isCurrentTrack ? "text-red-500" : "text-muted-foreground"
-                    )}
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-4 h-4 mx-auto" />
-                    ) : (
-                      index + 1
-                    )}
-                  </span>
-                  <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                    <Image
-                      src={track.albumArt}
-                      alt={track.album}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                  <div className="w-0 flex-grow overflow-hidden">
-                    <p
-                      className={cn(
-                        "text-sm font-medium truncate",
-                        isCurrentTrack && "text-red-500"
-                      )}
-                    >
-                      {track.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {track.artist}
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDuration(track.duration)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </ScrollArea>
   );
