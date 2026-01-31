@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MusicView, Playlist } from "./types";
-import { Home, Clock, User, Disc3, Music, ListMusic } from "lucide-react";
+import { Home, Compass, Clock, User, Disc3, Music, ListMusic } from "lucide-react";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -49,6 +49,13 @@ export function Sidebar({
                 label="Home"
                 isActive={activeView === "home"}
                 onClick={() => onViewSelect("home")}
+                isMobileView={isMobileView}
+              />
+              <SidebarItem
+                icon={<Compass className="w-4 h-4" />}
+                label="Browse"
+                isActive={activeView === "browse"}
+                onClick={() => onViewSelect("browse")}
                 isMobileView={isMobileView}
               />
             </div>

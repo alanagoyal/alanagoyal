@@ -13,6 +13,7 @@ import { NowPlayingBar } from "./now-playing-bar";
 import { ChevronLeft } from "lucide-react";
 import {
   HomeView,
+  BrowseView,
   ArtistsView,
   AlbumsView,
   SongsView,
@@ -139,6 +140,8 @@ export default function App({ isDesktop = false }: AppProps) {
   // Get title and subtitle for mobile header
   const mobileHeader = (() => {
     switch (activeView) {
+      case "browse":
+        return { title: "Browse", subtitle: "Top Charts" };
       case "recently-added":
         return { title: "Recently Added", subtitle: `${songs.length} songs` };
       case "artists":
@@ -171,6 +174,8 @@ export default function App({ isDesktop = false }: AppProps) {
             isMobileView={isMobileView}
           />
         );
+      case "browse":
+        return <BrowseView isMobileView={isMobileView} />;
       case "recently-added":
         return (
           <RecentlyAddedView
@@ -261,7 +266,7 @@ export default function App({ isDesktop = false }: AppProps) {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              {activeView !== "playlist" && activeView !== "home" && (
+              {activeView !== "playlist" && activeView !== "home" && activeView !== "browse" && (
                 <div>
                   <h1 className="text-lg font-semibold">{mobileHeader.title}</h1>
                   {mobileHeader.subtitle && (

@@ -21,11 +21,35 @@ export interface Playlist {
 // View types
 export type MusicView =
   | "home"
+  | "browse"
   | "recently-added"
   | "artists"
   | "albums"
   | "songs"
   | "playlist";
+
+// iTunes Chart types
+export interface ChartAlbum {
+  id: string;
+  name: string;
+  artist: string;
+  artistUrl: string;
+  albumArt: string;
+  url: string;
+  releaseDate: string;
+  genre: string;
+}
+
+export interface ChartSong {
+  id: string;
+  name: string;
+  artist: string;
+  artistUrl: string;
+  albumArt: string;
+  url: string;
+  releaseDate: string;
+  genre: string;
+}
 
 // Playback state
 export type RepeatMode = "off" | "all" | "one";
