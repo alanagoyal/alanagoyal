@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { AudioProvider } from "@/lib/music/audio-context";
 
 export const metadata: Metadata = {
   title: siteConfig.title,
@@ -37,8 +38,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <AudioProvider>
+            {children}
+            <Toaster />
+          </AudioProvider>
         </ThemeProvider>
       </body>
     </html>

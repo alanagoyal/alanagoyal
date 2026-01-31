@@ -46,6 +46,17 @@ export const APPS: AppConfig[] = [
     menuBarTitle: "Photos",
   },
   {
+    id: "music",
+    name: "Music",
+    icon: "/music.svg",
+    description: "Music library",
+    accentColor: "#FA2D48",
+    defaultPosition: { x: 140, y: 70 },
+    defaultSize: { width: 900, height: 650 },
+    minSize: { width: 600, height: 450 },
+    menuBarTitle: "Music",
+  },
+  {
     id: "calendar",
     name: "Calendar",
     icon: "/calendar-icon",
