@@ -155,8 +155,8 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
 
           {/* Progress Bar */}
           {!isMobileView && (
-            <div className="w-full max-w-md flex items-center gap-2">
-              <span className="text-xs text-muted-foreground w-10 text-right">
+            <div className="w-full max-w-md flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-8 text-right tabular-nums">
                 {formatDuration(currentTime)}
               </span>
               <Slider
@@ -164,9 +164,9 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                 max={100}
                 step={0.1}
                 onValueChange={([value]) => seek(value / 100)}
-                className="flex-1"
+                className="flex-1 min-w-[100px]"
               />
-              <span className="text-xs text-muted-foreground w-10">
+              <span className="text-xs text-muted-foreground w-8 tabular-nums">
                 {formatDuration(duration)}
               </span>
             </div>
