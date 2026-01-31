@@ -30,22 +30,33 @@ const AudioContext = createContext<AudioContextValue | null>(null);
 
 const STORAGE_KEY = "music-playback-state";
 
+// Persist playback state including queue for next/previous to work after refresh
+interface PersistedState {
+  volume: number;
+  isShuffle: boolean;
+  repeatMode: RepeatMode;
+  currentTrack: PlaylistTrack | null;
+  progress: number;
+  queue: PlaylistTrack[];
+  originalQueue: PlaylistTrack[];
+  queueIndex: number;
+}
+
 function loadStoredState(): Partial<PlaybackState> {
   if (typeof window === "undefined") return {};
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored);
+      const parsed: PersistedState = JSON.parse(stored);
       return {
         volume: parsed.volume ?? 0.7,
         isShuffle: parsed.isShuffle ?? false,
         repeatMode: parsed.repeatMode ?? "off",
         currentTrack: parsed.currentTrack ?? null,
+        progress: parsed.progress ?? 0,
         queue: parsed.queue ?? [],
         originalQueue: parsed.originalQueue ?? [],
         queueIndex: parsed.queueIndex ?? -1,
-        duration: parsed.duration ?? 0,
-        progress: parsed.progress ?? 0,
       };
     }
   } catch {
@@ -54,25 +65,12 @@ function loadStoredState(): Partial<PlaybackState> {
   return {};
 }
 
-function saveState(state: PlaybackState) {
+function saveState(state: PersistedState) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        volume: state.volume,
-        isShuffle: state.isShuffle,
-        repeatMode: state.repeatMode,
-        currentTrack: state.currentTrack,
-        queue: state.queue,
-        originalQueue: state.originalQueue,
-        queueIndex: state.queueIndex,
-        duration: state.duration,
-        progress: state.progress,
-      })
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
-    // Ignore
+    // Ignore - quota exceeded or private browsing
   }
 }
 
@@ -97,15 +95,57 @@ const defaultState: PlaybackState = {
   isShuffle: false,
   repeatMode: "off",
   duration: 0,
+  error: null,
 };
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { volume: systemVolume } = useSystemSettingsSafe();
   const [playbackState, setPlaybackState] = useState<PlaybackState>(() => ({
     ...defaultState,
     ...loadStoredState(),
   }));
+
+  // Keep a ref to the latest state for callbacks that need fresh values
+  const stateRef = useRef(playbackState);
+  stateRef.current = playbackState;
+
+  // Debounced save - only saves after 1 second of no changes
+  const debouncedSave = useCallback((state: PlaybackState) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveState({
+        volume: state.volume,
+        isShuffle: state.isShuffle,
+        repeatMode: state.repeatMode,
+        currentTrack: state.currentTrack,
+        progress: state.progress,
+        queue: state.queue,
+        originalQueue: state.originalQueue,
+        queueIndex: state.queueIndex,
+      });
+    }, 1000);
+  }, []);
+
+  // Immediate save for important changes (track change, settings)
+  const immediateSave = useCallback((state: PlaybackState) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveState({
+      volume: state.volume,
+      isShuffle: state.isShuffle,
+      repeatMode: state.repeatMode,
+      currentTrack: state.currentTrack,
+      progress: state.progress,
+      queue: state.queue,
+      originalQueue: state.originalQueue,
+      queueIndex: state.queueIndex,
+    });
+  }, []);
 
   // Create audio element on mount and restore track if available
   useEffect(() => {
@@ -113,24 +153,43 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const audio = new Audio();
       audio.volume = (systemVolume / 100) * playbackState.volume;
 
-      audio.addEventListener("loadedmetadata", () => {
+      // Handle metadata load - update duration and seek to saved progress
+      const handleLoadedMetadata = () => {
         if (audio.duration && isFinite(audio.duration)) {
+          // Seek to saved progress on initial load (side effect outside setState)
+          const state = stateRef.current;
+          if (state.progress > 0 && !state.isPlaying) {
+            audio.currentTime = state.progress * audio.duration;
+          }
           setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
         }
-      });
+      };
+
+      // Handle playback errors
+      const handleError = () => {
+        const errorMessage = audio.error?.message || "Failed to load audio";
+        console.error("Audio error:", errorMessage);
+        setPlaybackState((prev) => ({
+          ...prev,
+          isPlaying: false,
+          error: errorMessage,
+        }));
+      };
+
+      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.addEventListener("error", handleError);
 
       // Restore track from persisted state (but don't auto-play)
       if (playbackState.currentTrack?.previewUrl) {
         audio.src = playbackState.currentTrack.previewUrl;
-        // Seek to saved progress after metadata loads
-        audio.addEventListener("loadedmetadata", () => {
-          if (playbackState.progress > 0 && audio.duration) {
-            audio.currentTime = playbackState.progress * audio.duration;
-          }
-        }, { once: true });
       }
 
       audioRef.current = audio;
+
+      return () => {
+        audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+        audio.removeEventListener("error", handleError);
+      };
     }
 
     return () => {
@@ -142,6 +201,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Cleanup save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Update audio volume when state or system volume changes
   useEffect(() => {
     if (audioRef.current) {
@@ -150,10 +218,38 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [playbackState.volume, systemVolume]);
 
-  // Save state to localStorage
+  // Debounced save for progress updates
   useEffect(() => {
-    saveState(playbackState);
-  }, [playbackState]);
+    debouncedSave(playbackState);
+  }, [playbackState.progress, debouncedSave, playbackState]);
+
+  // Immediate save for important state changes
+  const prevTrackRef = useRef(playbackState.currentTrack?.id);
+  const prevVolumeRef = useRef(playbackState.volume);
+  const prevShuffleRef = useRef(playbackState.isShuffle);
+  const prevRepeatRef = useRef(playbackState.repeatMode);
+
+  useEffect(() => {
+    const trackChanged = prevTrackRef.current !== playbackState.currentTrack?.id;
+    const volumeChanged = prevVolumeRef.current !== playbackState.volume;
+    const shuffleChanged = prevShuffleRef.current !== playbackState.isShuffle;
+    const repeatChanged = prevRepeatRef.current !== playbackState.repeatMode;
+
+    if (trackChanged || volumeChanged || shuffleChanged || repeatChanged) {
+      immediateSave(playbackState);
+      prevTrackRef.current = playbackState.currentTrack?.id;
+      prevVolumeRef.current = playbackState.volume;
+      prevShuffleRef.current = playbackState.isShuffle;
+      prevRepeatRef.current = playbackState.repeatMode;
+    }
+  }, [
+    playbackState.currentTrack?.id,
+    playbackState.volume,
+    playbackState.isShuffle,
+    playbackState.repeatMode,
+    immediateSave,
+    playbackState,
+  ]);
 
   // Progress update interval
   useEffect(() => {
@@ -178,7 +274,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (!audio) return;
 
     const handleEnded = () => {
-      const { repeatMode, queue, queueIndex } = playbackState;
+      const { repeatMode, queue, queueIndex } = stateRef.current;
 
       if (repeatMode === "one") {
         audio.currentTime = 0;
@@ -197,6 +293,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: nextTrack,
             queueIndex: nextIndex,
             progress: 0,
+            error: null,
           }));
         } else {
           setPlaybackState((prev) => ({
@@ -214,6 +311,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             currentTrack: firstTrack,
             queueIndex: 0,
             progress: 0,
+            error: null,
           }));
         }
       } else {
@@ -227,7 +325,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
     audio.addEventListener("ended", handleEnded);
     return () => audio.removeEventListener("ended", handleEnded);
-  }, [playbackState.repeatMode, playbackState.queue, playbackState.queueIndex]);
+  }, []);
 
   // Play a track
   const play = useCallback((track: PlaylistTrack, tracks: PlaylistTrack[]) => {
@@ -265,6 +363,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         originalQueue: tracks,
         queueIndex,
         progress: 0,
+        error: null,
       };
     });
   }, []);
@@ -279,7 +378,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const resume = useCallback(() => {
     if (audioRef.current && playbackState.currentTrack) {
       audioRef.current.play().catch(console.error);
-      setPlaybackState((prev) => ({ ...prev, isPlaying: true }));
+      setPlaybackState((prev) => ({ ...prev, isPlaying: true, error: null }));
     }
   }, [playbackState.currentTrack]);
 
@@ -295,12 +394,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         queue: [],
         originalQueue: [],
         queueIndex: -1,
+        error: null,
       }));
     }
   }, []);
 
   const next = useCallback(() => {
-    const { queue, queueIndex, repeatMode } = playbackState;
+    const { queue, queueIndex, repeatMode, isPlaying } = stateRef.current;
     if (queue.length === 0) return;
 
     let nextIndex = queueIndex + 1;
@@ -315,19 +415,22 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const nextTrack = queue[nextIndex];
     if (nextTrack && nextTrack.previewUrl && audioRef.current) {
       audioRef.current.src = nextTrack.previewUrl;
-      audioRef.current.play().catch(console.error);
+      // Only auto-play if we were already playing
+      if (isPlaying) {
+        audioRef.current.play().catch(console.error);
+      }
       setPlaybackState((prev) => ({
         ...prev,
-        isPlaying: true,
         currentTrack: nextTrack,
         queueIndex: nextIndex,
         progress: 0,
+        error: null,
       }));
     }
-  }, [playbackState]);
+  }, []);
 
   const previous = useCallback(() => {
-    const { queue, queueIndex } = playbackState;
+    const { queue, queueIndex, isPlaying } = stateRef.current;
     const audio = audioRef.current;
     if (!audio || queue.length === 0) return;
 
@@ -342,17 +445,20 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const prevTrack = queue[prevIndex];
       if (prevTrack && prevTrack.previewUrl) {
         audio.src = prevTrack.previewUrl;
-        audio.play().catch(console.error);
+        // Only auto-play if we were already playing
+        if (isPlaying) {
+          audio.play().catch(console.error);
+        }
         setPlaybackState((prev) => ({
           ...prev,
-          isPlaying: true,
           currentTrack: prevTrack,
           queueIndex: prevIndex,
           progress: 0,
+          error: null,
         }));
       }
     }
-  }, [playbackState]);
+  }, []);
 
   const seek = useCallback((progress: number) => {
     const audio = audioRef.current;

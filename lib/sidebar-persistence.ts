@@ -274,18 +274,17 @@ export function clearCalendarState(): void {
 // Music Persistence
 // ============================================================================
 
-// Note: MusicView type is defined in components/apps/music/types.ts.
-// This array must match that type.
-const MUSIC_VIEWS = [
+import type { MusicView } from "@/components/apps/music/types";
+
+// Valid views for validation - must match MusicView type
+const MUSIC_VIEWS: readonly MusicView[] = [
   "home",
   "recently-added",
   "artists",
   "albums",
   "songs",
   "playlist",
-] as const;
-
-type MusicView = (typeof MUSIC_VIEWS)[number];
+];
 
 interface MusicState {
   view: MusicView;

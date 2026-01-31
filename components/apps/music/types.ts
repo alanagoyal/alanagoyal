@@ -41,4 +41,5 @@ export interface PlaybackState {
   isShuffle: boolean;
   repeatMode: RepeatMode;
   duration: number; // in seconds
+  error: string | null; // Playback error message
 }
