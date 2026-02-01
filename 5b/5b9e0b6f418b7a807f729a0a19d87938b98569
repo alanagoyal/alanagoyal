@@ -1,0 +1,27 @@
+types/window.ts
+  e6fdfd3fd60f112f 41,51
+lib/window-context.tsx
+  e6fdfd3fd60f112f 412-424,648-660,729,742,859-862,945-948,1007,1020
+components/desktop/dock.tsx
+  e6fdfd3fd60f112f 60,240
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "5b5b9e0b6f418b7a807f729a0a19d87938b98569",
+  "prompts": {
+    "e6fdfd3fd60f112f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e40894e-b947-46e8-b08e-6e1188eb6046",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 62,
+      "total_deletions": 6,
+      "accepted_lines": 60,
+      "overriden_lines": 0
+    }
+  }
+}
