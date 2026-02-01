@@ -1,0 +1,29 @@
+components/desktop/window.tsx
+  e6fdfd3fd60f112f 31,101-108,128-133
+lib/window-context.tsx
+  e6fdfd3fd60f112f 709-712,755-759,977-979
+components/apps/textedit/textedit-window.tsx
+  e6fdfd3fd60f112f 15,56,104-119
+components/desktop/menu-bar.tsx
+  e6fdfd3fd60f112f 43,47-51,119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "de25d5ed07cfc7089716afbb01337f6655ab0143",
+  "prompts": {
+    "e6fdfd3fd60f112f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e40894e-b947-46e8-b08e-6e1188eb6046",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 78,
+      "total_deletions": 54,
+      "accepted_lines": 53,
+      "overriden_lines": 0
+    }
+  }
+}
