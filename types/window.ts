@@ -38,6 +38,7 @@ export type WindowAction =
   | { type: "MINIMIZE_WINDOW"; appId: string }
   | { type: "MAXIMIZE_WINDOW"; appId: string }
   | { type: "RESTORE_WINDOW"; appId: string }
+  | { type: "UNMINIMIZE_WINDOW"; appId: string }
   // Multi-window app actions (new)
   | { type: "OPEN_MULTI_WINDOW"; appId: string; instanceId: string; metadata?: Record<string, unknown> }
   | { type: "CLOSE_MULTI_WINDOW"; windowId: string }
@@ -47,6 +48,7 @@ export type WindowAction =
   | { type: "MINIMIZE_MULTI_WINDOW"; windowId: string }
   | { type: "MAXIMIZE_MULTI_WINDOW"; windowId: string }
   | { type: "RESTORE_MULTI_WINDOW"; windowId: string }
+  | { type: "UNMINIMIZE_MULTI_WINDOW"; windowId: string }
   | { type: "BRING_APP_TO_FRONT"; appId: string }
   | { type: "UPDATE_WINDOW_METADATA"; windowId: string; metadata: Record<string, unknown> }
   // State management

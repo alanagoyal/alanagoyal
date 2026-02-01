@@ -409,6 +409,27 @@ function windowReducer(
       };
     }
 
+    case "UNMINIMIZE_WINDOW": {
+      const { appId } = action;
+      const window = state.windows[appId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [appId]: {
+            ...window,
+            isMinimized: false,
+            // Preserve isMaximized so fullscreen windows restore to fullscreen
+            zIndex: state.nextZIndex,
+          },
+        },
+        focusedWindowId: appId,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
     case "RESTORE_STATE": {
       return action.state;
     }
@@ -624,6 +645,27 @@ function windowReducer(
       };
     }
 
+    case "UNMINIMIZE_MULTI_WINDOW": {
+      const { windowId } = action;
+      const window = state.windows[windowId];
+      if (!window) return state;
+
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [windowId]: {
+            ...window,
+            isMinimized: false,
+            // Preserve isMaximized so fullscreen windows restore to fullscreen
+            zIndex: state.nextZIndex,
+          },
+        },
+        focusedWindowId: windowId,
+        nextZIndex: state.nextZIndex + 1,
+      };
+    }
+
     case "BRING_APP_TO_FRONT": {
       const { appId } = action;
       // Get all open windows for this app, sorted by current z-index (ascending)
@@ -684,6 +726,7 @@ interface WindowManagerContextValue {
   minimizeWindow: (appId: string) => void;
   maximizeWindow: (appId: string) => void;
   restoreWindow: (appId: string) => void;
+  unminimizeWindow: (appId: string) => void;
   toggleMaximize: (appId: string) => void;
   getWindow: (appId: string) => WindowState | undefined;
   isWindowOpen: (appId: string) => boolean;
@@ -696,6 +739,7 @@ interface WindowManagerContextValue {
   minimizeMultiWindow: (windowId: string) => void;
   maximizeMultiWindow: (windowId: string) => void;
   restoreMultiWindow: (windowId: string) => void;
+  unminimizeMultiWindow: (windowId: string) => void;
   toggleMaximizeMultiWindow: (windowId: string) => void;
   bringAppToFront: (appId: string) => void;
   updateWindowMetadata: (windowId: string, metadata: Record<string, unknown>) => void;
@@ -812,6 +856,10 @@ export function WindowManagerProvider({
     dispatch({ type: "RESTORE_WINDOW", appId });
   }, []);
 
+  const unminimizeWindow = useCallback((appId: string) => {
+    dispatch({ type: "UNMINIMIZE_WINDOW", appId });
+  }, []);
+
   const toggleMaximize = useCallback(
     (appId: string) => {
       const window = state.windows[appId];
@@ -894,6 +942,10 @@ export function WindowManagerProvider({
     dispatch({ type: "RESTORE_MULTI_WINDOW", windowId });
   }, []);
 
+  const unminimizeMultiWindow = useCallback((windowId: string) => {
+    dispatch({ type: "UNMINIMIZE_MULTI_WINDOW", windowId });
+  }, []);
+
   const toggleMaximizeMultiWindow = useCallback(
     (windowId: string) => {
       const window = state.windows[windowId];
@@ -952,6 +1004,7 @@ export function WindowManagerProvider({
     minimizeWindow,
     maximizeWindow,
     restoreWindow,
+    unminimizeWindow,
     toggleMaximize,
     getWindow,
     isWindowOpen,
@@ -964,6 +1017,7 @@ export function WindowManagerProvider({
     minimizeMultiWindow,
     maximizeMultiWindow,
     restoreMultiWindow,
+    unminimizeMultiWindow,
     toggleMaximizeMultiWindow,
     bringAppToFront,
     updateWindowMetadata,

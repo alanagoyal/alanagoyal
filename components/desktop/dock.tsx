@@ -57,7 +57,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   const {
     openWindow,
     focusWindow,
-    restoreWindow,
+    unminimizeWindow,
     getWindow,
     hasOpenWindows,
     bringAppToFront,
@@ -237,7 +237,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
     const windowState = getWindow(appId);
     if (windowState?.isOpen) {
       if (windowState.isMinimized) {
-        restoreWindow(appId);
+        unminimizeWindow(appId);
       } else {
         focusWindow(appId);
       }
