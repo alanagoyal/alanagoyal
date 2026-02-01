@@ -1,0 +1,33 @@
+app/layout.tsx
+  616b4546efec3524 6,42-43,46-47
+app/api/music/search/route.ts
+  616b4546efec3524 1-60
+components/apps/music/content-views/browse-view.tsx
+  616b4546efec3524 160,163,167-170
+components/apps/music/now-playing-bar.tsx
+  616b4546efec3524 37,43-46,119-125,143-149
+components/desktop/desktop.tsx
+  616b4546efec3524 6
+components/desktop/status-menus.tsx
+  616b4546efec3524 258,263,265-268,372-378,383-392,403-409
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "fe2a098583bea35e3976c147c2eeda47d496cdf8",
+  "prompts": {
+    "616b4546efec3524": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ccac6623-21ad-4089-a4b9-caeffbff7cd2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 198,
+      "total_deletions": 95,
+      "accepted_lines": 125,
+      "overriden_lines": 0
+    }
+  }
+}
