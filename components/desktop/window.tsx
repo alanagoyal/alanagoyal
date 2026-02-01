@@ -28,6 +28,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     minimizeWindow,
     toggleMaximize,
     state,
+    isMenuOpenRef,
   } = useWindowManager();
 
   const windowState = getWindow(appId);
@@ -97,6 +98,14 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
       className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
       style={windowStyle}
       onMouseDownCapture={(e) => {
+        // Don't focus window or propagate click if a menu bar dropdown is open
+        // (clicking outside the menu should only close the menu, not trigger any window actions)
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
+
         // Capture mousedown before it reaches children
         const wasAlreadyFocused = isFocused;
         wasFocusedBeforeMouseDown.current = wasAlreadyFocused;
@@ -116,6 +125,12 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         }
       }}
       onClickCapture={(e) => {
+        // Block all clicks if menu is open
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
         // Also capture click events for any handlers that use onClick instead of onMouseDown
         if (!wasFocusedBeforeMouseDown.current) {
           const isWindowControl = (e.target as HTMLElement).closest(".window-controls");

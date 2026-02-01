@@ -706,6 +706,10 @@ interface WindowManagerContextValue {
   // State management
   restoreDesktopDefault: () => void;
   claimZIndex: () => number;
+  // Menu bar state (prevents window focus when menu is open)
+  // Uses a ref for synchronous checks in event handlers
+  isMenuOpenRef: React.MutableRefObject<boolean>;
+  setMenuOpen: (isOpen: boolean) => void;
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(
@@ -747,6 +751,12 @@ export function WindowManagerProvider({
 
   const [state, dispatch] = useReducer(windowReducer, null, computeInitialState);
   const [isHydrated, setIsHydrated] = React.useState(false);
+
+  // Ref for menu open state - allows synchronous checks in event handlers
+  const isMenuOpenRef = React.useRef(false);
+  const setMenuOpen = useCallback((isOpen: boolean) => {
+    isMenuOpenRef.current = isOpen;
+  }, []);
 
   // Ref to track z-index synchronously for external callers
   const zIndexRef = React.useRef(state.nextZIndex);
@@ -964,6 +974,9 @@ export function WindowManagerProvider({
     // State management
     restoreDesktopDefault,
     claimZIndex,
+    // Menu bar state
+    isMenuOpenRef,
+    setMenuOpen,
   };
 
   return (

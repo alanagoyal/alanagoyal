@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useWindowManager } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -40,11 +40,15 @@ export function MenuBar({
   onLogout,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
-  const { getFocusedAppId, closeWindow, closeMultiWindow, state } = useWindowManager();
+  const { getFocusedAppId, closeWindow, closeMultiWindow, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
-  const menuBarRef = useRef<HTMLDivElement>(null);
+
+  // Sync menu open state to window context (used to prevent window focus when menu is open)
+  useEffect(() => {
+    setMenuOpen(!!openMenu);
+  }, [openMenu, setMenuOpen]);
 
   const focusedAppId = getFocusedAppId(); // This returns the base app ID (e.g., "textedit")
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
@@ -111,32 +115,8 @@ export function MenuBar({
 
   const closeMenu = useCallback(() => setOpenMenu(null), []);
 
-  // Global click-outside handler for menus
-  // This ensures menus close when clicking ANYWHERE outside, including on windows
-  useEffect(() => {
-    if (!openMenu) return;
-
-    const handleGlobalMouseDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      // If click is outside the menu bar, close the menu
-      if (menuBarRef.current && !menuBarRef.current.contains(target)) {
-        closeMenu();
-      }
-    };
-
-    // Small delay to prevent the opening click from immediately closing
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleGlobalMouseDown, true);
-    }, 10);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleGlobalMouseDown, true);
-    };
-  }, [openMenu, closeMenu]);
-
   return (
-    <div ref={menuBarRef} className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[70] select-none">
+    <div className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[70] select-none">
       <div className="flex items-center gap-4">
         <button
           onClick={() => toggleMenu("apple")}
