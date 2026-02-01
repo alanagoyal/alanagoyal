@@ -1,0 +1,23 @@
+components/apps/music/content-views/browse-view.tsx
+  616b4546efec3524 25-70,243-245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "6ad482c180388f02fff45f4747d888cbd939a494",
+  "prompts": {
+    "616b4546efec3524": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ccac6623-21ad-4089-a4b9-caeffbff7cd2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 49,
+      "total_deletions": 3,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
