@@ -1,0 +1,23 @@
+components/desktop/menu-bar.tsx
+  e6fdfd3fd60f112f 3,47,112,114-136,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.40",
+  "base_commit_sha": "151d2e9c0b0232787ad130b11c4469067e3edc6a",
+  "prompts": {
+    "e6fdfd3fd60f112f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e40894e-b947-46e8-b08e-6e1188eb6046",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 31,
+      "total_deletions": 6,
+      "accepted_lines": 28,
+      "overriden_lines": 0
+    }
+  }
+}
