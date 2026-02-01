@@ -22,7 +22,7 @@ export function ArtistsView({ artists, isMobileView }: ArtistsViewProps) {
             )}
           >
             {artists.map((artist) => (
-              <div key={artist.id} className="group cursor-pointer text-center">
+              <div key={artist.id} className="text-center">
                 <div className="relative aspect-square rounded-full overflow-hidden mb-3 bg-muted mx-auto">
                   <Image
                     src={artist.image}
@@ -31,7 +31,6 @@ export function ArtistsView({ artists, isMobileView }: ArtistsViewProps) {
                     className="object-cover"
                     unoptimized
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                 </div>
                 <p className="text-sm font-medium truncate">{artist.name}</p>
                 <p className="text-xs text-muted-foreground">

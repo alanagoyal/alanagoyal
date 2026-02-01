@@ -279,7 +279,7 @@ import type { MusicView } from "@/components/apps/music/types";
 // Valid views for validation - must match MusicView type
 const MUSIC_VIEWS: readonly MusicView[] = [
   "home",
-  "recently-added",
+  "browse",
   "artists",
   "albums",
   "songs",

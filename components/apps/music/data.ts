@@ -793,7 +793,7 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
         name: "redrum",
         artist: "21 Savage",
         album: "american dream",
-        albumArt: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/77/84/5e/77845ee7-573c-efcc-4ce4-c9625fdcc8c7/196871714556.jpg/600x600bb.jpg",
+        albumArt: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/77/84/5e/77845ee7-573c-efcc-4ce4-c9625fdce8c7/196871714556.jpg/600x600bb.jpg",
         previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/63/ad/85/63ad85d5-8b49-520f-0f73-1cdc0ed9a80e/mzaf_16051919311495206574.plus.aac.p.m4a",
         duration: 270,
       },

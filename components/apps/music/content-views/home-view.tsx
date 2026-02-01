@@ -2,19 +2,20 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Playlist } from "../types";
+import { Playlist, PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
 
 interface HomeViewProps {
   playlists: Playlist[];
+  songs: PlaylistTrack[];
   onPlaylistSelect: (playlistId: string) => void;
   isMobileView: boolean;
 }
 
 export function HomeView({
   playlists,
+  songs,
   onPlaylistSelect,
   isMobileView,
 }: HomeViewProps) {
@@ -39,7 +40,7 @@ export function HomeView({
   };
 
   return (
-    <ScrollArea className="h-full" bottomMargin="0">
+    <div className="h-full overflow-y-auto overflow-x-hidden">
       <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         {/* Apple Music Promo Banner */}
         <div className="mb-8">
@@ -77,15 +78,10 @@ export function HomeView({
           </a>
         </div>
 
-        {/* Your Playlists */}
+        {/* Your Playlists - Horizontal Scroll */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Your Playlists</h2>
-          <div
-            className={cn(
-              "grid gap-4",
-              isMobileView ? "grid-cols-2" : "grid-cols-3 lg:grid-cols-5"
-            )}
-          >
+          <h2 className="text-lg font-semibold mb-4">Playlists</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {playlists.map((playlist) => {
               const isPlaying =
                 playbackState.isPlaying &&
@@ -96,7 +92,7 @@ export function HomeView({
                 <div
                   key={playlist.id}
                   onClick={() => onPlaylistSelect(playlist.id)}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer flex-shrink-0 w-32"
                 >
                   <div className="relative aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
                     {playlist.tracks[0]?.albumArt ? (
@@ -131,7 +127,53 @@ export function HomeView({
           </div>
         </div>
 
+        {/* Your Songs - Horizontal Scroll */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Songs</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {songs.map((song) => {
+              const isPlaying =
+                playbackState.isPlaying &&
+                playbackState.currentTrack?.id === song.id;
+
+              return (
+                <div
+                  key={song.id}
+                  onClick={() => song.previewUrl && play(song, songs)}
+                  className={cn(
+                    "group flex-shrink-0 w-32",
+                    song.previewUrl && "cursor-pointer"
+                  )}
+                >
+                  <div className="relative aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
+                    <Image
+                      src={song.albumArt}
+                      alt={song.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                    {song.previewUrl && (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        {isPlaying ? (
+                          <Pause className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                          <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate">{song.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {song.artist}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
-    </ScrollArea>
+    </div>
   );
 }

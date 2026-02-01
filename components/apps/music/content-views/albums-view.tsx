@@ -21,7 +21,7 @@ export function AlbumsView({ albums, isMobileView }: AlbumsViewProps) {
           )}
         >
           {albums.map((album) => (
-            <div key={album.id} className="group cursor-pointer">
+            <div key={album.id}>
               <div className="relative aspect-square rounded-lg overflow-hidden mb-2 bg-muted shadow-md">
                 <Image
                   src={album.albumArt}
@@ -30,7 +30,6 @@ export function AlbumsView({ albums, isMobileView }: AlbumsViewProps) {
                   className="object-cover"
                   unoptimized
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
               </div>
               <p className="text-sm font-medium truncate">{album.name}</p>
               <p className="text-xs text-muted-foreground truncate">{album.artist}</p>

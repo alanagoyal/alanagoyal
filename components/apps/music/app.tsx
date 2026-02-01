@@ -18,7 +18,6 @@ import {
   AlbumsView,
   SongsView,
   PlaylistView,
-  RecentlyAddedView,
 } from "./content-views";
 
 interface AppProps {
@@ -142,8 +141,6 @@ export default function App({ isDesktop = false }: AppProps) {
     switch (activeView) {
       case "browse":
         return { title: "Browse", subtitle: "Top Charts" };
-      case "recently-added":
-        return { title: "Recently Added", subtitle: `${songs.length} songs` };
       case "artists":
         return { title: "Artists", subtitle: `${artists.length} artists` };
       case "albums":
@@ -170,19 +167,13 @@ export default function App({ isDesktop = false }: AppProps) {
         return (
           <HomeView
             playlists={playlists}
+            songs={songs}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}
           />
         );
       case "browse":
         return <BrowseView isMobileView={isMobileView} />;
-      case "recently-added":
-        return (
-          <RecentlyAddedView
-            songs={songs}
-            isMobileView={isMobileView}
-          />
-        );
       case "artists":
         return (
           <ArtistsView
@@ -205,6 +196,7 @@ export default function App({ isDesktop = false }: AppProps) {
         ) : (
           <HomeView
             playlists={playlists}
+            songs={songs}
             onPlaylistSelect={(id) => handleViewSelect("playlist", id)}
             isMobileView={isMobileView}
           />
@@ -253,7 +245,7 @@ export default function App({ isDesktop = false }: AppProps) {
         {/* Main Content */}
         <div
           className={cn(
-            "flex-1 flex flex-col min-h-0 overflow-hidden relative",
+            "flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative",
             showMainContent ? "block" : "hidden"
           )}
         >

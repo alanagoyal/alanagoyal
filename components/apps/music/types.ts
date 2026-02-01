@@ -22,7 +22,6 @@ export interface Playlist {
 export type MusicView =
   | "home"
   | "browse"
-  | "recently-added"
   | "artists"
   | "albums"
   | "songs"
