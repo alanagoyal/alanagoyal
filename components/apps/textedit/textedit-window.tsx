@@ -12,7 +12,7 @@ import {
   CORNER_SIZE,
   EDGE_SIZE,
 } from "@/lib/use-window-behavior";
-import { MAXIMIZED_Z_INDEX } from "@/lib/window-context";
+import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 
 interface TextEditWindowProps {
   windowId: string; // Unique window identifier for multi-window support
@@ -53,6 +53,7 @@ export function TextEditWindow({
   void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
   const fileName = filePath?.split("/").pop() || "Untitled";
+  const { isMenuOpenRef } = useWindowManager();
 
   const { handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
@@ -100,7 +101,22 @@ export function TextEditWindow({
       ref={windowRef}
       className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
       style={windowStyle}
-      onMouseDown={onFocus}
+      onMouseDownCapture={(e) => {
+        // Don't focus or propagate if menu is open
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
+        onFocus();
+      }}
+      onClickCapture={(e) => {
+        // Block clicks if menu is open
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      }}
     >
       {/* Window chrome */}
       <div
