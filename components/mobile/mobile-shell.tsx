@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { RecentsProvider } from "@/lib/recents-context";
-import { SystemSettingsProvider } from "@/lib/system-settings-context";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
@@ -58,29 +57,27 @@ export function MobileShell({ initialApp, initialNoteSlug, initialTextEditFile }
   }
 
   return (
-    <SystemSettingsProvider>
-      <RecentsProvider>
-        <div className="h-dvh flex flex-col bg-background">
-          {activeAppId === "notes" && (
-            <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
-          )}
-          {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
-          {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
-          {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
-          {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
-          {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
-          {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
-          {activeAppId === "music" && <MusicApp isMobile={true} />}
-          {activeAppId === "textedit" && (
-            <TextEditApp
-              isMobile={true}
-              inShell={false}
-              initialFilePath={initialTextEditFile}
-              initialContent={initialTextEditFile ? getTextEditContent(initialTextEditFile) ?? "" : ""}
-            />
-          )}
-        </div>
-      </RecentsProvider>
-    </SystemSettingsProvider>
+    <RecentsProvider>
+      <div className="h-dvh flex flex-col bg-background">
+        {activeAppId === "notes" && (
+          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
+        )}
+        {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
+        {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
+        {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
+        {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
+        {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
+        {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
+        {activeAppId === "music" && <MusicApp isMobile={true} />}
+        {activeAppId === "textedit" && (
+          <TextEditApp
+            isMobile={true}
+            inShell={false}
+            initialFilePath={initialTextEditFile}
+            initialContent={initialTextEditFile ? getTextEditContent(initialTextEditFile) ?? "" : ""}
+          />
+        )}
+      </div>
+    </RecentsProvider>
   );
 }

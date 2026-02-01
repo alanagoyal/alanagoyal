@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
-import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
@@ -438,14 +438,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
 export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile }: DesktopProps) {
   return (
-    <SystemSettingsProvider>
-      <RecentsProvider>
-        <FileMenuProvider>
-          <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-            <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
-          </WindowManagerProvider>
-        </FileMenuProvider>
-      </RecentsProvider>
-    </SystemSettingsProvider>
+    <RecentsProvider>
+      <FileMenuProvider>
+        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
+        </WindowManagerProvider>
+      </FileMenuProvider>
+    </RecentsProvider>
   );
 }

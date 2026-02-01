@@ -157,19 +157,20 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
 
     setLoadingTrack(item.id);
     try {
-      // Search iTunes for this track to get preview URL
-      const searchQuery = encodeURIComponent(`${item.artist} ${item.name}`);
+      // Search for track preview URL via server-side API
+      const searchQuery = `${item.artist} ${item.name}`;
       const response = await fetch(
-        `https://itunes.apple.com/search?term=${searchQuery}&entity=song&limit=5`
+        `/api/music/search?term=${encodeURIComponent(searchQuery)}&limit=5`
       );
       const data = await response.json();
 
-      // Find best match
-      const result = data.results?.find(
-        (r: { previewUrl: string; trackName: string }) =>
+      // Find best match from server response
+      const results = data.results || [];
+      const result = results.find(
+        (r: { previewUrl?: string; trackName: string }) =>
           r.previewUrl &&
           r.trackName.toLowerCase().includes(item.name.toLowerCase().split(" ")[0])
-      ) || data.results?.[0];
+      ) || results[0];
 
       if (result?.previewUrl) {
         const track: PlaylistTrack = {

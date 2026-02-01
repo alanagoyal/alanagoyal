@@ -255,11 +255,17 @@ export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCe
   const menuRef = useRef<HTMLDivElement>(null);
   const [showFocusMenu, setShowFocusMenu] = useState(false);
   const { brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode } = useSystemSettings();
-  const { playbackState, pause, resume, next, previous } = useAudio();
+  const { playbackState, pause, resume, play, next, previous } = useAudio();
 
   // Use current track or default track
   const displayTrack = playbackState.currentTrack || DEFAULT_TRACK;
   const isPlaying = playbackState.isPlaying;
+  const hasCurrentTrack = !!playbackState.currentTrack;
+
+  // Disable navigation when there's only one track in the queue
+  const canNavigate = playbackState.queue.length > 1;
+  const canGoPrevious = canNavigate && playbackState.queueIndex > 0;
+  const canGoNext = canNavigate && (playbackState.queueIndex < playbackState.queue.length - 1 || playbackState.repeatMode === "all");
 
   useClickOutside(menuRef, onClose, isOpen);
 
@@ -363,12 +369,27 @@ export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCe
             <div className="flex items-center justify-center gap-3 mt-1.5">
               <button
                 onClick={previous}
-                className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+                disabled={!canGoPrevious}
+                className={cn(
+                  "p-0.5 rounded transition-colors",
+                  canGoPrevious
+                    ? "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground/30 cursor-not-allowed"
+                )}
               >
                 <SkipBack className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => isPlaying ? pause() : resume()}
+                onClick={() => {
+                  if (isPlaying) {
+                    pause();
+                  } else if (hasCurrentTrack) {
+                    resume();
+                  } else {
+                    // No current track - play the default track
+                    play(DEFAULT_TRACK, [DEFAULT_TRACK]);
+                  }
+                }}
                 className="p-0.5 rounded text-foreground hover:text-foreground/80 transition-colors"
               >
                 {isPlaying ? (
@@ -379,7 +400,13 @@ export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCe
               </button>
               <button
                 onClick={next}
-                className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+                disabled={!canGoNext}
+                className={cn(
+                  "p-0.5 rounded transition-colors",
+                  canGoNext
+                    ? "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground/30 cursor-not-allowed"
+                )}
               >
                 <SkipForward className="w-3.5 h-3.5" />
               </button>

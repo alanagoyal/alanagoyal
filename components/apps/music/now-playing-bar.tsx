@@ -34,11 +34,16 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
     toggleRepeat,
   } = useAudio();
 
-  const { currentTrack, isPlaying, progress, volume, isShuffle, repeatMode, duration } =
+  const { currentTrack, isPlaying, progress, volume, isShuffle, repeatMode, duration, queue, queueIndex } =
     playbackState;
 
   // Don't render if nothing is playing
   if (!currentTrack) return null;
+
+  // Disable navigation when there's only one track in the queue
+  const canNavigate = queue.length > 1;
+  const canGoPrevious = canNavigate && queueIndex > 0;
+  const canGoNext = canNavigate && (queueIndex < queue.length - 1 || repeatMode === "all");
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -111,7 +116,13 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
 
             <button
               onClick={previous}
-              className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              disabled={!canGoPrevious}
+              className={cn(
+                "p-2 rounded-full transition-colors",
+                canGoPrevious
+                  ? "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground/30 cursor-not-allowed"
+              )}
             >
               <SkipBack className="w-5 h-5" />
             </button>
@@ -129,7 +140,13 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
 
             <button
               onClick={next}
-              className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              disabled={!canGoNext}
+              className={cn(
+                "p-2 rounded-full transition-colors",
+                canGoNext
+                  ? "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground/30 cursor-not-allowed"
+              )}
             >
               <SkipForward className="w-5 h-5" />
             </button>
