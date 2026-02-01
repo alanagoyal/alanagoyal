@@ -3,6 +3,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { SystemSettingsProvider } from "@/lib/system-settings-context";
+import { AudioProvider } from "@/lib/music/audio-context";
 
 export const metadata: Metadata = {
   title: siteConfig.title,
@@ -37,8 +39,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <SystemSettingsProvider>
+            <AudioProvider>
+              {children}
+              <Toaster />
+            </AudioProvider>
+          </SystemSettingsProvider>
         </ThemeProvider>
       </body>
     </html>

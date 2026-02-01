@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
-import { SystemSettingsProvider, useSystemSettings } from "@/lib/system-settings-context";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import { RecentsProvider } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
@@ -16,6 +16,7 @@ import { ITermApp } from "@/components/apps/iterm/iterm-app";
 import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
+import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
@@ -191,6 +192,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   }, []);
 
   const handleCalendarFocus = useCallback(() => {
+    // URL will be updated by the focus change effect
+  }, []);
+
+  const handleMusicFocus = useCallback(() => {
     // URL will be updated by the focus change effect
   }, []);
 
@@ -377,6 +382,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
             <CalendarApp inShell={true} />
           </Window>
 
+          <Window appId="music" onFocus={handleMusicFocus}>
+            <MusicApp />
+          </Window>
+
           {/* TextEdit - multi-window support */}
           {/* On small screens, only show the topmost window */}
           {textEditWindows
@@ -429,14 +438,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
 export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile }: DesktopProps) {
   return (
-    <SystemSettingsProvider>
-      <RecentsProvider>
-        <FileMenuProvider>
-          <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-            <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
-          </WindowManagerProvider>
-        </FileMenuProvider>
-      </RecentsProvider>
-    </SystemSettingsProvider>
+    <RecentsProvider>
+      <FileMenuProvider>
+        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
+        </WindowManagerProvider>
+      </FileMenuProvider>
+    </RecentsProvider>
   );
 }
