@@ -22,6 +22,52 @@ interface ChartGridProps {
   onPlay: (item: ChartAlbum | ChartSong) => void;
 }
 
+function SkeletonGrid({ isMobileView, count = 10 }: { isMobileView: boolean; count?: number }) {
+  return (
+    <div className="mb-8">
+      <div className="h-5 w-24 bg-muted rounded animate-pulse mb-4" />
+      <div
+        className={cn(
+          "grid gap-4",
+          isMobileView ? "grid-cols-2" : "grid-cols-3 lg:grid-cols-5"
+        )}
+      >
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i}>
+            <div className="aspect-square rounded-lg bg-muted animate-pulse mb-2" />
+            <div className="h-4 w-3/4 bg-muted rounded animate-pulse mb-1" />
+            <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BrowseSkeleton({ isMobileView }: { isMobileView: boolean }) {
+  return (
+    <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
+      {/* Carousel skeleton */}
+      <div className="mb-8">
+        <div className="relative overflow-hidden rounded-xl aspect-[21/9] bg-muted animate-pulse">
+          {/* Gradient overlay placeholder */}
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="h-3 w-20 bg-white/20 rounded mb-2" />
+            <div className="h-7 w-48 bg-white/20 rounded mb-2" />
+            <div className="h-3 w-32 bg-white/20 rounded" />
+          </div>
+        </div>
+      </div>
+
+      {/* Top Songs skeleton */}
+      <SkeletonGrid isMobileView={isMobileView} count={10} />
+
+      {/* Top Albums skeleton */}
+      <SkeletonGrid isMobileView={isMobileView} count={10} />
+    </div>
+  );
+}
+
 function ChartGrid({
   title,
   items,
@@ -194,9 +240,9 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
+      <ScrollArea className="h-full" bottomMargin="0">
+        <BrowseSkeleton isMobileView={isMobileView} />
+      </ScrollArea>
     );
   }
 
