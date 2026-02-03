@@ -134,17 +134,14 @@ async function fetchRepoTree(repo: string): Promise<{ name: string; type: "file"
   }
 }
 
-async function fetchFileContent(repo: string, path: string): Promise<string> {
-  try {
-    const response = await fetch(
-      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
-    );
-    if (!response.ok) throw new Error("Failed to fetch file");
-    const data = await response.json();
-    return data.content;
-  } catch {
-    return "";
-  }
+async function fetchFileContent(repo: string, path: string): Promise<string | null> {
+  const response = await fetch(
+    `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
+  );
+  if (response.status === 404) return null; // File not found
+  if (!response.ok) throw new Error("Failed to fetch file");
+  const data = await response.json();
+  return data.content ?? null;
 }
 
 async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
@@ -543,7 +540,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       addRecent({ path: file.path, name: file.name, type: file.type });
 
       // Get file content
-      let content = "";
+      let content: string | null = "";
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
         const parts = relativePath.split("/");
@@ -551,11 +548,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const filePath = parts.slice(1).join("/");
         try {
           content = await fetchFileContent(repo, filePath);
-        } catch (error) {
-          content = `Error: ${error instanceof Error ? error.message : "Failed to fetch file"}`;
+        } catch {
+          content = null;
         }
       } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
         content = "hello world!";
+      }
+
+      // Handle file not found (shouldn't happen after tree verification, but just in case)
+      if (content === null) {
+        return;
       }
 
       // If text file and onOpenTextFile is available, open in TextEdit
@@ -793,27 +795,20 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       hash = hash & hash;
     }
     const daysAgo = Math.abs(hash) % 7;
-    const hours = Math.abs(hash >> 3) % 12 + 1;
+    const hours12 = Math.abs(hash >> 3) % 12 + 1; // 1-12
     const minutes = Math.abs(hash >> 7) % 60;
     const isPM = (hash >> 11) % 2 === 0;
 
+    // Convert 12-hour to 24-hour format
+    const hours24 = isPM
+      ? (hours12 === 12 ? 12 : hours12 + 12)  // 12 PM = 12, 1-11 PM = 13-23
+      : (hours12 === 12 ? 0 : hours12);        // 12 AM = 0, 1-11 AM = 1-11
+
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
+    date.setHours(hours24, minutes, 0, 0);
 
-    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
-
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return `Today at ${timeStr}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday at ${timeStr}`;
-    } else {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} at ${timeStr}`;
-    }
+    return formatDateString(date);
   };
 
   // Get file kind description

@@ -104,6 +104,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
       delete touchTimers.current[path];
     }, 500);
   }, [touchRecent]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    const timers = touchTimers.current;
+    return () => Object.values(timers).forEach(clearTimeout);
+  }, []);
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
@@ -163,52 +169,22 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        globalThis.window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "notes") {
-      const currentPath = globalThis.window.location.pathname;
+      const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
-        globalThis.window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
       }
     } else {
-      globalThis.window.history.replaceState(null, "", `/${focusedAppId}`);
+      window.history.replaceState(null, "", `/${focusedAppId}`);
     }
   }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
   const isActive = mode === "active";
 
-  // URL update handlers (URL is also updated by the effect above when focus changes)
-  const handleMessagesFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleNotesFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleSettingsFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleITermFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleFinderFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handlePhotosFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleCalendarFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleMusicFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
+  // Empty focus handlers - URL is updated by the effect that watches state.focusedWindowId
+  const noop = useCallback(() => {}, []);
 
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback(
@@ -365,35 +341,35 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
       {isActive && (
         <>
-          <Window appId="notes" onFocus={handleNotesFocus}>
+          <Window appId="notes" onFocus={noop}>
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
           </Window>
 
-          <Window appId="messages" onFocus={handleMessagesFocus}>
+          <Window appId="messages" onFocus={noop}>
             <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
           </Window>
 
-          <Window appId="settings" onFocus={handleSettingsFocus}>
+          <Window appId="settings" onFocus={noop}>
             <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
           </Window>
 
-          <Window appId="iterm" onFocus={handleITermFocus}>
+          <Window appId="iterm" onFocus={noop}>
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder" onFocus={handleFinderFocus}>
+          <Window appId="finder" onFocus={noop}>
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} initialTab={finderTab} />
           </Window>
 
-          <Window appId="photos" onFocus={handlePhotosFocus}>
+          <Window appId="photos" onFocus={noop}>
             <PhotosApp inShell={true} />
           </Window>
 
-          <Window appId="calendar" onFocus={handleCalendarFocus}>
+          <Window appId="calendar" onFocus={noop}>
             <CalendarApp inShell={true} />
           </Window>
 
-          <Window appId="music" onFocus={handleMusicFocus}>
+          <Window appId="music" onFocus={noop}>
             <MusicApp />
           </Window>
 
