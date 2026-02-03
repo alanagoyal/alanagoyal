@@ -12,6 +12,7 @@ export interface RecentFile {
 interface RecentsContextValue {
   recents: RecentFile[];
   addRecent: (file: Omit<RecentFile, "accessedAt">) => void;
+  touchRecent: (path: string) => void;
   clearRecents: () => void;
 }
 
@@ -73,12 +74,22 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const touchRecent = useCallback((path: string) => {
+    setRecents(prev => {
+      const index = prev.findIndex(r => r.path === path);
+      if (index === -1) return prev;
+      const file = prev[index];
+      const updated = { ...file, accessedAt: Date.now() };
+      return [updated, ...prev.slice(0, index), ...prev.slice(index + 1)];
+    });
+  }, []);
+
   const clearRecents = useCallback(() => {
     setRecents([]);
   }, []);
 
   return (
-    <RecentsContext.Provider value={{ recents, addRecent, clearRecents }}>
+    <RecentsContext.Provider value={{ recents, addRecent, touchRecent, clearRecents }}>
       {children}
     </RecentsContext.Provider>
   );

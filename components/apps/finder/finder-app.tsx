@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
@@ -83,6 +83,13 @@ function isTextFile(filename: string): boolean {
   return TEXT_FILE_EXTENSIONS.includes(ext);
 }
 
+// GitHub recent file type
+interface GitHubRecentFile {
+  path: string;
+  repo: string;
+  modifiedAt: string;
+}
+
 // GitHub cache
 interface GitHubCache {
   repos: string[] | null;
@@ -127,17 +134,21 @@ async function fetchRepoTree(repo: string): Promise<{ name: string; type: "file"
   }
 }
 
-async function fetchFileContent(repo: string, path: string): Promise<string> {
-  try {
-    const response = await fetch(
-      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
-    );
-    if (!response.ok) throw new Error("Failed to fetch file");
-    const data = await response.json();
-    return data.content;
-  } catch {
-    return "";
-  }
+async function fetchFileContent(repo: string, path: string): Promise<string | null> {
+  const response = await fetch(
+    `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
+  );
+  if (response.status === 404) return null; // File not found
+  if (!response.ok) throw new Error("Failed to fetch file");
+  const data = await response.json();
+  return data.content ?? null;
+}
+
+async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
+  const response = await fetch("/api/github?type=recent-files", { signal });
+  if (!response.ok) throw new Error("Failed to fetch recent files");
+  const data = await response.json();
+  return data.files;
 }
 
 // Icon component
@@ -278,6 +289,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const [showSidebar, setShowSidebar] = useState(true); // For mobile
   const [viewMode, setViewMode] = useState<"icons" | "list">("list");
   const [showViewDropdown, setShowViewDropdown] = useState(false);
+  const [githubRecentFiles, setGithubRecentFiles] = useState<GitHubRecentFile[]>([]);
 
   const inDesktopShell = !!(inShell && windowFocus);
 
@@ -384,8 +396,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       } else {
         setFiles([]);
       }
-    } catch (error) {
-      console.error("Error loading files:", error);
+    } catch {
       setFiles([]);
     }
 
@@ -402,17 +413,80 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     finderSidebarPersistence.save(selectedSidebar);
   }, [selectedSidebar]);
 
-  // Update files when viewing Recents and recents change
+  // Fetch GitHub files when entering Recents (only fetches, doesn't sort)
+  useEffect(() => {
+    if (currentPath !== "recents") return;
+
+    const abortController = new AbortController();
+    let cancelled = false;
+
+    const fetchGithubData = async () => {
+      setLoading(true);
+      try {
+        const files = await fetchGitHubRecentFiles(abortController.signal);
+        if (!cancelled) {
+          setGithubRecentFiles(files);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        // Silently handle fetch errors - will show empty recents
+      }
+      if (!cancelled) setLoading(false);
+    };
+
+    fetchGithubData();
+    return () => {
+      cancelled = true;
+      abortController.abort();
+    };
+  }, [currentPath]);
+
+  // Compute sorted recents from GitHub files + local recents (re-sorts when either changes)
+  const sortedRecentFiles = useMemo(() => {
+    const allFiles: Array<{ file: FileItem; timestamp: number }> = [];
+    const seenPaths = new Set<string>();
+
+    // Add GitHub files
+    for (const gf of githubRecentFiles) {
+      const fullPath = `${PROJECTS_DIR}/${gf.repo}/${gf.path}`;
+      const githubTime = new Date(gf.modifiedAt).getTime();
+      const textEditTime = getFileModifiedDate(fullPath);
+      const effectiveTime = textEditTime && textEditTime > githubTime ? textEditTime : githubTime;
+
+      seenPaths.add(fullPath);
+      allFiles.push({
+        file: {
+          name: gf.path.split("/").pop() || gf.path,
+          type: "file" as const,
+          path: fullPath,
+        },
+        timestamp: effectiveTime,
+      });
+    }
+
+    // Add local recents not in GitHub files
+    for (const r of recents) {
+      if (!seenPaths.has(r.path)) {
+        const textEditTime = getFileModifiedDate(r.path);
+        const effectiveTime = textEditTime || r.accessedAt;
+        allFiles.push({
+          file: { name: r.name, type: r.type, path: r.path },
+          timestamp: effectiveTime,
+        });
+      }
+    }
+
+    // Sort by timestamp (most recent first)
+    allFiles.sort((a, b) => b.timestamp - a.timestamp);
+    return allFiles.map(f => f.file);
+  }, [githubRecentFiles, recents]);
+
+  // Update files state when viewing Recents
   useEffect(() => {
     if (currentPath === "recents") {
-      const recentFiles: FileItem[] = recents.map(r => ({
-        name: r.name,
-        type: r.type,
-        path: r.path,
-      }));
-      setFiles(recentFiles);
+      setFiles(sortedRecentFiles);
     }
-  }, [currentPath, recents]);
+  }, [currentPath, sortedRecentFiles]);
 
   // Respond to initialTab changes from external navigation (e.g., dock clicks)
   useEffect(() => {
@@ -465,7 +539,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       addRecent({ path: file.path, name: file.name, type: file.type });
 
       // Get file content
-      let content = "";
+      let content: string | null = "";
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
         const parts = relativePath.split("/");
@@ -473,11 +547,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const filePath = parts.slice(1).join("/");
         try {
           content = await fetchFileContent(repo, filePath);
-        } catch (error) {
-          content = `Error: ${error instanceof Error ? error.message : "Failed to fetch file"}`;
+        } catch {
+          content = null;
         }
       } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
         content = "hello world!";
+      }
+
+      // Handle file not found (shouldn't happen after tree verification, but just in case)
+      if (content === null) {
+        return;
       }
 
       // If text file and onOpenTextFile is available, open in TextEdit
@@ -682,10 +761,29 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Get file date - uses real modified date if available, otherwise generates pseudo-random
   const getFileDate = (file: FileItem): string => {
-    // Check for real modified date first (from TextEdit edits)
-    const realModifiedDate = getFileModifiedDate(file.path);
-    if (realModifiedDate) {
-      return formatDateString(new Date(realModifiedDate));
+    const textEditDate = getFileModifiedDate(file.path);
+
+    // Check if this is a GitHub file
+    const githubFile = githubRecentFiles.find(gf =>
+      `${PROJECTS_DIR}/${gf.repo}/${gf.path}` === file.path
+    );
+    const githubDate = githubFile ? new Date(githubFile.modifiedAt).getTime() : null;
+
+    // Use most recent of TextEdit date or GitHub date
+    if (textEditDate && githubDate) {
+      return formatDateString(new Date(Math.max(textEditDate, githubDate)));
+    }
+    if (textEditDate) {
+      return formatDateString(new Date(textEditDate));
+    }
+    if (githubDate) {
+      return formatDateString(new Date(githubDate));
+    }
+
+    // Check local recents for accessedAt
+    const recentFile = recents.find(r => r.path === file.path);
+    if (recentFile) {
+      return formatDateString(new Date(recentFile.accessedAt));
     }
 
     // Fall back to pseudo-random date based on filename (deterministic)
@@ -696,27 +794,20 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       hash = hash & hash;
     }
     const daysAgo = Math.abs(hash) % 7;
-    const hours = Math.abs(hash >> 3) % 12 + 1;
+    const hours12 = Math.abs(hash >> 3) % 12 + 1; // 1-12
     const minutes = Math.abs(hash >> 7) % 60;
     const isPM = (hash >> 11) % 2 === 0;
 
+    // Convert 12-hour to 24-hour format
+    const hours24 = isPM
+      ? (hours12 === 12 ? 12 : hours12 + 12)  // 12 PM = 12, 1-11 PM = 13-23
+      : (hours12 === 12 ? 0 : hours12);        // 12 AM = 0, 1-11 AM = 1-11
+
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
+    date.setHours(hours24, minutes, 0, 0);
 
-    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
-
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return `Today at ${timeStr}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday at ${timeStr}`;
-    } else {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} at ${timeStr}`;
-    }
+    return formatDateString(date);
   };
 
   // Get file kind description
@@ -738,6 +829,70 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       default: return "Document";
     }
   };
+
+  // Skeleton loading for desktop list view
+  const renderDesktopListSkeleton = () => (
+    <div className="flex flex-col animate-pulse">
+      {/* Column headers */}
+      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex-1 min-w-0">Name</div>
+        <div className="w-32 text-left">Kind</div>
+        <div className="w-52 text-left">Date Modified</div>
+      </div>
+      {/* Skeleton rows */}
+      <div className="flex-1">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="w-full flex items-center px-4 py-1">
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
+              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${120 + (i * 17) % 80}px` }} />
+            </div>
+            <div className="w-32">
+              <div className="h-4 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+            <div className="w-52">
+              <div className="h-4 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Skeleton loading for desktop icons view
+  const renderIconsGridSkeleton = () => (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2 p-4 animate-pulse">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center gap-1 p-2">
+          <div className="w-12 h-12 rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-3 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${40 + (i * 13) % 30}px` }} />
+        </div>
+      ))}
+    </div>
+  );
+
+  // Skeleton loading for mobile list view
+  const renderMobileListSkeleton = () => (
+    <div className="px-4 pt-2 pb-8 animate-pulse">
+      <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-3 px-3 py-3",
+              i < 5 && "border-b border-zinc-200 dark:border-zinc-700"
+            )}
+          >
+            <div className="w-10 h-10 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${100 + (i * 23) % 60}px` }} />
+              <div className="h-3 w-12 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   // Render file grid (desktop icons view)
   const renderFileGrid = () => (
@@ -1009,13 +1164,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
           <>
             {renderMobileContentNav(getBreadcrumbs().slice(-1)[0], getMobileBackTitle())}
             <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="text-zinc-500">Loading...</div>
-                </div>
-              ) : (
-                renderFileList()
-              )}
+              {loading ? renderMobileListSkeleton() : renderFileList()}
             </div>
           </>
         )}
@@ -1035,9 +1184,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         {renderSidebar()}
         <div className="flex-1 overflow-y-auto" onClick={() => setSelectedFile(null)}>
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-zinc-500">Loading...</div>
-            </div>
+            viewMode === "list" ? renderDesktopListSkeleton() : renderIconsGridSkeleton()
           ) : previewContent !== null ? (
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">

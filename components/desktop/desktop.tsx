@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
-import { RecentsProvider } from "@/lib/recents-context";
+import { RecentsProvider, useRecents } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
@@ -25,6 +25,7 @@ import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
+import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
@@ -33,8 +34,6 @@ interface DesktopProps {
   initialNoteSlug?: string;
   initialTextEditFile?: string;
 }
-
-import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
 
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
@@ -88,11 +87,26 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     bringAppToFront,
     updateWindowMetadata,
     getWindowsByApp,
-    hasOpenWindows,
-    getFocusedAppId,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
+  const { touchRecent } = useRecents();
   const isMobile = useMobileDetect();
+
+  // Debounce touchRecent to avoid excessive re-renders
+  const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const debouncedTouchRecent = useCallback((path: string) => {
+    if (touchTimers.current[path]) clearTimeout(touchTimers.current[path]);
+    touchTimers.current[path] = setTimeout(() => {
+      touchRecent(path);
+      delete touchTimers.current[path];
+    }, 500);
+  }, [touchRecent]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    const timers = touchTimers.current;
+    return () => Object.values(timers).forEach(clearTimeout);
+  }, []);
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
@@ -152,52 +166,19 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        globalThis.window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "notes") {
-      const currentPath = globalThis.window.location.pathname;
+      const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
-        globalThis.window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
       }
     } else {
-      globalThis.window.history.replaceState(null, "", `/${focusedAppId}`);
+      window.history.replaceState(null, "", `/${focusedAppId}`);
     }
   }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
   const isActive = mode === "active";
-
-  // URL update handlers (URL is also updated by the effect above when focus changes)
-  const handleMessagesFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleNotesFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleSettingsFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleITermFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleFinderFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handlePhotosFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleCalendarFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
-
-  const handleMusicFocus = useCallback(() => {
-    // URL will be updated by the focus change effect
-  }, []);
 
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback(
@@ -216,11 +197,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     },
     [openMultiWindow]
   );
-
-  // Handler for TextEdit dock click - brings all windows to front
-  const handleTextEditDockClick = useCallback(() => {
-    bringAppToFront("textedit");
-  }, [bringAppToFront]);
 
   // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {
@@ -354,35 +330,35 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
       {isActive && (
         <>
-          <Window appId="notes" onFocus={handleNotesFocus}>
+          <Window appId="notes">
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
           </Window>
 
-          <Window appId="messages" onFocus={handleMessagesFocus}>
+          <Window appId="messages">
             <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
           </Window>
 
-          <Window appId="settings" onFocus={handleSettingsFocus}>
+          <Window appId="settings">
             <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
           </Window>
 
-          <Window appId="iterm" onFocus={handleITermFocus}>
+          <Window appId="iterm">
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder" onFocus={handleFinderFocus}>
+          <Window appId="finder">
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} initialTab={finderTab} />
           </Window>
 
-          <Window appId="photos" onFocus={handlePhotosFocus}>
+          <Window appId="photos">
             <PhotosApp inShell={true} />
           </Window>
 
-          <Window appId="calendar" onFocus={handleCalendarFocus}>
+          <Window appId="calendar">
             <CalendarApp inShell={true} />
           </Window>
 
-          <Window appId="music" onFocus={handleMusicFocus}>
+          <Window appId="music">
             <MusicApp />
           </Window>
 
@@ -416,6 +392,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
                     // Update metadata and save to localStorage
                     updateWindowMetadata(windowState.id, { content: newContent });
                     saveTextEditContent(filePath, newContent);
+                    debouncedTouchRecent(filePath);
                   }}
                 />
               );
