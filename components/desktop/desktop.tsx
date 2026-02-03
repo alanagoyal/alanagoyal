@@ -183,9 +183,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
   const isActive = mode === "active";
 
-  // Empty focus handlers - URL is updated by the effect that watches state.focusedWindowId
-  const noop = useCallback(() => {}, []);
-
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback(
     (filePath: string, content: string) => {
@@ -341,35 +338,35 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
       {isActive && (
         <>
-          <Window appId="notes" onFocus={noop}>
+          <Window appId="notes">
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
           </Window>
 
-          <Window appId="messages" onFocus={noop}>
+          <Window appId="messages">
             <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
           </Window>
 
-          <Window appId="settings" onFocus={noop}>
+          <Window appId="settings">
             <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
           </Window>
 
-          <Window appId="iterm" onFocus={noop}>
+          <Window appId="iterm">
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder" onFocus={noop}>
+          <Window appId="finder">
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} initialTab={finderTab} />
           </Window>
 
-          <Window appId="photos" onFocus={noop}>
+          <Window appId="photos">
             <PhotosApp inShell={true} />
           </Window>
 
-          <Window appId="calendar" onFocus={noop}>
+          <Window appId="calendar">
             <CalendarApp inShell={true} />
           </Window>
 
-          <Window appId="music" onFocus={noop}>
+          <Window appId="music">
             <MusicApp />
           </Window>
 
