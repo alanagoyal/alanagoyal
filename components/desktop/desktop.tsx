@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
-import { RecentsProvider } from "@/lib/recents-context";
+import { RecentsProvider, useRecents } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
@@ -92,7 +92,18 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     getFocusedAppId,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
+  const { touchRecent } = useRecents();
   const isMobile = useMobileDetect();
+
+  // Debounce touchRecent to avoid excessive re-renders
+  const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const debouncedTouchRecent = useCallback((path: string) => {
+    if (touchTimers.current[path]) clearTimeout(touchTimers.current[path]);
+    touchTimers.current[path] = setTimeout(() => {
+      touchRecent(path);
+      delete touchTimers.current[path];
+    }, 500);
+  }, [touchRecent]);
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
@@ -416,6 +427,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
                     // Update metadata and save to localStorage
                     updateWindowMetadata(windowState.id, { content: newContent });
                     saveTextEditContent(filePath, newContent);
+                    debouncedTouchRecent(filePath);
                   }}
                 />
               );

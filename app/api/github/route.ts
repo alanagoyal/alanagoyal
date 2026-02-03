@@ -4,6 +4,7 @@ import {
   fetchRepoTree,
   fetchFileContent,
   getRepoNames,
+  fetchRecentlyModifiedFiles,
 } from "@/lib/github";
 
 export async function GET(request: NextRequest) {
@@ -49,9 +50,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ content });
       }
 
+      case "recent-files": {
+        const recentFiles = await fetchRecentlyModifiedFiles();
+        return NextResponse.json({ files: recentFiles });
+      }
+
       default:
         return NextResponse.json(
-          { error: "Invalid type. Use: repos, tree, or file" },
+          { error: "Invalid type. Use: repos, tree, file, or recent-files" },
           { status: 400 }
         );
     }

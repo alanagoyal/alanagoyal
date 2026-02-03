@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
@@ -83,6 +83,13 @@ function isTextFile(filename: string): boolean {
   return TEXT_FILE_EXTENSIONS.includes(ext);
 }
 
+// GitHub recent file type
+interface GitHubRecentFile {
+  path: string;
+  repo: string;
+  modifiedAt: string;
+}
+
 // GitHub cache
 interface GitHubCache {
   repos: string[] | null;
@@ -138,6 +145,13 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
   } catch {
     return "";
   }
+}
+
+async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
+  const response = await fetch("/api/github?type=recent-files", { signal });
+  if (!response.ok) throw new Error("Failed to fetch recent files");
+  const data = await response.json();
+  return data.files;
 }
 
 // Icon component
@@ -278,6 +292,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const [showSidebar, setShowSidebar] = useState(true); // For mobile
   const [viewMode, setViewMode] = useState<"icons" | "list">("list");
   const [showViewDropdown, setShowViewDropdown] = useState(false);
+  const [githubRecentFiles, setGithubRecentFiles] = useState<GitHubRecentFile[]>([]);
 
   const inDesktopShell = !!(inShell && windowFocus);
 
@@ -402,17 +417,80 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     finderSidebarPersistence.save(selectedSidebar);
   }, [selectedSidebar]);
 
-  // Update files when viewing Recents and recents change
+  // Fetch GitHub files when entering Recents (only fetches, doesn't sort)
+  useEffect(() => {
+    if (currentPath !== "recents") return;
+
+    const abortController = new AbortController();
+    let cancelled = false;
+
+    const fetchGithubData = async () => {
+      setLoading(true);
+      try {
+        const files = await fetchGitHubRecentFiles(abortController.signal);
+        if (!cancelled) {
+          setGithubRecentFiles(files);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        console.error("Error loading GitHub files:", error);
+      }
+      if (!cancelled) setLoading(false);
+    };
+
+    fetchGithubData();
+    return () => {
+      cancelled = true;
+      abortController.abort();
+    };
+  }, [currentPath]);
+
+  // Compute sorted recents from GitHub files + local recents (re-sorts when either changes)
+  const sortedRecentFiles = useMemo(() => {
+    const allFiles: Array<{ file: FileItem; timestamp: number }> = [];
+    const seenPaths = new Set<string>();
+
+    // Add GitHub files
+    for (const gf of githubRecentFiles) {
+      const fullPath = `${PROJECTS_DIR}/${gf.repo}/${gf.path}`;
+      const githubTime = new Date(gf.modifiedAt).getTime();
+      const textEditTime = getFileModifiedDate(fullPath);
+      const effectiveTime = textEditTime && textEditTime > githubTime ? textEditTime : githubTime;
+
+      seenPaths.add(fullPath);
+      allFiles.push({
+        file: {
+          name: gf.path.split("/").pop() || gf.path,
+          type: "file" as const,
+          path: fullPath,
+        },
+        timestamp: effectiveTime,
+      });
+    }
+
+    // Add local recents not in GitHub files
+    for (const r of recents) {
+      if (!seenPaths.has(r.path)) {
+        const textEditTime = getFileModifiedDate(r.path);
+        const effectiveTime = textEditTime || r.accessedAt;
+        allFiles.push({
+          file: { name: r.name, type: r.type, path: r.path },
+          timestamp: effectiveTime,
+        });
+      }
+    }
+
+    // Sort by timestamp (most recent first)
+    allFiles.sort((a, b) => b.timestamp - a.timestamp);
+    return allFiles.map(f => f.file);
+  }, [githubRecentFiles, recents]);
+
+  // Update files state when viewing Recents
   useEffect(() => {
     if (currentPath === "recents") {
-      const recentFiles: FileItem[] = recents.map(r => ({
-        name: r.name,
-        type: r.type,
-        path: r.path,
-      }));
-      setFiles(recentFiles);
+      setFiles(sortedRecentFiles);
     }
-  }, [currentPath, recents]);
+  }, [currentPath, sortedRecentFiles]);
 
   // Respond to initialTab changes from external navigation (e.g., dock clicks)
   useEffect(() => {
@@ -682,10 +760,29 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Get file date - uses real modified date if available, otherwise generates pseudo-random
   const getFileDate = (file: FileItem): string => {
-    // Check for real modified date first (from TextEdit edits)
-    const realModifiedDate = getFileModifiedDate(file.path);
-    if (realModifiedDate) {
-      return formatDateString(new Date(realModifiedDate));
+    const textEditDate = getFileModifiedDate(file.path);
+
+    // Check if this is a GitHub file
+    const githubFile = githubRecentFiles.find(gf =>
+      `${PROJECTS_DIR}/${gf.repo}/${gf.path}` === file.path
+    );
+    const githubDate = githubFile ? new Date(githubFile.modifiedAt).getTime() : null;
+
+    // Use most recent of TextEdit date or GitHub date
+    if (textEditDate && githubDate) {
+      return formatDateString(new Date(Math.max(textEditDate, githubDate)));
+    }
+    if (textEditDate) {
+      return formatDateString(new Date(textEditDate));
+    }
+    if (githubDate) {
+      return formatDateString(new Date(githubDate));
+    }
+
+    // Check local recents for accessedAt
+    const recentFile = recents.find(r => r.path === file.path);
+    if (recentFile) {
+      return formatDateString(new Date(recentFile.accessedAt));
     }
 
     // Fall back to pseudo-random date based on filename (deterministic)
