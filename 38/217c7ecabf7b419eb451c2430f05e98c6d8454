@@ -1,0 +1,27 @@
+lib/github.ts
+  280a9d938c9148f6 6,43,57,323,364,369-394
+components/desktop/desktop.tsx
+  280a9d938c9148f6 107-112,175,186-187,344,348,352,356,360,364,368,372
+components/apps/finder/finder-app.tsx
+  280a9d938c9148f6 137,140-141,144,543,552,558-560,798,802-806,809,811
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "38217c7ecabf7b419eb451c2430f05e98c6d8454",
+  "prompts": {
+    "280a9d938c9148f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae777e7c-cf83-4836-884b-dd1cefb5760d",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 98,
+      "total_deletions": 102,
+      "accepted_lines": 68,
+      "overriden_lines": 0
+    }
+  }
+}
