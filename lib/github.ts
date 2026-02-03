@@ -400,8 +400,8 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
 
     setCache(cacheKey, result);
     return result;
-  } catch (error) {
-    console.error("Error fetching recent files:", error);
+  } catch {
+    // Silently handle errors - return empty array
     return [];
   }
 }

@@ -25,6 +25,7 @@ import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
+import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
@@ -33,8 +34,6 @@ interface DesktopProps {
   initialNoteSlug?: string;
   initialTextEditFile?: string;
 }
-
-import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
 
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
@@ -88,8 +87,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     bringAppToFront,
     updateWindowMetadata,
     getWindowsByApp,
-    hasOpenWindows,
-    getFocusedAppId,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const { touchRecent } = useRecents();
@@ -200,11 +197,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     },
     [openMultiWindow]
   );
-
-  // Handler for TextEdit dock click - brings all windows to front
-  const handleTextEditDockClick = useCallback(() => {
-    bringAppToFront("textedit");
-  }, [bringAppToFront]);
 
   // Handler for Finder dock icon click - resets to Recents view
   const handleFinderDockClick = useCallback(() => {

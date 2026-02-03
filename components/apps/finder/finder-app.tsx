@@ -396,8 +396,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       } else {
         setFiles([]);
       }
-    } catch (error) {
-      console.error("Error loading files:", error);
+    } catch {
       setFiles([]);
     }
 
@@ -430,7 +429,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
-        console.error("Error loading GitHub files:", error);
+        // Silently handle fetch errors - will show empty recents
       }
       if (!cancelled) setLoading(false);
     };
