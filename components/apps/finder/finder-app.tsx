@@ -831,6 +831,70 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   };
 
+  // Skeleton loading for desktop list view
+  const renderDesktopListSkeleton = () => (
+    <div className="flex flex-col animate-pulse">
+      {/* Column headers */}
+      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex-1 min-w-0">Name</div>
+        <div className="w-32 text-left">Kind</div>
+        <div className="w-52 text-left">Date Modified</div>
+      </div>
+      {/* Skeleton rows */}
+      <div className="flex-1">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="w-full flex items-center px-4 py-1">
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
+              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${120 + (i * 17) % 80}px` }} />
+            </div>
+            <div className="w-32">
+              <div className="h-4 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+            <div className="w-52">
+              <div className="h-4 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Skeleton loading for desktop icons view
+  const renderIconsGridSkeleton = () => (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2 p-4 animate-pulse">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center gap-1 p-2">
+          <div className="w-12 h-12 rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-3 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${40 + (i * 13) % 30}px` }} />
+        </div>
+      ))}
+    </div>
+  );
+
+  // Skeleton loading for mobile list view
+  const renderMobileListSkeleton = () => (
+    <div className="px-4 pt-2 pb-8 animate-pulse">
+      <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-3 px-3 py-3",
+              i < 5 && "border-b border-zinc-200 dark:border-zinc-700"
+            )}
+          >
+            <div className="w-10 h-10 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${100 + (i * 23) % 60}px` }} />
+              <div className="h-3 w-12 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   // Render file grid (desktop icons view)
   const renderFileGrid = () => (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2 p-4">
@@ -1101,13 +1165,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
           <>
             {renderMobileContentNav(getBreadcrumbs().slice(-1)[0], getMobileBackTitle())}
             <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="text-zinc-500">Loading...</div>
-                </div>
-              ) : (
-                renderFileList()
-              )}
+              {loading ? renderMobileListSkeleton() : renderFileList()}
             </div>
           </>
         )}
@@ -1127,9 +1185,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         {renderSidebar()}
         <div className="flex-1 overflow-y-auto" onClick={() => setSelectedFile(null)}>
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-zinc-500">Loading...</div>
-            </div>
+            viewMode === "list" ? renderDesktopListSkeleton() : renderIconsGridSkeleton()
           ) : previewContent !== null ? (
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
