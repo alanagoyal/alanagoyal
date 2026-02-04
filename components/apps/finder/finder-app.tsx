@@ -68,33 +68,26 @@ interface FinderAppProps {
   initialTab?: SidebarItem;
 }
 
-// Text file extensions that should open in TextEdit
-const TEXT_FILE_EXTENSIONS = [
-  "md", "txt", "ts", "tsx", "js", "jsx", "json",
-  "css", "html", "py", "yml", "yaml", "xml", "svg",
-  "sh", "bash", "zsh", "env", "gitignore", "eslintrc",
-  "prettierrc", "editorconfig", "toml", "ini", "cfg",
-  "rst", "csv", "log", "sql", "graphql", "vue", "svelte",
-];
+// Image extensions that should open in Preview
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
 
-function isTextFile(filename: string): boolean {
+function isImageFile(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
-  // Also treat files without extension but starting with a dot as text files
-  if (!ext && filename.startsWith(".")) return true;
-  return TEXT_FILE_EXTENSIONS.includes(ext);
+  return IMAGE_EXTENSIONS.includes(ext);
 }
 
-// Preview file extensions (images and PDFs)
-const PREVIEW_FILE_EXTENSIONS = ["png", "jpg", "jpeg", "pdf"];
-
-function isPreviewFile(filename: string): boolean {
+function isPdfFile(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
-  return PREVIEW_FILE_EXTENSIONS.includes(ext);
+  return ext === "pdf";
+}
+
+// Preview handles images and PDFs
+function isPreviewFile(filename: string): boolean {
+  return isImageFile(filename) || isPdfFile(filename);
 }
 
 function getPreviewFileType(filename: string): "image" | "pdf" {
-  const ext = filename.split(".").pop()?.toLowerCase() || "";
-  return ext === "pdf" ? "pdf" : "image";
+  return isPdfFile(filename) ? "pdf" : "image";
 }
 
 // GitHub recent file type
@@ -586,8 +579,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         return;
       }
 
-      // If text file and onOpenTextFile is available, open in TextEdit
-      if (isTextFile(file.name) && onOpenTextFile) {
+      // Open all non-preview files in TextEdit
+      if (onOpenTextFile) {
         onOpenTextFile(file.path, content);
       } else {
         // Fallback to preview panel

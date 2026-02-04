@@ -187,7 +187,7 @@ export function PreviewWindow({
 
     if (imageError) {
       return (
-        <div className="flex items-center justify-center h-full text-zinc-400">
+        <div className="flex items-center justify-center h-full text-zinc-500 dark:text-zinc-400">
           <div className="text-center">
             <svg className="w-16 h-16 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -277,13 +277,13 @@ export function PreviewWindow({
       {/* Window chrome */}
       <div
         className={cn(
-          "absolute inset-0 bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+          "absolute inset-0 bg-zinc-100 dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
           isMaximized ? "rounded-none" : "rounded-xl"
         )}
       >
         {/* Title bar */}
         <div
-          className="px-4 py-2 flex items-center justify-between select-none bg-zinc-800 border-b border-zinc-700 cursor-default"
+          className="px-4 py-2 flex items-center justify-between select-none bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700 cursor-default"
           onMouseDown={handleDragStart}
         >
           <WindowControls
@@ -296,14 +296,14 @@ export function PreviewWindow({
             closeLabel="Close window"
           />
           <div className="flex-1 text-center">
-            <span className="text-zinc-400 text-sm">{fileName}</span>
+            <span className="text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
           {/* Zoom controls for images */}
           {fileType === "image" && (
             <div className="flex items-center gap-1">
               <button
                 onClick={zoomOut}
-                className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
                 title="Zoom out (Cmd -)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -311,10 +311,10 @@ export function PreviewWindow({
                   <path d="M21 21l-4.35-4.35M8 11h6" />
                 </svg>
               </button>
-              <span className="text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
+              <span className="text-zinc-600 dark:text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
               <button
                 onClick={zoomIn}
-                className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
                 title="Zoom in (Cmd +)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -328,7 +328,7 @@ export function PreviewWindow({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 bg-zinc-900">
+        <div className="flex-1 min-h-0 bg-zinc-100 dark:bg-zinc-900">
           {renderContent()}
         </div>
       </div>
