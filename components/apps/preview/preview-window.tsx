@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import {
@@ -26,12 +26,17 @@ interface PreviewWindowProps {
   zIndex: number;
   isFocused: boolean;
   isMaximized: boolean;
+  initialZoom?: number;
+  initialScrollLeft?: number;
+  initialScrollTop?: number;
   onFocus: () => void;
   onClose: () => void;
   onMinimize: () => void;
   onToggleMaximize: () => void;
   onMove: (position: Position) => void;
   onResize: (size: Size, position?: Position) => void;
+  onZoomChange?: (zoom: number) => void;
+  onScrollChange?: (scrollLeft: number, scrollTop: number) => void;
 }
 
 export function PreviewWindow({
@@ -44,24 +49,33 @@ export function PreviewWindow({
   zIndex,
   isFocused,
   isMaximized,
+  initialZoom = 1,
+  initialScrollLeft = 0,
+  initialScrollTop = 0,
   onFocus,
   onClose,
   onMinimize,
   onToggleMaximize,
   onMove,
   onResize,
+  onZoomChange,
+  onScrollChange,
 }: PreviewWindowProps) {
   void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(initialZoom);
   const [imageError, setImageError] = useState(false);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isScrollRestored, setIsScrollRestored] = useState(initialZoom <= 1); // No restore needed at zoom=1
   const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
+  const pendingScrollRef = useRef<{ left: number; top: number } | null>(
+    initialZoom > 1 ? { left: initialScrollLeft, top: initialScrollTop } : null
+  );
 
   const { handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
@@ -110,22 +124,79 @@ export function PreviewWindow({
     }
   }, [naturalSize, containerSize]);
 
-  // Zoom controls
+  // Store callbacks in refs to avoid stale closures
+  const onZoomChangeRef = useRef(onZoomChange);
+  onZoomChangeRef.current = onZoomChange;
+  const onScrollChangeRef = useRef(onScrollChange);
+  onScrollChangeRef.current = onScrollChange;
+
+  // Restore scroll position when zoomed content becomes ready (useLayoutEffect to avoid flash)
+  useLayoutEffect(() => {
+    if (!pendingScrollRef.current || !containerRef.current) return;
+    const fitSize = getFitSize();
+    if (!fitSize || zoom <= 1) return;
+
+    // Content is ready, restore scroll position before paint
+    containerRef.current.scrollLeft = pendingScrollRef.current.left;
+    containerRef.current.scrollTop = pendingScrollRef.current.top;
+    pendingScrollRef.current = null;
+    setIsScrollRestored(true);
+  }, [zoom, naturalSize, containerSize, getFitSize]);
+
+  // Persist scroll position when user scrolls (debounced)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let timeoutId: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (zoom > 1) {
+          onScrollChangeRef.current?.(container.scrollLeft, container.scrollTop);
+        }
+      }, 100);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      clearTimeout(timeoutId);
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [zoom]);
+
+  // Zoom controls - persist changes and clear scroll when returning to fit
   const zoomIn = useCallback(() => {
-    setZoom((z) => Math.min(z + 0.25, 5));
+    setZoom((z) => {
+      const newZoom = Math.min(z + 0.25, 5);
+      setTimeout(() => onZoomChangeRef.current?.(newZoom), 0);
+      return newZoom;
+    });
   }, []);
 
   const zoomOut = useCallback(() => {
-    setZoom((z) => Math.max(z - 0.25, 0.25));
+    setZoom((z) => {
+      const newZoom = Math.max(z - 0.25, 0.25);
+      setTimeout(() => {
+        onZoomChangeRef.current?.(newZoom);
+        if (newZoom === 1) onScrollChangeRef.current?.(0, 0);
+      }, 0);
+      return newZoom;
+    });
   }, []);
 
   const resetZoom = useCallback(() => {
     setZoom(1);
+    setTimeout(() => {
+      onZoomChangeRef.current?.(1);
+      onScrollChangeRef.current?.(0, 0);
+    }, 0);
   }, []);
 
   // Pan handlers for drag-to-scroll when zoomed in
   const handlePanStart = useCallback((e: React.MouseEvent) => {
-    if (zoom <= 1 || !containerRef.current) return;
+    const fitSize = getFitSize();
+    if (zoom <= 1 || !fitSize || !containerRef.current) return;
 
     e.preventDefault();
     setIsPanning(true);
@@ -135,7 +206,7 @@ export function PreviewWindow({
       scrollLeft: containerRef.current.scrollLeft,
       scrollTop: containerRef.current.scrollTop,
     };
-  }, [zoom]);
+  }, [zoom, getFitSize]);
 
   const handlePanMove = useCallback((e: React.MouseEvent) => {
     if (!isPanning || !panStartRef.current || !containerRef.current) return;
@@ -191,9 +262,8 @@ export function PreviewWindow({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFocused, onClose, zoomIn, zoomOut, resetZoom]);
 
-  // Reset state when file changes
+  // Reset error/size state when file changes (zoom is initialized from prop)
   useEffect(() => {
-    setZoom(1);
     setImageError(false);
     setNaturalSize(null);
   }, [filePath]);
@@ -227,14 +297,18 @@ export function PreviewWindow({
     }
 
     // At zoom=1, use pure CSS for smooth resizing
-    // At other zoom levels, calculate dimensions for scrollable area
-    const isZoomed = zoom !== 1;
+    // At other zoom levels, calculate explicit dimensions for scrollable area
     const fitSize = getFitSize();
-    const canPan = isZoomed && zoom > 1 && fitSize;
+    const isZoomed = zoom !== 1 && fitSize !== null; // Only "zoomed" if we can calculate dimensions
+    const canPan = isZoomed && zoom > 1;
 
-    // Only calculate explicit dimensions when zoomed
-    const displayWidth = isZoomed && fitSize ? fitSize.width * zoom : undefined;
-    const displayHeight = isZoomed && fitSize ? fitSize.height * zoom : undefined;
+    // Calculate explicit dimensions only when zoomed and fitSize is available
+    const displayWidth = isZoomed ? fitSize!.width * zoom : undefined;
+    const displayHeight = isZoomed ? fitSize!.height * zoom : undefined;
+
+    // Hide content until scroll position is restored (prevents flash)
+    // isScrollRestored is initialized to true when initialZoom <= 1, so no delay for non-zoomed images
+    const showContent = isScrollRestored;
 
     return (
       <div
@@ -243,6 +317,7 @@ export function PreviewWindow({
         style={{
           overflow: canPan ? "auto" : "hidden",
           cursor: canPan ? (isPanning ? "grabbing" : "grab") : "default",
+          opacity: showContent ? 1 : 0,
         }}
         onMouseDown={handlePanStart}
         onMouseMove={handlePanMove}
@@ -263,11 +338,11 @@ export function PreviewWindow({
             src={fileUrl}
             alt={fileName}
             draggable={false}
-            className={isZoomed ? "" : "max-w-full max-h-full object-contain"}
+            className={isZoomed ? "" : "w-full h-full object-contain"}
             style={{
               width: displayWidth,
               height: displayHeight,
-              flexShrink: 0,
+              flexShrink: isZoomed ? 0 : undefined,
               pointerEvents: "none",
               transition: isZoomed ? "width 0.15s ease-out, height 0.15s ease-out" : undefined,
             }}

@@ -70,6 +70,35 @@ async function fetchFileContent(filePath: string): Promise<string> {
   return "";
 }
 
+// Calculate optimal window size for an image based on its dimensions
+function calculateImageWindowSize(
+  naturalWidth: number,
+  naturalHeight: number
+): { width: number; height: number } {
+  const titleBarHeight = 44;
+  const minWidth = 400;
+  const minContentHeight = 300 - titleBarHeight;
+  const maxContentWidth = Math.min(1200, window.innerWidth - 200);
+  const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
+
+  let contentWidth = naturalWidth;
+  let contentHeight = naturalHeight;
+
+  if (contentWidth > maxContentWidth || contentHeight > maxContentHeight) {
+    const scale = Math.min(maxContentWidth / contentWidth, maxContentHeight / contentHeight);
+    contentWidth = Math.round(contentWidth * scale);
+    contentHeight = Math.round(contentHeight * scale);
+  }
+
+  contentWidth = Math.max(contentWidth, minWidth);
+  contentHeight = Math.max(contentHeight, minContentHeight);
+
+  return {
+    width: contentWidth,
+    height: contentHeight + titleBarHeight,
+  };
+}
+
 function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
   const {
     openWindow,
@@ -194,32 +223,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         // For images, load to get dimensions first
         const img = new window.Image();
         img.onload = () => {
-          const titleBarHeight = 44;
-          const minWidth = 400;
-          const minContentHeight = 300 - titleBarHeight;
-          const maxContentWidth = Math.min(1200, window.innerWidth - 200);
-          const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
-
-          let contentWidth = img.naturalWidth;
-          let contentHeight = img.naturalHeight;
-
-          if (contentWidth > maxContentWidth || contentHeight > maxContentHeight) {
-            const scale = Math.min(maxContentWidth / contentWidth, maxContentHeight / contentHeight);
-            contentWidth = Math.round(contentWidth * scale);
-            contentHeight = Math.round(contentHeight * scale);
-          }
-
-          contentWidth = Math.max(contentWidth, minWidth);
-          contentHeight = Math.max(contentHeight, minContentHeight);
-
-          const windowWidth = contentWidth;
-          const windowHeight = contentHeight + titleBarHeight;
-
+          const size = calculateImageWindowSize(img.naturalWidth, img.naturalHeight);
           openMultiWindow(
             "preview",
             initialPreviewFile,
             { filePath: initialPreviewFile, fileUrl, fileType },
-            { width: windowWidth, height: windowHeight }
+            size
           );
           setUrlPreviewProcessed(true);
         };
@@ -293,7 +302,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const handleOpenPreviewFile = useCallback(
     (filePath: string, fileUrl: string, fileType: PreviewFileType) => {
       if (fileType === "pdf") {
-        // PDFs use default size
         openMultiWindow("preview", filePath, { filePath, fileUrl, fileType });
         return;
       }
@@ -301,47 +309,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       // For images, load to get dimensions first
       const img = new window.Image();
       img.onload = () => {
-        const naturalWidth = img.naturalWidth;
-        const naturalHeight = img.naturalHeight;
-
-        // Calculate window size based on image aspect ratio
-        const titleBarHeight = 44;
-        const minWidth = 400;
-        const minContentHeight = 300 - titleBarHeight;
-        const maxContentWidth = Math.min(1200, window.innerWidth - 200);
-        const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
-
-        // Scale image to fit max content area while maintaining aspect ratio
-        let contentWidth = naturalWidth;
-        let contentHeight = naturalHeight;
-
-        if (contentWidth > maxContentWidth || contentHeight > maxContentHeight) {
-          const scale = Math.min(maxContentWidth / contentWidth, maxContentHeight / contentHeight);
-          contentWidth = Math.round(contentWidth * scale);
-          contentHeight = Math.round(contentHeight * scale);
-        }
-
-        // Ensure minimum size
-        contentWidth = Math.max(contentWidth, minWidth);
-        contentHeight = Math.max(contentHeight, minContentHeight);
-
-        // Window size = content size + title bar
-        const windowWidth = contentWidth;
-        const windowHeight = contentHeight + titleBarHeight;
-
-        openMultiWindow(
-          "preview",
-          filePath,
-          { filePath, fileUrl, fileType },
-          { width: windowWidth, height: windowHeight }
-        );
+        const size = calculateImageWindowSize(img.naturalWidth, img.naturalHeight);
+        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType }, size);
       };
-
       img.onerror = () => {
-        // Fallback to default size on error
         openMultiWindow("preview", filePath, { filePath, fileUrl, fileType });
       };
-
       img.src = fileUrl;
     },
     [openMultiWindow]
@@ -556,6 +529,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
               const filePath = windowState.metadata!.filePath as string;
               const fileUrl = windowState.metadata!.fileUrl as string;
               const fileType = windowState.metadata!.fileType as PreviewFileType;
+              const zoom = (windowState.metadata?.zoom as number) ?? 1;
+              const scrollLeft = (windowState.metadata?.scrollLeft as number) ?? 0;
+              const scrollTop = (windowState.metadata?.scrollTop as number) ?? 0;
               return (
                 <PreviewWindow
                   key={windowState.id}
@@ -568,12 +544,17 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
                   zIndex={windowState.zIndex}
                   isFocused={state.focusedWindowId === windowState.id}
                   isMaximized={windowState.isMaximized}
+                  initialZoom={zoom}
+                  initialScrollLeft={scrollLeft}
+                  initialScrollTop={scrollTop}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
                   onMinimize={() => minimizeMultiWindow(windowState.id)}
                   onToggleMaximize={() => toggleMaximizeMultiWindow(windowState.id)}
                   onMove={(pos) => moveMultiWindow(windowState.id, pos)}
                   onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
+                  onZoomChange={(newZoom) => updateWindowMetadata(windowState.id, { zoom: newZoom })}
+                  onScrollChange={(left, top) => updateWindowMetadata(windowState.id, { scrollLeft: left, scrollTop: top })}
                 />
               );
             })}
