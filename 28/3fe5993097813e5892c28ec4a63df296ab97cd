@@ -1,0 +1,25 @@
+components/apps/finder/finder-app.tsx
+  498eb4b9c73645ed 71-72,74,76,79-82,84,86,90,582
+components/apps/preview/preview-window.tsx
+  498eb4b9c73645ed 190,280,286,299,306,314,317,331
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "283fe5993097813e5892c28ec4a63df296ab97cd",
+  "prompts": {
+    "498eb4b9c73645ed": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb716cef-9a9f-45ac-bb31-f3dfe2bc69da",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 29,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
