@@ -70,7 +70,7 @@ interface FinderAppProps {
 // Text file extensions that should open in TextEdit
 const TEXT_FILE_EXTENSIONS = [
   "md", "txt", "ts", "tsx", "js", "jsx", "json",
-  "css", "html", "py", "yml", "yaml", "xml",
+  "css", "html", "py", "yml", "yaml", "xml", "svg",
   "sh", "bash", "zsh", "env", "gitignore", "eslintrc",
   "prettierrc", "editorconfig", "toml", "ini", "cfg",
   "rst", "csv", "log", "sql", "graphql", "vue", "svelte",
