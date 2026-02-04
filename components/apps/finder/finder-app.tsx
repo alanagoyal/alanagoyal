@@ -9,7 +9,7 @@ import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
-import { finderSidebarPersistence } from "@/lib/sidebar-persistence";
+import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -260,8 +260,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const getInitialPath = (tab: SidebarItem | undefined): string => {
-    if (!tab) return "recents";
+  // Map sidebar item to its base path
+  const getPathForSidebarItem = (tab: SidebarItem): string => {
     switch (tab) {
       case "recents": return "recents";
       case "applications": return "applications";
@@ -274,14 +274,27 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   };
 
-  // Load persisted sidebar state (initialTab prop takes precedence if provided)
-  const getInitialSidebar = (): SidebarItem => {
-    if (initialTab) return initialTab;
-    return finderSidebarPersistence.load();
+  // Derive sidebar item from a path (inverse of getPathForSidebarItem)
+  const getSidebarForPath = (path: string): SidebarItem => {
+    if (path === "recents") return "recents";
+    if (path === "applications") return "applications";
+    if (path === "trash" || path.startsWith("trash/")) return "trash";
+    if (path === `${HOME_DIR}/Desktop` || path.startsWith(`${HOME_DIR}/Desktop/`)) return "desktop";
+    if (path === `${HOME_DIR}/Documents` || path.startsWith(`${HOME_DIR}/Documents/`)) return "documents";
+    if (path === `${HOME_DIR}/Downloads` || path.startsWith(`${HOME_DIR}/Downloads/`)) return "downloads";
+    if (path === PROJECTS_DIR || path.startsWith(`${PROJECTS_DIR}/`)) return "projects";
+    return "recents";
   };
 
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(getInitialSidebar);
-  const [currentPath, setCurrentPath] = useState(() => getInitialPath(getInitialSidebar()));
+  // Get initial path - prefer persisted path, fall back to initialTab prop, then "recents"
+  const getInitialPath = (): string => {
+    if (initialTab) return getPathForSidebarItem(initialTab);
+    const persistedPath = loadFinderPath();
+    return persistedPath || "recents";
+  };
+
+  const [currentPath, setCurrentPath] = useState(getInitialPath);
+  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -292,20 +305,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const [githubRecentFiles, setGithubRecentFiles] = useState<GitHubRecentFile[]>([]);
 
   const inDesktopShell = !!(inShell && windowFocus);
-
-  // Get path for sidebar item
-  const getPathForSidebar = useCallback((item: SidebarItem): string => {
-    switch (item) {
-      case "recents": return "recents";
-      case "applications": return "applications";
-      case "desktop": return `${HOME_DIR}/Desktop`;
-      case "documents": return `${HOME_DIR}/Documents`;
-      case "downloads": return `${HOME_DIR}/Downloads`;
-      case "projects": return PROJECTS_DIR;
-      case "trash": return "trash";
-      default: return HOME_DIR;
-    }
-  }, []);
 
   // Load files for current path
   const loadFiles = useCallback(async (path: string) => {
@@ -408,10 +407,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
 
-  // Persist sidebar selection
+  // Persist current path (sidebar is derived from path on load)
   useEffect(() => {
-    finderSidebarPersistence.save(selectedSidebar);
-  }, [selectedSidebar]);
+    saveFinderPath(currentPath);
+  }, [currentPath]);
 
   // Fetch GitHub files when entering Recents (only fetches, doesn't sort)
   useEffect(() => {
@@ -492,7 +491,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   useEffect(() => {
     if (initialTab) {
       setSelectedSidebar(initialTab);
-      setCurrentPath(getInitialPath(initialTab));
+      setCurrentPath(getPathForSidebarItem(initialTab));
       setSelectedFile(null);
     }
   }, [initialTab]);
@@ -500,12 +499,12 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
     setSelectedSidebar(item);
-    setCurrentPath(getPathForSidebar(item));
+    setCurrentPath(getPathForSidebarItem(item));
     setSelectedFile(null);
     if (isMobile) {
       setShowSidebar(false);
     }
-  }, [getPathForSidebar, isMobile]);
+  }, [getPathForSidebarItem, isMobile]);
 
   // Handle file/folder click
   const handleFileClick = useCallback((file: FileItem) => {
@@ -574,7 +573,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     const parentPath = currentPath.split("/").slice(0, -1).join("/");
 
     if (isMobile && !showSidebar) {
-      const sidebarPath = getPathForSidebar(selectedSidebar);
+      const sidebarPath = getPathForSidebarItem(selectedSidebar);
       if (currentPath !== sidebarPath && (parentPath.startsWith(HOME_DIR) || currentPath.startsWith("trash/"))) {
         setCurrentPath(parentPath || "trash");
       } else {
@@ -587,7 +586,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR) || currentPath.startsWith("trash/")) {
       setCurrentPath(parentPath || HOME_DIR);
     }
-  }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebar]);
+  }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebarItem]);
 
   // Get breadcrumb parts
   const getBreadcrumbs = useCallback(() => {
@@ -664,7 +663,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
 
     // If we're in a nested folder within a sidebar section, show parent folder name
-    const sidebarPath = getPathForSidebar(selectedSidebar);
+    const sidebarPath = getPathForSidebarItem(selectedSidebar);
     if (currentPath !== sidebarPath && currentPath.startsWith(HOME_DIR)) {
       const parentPath = currentPath.split("/").slice(0, -1).join("/");
       if (parentPath === sidebarPath || parentPath === PROJECTS_DIR) {

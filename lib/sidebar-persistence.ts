@@ -32,6 +32,7 @@
 const STORAGE_KEYS = {
   // Session storage (resets on window close)
   FINDER_SIDEBAR: "finder-sidebar",
+  FINDER_PATH: "finder-path",
   PHOTOS_VIEW: "photos-view",
   PHOTOS_SELECTED: "photos-selected-id",
   SETTINGS_STATE: "settings-state",
@@ -123,8 +124,33 @@ export const finderSidebarPersistence = createSidebarPersistence<FinderSidebarIt
   FINDER_SIDEBAR_ITEMS
 );
 
+// Path persistence for full navigation path (e.g., /Users/alanagoyal/Projects/repo/folder)
+export function loadFinderPath(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.FINDER_PATH);
+  } catch {
+    return null;
+  }
+}
+
+export function saveFinderPath(path: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.FINDER_PATH, path);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearFinderState(): void {
   finderSidebarPersistence.clear();
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.FINDER_PATH);
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 // ============================================================================
