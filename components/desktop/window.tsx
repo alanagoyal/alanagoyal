@@ -144,7 +144,8 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         ref={innerWrapperRef}
         className={cn(
           "absolute inset-0 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
-          isMaximized ? "rounded-none" : "rounded-xl"
+          isMaximized ? "rounded-none" : "rounded-xl",
+          !isFocused && "[&_*]:!cursor-default"
         )}
       >
         <div className="flex-1 min-h-0">
