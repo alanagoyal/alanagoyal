@@ -141,6 +141,32 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 
 The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
 
+### Preventing Drag on Interactive Elements
+
+When the nav bar has `onMouseDown={windowFocus?.onDragStart}` for window dragging, any buttons inside will also trigger the drag. **Always add `onMouseDown={(e) => e.stopPropagation()}` to interactive elements** in the nav bar:
+
+```tsx
+<div
+  className="nav-bar"
+  onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
+>
+  <WindowControls ... />
+
+  {/* Wrap button groups with stopPropagation */}
+  <div onMouseDown={(e) => e.stopPropagation()}>
+    <Button onClick={onAction}>Action</Button>
+  </div>
+
+  {/* Or add directly to individual buttons */}
+  <button
+    onClick={onAction}
+    onMouseDown={(e) => e.stopPropagation()}
+  >
+    Action
+  </button>
+</div>
+```
+
 On mobile, replace window controls with a back button:
 
 ```tsx
@@ -345,6 +371,7 @@ When creating a new app, ensure:
 - [ ] Icons use `text-muted-foreground` or `text-foreground`
 - [ ] Nav bar includes window controls (desktop) or back button (mobile)
 - [ ] Nav bar has `select-none` for drag handle area
+- [ ] Nav bar buttons have `onMouseDown={(e) => e.stopPropagation()}` to prevent drag
 - [ ] Search input follows standard styling
 - [ ] List items are 70px height with proper truncation
 - [ ] Dividers use `border-muted-foreground/20`
