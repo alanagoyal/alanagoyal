@@ -1,0 +1,23 @@
+components/apps/finder/finder-app.tsx
+  bb725e0d927bc91d 73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "a5d2ca871a44fb04a884743ac6fe495644860439",
+  "prompts": {
+    "bb725e0d927bc91d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d8db326-4046-46a1-a562-57734a41b63f",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
