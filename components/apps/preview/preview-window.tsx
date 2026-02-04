@@ -17,7 +17,6 @@ import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 export type PreviewFileType = "image" | "pdf";
 
 interface PreviewWindowProps {
-  windowId: string;
   filePath: string;
   fileUrl: string;
   fileType: PreviewFileType;
@@ -40,7 +39,6 @@ interface PreviewWindowProps {
 }
 
 export function PreviewWindow({
-  windowId,
   filePath,
   fileUrl,
   fileType,
@@ -61,7 +59,6 @@ export function PreviewWindow({
   onZoomChange,
   onScrollChange,
 }: PreviewWindowProps) {
-  void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileName = filePath?.split("/").pop() || "Untitled";
@@ -144,17 +141,16 @@ export function PreviewWindow({
   }, [zoom, naturalSize, containerSize, getFitSize]);
 
   // Persist scroll position when user scrolls (debounced)
+  // Re-attaches listener when zoom changes to ensure correct zoom check
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || zoom <= 1) return;
 
     let timeoutId: NodeJS.Timeout;
     const handleScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        if (zoom > 1) {
-          onScrollChangeRef.current?.(container.scrollLeft, container.scrollTop);
-        }
+        onScrollChangeRef.current?.(container.scrollLeft, container.scrollTop);
       }, 100);
     };
 
@@ -288,7 +284,10 @@ export function PreviewWindow({
         <div className="flex items-center justify-center h-full text-zinc-500 dark:text-zinc-400">
           <div className="text-center">
             <svg className="w-16 h-16 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+              <line x1="2" y1="2" x2="22" y2="22" />
             </svg>
             <p>Unable to load image</p>
           </div>

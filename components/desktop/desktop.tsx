@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
@@ -99,6 +99,22 @@ function calculateImageWindowSize(
   };
 }
 
+// Load image and calculate optimal window size
+function loadImageAndGetSize(
+  fileUrl: string
+): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      resolve(calculateImageWindowSize(img.naturalWidth, img.naturalHeight));
+    };
+    img.onerror = () => {
+      resolve(null); // Return null on error, caller will use default size
+    };
+    img.src = fileUrl;
+  });
+}
+
 function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
   const {
     openWindow,
@@ -146,6 +162,25 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
+
+  // Memoize filtered/sorted windows to avoid recomputing on every render
+  const visibleTextEditWindows = useMemo(
+    () =>
+      textEditWindows
+        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+        .sort((a, b) => b.zIndex - a.zIndex)
+        .slice(0, isMobile ? 1 : undefined),
+    [textEditWindows, isMobile]
+  );
+
+  const visiblePreviewWindows = useMemo(
+    () =>
+      previewWindows
+        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+        .sort((a, b) => b.zIndex - a.zIndex)
+        .slice(0, isMobile ? 1 : undefined),
+    [previewWindows, isMobile]
+  );
 
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
@@ -221,26 +256,15 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         setUrlPreviewProcessed(true);
       } else {
         // For images, load to get dimensions first
-        const img = new window.Image();
-        img.onload = () => {
-          const size = calculateImageWindowSize(img.naturalWidth, img.naturalHeight);
+        loadImageAndGetSize(fileUrl).then((size) => {
           openMultiWindow(
             "preview",
             initialPreviewFile,
             { filePath: initialPreviewFile, fileUrl, fileType },
-            size
+            size ?? undefined
           );
           setUrlPreviewProcessed(true);
-        };
-        img.onerror = () => {
-          openMultiWindow("preview", initialPreviewFile, {
-            filePath: initialPreviewFile,
-            fileUrl,
-            fileType,
-          });
-          setUrlPreviewProcessed(true);
-        };
-        img.src = fileUrl;
+        });
       }
     } else {
       setUrlPreviewProcessed(true);
@@ -307,15 +331,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       }
 
       // For images, load to get dimensions first
-      const img = new window.Image();
-      img.onload = () => {
-        const size = calculateImageWindowSize(img.naturalWidth, img.naturalHeight);
-        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType }, size);
-      };
-      img.onerror = () => {
-        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType });
-      };
-      img.src = fileUrl;
+      loadImageAndGetSize(fileUrl).then((size) => {
+        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType }, size ?? undefined);
+      });
     },
     [openMultiWindow]
   );
@@ -486,11 +504,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
           {/* TextEdit - multi-window support */}
           {/* On small screens, only show the topmost window */}
-          {textEditWindows
-            .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-            .sort((a, b) => b.zIndex - a.zIndex)
-            .slice(0, isMobile ? 1 : undefined)
-            .map((windowState) => {
+          {visibleTextEditWindows.map((windowState) => {
               const filePath = windowState.metadata!.filePath as string;
               const content = (windowState.metadata?.content as string) ?? "";
               return (
@@ -521,11 +535,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             })}
 
           {/* Preview - multi-window support for images and PDFs */}
-          {previewWindows
-            .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-            .sort((a, b) => b.zIndex - a.zIndex)
-            .slice(0, isMobile ? 1 : undefined)
-            .map((windowState) => {
+          {visiblePreviewWindows.map((windowState) => {
               const filePath = windowState.metadata!.filePath as string;
               const fileUrl = windowState.metadata!.fileUrl as string;
               const fileType = windowState.metadata!.fileType as PreviewFileType;
@@ -535,7 +545,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
               return (
                 <PreviewWindow
                   key={windowState.id}
-                  windowId={windowState.id}
                   filePath={filePath}
                   fileUrl={fileUrl}
                   fileType={fileType}
