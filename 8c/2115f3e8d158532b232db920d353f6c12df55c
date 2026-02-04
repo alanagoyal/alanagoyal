@@ -1,0 +1,25 @@
+components/desktop/desktop.tsx
+  498eb4b9c73645ed 3,102-117,166-184,259,264,334-335,507,538
+components/apps/preview/preview-window.tsx
+  498eb4b9c73645ed 144,147,287-290
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "8c2115f3e8d158532b232db920d353f6c12df55c",
+  "prompts": {
+    "498eb4b9c73645ed": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb716cef-9a9f-45ac-bb31-f3dfe2bc69da",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 53,
+      "total_deletions": 45,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
