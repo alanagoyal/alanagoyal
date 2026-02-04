@@ -1,0 +1,23 @@
+components/apps/preview/preview-window.tsx
+  0ab6a2359cc64579 71,130,132,141,301-322
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "a510e4f7b3ca35c5c14699f685b1224194a668c3",
+  "prompts": {
+    "0ab6a2359cc64579": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5c67dfdb-6e49-4cf8-88d9-df8bda71996e",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 45,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    }
+  }
+}
