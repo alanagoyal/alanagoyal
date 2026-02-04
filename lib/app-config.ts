@@ -103,6 +103,20 @@ export const APPS: AppConfig[] = [
     multiWindow: true,
     cascadeOffset: 30,
   },
+  {
+    id: "preview",
+    name: "Preview",
+    icon: "/preview.svg",
+    description: "Image and PDF viewer",
+    accentColor: "#007AFF",
+    defaultPosition: { x: 180, y: 100 },
+    defaultSize: { width: 800, height: 600 },
+    minSize: { width: 400, height: 300 },
+    menuBarTitle: "Preview",
+    showOnDockByDefault: false,
+    multiWindow: true,
+    cascadeOffset: 30,
+  },
 ];
 
 export function getAppById(id: string): AppConfig | undefined {

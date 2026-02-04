@@ -1,0 +1,383 @@
+"use client";
+
+import { useRef, useEffect, useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
+import { WindowControls } from "@/components/window-controls";
+import {
+  useWindowBehavior,
+  Position,
+  Size,
+  MENU_BAR_HEIGHT,
+  DOCK_HEIGHT,
+  CORNER_SIZE,
+  EDGE_SIZE,
+} from "@/lib/use-window-behavior";
+import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
+
+export type PreviewFileType = "image" | "pdf";
+
+interface PreviewWindowProps {
+  windowId: string;
+  filePath: string;
+  fileUrl: string;
+  fileType: PreviewFileType;
+  position: Position;
+  size: Size;
+  zIndex: number;
+  isFocused: boolean;
+  isMaximized: boolean;
+  onFocus: () => void;
+  onClose: () => void;
+  onMinimize: () => void;
+  onToggleMaximize: () => void;
+  onMove: (position: Position) => void;
+  onResize: (size: Size, position?: Position) => void;
+}
+
+export function PreviewWindow({
+  windowId,
+  filePath,
+  fileUrl,
+  fileType,
+  position,
+  size,
+  zIndex,
+  isFocused,
+  isMaximized,
+  onFocus,
+  onClose,
+  onMinimize,
+  onToggleMaximize,
+  onMove,
+  onResize,
+}: PreviewWindowProps) {
+  void windowId;
+  const windowRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const fileName = filePath?.split("/").pop() || "Untitled";
+  const { isMenuOpenRef } = useWindowManager();
+  const [zoom, setZoom] = useState(1);
+  const [imageError, setImageError] = useState(false);
+  const [baseSize, setBaseSize] = useState<{ width: number; height: number } | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
+
+  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+    position,
+    size,
+    minSize: { width: 400, height: 300 },
+    isMaximized,
+    onMove,
+    onResize,
+    onFocus,
+  });
+
+  // Capture base size from container (which is sized to fit the image)
+  useEffect(() => {
+    if (containerRef.current && !baseSize) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setBaseSize({ width: rect.width, height: rect.height });
+      }
+    }
+  }, [baseSize, size]);
+
+  // Zoom controls
+  const zoomIn = useCallback(() => {
+    setZoom((z) => Math.min(z + 0.25, 5));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoom((z) => Math.max(z - 0.25, 0.25));
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(1);
+  }, []);
+
+  // Pan handlers for drag-to-scroll when zoomed in
+  const handlePanStart = useCallback((e: React.MouseEvent) => {
+    if (zoom <= 1 || !containerRef.current) return;
+
+    e.preventDefault();
+    setIsPanning(true);
+    panStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      scrollLeft: containerRef.current.scrollLeft,
+      scrollTop: containerRef.current.scrollTop,
+    };
+  }, [zoom]);
+
+  const handlePanMove = useCallback((e: React.MouseEvent) => {
+    if (!isPanning || !panStartRef.current || !containerRef.current) return;
+
+    const deltaX = e.clientX - panStartRef.current.x;
+    const deltaY = e.clientY - panStartRef.current.y;
+
+    containerRef.current.scrollLeft = panStartRef.current.scrollLeft - deltaX;
+    containerRef.current.scrollTop = panStartRef.current.scrollTop - deltaY;
+  }, [isPanning]);
+
+  const handlePanEnd = useCallback(() => {
+    setIsPanning(false);
+    panStartRef.current = null;
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFocused) return;
+
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement)?.blur();
+        return;
+      }
+
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "q") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          zoomIn();
+        } else if (e.key === "-") {
+          e.preventDefault();
+          zoomOut();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          resetZoom();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFocused, onClose, zoomIn, zoomOut, resetZoom]);
+
+  // Reset state when file changes
+  useEffect(() => {
+    setZoom(1);
+    setImageError(false);
+    setBaseSize(null);
+  }, [filePath]);
+
+  const windowStyle = isMaximized
+    ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
+    : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
+
+  const renderContent = () => {
+    if (fileType === "pdf") {
+      return (
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0"
+          title={fileName}
+        />
+      );
+    }
+
+    if (imageError) {
+      return (
+        <div className="flex items-center justify-center h-full text-zinc-400">
+          <div className="text-center">
+            <svg className="w-16 h-16 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>
+            <p>Unable to load image</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Calculate zoomed image dimensions
+    const zoomedWidth = baseSize ? baseSize.width * zoom : 0;
+    const zoomedHeight = baseSize ? baseSize.height * zoom : 0;
+
+    const canPan = zoom > 1;
+
+    return (
+      <div
+        ref={containerRef}
+        className="w-full h-full select-none"
+        style={{
+          overflow: canPan ? "auto" : "hidden",
+          cursor: canPan ? (isPanning ? "grabbing" : "grab") : "default",
+        }}
+        onMouseDown={handlePanStart}
+        onMouseMove={handlePanMove}
+        onMouseUp={handlePanEnd}
+        onMouseLeave={handlePanEnd}
+      >
+        {/* Inner wrapper sized to zoomed dimensions for proper scrolling */}
+        <div
+          style={{
+            width: baseSize ? Math.max(zoomedWidth, baseSize.width) : "100%",
+            height: baseSize ? Math.max(zoomedHeight, baseSize.height) : "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "100%",
+            minHeight: "100%",
+          }}
+        >
+          <img
+            src={fileUrl}
+            alt={fileName}
+            draggable={false}
+            style={{
+              width: baseSize ? zoomedWidth : "100%",
+              height: baseSize ? zoomedHeight : "100%",
+              objectFit: baseSize ? "fill" : "contain",
+              flexShrink: 0,
+              pointerEvents: "none",
+            }}
+            onError={() => setImageError(true)}
+            onLoad={() => {
+              // Capture base size after image loads
+              if (containerRef.current && !baseSize) {
+                const rect = containerRef.current.getBoundingClientRect();
+                setBaseSize({ width: rect.width, height: rect.height });
+              }
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      ref={windowRef}
+      className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
+      style={windowStyle}
+      onMouseDownCapture={(e) => {
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
+        onFocus();
+      }}
+      onClickCapture={(e) => {
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      }}
+    >
+      {/* Window chrome */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+          isMaximized ? "rounded-none" : "rounded-xl"
+        )}
+      >
+        {/* Title bar */}
+        <div
+          className="px-4 py-2 flex items-center justify-between select-none bg-zinc-800 border-b border-zinc-700 cursor-default"
+          onMouseDown={handleDragStart}
+        >
+          <WindowControls
+            inShell={true}
+            className="p-2 window-controls"
+            onClose={onClose}
+            onMinimize={onMinimize}
+            onToggleMaximize={onToggleMaximize}
+            isMaximized={isMaximized}
+            closeLabel="Close window"
+          />
+          <div className="flex-1 text-center">
+            <span className="text-zinc-400 text-sm">{fileName}</span>
+          </div>
+          {/* Zoom controls for images */}
+          {fileType === "image" && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={zoomOut}
+                className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                title="Zoom out (Cmd -)"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35M8 11h6" />
+                </svg>
+              </button>
+              <span className="text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
+              <button
+                onClick={zoomIn}
+                className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                title="Zoom in (Cmd +)"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
+                </svg>
+              </button>
+            </div>
+          )}
+          {fileType === "pdf" && <div className="w-[68px]" />}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-h-0 bg-zinc-900">
+          {renderContent()}
+        </div>
+      </div>
+
+      {/* Resize handles */}
+      {!isMaximized && (
+        <>
+          <div
+            className="absolute cursor-nw-resize"
+            style={{ top: -3, left: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
+            onMouseDown={(e) => handleResizeStart(e, "nw")}
+          />
+          <div
+            className="absolute cursor-ne-resize"
+            style={{ top: -3, right: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
+            onMouseDown={(e) => handleResizeStart(e, "ne")}
+          />
+          <div
+            className="absolute cursor-sw-resize"
+            style={{ bottom: -3, left: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
+            onMouseDown={(e) => handleResizeStart(e, "sw")}
+          />
+          <div
+            className="absolute cursor-se-resize"
+            style={{ bottom: -3, right: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
+            onMouseDown={(e) => handleResizeStart(e, "se")}
+          />
+          <div
+            className="absolute cursor-n-resize"
+            style={{ top: -3, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "n")}
+          />
+          <div
+            className="absolute cursor-s-resize"
+            style={{ bottom: -3, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "s")}
+          />
+          <div
+            className="absolute cursor-w-resize"
+            style={{ left: -3, top: CORNER_SIZE, bottom: CORNER_SIZE, width: EDGE_SIZE, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "w")}
+          />
+          <div
+            className="absolute cursor-e-resize"
+            style={{ right: -3, top: CORNER_SIZE, bottom: CORNER_SIZE, width: EDGE_SIZE, zIndex: 10 }}
+            onMouseDown={(e) => handleResizeStart(e, "e")}
+          />
+        </>
+      )}
+    </div>
+  );
+}

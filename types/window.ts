@@ -40,7 +40,7 @@ export type WindowAction =
   | { type: "RESTORE_WINDOW"; appId: string }
   | { type: "UNMINIMIZE_WINDOW"; appId: string }
   // Multi-window app actions (new)
-  | { type: "OPEN_MULTI_WINDOW"; appId: string; instanceId: string; metadata?: Record<string, unknown> }
+  | { type: "OPEN_MULTI_WINDOW"; appId: string; instanceId: string; metadata?: Record<string, unknown>; size?: Size }
   | { type: "CLOSE_MULTI_WINDOW"; windowId: string }
   | { type: "FOCUS_MULTI_WINDOW"; windowId: string }
   | { type: "MOVE_MULTI_WINDOW"; windowId: string; position: Position }

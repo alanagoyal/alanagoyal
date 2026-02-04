@@ -18,6 +18,7 @@ import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
 import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
+import { PreviewWindow, type PreviewFileType } from "@/components/apps/preview";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -33,6 +34,7 @@ interface DesktopProps {
   initialAppId?: string;
   initialNoteSlug?: string;
   initialTextEditFile?: string;
+  initialPreviewFile?: string;
 }
 
 // Constants for file paths
@@ -68,7 +70,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
   return "";
 }
 
-function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteSlug?: string; initialTextEditFile?: string }) {
+function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
   const {
     openWindow,
     focusWindow,
@@ -112,11 +114,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
-  // Get TextEdit windows from window manager
+  // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
+  const previewWindows = getWindowsByApp("preview");
 
-  // Track whether we've processed the URL file parameter
+  // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
+  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -154,6 +158,86 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     }
   }, [initialTextEditFile, urlFileProcessed, existingWindowId, focusMultiWindow, openMultiWindow]);
 
+  // Open Preview file from URL on mount (only once)
+  const existingPreviewWindow = initialPreviewFile
+    ? previewWindows.find((w) => w.instanceId === initialPreviewFile)
+    : null;
+  const existingPreviewWindowId = existingPreviewWindow?.id;
+
+  useEffect(() => {
+    if (urlPreviewProcessed || !initialPreviewFile) return;
+
+    if (existingPreviewWindowId) {
+      focusMultiWindow(existingPreviewWindowId);
+      setUrlPreviewProcessed(true);
+      return;
+    }
+
+    // Parse the file path to get URL and type
+    if (initialPreviewFile.startsWith(PROJECTS_DIR + "/")) {
+      const relativePath = initialPreviewFile.slice(PROJECTS_DIR.length + 1);
+      const parts = relativePath.split("/");
+      const repo = parts[0];
+      const repoPath = parts.slice(1).join("/");
+      const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
+      const ext = initialPreviewFile.split(".").pop()?.toLowerCase() || "";
+      const fileType: PreviewFileType = ext === "pdf" ? "pdf" : "image";
+
+      if (fileType === "pdf") {
+        openMultiWindow("preview", initialPreviewFile, {
+          filePath: initialPreviewFile,
+          fileUrl,
+          fileType,
+        });
+        setUrlPreviewProcessed(true);
+      } else {
+        // For images, load to get dimensions first
+        const img = new window.Image();
+        img.onload = () => {
+          const titleBarHeight = 44;
+          const minWidth = 400;
+          const minContentHeight = 300 - titleBarHeight;
+          const maxContentWidth = Math.min(1200, window.innerWidth - 200);
+          const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
+
+          let contentWidth = img.naturalWidth;
+          let contentHeight = img.naturalHeight;
+
+          if (contentWidth > maxContentWidth || contentHeight > maxContentHeight) {
+            const scale = Math.min(maxContentWidth / contentWidth, maxContentHeight / contentHeight);
+            contentWidth = Math.round(contentWidth * scale);
+            contentHeight = Math.round(contentHeight * scale);
+          }
+
+          contentWidth = Math.max(contentWidth, minWidth);
+          contentHeight = Math.max(contentHeight, minContentHeight);
+
+          const windowWidth = contentWidth;
+          const windowHeight = contentHeight + titleBarHeight;
+
+          openMultiWindow(
+            "preview",
+            initialPreviewFile,
+            { filePath: initialPreviewFile, fileUrl, fileType },
+            { width: windowWidth, height: windowHeight }
+          );
+          setUrlPreviewProcessed(true);
+        };
+        img.onerror = () => {
+          openMultiWindow("preview", initialPreviewFile, {
+            filePath: initialPreviewFile,
+            fileUrl,
+            fileType,
+          });
+          setUrlPreviewProcessed(true);
+        };
+        img.src = fileUrl;
+      }
+    } else {
+      setUrlPreviewProcessed(true);
+    }
+  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, focusMultiWindow, openMultiWindow]);
+
   // Update URL when focus changes
   useEffect(() => {
     const focusedWindowId = state.focusedWindowId;
@@ -167,6 +251,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
         window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+      }
+    } else if (focusedAppId === "preview") {
+      // For Preview, include the file path in URL
+      const windowState = state.windows[focusedWindowId];
+      const filePath = windowState?.metadata?.filePath as string;
+      if (filePath) {
+        window.history.replaceState(null, "", `/preview?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
@@ -194,6 +285,64 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
 
       // Open multi-window (will focus existing if same file already open)
       openMultiWindow("textedit", filePath, { filePath, content: contentToUse });
+    },
+    [openMultiWindow]
+  );
+
+  // Handler for opening preview files (images and PDFs) in Preview
+  const handleOpenPreviewFile = useCallback(
+    (filePath: string, fileUrl: string, fileType: PreviewFileType) => {
+      if (fileType === "pdf") {
+        // PDFs use default size
+        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType });
+        return;
+      }
+
+      // For images, load to get dimensions first
+      const img = new window.Image();
+      img.onload = () => {
+        const naturalWidth = img.naturalWidth;
+        const naturalHeight = img.naturalHeight;
+
+        // Calculate window size based on image aspect ratio
+        const titleBarHeight = 44;
+        const minWidth = 400;
+        const minContentHeight = 300 - titleBarHeight;
+        const maxContentWidth = Math.min(1200, window.innerWidth - 200);
+        const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
+
+        // Scale image to fit max content area while maintaining aspect ratio
+        let contentWidth = naturalWidth;
+        let contentHeight = naturalHeight;
+
+        if (contentWidth > maxContentWidth || contentHeight > maxContentHeight) {
+          const scale = Math.min(maxContentWidth / contentWidth, maxContentHeight / contentHeight);
+          contentWidth = Math.round(contentWidth * scale);
+          contentHeight = Math.round(contentHeight * scale);
+        }
+
+        // Ensure minimum size
+        contentWidth = Math.max(contentWidth, minWidth);
+        contentHeight = Math.max(contentHeight, minContentHeight);
+
+        // Window size = content size + title bar
+        const windowWidth = contentWidth;
+        const windowHeight = contentHeight + titleBarHeight;
+
+        openMultiWindow(
+          "preview",
+          filePath,
+          { filePath, fileUrl, fileType },
+          { width: windowWidth, height: windowHeight }
+        );
+      };
+
+      img.onerror = () => {
+        // Fallback to default size on error
+        openMultiWindow("preview", filePath, { filePath, fileUrl, fileType });
+      };
+
+      img.src = fileUrl;
     },
     [openMultiWindow]
   );
@@ -347,7 +496,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
           </Window>
 
           <Window appId="finder">
-            <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} initialTab={finderTab} />
+            <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
           </Window>
 
           <Window appId="photos">
@@ -398,6 +547,37 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
               );
             })}
 
+          {/* Preview - multi-window support for images and PDFs */}
+          {previewWindows
+            .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+            .sort((a, b) => b.zIndex - a.zIndex)
+            .slice(0, isMobile ? 1 : undefined)
+            .map((windowState) => {
+              const filePath = windowState.metadata!.filePath as string;
+              const fileUrl = windowState.metadata!.fileUrl as string;
+              const fileType = windowState.metadata!.fileType as PreviewFileType;
+              return (
+                <PreviewWindow
+                  key={windowState.id}
+                  windowId={windowState.id}
+                  filePath={filePath}
+                  fileUrl={fileUrl}
+                  fileType={fileType}
+                  position={windowState.position}
+                  size={windowState.size}
+                  zIndex={windowState.zIndex}
+                  isFocused={state.focusedWindowId === windowState.id}
+                  isMaximized={windowState.isMaximized}
+                  onFocus={() => focusMultiWindow(windowState.id)}
+                  onClose={() => closeMultiWindow(windowState.id)}
+                  onMinimize={() => minimizeMultiWindow(windowState.id)}
+                  onToggleMaximize={() => toggleMaximizeMultiWindow(windowState.id)}
+                  onMove={(pos) => moveMultiWindow(windowState.id, pos)}
+                  onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
+                />
+              );
+            })}
+
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
@@ -413,12 +593,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
   );
 }
 
-export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile }: DesktopProps) {
+export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, initialPreviewFile }: DesktopProps) {
   return (
     <RecentsProvider>
       <FileMenuProvider>
         <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} />
+          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
         </WindowManagerProvider>
       </FileMenuProvider>
     </RecentsProvider>

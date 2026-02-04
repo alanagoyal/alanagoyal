@@ -64,6 +64,7 @@ interface FinderAppProps {
   inShell?: boolean;
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
+  onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
   initialTab?: SidebarItem;
 }
 
@@ -81,6 +82,19 @@ function isTextFile(filename: string): boolean {
   // Also treat files without extension but starting with a dot as text files
   if (!ext && filename.startsWith(".")) return true;
   return TEXT_FILE_EXTENSIONS.includes(ext);
+}
+
+// Preview file extensions (images and PDFs)
+const PREVIEW_FILE_EXTENSIONS = ["png", "jpg", "jpeg", "pdf"];
+
+function isPreviewFile(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  return PREVIEW_FILE_EXTENSIONS.includes(ext);
+}
+
+function getPreviewFileType(filename: string): "image" | "pdf" {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  return ext === "pdf" ? "pdf" : "image";
 }
 
 // GitHub recent file type
@@ -255,7 +269,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, initialTab }: FinderAppProps) {
+export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
   const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -538,7 +552,21 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       // Add to recents when viewing a file
       addRecent({ path: file.path, name: file.name, type: file.type });
 
-      // Get file content
+      // Check if it's a preview file (image or PDF)
+      if (isPreviewFile(file.name) && onOpenPreviewFile) {
+        // For GitHub files, construct the raw URL
+        if (file.path.startsWith(PROJECTS_DIR + "/")) {
+          const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
+          const parts = relativePath.split("/");
+          const repo = parts[0];
+          const repoPath = parts.slice(1).join("/");
+          const fileUrl = `https://raw.githubusercontent.com/${USERNAME}/${repo}/main/${repoPath}`;
+          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
+        }
+        return;
+      }
+
+      // Get file content for text files
       let content: string | null = "";
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
@@ -567,7 +595,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         setPreviewContent(content);
       }
     }
-  }, [onOpenApp, onOpenTextFile, addRecent]);
+  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
