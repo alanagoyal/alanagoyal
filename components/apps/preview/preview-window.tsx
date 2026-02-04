@@ -58,7 +58,8 @@ export function PreviewWindow({
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(1);
   const [imageError, setImageError] = useState(false);
-  const [baseSize, setBaseSize] = useState<{ width: number; height: number } | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
 
@@ -72,15 +73,42 @@ export function PreviewWindow({
     onFocus,
   });
 
-  // Capture base size from container (which is sized to fit the image)
+  // Track container size for responsive image fitting (debounced for smoothness)
   useEffect(() => {
-    if (containerRef.current && !baseSize) {
-      const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setBaseSize({ width: rect.width, height: rect.height });
-      }
+    if (!containerRef.current) return;
+    let timeoutId: NodeJS.Timeout;
+    const updateSize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setContainerSize({ width: rect.width, height: rect.height });
+        }
+      }, 16); // ~60fps
+    };
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(containerRef.current);
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, []);
+
+  // Calculate "fit" size - what the image would be at zoom=1 (contained within container)
+  const getFitSize = useCallback(() => {
+    if (!naturalSize || !containerSize) return null;
+    const containerAspect = containerSize.width / containerSize.height;
+    const imageAspect = naturalSize.width / naturalSize.height;
+
+    if (imageAspect > containerAspect) {
+      // Image is wider than container - fit to width
+      return { width: containerSize.width, height: containerSize.width / imageAspect };
+    } else {
+      // Image is taller than container - fit to height
+      return { width: containerSize.height * imageAspect, height: containerSize.height };
     }
-  }, [baseSize, size]);
+  }, [naturalSize, containerSize]);
 
   // Zoom controls
   const zoomIn = useCallback(() => {
@@ -167,7 +195,7 @@ export function PreviewWindow({
   useEffect(() => {
     setZoom(1);
     setImageError(false);
-    setBaseSize(null);
+    setNaturalSize(null);
   }, [filePath]);
 
   const windowStyle = isMaximized
@@ -198,11 +226,15 @@ export function PreviewWindow({
       );
     }
 
-    // Calculate zoomed image dimensions
-    const zoomedWidth = baseSize ? baseSize.width * zoom : 0;
-    const zoomedHeight = baseSize ? baseSize.height * zoom : 0;
+    // At zoom=1, use pure CSS for smooth resizing
+    // At other zoom levels, calculate dimensions for scrollable area
+    const isZoomed = zoom !== 1;
+    const fitSize = getFitSize();
+    const canPan = isZoomed && zoom > 1 && fitSize;
 
-    const canPan = zoom > 1;
+    // Only calculate explicit dimensions when zoomed
+    const displayWidth = isZoomed && fitSize ? fitSize.width * zoom : undefined;
+    const displayHeight = isZoomed && fitSize ? fitSize.height * zoom : undefined;
 
     return (
       <div
@@ -217,14 +249,12 @@ export function PreviewWindow({
         onMouseUp={handlePanEnd}
         onMouseLeave={handlePanEnd}
       >
-        {/* Inner wrapper sized to zoomed dimensions for proper scrolling */}
+        {/* Inner wrapper for centering and scroll area */}
         <div
+          className="flex items-center justify-center"
           style={{
-            width: baseSize ? Math.max(zoomedWidth, baseSize.width) : "100%",
-            height: baseSize ? Math.max(zoomedHeight, baseSize.height) : "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: canPan && displayWidth ? Math.max(displayWidth, containerSize?.width || 0) : "100%",
+            height: canPan && displayHeight ? Math.max(displayHeight, containerSize?.height || 0) : "100%",
             minWidth: "100%",
             minHeight: "100%",
           }}
@@ -233,20 +263,18 @@ export function PreviewWindow({
             src={fileUrl}
             alt={fileName}
             draggable={false}
+            className={isZoomed ? "" : "max-w-full max-h-full object-contain"}
             style={{
-              width: baseSize ? zoomedWidth : "100%",
-              height: baseSize ? zoomedHeight : "100%",
-              objectFit: baseSize ? "fill" : "contain",
+              width: displayWidth,
+              height: displayHeight,
               flexShrink: 0,
               pointerEvents: "none",
+              transition: isZoomed ? "width 0.15s ease-out, height 0.15s ease-out" : undefined,
             }}
             onError={() => setImageError(true)}
-            onLoad={() => {
-              // Capture base size after image loads
-              if (containerRef.current && !baseSize) {
-                const rect = containerRef.current.getBoundingClientRect();
-                setBaseSize({ width: rect.width, height: rect.height });
-              }
+            onLoad={(e) => {
+              const img = e.target as HTMLImageElement;
+              setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
           />
         </div>
