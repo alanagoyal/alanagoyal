@@ -198,17 +198,19 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile }: { initialNoteS
     [openMultiWindow]
   );
 
-  // Handler for Finder dock icon click - resets to Recents view
+  // Handler for Finder dock icon click - focuses existing window or opens new one at Recents
   const handleFinderDockClick = useCallback(() => {
-    setFinderTab("recents");
     const windowState = getWindow("finder");
     if (windowState?.isOpen) {
+      // Window exists - just focus it without changing the current view
       if (windowState.isMinimized) {
         restoreWindow("finder");
       } else {
         focusWindow("finder");
       }
     } else {
+      // No window open - open fresh at Recents
+      setFinderTab("recents");
       openWindow("finder");
     }
     window.history.replaceState(null, "", "/finder");
