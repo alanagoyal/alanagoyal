@@ -46,7 +46,7 @@ export function Nav({
         isMaximized={windowFocus?.isMaximized ?? false}
         closeLabel={inShell ? "Close window" : "Close tab"}
       />
-      <div>
+      <div onMouseDown={(e) => e.stopPropagation()}>
         <NewNote
           addNewPinnedNote={addNewPinnedNote}
           clearSearch={clearSearch}

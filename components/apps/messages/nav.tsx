@@ -76,6 +76,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
             isMobileView ? "p-2" : ""
           }`}
           onClick={onNewChat}
+          onMouseDown={(e) => e.stopPropagation()}
           aria-label="New conversation (n)"
         >
           <Icons.new />

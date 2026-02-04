@@ -44,7 +44,7 @@ export function Nav({
       onMouseDown={showWindowControls ? windowFocus?.onDragStart : undefined}
     >
       {/* Left section - window controls and add button */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
         <WindowControls
           inShell={!!showWindowControls}
           className="p-2"
@@ -78,7 +78,7 @@ export function Nav({
 
       {/* Center section - view switcher (hidden on mobile) */}
       {!isMobile && (
-        <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50 shrink-0">
+        <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
           {VIEW_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -101,7 +101,7 @@ export function Nav({
 
       {/* Right section - navigation (hidden on mobile, shown in view header instead) */}
       {!isMobile && (
-        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
           <Button
             variant="ghost"
             size="icon"

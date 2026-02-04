@@ -1039,7 +1039,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       {/* Navigation arrows (desktop) */}
       {!isMobile && (
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-1 ml-2" onMouseDown={(e) => e.stopPropagation()}>
           <button
             onClick={handleBack}
             disabled={!canGoBack()}
@@ -1087,7 +1087,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       {/* View mode dropdown (desktop only) */}
       {!isMobile && (
-        <div className="relative">
+        <div className="relative" onMouseDown={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowViewDropdown(!showViewDropdown)}
             className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
@@ -1097,8 +1097,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
                 <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
               </svg>
             ) : (
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z" />
               </svg>
             )}
             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

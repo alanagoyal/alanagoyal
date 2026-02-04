@@ -62,6 +62,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
     >
       <button
         onClick={onBack}
+        onMouseDown={(e) => e.stopPropagation()}
         disabled={!canGoBack}
         className={cn(
           "p-1 rounded-md transition-colors",
@@ -75,6 +76,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
       </button>
       <button
         onClick={onForward}
+        onMouseDown={(e) => e.stopPropagation()}
         disabled={!canGoForward}
         className={cn(
           "p-1 rounded-md transition-colors",
