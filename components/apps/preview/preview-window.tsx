@@ -68,7 +68,7 @@ export function PreviewWindow({
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
-  const [isScrollRestored, setIsScrollRestored] = useState(initialZoom <= 1); // No restore needed at zoom=1
+  const [isScrollRestored, setIsScrollRestored] = useState(false);
   const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const pendingScrollRef = useRef<{ left: number; top: number } | null>(
     initialZoom > 1 ? { left: initialScrollLeft, top: initialScrollTop } : null
@@ -127,18 +127,18 @@ export function PreviewWindow({
   const onScrollChangeRef = useRef(onScrollChange);
   onScrollChangeRef.current = onScrollChange;
 
-  // Restore scroll position when zoomed content becomes ready (useLayoutEffect to avoid flash)
+  // Restore scroll position when zoomed in content becomes ready
   useLayoutEffect(() => {
+    if (isScrollRestored || zoom <= 1) return;
     if (!pendingScrollRef.current || !containerRef.current) return;
     const fitSize = getFitSize();
-    if (!fitSize || zoom <= 1) return;
+    if (!fitSize) return;
 
-    // Content is ready, restore scroll position before paint
     containerRef.current.scrollLeft = pendingScrollRef.current.left;
     containerRef.current.scrollTop = pendingScrollRef.current.top;
     pendingScrollRef.current = null;
     setIsScrollRestored(true);
-  }, [zoom, naturalSize, containerSize, getFitSize]);
+  }, [isScrollRestored, zoom, getFitSize]);
 
   // Persist scroll position when user scrolls (debounced)
   // Re-attaches listener when zoom changes to ensure correct zoom check
@@ -298,16 +298,33 @@ export function PreviewWindow({
     // At zoom=1, use pure CSS for smooth resizing
     // At other zoom levels, calculate explicit dimensions for scrollable area
     const fitSize = getFitSize();
-    const isZoomed = zoom !== 1 && fitSize !== null; // Only "zoomed" if we can calculate dimensions
+
+    // For non-1 zoom, we need fitSize to calculate dimensions
+    // Render image invisibly to load it and get naturalSize, then show once fitSize is ready
+    const needsFitSize = zoom !== 1;
+    if (needsFitSize && !fitSize) {
+      return (
+        <div ref={containerRef} className="w-full h-full relative">
+          <img
+            src={fileUrl}
+            alt=""
+            className="absolute invisible"
+            onLoad={(e) => {
+              const img = e.target as HTMLImageElement;
+              setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+            }}
+            onError={() => setImageError(true)}
+          />
+        </div>
+      );
+    }
+
+    const isZoomed = zoom !== 1 && fitSize !== null;
     const canPan = isZoomed && zoom > 1;
 
     // Calculate explicit dimensions only when zoomed and fitSize is available
     const displayWidth = isZoomed ? fitSize!.width * zoom : undefined;
     const displayHeight = isZoomed ? fitSize!.height * zoom : undefined;
-
-    // Hide content until scroll position is restored (prevents flash)
-    // isScrollRestored is initialized to true when initialZoom <= 1, so no delay for non-zoomed images
-    const showContent = isScrollRestored;
 
     return (
       <div
@@ -316,7 +333,6 @@ export function PreviewWindow({
         style={{
           overflow: canPan ? "auto" : "hidden",
           cursor: canPan ? (isPanning ? "grabbing" : "grab") : "default",
-          opacity: showContent ? 1 : 0,
         }}
         onMouseDown={handlePanStart}
         onMouseMove={handlePanMove}
