@@ -33,7 +33,11 @@ const STATIC_FILES: Record<string, FileItem[]> = {
   [`${HOME_DIR}/Desktop`]: [
     { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
   ],
-  [`${HOME_DIR}/Documents`]: [],
+  [`${HOME_DIR}/Documents`]: [
+    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital I - Form D.pdf` },
+    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital II - Form D.pdf` },
+    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital III - Form D.pdf` },
+  ],
   [`${HOME_DIR}/Downloads`]: [],
 };
 
@@ -553,6 +557,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
           const repo = parts[0];
           const repoPath = parts.slice(1).join("/");
           const fileUrl = `https://raw.githubusercontent.com/${USERNAME}/${repo}/main/${repoPath}`;
+          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
+        } else if (file.path.startsWith(`${HOME_DIR}/Documents/`)) {
+          // For Documents files, serve from public/documents
+          const fileName = file.path.slice(`${HOME_DIR}/Documents/`.length);
+          const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
           onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
         }
         return;
