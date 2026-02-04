@@ -1,0 +1,25 @@
+lib/sidebar-persistence.ts
+  498eb4b9c73645ed 35,127-145,148-153
+components/apps/finder/finder-app.tsx
+  498eb4b9c73645ed 12,263-264,277-286,289-297,410,412-413,494,502,507,576,589,666
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "c551a4373185a4876be73a6120fd78b52544b672",
+  "prompts": {
+    "498eb4b9c73645ed": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb716cef-9a9f-45ac-bb31-f3dfe2bc69da",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 101,
+      "total_deletions": 61,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    }
+  }
+}
