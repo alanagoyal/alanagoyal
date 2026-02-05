@@ -29,7 +29,7 @@ function TextEditPageContent() {
   }
 
   if (isMobile) {
-    return <MobileShell initialApp="textedit" initialTextEditFile={initialFilePath || undefined} />;
+    return <MobileShell initialApp="textedit" />;
   }
 
   return <Desktop initialAppId="textedit" initialTextEditFile={initialFilePath || undefined} />;

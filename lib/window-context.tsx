@@ -208,6 +208,25 @@ function saveStateToStorage(state: WindowManagerState): void {
   }
 }
 
+/**
+ * Get the topmost (highest z-index) open window for a specific app
+ * Used by MobileShell to display the correct window when switching from desktop
+ * Reads directly from sessionStorage to work outside WindowManagerProvider
+ */
+export function getTopmostWindowForApp(appId: string): WindowState | null {
+  const savedState = loadStateFromStorage();
+  if (!savedState) return null;
+
+  const appWindows = Object.values(savedState.windows)
+    .filter((w) => {
+      const isAppWindow = w.id.startsWith(`${appId}-`) || w.appId === appId || w.id === appId;
+      return isAppWindow && w.isOpen && !w.isMinimized;
+    })
+    .sort((a, b) => b.zIndex - a.zIndex);
+
+  return appWindows[0] || null;
+}
+
 // Max z-index before we normalize (windows stay in 1-50 range)
 // See lib/desktop/z-index.ts for the full layering system
 const MAX_Z_INDEX = 50;
@@ -784,8 +803,10 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: use saved state, focus requested app if specified
-      return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
+      // Returning visitor: preserve their session state exactly as-is
+      // Don't override focus based on URL - their window order/focus takes precedence
+      // This is important for preserving z-order when switching between desktop/mobile
+      return savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified
       const defaultState = getDesktopDefaultState();

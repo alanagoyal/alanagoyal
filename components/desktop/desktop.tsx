@@ -196,8 +196,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (urlFileProcessed || !initialTextEditFile) return;
 
     if (existingWindowId) {
-      // Window already exists from sessionStorage, just focus it
-      focusMultiWindow(existingWindowId);
+      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
       setUrlFileProcessed(true);
       return;
     }
@@ -231,7 +230,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (urlPreviewProcessed || !initialPreviewFile) return;
 
     if (existingPreviewWindowId) {
-      focusMultiWindow(existingPreviewWindowId);
+      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
       setUrlPreviewProcessed(true);
       return;
     }
