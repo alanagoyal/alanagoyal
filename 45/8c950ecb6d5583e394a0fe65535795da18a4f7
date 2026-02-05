@@ -1,0 +1,43 @@
+components/apps/finder/finder-app.tsx
+  a309ffaf8039758c 272,509
+  3c035f093da2e625 23,492-507,963,1003,1049
+lib/recents-context.tsx
+  a309ffaf8039758c 17,28,80,95
+components/desktop/desktop.tsx
+  3c035f093da2e625 30,338,340
+lib/file-storage.ts
+  3c035f093da2e625 42-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "458c950ecb6d5583e394a0fe65535795da18a4f7",
+  "prompts": {
+    "3c035f093da2e625": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d492c98-db4e-4a4e-b145-0f3dbbd829f0",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 33,
+      "total_deletions": 7,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    },
+    "a309ffaf8039758c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e25a17a9-42dc-4131-913d-90be70751afe",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 3,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
