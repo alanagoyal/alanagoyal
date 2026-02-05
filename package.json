@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "npm run test:unit",
+    "test:unit": "tsc --pretty false --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck --outDir .tmp-tests tests/unit/*.test.ts lib/music/utils.ts lib/preview-utils.ts lib/photos/image-utils.ts lib/notes/search.ts lib/notes/types.ts && node --test .tmp-tests/tests/unit/*.test.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.4",
