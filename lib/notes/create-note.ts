@@ -3,9 +3,14 @@ import { createClient } from "@/utils/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Note } from "@/lib/notes/types";
 
+interface NotesRouter {
+  push: (href: string) => void;
+  refresh: () => void;
+}
+
 export async function createNote(
   sessionId: string | null,
-  router: any,
+  router: NotesRouter,
   addNewPinnedNote: (slug: string, silent?: boolean) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,

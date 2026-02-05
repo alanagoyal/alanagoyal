@@ -6,9 +6,10 @@ import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
 import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
+import { Note as NoteType } from "@/lib/notes/types";
 
 interface NoteProps {
-  note: any;
+  note: NoteType;
   onBack?: () => void; // Callback for back navigation in shell mode
 }
 
@@ -18,20 +19,20 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
   const [sessionId, setSessionId] = useState("");
   const [isEditing, setIsEditing] = useState(!initialNote.content);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingUpdatesRef = useRef<Partial<typeof note>>({});
+  const pendingUpdatesRef = useRef<Partial<NoteType>>({});
   const noteRef = useRef(initialNote);
 
   const { refreshSessionNotes } = useContext(SessionNotesContext);
 
   const saveNote = useCallback(
-    async (updates: Partial<typeof note>) => {
+    async (updates: Partial<NoteType>) => {
       // Clear existing timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
       // Update local state immediately (optimistic update)
-      setNote((prevNote: typeof note) => {
+      setNote((prevNote: NoteType) => {
         const updatedNote = { ...prevNote, ...updates };
         noteRef.current = updatedNote;
         return updatedNote;

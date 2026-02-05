@@ -7,10 +7,11 @@ import { useMobileDetect } from "./mobile-detector";
 import { useRouter, usePathname } from "next/navigation";
 import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import Sidebar from "./sidebar";
+import { Note } from "@/lib/notes/types";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  notes: any;
+  notes: Note[];
 }
 
 export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
@@ -24,7 +25,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
     }
   }, [isMobile, router, pathname]);
 
-  const handleNoteSelect = (note: any) => {
+  const handleNoteSelect = (note: Note) => {
     router.push(`/notes/${note.slug}`);
   };
 
