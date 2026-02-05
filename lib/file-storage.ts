@@ -39,6 +39,15 @@ export function saveTextEditContent(filePath: string, content: string): void {
   } catch {}
 }
 
+export function cacheTextEditContent(filePath: string, content: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const contents = loadTextEditContents();
+    contents[filePath] = content;
+    localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
+  } catch {}
+}
+
 // =============================================================================
 // File Modified Dates
 // =============================================================================

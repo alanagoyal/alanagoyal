@@ -14,6 +14,7 @@ interface RecentsContextValue {
   addRecent: (file: Omit<RecentFile, "accessedAt">) => void;
   touchRecent: (path: string) => void;
   clearRecents: () => void;
+  fileModifiedVersion: number;
 }
 
 const RecentsContext = createContext<RecentsContextValue | null>(null);
@@ -24,6 +25,7 @@ const MAX_RECENTS = 20;
 export function RecentsProvider({ children }: { children: React.ReactNode }) {
   const [recents, setRecents] = useState<RecentFile[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [fileModifiedVersion, setFileModifiedVersion] = useState(0);
 
   // Load recents from localStorage on mount
   useEffect(() => {
@@ -75,6 +77,7 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const touchRecent = useCallback((path: string) => {
+    setFileModifiedVersion(v => v + 1);
     setRecents(prev => {
       const index = prev.findIndex(r => r.path === path);
       if (index === -1) return prev;
@@ -89,7 +92,7 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <RecentsContext.Provider value={{ recents, addRecent, touchRecent, clearRecents }}>
+    <RecentsContext.Provider value={{ recents, addRecent, touchRecent, clearRecents, fileModifiedVersion }}>
       {children}
     </RecentsContext.Provider>
   );
