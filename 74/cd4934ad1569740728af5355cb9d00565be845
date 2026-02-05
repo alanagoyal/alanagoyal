@@ -1,0 +1,23 @@
+lib/window-context.tsx
+  3b5c7af68ace09b1 222-224,807-810
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "74cd4934ad1569740728af5355cb9d00565be845",
+  "prompts": {
+    "3b5c7af68ace09b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea62830b-7f42-46dc-a4c8-477bafad8aa3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 4,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    }
+  }
+}
