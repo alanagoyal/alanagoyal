@@ -14,7 +14,11 @@ import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
-import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
+import {
+  groupNotesByCategory,
+  sortGroupedNotes,
+  type GroupedNotes,
+} from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/notes/types";
 import { toast } from "@/hooks/use-toast";
@@ -48,15 +52,13 @@ export default function Sidebar({
   selectedSlug: externalSelectedSlug,
   useCallbackNavigation = false,
   onNoteCreated,
-  dialogContainer,
 }: {
-  notes: any[];
-  onNoteSelect: (note: any) => void;
+  notes: Note[];
+  onNoteSelect: (note: Note) => void;
   isMobile: boolean;
   selectedSlug?: string | null;
   useCallbackNavigation?: boolean;
-  onNoteCreated?: (note: any) => void;
-  dialogContainer?: HTMLElement | null;
+  onNoteCreated?: (note: Note) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -66,11 +68,11 @@ export default function Sidebar({
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [localSearchResults, setLocalSearchResults] = useState<any[] | null>(
+  const [localSearchResults, setLocalSearchResults] = useState<Note[] | null>(
     null
   );
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [groupedNotes, setGroupedNotes] = useState<any>({});
+  const [groupedNotes, setGroupedNotes] = useState<GroupedNotes>({});
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [openSwipeItemSlug, setOpenSwipeItemSlug] = useState<string | null>(
     null
@@ -484,7 +486,7 @@ export default function Sidebar({
   ]);
 
   const handleNoteSelect = useCallback(
-    (note: any) => {
+    (note: Note) => {
       onNoteSelect(note);
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${note.slug}`);
