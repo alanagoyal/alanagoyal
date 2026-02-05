@@ -567,6 +567,56 @@ function windowReducer(
       };
     }
 
+    case "CLOSE_APP": {
+      const { appId } = action;
+      const app = getAppById(appId);
+      if (!app) return state;
+
+      if (!app.multiWindow) {
+        const window = state.windows[appId];
+        if (!window) return state;
+
+        const openWindows = Object.values(state.windows)
+          .filter((w) => w.isOpen && w.appId !== appId)
+          .sort((a, b) => b.zIndex - a.zIndex);
+        const nextFocused = openWindows[0]?.id || null;
+
+        return {
+          ...state,
+          windows: {
+            ...state.windows,
+            [appId]: {
+              ...window,
+              isOpen: false,
+              isMaximized: false,
+            },
+          },
+          focusedWindowId: nextFocused,
+        };
+      }
+
+      const newWindows = { ...state.windows };
+      let removed = false;
+      for (const [windowId, windowState] of Object.entries(state.windows)) {
+        if (windowState.appId === appId) {
+          delete newWindows[windowId];
+          removed = true;
+        }
+      }
+      if (!removed) return state;
+
+      const openWindows = Object.values(newWindows)
+        .filter((w) => w.isOpen && !w.isMinimized)
+        .sort((a, b) => b.zIndex - a.zIndex);
+      const nextFocused = openWindows[0]?.id || null;
+
+      return {
+        ...state,
+        windows: newWindows,
+        focusedWindowId: nextFocused,
+      };
+    }
+
     case "FOCUS_MULTI_WINDOW": {
       const { windowId } = action;
       const window = state.windows[windowId];
@@ -762,6 +812,7 @@ interface WindowManagerContextValue {
   // Single-window app methods
   openWindow: (appId: string) => void;
   closeWindow: (appId: string) => void;
+  closeApp: (appId: string) => void;
   focusWindow: (appId: string) => void;
   moveWindow: (appId: string, position: Position) => void;
   resizeWindow: (appId: string, size: Size, position?: Position) => void;
@@ -887,6 +938,12 @@ export function WindowManagerProvider({
   const closeWindow = useCallback((appId: string) => {
     dispatch({ type: "CLOSE_WINDOW", appId });
     // Clear sidebar/view state when app window is closed
+    clearAppState(appId);
+  }, []);
+
+  // Note: "Quit" should close all windows for multi-window apps.
+  const closeApp = useCallback((appId: string) => {
+    dispatch({ type: "CLOSE_APP", appId });
     clearAppState(appId);
   }, []);
 
@@ -1056,6 +1113,7 @@ export function WindowManagerProvider({
     // Single-window methods
     openWindow,
     closeWindow,
+    closeApp,
     focusWindow,
     moveWindow,
     resizeWindow,
