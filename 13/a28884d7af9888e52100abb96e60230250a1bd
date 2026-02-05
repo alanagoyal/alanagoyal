@@ -1,0 +1,27 @@
+lib/file-storage.ts
+  3c035f093da2e625 27-32,36,46
+components/apps/finder/finder-app.tsx
+  3c035f093da2e625 493,498-511
+lib/recents-context.tsx
+  3c035f093da2e625 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "13a28884d7af9888e52100abb96e60230250a1bd",
+  "prompts": {
+    "3c035f093da2e625": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d492c98-db4e-4a4e-b145-0f3dbbd829f0",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 17,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
