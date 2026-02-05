@@ -157,21 +157,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const payload = body as Record<string, unknown>;
+
     const image =
-      typeof (body as Record<string, unknown>).image === "string"
-        ? (body as Record<string, unknown>).image
-        : null;
+      typeof payload.image === "string" ? payload.image : null;
+
     const timestamp =
-      typeof (body as Record<string, unknown>).timestamp === "string"
-        ? (body as Record<string, unknown>).timestamp.trim()
-        : null;
+      typeof payload.timestamp === "string" ? payload.timestamp.trim() : null;
+
     const filename =
-      typeof (body as Record<string, unknown>).filename === "string"
-        ? (body as Record<string, unknown>).filename.trim()
-        : null;
-    const collections = normalizeCollections(
-      (body as Record<string, unknown>).collections
-    );
+      typeof payload.filename === "string" ? payload.filename.trim() : null;
+
+    const collections = normalizeCollections(payload.collections);
 
     if (!image) {
       return NextResponse.json(
