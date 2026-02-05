@@ -169,6 +169,28 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
   };
 }
 
+function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string): WindowManagerState | null {
+  const appWindows = Object.values(savedState.windows)
+    .filter((w) => w.appId === appId && w.isOpen)
+    .sort((a, b) => b.zIndex - a.zIndex);
+  const topmost = appWindows[0];
+  if (!topmost) return null;
+
+  return {
+    ...savedState,
+    windows: {
+      ...savedState.windows,
+      [topmost.id]: {
+        ...topmost,
+        isMinimized: false,
+        zIndex: savedState.nextZIndex,
+      },
+    },
+    focusedWindowId: topmost.id,
+    nextZIndex: savedState.nextZIndex + 1,
+  };
+}
+
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
   try {
@@ -206,6 +228,26 @@ function saveStateToStorage(state: WindowManagerState): void {
   } catch (e) {
     console.error("Failed to save window state:", e);
   }
+}
+
+/**
+ * Get the topmost (highest z-index) open window for a specific app
+ * Used by MobileShell to display the correct window when switching from desktop
+ * Reads directly from sessionStorage to work outside WindowManagerProvider
+ */
+export function getTopmostWindowForApp(appId: string): WindowState | null {
+  const savedState = loadStateFromStorage();
+  if (!savedState) return null;
+
+  const appWindows = Object.values(savedState.windows)
+    .filter((w) => {
+      // Only match windows where appId explicitly matches
+      // This prevents returning windows from different apps that might have similar instanceIds
+      return w.appId === appId && w.isOpen && !w.isMinimized;
+    })
+    .sort((a, b) => b.zIndex - a.zIndex);
+
+  return appWindows[0] || null;
 }
 
 // Max z-index before we normalize (windows stay in 1-50 range)
@@ -784,8 +826,24 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: use saved state, focus requested app if specified
-      return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
+      // Returning visitor: preserve their session state as-is unless a deep link requests focus
+      if (initialAppId) {
+        const focusedAppId = savedState.focusedWindowId
+          ? getAppIdFromWindowId(savedState.focusedWindowId)
+          : null;
+
+        if (focusedAppId !== initialAppId) {
+          if (isMultiWindowApp(initialAppId)) {
+            const focusedState = focusTopmostWindowForApp(savedState, initialAppId);
+            if (focusedState) {
+              return focusedState;
+            }
+          } else {
+            return withFocusedApp(savedState, initialAppId);
+          }
+        }
+      }
+      return savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified
       const defaultState = getDesktopDefaultState();

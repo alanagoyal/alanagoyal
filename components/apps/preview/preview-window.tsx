@@ -13,6 +13,7 @@ import {
   EDGE_SIZE,
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
+import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
 
 export type PreviewFileType = "image" | "pdf";
 
@@ -68,7 +69,6 @@ export function PreviewWindow({
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
   const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(true);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -265,9 +265,8 @@ export function PreviewWindow({
   // Reset error/size/loading state when file changes (zoom is initialized from prop)
   useEffect(() => {
     setImageError(null);
-    setPdfLoading(true);
     setNaturalSize(null);
-  }, [filePath]);
+  }, [filePath, fileUrl, fileType]);
 
   const windowStyle = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
@@ -286,25 +285,12 @@ export function PreviewWindow({
   const renderContent = () => {
     if (fileType === "pdf") {
       return (
-        <div className="relative w-full h-full">
-          {pdfLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
-              <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
-                <svg className="w-8 h-8 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                </svg>
-                <span className="text-sm">Loading PDF...</span>
-              </div>
-            </div>
-          )}
-          <embed
-            src={fileUrl}
-            type="application/pdf"
-            className="w-full h-full"
-            onLoad={() => setPdfLoading(false)}
-          />
-        </div>
+        <PdfViewer
+          fileUrl={fileUrl}
+          fileName={fileName}
+          focusOverlayActive={!isFocused}
+          onRequestFocus={onFocus}
+        />
       );
     }
 

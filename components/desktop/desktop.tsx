@@ -19,6 +19,7 @@ import { CalendarApp } from "@/components/apps/calendar/calendar-app";
 import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
 import { PreviewWindow, PREVIEW_TITLE_BAR_HEIGHT, type PreviewFileType } from "@/components/apps/preview";
+import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -195,9 +196,33 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   useEffect(() => {
     if (urlFileProcessed || !initialTextEditFile) return;
 
+    const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
+    if (previewMetadata) {
+      const { fileUrl, fileType } = previewMetadata;
+      if (fileType === "pdf") {
+        openMultiWindow("preview", initialTextEditFile, {
+          filePath: initialTextEditFile,
+          fileUrl,
+          fileType,
+        });
+        setUrlFileProcessed(true);
+        return;
+      }
+
+      loadImageAndGetSize(fileUrl).then((size) => {
+        openMultiWindow(
+          "preview",
+          initialTextEditFile,
+          { filePath: initialTextEditFile, fileUrl, fileType },
+          size ?? undefined
+        );
+        setUrlFileProcessed(true);
+      });
+      return;
+    }
+
     if (existingWindowId) {
-      // Window already exists from sessionStorage, just focus it
-      focusMultiWindow(existingWindowId);
+      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
       setUrlFileProcessed(true);
       return;
     }
@@ -219,7 +244,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, focusMultiWindow, openMultiWindow]);
+  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
 
   // Open Preview file from URL on mount (only once)
   const existingPreviewWindow = initialPreviewFile
@@ -231,7 +256,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (urlPreviewProcessed || !initialPreviewFile) return;
 
     if (existingPreviewWindowId) {
-      focusMultiWindow(existingPreviewWindowId);
+      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
       setUrlPreviewProcessed(true);
       return;
     }
@@ -268,7 +293,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       setUrlPreviewProcessed(true);
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, focusMultiWindow, openMultiWindow]);
+  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
