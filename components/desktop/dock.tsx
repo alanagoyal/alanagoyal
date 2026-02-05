@@ -263,7 +263,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300">
+      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
         {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
@@ -275,7 +275,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
               className={cn(
-                "group relative flex flex-col items-center p-1 outline-none transition-all duration-300",
+                "group relative flex flex-col items-center p-1 outline-none transition-all duration-300 flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
                 animState === "stable" && "hover:scale-110 active:scale-95"
@@ -309,13 +309,16 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             </button>
           );
         })}
+        {/* Divider before Trash */}
+        <div className="w-px h-12 bg-black/20 dark:bg-white/10 mx-1 self-center" />
+
         {/* Trash icon - uses custom sizing because unlike square app icons,
            the trash SVG has a tall aspect ratio with built-in padding */}
         <button
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none"
+          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
         >
           {hoveredApp === "trash" && <DockTooltip label="Trash" />}
           <div className="h-12 relative flex items-end">

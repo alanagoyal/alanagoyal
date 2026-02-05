@@ -446,7 +446,7 @@ function windowReducer(
     // ==========================================================================
 
     case "OPEN_MULTI_WINDOW": {
-      const { appId, instanceId, metadata } = action;
+      const { appId, instanceId, metadata, size: customSize } = action;
       const app = getAppById(appId);
       if (!app?.multiWindow) return state;
 
@@ -489,7 +489,7 @@ function windowReducer(
             isMinimized: false,
             isMaximized: false,
             position: newPosition,
-            size: app.defaultSize,
+            size: customSize ?? app.defaultSize,
             zIndex: state.nextZIndex,
             metadata,
           },
@@ -731,7 +731,7 @@ interface WindowManagerContextValue {
   getWindow: (appId: string) => WindowState | undefined;
   isWindowOpen: (appId: string) => boolean;
   // Multi-window app methods
-  openMultiWindow: (appId: string, instanceId: string, metadata?: Record<string, unknown>) => void;
+  openMultiWindow: (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size) => void;
   closeMultiWindow: (windowId: string) => void;
   focusMultiWindow: (windowId: string) => void;
   moveMultiWindow: (windowId: string, position: Position) => void;
@@ -905,8 +905,8 @@ export function WindowManagerProvider({
   // ==========================================================================
 
   const openMultiWindow = useCallback(
-    (appId: string, instanceId: string, metadata?: Record<string, unknown>) => {
-      dispatch({ type: "OPEN_MULTI_WINDOW", appId, instanceId, metadata });
+    (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size) => {
+      dispatch({ type: "OPEN_MULTI_WINDOW", appId, instanceId, metadata, size });
     },
     []
   );

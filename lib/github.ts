@@ -128,6 +128,12 @@ export async function fetchRepoTree(
   );
 
   if (!repoResponse.ok) {
+    if (repoResponse.status === 404) {
+      throw new Error("Repository not found");
+    }
+    if (repoResponse.status === 403) {
+      throw new Error("GitHub API rate limit exceeded");
+    }
     throw new Error(`Failed to fetch repo info: ${repoResponse.status}`);
   }
 
@@ -148,6 +154,12 @@ export async function fetchRepoTree(
   );
 
   if (!treeResponse.ok) {
+    if (treeResponse.status === 404) {
+      throw new Error("Tree not found");
+    }
+    if (treeResponse.status === 403) {
+      throw new Error("GitHub API rate limit exceeded");
+    }
     throw new Error(`Failed to fetch tree: ${treeResponse.status}`);
   }
 

@@ -33,7 +33,11 @@ const STATIC_FILES: Record<string, FileItem[]> = {
   [`${HOME_DIR}/Desktop`]: [
     { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
   ],
-  [`${HOME_DIR}/Documents`]: [],
+  [`${HOME_DIR}/Documents`]: [
+    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital I - Form D.pdf` },
+    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital II - Form D.pdf` },
+    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital III - Form D.pdf` },
+  ],
   [`${HOME_DIR}/Downloads`]: [],
 };
 
@@ -64,23 +68,30 @@ interface FinderAppProps {
   inShell?: boolean;
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
+  onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
   initialTab?: SidebarItem;
 }
 
-// Text file extensions that should open in TextEdit
-const TEXT_FILE_EXTENSIONS = [
-  "md", "txt", "ts", "tsx", "js", "jsx", "json",
-  "css", "html", "py", "yml", "yaml", "xml",
-  "sh", "bash", "zsh", "env", "gitignore", "eslintrc",
-  "prettierrc", "editorconfig", "toml", "ini", "cfg",
-  "rst", "csv", "log", "sql", "graphql", "vue", "svelte",
-];
+// Image extensions that should open in Preview
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
 
-function isTextFile(filename: string): boolean {
+function isImageFile(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
-  // Also treat files without extension but starting with a dot as text files
-  if (!ext && filename.startsWith(".")) return true;
-  return TEXT_FILE_EXTENSIONS.includes(ext);
+  return IMAGE_EXTENSIONS.includes(ext);
+}
+
+function isPdfFile(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  return ext === "pdf";
+}
+
+// Preview handles images and PDFs
+function isPreviewFile(filename: string): boolean {
+  return isImageFile(filename) || isPdfFile(filename);
+}
+
+function getPreviewFileType(filename: string): "image" | "pdf" {
+  return isPdfFile(filename) ? "pdf" : "image";
 }
 
 // GitHub recent file type
@@ -255,7 +266,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, initialTab }: FinderAppProps) {
+export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
   const { recents, addRecent } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -537,7 +548,26 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       // Add to recents when viewing a file
       addRecent({ path: file.path, name: file.name, type: file.type });
 
-      // Get file content
+      // Check if it's a preview file (image or PDF)
+      if (isPreviewFile(file.name) && onOpenPreviewFile) {
+        // For GitHub files, construct the raw URL
+        if (file.path.startsWith(PROJECTS_DIR + "/")) {
+          const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
+          const parts = relativePath.split("/");
+          const repo = parts[0];
+          const repoPath = parts.slice(1).join("/");
+          const fileUrl = `https://raw.githubusercontent.com/${USERNAME}/${repo}/main/${repoPath}`;
+          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
+        } else if (file.path.startsWith(`${HOME_DIR}/Documents/`)) {
+          // For Documents files, serve from public/documents
+          const fileName = file.path.slice(`${HOME_DIR}/Documents/`.length);
+          const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
+          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
+        }
+        return;
+      }
+
+      // Get file content for text files
       let content: string | null = "";
       if (file.path.startsWith(PROJECTS_DIR + "/")) {
         const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
@@ -558,15 +588,15 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         return;
       }
 
-      // If text file and onOpenTextFile is available, open in TextEdit
-      if (isTextFile(file.name) && onOpenTextFile) {
+      // Open all non-preview files in TextEdit
+      if (onOpenTextFile) {
         onOpenTextFile(file.path, content);
       } else {
         // Fallback to preview panel
         setPreviewContent(content);
       }
     }
-  }, [onOpenApp, onOpenTextFile, addRecent]);
+  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
