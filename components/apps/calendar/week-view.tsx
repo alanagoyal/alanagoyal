@@ -91,15 +91,15 @@ export function WeekView({
             <div className="text-xs text-muted-foreground">
               {format(date, "EEE")}
             </div>
-            <div
-              className={cn(
-                "text-lg font-medium",
-                isToday(date) &&
-                  "bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto"
-              )}
-            >
-              {format(date, "d")}
-            </div>
+            {isToday(date) ? (
+              <div className="w-8 h-8 bg-red-500 rounded-full mx-auto flex items-center justify-center">
+                <span className="text-white text-lg font-medium pr-px">{format(date, "d")}</span>
+              </div>
+            ) : (
+              <div className="text-lg font-medium">
+                {format(date, "d")}
+              </div>
+            )}
           </div>
         ))}
       </div>

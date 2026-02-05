@@ -254,7 +254,7 @@ export function MonthView({
                           <span className={cn(
                             dayIsToday && "bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                           )}>
-                            {dayIsToday ? format(day, "d") : null}
+                            {dayIsToday ? <span className="pr-px">{format(day, "d")}</span> : null}
                           </span>
                           {!dayIsToday && (
                             <>
@@ -275,7 +275,7 @@ export function MonthView({
                             dayIsToday && "bg-red-500 text-white rounded-full"
                           )}
                         >
-                          {format(day, "d")}
+                          <span className={cn(dayIsToday && "pr-px")}>{format(day, "d")}</span>
                         </span>
                       )}
                     </div>
