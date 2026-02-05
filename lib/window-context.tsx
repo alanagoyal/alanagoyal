@@ -804,9 +804,38 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: preserve their session state exactly as-is
-      // Don't call withFocusedApp - it assigns new z-indexes which destroys saved order
-      // The URL should already be in sync with the focused window from the previous session
+      // Returning visitor: preserve their session state as-is unless a deep link requests focus
+      if (initialAppId) {
+        const focusedAppId = savedState.focusedWindowId
+          ? getAppIdFromWindowId(savedState.focusedWindowId)
+          : null;
+
+        if (focusedAppId !== initialAppId) {
+          if (isMultiWindowApp(initialAppId)) {
+            const appWindows = Object.values(savedState.windows)
+              .filter((w) => w.appId === initialAppId && w.isOpen)
+              .sort((a, b) => b.zIndex - a.zIndex);
+            const topmost = appWindows[0];
+            if (topmost) {
+              return {
+                ...savedState,
+                windows: {
+                  ...savedState.windows,
+                  [topmost.id]: {
+                    ...topmost,
+                    isMinimized: false,
+                    zIndex: savedState.nextZIndex,
+                  },
+                },
+                focusedWindowId: topmost.id,
+                nextZIndex: savedState.nextZIndex + 1,
+              };
+            }
+          } else {
+            return withFocusedApp(savedState, initialAppId);
+          }
+        }
+      }
       return savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified

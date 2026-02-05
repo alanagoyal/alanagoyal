@@ -16,6 +16,30 @@ import { getTextEditContent } from "@/lib/file-storage";
 import { getTopmostWindowForApp } from "@/lib/window-context";
 
 const DEFAULT_APP = "notes";
+const HOME_DIR = "/Users/alanagoyal";
+const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+
+function getPreviewMetadata(filePath: string): { filePath: string; fileUrl: string; fileType: PreviewFileType } | null {
+  const ext = filePath.split(".").pop()?.toLowerCase() || "";
+  const fileType: PreviewFileType = ext === "pdf" ? "pdf" : "image";
+
+  if (filePath.startsWith(PROJECTS_DIR + "/")) {
+    const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
+    const parts = relativePath.split("/");
+    const repo = parts[0];
+    const repoPath = parts.slice(1).join("/");
+    const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
+    return { filePath, fileUrl, fileType };
+  }
+
+  if (filePath.startsWith(`${HOME_DIR}/Documents/`)) {
+    const fileName = filePath.slice(`${HOME_DIR}/Documents/`.length);
+    const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
+    return { filePath, fileUrl, fileType };
+  }
+
+  return null;
+}
 
 interface MobileShellProps {
   initialApp?: string;
@@ -34,25 +58,31 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   useEffect(() => {
     // Load topmost TextEdit window from desktop session
     const textEditWindow = getTopmostWindowForApp("textedit");
-    if (textEditWindow?.metadata?.filePath) {
+    const hasSavedTextEdit = Boolean(textEditWindow?.metadata?.filePath);
+    if (hasSavedTextEdit) {
       setTopmostTextEdit({
-        filePath: textEditWindow.metadata.filePath as string,
-        content: (textEditWindow.metadata.content as string) ?? "",
+        filePath: textEditWindow!.metadata!.filePath as string,
+        content: (textEditWindow!.metadata!.content as string) ?? "",
       });
     }
 
     // Load topmost Preview window from desktop session
     const previewWindow = getTopmostWindowForApp("preview");
-    if (previewWindow?.metadata?.filePath && previewWindow?.metadata?.fileUrl && previewWindow?.metadata?.fileType) {
+    const hasSavedPreview = Boolean(
+      previewWindow?.metadata?.filePath && previewWindow?.metadata?.fileUrl && previewWindow?.metadata?.fileType
+    );
+    if (hasSavedPreview) {
       setTopmostPreview({
-        filePath: previewWindow.metadata.filePath as string,
-        fileUrl: previewWindow.metadata.fileUrl as string,
-        fileType: previewWindow.metadata.fileType as PreviewFileType,
+        filePath: previewWindow!.metadata!.filePath as string,
+        fileUrl: previewWindow!.metadata!.fileUrl as string,
+        fileType: previewWindow!.metadata!.fileType as PreviewFileType,
       });
     }
 
     // Set active app based on URL path
     const path = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const fileParam = searchParams.get("file");
     if (path.startsWith("/settings")) {
       setActiveAppId("settings");
     } else if (path.startsWith("/messages")) {
@@ -75,6 +105,22 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       setActiveAppId("preview");
     } else if (initialApp) {
       setActiveAppId(initialApp);
+    }
+
+    if (fileParam) {
+      if (path.startsWith("/textedit") && !hasSavedTextEdit) {
+        setTopmostTextEdit({
+          filePath: fileParam,
+          content: getTextEditContent(fileParam) ?? "",
+        });
+      }
+
+      if (path.startsWith("/preview") && !hasSavedPreview) {
+        const previewMetadata = getPreviewMetadata(fileParam);
+        if (previewMetadata) {
+          setTopmostPreview(previewMetadata);
+        }
+      }
     }
     setIsHydrated(true);
   }, [initialApp]);
