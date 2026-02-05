@@ -12,6 +12,67 @@ function getServiceClient() {
 
 // Available collections for categorization
 const COLLECTIONS = ["flowers", "food", "friends"] as const;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB decoded
+const MAX_FILENAME_LENGTH = 255;
+const COLLECTION_SET = new Set<string>(COLLECTIONS);
+
+type ParsedImagePayload = {
+  base64Data: string;
+  contentType: string;
+  extension: string;
+};
+
+function parseImagePayload(image: string): ParsedImagePayload | null {
+  const trimmed = image.trim();
+  const dataUrlMatch = trimmed.match(
+    /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\r\n]+)$/i
+  );
+
+  if (dataUrlMatch) {
+    const subtype = dataUrlMatch[1].toLowerCase();
+    const base64Data = dataUrlMatch[2].replace(/\s+/g, "");
+    if (!base64Data) return null;
+    if (subtype === "png") {
+      return { base64Data, contentType: "image/png", extension: "png" };
+    }
+    if (subtype === "webp") {
+      return { base64Data, contentType: "image/webp", extension: "webp" };
+    }
+    return { base64Data, contentType: "image/jpeg", extension: "jpeg" };
+  }
+
+  // Fallback for plain base64 payloads (assume JPEG).
+  if (!/^[A-Za-z0-9+/=\r\n]+$/.test(trimmed)) return null;
+  const base64Data = trimmed.replace(/\s+/g, "");
+  if (!base64Data) return null;
+
+  return { base64Data, contentType: "image/jpeg", extension: "jpeg" };
+}
+
+function isValidFilename(filename: string): boolean {
+  return (
+    filename.length > 0 &&
+    filename.length <= MAX_FILENAME_LENGTH &&
+    /^[A-Za-z0-9._-]+$/.test(filename)
+  );
+}
+
+function normalizeCollections(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return null;
+
+  const normalized: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string") return null;
+    const candidate = item.trim().toLowerCase();
+    if (!COLLECTION_SET.has(candidate)) return null;
+    if (!normalized.includes(candidate)) {
+      normalized.push(candidate);
+    }
+  }
+
+  return normalized;
+}
 
 // Use OpenAI Vision to categorize the image
 async function categorizeImage(base64Image: string): Promise<string[]> {
@@ -87,9 +148,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { image, timestamp, filename, collections } = body;
+    // Parse and validate request body
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const image =
+      typeof (body as Record<string, unknown>).image === "string"
+        ? (body as Record<string, unknown>).image
+        : null;
+    const timestamp =
+      typeof (body as Record<string, unknown>).timestamp === "string"
+        ? (body as Record<string, unknown>).timestamp.trim()
+        : null;
+    const filename =
+      typeof (body as Record<string, unknown>).filename === "string"
+        ? (body as Record<string, unknown>).filename.trim()
+        : null;
+    const collections = normalizeCollections(
+      (body as Record<string, unknown>).collections
+    );
 
     if (!image) {
       return NextResponse.json(
@@ -105,54 +187,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Decode base64 image
-    const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-
-    // Detect image type from base64 header or default to jpeg
-    let contentType = "image/jpeg";
-    let extension = "jpeg";
-
-    if (image.startsWith("data:image/png")) {
-      contentType = "image/png";
-      extension = "png";
-    } else if (image.startsWith("data:image/webp")) {
-      contentType = "image/webp";
-      extension = "webp";
-    }
-
-    // Generate filename if not provided
-    const finalFilename = filename || `IMG_${Date.now()}.${extension}`;
-    const storagePath = finalFilename;
-
-    // Get Supabase client with service role
-    const supabase = getServiceClient();
-
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("photos")
-      .upload(storagePath, buffer, {
-        contentType,
-        cacheControl: "31536000", // 1 year cache
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
+    if (collections === null) {
       return NextResponse.json(
-        { error: `Upload failed: ${uploadError.message}` },
-        { status: 500 }
+        { error: "collections must be an array of: flowers, food, friends" },
+        { status: 400 }
       );
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from("photos")
-      .getPublicUrl(uploadData.path);
+    const parsedImage = parseImagePayload(image);
+    if (!parsedImage) {
+      return NextResponse.json(
+        { error: "Invalid image payload. Expected base64 image data." },
+        { status: 400 }
+      );
+    }
+
+    const buffer = Buffer.from(parsedImage.base64Data, "base64");
+    if (buffer.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid image payload. Decoded image is empty." },
+        { status: 400 }
+      );
+    }
+    if (buffer.length > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: "Image exceeds 10MB size limit" },
+        { status: 400 }
+      );
+    }
 
     // Parse timestamp to ensure valid format
     // If timestamp has no timezone info, assume it's Pacific time (America/Los_Angeles)
-    let timestampStr = timestamp as string;
+    let timestampStr = timestamp;
 
     // Check if timestamp already has timezone info (Z, +, or -)
     const hasTimezone = /([Zz]|[+-]\d{2}:?\d{2})$/.test(timestampStr);
@@ -191,10 +257,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (filename && !isValidFilename(filename)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid filename. Use letters, numbers, dot, underscore, or hyphen only.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Generate filename if not provided
+    const finalFilename = filename || `IMG_${Date.now()}.${parsedImage.extension}`;
+    const storagePath = finalFilename;
+
+    // Get Supabase client with service role
+    const supabase = getServiceClient();
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("photos")
+      .upload(storagePath, buffer, {
+        contentType: parsedImage.contentType,
+        cacheControl: "31536000", // 1 year cache
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return NextResponse.json(
+        { error: `Upload failed: ${uploadError.message}` },
+        { status: 500 }
+      );
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from("photos")
+      .getPublicUrl(uploadData.path);
+
     // Use AI to categorize the image if no collections provided
-    const detectedCollections = collections?.length > 0
+    const detectedCollections = collections.length > 0
       ? collections
-      : await categorizeImage(base64Data);
+      : await categorizeImage(parsedImage.base64Data);
 
     // Insert metadata into database using RPC
     const { data: photoId, error: insertError } = await supabase.rpc(
