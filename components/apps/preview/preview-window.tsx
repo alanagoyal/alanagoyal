@@ -358,6 +358,19 @@ export function PreviewWindow({
 
       return (
         <div className="relative w-full h-full">
+          {!isFocused && (
+            <div
+              className="absolute inset-0 z-10"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onFocus();
+              }}
+              onClick={(event) => {
+                event.preventDefault();
+                onFocus();
+              }}
+            />
+          )}
           {pdfLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
               <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
@@ -374,6 +387,8 @@ export function PreviewWindow({
             src={pdfSrc}
             className="w-full h-full border-0"
             title={fileName}
+            tabIndex={0}
+            onFocus={() => onFocus()}
             onLoad={() => {
               setPdfLoading(false);
               setPdfError(false);
