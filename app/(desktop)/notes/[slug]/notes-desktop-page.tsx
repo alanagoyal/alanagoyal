@@ -47,6 +47,20 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
         setCurrentApp("messages");
       } else if (path.startsWith("/settings")) {
         setCurrentApp("settings");
+      } else if (path.startsWith("/textedit")) {
+        setCurrentApp("textedit");
+      } else if (path.startsWith("/preview")) {
+        setCurrentApp("preview");
+      } else if (path.startsWith("/finder")) {
+        setCurrentApp("finder");
+      } else if (path.startsWith("/photos")) {
+        setCurrentApp("photos");
+      } else if (path.startsWith("/calendar")) {
+        setCurrentApp("calendar");
+      } else if (path.startsWith("/music")) {
+        setCurrentApp("music");
+      } else if (path.startsWith("/iterm")) {
+        setCurrentApp("iterm");
       }
     };
 
