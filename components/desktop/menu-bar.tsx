@@ -40,7 +40,7 @@ export function MenuBar({
   onLogout,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
-  const { getFocusedAppId, closeWindow, closeMultiWindow, state, setMenuOpen } = useWindowManager();
+  const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
@@ -72,24 +72,19 @@ export function MenuBar({
     return () => clearInterval(interval);
   }, []);
 
-  // Helper to close the focused window (handles both single and multi-window apps)
-  const closeFocusedWindow = useCallback(() => {
-    if (!focusedWindowId) return;
+  // Helper to quit the focused app (quits all windows for multi-window apps)
+  const quitFocusedApp = useCallback(() => {
+    if (!focusedAppId) return;
 
     // Clear iTerm storage when quitting iTerm
     if (focusedAppId === "iterm") {
       clearItermStorage();
     }
 
-    // Check if this is a multi-window app
-    if (focusedApp?.multiWindow) {
-      closeMultiWindow(focusedWindowId);
-    } else if (focusedAppId) {
-      closeWindow(focusedAppId);
-    }
-  }, [focusedWindowId, focusedApp, focusedAppId, closeMultiWindow, closeWindow]);
+    closeApp(focusedAppId);
+  }, [focusedAppId, closeApp]);
 
-  // Q shortcut to quit/close the focused app/window
+  // Q shortcut to quit the focused app (closes all windows for multi-window apps)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle Q key when not in an input field
@@ -101,13 +96,13 @@ export function MenuBar({
       // Finder can be closed but not quit
       if (e.key.toLowerCase() === "q" && focusedWindowId && focusedAppId !== "finder") {
         e.preventDefault();
-        closeFocusedWindow();
+        quitFocusedApp();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [focusedWindowId, focusedAppId, closeFocusedWindow]);
+  }, [focusedWindowId, focusedAppId, quitFocusedApp]);
 
   const toggleMenu = (menu: OpenMenu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -234,7 +229,7 @@ export function MenuBar({
         appId={focusedAppId || "finder"}
         appName={focusedApp?.menuBarTitle || "Finder"}
         onAbout={() => setAboutDialogOpen(true)}
-        onQuit={closeFocusedWindow}
+        onQuit={quitFocusedApp}
       />
 
       <FileMenu

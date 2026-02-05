@@ -51,6 +51,7 @@ export type WindowAction =
   | { type: "UNMINIMIZE_MULTI_WINDOW"; windowId: string }
   | { type: "BRING_APP_TO_FRONT"; appId: string }
   | { type: "UPDATE_WINDOW_METADATA"; windowId: string; metadata: Record<string, unknown> }
+  | { type: "CLOSE_APP"; appId: string }
   // State management
   | { type: "RESTORE_STATE"; state: WindowManagerState }
   | { type: "INCREMENT_Z_INDEX" };
