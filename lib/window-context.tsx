@@ -219,8 +219,9 @@ export function getTopmostWindowForApp(appId: string): WindowState | null {
 
   const appWindows = Object.values(savedState.windows)
     .filter((w) => {
-      const isAppWindow = w.id.startsWith(`${appId}-`) || w.appId === appId || w.id === appId;
-      return isAppWindow && w.isOpen && !w.isMinimized;
+      // Only match windows where appId explicitly matches
+      // This prevents returning windows from different apps that might have similar instanceIds
+      return w.appId === appId && w.isOpen && !w.isMinimized;
     })
     .sort((a, b) => b.zIndex - a.zIndex);
 
@@ -803,8 +804,10 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: use saved state, focus requested app if specified
-      return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
+      // Returning visitor: preserve their session state exactly as-is
+      // Don't call withFocusedApp - it assigns new z-indexes which destroys saved order
+      // The URL should already be in sync with the focused window from the previous session
+      return savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified
       const defaultState = getDesktopDefaultState();
