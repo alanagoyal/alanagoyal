@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { getThumbnailPath } from "@/lib/os-versions";
 import { SettingsCategory } from "../settings-app";
@@ -33,7 +32,7 @@ export function AboutPanel({ isMobile = false, onCategorySelect }: AboutPanelPro
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
             <span className="text-base">Name</span>
             <div className="flex items-center gap-1">
-              <span className="text-base text-muted-foreground">alana's iphone</span>
+              <span className="text-base text-muted-foreground">alana&apos;s iphone</span>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </div>
           </div>
