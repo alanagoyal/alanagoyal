@@ -19,6 +19,7 @@ import { CalendarApp } from "@/components/apps/calendar/calendar-app";
 import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
 import { PreviewWindow, PREVIEW_TITLE_BAR_HEIGHT, type PreviewFileType } from "@/components/apps/preview";
+import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -40,30 +41,6 @@ interface DesktopProps {
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
 const PROJECTS_DIR = `${HOME_DIR}/Projects`;
-const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
-
-function getPreviewMetadataFromPath(filePath: string): { fileUrl: string; fileType: PreviewFileType } | null {
-  const ext = filePath.split(".").pop()?.toLowerCase() || "";
-  const fileType: PreviewFileType | null = ext === "pdf" ? "pdf" : IMAGE_EXTENSIONS.includes(ext) ? "image" : null;
-  if (!fileType) return null;
-
-  if (filePath.startsWith(PROJECTS_DIR + "/")) {
-    const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
-    const parts = relativePath.split("/");
-    const repo = parts[0];
-    const repoPath = parts.slice(1).join("/");
-    const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
-    return { fileUrl, fileType };
-  }
-
-  if (filePath.startsWith(`${HOME_DIR}/Documents/`)) {
-    const fileName = filePath.slice(`${HOME_DIR}/Documents/`.length);
-    const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
-    return { fileUrl, fileType };
-  }
-
-  return null;
-}
 
 // Fetch file content from GitHub API
 async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {

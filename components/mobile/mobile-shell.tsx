@@ -14,32 +14,9 @@ import { TextEditApp } from "@/components/apps/textedit";
 import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
 import { getTextEditContent } from "@/lib/file-storage";
 import { getTopmostWindowForApp } from "@/lib/window-context";
+import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
 const DEFAULT_APP = "notes";
-const HOME_DIR = "/Users/alanagoyal";
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
-
-function getPreviewMetadata(filePath: string): { filePath: string; fileUrl: string; fileType: PreviewFileType } | null {
-  const ext = filePath.split(".").pop()?.toLowerCase() || "";
-  const fileType: PreviewFileType = ext === "pdf" ? "pdf" : "image";
-
-  if (filePath.startsWith(PROJECTS_DIR + "/")) {
-    const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
-    const parts = relativePath.split("/");
-    const repo = parts[0];
-    const repoPath = parts.slice(1).join("/");
-    const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
-    return { filePath, fileUrl, fileType };
-  }
-
-  if (filePath.startsWith(`${HOME_DIR}/Documents/`)) {
-    const fileName = filePath.slice(`${HOME_DIR}/Documents/`.length);
-    const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
-    return { filePath, fileUrl, fileType };
-  }
-
-  return null;
-}
 
 interface MobileShellProps {
   initialApp?: string;
@@ -116,9 +93,13 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       }
 
       if (path.startsWith("/preview") && !hasSavedPreview) {
-        const previewMetadata = getPreviewMetadata(fileParam);
+        const previewMetadata = getPreviewMetadataFromPath(fileParam);
         if (previewMetadata) {
-          setTopmostPreview(previewMetadata);
+          setTopmostPreview({
+            filePath: fileParam,
+            fileUrl: previewMetadata.fileUrl,
+            fileType: previewMetadata.fileType,
+          });
         }
       }
     }

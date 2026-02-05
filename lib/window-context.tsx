@@ -169,6 +169,28 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
   };
 }
 
+function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string): WindowManagerState | null {
+  const appWindows = Object.values(savedState.windows)
+    .filter((w) => w.appId === appId && w.isOpen)
+    .sort((a, b) => b.zIndex - a.zIndex);
+  const topmost = appWindows[0];
+  if (!topmost) return null;
+
+  return {
+    ...savedState,
+    windows: {
+      ...savedState.windows,
+      [topmost.id]: {
+        ...topmost,
+        isMinimized: false,
+        zIndex: savedState.nextZIndex,
+      },
+    },
+    focusedWindowId: topmost.id,
+    nextZIndex: savedState.nextZIndex + 1,
+  };
+}
+
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
   try {
@@ -812,24 +834,9 @@ export function WindowManagerProvider({
 
         if (focusedAppId !== initialAppId) {
           if (isMultiWindowApp(initialAppId)) {
-            const appWindows = Object.values(savedState.windows)
-              .filter((w) => w.appId === initialAppId && w.isOpen)
-              .sort((a, b) => b.zIndex - a.zIndex);
-            const topmost = appWindows[0];
-            if (topmost) {
-              return {
-                ...savedState,
-                windows: {
-                  ...savedState.windows,
-                  [topmost.id]: {
-                    ...topmost,
-                    isMinimized: false,
-                    zIndex: savedState.nextZIndex,
-                  },
-                },
-                focusedWindowId: topmost.id,
-                nextZIndex: savedState.nextZIndex + 1,
-              };
+            const focusedState = focusTopmostWindowForApp(savedState, initialAppId);
+            if (focusedState) {
+              return focusedState;
             }
           } else {
             return withFocusedApp(savedState, initialAppId);
