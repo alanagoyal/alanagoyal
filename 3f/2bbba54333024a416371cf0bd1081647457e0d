@@ -1,0 +1,25 @@
+components/apps/calendar/week-view.tsx
+  4d2ef3062eb4b677 94-99,102
+components/apps/calendar/month-view.tsx
+  4d2ef3062eb4b677 257,278
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3f2bbba54333024a416371cf0bd1081647457e0d",
+  "prompts": {
+    "4d2ef3062eb4b677": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db3c183b-8b9c-493b-80c2-4ca4c2a04a8d",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 14,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
