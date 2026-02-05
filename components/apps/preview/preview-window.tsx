@@ -298,10 +298,10 @@ export function PreviewWindow({
               </div>
             </div>
           )}
-          <iframe
+          <embed
             src={fileUrl}
-            className="w-full h-full border-0"
-            title={fileName}
+            type="application/pdf"
+            className="w-full h-full"
             onLoad={() => setPdfLoading(false)}
           />
         </div>
