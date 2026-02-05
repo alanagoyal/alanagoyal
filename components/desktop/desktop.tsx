@@ -27,7 +27,7 @@ import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
-import { getTextEditContent, saveTextEditContent } from "@/lib/file-storage";
+import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
@@ -335,9 +335,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       const cachedContent = getTextEditContent(filePath);
       const contentToUse = cachedContent !== undefined ? cachedContent : content;
 
-      // Only save if no cached version exists (don't overwrite edits)
+      // Only cache if no cached version exists (don't overwrite edits)
       if (cachedContent === undefined) {
-        saveTextEditContent(filePath, content);
+        cacheTextEditContent(filePath, content);
       }
 
       // Open multi-window (will focus existing if same file already open)

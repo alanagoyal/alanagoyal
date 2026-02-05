@@ -20,6 +20,7 @@ interface FileItem {
   type: "file" | "dir" | "app";
   path: string;
   icon?: string;
+  displayName?: string;
 }
 
 // Static file system structure
@@ -268,7 +269,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 
 export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
   const windowFocus = useWindowFocus();
-  const { recents, addRecent } = useRecents();
+  const { recents, addRecent, fileModifiedVersion } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Map sidebar item to its base path
@@ -488,8 +489,32 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     // Sort by timestamp (most recent first)
     allFiles.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Disambiguate duplicate file names by walking up the path
+    const nameCount = new Map<string, number>();
+    for (const entry of allFiles) {
+      nameCount.set(entry.file.name, (nameCount.get(entry.file.name) || 0) + 1);
+    }
+    const dupes = allFiles.filter(e => (nameCount.get(e.file.name) || 0) > 1);
+    if (dupes.length > 0) {
+      const segments = dupes.map(e => e.file.path.split("/"));
+      // Walk up from parent dir until all display names are unique
+      for (let depth = 2; depth <= Math.max(...segments.map(s => s.length)); depth++) {
+        const names = segments.map(s =>
+          s.length >= depth ? s.slice(-depth).join("/") : s.join("/")
+        );
+        const unique = new Set(names).size === names.length;
+        if (unique) {
+          dupes.forEach((entry, i) => {
+            entry.file = { ...entry.file, displayName: names[i] };
+          });
+          break;
+        }
+      }
+    }
+
     return allFiles.map(f => f.file);
-  }, [githubRecentFiles, recents]);
+  }, [githubRecentFiles, recents, fileModifiedVersion]);
 
   // Update files state when viewing Recents
   useEffect(() => {
@@ -943,7 +968,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
               ? "bg-blue-500 text-white"
               : "text-zinc-700 dark:text-zinc-300"
           )}>
-            {file.name}
+            {file.displayName || file.name}
           </span>
         </button>
       ))}
@@ -983,7 +1008,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
                 icon={file.icon}
                 className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && file.type !== "app" && "brightness-0 invert")}
               />
-              <span className="truncate">{file.name}</span>
+              <span className="truncate">{file.displayName || file.name}</span>
             </div>
             <div className={cn(
               "w-32 text-left truncate",
@@ -1029,7 +1054,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-10 h-10 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-base text-zinc-900 dark:text-white truncate">
-                {file.name}
+                {file.displayName || file.name}
               </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 {file.type === "dir" ? "Folder" : file.type === "app" ? "Application" : "File"}
