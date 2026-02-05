@@ -77,10 +77,10 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const touchRecent = useCallback((path: string) => {
-    setFileModifiedVersion(v => v + 1);
     setRecents(prev => {
       const index = prev.findIndex(r => r.path === path);
       if (index === -1) return prev;
+      setFileModifiedVersion(v => v + 1);
       const file = prev[index];
       const updated = { ...file, accessedAt: Date.now() };
       return [updated, ...prev.slice(0, index), ...prev.slice(index + 1)];

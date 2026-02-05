@@ -490,17 +490,25 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     // Sort by timestamp (most recent first)
     allFiles.sort((a, b) => b.timestamp - a.timestamp);
 
-    // Disambiguate duplicate file names with parent directory
+    // Disambiguate duplicate file names by walking up the path
     const nameCount = new Map<string, number>();
     for (const entry of allFiles) {
       nameCount.set(entry.file.name, (nameCount.get(entry.file.name) || 0) + 1);
     }
-    for (const entry of allFiles) {
-      if ((nameCount.get(entry.file.name) || 0) > 1) {
-        const segments = entry.file.path.split("/");
-        const parentDir = segments.length >= 2 ? segments[segments.length - 2] : "";
-        if (parentDir) {
-          entry.file = { ...entry.file, displayName: `${parentDir}/${entry.file.name}` };
+    const dupes = allFiles.filter(e => (nameCount.get(e.file.name) || 0) > 1);
+    if (dupes.length > 0) {
+      const segments = dupes.map(e => e.file.path.split("/"));
+      // Walk up from parent dir until all display names are unique
+      for (let depth = 2; depth <= Math.max(...segments.map(s => s.length)); depth++) {
+        const names = segments.map(s =>
+          s.length >= depth ? s.slice(-depth).join("/") : s.join("/")
+        );
+        const unique = new Set(names).size === names.length;
+        if (unique) {
+          dupes.forEach((entry, i) => {
+            entry.file = { ...entry.file, displayName: names[i] };
+          });
+          break;
         }
       }
     }

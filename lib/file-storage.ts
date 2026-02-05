@@ -24,15 +24,16 @@ export function getTextEditContent(filePath: string): string | undefined {
   return contents[filePath];
 }
 
+function persistContent(filePath: string, content: string): void {
+  const contents = loadTextEditContents();
+  contents[filePath] = content;
+  localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
+}
+
 export function saveTextEditContent(filePath: string, content: string): void {
   if (typeof window === "undefined") return;
   try {
-    // Save content
-    const contents = loadTextEditContents();
-    contents[filePath] = content;
-    localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
-
-    // Update modified date
+    persistContent(filePath, content);
     const dates = loadFileModifiedDates();
     dates[filePath] = Date.now();
     localStorage.setItem(FILE_MODIFIED_DATES_KEY, JSON.stringify(dates));
@@ -42,9 +43,7 @@ export function saveTextEditContent(filePath: string, content: string): void {
 export function cacheTextEditContent(filePath: string, content: string): void {
   if (typeof window === "undefined") return;
   try {
-    const contents = loadTextEditContents();
-    contents[filePath] = content;
-    localStorage.setItem(TEXTEDIT_CONTENTS_KEY, JSON.stringify(contents));
+    persistContent(filePath, content);
   } catch {}
 }
 
