@@ -1,0 +1,33 @@
+components/desktop/desktop.tsx
+  3b5c7af68ace09b1 199,233
+lib/window-context.tsx
+  3b5c7af68ace09b1 211-229,806-809
+app/(desktop)/textedit/page.tsx
+  3b5c7af68ace09b1 32
+components/apps/preview/index.ts
+  3b5c7af68ace09b1 2
+components/mobile/mobile-shell.tsx
+  3b5c7af68ace09b1 14,16,29-33,35-54,74-75,99-103,107-108,110-113,115-117
+components/apps/preview/preview-app.tsx
+  3b5c7af68ace09b1 1-320
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "b887bc66b06b0cad6bddaf066e6d43b20887f961",
+  "prompts": {
+    "3b5c7af68ace09b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea62830b-7f42-46dc-a4c8-477bafad8aa3",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 692,
+      "total_deletions": 308,
+      "accepted_lines": 424,
+      "overriden_lines": 0
+    }
+  }
+}
