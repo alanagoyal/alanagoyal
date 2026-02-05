@@ -803,10 +803,8 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: preserve their session state exactly as-is
-      // Don't override focus based on URL - their window order/focus takes precedence
-      // This is important for preserving z-order when switching between desktop/mobile
-      return savedState;
+      // Returning visitor: use saved state, focus requested app if specified
+      return initialAppId ? withFocusedApp(savedState, initialAppId) : savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified
       const defaultState = getDesktopDefaultState();

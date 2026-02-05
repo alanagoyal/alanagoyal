@@ -17,7 +17,6 @@ export function PreviewApp({
   fileUrl,
   fileType = "image",
 }: PreviewAppProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileName = filePath?.split("/").pop() || "Untitled";
 
@@ -131,7 +130,6 @@ export function PreviewApp({
   if (!fileUrl) {
     return (
       <div
-        ref={containerRef}
         className={cn(
           "flex flex-col bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white",
           isMobile ? "h-dvh w-full" : "h-full"
@@ -272,7 +270,6 @@ export function PreviewApp({
 
   return (
     <div
-      ref={containerRef}
       className={cn(
         "flex flex-col bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white overflow-hidden",
         isMobile ? "h-dvh w-full" : "h-full"

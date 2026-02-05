@@ -218,7 +218,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, focusMultiWindow, openMultiWindow]);
+  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
 
   // Open Preview file from URL on mount (only once)
   const existingPreviewWindow = initialPreviewFile
@@ -267,7 +267,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       setUrlPreviewProcessed(true);
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, focusMultiWindow, openMultiWindow]);
+  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
