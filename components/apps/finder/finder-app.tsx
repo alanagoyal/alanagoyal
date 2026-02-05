@@ -33,7 +33,11 @@ const STATIC_FILES: Record<string, FileItem[]> = {
   [`${HOME_DIR}/Desktop`]: [
     { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
   ],
-  [`${HOME_DIR}/Documents`]: [],
+  [`${HOME_DIR}/Documents`]: [
+    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital I - Form D.pdf` },
+    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital II - Form D.pdf` },
+    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital III - Form D.pdf` },
+  ],
   [`${HOME_DIR}/Downloads`]: [],
 };
 
