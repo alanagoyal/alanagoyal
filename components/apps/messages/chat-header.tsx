@@ -657,7 +657,7 @@ export function ChatHeader({
       );
     }
     prevIsEditMode.current = isEditMode;
-  }, [isEditMode, activeConversation]);
+  }, [isEditMode, activeConversation, setRecipientInput]);
 
   // Render helpers
   const renderRecipients = () => {

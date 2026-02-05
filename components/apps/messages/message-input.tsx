@@ -239,7 +239,7 @@ export const MessageInput = forwardRef<
     if (shouldDestroyEditor) {
       editor.destroy();
     }
-  }, [conversationId]);
+  }, [conversationId, editor]);
 
   // Focus editor at end of content
   useEffect(() => {

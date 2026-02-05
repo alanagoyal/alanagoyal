@@ -273,7 +273,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Map sidebar item to its base path
-  const getPathForSidebarItem = (tab: SidebarItem): string => {
+  const getPathForSidebarItem = useCallback((tab: SidebarItem): string => {
     switch (tab) {
       case "recents": return "recents";
       case "applications": return "applications";
@@ -284,7 +284,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       case "trash": return "trash";
       default: return "recents";
     }
-  };
+  }, []);
 
   // Derive sidebar item from a path (inverse of getPathForSidebarItem)
   const getSidebarForPath = (path: string): SidebarItem => {
@@ -454,6 +454,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Compute sorted recents from GitHub files + local recents (re-sorts when either changes)
   const sortedRecentFiles = useMemo(() => {
+    // Force recalculation when file modified timestamps are bumped via context.
+    void fileModifiedVersion;
     const allFiles: Array<{ file: FileItem; timestamp: number }> = [];
     const seenPaths = new Set<string>();
 
@@ -530,7 +532,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       setCurrentPath(getPathForSidebarItem(initialTab));
       setSelectedFile(null);
     }
-  }, [initialTab]);
+  }, [initialTab, getPathForSidebarItem]);
 
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {

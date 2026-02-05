@@ -268,7 +268,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     if (allConversations.length > 0) {
       setActiveConversation(allConversations[0].id);
     }
-  }, [isMobileView]);
+  }, [isMobileView, updateUrl]);
 
   // Update lastActiveConversation whenever activeConversation changes
   useEffect(() => {
@@ -393,8 +393,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Cleanup message queue interval on unmount to prevent resource leaks
   useEffect(() => {
+    const queue = messageQueue.current;
     return () => {
-      messageQueue.current.dispose();
+      queue.dispose();
     };
   }, []);
 

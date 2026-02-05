@@ -94,7 +94,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
       setLoading(false);
     }
     fetchNotes();
-  }, [supabase, initialSlug, isMobile]);
+  }, [supabase, initialSlug, isMobile, selectedNote]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Fetch full note data using RPC
