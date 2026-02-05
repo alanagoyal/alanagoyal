@@ -16,6 +16,9 @@ import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 
 export type PreviewFileType = "image" | "pdf";
 
+// Title bar height - exported for use in window size calculations
+export const PREVIEW_TITLE_BAR_HEIGHT = 44;
+
 interface PreviewWindowProps {
   filePath: string;
   fileUrl: string;
@@ -64,7 +67,8 @@ export function PreviewWindow({
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(true);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -258,9 +262,10 @@ export function PreviewWindow({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFocused, onClose, zoomIn, zoomOut, resetZoom]);
 
-  // Reset error/size state when file changes (zoom is initialized from prop)
+  // Reset error/size/loading state when file changes (zoom is initialized from prop)
   useEffect(() => {
-    setImageError(false);
+    setImageError(null);
+    setPdfLoading(true);
     setNaturalSize(null);
   }, [filePath]);
 
@@ -268,14 +273,38 @@ export function PreviewWindow({
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
     : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
 
+  // Handle image load errors with network detection
+  const handleImageError = useCallback(() => {
+    // Check if likely a network error (offline or CORS)
+    if (!navigator.onLine) {
+      setImageError("network");
+    } else {
+      setImageError("unknown");
+    }
+  }, []);
+
   const renderContent = () => {
     if (fileType === "pdf") {
       return (
-        <iframe
-          src={fileUrl}
-          className="w-full h-full border-0"
-          title={fileName}
-        />
+        <div className="relative w-full h-full">
+          {pdfLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
+              <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                <svg className="w-8 h-8 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                </svg>
+                <span className="text-sm">Loading PDF...</span>
+              </div>
+            </div>
+          )}
+          <iframe
+            src={fileUrl}
+            className="w-full h-full border-0"
+            title={fileName}
+            onLoad={() => setPdfLoading(false)}
+          />
+        </div>
       );
     }
 
@@ -289,7 +318,12 @@ export function PreviewWindow({
               <path d="M21 15l-5-5L5 21" />
               <line x1="2" y1="2" x2="22" y2="22" />
             </svg>
-            <p>Unable to load image</p>
+            <p className="font-medium">Unable to load image</p>
+            <p className="text-sm mt-1">
+              {imageError === "network"
+                ? "Check your internet connection"
+                : "The file may be missing or inaccessible"}
+            </p>
           </div>
         </div>
       );
@@ -313,7 +347,7 @@ export function PreviewWindow({
               const img = e.target as HTMLImageElement;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
         </div>
       );
@@ -361,7 +395,7 @@ export function PreviewWindow({
               pointerEvents: "none",
               transition: isZoomed ? "width 0.15s ease-out, height 0.15s ease-out" : undefined,
             }}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
             onLoad={(e) => {
               const img = e.target as HTMLImageElement;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
@@ -417,9 +451,9 @@ export function PreviewWindow({
           <div className="flex-1 text-center">
             <span className="text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
-          {/* Zoom controls for images */}
+          {/* Zoom controls for images - stopPropagation prevents window drag */}
           {fileType === "image" && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
               <button
                 onClick={zoomOut}
                 className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"

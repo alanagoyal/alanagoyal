@@ -18,7 +18,7 @@ import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
 import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditWindow } from "@/components/apps/textedit";
-import { PreviewWindow, type PreviewFileType } from "@/components/apps/preview";
+import { PreviewWindow, PREVIEW_TITLE_BAR_HEIGHT, type PreviewFileType } from "@/components/apps/preview";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -75,11 +75,10 @@ function calculateImageWindowSize(
   naturalWidth: number,
   naturalHeight: number
 ): { width: number; height: number } {
-  const titleBarHeight = 44;
   const minWidth = 400;
-  const minContentHeight = 300 - titleBarHeight;
+  const minContentHeight = 300 - PREVIEW_TITLE_BAR_HEIGHT;
   const maxContentWidth = Math.min(1200, window.innerWidth - 200);
-  const maxContentHeight = Math.min(900, window.innerHeight - 200) - titleBarHeight;
+  const maxContentHeight = Math.min(900, window.innerHeight - 200) - PREVIEW_TITLE_BAR_HEIGHT;
 
   let contentWidth = naturalWidth;
   let contentHeight = naturalHeight;
@@ -95,7 +94,7 @@ function calculateImageWindowSize(
 
   return {
     width: contentWidth,
-    height: contentHeight + titleBarHeight,
+    height: contentHeight + PREVIEW_TITLE_BAR_HEIGHT,
   };
 }
 
