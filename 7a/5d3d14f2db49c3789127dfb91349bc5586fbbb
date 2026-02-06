@@ -1,0 +1,27 @@
+components/apps/messages/chat-area.tsx
+  ba94314f693dc0c8 34,57,188
+components/apps/messages/app.tsx
+  ba94314f693dc0c8 53,268,1011
+components/apps/messages/message-list.tsx
+  ba94314f693dc0c8 17,30,78-79,94-97,101,118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "7a5d3d14f2db49c3789127dfb91349bc5586fbbb",
+  "prompts": {
+    "ba94314f693dc0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3ba2c74-2e1e-405f-9141-047edf9fffe6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 2,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
