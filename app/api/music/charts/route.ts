@@ -12,8 +12,20 @@ interface ITunesRSSEntry {
 
 interface ITunesRSSFeed {
   feed: {
-    entry: ITunesRSSEntry[];
+    entry?: ITunesRSSEntry | ITunesRSSEntry[];
   };
+}
+
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 100;
+const CHART_TYPES = new Set(["albums", "songs"]);
+
+function parseLimit(rawLimit: string | null): number | null {
+  if (!rawLimit) return DEFAULT_LIMIT;
+  if (!/^\d+$/.test(rawLimit)) return null;
+  const parsed = Number.parseInt(rawLimit, 10);
+  if (parsed < 1 || parsed > MAX_LIMIT) return null;
+  return parsed;
 }
 
 function transformEntry(entry: ITunesRSSEntry) {
@@ -33,10 +45,32 @@ function transformEntry(entry: ITunesRSSEntry) {
   };
 }
 
+function normalizeEntries(
+  entry: ITunesRSSFeed["feed"]["entry"]
+): ITunesRSSEntry[] {
+  if (!entry) return [];
+  return Array.isArray(entry) ? entry : [entry];
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") || "albums";
-  const limit = searchParams.get("limit") || "25";
+  const typeRaw = searchParams.get("type");
+  const type = typeRaw?.trim() || "albums";
+  const limit = parseLimit(searchParams.get("limit"));
+
+  if (!CHART_TYPES.has(type)) {
+    return NextResponse.json(
+      { error: "type must be either 'albums' or 'songs'" },
+      { status: 400 }
+    );
+  }
+
+  if (limit === null) {
+    return NextResponse.json(
+      { error: `limit must be an integer between 1 and ${MAX_LIMIT}` },
+      { status: 400 }
+    );
+  }
 
   try {
     const endpoint =
@@ -53,7 +87,7 @@ export async function GET(request: Request) {
     }
 
     const data: ITunesRSSFeed = await response.json();
-    const items = data.feed.entry?.map(transformEntry) || [];
+    const items = normalizeEntries(data.feed.entry).map(transformEntry);
 
     return NextResponse.json({ items });
   } catch (error) {

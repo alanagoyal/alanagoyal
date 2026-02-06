@@ -15,14 +15,33 @@ interface ITunesSearchResponse {
   results: ITunesSearchResult[];
 }
 
+const DEFAULT_LIMIT = 5;
+const MAX_LIMIT = 25;
+
+function parseLimit(rawLimit: string | null): number | null {
+  if (!rawLimit) return DEFAULT_LIMIT;
+  if (!/^\d+$/.test(rawLimit)) return null;
+  const parsed = Number.parseInt(rawLimit, 10);
+  if (parsed < 1 || parsed > MAX_LIMIT) return null;
+  return parsed;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const term = searchParams.get("term");
-  const limit = searchParams.get("limit") || "5";
+  const termRaw = searchParams.get("term");
+  const term = termRaw?.trim();
+  const limit = parseLimit(searchParams.get("limit"));
 
-  if (!term) {
+  if (!term || term.length > 200) {
     return NextResponse.json(
-      { error: "Search term is required" },
+      { error: "Search term is required and must be 200 characters or less" },
+      { status: 400 }
+    );
+  }
+
+  if (limit === null) {
+    return NextResponse.json(
+      { error: `limit must be an integer between 1 and ${MAX_LIMIT}` },
       { status: 400 }
     );
   }

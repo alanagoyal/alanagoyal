@@ -9,9 +9,31 @@ initLogger({
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { name } = body;
-    const data = await handleRequest(name);
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const name = (body as Record<string, unknown>).name;
+    if (typeof name !== "string") {
+      return NextResponse.json(
+        { error: "name must be a string" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedName = name.trim();
+    if (normalizedName.length < 1 || normalizedName.length > 80) {
+      return NextResponse.json(
+        { error: "name must be between 1 and 80 characters" },
+        { status: 400 }
+      );
+    }
+
+    const data = await handleRequest(normalizedName);
     return NextResponse.json(data);
 
   } catch (error) {
