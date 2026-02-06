@@ -21,7 +21,6 @@ import {
 } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
 import { Note } from "@/lib/notes/types";
-import { toast } from "@/hooks/use-toast";
 import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Nav } from "./nav";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -233,7 +232,7 @@ export default function Sidebar({
   );
 
   const handlePinToggle = useCallback(
-    (slug: string, silent: boolean = false) => {
+    (slug: string) => {
       let isPinning = false;
       setPinnedNotes((prev) => {
         const newPinned = new Set(prev);
@@ -260,11 +259,6 @@ export default function Sidebar({
         if (note) onNoteSelect(note);
       }
 
-      if (!silent && !isMobile) {
-        toast({
-          description: isPinning ? "Note pinned" : "Note unpinned",
-        });
-      }
     },
     [router, isMobile, useCallbackNavigation, clearSearch, notes, onNoteSelect]
   );
@@ -272,11 +266,6 @@ export default function Sidebar({
   const handleNoteDelete = useCallback(
     async (noteToDelete: Note) => {
       if (noteToDelete.public) {
-        if (!isMobile) {
-          toast({
-            description: "Oops! You can't delete public notes",
-          });
-        }
         return;
       }
 
@@ -323,11 +312,6 @@ export default function Sidebar({
           router.refresh();
         }
 
-        if (!isMobile) {
-          toast({
-            description: "Note deleted",
-          });
-        }
       } catch (error) {
         console.error("Error deleting note:", error);
       }
@@ -373,7 +357,6 @@ export default function Sidebar({
           handlePinToggle,
           refreshSessionNotes,
           setSelectedNoteSlug,
-          isMobile,
           useCallbackNavigation,
           onNoteCreated
         );
@@ -393,7 +376,7 @@ export default function Sidebar({
     return () => {
       fileMenu.unregisterNotesActions();
     };
-  }, [fileMenu, router, setSelectedNoteSlug, sessionId, handlePinToggle, refreshSessionNotes, isMobile, useCallbackNavigation, onNoteCreated, highlightedNote, handleNoteDelete]);
+  }, [fileMenu, router, setSelectedNoteSlug, sessionId, handlePinToggle, refreshSessionNotes, useCallbackNavigation, onNoteCreated, highlightedNote, handleNoteDelete]);
 
   // Update file menu state when highlighted note or pinned status changes
   useEffect(() => {

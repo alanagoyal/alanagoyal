@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
 import { useRouter, usePathname } from "next/navigation";
@@ -52,7 +51,6 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
             </ScrollArea>
           </div>
         )}
-        <Toaster />
       </div>
     </SessionNotesProvider>
   );

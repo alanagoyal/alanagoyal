@@ -3,7 +3,6 @@ import { Conversation } from "@/types/messages";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { initialContacts } from "@/data/messages/initial-contacts";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUserContacts, addUserContact } from "@/lib/messages/contacts";
@@ -327,7 +326,6 @@ export function ChatHeader({
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
 }: ChatHeaderProps) {
-  const { toast } = useToast();
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -341,14 +339,6 @@ export function ChatHeader({
       .filter(Boolean);
 
     if (!isValidRecipientCount(currentRecipients)) {
-      if (!isMobileView) {
-        toast({
-          description:
-            currentRecipients.length === 0
-              ? "You need at least one recipient"
-              : "You can add up to four recipients",
-        });
-      }
       return false;
     }
 
@@ -374,7 +364,6 @@ export function ChatHeader({
     onUpdateRecipients,
     recipientInput,
     setShowCompactNewChat,
-    toast,
   ]);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -451,16 +440,10 @@ export function ChatHeader({
       const recipientNames = recipientInput.split(",").filter((r) => r.trim());
 
       if (isEditMode && recipientNames.length === 0) {
-        if (!isMobileView) {
-          toast({ description: "You need at least one recipient" });
-        }
         return;
       }
 
       if (isNewChat && !isMobileView && recipientNames.length === 0) {
-        if (!isMobileView) {
-          toast({ description: "Please add at least one recipient" });
-        }
         return;
       }
 
@@ -484,7 +467,6 @@ export function ChatHeader({
     recipientInput,
     onUpdateRecipients,
     onCreateConversation,
-    toast,
     isMobileView,
     searchValue,
   ]);
@@ -527,9 +509,6 @@ export function ChatHeader({
     if (currentRecipients.includes(person.name)) return;
 
     if (hasReachedMaxRecipients(recipientInput)) {
-      if (!isMobileView) {
-        toast({ description: "You can add up to four recipients" });
-      }
       return;
     }
 
@@ -563,11 +542,6 @@ export function ChatHeader({
         const data = await response.json();
 
         if (data.validation === false) {
-          if (!isMobileView) {
-            toast({
-              description: "Please enter a valid contact name",
-            });
-          }
           return;
         }
 
@@ -577,11 +551,6 @@ export function ChatHeader({
         });
         setShowResults(true); // Keep the dropdown open for more selections
       } catch {
-        if (!isMobileView) {
-          toast({
-            description: "Failed to validate contact name",
-          });
-        }
       } finally {
         setIsValidating(false);
       }
@@ -669,11 +638,6 @@ export function ChatHeader({
         onRemove={(index) => {
           // Prevent removing if it's the last recipient
           if (totalRecipients <= 1) {
-            if (!isMobileView) {
-              toast({
-                description: "You must have at least one recipient"
-              });
-            }
             return;
           }
 

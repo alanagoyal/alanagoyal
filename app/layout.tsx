@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { SystemSettingsProvider } from "@/lib/system-settings-context";
 import { AudioProvider } from "@/lib/music/audio-context";
 
@@ -42,7 +41,6 @@ export default function RootLayout({
           <SystemSettingsProvider>
             <AudioProvider>
               {children}
-              <Toaster />
             </AudioProvider>
           </SystemSettingsProvider>
         </ThemeProvider>

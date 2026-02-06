@@ -10,7 +10,6 @@ import {
   uploadNoteImage,
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
-import { toast } from "@/hooks/use-toast";
 
 function getTaskText(node: React.ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -123,12 +122,8 @@ export default function NoteContent({
       // Prevent default paste behavior for images
       e.preventDefault();
 
-      const { dismiss } = toast({ description: "Uploading image..." });
-
       try {
         const result = await uploadNoteImage(imageFile, note.id);
-
-        dismiss();
 
         if (result.success && result.url && textareaRef.current) {
           insertImageMarkdown(textareaRef.current, result.url);
@@ -138,12 +133,9 @@ export default function NoteContent({
           setTimeout(() => saveNote({ content: newContent }), 0);
         } else if (result.error) {
           console.error("Image upload failed:", result.error);
-          toast({ description: `Failed to upload image: ${result.error}`, variant: "destructive" });
         }
       } catch (error) {
         console.error("Unexpected error during image upload:", error);
-        dismiss();
-        toast({ description: "An unexpected error occurred while uploading the image.", variant: "destructive" });
       }
     },
     [canEdit, note.id, saveNote]

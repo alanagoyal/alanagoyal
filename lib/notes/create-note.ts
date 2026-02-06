@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
-import { toast } from "@/hooks/use-toast";
 import { Note } from "@/lib/notes/types";
 
 interface NotesRouter {
@@ -11,10 +10,9 @@ interface NotesRouter {
 export async function createNote(
   sessionId: string | null,
   router: NotesRouter,
-  addNewPinnedNote: (slug: string, silent?: boolean) => void,
+  addNewPinnedNote: (slug: string) => void,
   refreshSessionNotes: () => Promise<void>,
   setSelectedNoteSlug: (slug: string | null) => void,
-  isMobile: boolean,
   useCallbackNavigation: boolean = false,
   onNoteCreated?: (note: Note) => void
 ) {
@@ -41,7 +39,7 @@ export async function createNote(
 
     if (useCallbackNavigation) {
       // Use callbacks instead of router navigation
-      addNewPinnedNote(slug, true);
+      addNewPinnedNote(slug);
       await refreshSessionNotes();
       setSelectedNoteSlug(slug);
       // Fetch the full note and call the callback
@@ -55,17 +53,11 @@ export async function createNote(
       }
     } else {
       // Use router navigation (standalone browser mode)
-      addNewPinnedNote(slug, true);
+      addNewPinnedNote(slug);
       refreshSessionNotes().then(() => {
         setSelectedNoteSlug(slug);
         router.push(`/notes/${slug}`);
         router.refresh();
-      });
-    }
-
-    if (!isMobile) {
-      toast({
-        description: "Private note created",
       });
     }
   } catch (error) {
