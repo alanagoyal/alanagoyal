@@ -12,7 +12,7 @@ interface ITunesRSSEntry {
 
 interface ITunesRSSFeed {
   feed: {
-    entry: ITunesRSSEntry[];
+    entry?: ITunesRSSEntry | ITunesRSSEntry[];
   };
 }
 
@@ -43,6 +43,13 @@ function transformEntry(entry: ITunesRSSEntry) {
     releaseDate: entry["im:releaseDate"]?.attributes?.label || "",
     genre: entry.category?.attributes?.label || "",
   };
+}
+
+function normalizeEntries(
+  entry: ITunesRSSFeed["feed"]["entry"]
+): ITunesRSSEntry[] {
+  if (!entry) return [];
+  return Array.isArray(entry) ? entry : [entry];
 }
 
 export async function GET(request: Request) {
@@ -80,7 +87,7 @@ export async function GET(request: Request) {
     }
 
     const data: ITunesRSSFeed = await response.json();
-    const items = data.feed.entry?.map(transformEntry) || [];
+    const items = normalizeEntries(data.feed.entry).map(transformEntry);
 
     return NextResponse.json({ items });
   } catch (error) {
