@@ -106,11 +106,12 @@ export function ChatArea({
     }
   };
 
-  const handleSend = () => {
-    if (!messageDraft.trim()) return;
+  const handleSend = (): boolean => {
+    if (!messageDraft.trim()) return false;
 
     if (activeConversation) {
       onSendMessage(messageDraft, activeConversation.id);
+      return true;
     } else if (isNewChat && recipientInput.trim()) {
       const recipientList = recipientInput
         .split(",")
@@ -118,8 +119,10 @@ export function ChatArea({
         .filter((r) => r.length > 0);
       if (recipientList.length > 0) {
         onSendMessage(messageDraft);
+        return true;
       }
     }
+    return false;
   };
 
   return (
