@@ -50,7 +50,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(soundEffects.isEnabled());
 
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,9 +62,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   useEffect(() => {
     focusModeRef.current = focusModeActive;
   }, [focusModeActive]);
-  // Use window's dialog container when in desktop shell, otherwise use local ref
-  const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
-
   const STORAGE_KEY = "dialogueConversations";
   const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
 
@@ -268,7 +264,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     if (allConversations.length > 0) {
       setActiveConversation(allConversations[0].id);
     }
-  }, [isMobileView]);
+  }, [isMobileView, updateUrl]);
 
   // Update lastActiveConversation whenever activeConversation changes
   useEffect(() => {
@@ -393,14 +389,10 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Cleanup message queue interval on unmount to prevent resource leaks
   useEffect(() => {
+    const queue = messageQueue.current;
     return () => {
-      messageQueue.current.dispose();
+      queue.dispose();
     };
-  }, []);
-
-  // Update sound enabled state when it changes in soundEffects
-  useEffect(() => {
-    setSoundEnabled(soundEffects.isEnabled());
   }, []);
 
   // Method to reset unread count when conversation is selected
@@ -900,7 +892,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   // Handle sound toggle
   const handleSoundToggle = useCallback(() => {
     soundEffects.toggleSound();
-    setSoundEnabled(soundEffects.isEnabled());
   }, []);
 
   // Handle drag-to-move in the chat area header zone (desktop only)

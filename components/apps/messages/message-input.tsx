@@ -231,16 +231,6 @@ export const MessageInput = forwardRef<
     }
   }, [message, editor, isMobileView, disabled, conversationId]);
 
-  // Destroy editor when switching to new chat
-  useEffect(() => {
-    const isNewChat = conversationId === undefined;
-    const shouldDestroyEditor = editor && isNewChat;
-
-    if (shouldDestroyEditor) {
-      editor.destroy();
-    }
-  }, [conversationId]);
-
   // Focus editor at end of content
   useEffect(() => {
     if (editor && conversationId && !isMobileView && !isNewChat) {

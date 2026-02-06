@@ -69,7 +69,7 @@ export function MessageList({
 
     viewport.addEventListener("scroll", handleScroll);
     return () => viewport.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isAtBottom]);
 
   // Ref to track if we should auto-scroll (persists across ResizeObserver callbacks)
   const shouldAutoScrollRef = useRef(true);
