@@ -1,5 +1,9 @@
-export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
-  const groupedNotes: any = {
+import { Note } from "@/lib/notes/types";
+
+export type GroupedNotes = Record<string, Note[]>;
+
+export function groupNotesByCategory(notes: Note[], pinnedNotes: Set<string>) {
+  const groupedNotes: GroupedNotes = {
     pinned: [],
   };
 
@@ -18,7 +22,7 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
       return;
     }
 
-    let category = note.category;
+    let category = note.category ?? "older";
     if (!note.public) {
       const createdDate = new Date(note.created_at);
 
@@ -44,9 +48,9 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
   return groupedNotes;
 }
 
-export function sortGroupedNotes(groupedNotes: any) {
+export function sortGroupedNotes(groupedNotes: GroupedNotes) {
   Object.keys(groupedNotes).forEach((category) => {
-    groupedNotes[category].sort((a: any, b: any) =>
+    groupedNotes[category].sort((a, b) =>
       b.created_at.localeCompare(a.created_at)
     );
   });

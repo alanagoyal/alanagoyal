@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,6 +11,27 @@ import {
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
 import { toast } from "@/hooks/use-toast";
+
+function getTaskText(node: React.ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getTaskText).join("");
+  }
+
+  if (!React.isValidElement(node)) {
+    return "";
+  }
+
+  if (typeof node.type === "string" && node.type === "a") {
+    const href = node.props.href ?? "";
+    return `[${getTaskText(node.props.children)}](${href})`;
+  }
+
+  return getTaskText(node.props.children);
+}
 
 export default function NoteContent({
   note,
@@ -192,21 +213,28 @@ export default function NoteContent({
     saveNote({ content: updatedContent });
   }, [note.content, saveNote]);
 
-  const renderListItem = useCallback(({ children, ...props }: any) => {
+  type ListItemComponentProps = React.ComponentPropsWithoutRef<"li"> & {
+    children?: React.ReactNode;
+    index?: number;
+  };
+
+  const renderListItem = useCallback(({ children, ...props }: ListItemComponentProps) => {
     if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>;
 
-    const checkbox = children.find((child: any) => child.type === 'input');
+    const childNodes = React.Children.toArray(children);
+    const checkbox = childNodes.find(
+      (child): child is React.ReactElement<{ checked?: boolean }> =>
+        React.isValidElement(child) &&
+        typeof child.type === "string" &&
+        child.type === "input"
+    );
     if (!checkbox) return <li {...props}>{children}</li>;
 
-    const isChecked = checkbox.props.checked;
-    const taskContent = children.filter((child: any) => child !== checkbox);
-    const taskText = taskContent.map((child: any) => {
-      if (typeof child === 'string') return child;
-      if (child.type === 'a') return `[${child.props.children}](${child.props.href})`;
-      return child.props.children;
-    }).join('').trim();
+    const isChecked = Boolean(checkbox.props.checked);
+    const taskContent = childNodes.filter((child) => child !== checkbox);
+    const taskText = taskContent.map(getTaskText).join("").trim();
 
-    const taskId = `task-${taskText.substring(0, 20).replace(/\s+/g, '-').toLowerCase()}-${props.index}`;
+    const taskId = `task-${taskText.substring(0, 20).replace(/\s+/g, '-').toLowerCase()}-${props.index ?? 0}`;
 
     const handleCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();

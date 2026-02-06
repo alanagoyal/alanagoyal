@@ -24,8 +24,6 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
-  // Use window's dialog container when in desktop shell, otherwise use local ref
-  const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
   // Fetch public notes on mount
   useEffect(() => {
@@ -179,15 +177,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         onMouseDown={() => containerRef.current?.focus()}
         className="notes-app h-full flex bg-background text-foreground relative outline-none"
       >
-        <Sidebar
-          notes={notes}
-          onNoteSelect={handleNoteSelect}
-          isMobile={false}
-          selectedSlug={selectedNote?.slug}
-          useCallbackNavigation
-          onNoteCreated={handleNoteCreated}
-          dialogContainer={dialogContainer}
-        />
+            <Sidebar
+              notes={notes}
+              onNoteSelect={handleNoteSelect}
+              isMobile={false}
+              selectedSlug={selectedNote?.slug}
+              useCallbackNavigation
+              onNoteCreated={handleNoteCreated}
+            />
         <div className="flex-grow h-full overflow-hidden relative">
           {/* Drag overlay - matches nav height, doesn't affect layout */}
           {inShell && windowFocus && (

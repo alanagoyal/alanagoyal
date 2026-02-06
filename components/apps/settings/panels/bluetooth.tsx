@@ -146,7 +146,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
 
         {/* Discoverable note */}
         <p className="text-sm text-muted-foreground px-2">
-          This iPhone is discoverable as "alana's iphone" while Bluetooth Settings is open.
+          This iPhone is discoverable as &quot;alana&apos;s iphone&quot; while Bluetooth Settings is open.
         </p>
 
         {/* My Devices section */}
@@ -220,7 +220,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
         <>
           {/* Discoverable text */}
           <p className="text-xs text-muted-foreground py-4 border-b border-border/50">
-            This Mac is discoverable as "Alana's MacBook Air" while Bluetooth Settings is open.
+            This Mac is discoverable as &quot;Alana&apos;s MacBook Air&quot; while Bluetooth Settings is open.
           </p>
 
           {/* My Devices section */}
