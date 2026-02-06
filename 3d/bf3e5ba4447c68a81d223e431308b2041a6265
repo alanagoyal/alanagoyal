@@ -1,0 +1,25 @@
+components/apps/messages/app.tsx
+  df8711e587857e2c 13,263-270,281
+lib/sidebar-persistence.ts
+  df8711e587857e2c 43,368-404,422-424
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3dbf3e5ba4447c68a81d223e431308b2041a6265",
+  "prompts": {
+    "df8711e587857e2c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc9d3943-d8d2-4f57-9816-15232b5e6392",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 51,
+      "total_deletions": 1,
+      "accepted_lines": 51,
+      "overriden_lines": 0
+    }
+  }
+}
