@@ -1,7 +1,6 @@
 import { Icons } from "./icons";
 import { Conversation } from "@/types/messages";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import Image from "next/image";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -287,13 +286,11 @@ function MobileAvatars({
           style={getOffset(index, recipients.length)}
         >
           {recipient.avatar ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={recipient.avatar}
               alt=""
-              width={40}
-              height={40}
               className="w-full h-full object-cover"
-              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
