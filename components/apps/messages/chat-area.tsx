@@ -107,7 +107,10 @@ export function ChatArea({
   };
 
   const handleSend = (): boolean => {
-    if (!messageDraft.trim()) return false;
+    // Strip HTML tags to check if there's actual text content
+    // (Tiptap produces "<p></p>" for an empty editor)
+    const textContent = messageDraft.replace(/<[^>]*>/g, "").trim();
+    if (!textContent) return false;
 
     if (activeConversation) {
       onSendMessage(messageDraft, activeConversation.id);
