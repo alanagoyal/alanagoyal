@@ -6,6 +6,7 @@ import { MessageList } from "./message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { extractMessageContent } from "@/lib/messages/content";
 
 interface ChatAreaProps {
   isNewChat: boolean;
@@ -106,11 +107,12 @@ export function ChatArea({
     }
   };
 
-  const handleSend = () => {
-    if (!messageDraft.trim()) return;
+  const handleSend = (): boolean => {
+    if (!extractMessageContent(messageDraft).trim()) return false;
 
     if (activeConversation) {
       onSendMessage(messageDraft, activeConversation.id);
+      return true;
     } else if (isNewChat && recipientInput.trim()) {
       const recipientList = recipientInput
         .split(",")
@@ -118,8 +120,10 @@ export function ChatArea({
         .filter((r) => r.length > 0);
       if (recipientList.length > 0) {
         onSendMessage(messageDraft);
+        return true;
       }
     }
+    return false;
   };
 
   return (

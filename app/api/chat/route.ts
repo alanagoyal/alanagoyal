@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { Recipient, Message, ReactionType } from "@/types/messages";
+import { Recipient, Message } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
@@ -12,6 +12,23 @@ import {
 
 let client: OpenAI | null = null;
 let loggerInitialized = false;
+
+function parseToolCallArguments(
+  rawArguments: string | undefined,
+  functionName: string
+): Record<string, unknown> {
+  if (!rawArguments) return {};
+  try {
+    const parsed = JSON.parse(rawArguments);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    console.warn(
+      `Failed to parse tool arguments for ${functionName}:`,
+      error
+    );
+    return {};
+  }
+}
 
 function getClient() {
   if (!client) {
@@ -121,7 +138,10 @@ export async function POST(req: Request) {
 
     // Return all actions (supports react + respond in same turn)
     const actions = toolCalls.map((tc) => {
-      const args = JSON.parse(tc.function.arguments || "{}");
+      const args = parseToolCallArguments(
+        tc.function.arguments,
+        tc.function.name
+      );
       return {
         action: tc.function.name,
         ...args,

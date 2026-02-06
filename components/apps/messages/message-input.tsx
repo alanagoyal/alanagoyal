@@ -20,7 +20,7 @@ import { soundEffects } from "@/lib/messages/sound-effects";
 interface MessageInputProps {
   message: string;
   setMessage: (value: string) => void;
-  handleSend: () => void;
+  handleSend: () => boolean;
   disabled?: boolean;
   recipients: Recipient[];
   isMobileView?: boolean;
@@ -205,8 +205,9 @@ export const MessageInput = forwardRef<
   });
 
   const handleSubmit = () => {
-    handleSend();
-    soundEffects.playSentSound();
+    if (handleSend()) {
+      soundEffects.playSentSound();
+    }
   };
 
   // Expose focus method to parent through ref
@@ -230,16 +231,6 @@ export const MessageInput = forwardRef<
       editor.commands.setContent(message);
     }
   }, [message, editor, isMobileView, disabled, conversationId]);
-
-  // Destroy editor when switching to new chat
-  useEffect(() => {
-    const isNewChat = conversationId === undefined;
-    const shouldDestroyEditor = editor && isNewChat;
-
-    if (shouldDestroyEditor) {
-      editor.destroy();
-    }
-  }, [conversationId]);
 
   // Focus editor at end of content
   useEffect(() => {

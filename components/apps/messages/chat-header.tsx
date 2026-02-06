@@ -1,12 +1,12 @@
 import { Icons } from "./icons";
 import { Conversation } from "@/types/messages";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import Image from "next/image";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUserContacts, addUserContact } from "@/lib/messages/contacts";
 import { ContactDrawer } from "./contact-drawer";
-import { useWindowFocus } from "@/lib/window-focus-context";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
@@ -55,7 +55,6 @@ interface RecipientSearchProps {
   handleAddContact: () => Promise<void>;
   setSelectedIndex: (index: number) => void;
   setShowResults: (show: boolean) => void;
-  updateRecipients: () => void;
   isMobileView?: boolean;
   recipientInput: string;
   isValidating: boolean;
@@ -108,7 +107,6 @@ function RecipientSearch({
   handleAddContact,
   setSelectedIndex,
   setShowResults,
-  updateRecipients,
   isMobileView,
   recipientInput,
   isValidating,
@@ -288,10 +286,13 @@ function MobileAvatars({
           style={getOffset(index, recipients.length)}
         >
           {recipient.avatar ? (
-            <img
+            <Image
               src={recipient.avatar}
               alt=""
+              width={40}
+              height={40}
               className="w-full h-full object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
@@ -324,16 +325,12 @@ export function ChatHeader({
   unreadCount,
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
-  isDesktop = false,
 }: ChatHeaderProps) {
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
-
-  const windowFocus = useWindowFocus();
-  const inShell = isDesktop && windowFocus;
 
   const saveAndExitHeaderEditMode = useCallback(() => {
     const currentRecipients = recipientInput
@@ -368,7 +365,6 @@ export function ChatHeader({
     recipientInput,
     setShowCompactNewChat,
   ]);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!isEditMode && !isNewChat) {
@@ -626,7 +622,7 @@ export function ChatHeader({
       );
     }
     prevIsEditMode.current = isEditMode;
-  }, [isEditMode, activeConversation]);
+  }, [isEditMode, activeConversation, setRecipientInput]);
 
   // Render helpers
   const renderRecipients = () => {
@@ -724,7 +720,6 @@ export function ChatHeader({
                         handleAddContact={handleAddContact}
                         setSelectedIndex={setSelectedIndex}
                         setShowResults={setShowResults}
-                        updateRecipients={updateRecipients}
                         isMobileView={isMobileView}
                         recipientInput={recipientInput}
                         isValidating={isValidating}
@@ -812,7 +807,6 @@ export function ChatHeader({
                     handleAddContact={handleAddContact}
                     setSelectedIndex={setSelectedIndex}
                     setShowResults={setShowResults}
-                    updateRecipients={updateRecipients}
                     isMobileView={isMobileView}
                     recipientInput={recipientInput}
                     isValidating={isValidating}
