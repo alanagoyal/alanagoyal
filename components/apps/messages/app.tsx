@@ -6,7 +6,6 @@ import { Conversation, Message, Reaction } from "@/types/messages";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
-import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
@@ -29,7 +28,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   );
 
   // State
-  const { toast } = useToast(); // Destructure toast from custom hook
   const [isNewConversation, setIsNewConversation] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(
@@ -717,12 +715,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return newConversations;
     });
 
-    // Show toast notification (not on mobile)
-    if (!isMobileView) {
-      toast({
-        description: "Conversation deleted",
-      });
-    }
   };
 
   // Method to handle conversation pin/unpin
@@ -730,30 +722,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     conversations: Conversation[],
     updateType?: "pin" | "mute"
   ) => {
-    const updatedConversation = conversations.find(
-      (conv) => conv.id === activeConversation
-    );
     setConversations(conversations);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-
-    // Show toast notification (not on mobile)
-    if (updatedConversation && !isMobileView) {
-      let toastMessage = "";
-      if (updateType === "pin") {
-        toastMessage = updatedConversation.pinned
-          ? "Conversation pinned"
-          : "Conversation unpinned";
-      } else if (updateType === "mute") {
-        toastMessage = updatedConversation.hideAlerts
-          ? "Conversation muted"
-          : "Conversation unmuted";
-      }
-      if (toastMessage) {
-        toast({
-          description: toastMessage,
-        });
-      }
-    }
+    void updateType;
   };
 
   // Refs to hold current state for file menu actions

@@ -38,7 +38,6 @@ export default function NewNote({
       addNewPinnedNote,
       refreshSessionNotes,
       setSelectedNoteSlug,
-      isMobile,
       useCallbackNavigation,
       onNoteCreated
     );
@@ -49,7 +48,6 @@ export default function NewNote({
     clearSearch,
     refreshSessionNotes,
     setSelectedNoteSlug,
-    isMobile,
     useCallbackNavigation,
     onNoteCreated,
   ]);
