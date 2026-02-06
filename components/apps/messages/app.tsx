@@ -10,6 +10,7 @@ import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effe
 import { extractMessageContent } from "@/lib/messages/content";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
+import { loadMessagesConversation, saveMessagesConversation } from "@/lib/sidebar-persistence";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -259,7 +260,14 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return;
     }
 
-    // No URL ID or invalid ID, and not mobile - select first conversation
+    // Try restoring persisted conversation from sessionStorage (desktop/shell mode)
+    const persistedId = loadMessagesConversation();
+    if (persistedId && allConversations.some((c) => c.id === persistedId)) {
+      setActiveConversation(persistedId);
+      return;
+    }
+
+    // No URL ID, no persisted ID, and not mobile - select first conversation
     if (allConversations.length > 0) {
       setActiveConversation(allConversations[0].id);
     }
@@ -270,6 +278,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     if (activeConversation) {
       setLastActiveConversation(activeConversation);
       resetUnreadCount(activeConversation);
+      saveMessagesConversation(activeConversation);
     }
   }, [activeConversation]);
 
