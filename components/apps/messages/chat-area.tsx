@@ -6,6 +6,7 @@ import { MessageList } from "./message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { extractMessageContent } from "@/lib/messages/content";
 
 interface ChatAreaProps {
   isNewChat: boolean;
@@ -107,10 +108,7 @@ export function ChatArea({
   };
 
   const handleSend = (): boolean => {
-    // Strip HTML tags to check if there's actual text content
-    // (Tiptap produces "<p></p>" for an empty editor)
-    const textContent = messageDraft.replace(/<[^>]*>/g, "").trim();
-    if (!textContent) return false;
+    if (!extractMessageContent(messageDraft).trim()) return false;
 
     if (activeConversation) {
       onSendMessage(messageDraft, activeConversation.id);
