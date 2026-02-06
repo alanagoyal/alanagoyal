@@ -8,6 +8,7 @@ import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { useToast } from "@/hooks/use-toast"; // Import useToast from custom hook
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
+import { extractMessageContent } from "@/lib/messages/content";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
 
@@ -499,13 +500,6 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       delete newDrafts[conversationId];
       return newDrafts;
     });
-  };
-
-  // Method to extract plain text from HTML content while preserving mentions
-  const extractMessageContent = (htmlContent: string): string => {
-    const temp = document.createElement("div");
-    temp.innerHTML = htmlContent;
-    return temp.textContent || "";
   };
 
   // Method to create a new conversation with recipients
