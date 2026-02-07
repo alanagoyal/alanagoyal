@@ -502,10 +502,10 @@ export function MessageBubble({
                         new Date(b.timestamp).getTime()
                     )
                     .map((reaction, index, array) => (
-                      <Popover key={`${reaction.type}-${reaction.timestamp}`}>
+                      <Popover key={`${reaction.type}-${reaction.sender}-${reaction.timestamp}`}>
                         <PopoverTrigger>
                           <div
-                            key={`${reaction.type}-${reaction.timestamp}`}
+                            key={`${reaction.type}-${reaction.sender}-${reaction.timestamp}`}
                             className={cn(
                               "w-8 h-8 flex items-center justify-center text-sm relative cursor-pointer",
                               index !== array.length - 1 &&

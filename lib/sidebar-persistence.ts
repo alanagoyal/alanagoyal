@@ -40,6 +40,7 @@ const STORAGE_KEYS = {
   CALENDAR_DATE: "calendar-date",
   CALENDAR_SCROLL: "calendar-scroll",
   MUSIC_STATE: "music-state",
+  MESSAGES_CONVERSATION: "messages-conversation",
 } as const;
 
 // ============================================================================
@@ -364,6 +365,43 @@ export function clearMusicState(): void {
   }
 }
 
+// ============================================================================
+// Messages Persistence
+// ============================================================================
+
+// Messages uses dynamic conversation IDs, similar to Photos.
+
+export function loadMessagesConversation(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
+  } catch {
+    return null;
+  }
+}
+
+export function saveMessagesConversation(id: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (id) {
+      sessionStorage.setItem(STORAGE_KEYS.MESSAGES_CONVERSATION, id);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearMessagesState(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearAppState(appId: string): void {
   switch (appId) {
     case "finder":
@@ -380,6 +418,9 @@ export function clearAppState(appId: string): void {
       break;
     case "music":
       clearMusicState();
+      break;
+    case "messages":
+      clearMessagesState();
       break;
   }
 }
