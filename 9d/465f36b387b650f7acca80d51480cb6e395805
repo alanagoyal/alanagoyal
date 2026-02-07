@@ -1,0 +1,79 @@
+components/apps/messages/message-list.tsx
+  ba94314f693dc0c8 6,8-11,95-101,103-108,117
+  ebfc9541922e3bf5 3,55,63
+  956ce8f87192f1d6 145,147,152-153,159,161
+  0bb8d60945199955 80-83,85-86,88-89,102,109,111,114-116,118-119,122-128,130-132,135
+  8f284c76fb6649b0 5,12,137,141,143-144,146,148-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "9d465f36b387b650f7acca80d51480cb6e395805",
+  "prompts": {
+    "0bb8d60945199955": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ca1bc2a-1106-4e89-8876-82348326bcc2",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 50,
+      "total_deletions": 41,
+      "accepted_lines": 27,
+      "overriden_lines": 0
+    },
+    "8f284c76fb6649b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012f2600-c2f1-42c1-9c47-69ea3eee42a4",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "956ce8f87192f1d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "673a6455-4277-41c6-b11b-3ea19247110f",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 34,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    },
+    "ba94314f693dc0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3ba2c74-2e1e-405f-9141-047edf9fffe6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    },
+    "ebfc9541922e3bf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8d21b994-4275-48a2-90dd-99a439a294b0",
+        "model": "claude-4.5-opus-high-thinking"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
