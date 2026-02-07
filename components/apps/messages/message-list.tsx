@@ -86,16 +86,20 @@ export function MessageList({
     ) as HTMLElement;
     if (!viewport) return;
 
+    let isFirstScroll = true;
+
     const scrollToBottom = () => {
+      const behavior = isFirstScroll ? "instant" : "smooth";
+      isFirstScroll = false;
       const scrollTarget = viewport.scrollHeight - viewport.clientHeight;
       viewport.scrollTo({
         top: scrollTarget,
-        behavior: "smooth",
+        behavior,
       });
     };
 
     const resizeObserver = new ResizeObserver(() => {
-      if (shouldAutoScrollRef.current) {
+      if (isFirstScroll || shouldAutoScrollRef.current) {
         scrollToBottom();
       }
     });
