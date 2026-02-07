@@ -1,0 +1,23 @@
+components/apps/messages/message-bubble.tsx
+  ba94314f693dc0c8 505,508
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "a2b473ee79a13ce9991f8bc7028dee78ae3bcf14",
+  "prompts": {
+    "ba94314f693dc0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3ba2c74-2e1e-405f-9141-047edf9fffe6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
