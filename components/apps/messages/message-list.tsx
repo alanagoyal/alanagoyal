@@ -100,8 +100,12 @@ export function MessageList({
     }
 
     const scrollToBottom = () => {
-      // Fresh open (page refresh, close+reopen): smooth. Conversation switch or restore from minimize: instant.
-      const behavior = isFirstScroll && !hasBeenMounted ? "smooth" : isFirstScroll ? "instant" : "smooth";
+      // First scroll after mount: instant for conversation switch / restore, smooth for fresh app open
+      // Subsequent scrolls (new messages, reactions): always smooth
+      let behavior: ScrollBehavior = "smooth";
+      if (isFirstScroll && hasBeenMounted) {
+        behavior = "instant";
+      }
       if (isFirstScroll) {
         isFirstScroll = false;
         hasBeenMounted = true;
