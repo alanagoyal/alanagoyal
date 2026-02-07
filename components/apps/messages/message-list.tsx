@@ -3,6 +3,12 @@ import { MessageBubble } from "./message-bubble";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
+import { loadMessagesConversation } from "@/lib/sidebar-persistence";
+
+// Tracks whether the component has been mounted in this page session.
+// Resets on page refresh (module reloads). Persists across minimize/restore (page stays loaded).
+// Also reset when sessionStorage has no persisted conversation (app was closed, not minimized).
+let hasBeenMounted = false;
 
 interface MessageListProps {
   messages: Message[];
@@ -88,9 +94,18 @@ export function MessageList({
 
     let isFirstScroll = true;
 
+    // If sessionStorage has no persisted conversation, the app was closed (not minimized) — reset
+    if (!loadMessagesConversation()) {
+      hasBeenMounted = false;
+    }
+
     const scrollToBottom = () => {
-      const behavior = isFirstScroll ? "instant" : "smooth";
-      isFirstScroll = false;
+      // Fresh open (page refresh, close+reopen): smooth. Conversation switch or restore from minimize: instant.
+      const behavior = isFirstScroll && !hasBeenMounted ? "smooth" : isFirstScroll ? "instant" : "smooth";
+      if (isFirstScroll) {
+        isFirstScroll = false;
+        hasBeenMounted = true;
+      }
       const scrollTarget = viewport.scrollHeight - viewport.clientHeight;
       viewport.scrollTo({
         top: scrollTarget,
