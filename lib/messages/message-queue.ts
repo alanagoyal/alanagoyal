@@ -6,6 +6,7 @@ type ConversationState = {
   version: number;
   currentAbortController: AbortController | null;
   debounceTimeout: NodeJS.Timeout | null;
+  aiMessageTimeout: NodeJS.Timeout | null;
   pendingConversation: Conversation | null;
   lastActivity: number;
 };
@@ -78,6 +79,9 @@ export class MessageQueue {
       if (state.debounceTimeout) {
         clearTimeout(state.debounceTimeout);
       }
+      if (state.aiMessageTimeout) {
+        clearTimeout(state.aiMessageTimeout);
+      }
       if (state.currentAbortController) {
         state.currentAbortController.abort();
       }
@@ -97,6 +101,7 @@ export class MessageQueue {
         version: 0,
         currentAbortController: null,
         debounceTimeout: null,
+        aiMessageTimeout: null,
         pendingConversation: null,
         lastActivity: Date.now(),
       };
@@ -126,6 +131,11 @@ export class MessageQueue {
     if (state.currentAbortController) {
       state.currentAbortController.abort();
       state.currentAbortController = null;
+    }
+
+    if (state.aiMessageTimeout) {
+      clearTimeout(state.aiMessageTimeout);
+      state.aiMessageTimeout = null;
     }
 
     this.callbacks.onTypingStatusChange(null, null);
@@ -168,10 +178,17 @@ export class MessageQueue {
       return;
     }
 
-    setTimeout(() => {
+    if (state.aiMessageTimeout) {
+      clearTimeout(state.aiMessageTimeout);
+    }
+
+    state.aiMessageTimeout = setTimeout(() => {
       const currentState = this.state.conversations.get(conversation.id);
-      if (currentState && currentState.version === currentVersion) {
-        this.processMessage(conversation.id, conversation);
+      if (currentState) {
+        currentState.aiMessageTimeout = null;
+        if (currentState.version === currentVersion) {
+          this.processMessage(conversation.id, conversation);
+        }
       }
     }, AI_MESSAGE_DELAY_MS);
   }
