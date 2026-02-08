@@ -6,6 +6,7 @@ type ConversationState = {
   version: number;
   currentAbortController: AbortController | null;
   debounceTimeout: NodeJS.Timeout | null;
+  aiMessageTimeout: NodeJS.Timeout | null;
   pendingConversation: Conversation | null;
   lastActivity: number;
 };
@@ -78,6 +79,9 @@ export class MessageQueue {
       if (state.debounceTimeout) {
         clearTimeout(state.debounceTimeout);
       }
+      if (state.aiMessageTimeout) {
+        clearTimeout(state.aiMessageTimeout);
+      }
       if (state.currentAbortController) {
         state.currentAbortController.abort();
       }
@@ -97,6 +101,7 @@ export class MessageQueue {
         version: 0,
         currentAbortController: null,
         debounceTimeout: null,
+        aiMessageTimeout: null,
         pendingConversation: null,
         lastActivity: Date.now(),
       };
@@ -126,6 +131,11 @@ export class MessageQueue {
     if (state.currentAbortController) {
       state.currentAbortController.abort();
       state.currentAbortController = null;
+    }
+
+    if (state.aiMessageTimeout) {
+      clearTimeout(state.aiMessageTimeout);
+      state.aiMessageTimeout = null;
     }
 
     this.callbacks.onTypingStatusChange(null, null);
@@ -168,10 +178,17 @@ export class MessageQueue {
       return;
     }
 
-    setTimeout(() => {
+    if (state.aiMessageTimeout) {
+      clearTimeout(state.aiMessageTimeout);
+    }
+
+    state.aiMessageTimeout = setTimeout(() => {
       const currentState = this.state.conversations.get(conversation.id);
-      if (currentState && currentState.version === currentVersion) {
-        this.processMessage(conversation.id, conversation);
+      if (currentState) {
+        currentState.aiMessageTimeout = null;
+        if (currentState.version === currentVersion) {
+          this.processMessage(conversation.id, conversation);
+        }
       }
     }, AI_MESSAGE_DELAY_MS);
   }
@@ -217,20 +234,11 @@ export class MessageQueue {
     try {
       const isGroupChat = conversation.recipients.length > 1;
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients: conversation.recipients,
-          messages: conversation.messages,
-          isOneOnOne: !isGroupChat,
-        }),
-        signal: state.currentAbortController.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch");
-      }
+      const response = await this.fetchWithRetry(
+        conversation,
+        !isGroupChat,
+        state.currentAbortController.signal
+      );
 
       if (currentVersion !== state.version) {
         this.callbacks.onTypingStatusChange(null, null);
@@ -248,20 +256,21 @@ export class MessageQueue {
       const waitAction = actions.find(a => a.action === "wait");
 
       // Handle reactions first
+      let accumulatedReactions: Message["reactions"] | undefined;
       for (const reactionAction of reactionActions) {
         const reactor = reactionAction.participant;
         const reactionType = reactionAction.reaction as ReactionType;
 
         if (reactor && reactionType && conversation.messages.length > 0) {
           const lastMessage = conversation.messages[conversation.messages.length - 1];
-          if (!lastMessage.reactions) {
-            lastMessage.reactions = [];
-          }
-          lastMessage.reactions.push({
-            type: reactionType,
-            sender: reactor,
-            timestamp: new Date().toISOString(),
-          });
+          accumulatedReactions = [
+            ...(accumulatedReactions ?? lastMessage.reactions ?? []),
+            {
+              type: reactionType,
+              sender: reactor,
+              timestamp: new Date().toISOString(),
+            },
+          ];
 
           const shouldMute =
             this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
@@ -271,7 +280,7 @@ export class MessageQueue {
 
           if (this.callbacks.onMessageUpdated) {
             this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
-              reactions: lastMessage.reactions,
+              reactions: accumulatedReactions,
             });
           }
 
@@ -280,6 +289,11 @@ export class MessageQueue {
             await this.delay(REACTION_DISPLAY_MS);
           }
         }
+      }
+
+      // Pause after reactions before proceeding to typing indicator
+      if (reactionActions.length > 0 && messageAction) {
+        await this.delay(REACTION_DISPLAY_MS);
       }
 
       // If only reactions (no message action), continue the conversation
@@ -374,6 +388,42 @@ export class MessageQueue {
       state.status = "idle";
       state.currentAbortController = null;
     }
+  }
+
+  private async fetchWithRetry(
+    conversation: Conversation,
+    isOneOnOne: boolean,
+    signal: AbortSignal,
+    retries = 1
+  ): Promise<Response> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipients: conversation.recipients,
+            messages: conversation.messages,
+            isOneOnOne,
+          }),
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Chat API error: ${response.status}`);
+        }
+
+        return response;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") throw error;
+        if (attempt < retries) {
+          await this.delay(1000);
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error("Chat API failed after retries");
   }
 
   private delay(ms: number): Promise<void> {
