@@ -283,6 +283,11 @@ export class MessageQueue {
         }
       }
 
+      // Pause after reactions before proceeding to typing indicator
+      if (reactionActions.length > 0 && messageAction) {
+        await this.delay(REACTION_DISPLAY_MS);
+      }
+
       // If only reactions (no message action), continue the conversation
       if (reactionActions.length > 0 && !messageAction && !waitAction) {
         this.callbacks.onTypingStatusChange(null, null);
