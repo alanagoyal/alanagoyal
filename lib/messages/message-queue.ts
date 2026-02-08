@@ -30,8 +30,8 @@ type MessageQueueCallbacks = {
   shouldMuteIncomingSound?: (hideAlerts: boolean | undefined) => boolean;
 };
 
-// Safety limit - model should wrap_up before this, but this is a fallback
-const MAX_CONSECUTIVE_AI_MESSAGES = 10;
+// Hard safety limit for autonomous group-chat loops without user input.
+const MAX_CONSECUTIVE_AI_MESSAGES = 4;
 
 // Debounce time for user messages
 const USER_MESSAGE_DEBOUNCE_MS = 500;
@@ -45,6 +45,42 @@ const REACTION_DISPLAY_MS = 1000;
 
 // Delay between consecutive AI messages
 const AI_MESSAGE_DELAY_MS = 2000;
+
+function getLastNonSystemMessage(messages: Message[]): Message | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].sender !== "system") {
+      return messages[i];
+    }
+  }
+  return null;
+}
+
+function isQuestionDirectedAtUser(messages: Message[]): boolean {
+  const last = getLastNonSystemMessage(messages);
+  if (!last || last.sender === "me") return false;
+  if (!last.content.includes("?")) return false;
+
+  const text = last.content.toLowerCase();
+  return /\b(what do you think|your thoughts|your take|can you|could you|would you|how about you|you think)\b/.test(
+    text
+  );
+}
+
+function buildGracefulWrapUp(messages: Message[]): string {
+  const recentAi = messages
+    .filter((m) => m.sender !== "me" && m.sender !== "system")
+    .slice(-3)
+    .map((m) => m.content.trim())
+    .filter(Boolean);
+  const compactSummary =
+    recentAi.length > 0
+      ? `Quick synthesis: we touched on ${recentAi
+          .map((m) => m.replace(/[.!?]+$/g, ""))
+          .join(", ")}.`
+      : "Quick synthesis: we shared a few useful ideas.";
+
+  return `${compactSummary}\n\nPractical next step: pick one concrete direction and I can help turn it into a short plan.\n\nWant to continue with one specific goal?`;
+}
 
 export class MessageQueue {
   private state: MessageQueueState = {
@@ -173,8 +209,8 @@ export class MessageQueue {
     // Safety limit - don't schedule if we've hit the max
     const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
     if (consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES) {
-      // Force a wrap-up via silenced message
-      this.showSilencedMessage(conversation.id, conversation, currentVersion);
+      // Force graceful closure if model doesn't wrap up in time.
+      this.showForcedWrapUp(conversation.id, conversation, currentVersion);
       return;
     }
 
@@ -193,7 +229,7 @@ export class MessageQueue {
     }, AI_MESSAGE_DELAY_MS);
   }
 
-  private async showSilencedMessage(
+  private async showForcedWrapUp(
     conversationId: string,
     conversation: Conversation,
     currentVersion: number
@@ -211,6 +247,17 @@ export class MessageQueue {
       .find((m) => m.sender !== "me" && m.sender !== "system");
 
     if (lastAiMessage) {
+      const wrapUpMessage: Message = {
+        id: crypto.randomUUID(),
+        content: buildGracefulWrapUp(conversation.messages),
+        sender: lastAiMessage.sender,
+        timestamp: new Date().toISOString(),
+      };
+      this.callbacks.onMessageGenerated(conversationId, wrapUpMessage);
+
+      await this.delay(REACTION_DISPLAY_MS);
+      if (state.version !== currentVersion) return;
+
       const silencedMessage: Message = {
         id: crypto.randomUUID(),
         content: `${lastAiMessage.sender} has notifications silenced`,
@@ -233,6 +280,11 @@ export class MessageQueue {
 
     try {
       const isGroupChat = conversation.recipients.length > 1;
+      if (isGroupChat && isQuestionDirectedAtUser(conversation.messages)) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
 
       const response = await this.fetchWithRetry(
         conversation,
@@ -251,7 +303,8 @@ export class MessageQueue {
         data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
       // Process actions - reactions first, then messages
-      const reactionActions = actions.filter(a => a.action === "react");
+      // Keep reactions intentional: at most one model reaction per loop tick.
+      const reactionActions = actions.filter(a => a.action === "react").slice(0, 1);
       const messageAction = actions.find(a => a.action === "respond" || a.action === "wrap_up");
       const waitAction = actions.find(a => a.action === "wait");
 

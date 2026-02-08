@@ -216,10 +216,10 @@ STATE:
 Based on the most recent message and the conversation history, determine the best next action(s). You can combine actions (e.g. react AND respond).
 
 HOW TO DECIDE:
-- react: React to a message when you feel strongly about it. Laugh if it's really funny, heart if you love what they said, question if you don't understand. React to roughly 1 in 3 messages. You can react and respond in the same turn if you do react.
+- react: React intentionally (not automatically). Use reactions sparingly and only when they add signal.
 - respond: Respond when a question or comment is directed at one of the participants (e.g. "hey Sarah, what do you think?"). Keep the conversation engaging and light, based on what your chosen persona would actually say. Remember it's a texting convo - keep messages brief unless asked for a longer response. Don't be repetitive - don't repeat yourself or other members of the chat. Move the convo forward. Participants should talk to each other, not just to anon - ask each other questions, riff on what others said, build on the conversation naturally like real friends would.
-- wait: Wait if the most recent message is directed at anon (the human user) - let them respond. Also wait if the message didn't ask anything or require a response.
-- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.`;
+- wait: Wait if the most recent message is directed at anon (the human user) - let them respond. Also wait if the message didn't ask anything or require a response. Never answer on anon's behalf.
+- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Format as: (1) quick synthesis, (2) practical next step, (3) exactly one re-engagement question.`;
 }
 
 /**
