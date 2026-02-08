@@ -248,20 +248,21 @@ export class MessageQueue {
       const waitAction = actions.find(a => a.action === "wait");
 
       // Handle reactions first
+      let accumulatedReactions: Message["reactions"] | undefined;
       for (const reactionAction of reactionActions) {
         const reactor = reactionAction.participant;
         const reactionType = reactionAction.reaction as ReactionType;
 
         if (reactor && reactionType && conversation.messages.length > 0) {
           const lastMessage = conversation.messages[conversation.messages.length - 1];
-          if (!lastMessage.reactions) {
-            lastMessage.reactions = [];
-          }
-          lastMessage.reactions.push({
-            type: reactionType,
-            sender: reactor,
-            timestamp: new Date().toISOString(),
-          });
+          accumulatedReactions = [
+            ...(accumulatedReactions ?? lastMessage.reactions ?? []),
+            {
+              type: reactionType,
+              sender: reactor,
+              timestamp: new Date().toISOString(),
+            },
+          ];
 
           const shouldMute =
             this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
@@ -271,7 +272,7 @@ export class MessageQueue {
 
           if (this.callbacks.onMessageUpdated) {
             this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
-              reactions: lastMessage.reactions,
+              reactions: accumulatedReactions,
             });
           }
 
