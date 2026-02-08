@@ -2,7 +2,7 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message, Reaction } from "@/types/messages";
+import { Conversation, Message, Reaction, ThreadMeta } from "@/types/messages";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
@@ -11,6 +11,7 @@ import { extractMessageContent } from "@/lib/messages/content";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { loadMessagesConversation, saveMessagesConversation } from "@/lib/sidebar-persistence";
+import { shouldResetThreadForGreeting } from "@/lib/messages/policy";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -19,6 +20,15 @@ interface AppProps {
 }
 
 export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
+  const createThreadMeta = (overrides: Partial<ThreadMeta> = {}): ThreadMeta => ({
+    threadEpoch: 1,
+    lastHumanAt: null,
+    consecutiveAiCount: 0,
+    lastWrapUpAt: null,
+    resetByGreeting: false,
+    ...overrides,
+  });
+
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
@@ -320,6 +330,25 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                   ...conv,
                   messages: [...conv.messages, message],
                   lastMessageTime: new Date().toISOString(),
+                  threadMeta: (() => {
+                    const currentMeta = conv.threadMeta ?? createThreadMeta();
+                    const isAiMessage =
+                      message.sender !== "me" && message.sender !== "system";
+                    const isWrapUp =
+                      isAiMessage &&
+                      /practical next step:/i.test(message.content) &&
+                      message.content.includes("\n\n");
+
+                    return {
+                      ...currentMeta,
+                      consecutiveAiCount: isAiMessage
+                        ? currentMeta.consecutiveAiCount + 1
+                        : currentMeta.consecutiveAiCount,
+                      lastWrapUpAt: isWrapUp
+                        ? new Date().toISOString()
+                        : currentMeta.lastWrapUpAt ?? null,
+                    };
+                  })(),
                   unreadCount: shouldIncrementUnread
                     ? (conv.unreadCount || 0) + 1
                     : conv.unreadCount,
@@ -518,14 +547,15 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     }));
 
     // Create new conversation object
-    const newConversation: Conversation = {
-      id: uuidv4(),
-      recipients,
-      messages: [],
-      lastMessageTime: new Date().toISOString(),
-      unreadCount: 0,
-      hideAlerts: false,
-    };
+      const newConversation: Conversation = {
+        id: uuidv4(),
+        recipients,
+        messages: [],
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0,
+        hideAlerts: false,
+        threadMeta: createThreadMeta(),
+      };
 
     // Update state
     setConversations((prev) => {
@@ -569,6 +599,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         messages: [],
         lastMessageTime: new Date().toISOString(),
         unreadCount: 0,
+        threadMeta: createThreadMeta(),
       };
 
       // Create message object
@@ -586,6 +617,10 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         messages: [message],
         lastMessageTime: new Date().toISOString(),
         unreadCount: 0,
+        threadMeta: createThreadMeta({
+          lastHumanAt: message.timestamp,
+          consecutiveAiCount: 0,
+        }),
       };
 
       // Update state in a single, synchronous update
@@ -614,6 +649,52 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return;
     }
 
+    const shouldResetThread =
+      conversation && shouldResetThreadForGreeting(messageText, conversation);
+    if (conversation && shouldResetThread) {
+      const now = new Date().toISOString();
+      const resetConversation: Conversation = {
+        id: uuidv4(),
+        recipients: conversation.recipients.map((r) => ({ ...r })),
+        messages: [],
+        lastMessageTime: now,
+        unreadCount: 0,
+        hideAlerts: conversation.hideAlerts ?? false,
+        threadMeta: createThreadMeta({
+          threadEpoch: (conversation.threadMeta?.threadEpoch ?? 1) + 1,
+          resetByGreeting: true,
+          lastHumanAt: now,
+        }),
+      };
+
+      const resetMessage: Message = {
+        id: uuidv4(),
+        content: messageText,
+        htmlContent: messageHtml,
+        sender: "me",
+        timestamp: now,
+      };
+
+      const resetConversationWithMessage: Conversation = {
+        ...resetConversation,
+        messages: [resetMessage],
+        lastMessageTime: now,
+      };
+
+      setConversations((prev) => {
+        const updatedConversations = [resetConversationWithMessage, ...prev];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConversations));
+        return updatedConversations;
+      });
+
+      setActiveConversation(resetConversationWithMessage.id);
+      setIsNewConversation(false);
+      updateUrl(`?id=${resetConversationWithMessage.id}`);
+      messageQueue.current.enqueueUserMessage(resetConversationWithMessage);
+      clearMessageDraft(conversationId);
+      return;
+    }
+
     // Create message object
     const message: Message = {
       id: uuidv4(),
@@ -629,6 +710,12 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       messages: [...conversation.messages, message],
       lastMessageTime: new Date().toISOString(),
       unreadCount: 0,
+      threadMeta: {
+        ...(conversation.threadMeta ?? createThreadMeta()),
+        lastHumanAt: message.timestamp,
+        consecutiveAiCount: 0,
+        resetByGreeting: false,
+      },
     };
 
     setConversations((prev) => {

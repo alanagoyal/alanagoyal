@@ -10,6 +10,17 @@ import {
   getConversationState,
 } from "@/lib/messages/temporal-context";
 
+type QueueControlHints = {
+  forceWrapUp?: boolean;
+  allowReactions?: boolean;
+  blockedParticipants?: string[];
+  reason?: string;
+};
+
+type ThreadMetaHints = {
+  resetByGreeting?: boolean;
+};
+
 let client: OpenAI | null = null;
 let loggerInitialized = false;
 
@@ -58,6 +69,8 @@ export async function POST(req: Request) {
       recipients: recipientsRaw,
       messages: messagesRaw,
       isOneOnOne: isOneOnOneRaw = false,
+      control: controlRaw,
+      threadMeta: threadMetaRaw,
     } = body as Record<string, unknown>;
 
     const isRecipientLike = (value: unknown): value is Recipient => {
@@ -88,6 +101,14 @@ export async function POST(req: Request) {
     );
 
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
+    const control: QueueControlHints =
+      controlRaw && typeof controlRaw === "object"
+        ? (controlRaw as QueueControlHints)
+        : {};
+    const threadMeta: ThreadMetaHints =
+      threadMetaRaw && typeof threadMetaRaw === "object"
+        ? (threadMetaRaw as ThreadMetaHints)
+        : {};
 
     // Get conversation state
     const state = getConversationState(messages);
@@ -105,7 +126,14 @@ export async function POST(req: Request) {
     // Build the prompt
     const prompt = isOneOnOne
       ? buildOneOnOnePrompt(recipients[0], conversation, state)
-      : buildGroupPrompt(recipients, participantDescriptions, conversationReversed, state);
+      : buildGroupPrompt(
+          recipients,
+          participantDescriptions,
+          conversationReversed,
+          state,
+          control,
+          threadMeta
+        );
 
     const chatMessages: ChatCompletionMessageParam[] = [
       { role: "system", content: prompt },
@@ -115,7 +143,7 @@ export async function POST(req: Request) {
     const participantNames = recipients.map((r) => r.name);
     const tools = isOneOnOne
       ? buildOneOnOneTools(recipients[0].name)
-      : buildGroupTools(participantNames, state.lastSpeaker);
+      : buildGroupTools(participantNames, state.lastSpeaker, control);
 
     const response = await getClient().chat.completions.create({
       model: "gpt-5.2",
@@ -194,11 +222,12 @@ function buildGroupPrompt(
     lastHumanMessage: string | null;
     lastHumanTime: string | null;
     lastSpeaker: string | null;
-  }
+  },
+  control: QueueControlHints,
+  threadMeta: ThreadMetaHints
 ): string {
   const participantNames = recipients.map(r => r.name).join(", ");
-
-  return `You are participating in a group chat with ${participantNames} and one other random, anonymous person (labeled "anon" in the conversation history below, but don't call them that - just talk to them naturally without using any name).
+  const basePrompt = `You are participating in a group chat with ${participantNames} and one other random, anonymous person (labeled "anon" in the conversation history below, but don't call them that - just talk to them naturally without using any name).
 
 PERSONAS:
 ${participantDescriptions}
@@ -219,7 +248,21 @@ HOW TO DECIDE:
 - react: React to a message when you feel strongly about it. Laugh if it's really funny, heart if you love what they said, question if you don't understand. React to roughly 1 in 3 messages. You can react and respond in the same turn if you do react.
 - respond: Respond when a question or comment is directed at one of the participants (e.g. "hey Sarah, what do you think?"). Keep the conversation engaging and light, based on what your chosen persona would actually say. Remember it's a texting convo - keep messages brief unless asked for a longer response. Don't be repetitive - don't repeat yourself or other members of the chat. Move the convo forward. Participants should talk to each other, not just to anon - ask each other questions, riff on what others said, build on the conversation naturally like real friends would.
 - wait: Wait if the most recent message is directed at anon (the human user) - let them respond. Also wait if the message didn't ask anything or require a response.
-- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.`;
+- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.
+- wrap_up_synthesis: End gracefully with exactly 3 parts: concise synthesis, one practical next step, and one re-engagement question.
+
+CONTROL HINTS:
+- forceWrapUp: ${control.forceWrapUp ? "true" : "false"}
+- allowReactions: ${control.allowReactions === false ? "false" : "true"}
+- reason: ${control.reason || "none"}
+
+If forceWrapUp is true, choose wrap_up_synthesis. If allowReactions is false, do not react.`;
+
+  const resetInstruction = threadMeta.resetByGreeting
+    ? `\nThis appears to be a fresh check-in after idle time. Respond practically: quick check-in, short menu of options, and exactly one orienting question.`
+    : "";
+
+  return `${basePrompt}${resetInstruction}`;
 }
 
 /**
@@ -276,34 +319,80 @@ function buildOneOnOneTools(recipientName: string) {
   ];
 }
 
-function buildGroupTools(participantNames: string[], lastSpeaker: string | null) {
+function buildGroupTools(
+  participantNames: string[],
+  lastSpeaker: string | null,
+  control: QueueControlHints
+) {
   // Filter out the last speaker from eligible participants (they shouldn't speak twice in a row)
-  const eligibleSpeakers = lastSpeaker && lastSpeaker !== "me"
+  const initialEligibleSpeakers = lastSpeaker && lastSpeaker !== "me"
     ? participantNames.filter(name => name !== lastSpeaker)
     : participantNames;
+  const blockedSet = new Set(control.blockedParticipants ?? []);
+  const eligibleSpeakers = initialEligibleSpeakers.filter(
+    (name) => !blockedSet.has(name)
+  );
+  const speakerEnum =
+    eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames;
 
-  return [
-    {
-      type: "function" as const,
-      function: {
-        name: "react",
-        description: "Add an emoji reaction to the last message (no text).",
-        parameters: {
-          type: "object",
-          properties: {
-            participant: {
-              type: "string",
-              enum: participantNames,
+  if (control.forceWrapUp) {
+    return [
+      {
+        type: "function" as const,
+        function: {
+          name: "wrap_up_synthesis",
+          description:
+            "End the thread with synthesis + one practical next step + one re-engagement question.",
+          parameters: {
+            type: "object",
+            properties: {
+              participant: {
+                type: "string",
+                enum: speakerEnum,
+              },
+              summary: {
+                type: "string",
+                description: "1 short sentence summary.",
+              },
+              next_step: {
+                type: "string",
+                description: "1 practical next step.",
+              },
+              question: {
+                type: "string",
+                description: "1 single re-engagement question.",
+              },
             },
-            reaction: {
-              type: "string",
-              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
-            },
+            required: ["participant", "summary", "next_step", "question"],
           },
-          required: ["participant", "reaction"],
         },
       },
-    },
+      {
+        type: "function" as const,
+        function: {
+          name: "wait",
+          description: "Stay silent and let anon respond.",
+          parameters: {
+            type: "object",
+            properties: {},
+          },
+        },
+      },
+    ];
+  }
+
+  const tools: Array<{
+    type: "function";
+    function: {
+      name: string;
+      description: string;
+      parameters: {
+        type: "object";
+        properties: Record<string, unknown>;
+        required?: string[];
+      };
+    };
+  }> = [
     {
       type: "function" as const,
       function: {
@@ -314,7 +403,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
           properties: {
             participant: {
               type: "string",
-              enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
+              enum: speakerEnum,
             },
             message: {
               type: "string",
@@ -345,7 +434,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
           properties: {
             participant: {
               type: "string",
-              enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
+              enum: speakerEnum,
             },
             message: {
               type: "string",
@@ -356,4 +445,58 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
       },
     },
   ];
+
+  if (control.allowReactions !== false) {
+    tools.unshift({
+      type: "function" as const,
+      function: {
+        name: "react",
+        description: "Add an emoji reaction to the last message (no text).",
+        parameters: {
+          type: "object",
+          properties: {
+            participant: {
+              type: "string",
+              enum: participantNames,
+            },
+            reaction: {
+              type: "string",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+            },
+          },
+          required: ["participant", "reaction"],
+        },
+      },
+    });
+  }
+
+  tools.push({
+    type: "function" as const,
+    function: {
+      name: "wrap_up_synthesis",
+      description:
+        "End the thread with synthesis + one practical next step + one re-engagement question.",
+      parameters: {
+        type: "object",
+        properties: {
+          participant: {
+            type: "string",
+            enum: speakerEnum,
+          },
+          summary: {
+            type: "string",
+          },
+          next_step: {
+            type: "string",
+          },
+          question: {
+            type: "string",
+          },
+        },
+        required: ["participant", "summary", "next_step", "question"],
+      },
+    },
+  });
+
+  return tools;
 }

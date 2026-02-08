@@ -1,5 +1,11 @@
 import { Conversation, Message, ReactionType } from "@/types/messages";
 import { soundEffects } from "./sound-effects";
+import {
+  MAX_CONSECUTIVE_AI_MESSAGES,
+  buildWrapUpMessageText,
+  evaluateQueueControl,
+  isQuestionDirectedAtUser,
+} from "./policy";
 
 type ConversationState = {
   status: "idle" | "processing";
@@ -29,9 +35,6 @@ type MessageQueueCallbacks = {
   ) => void;
   shouldMuteIncomingSound?: (hideAlerts: boolean | undefined) => boolean;
 };
-
-// Safety limit - model should wrap_up before this, but this is a fallback
-const MAX_CONSECUTIVE_AI_MESSAGES = 10;
 
 // Debounce time for user messages
 const USER_MESSAGE_DEBOUNCE_MS = 500;
@@ -173,8 +176,8 @@ export class MessageQueue {
     // Safety limit - don't schedule if we've hit the max
     const consecutiveAi = this.countConsecutiveAiMessages(conversation.messages);
     if (consecutiveAi >= MAX_CONSECUTIVE_AI_MESSAGES) {
-      // Force a wrap-up via silenced message
-      this.showSilencedMessage(conversation.id, conversation, currentVersion);
+      // Force a graceful wrap-up if the model didn't do it in time
+      this.showForcedWrapUpMessage(conversation.id, conversation, currentVersion);
       return;
     }
 
@@ -193,7 +196,7 @@ export class MessageQueue {
     }, AI_MESSAGE_DELAY_MS);
   }
 
-  private async showSilencedMessage(
+  private async showForcedWrapUpMessage(
     conversationId: string,
     conversation: Conversation,
     currentVersion: number
@@ -211,6 +214,22 @@ export class MessageQueue {
       .find((m) => m.sender !== "me" && m.sender !== "system");
 
     if (lastAiMessage) {
+      const wrapUpMessage: Message = {
+        id: crypto.randomUUID(),
+        sender: lastAiMessage.sender,
+        content: buildWrapUpMessageText(
+          undefined,
+          undefined,
+          undefined,
+          "a few good ideas"
+        ),
+        timestamp: new Date().toISOString(),
+      };
+      this.callbacks.onMessageGenerated(conversationId, wrapUpMessage);
+
+      await this.delay(REACTION_DISPLAY_MS);
+      if (state.version !== currentVersion) return;
+
       const silencedMessage: Message = {
         id: crypto.randomUUID(),
         content: `${lastAiMessage.sender} has notifications silenced`,
@@ -233,11 +252,19 @@ export class MessageQueue {
 
     try {
       const isGroupChat = conversation.recipients.length > 1;
+      const control = evaluateQueueControl(conversation);
+
+      if (isGroupChat && isQuestionDirectedAtUser(conversation.messages)) {
+        this.callbacks.onTypingStatusChange(null, null);
+        state.status = "idle";
+        return;
+      }
 
       const response = await this.fetchWithRetry(
         conversation,
         !isGroupChat,
-        state.currentAbortController.signal
+        state.currentAbortController.signal,
+        control
       );
 
       if (currentVersion !== state.version) {
@@ -247,12 +274,27 @@ export class MessageQueue {
       }
 
       const data = await response.json();
-      const actions: Array<{ action: string; participant?: string; message?: string; reaction?: string }> =
+      const actions: Array<{
+        action: string;
+        participant?: string;
+        message?: string;
+        reaction?: string;
+        summary?: string;
+        next_step?: string;
+        question?: string;
+      }> =
         data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
       // Process actions - reactions first, then messages
-      const reactionActions = actions.filter(a => a.action === "react");
-      const messageAction = actions.find(a => a.action === "respond" || a.action === "wrap_up");
+      const reactionActions = control.allowReactions
+        ? actions.filter((a) => a.action === "react")
+        : [];
+      const messageAction = actions.find(
+        (a) =>
+          a.action === "respond" ||
+          a.action === "wrap_up" ||
+          a.action === "wrap_up_synthesis"
+      );
       const waitAction = actions.find(a => a.action === "wait");
 
       // Handle reactions first
@@ -322,7 +364,15 @@ export class MessageQueue {
       }
 
       const sender = messageAction.participant;
-      const content = messageAction.message;
+      const content =
+        messageAction.action === "wrap_up_synthesis"
+          ? buildWrapUpMessageText(
+              messageAction.summary,
+              messageAction.next_step,
+              messageAction.question,
+              "the key points above"
+            )
+          : messageAction.message;
 
       if (!sender || !content) {
         console.warn("Malformed response - missing participant or message:", messageAction);
@@ -357,7 +407,10 @@ export class MessageQueue {
       this.callbacks.onTypingStatusChange(null, null);
 
       // Handle next steps based on action
-      if (messageAction.action === "wrap_up") {
+      if (
+        messageAction.action === "wrap_up" ||
+        messageAction.action === "wrap_up_synthesis"
+      ) {
         // Show "notifications silenced" after wrap_up
         await this.delay(AI_MESSAGE_DELAY_MS);
 
@@ -394,6 +447,12 @@ export class MessageQueue {
     conversation: Conversation,
     isOneOnOne: boolean,
     signal: AbortSignal,
+    control: {
+      forceWrapUp: boolean;
+      allowReactions: boolean;
+      blockedParticipants: string[];
+      reason: string;
+    },
     retries = 1
   ): Promise<Response> {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -405,6 +464,8 @@ export class MessageQueue {
             recipients: conversation.recipients,
             messages: conversation.messages,
             isOneOnOne,
+            control,
+            threadMeta: conversation.threadMeta ?? null,
           }),
           signal,
         });

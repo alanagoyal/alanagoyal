@@ -19,6 +19,7 @@ export interface Conversation {
   pinned?: boolean;
   isTyping?: boolean;
   hideAlerts?: boolean;
+  threadMeta?: ThreadMeta;
 }
 
 export interface Recipient {
@@ -35,4 +36,12 @@ export interface Reaction {
   type: ReactionType;
   sender: string;
   timestamp: string;
+}
+
+export interface ThreadMeta {
+  threadEpoch: number;
+  lastHumanAt: string | null;
+  consecutiveAiCount: number;
+  lastWrapUpAt?: string | null;
+  resetByGreeting?: boolean;
 }
