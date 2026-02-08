@@ -434,8 +434,7 @@ export function Sidebar({
 
                                           if (
                                             lastMessage?.reactions &&
-                                            lastMessage.reactions.length > 0 &&
-                                            lastMessage.sender !== "me"
+                                            lastMessage.reactions.length > 0
                                           ) {
                                             return (
                                               <div className="absolute -top-4 -right-4 flex z-30">
