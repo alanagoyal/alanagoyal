@@ -1,0 +1,23 @@
+lib/music/use-music.ts
+  ef457219598c57e2 3,22-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "6005a9d8867888de75b2406b6a5138d51fd683dc",
+  "prompts": {
+    "ef457219598c57e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e723829b-7319-4b3e-a478-914e59c0790a",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
