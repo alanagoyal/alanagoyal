@@ -217,20 +217,11 @@ export class MessageQueue {
     try {
       const isGroupChat = conversation.recipients.length > 1;
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients: conversation.recipients,
-          messages: conversation.messages,
-          isOneOnOne: !isGroupChat,
-        }),
-        signal: state.currentAbortController.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch");
-      }
+      const response = await this.fetchWithRetry(
+        conversation,
+        !isGroupChat,
+        state.currentAbortController.signal
+      );
 
       if (currentVersion !== state.version) {
         this.callbacks.onTypingStatusChange(null, null);
@@ -380,6 +371,42 @@ export class MessageQueue {
       state.status = "idle";
       state.currentAbortController = null;
     }
+  }
+
+  private async fetchWithRetry(
+    conversation: Conversation,
+    isOneOnOne: boolean,
+    signal: AbortSignal,
+    retries = 1
+  ): Promise<Response> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipients: conversation.recipients,
+            messages: conversation.messages,
+            isOneOnOne,
+          }),
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Chat API error: ${response.status}`);
+        }
+
+        return response;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") throw error;
+        if (attempt < retries) {
+          await this.delay(1000);
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error("Chat API failed after retries");
   }
 
   private delay(ms: number): Promise<void> {
