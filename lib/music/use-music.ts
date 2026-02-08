@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { Playlist } from "@/components/apps/music/types";
 import {
   DEFAULT_PLAYLISTS,
@@ -19,11 +19,11 @@ interface UseMusicResult {
 }
 
 export function useMusic(): UseMusicResult {
-  const [playlists] = useState<Playlist[]>(DEFAULT_PLAYLISTS);
-  const [featuredPlaylist] = useState<Playlist>(getFeaturedPlaylist());
-  const [albums] = useState(getAlbumsFromPlaylists());
-  const [artists] = useState(getArtistsFromPlaylists());
-  const [songs] = useState(getAllSongs());
+  const playlists = useMemo(() => DEFAULT_PLAYLISTS, []);
+  const featuredPlaylist = useMemo(() => getFeaturedPlaylist(), []);
+  const albums = useMemo(() => getAlbumsFromPlaylists(), []);
+  const artists = useMemo(() => getArtistsFromPlaylists(), []);
+  const songs = useMemo(() => getAllSongs(), []);
 
   return {
     playlists,
