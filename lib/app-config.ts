@@ -4,7 +4,7 @@ export const APPS: AppConfig[] = [
   {
     id: "finder",
     name: "Finder",
-    icon: "/finder.svg",
+    icon: "/finder.png",
     description: "File browser",
     accentColor: "#007AFF",
     defaultPosition: { x: 80, y: 40 },
@@ -15,7 +15,7 @@ export const APPS: AppConfig[] = [
   {
     id: "notes",
     name: "Notes",
-    icon: "/notes.svg",
+    icon: "/notes.png",
     description: "Personal notes and thoughts",
     accentColor: "#FFCC00",
     defaultPosition: { x: 100, y: 50 },
@@ -26,7 +26,7 @@ export const APPS: AppConfig[] = [
   {
     id: "messages",
     name: "Messages",
-    icon: "/messages.svg",
+    icon: "/messages.png",
     description: "Chat with AI personas",
     accentColor: "#34C759",
     defaultPosition: { x: 150, y: 80 },
@@ -37,7 +37,7 @@ export const APPS: AppConfig[] = [
   {
     id: "photos",
     name: "Photos",
-    icon: "/photos.svg",
+    icon: "/photos.png",
     description: "Photo library",
     accentColor: "#FF6B6B",
     defaultPosition: { x: 130, y: 60 },
@@ -48,7 +48,7 @@ export const APPS: AppConfig[] = [
   {
     id: "music",
     name: "Music",
-    icon: "/music.svg",
+    icon: "/music.png",
     description: "Music library",
     accentColor: "#FA2D48",
     defaultPosition: { x: 140, y: 70 },
@@ -59,7 +59,7 @@ export const APPS: AppConfig[] = [
   {
     id: "calendar",
     name: "Calendar",
-    icon: "/calendar-icon",
+    icon: "/calendar.png",
     description: "Calendar and events",
     accentColor: "#FF3B30",
     defaultPosition: { x: 170, y: 60 },
@@ -70,7 +70,7 @@ export const APPS: AppConfig[] = [
   {
     id: "iterm",
     name: "iTerm",
-    icon: "/iterm.svg",
+    icon: "/iterm.png",
     description: "Terminal emulator",
     accentColor: "#00D455",
     defaultPosition: { x: 120, y: 70 },
@@ -81,7 +81,7 @@ export const APPS: AppConfig[] = [
   {
     id: "settings",
     name: "Settings",
-    icon: "/settings.svg",
+    icon: "/settings.png",
     description: "System preferences",
     accentColor: "#8E8E93",
     defaultPosition: { x: 200, y: 100 },
@@ -92,7 +92,7 @@ export const APPS: AppConfig[] = [
   {
     id: "textedit",
     name: "TextEdit",
-    icon: "/textedit.svg",
+    icon: "/textedit.png",
     description: "Plain text editor",
     accentColor: "#8E8E93",
     defaultPosition: { x: 160, y: 90 },
@@ -106,7 +106,7 @@ export const APPS: AppConfig[] = [
   {
     id: "preview",
     name: "Preview",
-    icon: "/preview.svg",
+    icon: "/preview.png",
     description: "Image and PDF viewer",
     accentColor: "#007AFF",
     defaultPosition: { x: 180, y: 100 },
