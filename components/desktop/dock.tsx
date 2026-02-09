@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { APPS, getAppById } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
@@ -263,7 +262,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="flex items-end gap-1 px-2 py-1 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
+      <div className="flex items-end gap-1 px-3 py-1.5 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
         {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
@@ -275,7 +274,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
               className={cn(
-                "group relative flex flex-col items-center p-1 outline-none transition-all duration-300 flex-shrink-0",
+                "group relative flex flex-col items-center outline-none transition-all duration-300 flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
                 animState === "stable" && "hover:scale-110 active:scale-95"
@@ -284,11 +283,11 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               {hoveredApp === app.id && animState === "stable" && (
                 <DockTooltip label={app.name} />
               )}
-              <div className="w-12 h-12 relative">
+              <div className="w-12 h-12 relative flex items-center justify-center">
                 {app.id === "calendar" ? (
-                  <CalendarDockIcon size={48} />
+                  <CalendarDockIcon size={38} />
                 ) : (
-                  <Image
+                  <img
                     src={app.icon}
                     alt={app.name}
                     width={48}
@@ -312,22 +311,20 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
         {/* Divider before Trash */}
         <div className="w-px h-12 bg-black/20 dark:bg-white/10 mx-1 self-center" />
 
-        {/* Trash icon - uses custom sizing because unlike square app icons,
-           the trash SVG has a tall aspect ratio with built-in padding */}
+        {/* Trash icon */}
         <button
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center p-1 transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
+          className="group relative flex flex-col items-center transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
         >
           {hoveredApp === "trash" && <DockTooltip label="Trash" />}
-          <div className="h-12 relative flex items-end">
-            <Image
-              src="/trash.svg"
+          <div className="w-12 h-12 relative flex items-center justify-center">
+            <img
+              src="/trash.png"
               alt="Trash"
               width={48}
               height={48}
-              className="h-[52px] w-auto translate-y-0.5"
             />
           </div>
           {/* Trash doesn't show open indicator */}
