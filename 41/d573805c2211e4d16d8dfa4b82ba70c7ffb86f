@@ -1,0 +1,27 @@
+components/desktop/about-dialog.tsx
+  9c2576c337029f93 162
+lib/app-config.ts
+  9c2576c337029f93 7,18,29,40,51,62,73,84,95,109
+components/desktop/dock.tsx
+  9c2576c337029f93 265,277,286,288,290,314,319,322-324
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "41d573805c2211e4d16d8dfa4b82ba70c7ffb86f",
+  "prompts": {
+    "9c2576c337029f93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1bbb234f-f526-4d9c-ba55-17138a7aab79",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 1,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  }
+}
