@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 export interface Position {
   x: number;
@@ -26,11 +26,10 @@ interface UseWindowBehaviorProps {
   onMove: (position: Position) => void;
   onResize: (size: Size, position?: Position) => void;
   onFocus?: () => void;
+  windowRef: React.RefObject<HTMLDivElement | null>;
 }
 
 interface UseWindowBehaviorReturn {
-  isDragging: boolean;
-  resizeDir: ResizeDirection;
   handleDragStart: (e: React.MouseEvent) => void;
   handleResizeStart: (e: React.MouseEvent, direction: ResizeDirection) => void;
 }
@@ -43,95 +42,38 @@ export function useWindowBehavior({
   onMove,
   onResize,
   onFocus,
+  windowRef,
 }: UseWindowBehaviorProps): UseWindowBehaviorReturn {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [resizeDir, setResizeDir] = useState<ResizeDirection>(null);
-  const [resizeStart, setResizeStart] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    posX: 0,
-    posY: 0,
-  });
+  // Single state toggle to attach/detach global listeners (2 re-renders per interaction)
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  // All drag/resize data in refs — no re-renders during mousemove
+  const isDraggingRef = useRef(false);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const dragSizeRef = useRef({ width: 0, height: 0 });
+  const currentPosRef = useRef({ x: 0, y: 0 });
+
+  const resizeDirRef = useRef<ResizeDirection>(null);
+  const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
+  const currentSizeRef = useRef({ width: 0, height: 0 });
+  const currentResizePosRef = useRef({ x: 0, y: 0 });
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
-      // Don't drag if clicking on window controls
       if ((e.target as HTMLElement).closest(".window-controls")) return;
       if (isMaximized) return;
 
       e.preventDefault();
       onFocus?.();
-      setIsDragging(true);
-      setDragOffset({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
-      });
+
+      isDraggingRef.current = true;
+      dragOffsetRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+      dragSizeRef.current = { width: size.width, height: size.height };
+      currentPosRef.current = { x: position.x, y: position.y };
+      setIsInteracting(true);
     },
-    [position, isMaximized, onFocus]
+    [position, size, isMaximized, onFocus]
   );
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (isDragging) {
-        let newX = e.clientX - dragOffset.x;
-        let newY = e.clientY - dragOffset.y;
-
-        // Constrain bounds
-        const minX = -(size.width - 100);
-        const maxX = window.innerWidth - 100;
-        const minY = MENU_BAR_HEIGHT;
-        const maxY = window.innerHeight - DOCK_HEIGHT - 50;
-
-        newX = Math.max(minX, Math.min(maxX, newX));
-        newY = Math.max(minY, Math.min(maxY, newY));
-
-        onMove({ x: newX, y: newY });
-      } else if (resizeDir) {
-        const dx = e.clientX - resizeStart.x;
-        const dy = e.clientY - resizeStart.y;
-
-        let newWidth = resizeStart.width;
-        let newHeight = resizeStart.height;
-        let newX = resizeStart.posX;
-        let newY = resizeStart.posY;
-
-        // Handle horizontal resize
-        if (resizeDir.includes("e")) {
-          const maxWidth = window.innerWidth - resizeStart.posX;
-          newWidth = Math.max(minSize.width, Math.min(maxWidth, resizeStart.width + dx));
-        } else if (resizeDir.includes("w")) {
-          const proposedWidth = resizeStart.width - dx;
-          const maxLeftExpand = resizeStart.posX;
-          const maxWidthFromLeft = resizeStart.width + maxLeftExpand;
-          newWidth = Math.max(minSize.width, Math.min(maxWidthFromLeft, proposedWidth));
-          newX = resizeStart.posX + (resizeStart.width - newWidth);
-        }
-
-        // Handle vertical resize
-        if (resizeDir.includes("s")) {
-          const maxHeight = window.innerHeight - DOCK_HEIGHT - resizeStart.posY;
-          newHeight = Math.max(minSize.height, Math.min(maxHeight, resizeStart.height + dy));
-        } else if (resizeDir.includes("n")) {
-          const proposedHeight = resizeStart.height - dy;
-          const maxTopExpand = resizeStart.posY - MENU_BAR_HEIGHT;
-          const maxHeightFromTop = resizeStart.height + maxTopExpand;
-          newHeight = Math.max(minSize.height, Math.min(maxHeightFromTop, proposedHeight));
-          newY = resizeStart.posY + (resizeStart.height - newHeight);
-        }
-
-        onResize({ width: newWidth, height: newHeight }, { x: newX, y: newY });
-      }
-    },
-    [isDragging, dragOffset, resizeDir, resizeStart, size.width, minSize, onMove, onResize]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-    setResizeDir(null);
-  }, []);
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent, direction: ResizeDirection) => {
@@ -139,34 +81,106 @@ export function useWindowBehavior({
       e.preventDefault();
       e.stopPropagation();
       onFocus?.();
-      setResizeDir(direction);
-      setResizeStart({
+
+      resizeDirRef.current = direction;
+      resizeStartRef.current = {
         x: e.clientX,
         y: e.clientY,
         width: size.width,
         height: size.height,
         posX: position.x,
         posY: position.y,
-      });
+      };
+      currentSizeRef.current = { width: size.width, height: size.height };
+      currentResizePosRef.current = { x: position.x, y: position.y };
+      setIsInteracting(true);
     },
     [isMaximized, size, position, onFocus]
   );
 
-  // Attach global mouse listeners during drag/resize
   useEffect(() => {
-    if (isDragging || resizeDir) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging, resizeDir, handleMouseMove, handleMouseUp]);
+    if (!isInteracting) return;
+
+    const el = windowRef.current;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current && el) {
+        let newX = e.clientX - dragOffsetRef.current.x;
+        let newY = e.clientY - dragOffsetRef.current.y;
+
+        const minX = -(dragSizeRef.current.width - 100);
+        const maxX = window.innerWidth - 100;
+        const minY = MENU_BAR_HEIGHT;
+        const maxY = window.innerHeight - DOCK_HEIGHT - 50;
+
+        newX = Math.max(minX, Math.min(maxX, newX));
+        newY = Math.max(minY, Math.min(maxY, newY));
+
+        currentPosRef.current = { x: newX, y: newY };
+        el.style.transform = `translate(${newX}px, ${newY}px)`;
+      } else if (resizeDirRef.current && el) {
+        const dir = resizeDirRef.current;
+        const start = resizeStartRef.current;
+        const dx = e.clientX - start.x;
+        const dy = e.clientY - start.y;
+
+        let newWidth = start.width;
+        let newHeight = start.height;
+        let newX = start.posX;
+        let newY = start.posY;
+
+        if (dir.includes("e")) {
+          const maxWidth = window.innerWidth - start.posX;
+          newWidth = Math.max(minSize.width, Math.min(maxWidth, start.width + dx));
+        } else if (dir.includes("w")) {
+          const proposedWidth = start.width - dx;
+          const maxLeftExpand = start.posX;
+          const maxWidthFromLeft = start.width + maxLeftExpand;
+          newWidth = Math.max(minSize.width, Math.min(maxWidthFromLeft, proposedWidth));
+          newX = start.posX + (start.width - newWidth);
+        }
+
+        if (dir.includes("s")) {
+          const maxHeight = window.innerHeight - DOCK_HEIGHT - start.posY;
+          newHeight = Math.max(minSize.height, Math.min(maxHeight, start.height + dy));
+        } else if (dir.includes("n")) {
+          const proposedHeight = start.height - dy;
+          const maxTopExpand = start.posY - MENU_BAR_HEIGHT;
+          const maxHeightFromTop = start.height + maxTopExpand;
+          newHeight = Math.max(minSize.height, Math.min(maxHeightFromTop, proposedHeight));
+          newY = start.posY + (start.height - newHeight);
+        }
+
+        currentSizeRef.current = { width: newWidth, height: newHeight };
+        currentResizePosRef.current = { x: newX, y: newY };
+
+        el.style.transform = `translate(${newX}px, ${newY}px)`;
+        el.style.width = `${newWidth}px`;
+        el.style.height = `${newHeight}px`;
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        onMove(currentPosRef.current);
+      }
+      if (resizeDirRef.current) {
+        resizeDirRef.current = null;
+        onResize(currentSizeRef.current, currentResizePosRef.current);
+      }
+      setIsInteracting(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isInteracting, windowRef, minSize, onMove, onResize]);
 
   return {
-    isDragging,
-    resizeDir,
     handleDragStart,
     handleResizeStart,
   };

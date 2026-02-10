@@ -86,6 +86,7 @@ export function PreviewWindow({
     onMove,
     onResize,
     onFocus,
+    windowRef,
   });
 
   // Track container size for responsive image fitting (debounced for smoothness)
@@ -268,9 +269,9 @@ export function PreviewWindow({
     setNaturalSize(null);
   }, [filePath, fileUrl, fileType]);
 
-  const windowStyle = isMaximized
+  const windowStyle: React.CSSProperties = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
-    : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
+    : { transform: `translate(${position.x}px, ${position.y}px)`, width: size.width, height: size.height, zIndex, willChange: "transform" };
 
   // Handle image load errors with network detection
   const handleImageError = useCallback(() => {
