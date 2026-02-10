@@ -62,7 +62,7 @@ export const OS_VERSIONS: OSVersion[] = [
     name: "Sierra",
     version: "10.12",
     darwinVersion: "16.0.0",
-    wallpaperFile: "sierra-wallpaper.png",
+    wallpaperFile: "sierra-wallpaper.jpg",
     releaseYear: 2016,
   },
   {
@@ -78,7 +78,7 @@ export const OS_VERSIONS: OSVersion[] = [
     name: "Sonoma",
     version: "14.0",
     darwinVersion: "23.0.0",
-    wallpaperFile: "sonoma-wallpaper.png",
+    wallpaperFile: "sonoma-wallpaper.jpg",
     releaseYear: 2023,
   },
   {
@@ -86,7 +86,7 @@ export const OS_VERSIONS: OSVersion[] = [
     name: "Sequoia",
     version: "15.0",
     darwinVersion: "24.0.0",
-    wallpaperFile: "sequoia-wallpaper.png",
+    wallpaperFile: "sequoia-wallpaper.jpg",
     releaseYear: 2024,
   },
   {
@@ -94,7 +94,7 @@ export const OS_VERSIONS: OSVersion[] = [
     name: "Tahoe",
     version: "26.0",
     darwinVersion: "25.0.0",
-    wallpaperFile: "tahoe-wallpaper.png",
+    wallpaperFile: "tahoe-wallpaper.jpg",
     releaseYear: 2025,
   },
 ];
@@ -112,9 +112,6 @@ export function getWallpaperPath(id: string): string {
 
 export function getThumbnailPath(id: string): string {
   const os = getOSVersion(id);
-  // Thumbnail filename: original name with -thumb before extension
-  const parts = os.wallpaperFile.split(".");
-  const ext = parts.pop();
-  const name = parts.join(".");
-  return `/desktop/versions/thumbnails/${name}-thumb.${ext}`;
+  const name = os.wallpaperFile.replace(/\.[^.]+$/, "");
+  return `/desktop/versions/thumbnails/${name}-thumb.jpg`;
 }
