@@ -1,0 +1,31 @@
+lib/sidebar-persistence.ts
+  575ffb29da8a6e32 305,426-428
+components/apps/iterm/terminal.tsx
+  575ffb29da8a6e32 31,35,39,49,53,57,63,191,193,197,200,233
+components/desktop/menu-bar.tsx
+  575ffb29da8a6e32 75
+docs/design-system.md
+  575ffb29da8a6e32 364-388,406-408
+components/apps/iterm/nav.tsx
+  575ffb29da8a6e32 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "b036b91aa5471524deddad63ebae4d2283c6b881",
+  "prompts": {
+    "575ffb29da8a6e32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36be286e-edb1-49a7-a787-e7d6cce8fb48",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 25,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
