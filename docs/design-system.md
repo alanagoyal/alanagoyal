@@ -361,6 +361,31 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 | Finder | No | Not needed | - |
 | Settings | No | Not needed | - |
 
+## App State Persistence
+
+### Storage Tiers
+
+| Tier | Storage | Lifetime | Use Case |
+|------|---------|----------|----------|
+| **View state** | `sessionStorage` | Per-tab, clears on tab close | Sidebar selection, scroll position, current directory, terminal history |
+| **Content data** | `localStorage` | Permanent, shared across tabs | User-created content (notes, drafts) that should survive restarts |
+
+Most apps only need view-state persistence via `sessionStorage`. Use `localStorage` only when data represents user-created content that would be surprising to lose.
+
+### Rules
+
+1. **Close = clear**: When a window is closed (red button or Cmd+Q), its view state is cleared via `clearAppState(appId)`.
+2. **Minimize = preserve**: Minimized windows keep their state in memory. Unminimizing restores exactly where the user left off.
+3. **No cross-window leaking**: Using `sessionStorage` ensures two browser tabs have independent state.
+
+### Wiring Up State Clearing
+
+When adding persistence to a new app:
+
+1. Create `load`/`save`/`clear` functions in `sidebar-persistence.ts` (or export a `clear` function from the app's own module).
+2. Add a `case "your-app-id"` to the `clearAppState()` switch in `sidebar-persistence.ts`.
+3. That's it — `closeWindow` and `closeApp` in `window-context.tsx` already call `clearAppState(appId)` automatically. No manual clearing needed in nav bars or menu bar.
+
 ## Checklist for New Apps
 
 When creating a new app, ensure:
@@ -378,3 +403,6 @@ When creating a new app, ensure:
 - [ ] Responsive patterns use `isMobileView` prop
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
+- [ ] View state uses `sessionStorage` (not `localStorage`) — via `sidebar-persistence.ts`
+- [ ] `clearAppState()` has a case for this app's ID
+- [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`

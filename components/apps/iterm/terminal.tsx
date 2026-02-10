@@ -28,15 +28,15 @@ interface ItermStorageState {
 // Clear terminal storage (called when app is quit)
 export function clearItermStorage() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem(ITERM_STORAGE_KEY);
+    sessionStorage.removeItem(ITERM_STORAGE_KEY);
   }
 }
 
-// Load terminal state from localStorage
+// Load terminal state from sessionStorage
 function loadItermStorage(): ItermStorageState | null {
   if (typeof window === "undefined") return null;
   try {
-    const stored = localStorage.getItem(ITERM_STORAGE_KEY);
+    const stored = sessionStorage.getItem(ITERM_STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -46,21 +46,21 @@ function loadItermStorage(): ItermStorageState | null {
   return null;
 }
 
-// Maximum number of history entries to persist (prevents localStorage bloat)
+// Maximum number of history entries to persist (prevents sessionStorage bloat)
 const MAX_HISTORY_ENTRIES = 500;
 const MAX_COMMAND_HISTORY_ENTRIES = 100;
 
-// Save terminal state to localStorage
+// Save terminal state to sessionStorage
 function saveItermStorage(state: ItermStorageState) {
   if (typeof window === "undefined") return;
   try {
-    // Truncate history to prevent localStorage bloat
+    // Truncate history to prevent sessionStorage bloat
     const truncatedState: ItermStorageState = {
       history: state.history.slice(-MAX_HISTORY_ENTRIES),
       commandHistory: state.commandHistory.slice(-MAX_COMMAND_HISTORY_ENTRIES),
       currentDir: state.currentDir,
     };
-    localStorage.setItem(ITERM_STORAGE_KEY, JSON.stringify(truncatedState));
+    sessionStorage.setItem(ITERM_STORAGE_KEY, JSON.stringify(truncatedState));
   } catch {
     // Storage full or unavailable, ignore
   }
@@ -184,23 +184,20 @@ async function fetchFileContent(repo: string, path: string): Promise<string> {
   }
 }
 
-// Load persisted state once at module level to avoid repeated parsing
-const initialStoredState = typeof window !== "undefined" ? loadItermStorage() : null;
-
 export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   const { currentOS } = useSystemSettings();
   const { addRecent } = useRecents();
 
-  // Initialize state from persisted storage (loaded once above)
+  // Initialize state from persisted sessionStorage (loaded fresh each mount)
   const [history, setHistory] = useState<HistoryEntry[]>(
-    initialStoredState?.history ?? [{ type: "output", content: "Type 'help' for available commands" }]
+    () => loadItermStorage()?.history ?? [{ type: "output", content: "Type 'help' for available commands" }]
   );
   const [currentInput, setCurrentInput] = useState("");
   const [currentDir, setCurrentDir] = useState(
-    initialStoredState?.currentDir ?? HOME_DIR
+    () => loadItermStorage()?.currentDir ?? HOME_DIR
   );
   const [commandHistory, setCommandHistory] = useState<string[]>(
-    initialStoredState?.commandHistory ?? []
+    () => loadItermStorage()?.commandHistory ?? []
   );
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -233,7 +230,7 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
     }
   }, [history]);
 
-  // Persist terminal state to localStorage
+  // Persist terminal state to sessionStorage
   useEffect(() => {
     saveItermStorage({ history, commandHistory, currentDir });
   }, [history, commandHistory, currentDir]);

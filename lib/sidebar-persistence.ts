@@ -302,6 +302,7 @@ export function clearCalendarState(): void {
 // ============================================================================
 
 import type { MusicView } from "@/components/apps/music/types";
+import { clearItermStorage } from "@/components/apps/iterm/terminal";
 
 // Valid views for validation - must match MusicView type
 const MUSIC_VIEWS: readonly MusicView[] = [
@@ -421,6 +422,9 @@ export function clearAppState(appId: string): void {
       break;
     case "messages":
       clearMessagesState();
+      break;
+    case "iterm":
+      clearItermStorage();
       break;
   }
 }
