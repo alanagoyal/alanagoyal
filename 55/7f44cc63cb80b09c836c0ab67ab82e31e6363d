@@ -1,0 +1,29 @@
+components/apps/messages/conversation-item.tsx
+  b85423302c3e019f 1,29,364
+components/apps/messages/sidebar.tsx
+  b85423302c3e019f 1,94,103,105,121
+components/apps/messages/message-bubble.tsx
+  b85423302c3e019f 4,36,562
+components/apps/messages/message-list.tsx
+  b85423302c3e019f 3,65,72,74-78,81-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "557f44cc63cb80b09c836c0ab67ab82e31e6363d",
+  "prompts": {
+    "b85423302c3e019f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d151469d-39d0-44b6-8403-92138968acca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 16,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
