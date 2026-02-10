@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction } from "@/types/messages";
 import { Conversation } from "@/types/messages";
-import { useCallback, useState, useRef } from "react";
+import { memo, useCallback, useState, useRef } from "react";
 import {
   Popover,
   PopoverContent,
@@ -33,7 +33,7 @@ const typingAnimation = `
 }
 `;
 
-export function MessageBubble({
+export const MessageBubble = memo(function MessageBubble({
   message,
   isLastUserMessage,
   conversation,
@@ -559,4 +559,4 @@ export function MessageBubble({
       <div className="h-1 bg-background" />
     </div>
   );
-}
+});
