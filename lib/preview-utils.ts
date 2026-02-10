@@ -1,3 +1,5 @@
+export const PREVIEW_TITLE_BAR_HEIGHT = 44;
+
 export function getPdfProxyUrl(fileUrl: string): string {
   if (fileUrl.startsWith("/api/preview/pdf?")) {
     return fileUrl;

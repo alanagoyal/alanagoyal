@@ -6,20 +6,15 @@ import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, g
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { RecentsProvider, useRecents } from "@/lib/recents-context";
 import { FileMenuProvider } from "@/lib/file-menu-context";
+import dynamic from "next/dynamic";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
-import { SettingsApp } from "@/components/apps/settings/settings-app";
-import { ITermApp } from "@/components/apps/iterm/iterm-app";
-import { FinderApp, type SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
-import { PhotosApp } from "@/components/apps/photos/photos-app";
-import { CalendarApp } from "@/components/apps/calendar/calendar-app";
-import { MusicApp } from "@/components/apps/music/music-app";
-import { TextEditWindow } from "@/components/apps/textedit";
-import { PreviewWindow, PREVIEW_TITLE_BAR_HEIGHT, type PreviewFileType } from "@/components/apps/preview";
-import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
+import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
+import type { PreviewFileType } from "@/components/apps/preview";
+import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -28,6 +23,15 @@ import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
+
+const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
+const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
+const FinderApp = dynamic(() => import("@/components/apps/finder/finder-app").then(m => ({ default: m.FinderApp })));
+const PhotosApp = dynamic(() => import("@/components/apps/photos/photos-app").then(m => ({ default: m.PhotosApp })));
+const CalendarApp = dynamic(() => import("@/components/apps/calendar/calendar-app").then(m => ({ default: m.CalendarApp })));
+const MusicApp = dynamic(() => import("@/components/apps/music/music-app").then(m => ({ default: m.MusicApp })));
+const TextEditWindow = dynamic(() => import("@/components/apps/textedit").then(m => ({ default: m.TextEditWindow })));
+const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m => ({ default: m.PreviewWindow })));
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
