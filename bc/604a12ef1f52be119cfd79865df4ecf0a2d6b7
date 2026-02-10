@@ -1,0 +1,27 @@
+lib/os-versions.ts
+  b85423302c3e019f 65,81,89,97
+components/desktop/desktop.tsx
+  b85423302c3e019f 483
+components/desktop/lock-screen.tsx
+  b85423302c3e019f 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "bc604a12ef1f52be119cfd79865df4ecf0a2d6b7",
+  "prompts": {
+    "b85423302c3e019f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d151469d-39d0-44b6-8403-92138968acca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 7,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
