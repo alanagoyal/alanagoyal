@@ -480,8 +480,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         fill
         className="object-cover -z-10"
         priority
-        quality={100}
-        unoptimized
+        quality={90}
       />
       <MenuBar
         onOpenSettings={handleOpenSettings}
