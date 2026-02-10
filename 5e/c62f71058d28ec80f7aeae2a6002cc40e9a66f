@@ -1,0 +1,29 @@
+lib/use-window-behavior.ts
+  b85423302c3e019f 3,29,45,47-59,69-73,75,84-86,93-96,102-111,115-174,181
+components/desktop/window.tsx
+  b85423302c3e019f 65,85,89
+components/apps/preview/preview-window.tsx
+  b85423302c3e019f 89,272,274
+components/apps/textedit/textedit-window.tsx
+  b85423302c3e019f 66,96,98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "5ec62f71058d28ec80f7aeae2a6002cc40e9a66f",
+  "prompts": {
+    "b85423302c3e019f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d151469d-39d0-44b6-8403-92138968acca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 119,
+      "total_deletions": 106,
+      "accepted_lines": 109,
+      "overriden_lines": 0
+    }
+  }
+}
