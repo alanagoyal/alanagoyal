@@ -103,7 +103,26 @@ export function useWindowBehavior({
 
     const el = windowRef.current;
 
+    const endInteraction = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        onMove(currentPosRef.current);
+      }
+      if (resizeDirRef.current) {
+        resizeDirRef.current = null;
+        onResize(currentSizeRef.current, currentResizePosRef.current);
+      }
+      setIsInteracting(false);
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
+      // Some embedded content (for example PDF iframes) can swallow mouseup.
+      // If buttons are no longer pressed, end interaction immediately.
+      if ((isDraggingRef.current || resizeDirRef.current) && e.buttons === 0) {
+        endInteraction();
+        return;
+      }
+
       if (isDraggingRef.current && el) {
         let newX = e.clientX - dragOffsetRef.current.x;
         let newY = e.clientY - dragOffsetRef.current.y;
@@ -160,23 +179,15 @@ export function useWindowBehavior({
       }
     };
 
-    const handleMouseUp = () => {
-      if (isDraggingRef.current) {
-        isDraggingRef.current = false;
-        onMove(currentPosRef.current);
-      }
-      if (resizeDirRef.current) {
-        resizeDirRef.current = null;
-        onResize(currentSizeRef.current, currentResizePosRef.current);
-      }
-      setIsInteracting(false);
-    };
+    const handleMouseUp = () => endInteraction();
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("blur", handleMouseUp);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("blur", handleMouseUp);
     };
   }, [isInteracting, windowRef, minSize, onMove, onResize]);
 
