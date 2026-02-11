@@ -14,11 +14,9 @@ import {
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
+import { PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 
 export type PreviewFileType = "image" | "pdf";
-
-// Title bar height - exported for use in window size calculations
-export const PREVIEW_TITLE_BAR_HEIGHT = 44;
 
 interface PreviewWindowProps {
   filePath: string;
