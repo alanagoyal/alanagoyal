@@ -14,7 +14,6 @@ import {
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
-import { PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 
 export type PreviewFileType = "image" | "pdf";
 
@@ -269,7 +268,13 @@ export function PreviewWindow({
 
   const windowStyle: React.CSSProperties = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
-    : { transform: `translate(${position.x}px, ${position.y}px)`, width: size.width, height: size.height, zIndex, willChange: "transform" };
+    : {
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: size.width,
+        height: size.height,
+        zIndex,
+        willChange: isInteracting ? "transform,width,height" : undefined,
+      };
 
   // Handle image load errors with network detection
   const handleImageError = useCallback(() => {

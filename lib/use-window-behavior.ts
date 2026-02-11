@@ -58,6 +58,8 @@ export function useWindowBehavior({
   const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
   const currentSizeRef = useRef({ width: 0, height: 0 });
   const currentResizePosRef = useRef({ x: 0, y: 0 });
+  const didMoveRef = useRef(false);
+  const didResizeRef = useRef(false);
   const rafIdRef = useRef<number | null>(null);
   const latestMouseRef = useRef({ x: 0, y: 0, buttons: 0 });
 
@@ -70,6 +72,7 @@ export function useWindowBehavior({
       onFocus?.();
 
       isDraggingRef.current = true;
+      didMoveRef.current = false;
       dragOffsetRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
       dragSizeRef.current = { width: size.width, height: size.height };
       currentPosRef.current = { x: position.x, y: position.y };
@@ -86,6 +89,7 @@ export function useWindowBehavior({
       onFocus?.();
 
       resizeDirRef.current = direction;
+      didResizeRef.current = false;
       resizeStartRef.current = {
         x: e.clientX,
         y: e.clientY,
@@ -109,11 +113,15 @@ export function useWindowBehavior({
     const endInteraction = () => {
       if (isDraggingRef.current) {
         isDraggingRef.current = false;
-        onMove(currentPosRef.current);
+        if (didMoveRef.current) {
+          onMove(currentPosRef.current);
+        }
       }
       if (resizeDirRef.current) {
         resizeDirRef.current = null;
-        onResize(currentSizeRef.current, currentResizePosRef.current);
+        if (didResizeRef.current) {
+          onResize(currentSizeRef.current, currentResizePosRef.current);
+        }
       }
       setIsInteracting(false);
     };
@@ -138,6 +146,9 @@ export function useWindowBehavior({
         newX = Math.max(minX, Math.min(maxX, newX));
         newY = Math.max(minY, Math.min(maxY, newY));
 
+        if (newX !== currentPosRef.current.x || newY !== currentPosRef.current.y) {
+          didMoveRef.current = true;
+        }
         currentPosRef.current = { x: newX, y: newY };
         el.style.transform = `translate(${newX}px, ${newY}px)`;
       } else if (resizeDirRef.current && el) {
@@ -173,6 +184,14 @@ export function useWindowBehavior({
           newY = start.posY + (start.height - newHeight);
         }
 
+        if (
+          newWidth !== currentSizeRef.current.width ||
+          newHeight !== currentSizeRef.current.height ||
+          newX !== currentResizePosRef.current.x ||
+          newY !== currentResizePosRef.current.y
+        ) {
+          didResizeRef.current = true;
+        }
         currentSizeRef.current = { width: newWidth, height: newHeight };
         currentResizePosRef.current = { x: newX, y: newY };
 

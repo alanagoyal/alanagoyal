@@ -54,7 +54,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     focusWindow(appId);
   }, [appId, focusWindow]);
 
-  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+  const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position: windowState?.position ?? { x: 0, y: 0 },
     size: windowState?.size ?? { width: 400, height: 300 },
     minSize: app?.minSize ?? { width: 200, height: 150 },
@@ -86,7 +86,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         width: size.width,
         height: size.height,
         zIndex: zIndexOverride ?? zIndex,
-        willChange: "transform",
+        willChange: isInteracting ? "transform,width,height" : undefined,
       };
 
   return (
