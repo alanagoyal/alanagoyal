@@ -76,7 +76,7 @@ export function PreviewWindow({
     initialZoom > 1 ? { left: initialScrollLeft, top: initialScrollTop } : null
   );
 
-  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+  const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
     size,
     minSize: { width: 400, height: 300 },
@@ -466,8 +466,9 @@ export function PreviewWindow({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 bg-zinc-100 dark:bg-zinc-900">
+        <div className="relative flex-1 min-h-0 bg-zinc-100 dark:bg-zinc-900">
           {renderContent()}
+          {fileType === "pdf" && isInteracting && <div className="absolute inset-0 z-30" />}
         </div>
       </div>
 

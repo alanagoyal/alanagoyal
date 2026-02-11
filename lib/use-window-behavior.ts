@@ -30,6 +30,7 @@ interface UseWindowBehaviorProps {
 }
 
 interface UseWindowBehaviorReturn {
+  isInteracting: boolean;
   handleDragStart: (e: React.MouseEvent) => void;
   handleResizeStart: (e: React.MouseEvent, direction: ResizeDirection) => void;
 }
@@ -57,6 +58,8 @@ export function useWindowBehavior({
   const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
   const currentSizeRef = useRef({ width: 0, height: 0 });
   const currentResizePosRef = useRef({ x: 0, y: 0 });
+  const rafIdRef = useRef<number | null>(null);
+  const latestMouseRef = useRef({ x: 0, y: 0, buttons: 0 });
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
@@ -115,17 +118,17 @@ export function useWindowBehavior({
       setIsInteracting(false);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const processMouseMove = (x: number, y: number, buttons: number) => {
       // Some embedded content (for example PDF iframes) can swallow mouseup.
       // If buttons are no longer pressed, end interaction immediately.
-      if ((isDraggingRef.current || resizeDirRef.current) && e.buttons === 0) {
+      if ((isDraggingRef.current || resizeDirRef.current) && buttons === 0) {
         endInteraction();
         return;
       }
 
       if (isDraggingRef.current && el) {
-        let newX = e.clientX - dragOffsetRef.current.x;
-        let newY = e.clientY - dragOffsetRef.current.y;
+        let newX = x - dragOffsetRef.current.x;
+        let newY = y - dragOffsetRef.current.y;
 
         const minX = -(dragSizeRef.current.width - 100);
         const maxX = window.innerWidth - 100;
@@ -140,8 +143,8 @@ export function useWindowBehavior({
       } else if (resizeDirRef.current && el) {
         const dir = resizeDirRef.current;
         const start = resizeStartRef.current;
-        const dx = e.clientX - start.x;
-        const dy = e.clientY - start.y;
+        const dx = x - start.x;
+        const dy = y - start.y;
 
         let newWidth = start.width;
         let newHeight = start.height;
@@ -179,12 +182,29 @@ export function useWindowBehavior({
       }
     };
 
+    const flushMouseMove = () => {
+      rafIdRef.current = null;
+      const { x, y, buttons } = latestMouseRef.current;
+      processMouseMove(x, y, buttons);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      latestMouseRef.current = { x: e.clientX, y: e.clientY, buttons: e.buttons };
+      if (rafIdRef.current === null) {
+        rafIdRef.current = window.requestAnimationFrame(flushMouseMove);
+      }
+    };
+
     const handleMouseUp = () => endInteraction();
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("blur", handleMouseUp);
     return () => {
+      if (rafIdRef.current !== null) {
+        window.cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("blur", handleMouseUp);
@@ -192,6 +212,7 @@ export function useWindowBehavior({
   }, [isInteracting, windowRef, minSize, onMove, onResize]);
 
   return {
+    isInteracting,
     handleDragStart,
     handleResizeStart,
   };
