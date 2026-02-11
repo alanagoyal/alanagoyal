@@ -3,7 +3,6 @@
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
-import { clearItermStorage } from "./terminal";
 
 interface NavProps {
   isMobile: boolean;
@@ -16,10 +15,9 @@ export function Nav({ isMobile, isDesktop = false }: NavProps) {
   // When in desktop shell, use window controls from context
   const inShell = !!(isDesktop && windowFocus);
 
-  // Handle close - clear storage before closing
+  // Handle close - storage is cleared automatically by closeWindow → clearAppState
   // On mobile, pass undefined to preserve original behavior (button disabled)
   const handleClose = (inShell || !isMobile) ? () => {
-    clearItermStorage();
     if (inShell) {
       windowFocus?.closeWindow();
     } else {
