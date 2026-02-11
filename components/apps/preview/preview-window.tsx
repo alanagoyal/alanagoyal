@@ -14,7 +14,6 @@ import {
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
-import { PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 
 export type PreviewFileType = "image" | "pdf";
 
@@ -76,7 +75,7 @@ export function PreviewWindow({
     initialZoom > 1 ? { left: initialScrollLeft, top: initialScrollTop } : null
   );
 
-  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+  const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
     size,
     minSize: { width: 400, height: 300 },
@@ -84,6 +83,7 @@ export function PreviewWindow({
     onMove,
     onResize,
     onFocus,
+    windowRef,
   });
 
   // Track container size for responsive image fitting (debounced for smoothness)
@@ -266,9 +266,15 @@ export function PreviewWindow({
     setNaturalSize(null);
   }, [filePath, fileUrl, fileType]);
 
-  const windowStyle = isMaximized
+  const windowStyle: React.CSSProperties = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
-    : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
+    : {
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: size.width,
+        height: size.height,
+        zIndex,
+        willChange: isInteracting ? "transform,width,height" : undefined,
+      };
 
   // Handle image load errors with network detection
   const handleImageError = useCallback(() => {
@@ -465,8 +471,9 @@ export function PreviewWindow({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 bg-zinc-100 dark:bg-zinc-900">
+        <div className="relative flex-1 min-h-0 bg-zinc-100 dark:bg-zinc-900">
           {renderContent()}
+          {fileType === "pdf" && isInteracting && <div className="absolute inset-0 z-30" />}
         </div>
       </div>
 

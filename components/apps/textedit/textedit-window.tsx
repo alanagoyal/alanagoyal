@@ -55,7 +55,7 @@ export function TextEditWindow({
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
 
-  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+  const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
     size,
     minSize: { width: 400, height: 300 },
@@ -63,6 +63,7 @@ export function TextEditWindow({
     onMove,
     onResize,
     onFocus,
+    windowRef,
   });
 
   // Keyboard shortcuts: Escape to unfocus, 'q' to quit
@@ -92,9 +93,15 @@ export function TextEditWindow({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFocused, onClose]);
 
-  const windowStyle = isMaximized
+  const windowStyle: React.CSSProperties = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
-    : { top: position.y, left: position.x, width: size.width, height: size.height, zIndex };
+    : {
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: size.width,
+        height: size.height,
+        zIndex,
+        willChange: isInteracting ? "transform,width,height" : undefined,
+      };
 
   return (
     <div

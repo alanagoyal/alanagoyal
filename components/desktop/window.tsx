@@ -5,11 +5,7 @@ import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
-import {
-  useWindowBehavior,
-  CORNER_SIZE,
-  EDGE_SIZE,
-} from "@/lib/use-window-behavior";
+import { useWindowBehavior, CORNER_SIZE, EDGE_SIZE } from "@/lib/use-window-behavior";
 
 interface WindowProps {
   appId: string;
@@ -58,7 +54,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     focusWindow(appId);
   }, [appId, focusWindow]);
 
-  const { handleDragStart, handleResizeStart } = useWindowBehavior({
+  const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position: windowState?.position ?? { x: 0, y: 0 },
     size: windowState?.size ?? { width: 400, height: 300 },
     minSize: app?.minSize ?? { width: 200, height: 150 },
@@ -66,6 +62,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     onMove: handleMove,
     onResize: handleResize,
     onFocus: handleFocus,
+    windowRef,
   });
 
   if (!windowState || !windowState.isOpen || windowState.isMinimized || !app) {
@@ -85,11 +82,11 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         zIndex: zIndexOverride ?? MAXIMIZED_Z_INDEX,
       }
     : {
-        top: position.y,
-        left: position.x,
+        transform: `translate(${position.x}px, ${position.y}px)`,
         width: size.width,
         height: size.height,
         zIndex: zIndexOverride ?? zIndex,
+        willChange: isInteracting ? "transform,width,height" : undefined,
       };
 
   return (
