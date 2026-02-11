@@ -262,7 +262,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="flex items-end gap-1 px-3 py-1.5 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
+      <div className="flex items-end gap-1 px-3 py-1.5 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
         {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
@@ -292,7 +292,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
                     alt={app.name}
                     width={48}
                     height={48}
-                    className="rounded-xl shadow-md"
+                    className="w-12 h-12 object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
                   />
                 )}
               </div>
@@ -325,6 +325,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
               alt="Trash"
               width={48}
               height={48}
+              className="w-12 h-12 object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
             />
           </div>
           {/* Trash doesn't show open indicator */}
