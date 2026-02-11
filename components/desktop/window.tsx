@@ -37,6 +37,8 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
   // Track if window was focused before current interaction
   // Used to implement "click-to-focus" - first click only focuses, doesn't trigger actions
   const wasFocusedBeforeMouseDown = useRef(true);
+  // Track recently consumed focus-transfer clicks so dblclick handlers don't fire.
+  const suppressDoubleClickUntil = useRef(0);
 
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
@@ -115,9 +117,11 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         // Exception: window controls and resize handles should always work
         if (!wasAlreadyFocused) {
           const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
-          const isResizeHandle = (e.target as HTMLElement).closest("[class*='cursor-']");
+          const isResizeHandle = (e.target as HTMLElement).closest("[data-window-resize-handle='true']");
           if (!isWindowControl && !isResizeHandle) {
             e.stopPropagation();
+            e.preventDefault();
+            suppressDoubleClickUntil.current = performance.now() + 500;
           }
         }
       }}
@@ -133,7 +137,21 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
           const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
           if (!isWindowControl) {
             e.stopPropagation();
+            e.preventDefault();
           }
+        }
+      }}
+      onDoubleClickCapture={(e) => {
+        if (isMenuOpenRef.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          return;
+        }
+
+        const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
+        if (!isWindowControl && performance.now() < suppressDoubleClickUntil.current) {
+          e.stopPropagation();
+          e.preventDefault();
         }
       }}
     >
@@ -166,41 +184,49 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         <>
           <div
             className="absolute cursor-nw-resize"
+            data-window-resize-handle="true"
             style={{ top: -3, left: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "nw")}
           />
           <div
             className="absolute cursor-ne-resize"
+            data-window-resize-handle="true"
             style={{ top: -3, right: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "ne")}
           />
           <div
             className="absolute cursor-sw-resize"
+            data-window-resize-handle="true"
             style={{ bottom: -3, left: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "sw")}
           />
           <div
             className="absolute cursor-se-resize"
+            data-window-resize-handle="true"
             style={{ bottom: -3, right: -3, width: CORNER_SIZE, height: CORNER_SIZE, zIndex: 20 }}
             onMouseDown={(e) => handleResizeStart(e, "se")}
           />
           <div
             className="absolute cursor-n-resize"
+            data-window-resize-handle="true"
             style={{ top: -3, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE, zIndex: 10 }}
             onMouseDown={(e) => handleResizeStart(e, "n")}
           />
           <div
             className="absolute cursor-s-resize"
+            data-window-resize-handle="true"
             style={{ bottom: -3, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE, zIndex: 10 }}
             onMouseDown={(e) => handleResizeStart(e, "s")}
           />
           <div
             className="absolute cursor-e-resize"
+            data-window-resize-handle="true"
             style={{ right: -3, top: CORNER_SIZE, bottom: CORNER_SIZE, width: EDGE_SIZE, zIndex: 10 }}
             onMouseDown={(e) => handleResizeStart(e, "e")}
           />
           <div
             className="absolute cursor-w-resize"
+            data-window-resize-handle="true"
             style={{ left: -3, top: CORNER_SIZE, bottom: CORNER_SIZE, width: EDGE_SIZE, zIndex: 10 }}
             onMouseDown={(e) => handleResizeStart(e, "w")}
           />
