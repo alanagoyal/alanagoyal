@@ -31,7 +31,7 @@ type MessageQueueCallbacks = {
 };
 
 // Safety limit - model should wrap_up before this, but this is a fallback
-const MAX_CONSECUTIVE_AI_MESSAGES = 10;
+const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 
 // Debounce time for user messages
 const USER_MESSAGE_DEBOUNCE_MS = 500;
@@ -291,19 +291,49 @@ export class MessageQueue {
         }
       }
 
-      // Pause after reactions before proceeding to typing indicator
-      if (reactionActions.length > 0 && messageAction) {
+      // Handle inline reaction on respond/wrap_up (reaction field on the message action itself)
+      if (messageAction?.reaction && conversation.messages.length > 0) {
+        const lastMessage = conversation.messages[conversation.messages.length - 1];
+        const reactor = messageAction.participant;
+        const reactionType = messageAction.reaction as ReactionType;
+
+        if (reactor && reactionType && reactor !== lastMessage.sender) {
+          accumulatedReactions = [
+            ...(accumulatedReactions ?? lastMessage.reactions ?? []),
+            {
+              type: reactionType,
+              sender: reactor,
+              timestamp: new Date().toISOString(),
+            },
+          ];
+
+          const shouldMute =
+            this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
+          if (!shouldMute) {
+            soundEffects.playReactionSound();
+          }
+
+          if (this.callbacks.onMessageUpdated) {
+            this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
+              reactions: accumulatedReactions,
+            });
+          }
+
+          // Brief pause to show reaction before typing indicator
+          await this.delay(REACTION_DISPLAY_MS);
+        }
+      }
+
+      // Pause after standalone reactions before proceeding to typing indicator
+      if (reactionActions.length > 0 && messageAction && !messageAction.reaction) {
         await this.delay(REACTION_DISPLAY_MS);
       }
 
-      // If only reactions (no message action), continue the conversation
+      // If only reactions (no message action), stop — reactions are passive acknowledgments,
+      // not conversation drivers. Don't schedule another AI turn.
       if (reactionActions.length > 0 && !messageAction && !waitAction) {
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
-
-        if (currentVersion === state.version && isGroupChat) {
-          this.scheduleAIMessage(conversation);
-        }
         return;
       }
 

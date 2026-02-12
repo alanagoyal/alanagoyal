@@ -124,7 +124,7 @@ export async function POST(req: Request) {
       tools,
       parallel_tool_calls: false,
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 300,
     });
 
     const toolCalls = response.choices[0]?.message?.tool_calls;
@@ -182,7 +182,11 @@ ${conversation || "(no messages yet)"}
 STATE:
 - Last human message: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
 
-Respond naturally. Keep it SHORT like a real text message (1-2 sentences, not paragraphs).`;
+RULES:
+1. You're texting. 1-2 sentences MAX. No paragraphs. Be casual.
+2. Don't repeat things you've already said in this conversation. Keep it fresh.
+
+Respond naturally like a real text.`;
 }
 
 function buildGroupPrompt(
@@ -198,7 +202,17 @@ function buildGroupPrompt(
 ): string {
   const participantNames = recipients.map(r => r.name).join(", ");
 
-  return `You are participating in a group chat with ${participantNames} and one other random, anonymous person (labeled "anon" in the conversation history below, but don't call them that - just talk to them naturally without using any name).
+  // Stepped cadence guidance based on how many AI messages since the human last spoke
+  let cadenceGuidance: string;
+  if (state.messagesSinceHuman === 0) {
+    cadenceGuidance = "The human just spoke. Respond naturally.";
+  } else if (state.messagesSinceHuman <= 2) {
+    cadenceGuidance = "A couple messages since the human spoke. Respond if you're addressed or have something genuinely NEW to add. Don't repeat what was already said.";
+  } else {
+    cadenceGuidance = "Several AI messages in a row. Only respond if directly addressed (e.g. someone asked you a question). Otherwise use `wait` or `wrap_up`.";
+  }
+
+  return `You are in a group text with ${participantNames} and one other person (labeled "anon" below — don't call them that, just talk naturally).
 
 PERSONAS:
 ${participantDescriptions}
@@ -213,13 +227,17 @@ STATE:
 - Messages since anon last spoke: ${state.messagesSinceHuman}
 - Last speaker: ${state.lastSpeaker === "me" ? "anon" : state.lastSpeaker || "none"}
 
-Based on the most recent message and the conversation history, determine the best next action(s). You can combine actions (e.g. react AND respond).
+CADENCE: ${cadenceGuidance}
 
-HOW TO DECIDE:
-- react: React to a message when you feel strongly about it. Laugh if it's really funny, heart if you love what they said, question if you don't understand. React to roughly 1 in 3 messages. You can react and respond in the same turn if you do react.
-- respond: Respond when a question or comment is directed at one of the participants (e.g. "hey Sarah, what do you think?"). Keep the conversation engaging and light, based on what your chosen persona would actually say. Remember it's a texting convo - keep messages brief unless asked for a longer response. Don't be repetitive - don't repeat yourself or other members of the chat. Move the convo forward. Participants should talk to each other, not just to anon - ask each other questions, riff on what others said, build on the conversation naturally like real friends would.
-- wait: Wait if the most recent message is directed at anon (the human user) - let them respond. Also wait if the message didn't ask anything or require a response.
-- wrap_up: Wrap up if we haven't seen a message from anon in 3+ messages. Bring the conversation to a natural, friendly end.`;
+RULES:
+1. BREVITY: You're texting. 1-2 sentences MAX. No paragraphs. Use casual abbreviations, fragments, lowercase — whatever fits your persona. Think real iMessage energy.
+2. NO REPETITION: NEVER repeat a point someone already made in this conversation. If it's been said, move on or stay silent.
+3. REACTIONS: Feel free to react when something warrants it — laugh at funny things, heart touching things. You can react AND respond in the same turn. Never react to your own message.
+4. CONVERSATION FLOW: Talk to each other, not just to anon. If another participant asks you a question, ANSWER IT — don't wait.
+5. WAIT: ONLY use wait when anon (the human) specifically needs to respond. If a question is directed at another AI participant, that participant should respond, not wait.
+6. WRAP UP: If 3+ messages have passed without anon speaking, use wrap_up to end things naturally.
+
+Pick the best action(s).`;
 }
 
 /**
@@ -234,7 +252,7 @@ function buildOneOnOneTools(recipientName: string) {
       type: "function" as const,
       function: {
         name: "react",
-        description: "React to the last message without saying anything. React to roughly 1 in 3 messages.",
+        description: "React to the last message WITHOUT saying anything. Use this when you want to ONLY react (no text reply).",
         parameters: {
           type: "object",
           properties: {
@@ -256,7 +274,7 @@ function buildOneOnOneTools(recipientName: string) {
       type: "function" as const,
       function: {
         name: "respond",
-        description: "Send a message in the conversation",
+        description: "Send a text message. Optionally react to the last message at the same time.",
         parameters: {
           type: "object",
           properties: {
@@ -267,6 +285,11 @@ function buildOneOnOneTools(recipientName: string) {
             message: {
               type: "string",
               description: "Keep it SHORT (1-2 sentences). Casual like friends texting.",
+            },
+            reaction: {
+              type: "string",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+              description: "Optional: also react to the last message before responding. Use when something genuinely warrants it.",
             },
           },
           required: ["participant", "message"],
@@ -282,18 +305,23 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
     ? participantNames.filter(name => name !== lastSpeaker)
     : participantNames;
 
+  // Filter out the last message sender from react participants (no self-reactions)
+  const eligibleReactors = lastSpeaker && lastSpeaker !== "me"
+    ? participantNames.filter(name => name !== lastSpeaker)
+    : participantNames;
+
   return [
     {
       type: "function" as const,
       function: {
         name: "react",
-        description: "Add an emoji reaction to the last message (no text).",
+        description: "Add an emoji reaction to the last message. React sparingly — only when genuinely warranted.",
         parameters: {
           type: "object",
           properties: {
             participant: {
               type: "string",
-              enum: participantNames,
+              enum: eligibleReactors.length > 0 ? eligibleReactors : participantNames,
             },
             reaction: {
               type: "string",
@@ -308,7 +336,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
       type: "function" as const,
       function: {
         name: "respond",
-        description: "Send a short text message (1-2 sentences).",
+        description: "Send a SHORT text message (1-2 sentences). Optionally react to the last message at the same time.",
         parameters: {
           type: "object",
           properties: {
@@ -318,6 +346,12 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
             },
             message: {
               type: "string",
+              description: "Keep it to 1-2 sentences max. Casual texting style.",
+            },
+            reaction: {
+              type: "string",
+              enum: ["heart", "like", "dislike", "laugh", "emphasize", "question"],
+              description: "Optional: also react to the last message before responding. Use when something genuinely warrants it.",
             },
           },
           required: ["participant", "message"],
@@ -328,7 +362,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
       type: "function" as const,
       function: {
         name: "wait",
-        description: "Stay silent and let anon respond.",
+        description: "Stay silent. ONLY use this when anon (the human) specifically needs to respond — e.g. a question was directed at them. Do NOT wait if another participant asked an AI participant a question.",
         parameters: {
           type: "object",
           properties: {},
@@ -339,7 +373,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
       type: "function" as const,
       function: {
         name: "wrap_up",
-        description: "End conversation with a brief friendly closing.",
+        description: "End conversation with a brief friendly closing (1 sentence).",
         parameters: {
           type: "object",
           properties: {
@@ -349,6 +383,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
             },
             message: {
               type: "string",
+              description: "Brief, natural sign-off. 1 sentence.",
             },
           },
           required: ["participant", "message"],
