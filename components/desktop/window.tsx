@@ -33,6 +33,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
   const innerWrapperRef = useRef<HTMLDivElement>(null);
 
   const isFocused = state.focusedWindowId === appId;
+  const usesTransformPositioning = appId !== "messages";
 
   // Track if window was focused before current interaction
   // Used to implement "click-to-focus" - first click only focuses, doesn't trigger actions
@@ -65,6 +66,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     onResize: handleResize,
     onFocus: handleFocus,
     windowRef,
+    positionMode: usesTransformPositioning ? "transform" : "top-left",
   });
 
   if (!windowState || !windowState.isOpen || windowState.isMinimized || !app) {
@@ -84,11 +86,17 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
         zIndex: zIndexOverride ?? MAXIMIZED_Z_INDEX,
       }
     : {
-        transform: `translate(${position.x}px, ${position.y}px)`,
+        ...(usesTransformPositioning
+          ? { transform: `translate(${position.x}px, ${position.y}px)` }
+          : { top: position.y, left: position.x }),
         width: size.width,
         height: size.height,
         zIndex: zIndexOverride ?? zIndex,
-        willChange: isInteracting ? "transform,width,height" : undefined,
+        willChange: isInteracting
+          ? usesTransformPositioning
+            ? "transform,width,height"
+            : "top,left,width,height"
+          : undefined,
       };
 
   return (

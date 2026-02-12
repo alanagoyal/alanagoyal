@@ -27,6 +27,7 @@ interface UseWindowBehaviorProps {
   onResize: (size: Size, position?: Position) => void;
   onFocus?: () => void;
   windowRef: React.RefObject<HTMLDivElement | null>;
+  positionMode?: "transform" | "top-left";
 }
 
 interface UseWindowBehaviorReturn {
@@ -44,6 +45,7 @@ export function useWindowBehavior({
   onResize,
   onFocus,
   windowRef,
+  positionMode = "transform",
 }: UseWindowBehaviorProps): UseWindowBehaviorReturn {
   // Single state toggle to attach/detach global listeners (2 re-renders per interaction)
   const [isInteracting, setIsInteracting] = useState(false);
@@ -126,6 +128,16 @@ export function useWindowBehavior({
       setIsInteracting(false);
     };
 
+    const applyPosition = (target: HTMLDivElement, x: number, y: number) => {
+      if (positionMode === "top-left") {
+        target.style.transform = "";
+        target.style.left = `${x}px`;
+        target.style.top = `${y}px`;
+        return;
+      }
+      target.style.transform = `translate(${x}px, ${y}px)`;
+    };
+
     const processMouseMove = (x: number, y: number, buttons: number) => {
       // Some embedded content (for example PDF iframes) can swallow mouseup.
       // If buttons are no longer pressed, end interaction immediately.
@@ -150,7 +162,7 @@ export function useWindowBehavior({
           didMoveRef.current = true;
         }
         currentPosRef.current = { x: newX, y: newY };
-        el.style.transform = `translate(${newX}px, ${newY}px)`;
+        applyPosition(el, newX, newY);
       } else if (resizeDirRef.current && el) {
         const dir = resizeDirRef.current;
         const start = resizeStartRef.current;
@@ -195,7 +207,7 @@ export function useWindowBehavior({
         currentSizeRef.current = { width: newWidth, height: newHeight };
         currentResizePosRef.current = { x: newX, y: newY };
 
-        el.style.transform = `translate(${newX}px, ${newY}px)`;
+        applyPosition(el, newX, newY);
         el.style.width = `${newWidth}px`;
         el.style.height = `${newHeight}px`;
       }
@@ -228,7 +240,7 @@ export function useWindowBehavior({
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("blur", handleMouseUp);
     };
-  }, [isInteracting, windowRef, minSize, onMove, onResize]);
+  }, [isInteracting, windowRef, minSize, onMove, onResize, positionMode]);
 
   return {
     isInteracting,
