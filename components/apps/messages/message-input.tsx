@@ -30,6 +30,7 @@ interface MessageInputProps {
 type EmojiPickerProps = {
   data: unknown;
   onEmojiSelect?: (emoji: { native: string }) => void;
+  onClickOutside?: () => void;
   theme?: "light" | "dark" | "auto";
 };
 
@@ -69,14 +70,19 @@ export const MessageInput = forwardRef<
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
     setEmojiPickerLoading(true);
-    const [pickerModule, dataModule] = await Promise.all([
-      import("@emoji-mart/react"),
-      import("@emoji-mart/data"),
-    ]);
-    setPickerComponent(() => pickerModule.default);
-    setEmojiData(dataModule.default);
-    setEmojiPickerLoaded(true);
-    setEmojiPickerLoading(false);
+    try {
+      const [pickerModule, dataModule] = await Promise.all([
+        import("@emoji-mart/react"),
+        import("@emoji-mart/data"),
+      ]);
+      setPickerComponent(() => pickerModule.default);
+      setEmojiData(dataModule.default);
+      setEmojiPickerLoaded(true);
+    } catch (error) {
+      console.error("Failed to load emoji picker modules:", error);
+    } finally {
+      setEmojiPickerLoading(false);
+    }
   }, [emojiPickerLoaded, emojiPickerLoading]);
 
   // Tiptap editor definition
@@ -411,6 +417,7 @@ export const MessageInput = forwardRef<
                   }
                   setShowEmojiPicker(false);
                 }}
+                onClickOutside={() => setShowEmojiPicker(false)}
                 theme={effectiveTheme === "dark" ? "dark" : "light"}
               />
             ) : (

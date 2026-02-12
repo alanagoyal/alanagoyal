@@ -46,18 +46,24 @@ export default function NoteHeader({
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
   const [formattedDate, setFormattedDate] = useState("");
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
     setEmojiPickerLoading(true);
-    const [pickerModule, dataModule] = await Promise.all([
-      import("@emoji-mart/react"),
-      import("@emoji-mart/data"),
-    ]);
-    setPickerComponent(() => pickerModule.default);
-    setEmojiData(dataModule.default);
-    setEmojiPickerLoaded(true);
-    setEmojiPickerLoading(false);
+    try {
+      const [pickerModule, dataModule] = await Promise.all([
+        import("@emoji-mart/react"),
+        import("@emoji-mart/data"),
+      ]);
+      setPickerComponent(() => pickerModule.default);
+      setEmojiData(dataModule.default);
+      setEmojiPickerLoaded(true);
+    } catch (error) {
+      console.error("Failed to load emoji picker modules:", error);
+    } finally {
+      setEmojiPickerLoading(false);
+    }
   }, [emojiPickerLoaded, emojiPickerLoading]);
 
   useEffect(() => {
@@ -100,6 +106,32 @@ export default function NoteHeader({
       window.removeEventListener("scroll", updatePickerPosition, true);
     };
   }, [showEmojiPicker, updatePickerPosition]);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const clickedInsidePicker = pickerRef.current?.contains(target);
+      const clickedEmojiButton = emojiButtonRef.current?.contains(target);
+      if (!clickedInsidePicker && !clickedEmojiButton) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showEmojiPicker]);
 
   return (
     <>
@@ -173,6 +205,7 @@ export default function NoteHeader({
         {showEmojiPicker && !isMobile && !note.public && canEdit && typeof document !== "undefined" &&
           createPortal(
             <div
+              ref={pickerRef}
               className="fixed z-[300]"
               style={{ top: `${pickerPosition.top}px`, left: `${pickerPosition.left}px` }}
             >
