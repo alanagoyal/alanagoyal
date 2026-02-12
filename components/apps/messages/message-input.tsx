@@ -3,11 +3,10 @@ import {
   useState,
   useRef,
   useEffect,
+  useCallback,
   forwardRef,
   useImperativeHandle,
 } from "react";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -27,6 +26,12 @@ interface MessageInputProps {
   conversationId?: string;
   isNewChat?: boolean;
 }
+
+type EmojiPickerProps = {
+  data: unknown;
+  onEmojiSelect?: (emoji: { native: string }) => void;
+  theme?: "light" | "dark" | "auto";
+};
 
 // Export type for message input's focus method
 export type MessageInputHandle = {
@@ -51,10 +56,27 @@ export const MessageInput = forwardRef<
   ref
 ) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiPickerLoaded, setEmojiPickerLoaded] = useState(false);
+  const [emojiPickerLoading, setEmojiPickerLoading] = useState(false);
+  const [PickerComponent, setPickerComponent] = useState<React.ComponentType<EmojiPickerProps> | null>(null);
+  const [emojiData, setEmojiData] = useState<unknown>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { theme } = useTheme();
+
+  const loadEmojiPicker = useCallback(async () => {
+    if (emojiPickerLoaded || emojiPickerLoading) return;
+    setEmojiPickerLoading(true);
+    const [pickerModule, dataModule] = await Promise.all([
+      import("@emoji-mart/react"),
+      import("@emoji-mart/data"),
+    ]);
+    setPickerComponent(() => pickerModule.default);
+    setEmojiData(dataModule.default);
+    setEmojiPickerLoaded(true);
+    setEmojiPickerLoading(false);
+  }, [emojiPickerLoaded, emojiPickerLoading]);
 
   // Tiptap editor definition
   const editor = useEditor({
@@ -355,7 +377,19 @@ export const MessageInput = forwardRef<
           <button
             ref={buttonRef}
             type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            onClick={async () => {
+              const nextOpenState = !showEmojiPicker;
+              if (nextOpenState) {
+                await loadEmojiPicker();
+              }
+              setShowEmojiPicker(nextOpenState);
+            }}
+            onMouseEnter={() => {
+              void loadEmojiPicker();
+            }}
+            onFocus={() => {
+              void loadEmojiPicker();
+            }}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <Icons.smile className="h-5 w-5" />
@@ -367,16 +401,20 @@ export const MessageInput = forwardRef<
             className="absolute bottom-12 right-0 z-50"
             style={{ width: "352px" }}
           >
-            <Picker
-              data={data}
-              onEmojiSelect={(emoji: { native: string }) => {
-                if (editor) {
-                  editor.commands.insertContent(emoji.native);
-                }
-                setShowEmojiPicker(false);
-              }}
-              theme={theme === "dark" ? "dark" : "light"}
-            />
+            {PickerComponent && emojiData ? (
+              <PickerComponent
+                data={emojiData}
+                onEmojiSelect={(emoji: { native: string }) => {
+                  if (editor) {
+                    editor.commands.insertContent(emoji.native);
+                  }
+                  setShowEmojiPicker(false);
+                }}
+                theme={theme === "dark" ? "dark" : "light"}
+              />
+            ) : (
+              <div className="h-[435px] w-[352px] rounded-lg border border-muted-foreground/20 bg-background/90" />
+            )}
           </div>
         )}
       </div>
