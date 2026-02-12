@@ -1,6 +1,6 @@
 import { Message, Conversation, Reaction } from "@/types/messages";
 import { MessageBubble } from "./message-bubble";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { loadMessagesConversation } from "@/lib/sidebar-persistence";
@@ -62,19 +62,27 @@ export function MessageList({
     return Math.abs(scrollHeight - clientHeight - scrollTop) < 336;
   }, []);
 
-  // Track scroll position
+  // Track scroll position (throttled via rAF to avoid 60fps state updates)
   useEffect(() => {
     const viewport = messageListRef.current?.closest(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
     if (!viewport) return;
 
+    let rafId = 0;
     const handleScroll = () => {
-      setWasAtBottom(isAtBottom());
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        setWasAtBottom(isAtBottom());
+      });
     };
 
-    viewport.addEventListener("scroll", handleScroll);
-    return () => viewport.removeEventListener("scroll", handleScroll);
+    viewport.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      viewport.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, [isAtBottom]);
 
   // Ref to track if we should auto-scroll (persists across ResizeObserver callbacks)

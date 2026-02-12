@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Conversation } from "@/types/messages";
 import { SwipeActions } from "./swipe-actions";
@@ -26,7 +26,7 @@ interface ConversationItemProps {
   setOpenSwipedConvo: (id: string | null) => void;
 }
 
-export function ConversationItem({
+export const ConversationItem = memo(function ConversationItem({
   conversation,
   activeConversation,
   onSelectConversation,
@@ -361,4 +361,4 @@ export function ConversationItem({
       </ContextMenu>
     );
   }
-}
+});

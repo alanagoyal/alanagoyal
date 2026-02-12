@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Conversation } from "@/types/messages";
 import { SearchBar } from "./search-bar";
 import { format, isToday, isYesterday, isThisWeek, parseISO } from "date-fns";
@@ -91,7 +91,7 @@ export function Sidebar({
     return `/messages/reactions/left-${variant}-${reactionType}.svg`;
   };
 
-  const sortedConversations = [...conversations].sort((a, b) => {
+  const sortedConversations = useMemo(() => [...conversations].sort((a, b) => {
     // First sort by pinned status
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -100,9 +100,9 @@ export function Sidebar({
     const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
     const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
     return timeB - timeA; // Most recent first
-  });
+  }), [conversations]);
 
-  const filteredConversations = sortedConversations.filter((conversation) => {
+  const filteredConversations = useMemo(() => sortedConversations.filter((conversation) => {
     if (!searchTerm) return true;
 
     // Search in non-system messages content only
@@ -118,7 +118,7 @@ export function Sidebar({
     );
 
     return hasMatchInMessages || hasMatchInNames;
-  });
+  }), [sortedConversations, searchTerm]);
 
   // Keyboard navigation
   useEffect(() => {
