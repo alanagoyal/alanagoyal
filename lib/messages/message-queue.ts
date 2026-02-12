@@ -361,29 +361,37 @@ export class MessageQueue {
         return;
       }
 
-      // Show typing indicator
-      this.callbacks.onTypingStatusChange(conversationId, sender);
+      // Split long messages into multiple texts like real texting
+      const chunks = this.splitIntoTexts(content);
+      const deliveredMessages: Message[] = [];
 
-      // Typing delay
-      const typingDelay =
-        TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
-      await this.delay(typingDelay);
+      for (let i = 0; i < chunks.length; i++) {
+        // Show typing indicator
+        this.callbacks.onTypingStatusChange(conversationId, sender);
 
-      if (currentVersion !== state.version) {
-        this.callbacks.onTypingStatusChange(null, null);
-        state.status = "idle";
-        return;
+        // Typing delay (shorter for follow-up chunks)
+        const typingDelay = i === 0
+          ? TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS)
+          : 800 + Math.random() * 700;
+        await this.delay(typingDelay);
+
+        if (currentVersion !== state.version) {
+          this.callbacks.onTypingStatusChange(null, null);
+          state.status = "idle";
+          return;
+        }
+
+        const msg: Message = {
+          id: crypto.randomUUID(),
+          content: chunks[i],
+          sender: sender,
+          timestamp: new Date().toISOString(),
+        };
+
+        this.callbacks.onMessageGenerated(conversationId, msg);
+        deliveredMessages.push(msg);
       }
 
-      // Deliver the message
-      const newMessage: Message = {
-        id: crypto.randomUUID(),
-        content: content,
-        sender: sender,
-        timestamp: new Date().toISOString(),
-      };
-
-      this.callbacks.onMessageGenerated(conversationId, newMessage);
       this.callbacks.onTypingStatusChange(null, null);
 
       // Handle next steps based on action
@@ -402,10 +410,10 @@ export class MessageQueue {
           this.callbacks.onMessageGenerated(conversationId, silencedMessage);
         }
       } else if (messageAction.action === "respond" && isGroupChat) {
-        // Continue the conversation
+        // Continue the conversation with all delivered chunks
         this.scheduleAIMessage({
           ...conversation,
-          messages: [...conversation.messages, newMessage],
+          messages: [...conversation.messages, ...deliveredMessages],
         });
       }
       // For 1-on-1 with "respond", just wait for next user message
@@ -458,6 +466,37 @@ export class MessageQueue {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Split a long message into multiple shorter texts at sentence boundaries,
+   * like how people actually text (multiple quick messages instead of one block).
+   */
+  private splitIntoTexts(text: string): string[] {
+    if (text.length < 80) return [text];
+
+    const chunks: string[] = [];
+    let remaining = text;
+
+    while (remaining.length > 0) {
+      if (remaining.length < 80 || chunks.length >= 2) {
+        chunks.push(remaining);
+        break;
+      }
+
+      // Find sentence boundaries (? ! .) followed by a space
+      const match = remaining.match(/[.!?]\s+/);
+      if (match && match.index !== undefined) {
+        const splitAt = match.index + 1;
+        chunks.push(remaining.slice(0, splitAt).trim());
+        remaining = remaining.slice(splitAt).trim();
+      } else {
+        chunks.push(remaining);
+        break;
+      }
+    }
+
+    return chunks;
   }
 
   public setActiveConversation(conversationId: string | null) {
