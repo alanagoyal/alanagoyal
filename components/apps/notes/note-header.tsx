@@ -9,6 +9,7 @@ import { Lock } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
 import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
@@ -30,10 +31,13 @@ export default function NoteHeader({
     autoFocus?: boolean;
     searchPosition?: "top" | "bottom" | "none";
     onClickOutside?: () => void;
+    theme?: "light" | "dark" | "auto";
   };
 
   const isMobile = useMobileDetect();
   const pathname = usePathname();
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerLoaded, setEmojiPickerLoaded] = useState(false);
   const [emojiPickerLoading, setEmojiPickerLoading] = useState(false);
@@ -178,6 +182,7 @@ export default function NoteHeader({
                   onEmojiSelect={handleEmojiSelect}
                   autoFocus={true}
                   searchPosition="top"
+                  theme={effectiveTheme === "dark" ? "dark" : "light"}
                   onClickOutside={() => setShowEmojiPicker(false)}
                 />
               ) : (

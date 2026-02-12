@@ -63,7 +63,8 @@ export const MessageInput = forwardRef<
   const pickerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const { theme } = useTheme();
+  const { theme, systemTheme } = useTheme();
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
 
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
@@ -410,7 +411,7 @@ export const MessageInput = forwardRef<
                   }
                   setShowEmojiPicker(false);
                 }}
-                theme={theme === "dark" ? "dark" : "light"}
+                theme={effectiveTheme === "dark" ? "dark" : "light"}
               />
             ) : (
               <div className="h-[435px] w-[352px] rounded-lg border border-muted-foreground/20 bg-background/90" />
