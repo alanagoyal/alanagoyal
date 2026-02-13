@@ -482,7 +482,6 @@ export class MessageQueue {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-
   public setActiveConversation(conversationId: string | null) {
     if (this.activeConversation && this.activeConversation !== conversationId) {
       const prevState = this.state.conversations.get(this.activeConversation);
