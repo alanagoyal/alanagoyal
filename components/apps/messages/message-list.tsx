@@ -38,10 +38,8 @@ export function MessageList({
   const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(
     null
   );
-  const [prevConversationId, setPrevConversationId] = useState<string | null>(
-    null
-  );
-  const [prevMessageCount, setPrevMessageCount] = useState(0);
+  const conversationReadyRef = useRef(false);
+  const prevMessageCountRef = useRef(0);
   const messageListRef = useRef<HTMLDivElement>(null);
   const [wasAtBottom, setWasAtBottom] = useState(true);
 
@@ -140,40 +138,43 @@ export function MessageList({
     return () => resizeObserver.disconnect();
   }, [conversationId]);
 
-  // Update previous state tracking for sound effects
+  // Reset tracking when conversation changes (must be defined before the message effect)
   useEffect(() => {
-    setPrevMessageCount(messages.length);
-    setPrevConversationId(conversationId);
-  }, [messages, conversationId]);
+    conversationReadyRef.current = false;
+    prevMessageCountRef.current = 0;
+  }, [conversationId]);
 
   // Handle new message effects (sounds, animations)
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      const isNewMessageInSameConversation =
-        conversationId === prevConversationId &&
-        messages.length > prevMessageCount;
-
-      // Only process effects for new messages in the same conversation
-      if (isNewMessageInSameConversation) {
-        // Play sound for incoming messages in the active conversation (unless muted)
-        const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
-        if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
-          soundEffects.playReceivedSound();
-        }
-
-        // Trigger "delivered" animation for sent messages
-        if (lastMessage.sender === "me") {
-          setLastSentMessageId(lastMessage.id);
-          // Clear the lastSentMessageId after animation duration
-          const timer = setTimeout(() => {
-            setLastSentMessageId(null);
-          }, 1000);
-          return () => clearTimeout(timer);
-        }
-      }
+    // Skip the first render cycle per conversation (mount, switch, restore)
+    if (!conversationReadyRef.current) {
+      conversationReadyRef.current = true;
+      prevMessageCountRef.current = messages.length;
+      return;
     }
-  }, [messages, conversationId, prevConversationId, prevMessageCount, conversation?.hideAlerts, focusModeActive]);
+
+    const isNewMessage = messages.length > prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+
+    if (!isNewMessage || messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    // Play sound for incoming messages (unless muted)
+    const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
+    if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
+      soundEffects.playReceivedSound();
+    }
+
+    // Trigger "delivered" animation for sent messages
+    if (lastMessage.sender === "me") {
+      setLastSentMessageId(lastMessage.id);
+      const timer = setTimeout(() => {
+        setLastSentMessageId(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, conversation?.hideAlerts, focusModeActive]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
