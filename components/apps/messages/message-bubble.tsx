@@ -23,6 +23,7 @@ interface MessageBubbleProps {
   onReactionComplete?: () => void;
   justSent?: boolean;
   isMobileView?: boolean;
+  hideSenderName?: boolean;
 }
 
 const typingAnimation = `
@@ -43,6 +44,7 @@ export const MessageBubble = memo(function MessageBubble({
   onReactionComplete,
   justSent = false,
   isMobileView = false,
+  hideSenderName = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -322,7 +324,7 @@ export const MessageBubble = memo(function MessageBubble({
       />
 
       {/* Show recipient name for messages from others */}
-      {recipientName && (
+      {recipientName && !hideSenderName && (
         <div className="text-[10px] text-muted-foreground pl-4 pb-0.5 bg-background">
           {recipientName}
         </div>

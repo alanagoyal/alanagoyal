@@ -274,7 +274,7 @@ function buildOneOnOneTools(recipientName: string) {
       type: "function" as const,
       function: {
         name: "respond",
-        description: "Send a text message. Optionally react to the last message at the same time.",
+        description: "Send text messages. Optionally react to the last message at the same time.",
         parameters: {
           type: "object",
           properties: {
@@ -282,9 +282,12 @@ function buildOneOnOneTools(recipientName: string) {
               type: "string",
               enum: [recipientName],
             },
-            message: {
-              type: "string",
-              description: "Keep it SHORT (1-2 sentences). Casual like friends texting.",
+            messages: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 1,
+              maxItems: 3,
+              description: "1-3 short texts, like real iMessage. Each should be 1 sentence. Split separate thoughts into separate messages.",
             },
             reaction: {
               type: "string",
@@ -292,7 +295,7 @@ function buildOneOnOneTools(recipientName: string) {
               description: "Optional: also react to the last message before responding. Use when something genuinely warrants it.",
             },
           },
-          required: ["participant", "message"],
+          required: ["participant", "messages"],
         },
       },
     },
@@ -336,7 +339,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
       type: "function" as const,
       function: {
         name: "respond",
-        description: "Send a SHORT text message (1-2 sentences). Optionally react to the last message at the same time.",
+        description: "Send short text messages like real iMessage. Optionally react to the last message at the same time.",
         parameters: {
           type: "object",
           properties: {
@@ -344,9 +347,12 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
               type: "string",
               enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
             },
-            message: {
-              type: "string",
-              description: "Keep it to 1-2 sentences max. Casual texting style.",
+            messages: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 1,
+              maxItems: 3,
+              description: "1-3 short texts. Each should be 1 sentence. Split separate thoughts into separate messages instead of one long block.",
             },
             reaction: {
               type: "string",
@@ -354,7 +360,7 @@ function buildGroupTools(participantNames: string[], lastSpeaker: string | null)
               description: "Optional: also react to the last message before responding. Use when something genuinely warrants it.",
             },
           },
-          required: ["participant", "message"],
+          required: ["participant", "messages"],
         },
       },
     },

@@ -43,8 +43,11 @@ const TYPING_DELAY_MAX_MS = 3000;
 // Delay to show reaction before continuing
 const REACTION_DISPLAY_MS = 1000;
 
-// Delay between consecutive AI messages
+// Delay between consecutive AI messages (different speakers)
 const AI_MESSAGE_DELAY_MS = 2000;
+
+// Delay between chunks from the same sender
+const SAME_SENDER_DELAY_MS = 1000;
 
 export class MessageQueue {
   private state: MessageQueueState = {
@@ -247,7 +250,7 @@ export class MessageQueue {
       }
 
       const data = await response.json();
-      const actions: Array<{ action: string; participant?: string; message?: string; reaction?: string }> =
+      const actions: Array<{ action: string; participant?: string; message?: string; messages?: string[]; reaction?: string }> =
         data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
       // Process actions - reactions first, then messages
@@ -352,27 +355,29 @@ export class MessageQueue {
       }
 
       const sender = messageAction.participant;
-      const content = messageAction.message;
+      // Support both `messages` (array) and `message` (string) from the API
+      const chunks: string[] = Array.isArray(messageAction.messages)
+        ? messageAction.messages.filter((m): m is string => typeof m === "string" && m.trim().length > 0)
+        : messageAction.message
+          ? [messageAction.message]
+          : [];
 
-      if (!sender || !content) {
-        console.warn("Malformed response - missing participant or message:", messageAction);
+      if (!sender || chunks.length === 0) {
+        console.warn("Malformed response - missing participant or messages:", messageAction);
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
         return;
       }
-
-      // Split long messages into multiple texts like real texting
-      const chunks = this.splitIntoTexts(content);
       const deliveredMessages: Message[] = [];
 
       for (let i = 0; i < chunks.length; i++) {
         // Show typing indicator
         this.callbacks.onTypingStatusChange(conversationId, sender);
 
-        // Typing delay (shorter for follow-up chunks)
+        // Typing delay: first chunk uses standard range, follow-ups scale with content length
         const typingDelay = i === 0
           ? TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS)
-          : 800 + Math.random() * 700;
+          : Math.min(1200 + chunks[i].length * 25, 3000) + Math.random() * 500;
         await this.delay(typingDelay);
 
         if (currentVersion !== state.version) {
@@ -381,18 +386,27 @@ export class MessageQueue {
           return;
         }
 
+        // Deliver message and clear typing
         const msg: Message = {
           id: crypto.randomUUID(),
           content: chunks[i],
           sender: sender,
           timestamp: new Date().toISOString(),
         };
-
         this.callbacks.onMessageGenerated(conversationId, msg);
+        this.callbacks.onTypingStatusChange(null, null);
         deliveredMessages.push(msg);
-      }
 
-      this.callbacks.onTypingStatusChange(null, null);
+        // Pause between messages so the delivered message can breathe
+        if (i < chunks.length - 1) {
+          await this.delay(SAME_SENDER_DELAY_MS);
+
+          if (currentVersion !== state.version) {
+            state.status = "idle";
+            return;
+          }
+        }
+      }
 
       // Handle next steps based on action
       if (messageAction.action === "wrap_up") {
@@ -468,36 +482,6 @@ export class MessageQueue {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * Split a long message into multiple shorter texts at sentence boundaries,
-   * like how people actually text (multiple quick messages instead of one block).
-   */
-  private splitIntoTexts(text: string): string[] {
-    if (text.length < 80) return [text];
-
-    const chunks: string[] = [];
-    let remaining = text;
-
-    while (remaining.length > 0) {
-      if (remaining.length < 80 || chunks.length >= 2) {
-        chunks.push(remaining);
-        break;
-      }
-
-      // Find sentence boundaries (? ! .) followed by a space
-      const match = remaining.match(/[.!?]\s+/);
-      if (match && match.index !== undefined) {
-        const splitAt = match.index + 1;
-        chunks.push(remaining.slice(0, splitAt).trim());
-        remaining = remaining.slice(splitAt).trim();
-      } else {
-        chunks.push(remaining);
-        break;
-      }
-    }
-
-    return chunks;
-  }
 
   public setActiveConversation(conversationId: string | null) {
     if (this.activeConversation && this.activeConversation !== conversationId) {

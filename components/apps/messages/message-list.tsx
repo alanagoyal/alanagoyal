@@ -206,6 +206,7 @@ export function MessageList({
                 }}
                 justSent={message.id === lastSentMessageId}
                 isMobileView={isMobileView}
+                hideSenderName={index > 0 && messages[index - 1]?.sender === message.sender}
               />
             </div>
           </div>
