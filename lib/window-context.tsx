@@ -862,6 +862,10 @@ export function WindowManagerProvider({
   children,
   initialAppId,
 }: WindowManagerProviderProps) {
+  const persistTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const latestStateRef = React.useRef<WindowManagerState | null>(null);
   /**
    * Compute initial state based on:
    * 1. Whether user has saved state (sessionStorage)
@@ -924,12 +928,42 @@ export function WindowManagerProvider({
     zIndexRef.current = state.nextZIndex;
   }, [state.nextZIndex]);
 
-  // Save to localStorage on state change
+  // Keep latest state available for cleanup flush
   useEffect(() => {
-    if (isHydrated) {
-      saveStateToStorage(state);
+    latestStateRef.current = state;
+  }, [state]);
+
+  // Debounce session persistence to avoid excessive writes during drag/resize
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (persistTimeoutRef.current) {
+      clearTimeout(persistTimeoutRef.current);
     }
+
+    persistTimeoutRef.current = setTimeout(() => {
+      saveStateToStorage(state);
+      persistTimeoutRef.current = null;
+    }, 200);
+
+    return () => {
+      if (persistTimeoutRef.current) {
+        clearTimeout(persistTimeoutRef.current);
+      }
+    };
   }, [state, isHydrated]);
+
+  // Flush pending state on unmount
+  useEffect(() => {
+    return () => {
+      if (persistTimeoutRef.current) {
+        clearTimeout(persistTimeoutRef.current);
+      }
+      if (latestStateRef.current) {
+        saveStateToStorage(latestStateRef.current);
+      }
+    };
+  }, []);
 
   const openWindow = useCallback((appId: string) => {
     dispatch({ type: "OPEN_WINDOW", appId });
