@@ -300,25 +300,36 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
 
   // Update URL when focus changes
+  const focusedWindowId = state.focusedWindowId;
+  const focusedWindowState = focusedWindowId
+    ? state.windows[focusedWindowId]
+    : undefined;
+  const focusedFilePath = focusedWindowState?.metadata?.filePath as
+    | string
+    | undefined;
+
   useEffect(() => {
-    const focusedWindowId = state.focusedWindowId;
     if (!focusedWindowId) return;
 
     const focusedAppId = getAppIdFromWindowId(focusedWindowId);
 
     if (focusedAppId === "textedit") {
       // For TextEdit, include the file path in URL
-      const windowState = state.windows[focusedWindowId];
-      const filePath = windowState?.metadata?.filePath as string;
-      if (filePath) {
-        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+      if (focusedFilePath) {
+        window.history.replaceState(
+          null,
+          "",
+          `/textedit?file=${encodeURIComponent(focusedFilePath)}`
+        );
       }
     } else if (focusedAppId === "preview") {
       // For Preview, include the file path in URL
-      const windowState = state.windows[focusedWindowId];
-      const filePath = windowState?.metadata?.filePath as string;
-      if (filePath) {
-        window.history.replaceState(null, "", `/preview?file=${encodeURIComponent(filePath)}`);
+      if (focusedFilePath) {
+        window.history.replaceState(
+          null,
+          "",
+          `/preview?file=${encodeURIComponent(focusedFilePath)}`
+        );
       }
     } else if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
@@ -328,7 +339,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       window.history.replaceState(null, "", `/${focusedAppId}`);
     }
-  }, [state.focusedWindowId, state.windows, initialNoteSlug]);
+  }, [focusedWindowId, focusedFilePath, initialNoteSlug]);
 
   const isActive = mode === "active";
 
