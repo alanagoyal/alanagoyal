@@ -1,0 +1,33 @@
+public/messages/message-bubbles/right-no-tail-dark.svg
+  872d8bb11a7bb8ca 1-6
+public/messages/message-bubbles/left-no-tail-light.svg
+  872d8bb11a7bb8ca 1-4
+components/apps/messages/message-bubble.tsx
+  872d8bb11a7bb8ca 27,49,245-249,251-256,258,373-374,379-382,387,440-441,445,448
+components/apps/messages/message-list.tsx
+  872d8bb11a7bb8ca 201
+public/messages/message-bubbles/right-no-tail-light.svg
+  872d8bb11a7bb8ca 1-6
+public/messages/message-bubbles/left-no-tail-dark.svg
+  872d8bb11a7bb8ca 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "644d74dc6d31f145cab58b28db39bc2ef605564c",
+  "prompts": {
+    "872d8bb11a7bb8ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4440375a-d6b5-45a3-9780-868cd31333db",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 64,
+      "total_deletions": 29,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
