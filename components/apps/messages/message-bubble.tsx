@@ -24,6 +24,7 @@ interface MessageBubbleProps {
   justSent?: boolean;
   isMobileView?: boolean;
   hideSenderName?: boolean;
+  hideTail?: boolean;
 }
 
 const typingAnimation = `
@@ -45,6 +46,7 @@ export const MessageBubble = memo(function MessageBubble({
   justSent = false,
   isMobileView = false,
   hideSenderName = false,
+  hideTail = false,
 }: MessageBubbleProps) {
   // Determine message sender type and display name
   const isSystemMessage = message.sender === "system";
@@ -240,14 +242,20 @@ export const MessageBubble = memo(function MessageBubble({
       .join(", ");
   };
 
-  const rightBubbleSvg =
-    effectiveTheme === "dark"
+  const rightBubbleSvg = hideTail
+    ? (effectiveTheme === "dark"
+      ? "/messages/message-bubbles/right-no-tail-dark.svg"
+      : "/messages/message-bubbles/right-no-tail-light.svg")
+    : (effectiveTheme === "dark"
       ? "/messages/message-bubbles/right-bubble-dark.svg"
-      : "/messages/message-bubbles/right-bubble-light.svg";
-  const leftBubbleSvg =
-    effectiveTheme === "dark"
+      : "/messages/message-bubbles/right-bubble-light.svg");
+  const leftBubbleSvg = hideTail
+    ? (effectiveTheme === "dark"
+      ? "/messages/message-bubbles/left-no-tail-dark.svg"
+      : "/messages/message-bubbles/left-no-tail-light.svg")
+    : (effectiveTheme === "dark"
       ? "/messages/message-bubbles/left-bubble-dark.svg"
-      : "/messages/message-bubbles/left-bubble-light.svg";
+      : "/messages/message-bubbles/left-bubble-light.svg");
   const typingIndicatorSvg =
     effectiveTheme === "dark"
       ? "/messages/typing-bubbles/chat-typing-dark.svg"
@@ -362,17 +370,21 @@ export const MessageBubble = memo(function MessageBubble({
                 ? "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
                 : isMe
                 ? cn(
-                    "border-[17px] border-solid border-r-[22px] text-white",
+                    "border-[17px] border-solid text-white",
+                    hideTail ? "mr-[5px]" : "border-r-[22px]",
                     isMobileView
                       ? "bg-[#0A7CFF]"
                       : "bg-[linear-gradient(#47B5FF,#0A7CFF)] bg-fixed"
                   )
-                : "border-[17px] border-solid border-l-[22px] bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100"
+                : cn(
+                    "border-[17px] border-solid bg-gray-100 dark:bg-[#404040] text-gray-900 dark:text-gray-100",
+                    hideTail ? "ml-[5px]" : "border-l-[22px]"
+                  )
             )}
             style={
               !isSystemMessage
                 ? {
-                    borderImageSlice: isMe ? "31 43 31 31" : "31 31 31 43",
+                    borderImageSlice: hideTail ? "31 31 31 31" : isMe ? "31 43 31 31" : "31 31 31 43",
                     borderImageSource: `url('${
                       isMe
                         ? rightBubbleSvg
@@ -425,13 +437,15 @@ export const MessageBubble = memo(function MessageBubble({
                 >
                   <PopoverTrigger asChild>
                     <div className="flex flex-col cursor-pointer">
-                      {/* Add this to cover up the right border */}
-                      <div
-                        className={cn(
-                          "absolute border-r-[0.5px] border-background",
-                          !isMe ? "inset-[-17px]" : "inset-[-22px]"
-                        )}
-                      />
+                      {/* Cover up the right border artifact (only needed with tail) */}
+                      {!hideTail && (
+                        <div
+                          className={cn(
+                            "absolute border-r-[0.5px] border-background",
+                            !isMe ? "inset-[-17px]" : "inset-[-22px]"
+                          )}
+                        />
+                      )}
                       <div className="text-[14px] flex items-center">
                         {prepareContent(
                           message.content,
