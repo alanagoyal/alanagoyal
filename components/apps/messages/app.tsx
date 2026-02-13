@@ -44,6 +44,13 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
+  const [justSentMessageId, setJustSentMessageId] = useState<string | null>(null);
+  // Clear the delivered animation after it completes
+  useEffect(() => {
+    if (!justSentMessageId) return;
+    const timer = setTimeout(() => setJustSentMessageId(null), 1000);
+    return () => clearTimeout(timer);
+  }, [justSentMessageId]);
   const [typingStatus, setTypingStatus] = useState<{
     conversationId: string;
     recipient: string;
@@ -603,6 +610,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         return updatedConversations;
       });
 
+      setJustSentMessageId(message.id);
       updateUrl(`?id=${newConversation.id}`);
       // Use enqueueUserMessage - the queue will handle group vs 1-on-1 logic
       messageQueue.current.enqueueUserMessage(conversationWithMessage);
@@ -645,6 +653,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       )
     );
 
+    setJustSentMessageId(message.id);
     setActiveConversation(conversationId);
     setIsNewConversation(false);
     updateUrl(`?id=${conversationId}`);
@@ -996,6 +1005,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                 selectConversation(null);
               }}
               onSendMessage={handleSendMessage}
+              justSentMessageId={justSentMessageId}
               onReaction={handleReaction}
               typingStatus={typingStatus}
               conversationId={activeConversation || ""}
