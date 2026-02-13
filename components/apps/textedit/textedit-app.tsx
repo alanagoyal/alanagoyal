@@ -62,13 +62,15 @@ export function TextEditApp({
   // Initialize file contents from files prop
   useEffect(() => {
     if (files.length === 0) return; // Don't update state for empty files array
-    const newContents: Record<string, string> = {};
-    files.forEach(file => {
-      // Preserve existing edits, or use original content
-      newContents[file.path] = fileContents[file.path] ?? file.content;
+    setFileContents((prev) => {
+      const next: Record<string, string> = {};
+      files.forEach((file) => {
+        // Preserve existing edits, or use original content
+        next[file.path] = prev[file.path] ?? file.content;
+      });
+      return next;
     });
-    setFileContents(newContents);
-  }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [files]);
 
   // Legacy: Extract filename from path for standalone mode
   useEffect(() => {
