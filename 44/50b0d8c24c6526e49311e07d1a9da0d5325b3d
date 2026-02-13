@@ -1,0 +1,29 @@
+lib/messages/message-queue.ts
+  872d8bb11a7bb8ca 46,49-50,253,358-363,365-366,377,380,389,397,400-409
+components/apps/messages/message-list.tsx
+  872d8bb11a7bb8ca 209
+components/apps/messages/message-bubble.tsx
+  872d8bb11a7bb8ca 26,47,327
+app/api/chat/route.ts
+  872d8bb11a7bb8ca 277,285-290,298,342,350-355,363
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "4450b0d8c24c6526e49311e07d1a9da0d5325b3d",
+  "prompts": {
+    "872d8bb11a7bb8ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4440375a-d6b5-45a3-9780-868cd31333db",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 65,
+      "total_deletions": 72,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
