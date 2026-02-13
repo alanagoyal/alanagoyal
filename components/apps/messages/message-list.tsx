@@ -1,6 +1,6 @@
 import { Message, Conversation, Reaction } from "@/types/messages";
 import { MessageBubble } from "./message-bubble";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { loadMessagesConversation } from "@/lib/sidebar-persistence";
@@ -20,6 +20,7 @@ interface MessageListProps {
   messageInputRef?: React.RefObject<{ focus: () => void }>;
   isMobileView?: boolean;
   focusModeActive?: boolean;
+  justSentMessageId?: string | null;
 }
 
 export function MessageList({
@@ -32,16 +33,12 @@ export function MessageList({
   messageInputRef,
   isMobileView,
   focusModeActive = false,
+  justSentMessageId,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
-  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(
-    null
-  );
-  const [prevConversationId, setPrevConversationId] = useState<string | null>(
-    null
-  );
-  const [prevMessageCount, setPrevMessageCount] = useState(0);
+  const conversationReadyRef = useRef(false);
+  const prevMessageCountRef = useRef(0);
   const messageListRef = useRef<HTMLDivElement>(null);
   const [wasAtBottom, setWasAtBottom] = useState(true);
 
@@ -140,40 +137,34 @@ export function MessageList({
     return () => resizeObserver.disconnect();
   }, [conversationId]);
 
-  // Update previous state tracking for sound effects
+  // Reset tracking when conversation changes (must be defined before the message effect)
   useEffect(() => {
-    setPrevMessageCount(messages.length);
-    setPrevConversationId(conversationId);
-  }, [messages, conversationId]);
+    conversationReadyRef.current = false;
+    prevMessageCountRef.current = 0;
+  }, [conversationId]);
 
-  // Handle new message effects (sounds, animations)
+  // Handle new message sound effects
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      const isNewMessageInSameConversation =
-        conversationId === prevConversationId &&
-        messages.length > prevMessageCount;
-
-      // Only process effects for new messages in the same conversation
-      if (isNewMessageInSameConversation) {
-        // Play sound for incoming messages in the active conversation (unless muted)
-        const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
-        if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
-          soundEffects.playReceivedSound();
-        }
-
-        // Trigger "delivered" animation for sent messages
-        if (lastMessage.sender === "me") {
-          setLastSentMessageId(lastMessage.id);
-          // Clear the lastSentMessageId after animation duration
-          const timer = setTimeout(() => {
-            setLastSentMessageId(null);
-          }, 1000);
-          return () => clearTimeout(timer);
-        }
-      }
+    // Skip the first render cycle per conversation (mount, switch, restore)
+    if (!conversationReadyRef.current) {
+      conversationReadyRef.current = true;
+      prevMessageCountRef.current = messages.length;
+      return;
     }
-  }, [messages, conversationId, prevConversationId, prevMessageCount, conversation?.hideAlerts, focusModeActive]);
+
+    const isNewMessage = messages.length > prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+
+    if (!isNewMessage || messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    // Play sound for incoming messages (unless muted)
+    const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
+    if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
+      soundEffects.playReceivedSound();
+    }
+  }, [messages, conversation?.hideAlerts, focusModeActive]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">
@@ -204,8 +195,9 @@ export function MessageList({
                   messageInputRef?.current?.focus();
                   onReactionComplete?.();
                 }}
-                justSent={message.id === lastSentMessageId}
+                justSent={message.id === justSentMessageId}
                 isMobileView={isMobileView}
+                hideSenderName={index > 0 && messages[index - 1]?.sender === message.sender}
               />
             </div>
           </div>

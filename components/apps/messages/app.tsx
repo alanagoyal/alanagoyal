@@ -44,6 +44,13 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   const [recipientInput, setRecipientInput] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
+  const [justSentMessageId, setJustSentMessageId] = useState<string | null>(null);
+  // Clear the delivered animation after it completes
+  useEffect(() => {
+    if (!justSentMessageId) return;
+    const timer = setTimeout(() => setJustSentMessageId(null), 1000);
+    return () => clearTimeout(timer);
+  }, [justSentMessageId]);
   const [typingStatus, setTypingStatus] = useState<{
     conversationId: string;
     recipient: string;
@@ -128,6 +135,10 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       }
     }
   }, [conversations, activeConversation, selectConversation]);
+
+  // Keep a ref to always have the latest conversations (avoids stale closures)
+  const conversationsRef = useRef(conversations);
+  conversationsRef.current = conversations;
 
   // Save user's conversations to local storage
   useEffect(() => {
@@ -599,6 +610,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         return updatedConversations;
       });
 
+      setJustSentMessageId(message.id);
       updateUrl(`?id=${newConversation.id}`);
       // Use enqueueUserMessage - the queue will handle group vs 1-on-1 logic
       messageQueue.current.enqueueUserMessage(conversationWithMessage);
@@ -623,22 +635,25 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       timestamp: new Date().toISOString(),
     };
 
-    // Update conversation with user message
+    // Build from the ref (always the latest rendered state) to avoid
+    // overwriting AI messages that arrived since the last render
+    const latestConversation = conversationsRef.current.find(
+      (c) => c.id === conversationId
+    );
     const updatedConversation = {
-      ...conversation,
-      messages: [...conversation.messages, message],
+      ...(latestConversation || conversation),
+      messages: [...(latestConversation || conversation).messages, message],
       lastMessageTime: new Date().toISOString(),
       unreadCount: 0,
     };
 
-    setConversations((prev) => {
-      const updatedConversations = prev.map((c) =>
+    setConversations((prev) =>
+      prev.map((c) =>
         c.id === conversationId ? updatedConversation : c
-      );
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConversations));
-      return updatedConversations;
-    });
+      )
+    );
 
+    setJustSentMessageId(message.id);
     setActiveConversation(conversationId);
     setIsNewConversation(false);
     updateUrl(`?id=${conversationId}`);
@@ -990,6 +1005,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                 selectConversation(null);
               }}
               onSendMessage={handleSendMessage}
+              justSentMessageId={justSentMessageId}
               onReaction={handleReaction}
               typingStatus={typingStatus}
               conversationId={activeConversation || ""}

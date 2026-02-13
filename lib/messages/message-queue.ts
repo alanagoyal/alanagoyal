@@ -31,7 +31,7 @@ type MessageQueueCallbacks = {
 };
 
 // Safety limit - model should wrap_up before this, but this is a fallback
-const MAX_CONSECUTIVE_AI_MESSAGES = 10;
+const MAX_CONSECUTIVE_AI_MESSAGES = 5;
 
 // Debounce time for user messages
 const USER_MESSAGE_DEBOUNCE_MS = 500;
@@ -43,8 +43,11 @@ const TYPING_DELAY_MAX_MS = 3000;
 // Delay to show reaction before continuing
 const REACTION_DISPLAY_MS = 1000;
 
-// Delay between consecutive AI messages
+// Delay between consecutive AI messages (different speakers)
 const AI_MESSAGE_DELAY_MS = 2000;
+
+// Delay between chunks from the same sender
+const SAME_SENDER_DELAY_MS = 1000;
 
 export class MessageQueue {
   private state: MessageQueueState = {
@@ -247,7 +250,7 @@ export class MessageQueue {
       }
 
       const data = await response.json();
-      const actions: Array<{ action: string; participant?: string; message?: string; reaction?: string }> =
+      const actions: Array<{ action: string; participant?: string; message?: string; messages?: string[]; reaction?: string }> =
         data.actions || [{ action: data.action, ...data }]; // Backwards compat
 
       // Process actions - reactions first, then messages
@@ -291,19 +294,49 @@ export class MessageQueue {
         }
       }
 
-      // Pause after reactions before proceeding to typing indicator
-      if (reactionActions.length > 0 && messageAction) {
+      // Handle inline reaction on respond/wrap_up (reaction field on the message action itself)
+      if (messageAction?.reaction && conversation.messages.length > 0) {
+        const lastMessage = conversation.messages[conversation.messages.length - 1];
+        const reactor = messageAction.participant;
+        const reactionType = messageAction.reaction as ReactionType;
+
+        if (reactor && reactionType && reactor !== lastMessage.sender) {
+          accumulatedReactions = [
+            ...(accumulatedReactions ?? lastMessage.reactions ?? []),
+            {
+              type: reactionType,
+              sender: reactor,
+              timestamp: new Date().toISOString(),
+            },
+          ];
+
+          const shouldMute =
+            this.callbacks.shouldMuteIncomingSound?.(conversation.hideAlerts) ?? false;
+          if (!shouldMute) {
+            soundEffects.playReactionSound();
+          }
+
+          if (this.callbacks.onMessageUpdated) {
+            this.callbacks.onMessageUpdated(conversationId, lastMessage.id, {
+              reactions: accumulatedReactions,
+            });
+          }
+
+          // Brief pause to show reaction before typing indicator
+          await this.delay(REACTION_DISPLAY_MS);
+        }
+      }
+
+      // Pause after standalone reactions before proceeding to typing indicator
+      if (reactionActions.length > 0 && messageAction && !messageAction.reaction) {
         await this.delay(REACTION_DISPLAY_MS);
       }
 
-      // If only reactions (no message action), continue the conversation
+      // If only reactions (no message action), stop — reactions are passive acknowledgments,
+      // not conversation drivers. Don't schedule another AI turn.
       if (reactionActions.length > 0 && !messageAction && !waitAction) {
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
-
-        if (currentVersion === state.version && isGroupChat) {
-          this.scheduleAIMessage(conversation);
-        }
         return;
       }
 
@@ -322,39 +355,58 @@ export class MessageQueue {
       }
 
       const sender = messageAction.participant;
-      const content = messageAction.message;
+      // Support both `messages` (array) and `message` (string) from the API
+      const chunks: string[] = Array.isArray(messageAction.messages)
+        ? messageAction.messages.filter((m): m is string => typeof m === "string" && m.trim().length > 0)
+        : messageAction.message
+          ? [messageAction.message]
+          : [];
 
-      if (!sender || !content) {
-        console.warn("Malformed response - missing participant or message:", messageAction);
+      if (!sender || chunks.length === 0) {
+        console.warn("Malformed response - missing participant or messages:", messageAction);
         this.callbacks.onTypingStatusChange(null, null);
         state.status = "idle";
         return;
       }
+      const deliveredMessages: Message[] = [];
 
-      // Show typing indicator
-      this.callbacks.onTypingStatusChange(conversationId, sender);
+      for (let i = 0; i < chunks.length; i++) {
+        // Show typing indicator
+        this.callbacks.onTypingStatusChange(conversationId, sender);
 
-      // Typing delay
-      const typingDelay =
-        TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS);
-      await this.delay(typingDelay);
+        // Typing delay: first chunk uses standard range, follow-ups scale with content length
+        const typingDelay = i === 0
+          ? TYPING_DELAY_MIN_MS + Math.random() * (TYPING_DELAY_MAX_MS - TYPING_DELAY_MIN_MS)
+          : Math.min(1200 + chunks[i].length * 25, 3000) + Math.random() * 500;
+        await this.delay(typingDelay);
 
-      if (currentVersion !== state.version) {
+        if (currentVersion !== state.version) {
+          this.callbacks.onTypingStatusChange(null, null);
+          state.status = "idle";
+          return;
+        }
+
+        // Deliver message and clear typing
+        const msg: Message = {
+          id: crypto.randomUUID(),
+          content: chunks[i],
+          sender: sender,
+          timestamp: new Date().toISOString(),
+        };
+        this.callbacks.onMessageGenerated(conversationId, msg);
         this.callbacks.onTypingStatusChange(null, null);
-        state.status = "idle";
-        return;
+        deliveredMessages.push(msg);
+
+        // Pause between messages so the delivered message can breathe
+        if (i < chunks.length - 1) {
+          await this.delay(SAME_SENDER_DELAY_MS);
+
+          if (currentVersion !== state.version) {
+            state.status = "idle";
+            return;
+          }
+        }
       }
-
-      // Deliver the message
-      const newMessage: Message = {
-        id: crypto.randomUUID(),
-        content: content,
-        sender: sender,
-        timestamp: new Date().toISOString(),
-      };
-
-      this.callbacks.onMessageGenerated(conversationId, newMessage);
-      this.callbacks.onTypingStatusChange(null, null);
 
       // Handle next steps based on action
       if (messageAction.action === "wrap_up") {
@@ -372,10 +424,10 @@ export class MessageQueue {
           this.callbacks.onMessageGenerated(conversationId, silencedMessage);
         }
       } else if (messageAction.action === "respond" && isGroupChat) {
-        // Continue the conversation
+        // Continue the conversation with all delivered chunks
         this.scheduleAIMessage({
           ...conversation,
-          messages: [...conversation.messages, newMessage],
+          messages: [...conversation.messages, ...deliveredMessages],
         });
       }
       // For 1-on-1 with "respond", just wait for next user message
