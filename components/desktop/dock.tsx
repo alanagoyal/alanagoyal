@@ -76,6 +76,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
     return states;
   });
   const exitingAppsRef = useRef<Set<string>>(new Set());
+  const animationTimeoutsRef = useRef<Set<number>>(new Set());
 
   // Track apps that existed on initial mount - these skip enter animation on first appearance
   // but will animate if closed and reopened (removed from this set on exit)
@@ -95,6 +96,16 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
   if (initialAppsRef.current === null) {
     initialAppsRef.current = new Set(currentAppsToShow);
   }
+
+  useEffect(() => {
+    const timeouts = animationTimeoutsRef.current;
+    return () => {
+      timeouts.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      timeouts.clear();
+    };
+  }, []);
 
   // Handle app visibility changes with animations
   // State machine: apps transition through entering -> stable -> exiting -> removed
@@ -175,7 +186,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
 
       // After animation, mark entering apps as stable
       if (enteringApps.length > 0) {
-        setTimeout(() => {
+        const timeoutId = window.setTimeout(() => {
           setAnimationStates((prev) => {
             const next = { ...prev };
             enteringApps.forEach((appId) => {
@@ -185,12 +196,14 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
+          animationTimeoutsRef.current.delete(timeoutId);
         }, 700);
+        animationTimeoutsRef.current.add(timeoutId);
       }
 
       // After animation, remove exiting apps from visible set
       if (exitingApps.length > 0) {
-        setTimeout(() => {
+        const timeoutId = window.setTimeout(() => {
           setVisibleApps((prev) => {
             const next = new Set(prev);
             exitingApps.forEach((appId) => {
@@ -208,7 +221,9 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
             });
             return next;
           });
+          animationTimeoutsRef.current.delete(timeoutId);
         }, 350);
+        animationTimeoutsRef.current.add(timeoutId);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- visibleApps is a Set; we track changes via currentAppsKey
