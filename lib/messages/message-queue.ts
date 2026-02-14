@@ -469,7 +469,7 @@ export class MessageQueue {
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") throw error;
         if (attempt < retries) {
-          await this.delay(1000);
+          await this.delay(1000, signal);
           continue;
         }
         throw error;
@@ -478,8 +478,34 @@ export class MessageQueue {
     throw new Error("Chat API failed after retries");
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  private delay(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(new DOMException("The operation was aborted", "AbortError"));
+        return;
+      }
+
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        resolve();
+      }, ms);
+
+      const onAbort = () => {
+        clearTimeout(timeoutId);
+        cleanup();
+        reject(new DOMException("The operation was aborted", "AbortError"));
+      };
+
+      const cleanup = () => {
+        if (signal) {
+          signal.removeEventListener("abort", onAbort);
+        }
+      };
+
+      if (signal) {
+        signal.addEventListener("abort", onAbort, { once: true });
+      }
+    });
   }
 
   public setActiveConversation(conversationId: string | null) {
