@@ -140,7 +140,8 @@ export const ConversationItem = memo(function ConversationItem({
           : ""
       }`}
     >
-      {conversation.unreadCount > 0 && (
+      {conversation.unreadCount > 0 &&
+        activeConversation !== conversation.id && (
         <div className="absolute left-0.5 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
       )}
       <div className="flex items-center gap-2 w-full px-4">

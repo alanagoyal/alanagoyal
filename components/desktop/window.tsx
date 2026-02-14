@@ -12,9 +12,16 @@ interface WindowProps {
   children: React.ReactNode;
   onFocus?: () => void;
   zIndexOverride?: number;
+  keepMountedWhenMinimized?: boolean;
 }
 
-export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps) {
+export function Window({
+  appId,
+  children,
+  onFocus,
+  zIndexOverride,
+  keepMountedWhenMinimized = false,
+}: WindowProps) {
   const {
     getWindow,
     closeWindow,
@@ -69,7 +76,13 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     positionMode: usesTransformPositioning ? "transform" : "top-left",
   });
 
-  if (!windowState || !windowState.isOpen || windowState.isMinimized || !app) {
+  if (!windowState || !windowState.isOpen || !app) {
+    return null;
+  }
+
+  const isHiddenMinimized = windowState.isMinimized && keepMountedWhenMinimized;
+
+  if (windowState.isMinimized && !keepMountedWhenMinimized) {
     return null;
   }
 
@@ -103,7 +116,7 @@ export function Window({ appId, children, onFocus, zIndexOverride }: WindowProps
     <div
       ref={windowRef}
       className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
-      style={windowStyle}
+      style={isHiddenMinimized ? { ...windowStyle, display: "none" } : windowStyle}
       onMouseDownCapture={(e) => {
         // Don't focus window or propagate click if a menu bar dropdown is open
         // (clicking outside the menu should only close the menu, not trigger any window actions)

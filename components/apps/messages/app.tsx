@@ -16,30 +16,33 @@ interface AppProps {
   isDesktop?: boolean;
   inShell?: boolean; // When true, prevent URL updates (for mobile shell)
   focusModeActive?: boolean; // When true, mute all notifications and sounds
+  onUnreadBadgeCountChange?: (count: number) => void;
 }
 
-function getConversationSortTime(conversation: Conversation): number {
+function getConversationTime(conversation: Conversation): number {
   if (!conversation.lastMessageTime) return 0;
-  const parsed = new Date(conversation.lastMessageTime).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
+  const time = new Date(conversation.lastMessageTime).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function compareConversations(a: Conversation, b: Conversation): number {
+  if (a.pinned && !b.pinned) return -1;
+  if (!a.pinned && b.pinned) return 1;
+  return getConversationTime(b) - getConversationTime(a);
 }
 
 function getDefaultConversationId(conversations: Conversation[]): string | null {
   if (conversations.length === 0) return null;
-
-  const sorted = [...conversations].sort((a, b) => {
-    // Pinned conversations come first.
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-
-    // Within each group, most recent conversation comes first.
-    return getConversationSortTime(b) - getConversationSortTime(a);
-  });
-
+  const sorted = [...conversations].sort(compareConversations);
   return sorted[0]?.id ?? null;
 }
 
-export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
+export default function App({
+  isDesktop = false,
+  inShell = false,
+  focusModeActive = false,
+  onUnreadBadgeCountChange,
+}: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
@@ -81,15 +84,19 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
-  // Ref to track focusModeActive for use in callbacks
-  const focusModeRef = useRef(focusModeActive);
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
+  const isWindowFocused = windowFocus?.isFocused ?? true;
+  // Ref to track focusModeActive for use in callbacks
+  const focusModeRef = useRef(focusModeActive);
+  // Ref to track window focus for queue callbacks (avoids stale closure reads)
+  const windowFocusedRef = useRef(isWindowFocused);
 
   // Keep focusModeRef in sync with prop
   useEffect(() => {
     focusModeRef.current = focusModeActive;
   }, [focusModeActive]);
+  windowFocusedRef.current = isWindowFocused;
   const STORAGE_KEY = "dialogueConversations";
   const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
 
@@ -112,7 +119,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       if (!selectedConversation) {
         console.error(`Conversation with ID ${conversationId} not found`);
 
-        // Clear URL and select first available conversation
+        // Clear URL and select default available conversation
         updateUrl("/messages");
 
         const fallbackConversationId = getDefaultConversationId(conversations);
@@ -298,8 +305,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return;
     }
 
-    // No URL ID, no persisted ID, and not mobile - select default conversation:
-    // pinned + most recent first, otherwise most recent overall.
+    // No URL ID, no persisted ID, and not mobile - select default conversation
     const defaultConversationId = getDefaultConversationId(allConversations);
     if (defaultConversationId) {
       setActiveConversation(defaultConversationId);
@@ -314,6 +320,13 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       saveMessagesConversation(activeConversation);
     }
   }, [activeConversation]);
+
+  // When Messages regains focus, treat the active thread as read.
+  useEffect(() => {
+    if (isWindowFocused && activeConversation) {
+      resetUnreadCount(activeConversation);
+    }
+  }, [isWindowFocused, activeConversation]);
 
   // Keep MessageQueue's internal state in sync with React's activeConversation state
   useEffect(() => {
@@ -339,8 +352,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
           // Determine if this message should increment unread count (show blue dot)
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           const shouldIncrementUnread =
-            conversationId !== currentActiveConversation &&
-            message.sender !== "me";
+            message.sender !== "me" &&
+            (conversationId !== currentActiveConversation ||
+              !windowFocusedRef.current);
 
           // Play sound for messages in inactive conversations (unless muted)
           if (shouldIncrementUnread && !shouldMuteIncomingSound(conversation.hideAlerts, focusModeRef.current)) {
@@ -369,24 +383,24 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         setConversations((prev) => {
           const currentActiveConversation =
             messageQueue.current.getActiveConversation();
+          const isBackgroundUpdate =
+            conversationId !== currentActiveConversation ||
+            !windowFocusedRef.current;
 
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           return prev.map((conv) =>
             conv.id === conversationId
-              ? {
-                  ...conv,
-                  unreadCount:
-                    conversationId === currentActiveConversation
-                      ? conv.unreadCount
-                      : (conv.unreadCount || 0) + 1,
-                  messages: conv.messages.map((msg) => {
+              ? (() => {
+                  let unreadIncrement = 0;
+
+                  const nextMessages = conv.messages.map((msg) => {
                     if (msg.id === messageId) {
                       // If we're updating reactions and the message already has reactions,
-                      // merge them together instead of overwriting
+                      // merge them together instead of overwriting.
                       const currentReactions = msg.reactions || [];
                       const newReactions = updates.reactions || [];
 
-                      // Filter out any duplicate reactions (same type and sender)
+                      // Filter out duplicate reactions (same type and sender).
                       const uniqueNewReactions = newReactions.filter(
                         (newReaction) =>
                           !currentReactions.some(
@@ -395,6 +409,11 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                               currentReaction.sender === newReaction.sender
                           )
                       );
+
+                      if (isBackgroundUpdate && uniqueNewReactions.length > 0) {
+                        unreadIncrement += uniqueNewReactions.length;
+                      }
+
                       return {
                         ...msg,
                         ...updates,
@@ -402,8 +421,14 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
                       };
                     }
                     return msg;
-                  }),
-                }
+                  });
+
+                  return {
+                    ...conv,
+                    unreadCount: (conv.unreadCount || 0) + unreadIncrement,
+                    messages: nextMessages,
+                  };
+                })()
               : conv
           );
         });
@@ -438,13 +463,17 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Method to reset unread count when conversation is selected
   const resetUnreadCount = (conversationId: string) => {
-    setConversations((prev) =>
-      prev.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation
-      )
-    );
+    setConversations((prev) => {
+      let changed = false;
+      const next = prev.map((conversation) => {
+        if (conversation.id !== conversationId || !conversation.unreadCount) {
+          return conversation;
+        }
+        changed = true;
+        return { ...conversation, unreadCount: 0 };
+      });
+      return changed ? next : prev;
+    });
   };
 
   // Method to update conversation recipients
@@ -717,17 +746,7 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       // If we're deleting the active conversation and there are conversations left
       if (id === activeConversation && newConversations.length > 0) {
         // Sort conversations the same way as in the sidebar
-        const sortedConvos = [...prevConversations].sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          const timeA = a.lastMessageTime
-            ? new Date(a.lastMessageTime).getTime()
-            : 0;
-          const timeB = b.lastMessageTime
-            ? new Date(b.lastMessageTime).getTime()
-            : 0;
-          return timeB - timeA;
-        });
+        const sortedConvos = [...prevConversations].sort(compareConversations);
 
         // Find the index of the deleted conversation in the sorted list
         const deletedIndex = sortedConvos.findIndex((conv) => conv.id === id);
@@ -952,6 +971,11 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
     return total + (conv.unreadCount || 0);
   }, 0);
 
+  useEffect(() => {
+    if (!onUnreadBadgeCountChange) return;
+    onUnreadBadgeCountChange(totalUnreadCount);
+  }, [onUnreadBadgeCountChange, totalUnreadCount]);
+
   // Show empty background while initializing to prevent flash
   if (!isLayoutInitialized) {
     return <div className="h-full bg-background" />;
@@ -981,6 +1005,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
               activeConversation={activeConversation}
               onSelectConversation={(id) => {
                 selectConversation(id);
+                if (id) {
+                  resetUnreadCount(id);
+                }
               }}
               onDeleteConversation={handleDeleteConversation}
               onUpdateConversation={handleUpdateConversation}
