@@ -381,20 +381,26 @@ export default function App({
         updates: Partial<Message>
       ) => {
         setConversations((prev) => {
+          const currentActiveConversation =
+            messageQueue.current.getActiveConversation();
+          const isBackgroundUpdate =
+            conversationId !== currentActiveConversation ||
+            !windowFocusedRef.current;
+
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           return prev.map((conv) =>
             conv.id === conversationId
-              ? {
-                  ...conv,
-                  unreadCount: conv.unreadCount,
-                  messages: conv.messages.map((msg) => {
+              ? (() => {
+                  let unreadIncrement = 0;
+
+                  const nextMessages = conv.messages.map((msg) => {
                     if (msg.id === messageId) {
                       // If we're updating reactions and the message already has reactions,
-                      // merge them together instead of overwriting
+                      // merge them together instead of overwriting.
                       const currentReactions = msg.reactions || [];
                       const newReactions = updates.reactions || [];
 
-                      // Filter out any duplicate reactions (same type and sender)
+                      // Filter out duplicate reactions (same type and sender).
                       const uniqueNewReactions = newReactions.filter(
                         (newReaction) =>
                           !currentReactions.some(
@@ -403,6 +409,11 @@ export default function App({
                               currentReaction.sender === newReaction.sender
                           )
                       );
+
+                      if (isBackgroundUpdate && uniqueNewReactions.length > 0) {
+                        unreadIncrement += uniqueNewReactions.length;
+                      }
+
                       return {
                         ...msg,
                         ...updates,
@@ -410,8 +421,14 @@ export default function App({
                       };
                     }
                     return msg;
-                  }),
-                }
+                  });
+
+                  return {
+                    ...conv,
+                    unreadCount: (conv.unreadCount || 0) + unreadIncrement,
+                    messages: nextMessages,
+                  };
+                })()
               : conv
           );
         });
