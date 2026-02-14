@@ -318,7 +318,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
                   />
                 )}
                 {badgeCount > 0 && (
-                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center border border-white/70 dark:border-zinc-900/70 shadow-sm">
+                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center shadow-sm">
                     {formatBadgeCount(badgeCount)}
                   </div>
                 )}
