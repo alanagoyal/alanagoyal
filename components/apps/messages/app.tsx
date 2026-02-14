@@ -19,24 +19,21 @@ interface AppProps {
   onUnreadBadgeCountChange?: (count: number) => void;
 }
 
-function getConversationSortTime(conversation: Conversation): number {
+function getConversationTime(conversation: Conversation): number {
   if (!conversation.lastMessageTime) return 0;
-  const parsed = new Date(conversation.lastMessageTime).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
+  const time = new Date(conversation.lastMessageTime).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function compareConversations(a: Conversation, b: Conversation): number {
+  if (a.pinned && !b.pinned) return -1;
+  if (!a.pinned && b.pinned) return 1;
+  return getConversationTime(b) - getConversationTime(a);
 }
 
 function getDefaultConversationId(conversations: Conversation[]): string | null {
   if (conversations.length === 0) return null;
-
-  const sorted = [...conversations].sort((a, b) => {
-    // Pinned conversations come first.
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-
-    // Within each group, most recent conversation comes first.
-    return getConversationSortTime(b) - getConversationSortTime(a);
-  });
-
+  const sorted = [...conversations].sort(compareConversations);
   return sorted[0]?.id ?? null;
 }
 
@@ -122,7 +119,7 @@ export default function App({
       if (!selectedConversation) {
         console.error(`Conversation with ID ${conversationId} not found`);
 
-        // Clear URL and select first available conversation
+        // Clear URL and select default available conversation
         updateUrl("/messages");
 
         const fallbackConversationId = getDefaultConversationId(conversations);
@@ -308,8 +305,7 @@ export default function App({
       return;
     }
 
-    // No URL ID, no persisted ID, and not mobile - select default conversation:
-    // pinned + most recent first, otherwise most recent overall.
+    // No URL ID, no persisted ID, and not mobile - select default conversation
     const defaultConversationId = getDefaultConversationId(allConversations);
     if (defaultConversationId) {
       setActiveConversation(defaultConversationId);
@@ -385,19 +381,12 @@ export default function App({
         updates: Partial<Message>
       ) => {
         setConversations((prev) => {
-          const currentActiveConversation =
-            messageQueue.current.getActiveConversation();
-
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           return prev.map((conv) =>
             conv.id === conversationId
               ? {
                   ...conv,
-                  unreadCount:
-                    conversationId === currentActiveConversation &&
-                    windowFocusedRef.current
-                      ? conv.unreadCount
-                      : (conv.unreadCount || 0) + 1,
+                  unreadCount: conv.unreadCount,
                   messages: conv.messages.map((msg) => {
                     if (msg.id === messageId) {
                       // If we're updating reactions and the message already has reactions,
@@ -457,13 +446,17 @@ export default function App({
 
   // Method to reset unread count when conversation is selected
   const resetUnreadCount = (conversationId: string) => {
-    setConversations((prev) =>
-      prev.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation
-      )
-    );
+    setConversations((prev) => {
+      let changed = false;
+      const next = prev.map((conversation) => {
+        if (conversation.id !== conversationId || !conversation.unreadCount) {
+          return conversation;
+        }
+        changed = true;
+        return { ...conversation, unreadCount: 0 };
+      });
+      return changed ? next : prev;
+    });
   };
 
   // Method to update conversation recipients
@@ -736,17 +729,7 @@ export default function App({
       // If we're deleting the active conversation and there are conversations left
       if (id === activeConversation && newConversations.length > 0) {
         // Sort conversations the same way as in the sidebar
-        const sortedConvos = [...prevConversations].sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          const timeA = a.lastMessageTime
-            ? new Date(a.lastMessageTime).getTime()
-            : 0;
-          const timeB = b.lastMessageTime
-            ? new Date(b.lastMessageTime).getTime()
-            : 0;
-          return timeB - timeA;
-        });
+        const sortedConvos = [...prevConversations].sort(compareConversations);
 
         // Find the index of the deleted conversation in the sorted list
         const deletedIndex = sortedConvos.findIndex((conv) => conv.id === id);
