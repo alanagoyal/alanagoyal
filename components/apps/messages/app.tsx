@@ -18,6 +18,27 @@ interface AppProps {
   focusModeActive?: boolean; // When true, mute all notifications and sounds
 }
 
+function getConversationSortTime(conversation: Conversation): number {
+  if (!conversation.lastMessageTime) return 0;
+  const parsed = new Date(conversation.lastMessageTime).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getDefaultConversationId(conversations: Conversation[]): string | null {
+  if (conversations.length === 0) return null;
+
+  const sorted = [...conversations].sort((a, b) => {
+    // Pinned conversations come first.
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+
+    // Within each group, most recent conversation comes first.
+    return getConversationSortTime(b) - getConversationSortTime(a);
+  });
+
+  return sorted[0]?.id ?? null;
+}
+
 export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
@@ -94,10 +115,10 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
         // Clear URL and select first available conversation
         updateUrl("/messages");
 
-        if (conversations.length > 0) {
-          const fallbackConversation = conversations[0];
-          setActiveConversation(fallbackConversation.id);
-          updateUrl(`?id=${fallbackConversation.id}`);
+        const fallbackConversationId = getDefaultConversationId(conversations);
+        if (fallbackConversationId) {
+          setActiveConversation(fallbackConversationId);
+          updateUrl(`?id=${fallbackConversationId}`);
         } else {
           setActiveConversation(null);
         }
@@ -125,9 +146,8 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       );
 
       // If current active conversation no longer exists
-      if (conversations.length > 0) {
-        // Select the first conversation
-        const newActiveConversation = conversations[0].id;
+      const newActiveConversation = getDefaultConversationId(conversations);
+      if (newActiveConversation) {
         selectConversation(newActiveConversation);
       } else {
         // No conversations left
@@ -278,9 +298,11 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
       return;
     }
 
-    // No URL ID, no persisted ID, and not mobile - select first conversation
-    if (allConversations.length > 0) {
-      setActiveConversation(allConversations[0].id);
+    // No URL ID, no persisted ID, and not mobile - select default conversation:
+    // pinned + most recent first, otherwise most recent overall.
+    const defaultConversationId = getDefaultConversationId(allConversations);
+    if (defaultConversationId) {
+      setActiveConversation(defaultConversationId);
     }
   }, [isMobileView, updateUrl]);
 
