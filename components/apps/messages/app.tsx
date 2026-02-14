@@ -325,6 +325,13 @@ export default function App({
     }
   }, [activeConversation]);
 
+  // When Messages regains focus, treat the active thread as read.
+  useEffect(() => {
+    if (isWindowFocused && activeConversation) {
+      resetUnreadCount(activeConversation);
+    }
+  }, [isWindowFocused, activeConversation]);
+
   // Keep MessageQueue's internal state in sync with React's activeConversation state
   useEffect(() => {
     messageQueue.current.setActiveConversation(activeConversation);
