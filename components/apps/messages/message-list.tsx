@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { loadMessagesConversation } from "@/lib/sidebar-persistence";
+import { useWindowFocus } from "@/lib/window-focus-context";
 
 // Tracks whether the component has been mounted in this page session.
 // Resets on page refresh (module reloads). Persists across minimize/restore (page stays loaded).
@@ -35,6 +36,8 @@ export function MessageList({
   focusModeActive = false,
   justSentMessageId,
 }: MessageListProps) {
+  const windowFocus = useWindowFocus();
+  const isWindowFocused = windowFocus?.isFocused ?? true;
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
   const conversationReadyRef = useRef(false);
@@ -159,12 +162,17 @@ export function MessageList({
 
     const lastMessage = messages[messages.length - 1];
 
-    // Play sound for incoming messages (unless muted)
+    // Play focused-conversation sound only when this Messages window is focused.
+    // When unfocused/minimized, unread sound is handled by MessageQueue.
     const isIncomingMessage = lastMessage.sender !== "me" && lastMessage.sender !== "system";
-    if (isIncomingMessage && !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)) {
+    if (
+      isIncomingMessage &&
+      isWindowFocused &&
+      !shouldMuteIncomingSound(conversation?.hideAlerts, focusModeActive)
+    ) {
       soundEffects.playReceivedSound();
     }
-  }, [messages, conversation?.hideAlerts, focusModeActive]);
+  }, [messages, conversation?.hideAlerts, focusModeActive, isWindowFocused]);
 
   return (
     <div ref={messageListRef} className="flex-1 flex flex-col-reverse relative">

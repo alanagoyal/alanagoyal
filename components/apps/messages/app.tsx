@@ -966,9 +966,8 @@ export default function App({
 
   useEffect(() => {
     if (!onUnreadBadgeCountChange) return;
-    // Badge is only shown while Messages is not focused.
-    onUnreadBadgeCountChange(isWindowFocused ? 0 : totalUnreadCount);
-  }, [onUnreadBadgeCountChange, isWindowFocused, totalUnreadCount]);
+    onUnreadBadgeCountChange(totalUnreadCount);
+  }, [onUnreadBadgeCountChange, totalUnreadCount]);
 
   // Show empty background while initializing to prevent flash
   if (!isLayoutInitialized) {
@@ -999,6 +998,9 @@ export default function App({
               activeConversation={activeConversation}
               onSelectConversation={(id) => {
                 selectConversation(id);
+                if (id) {
+                  resetUnreadCount(id);
+                }
               }}
               onDeleteConversation={handleDeleteConversation}
               onUpdateConversation={handleUpdateConversation}
