@@ -503,7 +503,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
           </Window>
 
-          <Window appId="messages">
+          <Window appId="messages" keepMountedWhenMinimized={true}>
             <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
           </Window>
 
