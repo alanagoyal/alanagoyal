@@ -9,6 +9,7 @@ import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon"
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
+  appBadges?: Record<string, number>;
 }
 
 function DockTooltip({ label }: { label: string }) {
@@ -52,7 +53,12 @@ const getDefaultDockApps = () => {
   return APPS.filter((app) => app.showOnDockByDefault !== false).map((app) => app.id);
 };
 
-export function Dock({ onTrashClick, onFinderClick }: DockProps) {
+function formatBadgeCount(count: number): string {
+  if (count > 99) return "99+";
+  return String(count);
+}
+
+export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
   const {
     openWindow,
     focusWindow,
@@ -281,6 +287,7 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
         {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
+          const badgeCount = appBadges[app.id] ?? 0;
 
           return (
             <button
@@ -309,6 +316,11 @@ export function Dock({ onTrashClick, onFinderClick }: DockProps) {
                     height={48}
                     className="w-12 h-12 object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
                   />
+                )}
+                {badgeCount > 0 && (
+                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center border border-white/70 dark:border-zinc-900/70 shadow-sm">
+                    {formatBadgeCount(badgeCount)}
+                  </div>
                 )}
               </div>
               <div

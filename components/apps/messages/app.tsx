@@ -16,6 +16,7 @@ interface AppProps {
   isDesktop?: boolean;
   inShell?: boolean; // When true, prevent URL updates (for mobile shell)
   focusModeActive?: boolean; // When true, mute all notifications and sounds
+  onUnreadBadgeCountChange?: (count: number) => void;
 }
 
 function getConversationSortTime(conversation: Conversation): number {
@@ -39,7 +40,12 @@ function getDefaultConversationId(conversations: Conversation[]): string | null 
   return sorted[0]?.id ?? null;
 }
 
-export default function App({ isDesktop = false, inShell = false, focusModeActive = false }: AppProps) {
+export default function App({
+  isDesktop = false,
+  inShell = false,
+  focusModeActive = false,
+  onUnreadBadgeCountChange,
+}: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
@@ -81,15 +87,19 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
 
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
-  // Ref to track focusModeActive for use in callbacks
-  const focusModeRef = useRef(focusModeActive);
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
+  const isWindowFocused = windowFocus?.isFocused ?? true;
+  // Ref to track focusModeActive for use in callbacks
+  const focusModeRef = useRef(focusModeActive);
+  // Ref to track window focus for queue callbacks (avoids stale closure reads)
+  const windowFocusedRef = useRef(isWindowFocused);
 
   // Keep focusModeRef in sync with prop
   useEffect(() => {
     focusModeRef.current = focusModeActive;
   }, [focusModeActive]);
+  windowFocusedRef.current = isWindowFocused;
   const STORAGE_KEY = "dialogueConversations";
   const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
 
@@ -339,8 +349,9 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
           // Determine if this message should increment unread count (show blue dot)
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           const shouldIncrementUnread =
-            conversationId !== currentActiveConversation &&
-            message.sender !== "me";
+            message.sender !== "me" &&
+            (conversationId !== currentActiveConversation ||
+              !windowFocusedRef.current);
 
           // Play sound for messages in inactive conversations (unless muted)
           if (shouldIncrementUnread && !shouldMuteIncomingSound(conversation.hideAlerts, focusModeRef.current)) {
@@ -376,7 +387,8 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
               ? {
                   ...conv,
                   unreadCount:
-                    conversationId === currentActiveConversation
+                    conversationId === currentActiveConversation &&
+                    windowFocusedRef.current
                       ? conv.unreadCount
                       : (conv.unreadCount || 0) + 1,
                   messages: conv.messages.map((msg) => {
@@ -951,6 +963,12 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   const totalUnreadCount = conversations.reduce((total, conv) => {
     return total + (conv.unreadCount || 0);
   }, 0);
+
+  useEffect(() => {
+    if (!onUnreadBadgeCountChange) return;
+    // Badge is only shown while Messages is not focused.
+    onUnreadBadgeCountChange(isWindowFocused ? 0 : totalUnreadCount);
+  }, [onUnreadBadgeCountChange, isWindowFocused, totalUnreadCount]);
 
   // Show empty background while initializing to prevent flash
   if (!isLayoutInitialized) {

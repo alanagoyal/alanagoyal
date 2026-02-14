@@ -163,6 +163,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
+  const [appBadges, setAppBadges] = useState<Record<string, number>>({});
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
@@ -456,6 +457,14 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     window.history.replaceState(null, "", "/settings");
   }, [openWindow]);
 
+  const handleMessagesUnreadBadgeChange = useCallback((count: number) => {
+    const safeCount = Math.max(0, Math.floor(count));
+    setAppBadges((prev) => {
+      if ((prev.messages ?? 0) === safeCount) return prev;
+      return { ...prev, messages: safeCount };
+    });
+  }, []);
+
   const handleSleep = useCallback(() => setMode("sleeping"), []);
   const handleRestart = useCallback(() => setMode("restarting"), []);
   const handleShutdown = useCallback(() => setMode("shuttingDown"), []);
@@ -514,8 +523,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <NotesApp inShell={true} initialSlug={initialNoteSlug} />
           </Window>
 
-          <Window appId="messages">
-            <MessagesApp inShell={true} focusModeActive={focusMode !== "off"} />
+          <Window appId="messages" keepMountedWhenMinimized={true}>
+            <MessagesApp
+              inShell={true}
+              focusModeActive={focusMode !== "off"}
+              onUnreadBadgeCountChange={handleMessagesUnreadBadgeChange}
+            />
           </Window>
 
           <Window appId="settings">
@@ -611,6 +624,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
+            appBadges={appBadges}
           />
         </>
       )}
