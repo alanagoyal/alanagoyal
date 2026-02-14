@@ -220,8 +220,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   // Debounced save for progress updates
   useEffect(() => {
-    debouncedSave(playbackState);
-  }, [playbackState.progress, debouncedSave, playbackState]);
+    debouncedSave(stateRef.current);
+  }, [playbackState.progress, debouncedSave]);
 
   // Immediate save for important state changes
   const prevTrackRef = useRef(playbackState.currentTrack?.id);
@@ -236,7 +236,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const repeatChanged = prevRepeatRef.current !== playbackState.repeatMode;
 
     if (trackChanged || volumeChanged || shuffleChanged || repeatChanged) {
-      immediateSave(playbackState);
+      immediateSave(stateRef.current);
       prevTrackRef.current = playbackState.currentTrack?.id;
       prevVolumeRef.current = playbackState.volume;
       prevShuffleRef.current = playbackState.isShuffle;
@@ -248,7 +248,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     playbackState.isShuffle,
     playbackState.repeatMode,
     immediateSave,
-    playbackState,
   ]);
 
   // Progress update interval
