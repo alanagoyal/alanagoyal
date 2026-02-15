@@ -1,0 +1,35 @@
+components/desktop/window.tsx
+  6a81813c8b99cac4 15,22-23,79,83-103
+types/messages/notification.ts
+  6a81813c8b99cac4 1-9
+components/apps/messages/app.tsx
+  6a81813c8b99cac4 14-15,21-23,26-40,44-47,94-95,101,105-111,153,161,342-361,373,389-396,403-412,428-430,437,441-442,447-458,467-469,471-493,497-504,508-509,1045-1048,1142
+components/apps/messages/messages-app.tsx
+  6a81813c8b99cac4 4,10-12,19-22,30-32
+components/desktop/desktop.tsx
+  6a81813c8b99cac4 13,27-28,168-171,485-537,565,568-571,668-672
+components/desktop/dock.tsx
+  6a81813c8b99cac4 12,56-61,275,305-308
+components/desktop/messages-notification-banner.tsx
+  6a81813c8b99cac4 1-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "125b6758cac035900a7be54b0b76a68b656cfd61",
+  "prompts": {
+    "6a81813c8b99cac4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c5865-85c2-77e1-9fb9-6607e41b4d46",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 402,
+      "total_deletions": 55,
+      "accepted_lines": 360,
+      "overriden_lines": 0
+    }
+  }
+}
