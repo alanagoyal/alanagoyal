@@ -22,6 +22,15 @@ type ParsedImagePayload = {
   extension: string;
 };
 
+function estimateBase64DecodedBytes(base64Data: string): number {
+  const padding = base64Data.endsWith("==")
+    ? 2
+    : base64Data.endsWith("=")
+      ? 1
+      : 0;
+  return Math.floor((base64Data.length * 3) / 4) - padding;
+}
+
 function parseImagePayload(image: string): ParsedImagePayload | null {
   const trimmed = image.trim();
   const dataUrlMatch = trimmed.match(
@@ -195,6 +204,20 @@ export async function POST(request: NextRequest) {
     if (!parsedImage) {
       return NextResponse.json(
         { error: "Invalid image payload. Expected base64 image data." },
+        { status: 400 }
+      );
+    }
+
+    const estimatedBytes = estimateBase64DecodedBytes(parsedImage.base64Data);
+    if (!Number.isFinite(estimatedBytes) || estimatedBytes <= 0) {
+      return NextResponse.json(
+        { error: "Invalid image payload. Decoded image is empty." },
+        { status: 400 }
+      );
+    }
+    if (estimatedBytes > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: "Image exceeds 10MB size limit" },
         { status: 400 }
       );
     }
