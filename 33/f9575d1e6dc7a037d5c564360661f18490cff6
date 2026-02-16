@@ -1,0 +1,15 @@
+public/messages/message-bubbles/right-no-tail-light.svg
+  872d8bb11a7bb8ca 1-6
+public/messages/message-bubbles/left-no-tail-dark.svg
+  872d8bb11a7bb8ca 1-4
+public/messages/message-bubbles/left-no-tail-light.svg
+  872d8bb11a7bb8ca 1-4
+public/messages/message-bubbles/right-no-tail-dark.svg
+  872d8bb11a7bb8ca 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "33f9575d1e6dc7a037d5c564360661f18490cff6",
+  "prompts": {}
+}
