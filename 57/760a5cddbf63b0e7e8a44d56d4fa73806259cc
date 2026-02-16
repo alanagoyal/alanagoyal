@@ -1,0 +1,27 @@
+components/apps/messages/message-list.tsx
+  a6af7978274d6123 166
+lib/messages/message-queue.ts
+  a6af7978274d6123 395
+components/apps/messages/app.tsx
+  a6af7978274d6123 432,436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "57760a5cddbf63b0e7e8a44d56d4fa73806259cc",
+  "prompts": {
+    "a6af7978274d6123": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "263c4c63-41f1-4b9f-85a4-369dfa7f69b6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 1,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
