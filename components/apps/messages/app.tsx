@@ -2,7 +2,7 @@ import { Sidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
-import { Conversation, Message, Reaction } from "@/types/messages";
+import { Conversation, Message, Reaction, REACTION_TEXT } from "@/types/messages";
 import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
@@ -11,12 +11,26 @@ import { extractMessageContent } from "@/lib/messages/content";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { loadMessagesConversation, saveMessagesConversation } from "@/lib/sidebar-persistence";
+import type { MessagesNotificationPayload } from "@/types/messages/notification";
+import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
 interface AppProps {
   isDesktop?: boolean;
   inShell?: boolean; // When true, prevent URL updates (for mobile shell)
   focusModeActive?: boolean; // When true, mute all notifications and sounds
   onUnreadBadgeCountChange?: (count: number) => void;
+  onNotification?: (notification: MessagesNotificationPayload) => void;
+  externalSelectConversationRequest?: MessagesConversationSelectRequest | null;
+  onExternalSelectRequestHandled?: (requestId: number) => void;
+}
+
+const STORAGE_KEY = "dialogueConversations";
+const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
+
+function truncateForNotification(content: string, max = 42): string {
+  const normalized = content.trim().replace(/\s+/g, " ");
+  if (normalized.length <= max) return normalized;
+  return `${normalized.slice(0, max - 1)}\u2026`;
 }
 
 function getConversationTime(conversation: Conversation): number {
@@ -42,6 +56,9 @@ export default function App({
   inShell = false,
   focusModeActive = false,
   onUnreadBadgeCountChange,
+  onNotification,
+  externalSelectConversationRequest,
+  onExternalSelectRequestHandled,
 }: AppProps) {
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
@@ -81,24 +98,28 @@ export default function App({
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const lastHandledExternalRequestIdRef = useRef<number | null>(null);
 
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  // Ref to track focusModeActive for use in callbacks
+  const focusModeRef = useRef(focusModeActive);
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
   const isWindowFocused = windowFocus?.isFocused ?? true;
-  // Ref to track focusModeActive for use in callbacks
-  const focusModeRef = useRef(focusModeActive);
-  // Ref to track window focus for queue callbacks (avoids stale closure reads)
   const windowFocusedRef = useRef(isWindowFocused);
 
   // Keep focusModeRef in sync with prop
   useEffect(() => {
     focusModeRef.current = focusModeActive;
   }, [focusModeActive]);
-  windowFocusedRef.current = isWindowFocused;
-  const STORAGE_KEY = "dialogueConversations";
-  const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
+  useEffect(() => {
+    windowFocusedRef.current = isWindowFocused;
+  }, [isWindowFocused]);
+  const onNotificationRef = useRef(onNotification);
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+  }, [onNotification]);
 
   // Memoized conversation selection method
   const selectConversation = useCallback(
@@ -140,6 +161,16 @@ export default function App({
     [conversations, setActiveConversation, setIsNewConversation, updateUrl]
   ); // Only recreate when these dependencies change
 
+  const resetUnreadCount = useCallback((conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, unreadCount: 0 }
+          : conversation
+      )
+    );
+  }, []);
+
   // Effects
   // Ensure active conversation remains valid
   useEffect(() => {
@@ -165,7 +196,9 @@ export default function App({
 
   // Keep a ref to always have the latest conversations (avoids stale closures)
   const conversationsRef = useRef(conversations);
-  conversationsRef.current = conversations;
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   // Save user's conversations to local storage
   useEffect(() => {
@@ -319,14 +352,36 @@ export default function App({
       resetUnreadCount(activeConversation);
       saveMessagesConversation(activeConversation);
     }
-  }, [activeConversation]);
+  }, [activeConversation, resetUnreadCount]);
 
-  // When Messages regains focus, treat the active thread as read.
   useEffect(() => {
     if (isWindowFocused && activeConversation) {
       resetUnreadCount(activeConversation);
     }
-  }, [isWindowFocused, activeConversation]);
+  }, [isWindowFocused, activeConversation, resetUnreadCount]);
+
+  useEffect(() => {
+    if (!externalSelectConversationRequest) return;
+
+    const { conversationId, requestId } = externalSelectConversationRequest;
+    if (lastHandledExternalRequestIdRef.current === requestId) return;
+    if (!conversations.some((c) => c.id === conversationId)) return;
+
+    if (activeConversation !== conversationId) {
+      selectConversation(conversationId);
+      resetUnreadCount(conversationId);
+    }
+
+    lastHandledExternalRequestIdRef.current = requestId;
+    onExternalSelectRequestHandled?.(requestId);
+  }, [
+    externalSelectConversationRequest,
+    conversations,
+    activeConversation,
+    selectConversation,
+    resetUnreadCount,
+    onExternalSelectRequestHandled,
+  ]);
 
   // Keep MessageQueue's internal state in sync with React's activeConversation state
   useEffect(() => {
@@ -337,7 +392,13 @@ export default function App({
   const messageQueue = useRef<MessageQueue>(
     new MessageQueue({
       onMessageGenerated: (conversationId: string, message: Message) => {
+        const notificationsToEmit: MessagesNotificationPayload[] = [];
+        let playUnread = false;
         setConversations((prev) => {
+          // Reset flags so StrictMode double-invocations produce correct results
+          playUnread = false;
+          notificationsToEmit.length = 0;
+
           // Get the current active conversation from MessageQueue's internal state
           // This ensures we always have the latest value, not a stale closure
           const currentActiveConversation =
@@ -349,16 +410,37 @@ export default function App({
             return prev;
           }
 
-          // Determine if this message should increment unread count (show blue dot)
-          // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
+          // Notification rules:
+          // - System messages (sender "system"): no unread, no sound, no banner
+          // - Hide Alerts / Focus Mode: no sound, no banner — unread still increments
+          // - Focused + active convo: playReceivedSound (via message-list), no unread
+          // - Focused + inactive convo: playUnreadSound, unread increments, no banner
+          // - Unfocused: playUnreadSound, unread increments, banner shown
           const shouldIncrementUnread =
             message.sender !== "me" &&
+            message.sender !== "system" &&
             (conversationId !== currentActiveConversation ||
               !windowFocusedRef.current);
 
-          // Play sound for messages in inactive conversations (unless muted)
+          const shouldShowNotificationBanner =
+            shouldIncrementUnread &&
+            !shouldMuteIncomingSound(conversation.hideAlerts, focusModeRef.current) &&
+            !windowFocusedRef.current;
+
+          // Flag sound to play after updater completes (no side effects inside updater)
           if (shouldIncrementUnread && !shouldMuteIncomingSound(conversation.hideAlerts, focusModeRef.current)) {
-            soundEffects.playUnreadSound();
+            playUnread = true;
+          }
+
+          if (shouldShowNotificationBanner) {
+            notificationsToEmit.push({
+              id: uuidv4(),
+              conversationId,
+              sender: message.sender,
+              title: message.sender,
+              body: truncateForNotification(message.content),
+              type: "message",
+            });
           }
 
           return prev.map((conv) =>
@@ -374,18 +456,25 @@ export default function App({
               : conv
           );
         });
+        if (playUnread) soundEffects.playUnreadSound();
+        notificationsToEmit.forEach((notification) => {
+          queueMicrotask(() => onNotificationRef.current?.(notification));
+        });
       },
       onMessageUpdated: (
         conversationId: string,
         messageId: string,
         updates: Partial<Message>
       ) => {
+        const notificationsToEmit: MessagesNotificationPayload[] = [];
         setConversations((prev) => {
+          // Reset so StrictMode double-invocations produce correct results
+          notificationsToEmit.length = 0;
+
           const currentActiveConversation =
             messageQueue.current.getActiveConversation();
           const isBackgroundUpdate =
-            conversationId !== currentActiveConversation ||
-            !windowFocusedRef.current;
+            conversationId !== currentActiveConversation || !windowFocusedRef.current;
 
           // Note: hideAlerts and focusMode do NOT affect unread count - only sounds
           return prev.map((conv) =>
@@ -394,33 +483,54 @@ export default function App({
                   let unreadIncrement = 0;
 
                   const nextMessages = conv.messages.map((msg) => {
-                    if (msg.id === messageId) {
-                      // If we're updating reactions and the message already has reactions,
-                      // merge them together instead of overwriting.
-                      const currentReactions = msg.reactions || [];
-                      const newReactions = updates.reactions || [];
+                    if (msg.id !== messageId) return msg;
 
-                      // Filter out duplicate reactions (same type and sender).
-                      const uniqueNewReactions = newReactions.filter(
-                        (newReaction) =>
-                          !currentReactions.some(
-                            (currentReaction) =>
-                              currentReaction.type === newReaction.type &&
-                              currentReaction.sender === newReaction.sender
-                          )
-                      );
+                    // If we're updating reactions and the message already has reactions,
+                    // merge them together instead of overwriting.
+                    const currentReactions = msg.reactions || [];
+                    const newReactions = updates.reactions || [];
 
-                      if (isBackgroundUpdate && uniqueNewReactions.length > 0) {
-                        unreadIncrement += uniqueNewReactions.length;
-                      }
+                    // Filter out duplicate reactions (same type and sender).
+                    const uniqueNewReactions = newReactions.filter(
+                      (newReaction) =>
+                        !currentReactions.some(
+                          (currentReaction) =>
+                            currentReaction.type === newReaction.type &&
+                            currentReaction.sender === newReaction.sender
+                        )
+                    );
 
-                      return {
-                        ...msg,
-                        ...updates,
-                        reactions: [...currentReactions, ...uniqueNewReactions],
-                      };
+                    if (isBackgroundUpdate && uniqueNewReactions.length > 0) {
+                      unreadIncrement += uniqueNewReactions.length;
                     }
-                    return msg;
+
+                    if (
+                      !windowFocusedRef.current &&
+                      uniqueNewReactions.length > 0 &&
+                      !shouldMuteIncomingSound(conv.hideAlerts, focusModeRef.current)
+                    ) {
+                      uniqueNewReactions.forEach((reaction) => {
+                        const prefix = `${reaction.sender.split(" ")[0]} ${
+                          REACTION_TEXT[reaction.type]
+                        } \u201c`;
+                        const suffix = "\u201d";
+                        const maxContent = 82 - prefix.length - suffix.length;
+                        notificationsToEmit.push({
+                          id: uuidv4(),
+                          conversationId,
+                          sender: reaction.sender,
+                          title: reaction.sender,
+                          body: `${prefix}${truncateForNotification(msg.content, maxContent)}${suffix}`,
+                          type: "reaction",
+                        });
+                      });
+                    }
+
+                    return {
+                      ...msg,
+                      ...updates,
+                      reactions: [...currentReactions, ...uniqueNewReactions],
+                    };
                   });
 
                   return {
@@ -431,6 +541,9 @@ export default function App({
                 })()
               : conv
           );
+        });
+        notificationsToEmit.forEach((notification) => {
+          queueMicrotask(() => onNotificationRef.current?.(notification));
         });
       },
       onTypingStatusChange: (
@@ -460,21 +573,6 @@ export default function App({
       queue.dispose();
     };
   }, []);
-
-  // Method to reset unread count when conversation is selected
-  const resetUnreadCount = (conversationId: string) => {
-    setConversations((prev) => {
-      let changed = false;
-      const next = prev.map((conversation) => {
-        if (conversation.id !== conversationId || !conversation.unreadCount) {
-          return conversation;
-        }
-        changed = true;
-        return { ...conversation, unreadCount: 0 };
-      });
-      return changed ? next : prev;
-    });
-  };
 
   // Method to update conversation recipients
   const updateConversationRecipients = (
@@ -746,7 +844,17 @@ export default function App({
       // If we're deleting the active conversation and there are conversations left
       if (id === activeConversation && newConversations.length > 0) {
         // Sort conversations the same way as in the sidebar
-        const sortedConvos = [...prevConversations].sort(compareConversations);
+        const sortedConvos = [...prevConversations].sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          const timeA = a.lastMessageTime
+            ? new Date(a.lastMessageTime).getTime()
+            : 0;
+          const timeB = b.lastMessageTime
+            ? new Date(b.lastMessageTime).getTime()
+            : 0;
+          return timeB - timeA;
+        });
 
         // Find the index of the deleted conversation in the sorted list
         const deletedIndex = sortedConvos.findIndex((conv) => conv.id === id);
@@ -1005,9 +1113,6 @@ export default function App({
               activeConversation={activeConversation}
               onSelectConversation={(id) => {
                 selectConversation(id);
-                if (id) {
-                  resetUnreadCount(id);
-                }
               }}
               onDeleteConversation={handleDeleteConversation}
               onUpdateConversation={handleUpdateConversation}
@@ -1071,6 +1176,7 @@ export default function App({
               unreadCount={totalUnreadCount}
               isDesktop={isDesktop}
               focusModeActive={focusModeActive}
+              isWindowFocused={isWindowFocused}
             />
           </div>
         </div>

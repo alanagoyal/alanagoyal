@@ -80,44 +80,55 @@ export function Window({
     return null;
   }
 
-  const isHiddenMinimized = windowState.isMinimized && keepMountedWhenMinimized;
-
   if (windowState.isMinimized && !keepMountedWhenMinimized) {
     return null;
   }
 
+  // When minimized with keepMountedWhenMinimized, we render the SAME tree
+  // structure but hidden via CSS. This preserves React's component identity
+  // so children (e.g. Messages and its MessageQueue) are never unmounted.
+  const isHiddenMinimized = windowState.isMinimized && keepMountedWhenMinimized;
+
   const { position, size, isMaximized, zIndex } = windowState;
 
-  const windowStyle: React.CSSProperties = isMaximized
-    ? {
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "auto",
-        height: "auto",
-        zIndex: zIndexOverride ?? MAXIMIZED_Z_INDEX,
-      }
-    : {
-        ...(usesTransformPositioning
-          ? { transform: `translate(${position.x}px, ${position.y}px)` }
-          : { top: position.y, left: position.x }),
-        width: size.width,
-        height: size.height,
-        zIndex: zIndexOverride ?? zIndex,
-        willChange: isInteracting
-          ? usesTransformPositioning
-            ? "transform,width,height"
-            : "top,left,width,height"
-          : undefined,
-      };
+  const windowStyle: React.CSSProperties = isHiddenMinimized
+    ? { width: 0, height: 0, overflow: "hidden" }
+    : isMaximized
+      ? {
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "auto",
+          height: "auto",
+          zIndex: zIndexOverride ?? MAXIMIZED_Z_INDEX,
+        }
+      : {
+          ...(usesTransformPositioning
+            ? { transform: `translate(${position.x}px, ${position.y}px)` }
+            : { top: position.y, left: position.x }),
+          width: size.width,
+          height: size.height,
+          zIndex: zIndexOverride ?? zIndex,
+          willChange: isInteracting
+            ? usesTransformPositioning
+              ? "transform,width,height"
+              : "top,left,width,height"
+            : undefined,
+        };
 
   return (
     <div
       ref={windowRef}
-      className={cn("fixed", !isFocused && !isMaximized && "opacity-95")}
-      style={isHiddenMinimized ? { ...windowStyle, display: "none" } : windowStyle}
+      className={cn(
+        "fixed",
+        isHiddenMinimized && "invisible pointer-events-none",
+        !isFocused && !isMaximized && !isHiddenMinimized && "opacity-95",
+      )}
+      style={windowStyle}
+      aria-hidden={isHiddenMinimized || undefined}
       onMouseDownCapture={(e) => {
+        if (isHiddenMinimized) return;
         // Don't focus window or propagate click if a menu bar dropdown is open
         // (clicking outside the menu should only close the menu, not trigger any window actions)
         if (isMenuOpenRef.current) {
@@ -147,6 +158,7 @@ export function Window({
         }
       }}
       onClickCapture={(e) => {
+        if (isHiddenMinimized) return;
         // Block all clicks if menu is open
         if (isMenuOpenRef.current) {
           e.stopPropagation();
@@ -163,6 +175,7 @@ export function Window({
         }
       }}
       onDoubleClickCapture={(e) => {
+        if (isHiddenMinimized) return;
         if (isMenuOpenRef.current) {
           e.stopPropagation();
           e.preventDefault();
@@ -186,7 +199,7 @@ export function Window({
       >
         <div className="flex-1 min-h-0">
           <WindowFocusProvider
-            isFocused={isFocused}
+            isFocused={isHiddenMinimized ? false : isFocused}
             appId={appId}
             closeWindow={() => closeWindow(appId)}
             minimizeWindow={() => minimizeWindow(appId)}
@@ -201,7 +214,7 @@ export function Window({
       </div>
 
       {/* Resize handles */}
-      {!isMaximized && (
+      {!isMaximized && !isHiddenMinimized && (
         <>
           <div
             className="absolute cursor-nw-resize"
