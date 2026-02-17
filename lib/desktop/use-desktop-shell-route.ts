@@ -25,11 +25,6 @@ export function replaceDesktopRoute(url: string): void {
   notifyDesktopRouteChange();
 }
 
-export function pushDesktopRoute(url: string): void {
-  window.history.pushState(null, "", url);
-  notifyDesktopRouteChange();
-}
-
 export interface DesktopShellRouteState {
   appId?: string;
   noteSlug?: string;

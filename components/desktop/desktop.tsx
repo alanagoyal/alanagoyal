@@ -167,7 +167,14 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
+  // One-shot signal for external Finder tab navigation (e.g. Trash dock icon).
+  // Cleared after one render so it doesn't override the saved tab on remount.
   const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
+  useEffect(() => {
+    if (finderTab !== undefined) {
+      setFinderTab(undefined);
+    }
+  }, [finderTab]);
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
@@ -426,11 +433,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     [openMultiWindow]
   );
 
-  // Handler for Finder dock icon click - focuses existing window or opens new one at Recents
-  const handleFinderDockClick = useCallback(() => {
-    setFinderTab("recents");
-  }, []);
-
   // Handler for Trash dock icon click
   const handleTrashClick = useCallback(() => {
     setFinderTab("trash");
@@ -634,7 +636,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder">
+          <Window appId="finder" keepMountedWhenMinimized={true}>
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
           </Window>
 
@@ -718,7 +720,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
           <Dock
             onTrashClick={handleTrashClick}
-            onFinderClick={handleFinderDockClick}
             appBadges={appBadges}
           />
           <MessagesNotificationBanner

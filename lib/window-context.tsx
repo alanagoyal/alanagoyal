@@ -942,15 +942,21 @@ export function WindowManagerProvider({
     zIndexRef.current = state.nextZIndex;
   }, [state.nextZIndex]);
 
-  const lastSyncedInitialAppIdRef = React.useRef<string | null>(null);
-  // Apply route-provided initialAppId only when it changes.
-  // This avoids re-focusing on every state update while keeping route transitions working.
+  // Tracks the last initialAppId we synced. Initialized to the prop value
+  // so that the first mount is a no-op (computeInitialState already handles it).
+  const lastSyncedInitialAppIdRef = React.useRef<string | undefined>(initialAppId);
+  // Apply route-provided initialAppId only when it actually changes.
+  // Read current state from the ref to avoid depending on state.windows/focusedWindowId,
+  // which change on every drag/resize and would re-run this effect needlessly.
   useEffect(() => {
     if (!initialAppId) return;
     if (lastSyncedInitialAppIdRef.current === initialAppId) return;
     lastSyncedInitialAppIdRef.current = initialAppId;
 
-    Object.values(state.windows).forEach((windowState) => {
+    const currentState = latestStateRef.current;
+    if (!currentState) return;
+
+    Object.values(currentState.windows).forEach((windowState) => {
       if (
         windowState.appId === initialAppId ||
         !windowState.isMaximized ||
@@ -969,7 +975,7 @@ export function WindowManagerProvider({
     if (!app) return;
 
     if (app.multiWindow) {
-      const topmost = Object.values(state.windows)
+      const topmost = Object.values(currentState.windows)
         .filter((w) => w.appId === initialAppId && w.isOpen)
         .sort((a, b) => b.zIndex - a.zIndex)[0];
       if (!topmost) return;
@@ -977,12 +983,12 @@ export function WindowManagerProvider({
         dispatch({ type: "UNMINIMIZE_MULTI_WINDOW", windowId: topmost.id });
         return;
       }
-      if (state.focusedWindowId === topmost.id) return;
+      if (currentState.focusedWindowId === topmost.id) return;
       dispatch({ type: "FOCUS_MULTI_WINDOW", windowId: topmost.id });
       return;
     }
 
-    const window = state.windows[initialAppId];
+    const window = currentState.windows[initialAppId];
     if (!window) return;
     if (!window.isOpen) {
       dispatch({ type: "OPEN_WINDOW", appId: initialAppId });
@@ -992,10 +998,10 @@ export function WindowManagerProvider({
       dispatch({ type: "UNMINIMIZE_WINDOW", appId: initialAppId });
       return;
     }
-    if (state.focusedWindowId !== initialAppId) {
+    if (currentState.focusedWindowId !== initialAppId) {
       dispatch({ type: "FOCUS_WINDOW", appId: initialAppId });
     }
-  }, [initialAppId, state.windows, state.focusedWindowId]);
+  }, [initialAppId]);
 
   // Keep latest state available for cleanup flush
   useEffect(() => {

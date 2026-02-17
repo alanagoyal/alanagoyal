@@ -8,7 +8,6 @@ import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon"
 
 interface DockProps {
   onTrashClick?: () => void;
-  onFinderClick?: () => void;
   appBadges?: Record<string, number>;
 }
 
@@ -58,7 +57,7 @@ function formatBadgeCount(count: number): string {
   return String(count);
 }
 
-export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
+export function Dock({ onTrashClick, appBadges = {} }: DockProps) {
   const {
     openWindow,
     focusWindow,
@@ -223,11 +222,6 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   }, [currentAppsKey]);
 
   const handleAppClick = (appId: string) => {
-    // Finder-specific behavior: reset tab to Recents, then proceed with normal app activation.
-    if (appId === "finder" && onFinderClick) {
-      onFinderClick();
-    }
-
     const app = getAppById(appId);
 
     // For multi-window apps, restore exactly one minimized window when present.
