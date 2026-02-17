@@ -82,7 +82,6 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
     return states;
   });
   const exitingAppsRef = useRef<Set<string>>(new Set());
-  const animationTimeoutsRef = useRef<Set<number>>(new Set());
 
   // Track apps that existed on initial mount - these skip enter animation on first appearance
   // but will animate if closed and reopened (removed from this set on exit)
@@ -102,16 +101,6 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   if (initialAppsRef.current === null) {
     initialAppsRef.current = new Set(currentAppsToShow);
   }
-
-  useEffect(() => {
-    const timeouts = animationTimeoutsRef.current;
-    return () => {
-      timeouts.forEach((timeoutId) => {
-        window.clearTimeout(timeoutId);
-      });
-      timeouts.clear();
-    };
-  }, []);
 
   // Handle app visibility changes with animations
   // State machine: apps transition through entering -> stable -> exiting -> removed
@@ -192,7 +181,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
 
       // After animation, mark entering apps as stable
       if (enteringApps.length > 0) {
-        const timeoutId = window.setTimeout(() => {
+        setTimeout(() => {
           setAnimationStates((prev) => {
             const next = { ...prev };
             enteringApps.forEach((appId) => {
@@ -202,14 +191,12 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
             });
             return next;
           });
-          animationTimeoutsRef.current.delete(timeoutId);
         }, 700);
-        animationTimeoutsRef.current.add(timeoutId);
       }
 
       // After animation, remove exiting apps from visible set
       if (exitingApps.length > 0) {
-        const timeoutId = window.setTimeout(() => {
+        setTimeout(() => {
           setVisibleApps((prev) => {
             const next = new Set(prev);
             exitingApps.forEach((appId) => {
@@ -227,9 +214,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
             });
             return next;
           });
-          animationTimeoutsRef.current.delete(timeoutId);
         }, 350);
-        animationTimeoutsRef.current.add(timeoutId);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- visibleApps is a Set; we track changes via currentAppsKey
@@ -318,7 +303,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
                   />
                 )}
                 {badgeCount > 0 && (
-                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center shadow-sm">
+                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                     {formatBadgeCount(badgeCount)}
                   </div>
                 )}

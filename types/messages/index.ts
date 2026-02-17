@@ -31,6 +31,15 @@ export interface Recipient {
 
 export type ReactionType = 'heart' | 'like' | 'dislike' | 'laugh' | 'emphasize' | 'question';
 
+export const REACTION_TEXT: Record<ReactionType, string> = {
+  heart: "loved",
+  like: "liked",
+  dislike: "disliked",
+  laugh: "laughed at",
+  emphasize: "emphasized",
+  question: "questioned",
+};
+
 export interface Reaction {
   type: ReactionType;
   sender: string;

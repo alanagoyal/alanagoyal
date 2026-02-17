@@ -462,12 +462,25 @@ export class MessageQueue {
         });
 
         if (!response.ok) {
-          throw new Error(`Chat API error: ${response.status}`);
+          let detail = `status ${response.status}`;
+          try {
+            const body = await response.json();
+            if (body?.details) detail = body.details;
+            else if (body?.error) detail = body.error;
+          } catch {
+            // ignore parse errors
+          }
+          const err = new Error(`Chat API error: ${detail}`);
+          (err as unknown as Record<string, number>).status = response.status;
+          throw err;
         }
 
         return response;
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") throw error;
+        // Don't retry quota/rate-limit errors
+        const status = (error as unknown as Record<string, number>)?.status;
+        if (status === 429) throw error;
         if (attempt < retries) {
           await this.delay(1000, signal);
           continue;

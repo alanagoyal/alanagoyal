@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Message, ReactionType, Reaction } from "@/types/messages";
+import { Message, ReactionType, Reaction, REACTION_TEXT } from "@/types/messages";
 import { Conversation } from "@/types/messages";
 import { memo, useCallback, useState, useRef } from "react";
 import {
@@ -199,25 +199,7 @@ export const MessageBubble = memo(function MessageBubble({
     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
   };
 
-  // Helper function to get reaction verb
-  const getReactionVerb = (type: ReactionType) => {
-    switch (type) {
-      case "heart":
-        return "loved";
-      case "like":
-        return "liked";
-      case "dislike":
-        return "disliked";
-      case "laugh":
-        return "laughed at";
-      case "emphasize":
-        return "emphasized";
-      case "question":
-        return "questioned";
-      default:
-        return "reacted to";
-    }
-  };
+  const getReactionVerb = (type: ReactionType) => REACTION_TEXT[type] ?? "reacted to";
 
   // Helper function to format reactions into a sentence
   const formatReactions = (reactions: Reaction[]) => {

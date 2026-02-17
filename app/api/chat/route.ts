@@ -1,5 +1,6 @@
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
 import { Recipient, Message } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
@@ -10,8 +11,12 @@ import {
   getConversationState,
 } from "@/lib/messages/temporal-context";
 
+// Keep route execution under strict serverless limits (for example 15s).
+export const maxDuration = 14;
+
 let client: OpenAI | null = null;
 let loggerInitialized = false;
+const CHAT_REQUEST_TIMEOUT_MS = 9000;
 
 function parseToolCallArguments(
   rawArguments: string | undefined,
@@ -36,8 +41,9 @@ function getClient() {
       new OpenAI({
         baseURL: "https://api.braintrust.dev/v1/proxy",
         apiKey: process.env.BRAINTRUST_API_KEY!,
-        timeout: 30000,
-        maxRetries: 3,
+        // Fail fast and let MessageQueue retry once on the client side.
+        timeout: 12000,
+        maxRetries: 0,
       })
     ) as unknown as OpenAI;
   }
@@ -49,6 +55,50 @@ function getClient() {
     loggerInitialized = true;
   }
   return client;
+}
+
+function isQuotaError(error: unknown): boolean {
+  if (error && typeof error === "object" && "status" in error && (error as { status: number }).status === 429) return true;
+  if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "insufficient_quota") return true;
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return message.includes("429") || message.includes("quota") || message.includes("rate limit");
+}
+
+function isTransientUpstreamError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return (
+    message.includes("abort") ||
+    message.includes("aborted") ||
+    message.includes("timeout") ||
+    message.includes("timed out") ||
+    message.includes("504") ||
+    message.includes("gateway") ||
+    message.includes("fetch failed") ||
+    message.includes("network")
+  );
+}
+
+function hasChoices(
+  value: unknown
+): value is { choices: Array<{ message?: { tool_calls?: ChatCompletionMessageToolCall[] } }> } {
+  return typeof value === "object" && value !== null && "choices" in value;
+}
+
+async function createChatCompletionWithTimeout(
+  params: Parameters<OpenAI["chat"]["completions"]["create"]>[0],
+  timeoutMs: number
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(`chat upstream timeout after ${timeoutMs}ms`);
+  }, timeoutMs);
+  try {
+    return await getClient().chat.completions.create(params, {
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function POST(req: Request) {
@@ -117,15 +167,22 @@ export async function POST(req: Request) {
       ? buildOneOnOneTools(recipients[0].name)
       : buildGroupTools(participantNames, state.lastSpeaker);
 
-    const response = await getClient().chat.completions.create({
-      model: "gpt-5.2",
-      messages: chatMessages,
-      tool_choice: "required",
-      tools,
-      parallel_tool_calls: false,
-      temperature: 0.7,
-      max_tokens: 300,
-    });
+    const response = await createChatCompletionWithTimeout(
+      {
+        model: "gpt-5.2",
+        messages: chatMessages,
+        tool_choice: "required",
+        tools,
+        stream: false,
+        parallel_tool_calls: false,
+        temperature: 0.7,
+        max_tokens: 300,
+      },
+      CHAT_REQUEST_TIMEOUT_MS
+    );
+    if (!hasChoices(response)) {
+      throw new Error("Unexpected streaming response from chat completions API");
+    }
 
     const toolCalls = response.choices[0]?.message?.tool_calls;
     if (!toolCalls || toolCalls.length === 0) {
@@ -137,7 +194,7 @@ export async function POST(req: Request) {
     }
 
     // Return all actions (supports react + respond in same turn)
-    const actions = toolCalls.map((tc) => {
+    const actions = toolCalls.map((tc: ChatCompletionMessageToolCall) => {
       const args = parseToolCallArguments(
         tc.function.arguments,
         tc.function.name
@@ -154,6 +211,31 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Error:", error);
+
+    if (isQuotaError(error)) {
+      return new Response(
+        JSON.stringify({
+          error: "API quota exceeded",
+          code: "quota_exceeded",
+          details: "The AI API quota has been exceeded. Messages will not receive replies until the quota resets.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Degrade gracefully on transient upstream failures so the UI keeps working
+    // instead of surfacing a hard error from /api/chat.
+    if (isTransientUpstreamError(error)) {
+      return new Response(
+        JSON.stringify({
+          actions: [{ action: "wait" }],
+          degraded: true,
+          reason: "upstream_unavailable",
+        }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         error: "Failed to generate message",

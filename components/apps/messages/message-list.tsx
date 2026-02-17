@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { loadMessagesConversation } from "@/lib/sidebar-persistence";
-import { useWindowFocus } from "@/lib/window-focus-context";
 
 // Tracks whether the component has been mounted in this page session.
 // Resets on page refresh (module reloads). Persists across minimize/restore (page stays loaded).
@@ -21,6 +20,7 @@ interface MessageListProps {
   messageInputRef?: React.RefObject<{ focus: () => void }>;
   isMobileView?: boolean;
   focusModeActive?: boolean;
+  isWindowFocused?: boolean;
   justSentMessageId?: string | null;
 }
 
@@ -34,10 +34,9 @@ export function MessageList({
   messageInputRef,
   isMobileView,
   focusModeActive = false,
+  isWindowFocused = true,
   justSentMessageId,
 }: MessageListProps) {
-  const windowFocus = useWindowFocus();
-  const isWindowFocused = windowFocus?.isFocused ?? true;
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
   const conversationReadyRef = useRef(false);

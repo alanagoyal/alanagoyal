@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
-import { Conversation } from "@/types/messages";
+import { Conversation, REACTION_TEXT } from "@/types/messages";
 import { SwipeActions } from "./swipe-actions";
 import {
   ContextMenu,
@@ -239,14 +239,7 @@ export const ConversationItem = memo(function ConversationItem({
                     // Check if the last message has any reaction
                     const lastReaction = lastMessage.reactions?.[0];
                     if (lastReaction) {
-                      const reactionText = {
-                        heart: "loved",
-                        like: "liked",
-                        dislike: "disliked",
-                        laugh: "laughed at",
-                        emphasize: "emphasized",
-                        question: "questioned",
-                      }[lastReaction.type];
+                      const reactionText = REACTION_TEXT[lastReaction.type];
 
                       return lastReaction.sender === "me"
                         ? `You ${reactionText} "${lastMessage.content}"`

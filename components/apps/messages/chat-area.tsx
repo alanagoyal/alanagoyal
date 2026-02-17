@@ -31,6 +31,7 @@ interface ChatAreaProps {
   unreadCount?: number;
   isDesktop?: boolean;
   focusModeActive?: boolean;
+  isWindowFocused?: boolean;
   justSentMessageId?: string | null;
 }
 
@@ -54,6 +55,7 @@ export function ChatArea({
   unreadCount = 0,
   isDesktop = false,
   focusModeActive = false,
+  isWindowFocused = true,
   justSentMessageId,
 }: ChatAreaProps) {
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
@@ -185,6 +187,7 @@ export function ChatArea({
                 messageInputRef={messageInputRef}
                 isMobileView={isMobileView}
                 focusModeActive={focusModeActive}
+                isWindowFocused={isWindowFocused}
                 justSentMessageId={justSentMessageId}
               />
               <div className="w-3 bg-background" />

@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
+import { MessagesNotificationBanner } from "./messages-notification-banner";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
@@ -23,6 +24,9 @@ import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
+import { saveMessagesConversation } from "@/lib/sidebar-persistence";
+import type { MessagesNotificationPayload } from "@/types/messages/notification";
+import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -135,7 +139,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     moveMultiWindow,
     resizeMultiWindow,
     toggleMaximizeMultiWindow,
-    bringAppToFront,
     updateWindowMetadata,
     getWindowsByApp,
   } = useWindowManager();
@@ -164,6 +167,11 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
+  const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
+  const [isNotificationHovered, setIsNotificationHovered] = useState(false);
+  const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
+  const nextMessagesSelectRequestIdRef = useRef(1);
+  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
@@ -301,36 +309,25 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
 
   // Update URL when focus changes
-  const focusedWindowId = state.focusedWindowId;
-  const focusedWindowState = focusedWindowId
-    ? state.windows[focusedWindowId]
-    : undefined;
-  const focusedFilePath = focusedWindowState?.metadata?.filePath as
-    | string
-    | undefined;
-
   useEffect(() => {
+    const focusedWindowId = state.focusedWindowId;
     if (!focusedWindowId) return;
 
     const focusedAppId = getAppIdFromWindowId(focusedWindowId);
 
     if (focusedAppId === "textedit") {
       // For TextEdit, include the file path in URL
-      if (focusedFilePath) {
-        window.history.replaceState(
-          null,
-          "",
-          `/textedit?file=${encodeURIComponent(focusedFilePath)}`
-        );
+      const windowState = state.windows[focusedWindowId];
+      const filePath = windowState?.metadata?.filePath as string;
+      if (filePath) {
+        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "preview") {
       // For Preview, include the file path in URL
-      if (focusedFilePath) {
-        window.history.replaceState(
-          null,
-          "",
-          `/preview?file=${encodeURIComponent(focusedFilePath)}`
-        );
+      const windowState = state.windows[focusedWindowId];
+      const filePath = windowState?.metadata?.filePath as string;
+      if (filePath) {
+        window.history.replaceState(null, "", `/preview?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
@@ -340,7 +337,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       window.history.replaceState(null, "", `/${focusedAppId}`);
     }
-  }, [focusedWindowId, focusedFilePath, initialNoteSlug]);
+  }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
   const isActive = mode === "active";
 
@@ -457,14 +454,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     window.history.replaceState(null, "", "/settings");
   }, [openWindow]);
 
-  const handleMessagesUnreadBadgeChange = useCallback((count: number) => {
-    const safeCount = Math.max(0, Math.floor(count));
-    setAppBadges((prev) => {
-      if ((prev.messages ?? 0) === safeCount) return prev;
-      return { ...prev, messages: safeCount };
-    });
-  }, []);
-
   const handleSleep = useCallback(() => setMode("sleeping"), []);
   const handleRestart = useCallback(() => setMode("restarting"), []);
   const handleShutdown = useCallback(() => setMode("shuttingDown"), []);
@@ -495,6 +484,71 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       }
     }
   }, [restoreDefaultOnUnlock, restoreDesktopDefault, initialNoteSlug]);
+
+  const handleMessagesUnreadBadgeChange = useCallback((count: number) => {
+    const safeCount = Math.max(0, Math.floor(count));
+    setAppBadges((prev) => {
+      if ((prev.messages ?? 0) === safeCount) return prev;
+      return { ...prev, messages: safeCount };
+    });
+  }, []);
+
+  const handleMessagesNotification = useCallback((notification: MessagesNotificationPayload) => {
+    setActiveNotification(notification);
+  }, []);
+
+  const handleNotificationDismiss = useCallback(() => {
+    setActiveNotification(null);
+    setIsNotificationHovered(false);
+  }, []);
+
+  useEffect(() => {
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
+    }
+    if (!activeNotification) return;
+    if (isNotificationHovered) return;
+    notificationTimeoutRef.current = setTimeout(() => {
+      setActiveNotification(null);
+      notificationTimeoutRef.current = null;
+    }, 3000);
+  }, [activeNotification, isNotificationHovered]);
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleNotificationClick = useCallback((notification: MessagesNotificationPayload) => {
+    const { conversationId } = notification;
+    saveMessagesConversation(conversationId);
+    const requestId = nextMessagesSelectRequestIdRef.current++;
+    setMessagesSelectRequest({ conversationId, requestId });
+    setActiveNotification(null);
+    setIsNotificationHovered(false);
+
+    const messagesWindow = getWindow("messages");
+    if (messagesWindow?.isOpen) {
+      if (messagesWindow.isMinimized) {
+        restoreWindow("messages");
+      } else {
+        focusWindow("messages");
+      }
+      return;
+    }
+    openWindow("messages");
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+
+  const handleMessagesSelectRequestHandled = useCallback((requestId: number) => {
+    setMessagesSelectRequest((prev) => {
+      if (!prev || prev.requestId !== requestId) return prev;
+      return null;
+    });
+  }, []);
 
   return (
     <div className="fixed inset-0">
@@ -528,6 +582,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
               inShell={true}
               focusModeActive={focusMode !== "off"}
               onUnreadBadgeCountChange={handleMessagesUnreadBadgeChange}
+              onNotification={handleMessagesNotification}
+              externalSelectConversationRequest={messagesSelectRequest}
+              onExternalSelectRequestHandled={handleMessagesSelectRequestHandled}
             />
           </Window>
 
@@ -625,6 +682,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
             appBadges={appBadges}
+          />
+          <MessagesNotificationBanner
+            notification={activeNotification}
+            onClick={handleNotificationClick}
+            onDismiss={handleNotificationDismiss}
+            onHoverChange={setIsNotificationHovered}
           />
         </>
       )}
