@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { APPS, getAppById } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,45 @@ function formatBadgeCount(count: number): string {
   return String(count);
 }
 
+const DOCK_SCALE_STORAGE_KEY = "desktopDockDesiredScale";
+const DOCK_MIN_DESIRED_SCALE = 0.7;
+const DOCK_MAX_DESIRED_SCALE = 1.6;
+const DOCK_DEFAULT_SCALE = 1;
+const DOCK_SCALE_STEP = 0.05;
+const DOCK_DRAG_PIXELS_PER_SCALE = 220;
+
+const BASE_ICON_SIZE = 48;
+const BASE_GAP = 4;
+const BASE_PADDING_X = 12;
+const BASE_PADDING_Y = 6;
+const BASE_DIVIDER_WIDTH = 1;
+const BASE_DIVIDER_MARGIN_X = 4;
+const BASE_DIVIDER_HEIGHT = 48;
+const BASE_DOT_SIZE = 4;
+const BASE_BADGE_HEIGHT = 20;
+const BASE_BADGE_MIN_WIDTH = 20;
+const BASE_BADGE_PADDING_X = 4;
+const BASE_BADGE_FONT_SIZE = 11;
+const BASE_TRASH_HANDLE_HITBOX_WIDTH = 14;
+const BASE_HANDLE_LINE_WIDTH = 1;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundScale(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+function getInitialDockScale(): number {
+  if (typeof window === "undefined") return DOCK_DEFAULT_SCALE;
+  const raw = window.sessionStorage.getItem(DOCK_SCALE_STORAGE_KEY);
+  if (!raw) return DOCK_DEFAULT_SCALE;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return DOCK_DEFAULT_SCALE;
+  return clamp(parsed, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE);
+}
+
 export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
   const {
     openWindow,
@@ -68,6 +107,11 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
     bringAppToFront,
   } = useWindowManager();
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
+  const [desiredScale, setDesiredScale] = useState(getInitialDockScale);
+  const [isResizingDock, setIsResizingDock] = useState(false);
+  const dragStateRef = useRef<{ pointerId: number; startY: number; startScale: number } | null>(null);
+  const previousUserSelectRef = useRef<string | null>(null);
+  const previousCursorRef = useRef<string | null>(null);
 
   // Track which apps are visible and their animation states
   // Initialize with default dock apps so they don't animate on page load
@@ -266,9 +310,167 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
     (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
   );
 
+  const effectiveScale = useMemo(
+    () => roundScale(clamp(desiredScale, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE)),
+    [desiredScale]
+  );
+
+  const metrics = useMemo(() => {
+    const scale = effectiveScale;
+    return {
+      icon: Math.max(30, Math.round(BASE_ICON_SIZE * scale)),
+      gap: Math.max(2, Math.round(BASE_GAP * scale)),
+      padX: Math.max(8, Math.round(BASE_PADDING_X * scale)),
+      padY: Math.max(4, Math.round(BASE_PADDING_Y * scale)),
+      dividerWidth: Math.max(1, Math.round(BASE_DIVIDER_WIDTH * scale)),
+      dividerHeight: Math.max(30, Math.round(BASE_DIVIDER_HEIGHT * scale)),
+      dividerMarginX: Math.max(2, Math.round(BASE_DIVIDER_MARGIN_X * scale)),
+      dot: Math.max(2, Math.round(BASE_DOT_SIZE * scale)),
+      badgeHeight: Math.max(14, Math.round(BASE_BADGE_HEIGHT * scale)),
+      badgeMinWidth: Math.max(14, Math.round(BASE_BADGE_MIN_WIDTH * scale)),
+      badgePaddingX: Math.max(2, Math.round(BASE_BADGE_PADDING_X * scale)),
+      badgeFontSize: Math.max(9, Math.round(BASE_BADGE_FONT_SIZE * scale)),
+      handleHitboxWidth: Math.max(10, Math.round(BASE_TRASH_HANDLE_HITBOX_WIDTH * scale)),
+      handleLineWidth: Math.max(1, Math.round(BASE_HANDLE_LINE_WIDTH * scale)),
+    };
+  }, [effectiveScale]);
+
+  const endDockResize = useCallback(() => {
+    dragStateRef.current = null;
+    setIsResizingDock(false);
+    if (typeof document !== "undefined") {
+      if (previousUserSelectRef.current !== null) {
+        document.body.style.userSelect = previousUserSelectRef.current;
+      } else {
+        document.body.style.removeProperty("user-select");
+      }
+      if (previousCursorRef.current !== null) {
+        document.body.style.cursor = previousCursorRef.current;
+      } else {
+        document.body.style.removeProperty("cursor");
+      }
+    }
+  }, []);
+
+  const updateDesiredScale = useCallback((next: number) => {
+    const bounded = roundScale(clamp(next, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE));
+    setDesiredScale(bounded);
+  }, []);
+
+  const handleResizePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+      dragStateRef.current = {
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        startScale: desiredScale,
+      };
+      previousUserSelectRef.current = document.body.style.userSelect;
+      previousCursorRef.current = document.body.style.cursor;
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "ns-resize";
+      setIsResizingDock(true);
+    },
+    [desiredScale]
+  );
+
+  const handleResizePointerMove = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    const viewportHeight = window.innerHeight;
+    if (event.clientY >= viewportHeight - 1) {
+      updateDesiredScale(DOCK_MIN_DESIRED_SCALE);
+      return;
+    }
+    if (event.clientY <= 1) {
+      updateDesiredScale(DOCK_MAX_DESIRED_SCALE);
+      return;
+    }
+    const deltaY = drag.startY - event.clientY;
+    const scaleDelta = deltaY / DOCK_DRAG_PIXELS_PER_SCALE;
+    updateDesiredScale(drag.startScale + scaleDelta);
+  }, [updateDesiredScale]);
+
+  const handleResizePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    if ((event.currentTarget as HTMLElement).hasPointerCapture(event.pointerId)) {
+      (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
+    }
+    endDockResize();
+  }, [endDockResize]);
+
+  const handleResizePointerCancel = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    endDockResize();
+  }, [endDockResize]);
+
+  const handleResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      updateDesiredScale(desiredScale + DOCK_SCALE_STEP);
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      updateDesiredScale(desiredScale - DOCK_SCALE_STEP);
+      return;
+    }
+    if (event.key === "Home") {
+      event.preventDefault();
+      updateDesiredScale(DOCK_MIN_DESIRED_SCALE);
+      return;
+    }
+    if (event.key === "End") {
+      event.preventDefault();
+      updateDesiredScale(DOCK_MAX_DESIRED_SCALE);
+    }
+  }, [desiredScale, updateDesiredScale]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(DOCK_SCALE_STORAGE_KEY, String(desiredScale));
+  }, [desiredScale]);
+
+  useEffect(() => {
+    if (!isResizingDock || typeof window === "undefined") return;
+    const forceEndResize = () => {
+      endDockResize();
+    };
+    window.addEventListener("pointerup", forceEndResize);
+    window.addEventListener("pointercancel", forceEndResize);
+    window.addEventListener("blur", forceEndResize);
+    return () => {
+      window.removeEventListener("pointerup", forceEndResize);
+      window.removeEventListener("pointercancel", forceEndResize);
+      window.removeEventListener("blur", forceEndResize);
+    };
+  }, [isResizingDock, endDockResize]);
+
+  useEffect(() => {
+    return () => {
+      endDockResize();
+    };
+  }, [endDockResize]);
+
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="flex items-end gap-1 px-3 py-1.5 bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg transition-all duration-300 w-max">
+      <div
+        className={cn(
+          "flex items-end bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg w-max",
+          isResizingDock ? "transition-none" : "transition-all duration-300"
+        )}
+        style={{
+          gap: `${metrics.gap}px`,
+          padding: `${metrics.padY}px ${metrics.padX}px`,
+        }}
+      >
         {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
@@ -287,41 +489,87 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
                 animState === "stable" && "hover:scale-110 active:scale-95"
               )}
             >
-              {hoveredApp === app.id && animState === "stable" && (
+              {hoveredApp === app.id && animState === "stable" && !isResizingDock && (
                 <DockTooltip label={app.name} />
               )}
-              <div className="w-12 h-12 relative flex items-center justify-center">
+              <div
+                className="relative flex items-center justify-center"
+                style={{ width: `${metrics.icon}px`, height: `${metrics.icon}px` }}
+              >
                 {app.id === "calendar" ? (
-                  <CalendarDockIcon size={38} />
+                  <CalendarDockIcon size={Math.round(metrics.icon * 0.79)} />
                 ) : (
                   <img
                     src={app.icon}
                     alt={app.name}
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
+                    width={metrics.icon}
+                    height={metrics.icon}
+                    className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
+                    draggable={false}
                   />
                 )}
                 {badgeCount > 0 && (
-                  <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-none flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+                  <div
+                    className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white font-semibold leading-none flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+                    style={{
+                      minWidth: `${metrics.badgeMinWidth}px`,
+                      height: `${metrics.badgeHeight}px`,
+                      paddingLeft: `${metrics.badgePaddingX}px`,
+                      paddingRight: `${metrics.badgePaddingX}px`,
+                      fontSize: `${metrics.badgeFontSize}px`,
+                    }}
+                  >
                     {formatBadgeCount(badgeCount)}
                   </div>
                 )}
               </div>
               <div
                 className={cn(
-                  "w-1 h-1 rounded-full mt-1 transition-opacity",
+                  "rounded-full mt-1 transition-opacity",
                   // Finder always shows dot (can be closed but not quit)
                   isOpen || app.id === "finder"
                     ? "bg-black/60 dark:bg-white/60 opacity-100"
                     : "opacity-0"
                 )}
+                style={{ width: `${metrics.dot}px`, height: `${metrics.dot}px` }}
               />
             </button>
           );
         })}
-        {/* Divider before Trash */}
-        <div className="w-px h-12 bg-black/20 dark:bg-white/10 mx-1 self-center" />
+        {/* Resize handle before Trash */}
+        <button
+          type="button"
+          aria-label="Resize Dock"
+          title="Resize Dock"
+          onPointerDown={handleResizePointerDown}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerUp}
+          onPointerCancel={handleResizePointerCancel}
+          onLostPointerCapture={endDockResize}
+          onKeyDown={handleResizeKeyDown}
+          onMouseEnter={() => setHoveredApp(null)}
+          className="relative self-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
+          style={{
+            width: `${metrics.handleHitboxWidth}px`,
+            height: `${metrics.dividerHeight + 8}px`,
+            marginLeft: `${metrics.dividerMarginX}px`,
+            marginRight: `${metrics.dividerMarginX}px`,
+            cursor: "ns-resize",
+            touchAction: "none",
+          }}
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/20 dark:bg-white/10 rounded-full",
+              isResizingDock && "bg-black/35 dark:bg-white/30"
+            )}
+            style={{
+              width: `${metrics.handleLineWidth}px`,
+              height: `${metrics.dividerHeight}px`,
+            }}
+          />
+        </button>
 
         {/* Trash icon */}
         <button
@@ -330,18 +578,22 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
           onMouseLeave={() => setHoveredApp(null)}
           className="group relative flex flex-col items-center transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
         >
-          {hoveredApp === "trash" && <DockTooltip label="Trash" />}
-          <div className="w-12 h-12 relative flex items-center justify-center">
+          {hoveredApp === "trash" && !isResizingDock && <DockTooltip label="Trash" />}
+          <div
+            className="relative flex items-center justify-center"
+            style={{ width: `${metrics.icon}px`, height: `${metrics.icon}px` }}
+          >
             <img
               src="/trash.png"
               alt="Trash"
-              width={48}
-              height={48}
-              className="w-12 h-12 object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
+              width={metrics.icon}
+              height={metrics.icon}
+              className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
+              draggable={false}
             />
           </div>
           {/* Trash doesn't show open indicator */}
-          <div className="w-1 h-1 rounded-full mt-1 opacity-0" />
+          <div className="rounded-full mt-1 opacity-0" style={{ width: `${metrics.dot}px`, height: `${metrics.dot}px` }} />
         </button>
       </div>
     </div>
