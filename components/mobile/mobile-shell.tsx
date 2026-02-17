@@ -20,14 +20,18 @@ import { useSystemSettings } from "@/lib/system-settings-context";
 import { getWallpaperPath } from "@/lib/os-versions";
 
 const DEFAULT_APP = "notes";
-const WINDOW_STATE_STORAGE_KEY = "desktop-window-state";
 
 interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
+  preserveBlankRootOnMobileResize?: boolean;
 }
 
-export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
+export function MobileShell({
+  initialApp,
+  initialNoteSlug,
+  preserveBlankRootOnMobileResize = false,
+}: MobileShellProps) {
   const { currentOS } = useSystemSettings();
   const [activeAppId, setActiveAppId] = useState<string | null>(initialApp || DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -91,24 +95,10 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       nextActiveAppId = initialApp;
     }
 
-    // If route is "/" and this session currently has no focused/visible windows,
-    // preserve the blank desktop state when resizing into mobile.
+    // Preserve blank desktop only for desktop->mobile resize handoff at root.
     if (!initialApp && path === "/") {
-      try {
-        const raw = window.sessionStorage.getItem(WINDOW_STATE_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as {
-            focusedWindowId?: string | null;
-            windows?: Record<string, { isOpen?: boolean; isMinimized?: boolean }>;
-          };
-          const windows = Object.values(parsed.windows ?? {});
-          const hasVisibleWindows = windows.some((w) => w.isOpen && !w.isMinimized);
-          if (!parsed.focusedWindowId && !hasVisibleWindows) {
-            nextActiveAppId = null;
-          }
-        }
-      } catch {
-        // Fall back to default app behavior.
+      if (preserveBlankRootOnMobileResize) {
+        nextActiveAppId = null;
       }
     }
 
@@ -134,7 +124,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       }
     }
     setIsHydrated(true);
-  }, [initialApp]);
+  }, [initialApp, preserveBlankRootOnMobileResize]);
 
   if (!isHydrated) {
     return (
@@ -144,7 +134,6 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
           alt="Desktop wallpaper"
           fill
           className="object-cover"
-          priority
           quality={90}
         />
       </div>
@@ -159,7 +148,6 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
           alt="Desktop wallpaper"
           fill
           className="object-cover -z-10"
-          priority
           quality={90}
         />
         {activeAppId === "notes" && (

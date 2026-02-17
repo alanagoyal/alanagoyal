@@ -9,6 +9,27 @@ const DIRECT_APP_ROUTE_IDS = new Set(
   APPS.map((app) => app.id).filter((id) => id !== "notes" && id !== "textedit" && id !== "preview")
 );
 
+let routeChangeDispatchScheduled = false;
+
+export function notifyDesktopRouteChange(): void {
+  if (routeChangeDispatchScheduled) return;
+  routeChangeDispatchScheduled = true;
+  window.setTimeout(() => {
+    routeChangeDispatchScheduled = false;
+    window.dispatchEvent(new Event(ROUTE_CHANGE_EVENT));
+  }, 0);
+}
+
+export function replaceDesktopRoute(url: string): void {
+  window.history.replaceState(null, "", url);
+  notifyDesktopRouteChange();
+}
+
+export function pushDesktopRoute(url: string): void {
+  window.history.pushState(null, "", url);
+  notifyDesktopRouteChange();
+}
+
 export interface DesktopShellRouteState {
   appId?: string;
   noteSlug?: string;
@@ -67,25 +88,33 @@ export function useDesktopShellRoute({
 }: UseDesktopShellRouteOptions): {
   isMobile: boolean;
   isHydrated: boolean;
+  isMobileRootResizeHandoff: boolean;
   route: DesktopShellRouteState;
 } {
   const [isMobile, setIsMobile] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isMobileRootResizeHandoff, setIsMobileRootResizeHandoff] = useState(false);
   const [route, setRoute] = useState<DesktopShellRouteState>(() => ({
     appId: defaultAppId,
     ...(defaultAppId === "notes" ? { noteSlug: defaultNoteSlug } : {}),
   }));
 
   useEffect(() => {
-    let routeChangeDispatchScheduled = false;
+    let lastMobile: boolean | null = null;
     const updateFromUrl = () => {
       const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+      if (lastMobile === false && mobile && window.location.pathname === "/") {
+        setIsMobileRootResizeHandoff(true);
+      } else if (!mobile || window.location.pathname !== "/") {
+        setIsMobileRootResizeHandoff(false);
+      }
+      lastMobile = mobile;
       setIsMobile(mobile);
 
       let pathname = window.location.pathname;
       if (normalizeNotesRootOnDesktop && !mobile && pathname === "/notes") {
         pathname = "/notes/about-me";
-        window.history.replaceState(null, "", pathname);
+        replaceDesktopRoute(pathname);
       }
 
       setRoute(
@@ -98,25 +127,6 @@ export function useDesktopShellRoute({
       );
     };
 
-    const emitRouteChange = () => {
-      if (routeChangeDispatchScheduled) return;
-      routeChangeDispatchScheduled = true;
-      window.setTimeout(() => {
-        routeChangeDispatchScheduled = false;
-        window.dispatchEvent(new Event(ROUTE_CHANGE_EVENT));
-      }, 0);
-    };
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-    window.history.pushState = function (...args) {
-      originalPushState.apply(this, args);
-      emitRouteChange();
-    };
-    window.history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
-      emitRouteChange();
-    };
-
     updateFromUrl();
     setIsHydrated(true);
 
@@ -127,10 +137,8 @@ export function useDesktopShellRoute({
       window.removeEventListener("resize", updateFromUrl);
       window.removeEventListener("popstate", updateFromUrl);
       window.removeEventListener(ROUTE_CHANGE_EVENT, updateFromUrl);
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
     };
   }, [defaultAppId, defaultNoteSlug, normalizeNotesRootOnDesktop]);
 
-  return { isMobile, isHydrated, route };
+  return { isMobile, isHydrated, isMobileRootResizeHandoff, route };
 }
