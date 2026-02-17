@@ -1,0 +1,90 @@
+components/mobile/mobile-shell.tsx
+  e1fd5afe50219d24 118
+components/apps/messages/chat-header.tsx
+  bdcd48e5612f6e77 75,81,191,705
+components/apps/calendar/nav.tsx
+  bdcd48e5612f6e77 42,47,87,104,118
+components/apps/music/content-views/artists-view.tsx
+  bdcd48e5612f6e77 21
+components/apps/settings/sidebar-nav.tsx
+  bdcd48e5612f6e77 39
+app/page.tsx
+  e1fd5afe50219d24 8
+components/apps/calendar/year-view.tsx
+  bdcd48e5612f6e77 132,179,198
+components/apps/notes/new-note.tsx
+  bdcd48e5612f6e77 93
+lib/desktop/use-desktop-shell-route.ts
+  e1fd5afe50219d24 123,126,154
+components/apps/messages/app.tsx
+  e1fd5afe50219d24 208,212-213,216
+tailwind.config.ts
+  bdcd48e5612f6e77 4,100-103
+lib/desktop/app-shell-page.tsx
+  e1fd5afe50219d24 8
+components/apps/photos/app.tsx
+  e1fd5afe50219d24 37,41-42
+components/apps/messages/sidebar.tsx
+  bdcd48e5612f6e77 509,520
+components/apps/music/content-views/browse-view.tsx
+  bdcd48e5612f6e77 32,86,284
+components/apps/photos/photos-grid.tsx
+  bdcd48e5612f6e77 193
+components/apps/messages/nav.tsx
+  bdcd48e5612f6e77 75
+components/apps/notes/note-content.tsx
+  bdcd48e5612f6e77 295
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  e1fd5afe50219d24 22
+components/apps/music/content-views/albums-view.tsx
+  bdcd48e5612f6e77 20
+components/apps/messages/message-input.tsx
+  bdcd48e5612f6e77 217
+components/apps/calendar/event-form.tsx
+  bdcd48e5612f6e77 175
+components/apps/notes/mobile-detector.tsx
+  e1fd5afe50219d24 7
+components/apps/music/app.tsx
+  e1fd5afe50219d24 53,57-58
+components/desktop/desktop.tsx
+  bdcd48e5612f6e77 590
+components/apps/messages/search-bar.tsx
+  bdcd48e5612f6e77 66
+components/apps/notes/search.tsx
+  bdcd48e5612f6e77 81
+components/apps/settings/sidebar.tsx
+  bdcd48e5612f6e77 124,278
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "5d9c9f3a6a9a01b170dc15d9674633d3f6294520",
+  "prompts": {
+    "bdcd48e5612f6e77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbf4ff21-5463-4b9a-8be2-34f70f96a846",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 38,
+      "total_deletions": 32,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "e1fd5afe50219d24": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1a74f5cf-cd69-40ec-b0ab-d8c6b86d3a1b",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 100,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}
