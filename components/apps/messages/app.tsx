@@ -74,9 +74,6 @@ export default function App({
   const [activeConversation, setActiveConversation] = useState<string | null>(
     null
   );
-  const [lastActiveConversation, setLastActiveConversation] = useState<
-    string | null
-  >(null);
   const [messageDrafts, setMessageDrafts] = useState<Record<string, string>>(
     {}
   );
@@ -205,41 +202,11 @@ export default function App({
     }
   }, [conversations]);
 
-  // Set mobile view based on context:
-  // - In MobileShell (isDesktop=false): Always use mobile layout
-  // - In Desktop windows (isDesktop=true): Use window.innerWidth to allow dynamic resizing
+  // Mobile layout is determined by shell context, not viewport width
   useEffect(() => {
-    // MobileShell is only shown on small screens, so always use mobile layout
-    if (!isDesktop) {
-      setIsMobileView(true);
-      setIsLayoutInitialized(true);
-      return;
-    }
-
-    // Desktop mode: check window width for dynamic layout switching
-    const handleResize = () => {
-      const newIsMobileView = window.innerWidth < 768;
-      if (isMobileView !== newIsMobileView) {
-        setIsMobileView(newIsMobileView);
-
-        // When transitioning from mobile to desktop, restore the last active conversation
-        if (!newIsMobileView && !activeConversation && lastActiveConversation) {
-          selectConversation(lastActiveConversation);
-        }
-      }
-    };
-
-    handleResize();
+    setIsMobileView(!isDesktop);
     setIsLayoutInitialized(true);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [
-    isDesktop,
-    isMobileView,
-    activeConversation,
-    lastActiveConversation,
-    selectConversation,
-  ]);
+  }, [isDesktop]);
 
   // Get conversations from local storage
   useEffect(() => {
@@ -343,10 +310,9 @@ export default function App({
     }
   }, [isMobileView, updateUrl]);
 
-  // Update lastActiveConversation whenever activeConversation changes
+  // Reset unread count and persist active conversation whenever it changes
   useEffect(() => {
     if (activeConversation) {
-      setLastActiveConversation(activeConversation);
       resetUnreadCount(activeConversation);
       saveMessagesConversation(activeConversation);
     }

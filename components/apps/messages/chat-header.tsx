@@ -72,13 +72,13 @@ function RecipientPill({
 
   return (
     <div 
-      className={cn("sm:inline", isMobileView && "w-full")}
+      className={cn("desktop:inline", isMobileView && "w-full")}
       onMouseDown={(e) => {
         // Prevent the mousedown from reaching document level
         e.stopPropagation();
       }}
     >
-      <span className="inline-flex items-center px-2 py-1 rounded-lg text-base sm:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
+      <span className="inline-flex items-center px-2 py-1 rounded-lg text-base desktop:text-sm bg-blue-100/50 dark:bg-[#15406B]/50 text-gray-900 dark:text-gray-100">
         {trimmedRecipient}
         <button
           onClick={(e) => {
@@ -188,7 +188,7 @@ function RecipientSearch({
             }
           }}
           placeholder="Type to add recipients..."
-          className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-[120px] w-full select-text"
+          className="flex-1 bg-transparent outline-none text-base desktop:text-sm min-w-[120px] w-full select-text"
           data-chat-header="true"
         />
         <button
@@ -702,7 +702,7 @@ export function ChatHeader({
               >
                 <div className="flex items-center gap-1 flex-wrap py-6">
                   <div className="absolute left-16 top-9">
-                    <span className="text-base sm:text-sm text-muted-foreground">
+                    <span className="text-base desktop:text-sm text-muted-foreground">
                       To:
                     </span>
                   </div>

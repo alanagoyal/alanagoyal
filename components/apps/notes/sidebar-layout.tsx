@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMobileDetect } from "./mobile-detector";
 import { useRouter, usePathname } from "next/navigation";
@@ -17,12 +16,6 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
   const isMobile = useMobileDetect();
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    if (isMobile !== null && !isMobile && pathname === "/notes") {
-      router.push("/notes/about-me");
-    }
-  }, [isMobile, router, pathname]);
 
   const handleNoteSelect = (note: Note) => {
     router.push(`/notes/${note.slug}`);

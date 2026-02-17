@@ -172,7 +172,7 @@ export function EventForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         container={container}
-        className="sm:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
+        className="desktop:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
         aria-describedby={undefined}
       >
         <DialogTitle className="sr-only">{isEditing ? "Edit Event" : "Create New Event"}</DialogTitle>

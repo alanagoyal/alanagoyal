@@ -19,77 +19,25 @@ interface NotesDesktopPageProps {
 }
 
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [currentApp, setCurrentApp] = useState<string>("notes");
-  const [currentNoteSlug, setCurrentNoteSlug] = useState<string | undefined>(slug);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkMobile = () => {
-      return window.innerWidth < 768;
-    };
-
-    // Check current URL to determine which app should be focused
-    // This handles the case where user navigated via MobileShell's tab bar
-    const checkUrl = (mobile: boolean) => {
-      const path = window.location.pathname;
-      if (path.startsWith("/notes")) {
-        setCurrentApp("notes");
-        const match = path.match(/^\/notes\/(.+)$/);
-        const noteSlug = match ? match[1] : slug || "about-me";
-        setCurrentNoteSlug(noteSlug);
-
-        // On desktop, redirect /notes to /notes/about-me for URL consistency
-        if (!mobile && path === "/notes") {
-          window.history.replaceState(null, "", "/notes/about-me");
-        }
-      } else if (path.startsWith("/messages")) {
-        setCurrentApp("messages");
-      } else if (path.startsWith("/settings")) {
-        setCurrentApp("settings");
-      } else if (path.startsWith("/textedit")) {
-        setCurrentApp("textedit");
-      } else if (path.startsWith("/preview")) {
-        setCurrentApp("preview");
-      } else if (path.startsWith("/finder")) {
-        setCurrentApp("finder");
-      } else if (path.startsWith("/photos")) {
-        setCurrentApp("photos");
-      } else if (path.startsWith("/calendar")) {
-        setCurrentApp("calendar");
-      } else if (path.startsWith("/music")) {
-        setCurrentApp("music");
-      } else if (path.startsWith("/iterm")) {
-        setCurrentApp("iterm");
-      }
-    };
-
-    const mobile = checkMobile();
+    const mobile = window.matchMedia("(pointer: coarse)").matches;
     setIsMobile(mobile);
-    checkUrl(mobile);
-    setIsHydrated(true);
 
-    const handleResize = () => {
-      const mobile = checkMobile();
-      setIsMobile(mobile);
-      checkUrl(mobile);
-    };
+    // On desktop, redirect /notes to /notes/about-me for URL consistency
+    if (!mobile && window.location.pathname === "/notes") {
+      window.history.replaceState(null, "", "/notes/about-me");
+    }
+  }, []);
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [slug]);
-
-  // Prevent flash during hydration - use neutral background
-  if (!isHydrated) {
+  if (isMobile === null) {
     return <div className="min-h-dvh bg-background" />;
   }
 
-  // On mobile, show the mobile shell with notes app
-  // If slug is provided, that note will be selected; otherwise shows sidebar
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;
   }
 
-  // On desktop, show the desktop with the current app focused (based on URL)
-  return <Desktop initialAppId={currentApp} initialNoteSlug={currentNoteSlug} />;
+  return <Desktop initialAppId="notes" initialNoteSlug={slug || "about-me"} />;
 }
