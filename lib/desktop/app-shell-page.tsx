@@ -5,7 +5,7 @@ import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 
 interface AppShellPageProps {
-  appId: string;
+  appId?: string;
   initialNoteSlug?: string;
   initialTextEditFile?: string;
   initialPreviewFile?: string;
@@ -28,7 +28,7 @@ export function AppShellPage({
   }
 
   if (isMobile) {
-    return <MobileShell initialApp={appId} initialNoteSlug={initialNoteSlug} />;
+    return <MobileShell initialApp={appId || "notes"} initialNoteSlug={initialNoteSlug} />;
   }
 
   return (
