@@ -24,13 +24,11 @@ const DEFAULT_APP = "notes";
 interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
-  preserveBlankRootOnMobileResize?: boolean;
 }
 
 export function MobileShell({
   initialApp,
   initialNoteSlug,
-  preserveBlankRootOnMobileResize = false,
 }: MobileShellProps) {
   const { currentOS } = useSystemSettings();
   const [activeAppId, setActiveAppId] = useState<string | null>(initialApp || DEFAULT_APP);
@@ -95,13 +93,6 @@ export function MobileShell({
       nextActiveAppId = initialApp;
     }
 
-    // Preserve blank desktop only for desktop->mobile resize handoff at root.
-    if (!initialApp && path === "/") {
-      if (preserveBlankRootOnMobileResize) {
-        nextActiveAppId = null;
-      }
-    }
-
     setActiveAppId(nextActiveAppId);
 
     if (fileParam) {
@@ -124,7 +115,7 @@ export function MobileShell({
       }
     }
     setIsHydrated(true);
-  }, [initialApp, preserveBlankRootOnMobileResize]);
+  }, [initialApp]);
 
   if (!isHydrated) {
     return (

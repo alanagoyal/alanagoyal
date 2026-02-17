@@ -205,41 +205,15 @@ export default function App({
     }
   }, [conversations]);
 
-  // Set mobile view based on context:
-  // - In MobileShell (isDesktop=false): Always use mobile layout
-  // - In Desktop windows (isDesktop=true): Use window.innerWidth to allow dynamic resizing
+  // Mobile view detection — pointer: coarse = touch device, set once on mount
   useEffect(() => {
-    // MobileShell is only shown on small screens, so always use mobile layout
     if (!isDesktop) {
       setIsMobileView(true);
-      setIsLayoutInitialized(true);
-      return;
+    } else {
+      setIsMobileView(window.matchMedia("(pointer: coarse)").matches);
     }
-
-    // Desktop mode: check window width for dynamic layout switching
-    const handleResize = () => {
-      const newIsMobileView = window.innerWidth < 768;
-      if (isMobileView !== newIsMobileView) {
-        setIsMobileView(newIsMobileView);
-
-        // When transitioning from mobile to desktop, restore the last active conversation
-        if (!newIsMobileView && !activeConversation && lastActiveConversation) {
-          selectConversation(lastActiveConversation);
-        }
-      }
-    };
-
-    handleResize();
     setIsLayoutInitialized(true);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [
-    isDesktop,
-    isMobileView,
-    activeConversation,
-    lastActiveConversation,
-    selectConversation,
-  ]);
+  }, [isDesktop]);
 
   // Get conversations from local storage
   useEffect(() => {

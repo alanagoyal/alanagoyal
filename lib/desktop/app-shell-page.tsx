@@ -5,7 +5,7 @@ import { MobileShell } from "@/components/mobile/mobile-shell";
 import { useDesktopShellRoute } from "@/lib/desktop/use-desktop-shell-route";
 
 export function AppShellPage({ defaultAppId }: { defaultAppId: string }) {
-  const { isMobile, isHydrated, isMobileRootResizeHandoff, route } = useDesktopShellRoute({ defaultAppId });
+  const { isMobile, isHydrated, route } = useDesktopShellRoute({ defaultAppId });
 
   if (!isHydrated) {
     return <div className="min-h-dvh bg-background" />;
@@ -16,7 +16,6 @@ export function AppShellPage({ defaultAppId }: { defaultAppId: string }) {
       <MobileShell
         initialApp={route.appId}
         initialNoteSlug={route.noteSlug}
-        preserveBlankRootOnMobileResize={isMobileRootResizeHandoff}
       />
     );
   }

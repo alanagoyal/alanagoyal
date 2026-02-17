@@ -506,7 +506,7 @@ export function Sidebar({
                                           return null;
                                         })()
                                       ) : null}
-                                      <div className="w-16 sm:w-14 h-16 sm:h-14 rounded-full overflow-hidden mb-1 shadow-md">
+                                      <div className="w-16 desktop:w-14 h-16 desktop:h-14 rounded-full overflow-hidden mb-1 shadow-md">
                                         {conversation.recipients[0].avatar ? (
                                           <img
                                             src={
@@ -517,7 +517,7 @@ export function Sidebar({
                                           />
                                         ) : (
                                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
-                                            <span className="relative text-white text-2xl sm:text-xl font-medium">
+                                            <span className="relative text-white text-2xl desktop:text-xl font-medium">
                                               {getInitials(
                                                 conversation.recipients[0].name
                                               )}

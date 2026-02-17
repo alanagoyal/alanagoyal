@@ -19,7 +19,7 @@ interface NotesDesktopPageProps {
 }
 
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const { isMobile, isHydrated, isMobileRootResizeHandoff, route } = useDesktopShellRoute({
+  const { isMobile, isHydrated, route } = useDesktopShellRoute({
     defaultAppId: "notes",
     defaultNoteSlug: slug || "about-me",
     normalizeNotesRootOnDesktop: true,
@@ -37,7 +37,6 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
       <MobileShell
         initialApp={route.appId}
         initialNoteSlug={route.noteSlug || slug}
-        preserveBlankRootOnMobileResize={isMobileRootResizeHandoff}
       />
     );
   }

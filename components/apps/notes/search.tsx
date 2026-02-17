@@ -78,7 +78,7 @@ export function SearchBar({
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search"
-          className="w-full pl-8 pr-8 py-0.5 rounded-lg text-base sm:text-sm placeholder:text-sm focus:outline-none border border-muted-foreground/20 dark:border-none dark:bg-[#353533]"
+          className="w-full pl-8 pr-8 py-0.5 rounded-lg text-base desktop:text-sm placeholder:text-sm focus:outline-none border border-muted-foreground/20 dark:border-none dark:bg-[#353533]"
           aria-label="Search notes"
           autoComplete="off"
           ref={inputRef}

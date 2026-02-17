@@ -39,12 +39,12 @@ export function Nav({
   return (
     <div
       className={cn(
-        "px-2 sm:px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted border-b border-border/50"
+        "px-2 desktop:px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted border-b border-border/50"
       )}
       onMouseDown={showWindowControls ? windowFocus?.onDragStart : undefined}
     >
       {/* Left section - window controls and add button */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1 desktop:gap-2 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
         <WindowControls
           inShell={!!showWindowControls}
           className="p-2"
@@ -84,7 +84,7 @@ export function Nav({
               key={option.value}
               onClick={() => onViewChange(option.value)}
               className={cn(
-                "px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-colors",
+                "px-2 desktop:px-3 py-1 text-xs desktop:text-sm font-medium rounded-md transition-colors",
                 view === option.value
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -101,7 +101,7 @@ export function Nav({
 
       {/* Right section - navigation (hidden on mobile, shown in view header instead) */}
       {!isMobile && (
-        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5 desktop:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
           <Button
             variant="ghost"
             size="icon"
@@ -115,7 +115,7 @@ export function Nav({
             variant="outline"
             size="sm"
             onClick={onToday}
-            className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
+            className="h-8 px-2 desktop:px-3 text-xs desktop:text-sm"
           >
             Today
           </Button>

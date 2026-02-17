@@ -29,7 +29,7 @@ function SkeletonGrid({ isMobileView, count = 10 }: { isMobileView: boolean; cou
       <div
         className={cn(
           "grid gap-4",
-          isMobileView ? "grid-cols-2" : "grid-cols-3 lg:grid-cols-5"
+          isMobileView ? "grid-cols-2" : "grid-cols-3 desktop:grid-cols-5"
         )}
       >
         {Array.from({ length: count }).map((_, i) => (
@@ -83,7 +83,7 @@ function ChartGrid({
       <div
         className={cn(
           "grid gap-4",
-          isMobileView ? "grid-cols-2" : "grid-cols-3 lg:grid-cols-5"
+          isMobileView ? "grid-cols-2" : "grid-cols-3 desktop:grid-cols-5"
         )}
       >
         {items.map((item) => {
@@ -281,7 +281,7 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
                       <p className="text-white/70 text-sm font-medium mb-1">
                         {album.artist}
                       </p>
-                      <h2 className="text-white text-2xl md:text-3xl font-bold mb-1">
+                      <h2 className="text-white text-2xl desktop:text-3xl font-bold mb-1">
                         {album.name}
                       </h2>
                       <p className="text-white/60 text-sm">

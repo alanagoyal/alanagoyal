@@ -16,7 +16,6 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
-import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -146,7 +145,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const { touchRecent } = useRecents();
-  const isMobile = useMobileDetect();
 
   // Debounce touchRecent to avoid excessive re-renders
   const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -190,18 +188,16 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     () =>
       textEditWindows
         .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .slice(0, isMobile ? 1 : undefined),
-    [textEditWindows, isMobile]
+        .sort((a, b) => b.zIndex - a.zIndex),
+    [textEditWindows]
   );
 
   const visiblePreviewWindows = useMemo(
     () =>
       previewWindows
         .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .slice(0, isMobile ? 1 : undefined),
-    [previewWindows, isMobile]
+        .sort((a, b) => b.zIndex - a.zIndex),
+    [previewWindows]
   );
 
   // Track which URL-provided file path has been processed.
@@ -591,7 +587,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   }, []);
 
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0 overflow-hidden" data-shell="desktop">
       <Image
         src={getWallpaperPath(currentOS.id)}
         alt="Desktop wallpaper"

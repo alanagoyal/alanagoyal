@@ -34,22 +34,14 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
 
-  // Mobile view detection
+  // Mobile view detection — pointer: coarse = touch device, set once on mount
   useEffect(() => {
     if (!isDesktop) {
       setIsMobileView(true);
-      setIsLayoutInitialized(true);
-      return;
+    } else {
+      setIsMobileView(window.matchMedia("(pointer: coarse)").matches);
     }
-
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-
-    handleResize();
     setIsLayoutInitialized(true);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
 
   // Mark view as loaded after first render

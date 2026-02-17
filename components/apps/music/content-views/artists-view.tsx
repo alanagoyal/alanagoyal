@@ -18,7 +18,7 @@ export function ArtistsView({ artists, isMobileView }: ArtistsViewProps) {
           <div
             className={cn(
               "grid gap-6",
-              isMobileView ? "grid-cols-2" : "grid-cols-4 lg:grid-cols-6"
+              isMobileView ? "grid-cols-2" : "grid-cols-4 desktop:grid-cols-6"
             )}
           >
             {artists.map((artist) => (

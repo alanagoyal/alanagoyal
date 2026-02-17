@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 import defaultTheme from "tailwindcss/defaultTheme";
 import tailwindcssAnimate from "tailwindcss-animate";
+import plugin from "tailwindcss/plugin";
 
 const { fontFamily } = defaultTheme;
 
@@ -95,5 +96,10 @@ export default {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    tailwindcssAnimate,
+    plugin(({ addVariant }) => {
+      addVariant("desktop", "[data-shell='desktop'] &");
+    }),
+  ],
 } satisfies Config;

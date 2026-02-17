@@ -14,7 +14,6 @@
 import { useEffect, useState } from "react";
 import { APPS } from "@/lib/app-config";
 
-const MOBILE_BREAKPOINT = 768;
 const HISTORY_STATE_CHANGE_EVENT = "historystatechange";
 const DIRECT_APP_ROUTE_IDS = new Set(
   APPS.map((app) => app.id).filter((id) => id !== "notes" && id !== "textedit" && id !== "preview")
@@ -111,29 +110,20 @@ export function useDesktopShellRoute({
 }: UseDesktopShellRouteOptions): {
   isMobile: boolean;
   isHydrated: boolean;
-  isMobileRootResizeHandoff: boolean;
   route: DesktopShellRouteState;
 } {
   const [isMobile, setIsMobile] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isMobileRootResizeHandoff, setIsMobileRootResizeHandoff] = useState(false);
   const [route, setRoute] = useState<DesktopShellRouteState>(() => ({
     appId: defaultAppId,
     ...(defaultAppId === "notes" ? { noteSlug: defaultNoteSlug } : {}),
   }));
 
   useEffect(() => {
-    let lastMobile: boolean | null = null;
-    const updateFromUrl = () => {
-      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
-      if (lastMobile === false && mobile && window.location.pathname === "/") {
-        setIsMobileRootResizeHandoff(true);
-      } else if (!mobile || window.location.pathname !== "/") {
-        setIsMobileRootResizeHandoff(false);
-      }
-      lastMobile = mobile;
-      setIsMobile(mobile);
+    const mobile = window.matchMedia("(pointer: coarse)").matches;
+    setIsMobile(mobile);
 
+    const updateFromUrl = () => {
       let pathname = window.location.pathname;
       if (normalizeNotesRootOnDesktop && !mobile && pathname === "/notes") {
         pathname = "/notes/about-me";
@@ -153,15 +143,13 @@ export function useDesktopShellRoute({
     updateFromUrl();
     setIsHydrated(true);
 
-    window.addEventListener("resize", updateFromUrl);
     window.addEventListener("popstate", updateFromUrl);
     window.addEventListener(HISTORY_STATE_CHANGE_EVENT, updateFromUrl);
     return () => {
-      window.removeEventListener("resize", updateFromUrl);
       window.removeEventListener("popstate", updateFromUrl);
       window.removeEventListener(HISTORY_STATE_CHANGE_EVENT, updateFromUrl);
     };
   }, [defaultAppId, defaultNoteSlug, normalizeNotesRootOnDesktop]);
 
-  return { isMobile, isHydrated, isMobileRootResizeHandoff, route };
+  return { isMobile, isHydrated, route };
 }

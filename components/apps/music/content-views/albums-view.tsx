@@ -17,7 +17,7 @@ export function AlbumsView({ albums, isMobileView }: AlbumsViewProps) {
         <div
           className={cn(
             "grid gap-4",
-            isMobileView ? "grid-cols-2" : "grid-cols-3 lg:grid-cols-5"
+            isMobileView ? "grid-cols-2" : "grid-cols-3 desktop:grid-cols-5"
           )}
         >
           {albums.map((album) => (

@@ -5,7 +5,7 @@ import { MobileShell } from "@/components/mobile/mobile-shell";
 import { useDesktopShellRoute } from "@/lib/desktop/use-desktop-shell-route";
 
 export default function HomePage() {
-  const { isMobile, isHydrated, isMobileRootResizeHandoff, route } = useDesktopShellRoute({
+  const { isMobile, isHydrated, route } = useDesktopShellRoute({
     defaultAppId: "notes",
   });
 
@@ -18,7 +18,6 @@ export default function HomePage() {
       <MobileShell
         initialApp={route.appId}
         initialNoteSlug={route.noteSlug}
-        preserveBlankRootOnMobileResize={isMobileRootResizeHandoff}
       />
     );
   }

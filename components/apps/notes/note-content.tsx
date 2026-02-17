@@ -292,7 +292,7 @@ export default function NoteContent({
           onFocus={handleFocus}
         />
       ) : (
-        <div className="text-base md:text-sm" onClick={handleMarkdownClick}>
+        <div className="text-base desktop:text-sm" onClick={handleMarkdownClick}>
           <ReactMarkdown
             className="markdown-body"
             remarkPlugins={[remarkGfm]}

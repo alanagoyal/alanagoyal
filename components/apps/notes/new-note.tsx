@@ -90,7 +90,7 @@ export default function NewNote({
       <button
         onClick={handleCreateNote}
         aria-label="Create new note"
-        className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${isMobile ? "p-2" : ""}`}
+        className={`desktop:p-2 hover:bg-muted-foreground/10 rounded-lg ${isMobile ? "p-2" : ""}`}
       >
         <Icons.new />
       </button>

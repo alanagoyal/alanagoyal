@@ -129,7 +129,7 @@ export function YearView({
               </div>
 
               {/* Months grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-4">
+              <div className="grid grid-cols-2 desktop:grid-cols-4 gap-x-4 desktop:gap-x-6 gap-y-4">
                 {getYearMonths(year).map((monthDate, monthIdx) => (
                   <MiniMonth
                     key={monthIdx}
@@ -176,7 +176,7 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
         {WEEKDAY_LETTERS.map((letter, idx) => (
           <div
             key={idx}
-            className="text-center text-[10px] sm:text-xs text-muted-foreground"
+            className="text-center text-[10px] desktop:text-xs text-muted-foreground"
           >
             {letter}
           </div>
@@ -195,7 +195,7 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
                 <button
                   key={dayIdx}
                   className={cn(
-                    "text-[10px] sm:text-xs aspect-square flex items-center justify-center rounded-full transition-colors",
+                    "text-[10px] desktop:text-xs aspect-square flex items-center justify-center rounded-full transition-colors",
                     !isCurrentMonth && "text-muted-foreground/50",
                     isCurrentMonth && "hover:bg-muted",
                     dayIsToday && "bg-red-500 text-white hover:bg-red-600"
