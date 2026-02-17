@@ -1,0 +1,23 @@
+components/desktop/dock.tsx
+  9541e3d12ff6a117 3,61-99,110-114,313-376,378-395,397-461,465-472,492,496-497,500,505-508,513-520,528,534,539-572,581,583-584,589-592,596
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "f937ea3a9b432bbd4bcb4bf29921c0b041a32d5b",
+  "prompts": {
+    "9541e3d12ff6a117": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c695d-2d82-7943-9f6b-5bc620681395",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 343,
+      "total_deletions": 91,
+      "accepted_lines": 262,
+      "overriden_lines": 0
+    }
+  }
+}
