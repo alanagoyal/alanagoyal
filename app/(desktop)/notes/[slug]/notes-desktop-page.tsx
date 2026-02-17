@@ -19,7 +19,7 @@ interface NotesDesktopPageProps {
 }
 
 export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const { isMobile, isHydrated, route } = useDesktopShellRoute({
+  const { isMobile, isHydrated, isMobileRootResizeHandoff, route } = useDesktopShellRoute({
     defaultAppId: "notes",
     defaultNoteSlug: slug || "about-me",
     normalizeNotesRootOnDesktop: true,
@@ -33,7 +33,13 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
   // On mobile, show the mobile shell with notes app
   // If slug is provided, that note will be selected; otherwise shows sidebar
   if (isMobile) {
-    return <MobileShell initialApp={route.appId} initialNoteSlug={route.noteSlug || slug} />;
+    return (
+      <MobileShell
+        initialApp={route.appId}
+        initialNoteSlug={route.noteSlug || slug}
+        preserveBlankRootOnMobileResize={isMobileRootResizeHandoff}
+      />
+    );
   }
 
   return (
