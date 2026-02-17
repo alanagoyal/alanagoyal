@@ -21,19 +21,31 @@ const DIRECT_APP_ROUTE_IDS = new Set(
 );
 
 // Patch history.pushState/replaceState once so ANY call (ours or third-party)
-// fires an event the hook can listen for. Guarded for SSR.
+// fires an event the hook can listen for. The event is deferred via microtask
+// to avoid re-entrant state updates (e.g. updateFromUrl → replaceState → event
+// → updateFromUrl again) and to stay out of restricted React phases.
+let historyEventPending = false;
+function scheduleHistoryEvent() {
+  if (historyEventPending) return;
+  historyEventPending = true;
+  Promise.resolve().then(() => {
+    historyEventPending = false;
+    window.dispatchEvent(new Event(HISTORY_STATE_CHANGE_EVENT));
+  });
+}
+
 if (typeof window !== "undefined") {
   const origPushState = history.pushState.bind(history);
   const origReplaceState = history.replaceState.bind(history);
 
   history.pushState = function (...args: Parameters<typeof origPushState>) {
     origPushState(...args);
-    window.dispatchEvent(new Event(HISTORY_STATE_CHANGE_EVENT));
+    scheduleHistoryEvent();
   };
 
   history.replaceState = function (...args: Parameters<typeof origReplaceState>) {
     origReplaceState(...args);
-    window.dispatchEvent(new Event(HISTORY_STATE_CHANGE_EVENT));
+    scheduleHistoryEvent();
   };
 }
 
