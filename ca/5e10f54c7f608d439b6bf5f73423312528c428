@@ -1,0 +1,89 @@
+components/apps/messages/app.tsx
+  4649079e31b7c348 205,207,313
+app/(desktop)/photos/page.tsx
+  4649079e31b7c348 3,6
+components/apps/photos/app.tsx
+  4649079e31b7c348 37,39
+app/(desktop)/finder/page.tsx
+  4649079e31b7c348 3,6
+app/(desktop)/calendar/page.tsx
+  4649079e31b7c348 3,6
+components/apps/settings/sidebar-nav.tsx
+  4649079e31b7c348 39
+components/apps/photos/photos-grid.tsx
+  4649079e31b7c348 193
+components/apps/music/content-views/browse-view.tsx
+  4649079e31b7c348 32,86,284
+components/apps/messages/message-input.tsx
+  4649079e31b7c348 217
+components/apps/notes/new-note.tsx
+  4649079e31b7c348 93
+components/apps/messages/nav.tsx
+  4649079e31b7c348 75
+components/apps/notes/search.tsx
+  4649079e31b7c348 81
+app/(desktop)/messages/page.tsx
+  4649079e31b7c348 3,6
+app/(desktop)/settings/page.tsx
+  4649079e31b7c348 3,6
+components/apps/messages/chat-header.tsx
+  4649079e31b7c348 75,81,191,705
+components/apps/notes/note-content.tsx
+  4649079e31b7c348 295
+app/(desktop)/textedit/page.tsx
+  4649079e31b7c348 3,5,11-13,16
+components/apps/music/app.tsx
+  4649079e31b7c348 53,55
+components/apps/calendar/nav.tsx
+  4649079e31b7c348 42,47,87,104,118
+components/apps/music/content-views/artists-view.tsx
+  4649079e31b7c348 21
+components/apps/messages/sidebar.tsx
+  4649079e31b7c348 509,520
+tailwind.config.ts
+  4649079e31b7c348 4,100-103
+app/(desktop)/music/page.tsx
+  4649079e31b7c348 3,6
+app/(desktop)/preview/page.tsx
+  4649079e31b7c348 3,5,11-13,16
+components/apps/messages/search-bar.tsx
+  4649079e31b7c348 66
+components/apps/music/content-views/albums-view.tsx
+  4649079e31b7c348 20
+components/apps/calendar/year-view.tsx
+  4649079e31b7c348 132,179,198
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  4649079e31b7c348 22,25,28-32,34,42
+lib/desktop/app-shell-page.tsx
+  4649079e31b7c348 1-42
+components/apps/calendar/event-form.tsx
+  4649079e31b7c348 175
+components/apps/settings/sidebar.tsx
+  4649079e31b7c348 124,278
+components/apps/notes/mobile-detector.tsx
+  4649079e31b7c348 7
+components/desktop/desktop.tsx
+  4649079e31b7c348 554
+app/(desktop)/iterm/page.tsx
+  4649079e31b7c348 3,6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "ca5e10f54c7f608d439b6bf5f73423312528c428",
+  "prompts": {
+    "4649079e31b7c348": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "263d11f1-ee11-42e5-9ba9-8102128c1c0c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 134,
+      "total_deletions": 510,
+      "accepted_lines": 121,
+      "overriden_lines": 0
+    }
+  }
+}
