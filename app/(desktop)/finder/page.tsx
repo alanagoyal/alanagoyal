@@ -1,32 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
+import { useDesktopShellRoute } from "@/lib/desktop/use-desktop-shell-route";
 
 export default function FinderPage() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    setIsHydrated(true);
-
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const { isMobile, isHydrated, route } = useDesktopShellRoute({
+    defaultAppId: "finder",
+  });
 
   if (!isHydrated) {
     return <div className="min-h-dvh bg-background" />;
   }
 
   if (isMobile) {
-    return <MobileShell initialApp="finder" />;
+    return <MobileShell initialApp={route.appId} initialNoteSlug={route.noteSlug} />;
   }
 
-  return <Desktop initialAppId="finder" />;
+  return (
+    <Desktop
+      initialAppId={route.appId}
+      initialNoteSlug={route.noteSlug}
+      initialTextEditFile={route.textEditFile}
+      initialPreviewFile={route.previewFile}
+    />
+  );
 }

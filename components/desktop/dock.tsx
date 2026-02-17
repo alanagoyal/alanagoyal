@@ -63,7 +63,9 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
     openWindow,
     focusWindow,
     unminimizeWindow,
+    unminimizeMultiWindow,
     getWindow,
+    getWindowsByApp,
     hasOpenWindows,
     bringAppToFront,
   } = useWindowManager();
@@ -221,17 +223,25 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   }, [currentAppsKey]);
 
   const handleAppClick = (appId: string) => {
-    // Special handling for Finder to reset tab to recents
+    // Finder-specific behavior: reset tab to Recents, then proceed with normal app activation.
     if (appId === "finder" && onFinderClick) {
       onFinderClick();
-      return;
     }
 
     const app = getAppById(appId);
 
-    // For multi-window apps, bring all windows to front
+    // For multi-window apps, restore exactly one minimized window when present.
     if (app?.multiWindow) {
       if (hasOpenWindows(appId)) {
+        const appWindows = getWindowsByApp(appId).filter((w) => w.isOpen);
+        const topmostMinimized = appWindows
+          .filter((w) => w.isMinimized)
+          .sort((a, b) => b.zIndex - a.zIndex)[0];
+
+        if (topmostMinimized) {
+          unminimizeMultiWindow(topmostMinimized.id);
+          return;
+        }
         bringAppToFront(appId);
       }
       // If no windows open, do nothing (can't open TextEdit without a file)

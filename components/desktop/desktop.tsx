@@ -136,6 +136,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     closeMultiWindow,
     focusMultiWindow,
     minimizeMultiWindow,
+    unminimizeMultiWindow,
     moveMultiWindow,
     resizeMultiWindow,
     toggleMaximizeMultiWindow,
@@ -195,9 +196,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     [previewWindows, isMobile]
   );
 
-  // Track whether we've processed the URL file parameters
-  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
-  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  // Track which URL-provided file path has been processed.
+  // This avoids missing deep links when props arrive after hydration.
+  const [processedTextEditFile, setProcessedTextEditFile] = useState<string | null>(null);
+  const [processedPreviewFile, setProcessedPreviewFile] = useState<string | null>(null);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -207,7 +209,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
   // Open TextEdit file from URL on mount (only once)
   useEffect(() => {
-    if (urlFileProcessed || !initialTextEditFile) return;
+    if (!initialTextEditFile) return;
+    if (processedTextEditFile === initialTextEditFile) return;
 
     const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
     if (previewMetadata) {
@@ -218,7 +221,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           fileUrl,
           fileType,
         });
-        setUrlFileProcessed(true);
+        setProcessedTextEditFile(initialTextEditFile);
         return;
       }
 
@@ -229,14 +232,20 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           { filePath: initialTextEditFile, fileUrl, fileType },
           size ?? undefined
         );
-        setUrlFileProcessed(true);
+        setProcessedTextEditFile(initialTextEditFile);
       });
       return;
     }
 
     if (existingWindowId) {
-      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
-      setUrlFileProcessed(true);
+      // Deep-link file should be focused when explicitly requested by URL.
+      const existingWindow = textEditWindows.find((w) => w.id === existingWindowId);
+      if (existingWindow?.isMinimized) {
+        unminimizeMultiWindow(existingWindowId);
+      } else {
+        focusMultiWindow(existingWindowId);
+      }
+      setProcessedTextEditFile(initialTextEditFile);
       return;
     }
 
@@ -247,17 +256,25 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         filePath: initialTextEditFile,
         content: cachedContent,
       });
-      setUrlFileProcessed(true);
+      setProcessedTextEditFile(initialTextEditFile);
     } else {
       fetchFileContent(initialTextEditFile).then((content) => {
         openMultiWindow("textedit", initialTextEditFile, {
           filePath: initialTextEditFile,
           content,
         });
-        setUrlFileProcessed(true);
+        setProcessedTextEditFile(initialTextEditFile);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
+  }, [
+    initialTextEditFile,
+    processedTextEditFile,
+    existingWindowId,
+    openMultiWindow,
+    textEditWindows,
+    focusMultiWindow,
+    unminimizeMultiWindow,
+  ]);
 
   // Open Preview file from URL on mount (only once)
   const existingPreviewWindow = initialPreviewFile
@@ -266,52 +283,67 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const existingPreviewWindowId = existingPreviewWindow?.id;
 
   useEffect(() => {
-    if (urlPreviewProcessed || !initialPreviewFile) return;
+    if (!initialPreviewFile) return;
+    if (processedPreviewFile === initialPreviewFile) return;
 
     if (existingPreviewWindowId) {
-      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
-      setUrlPreviewProcessed(true);
+      // Deep-link file should be focused when explicitly requested by URL.
+      const existingWindow = previewWindows.find((w) => w.id === existingPreviewWindowId);
+      if (existingWindow?.isMinimized) {
+        unminimizeMultiWindow(existingPreviewWindowId);
+      } else {
+        focusMultiWindow(existingPreviewWindowId);
+      }
+      setProcessedPreviewFile(initialPreviewFile);
       return;
     }
 
-    // Parse the file path to get URL and type
-    if (initialPreviewFile.startsWith(PROJECTS_DIR + "/")) {
-      const relativePath = initialPreviewFile.slice(PROJECTS_DIR.length + 1);
-      const parts = relativePath.split("/");
-      const repo = parts[0];
-      const repoPath = parts.slice(1).join("/");
-      const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
-      const ext = initialPreviewFile.split(".").pop()?.toLowerCase() || "";
-      const fileType: PreviewFileType = ext === "pdf" ? "pdf" : "image";
-
-      if (fileType === "pdf") {
-        openMultiWindow("preview", initialPreviewFile, {
-          filePath: initialPreviewFile,
-          fileUrl,
-          fileType,
-        });
-        setUrlPreviewProcessed(true);
-      } else {
-        // For images, load to get dimensions first
-        loadImageAndGetSize(fileUrl).then((size) => {
-          openMultiWindow(
-            "preview",
-            initialPreviewFile,
-            { filePath: initialPreviewFile, fileUrl, fileType },
-            size ?? undefined
-          );
-          setUrlPreviewProcessed(true);
-        });
-      }
-    } else {
-      setUrlPreviewProcessed(true);
+    const previewMetadata = getPreviewMetadataFromPath(initialPreviewFile);
+    if (!previewMetadata) {
+      setProcessedPreviewFile(initialPreviewFile);
+      return;
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
+
+    const { fileUrl, fileType } = previewMetadata;
+    if (fileType === "pdf") {
+      openMultiWindow("preview", initialPreviewFile, {
+        filePath: initialPreviewFile,
+        fileUrl,
+        fileType,
+      });
+      setProcessedPreviewFile(initialPreviewFile);
+      return;
+    }
+
+    // For images, load to get dimensions first
+    loadImageAndGetSize(fileUrl).then((size) => {
+      openMultiWindow(
+        "preview",
+        initialPreviewFile,
+        { filePath: initialPreviewFile, fileUrl, fileType },
+        size ?? undefined
+      );
+      setProcessedPreviewFile(initialPreviewFile);
+    });
+  }, [initialPreviewFile, processedPreviewFile, existingPreviewWindowId, openMultiWindow, previewWindows, focusMultiWindow, unminimizeMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
+    const pendingTextEditDeepLink = Boolean(
+      initialTextEditFile && processedTextEditFile !== initialTextEditFile
+    );
+    const pendingPreviewDeepLink = Boolean(
+      initialPreviewFile && processedPreviewFile !== initialPreviewFile
+    );
+    if (pendingTextEditDeepLink || pendingPreviewDeepLink) return;
+
     const focusedWindowId = state.focusedWindowId;
-    if (!focusedWindowId) return;
+    if (!focusedWindowId) {
+      if (window.location.pathname !== "/") {
+        window.history.replaceState(null, "", "/");
+      }
+      return;
+    }
 
     const focusedAppId = getAppIdFromWindowId(focusedWindowId);
 
@@ -320,24 +352,42 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+        const nextPath = `/textedit?file=${encodeURIComponent(filePath)}`;
+        if (`${window.location.pathname}${window.location.search}` !== nextPath) {
+          window.history.replaceState(null, "", nextPath);
+        }
+      } else if (window.location.pathname !== "/textedit") {
+        window.history.replaceState(null, "", "/textedit");
       }
     } else if (focusedAppId === "preview") {
       // For Preview, include the file path in URL
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        window.history.replaceState(null, "", `/preview?file=${encodeURIComponent(filePath)}`);
+        const nextPath = `/preview?file=${encodeURIComponent(filePath)}`;
+        if (`${window.location.pathname}${window.location.search}` !== nextPath) {
+          window.history.replaceState(null, "", nextPath);
+        }
+      } else if (window.location.pathname !== "/preview") {
+        window.history.replaceState(null, "", "/preview");
       }
     } else if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
         window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
       }
-    } else {
+    } else if (window.location.pathname !== `/${focusedAppId}`) {
       window.history.replaceState(null, "", `/${focusedAppId}`);
     }
-  }, [state.focusedWindowId, state.windows, initialNoteSlug]);
+  }, [
+    state.focusedWindowId,
+    state.windows,
+    initialNoteSlug,
+    initialTextEditFile,
+    processedTextEditFile,
+    initialPreviewFile,
+    processedPreviewFile,
+  ]);
 
   const isActive = mode === "active";
 
@@ -377,21 +427,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
   // Handler for Finder dock icon click - focuses existing window or opens new one at Recents
   const handleFinderDockClick = useCallback(() => {
-    const windowState = getWindow("finder");
-    if (windowState?.isOpen) {
-      // Window exists - just focus it without changing the current view
-      if (windowState.isMinimized) {
-        restoreWindow("finder");
-      } else {
-        focusWindow("finder");
-      }
-    } else {
-      // No window open - open fresh at Recents
-      setFinderTab("recents");
-      openWindow("finder");
-    }
-    window.history.replaceState(null, "", "/finder");
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+    setFinderTab("recents");
+  }, []);
 
   // Handler for Trash dock icon click
   const handleTrashClick = useCallback(() => {
@@ -704,7 +741,7 @@ export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, in
   return (
     <RecentsProvider>
       <FileMenuProvider>
-        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
+        <WindowManagerProvider initialAppId={initialAppId}>
           <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
         </WindowManagerProvider>
       </FileMenuProvider>

@@ -147,7 +147,7 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
   // (maximized windows use MAXIMIZED_Z_INDEX which would cover the focused app)
   const windowUpdates: Record<string, WindowState> = {};
   for (const [windowId, windowState] of Object.entries(savedState.windows)) {
-    if (windowId !== appId && windowState.isMaximized) {
+    if (windowId !== appId && windowState.isMaximized && !windowState.isMinimized) {
       windowUpdates[windowId] = { ...windowState, isMaximized: false };
     }
   }
@@ -169,19 +169,33 @@ function withFocusedApp(savedState: WindowManagerState, appId: string): WindowMa
   };
 }
 
+function withOtherMaximizedWindowsRestored(
+  savedState: WindowManagerState,
+  appId: string
+): Record<string, WindowState> {
+  const windowUpdates: Record<string, WindowState> = {};
+  for (const [windowId, windowState] of Object.entries(savedState.windows)) {
+    if (windowState.appId !== appId && windowState.isMaximized && !windowState.isMinimized) {
+      windowUpdates[windowId] = { ...windowState, isMaximized: false };
+    }
+  }
+  return { ...savedState.windows, ...windowUpdates };
+}
+
 function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string): WindowManagerState | null {
   const appWindows = Object.values(savedState.windows)
     .filter((w) => w.appId === appId && w.isOpen)
     .sort((a, b) => b.zIndex - a.zIndex);
   const topmost = appWindows[0];
   if (!topmost) return null;
+  const updatedWindows = withOtherMaximizedWindowsRestored(savedState, appId);
 
   return {
     ...savedState,
     windows: {
-      ...savedState.windows,
+      ...updatedWindows,
       [topmost.id]: {
-        ...topmost,
+        ...updatedWindows[topmost.id],
         isMinimized: false,
         zIndex: savedState.nextZIndex,
       },
@@ -760,18 +774,18 @@ function windowReducer(
 
     case "BRING_APP_TO_FRONT": {
       const { appId } = action;
-      // Get all open windows for this app, sorted by current z-index (ascending)
+      // Get all visible (non-minimized) windows for this app, sorted by z-index.
       const appWindows = Object.values(state.windows)
-        .filter((w) => w.appId === appId && w.isOpen)
+        .filter((w) => w.appId === appId && w.isOpen && !w.isMinimized)
         .sort((a, b) => a.zIndex - b.zIndex);
 
       if (appWindows.length === 0) return state;
 
-      // Assign new z-indexes preserving relative order, un-minimize all
+      // Assign new z-indexes preserving relative order.
       let nextZ = state.nextZIndex;
       const newWindows = { ...state.windows };
       appWindows.forEach((w) => {
-        newWindows[w.id] = { ...w, zIndex: nextZ++, isMinimized: false };
+        newWindows[w.id] = { ...w, zIndex: nextZ++ };
       });
 
       // Focus the topmost window (last in sorted array)
@@ -927,6 +941,61 @@ export function WindowManagerProvider({
   useEffect(() => {
     zIndexRef.current = state.nextZIndex;
   }, [state.nextZIndex]);
+
+  const lastSyncedInitialAppIdRef = React.useRef<string | null>(null);
+  // Apply route-provided initialAppId only when it changes.
+  // This avoids re-focusing on every state update while keeping route transitions working.
+  useEffect(() => {
+    if (!initialAppId) return;
+    if (lastSyncedInitialAppIdRef.current === initialAppId) return;
+    lastSyncedInitialAppIdRef.current = initialAppId;
+
+    Object.values(state.windows).forEach((windowState) => {
+      if (
+        windowState.appId === initialAppId ||
+        !windowState.isMaximized ||
+        windowState.isMinimized
+      ) {
+        return;
+      }
+      if (isMultiWindowApp(windowState.appId)) {
+        dispatch({ type: "RESTORE_MULTI_WINDOW", windowId: windowState.id });
+      } else {
+        dispatch({ type: "RESTORE_WINDOW", appId: windowState.appId });
+      }
+    });
+
+    const app = getAppById(initialAppId);
+    if (!app) return;
+
+    if (app.multiWindow) {
+      const topmost = Object.values(state.windows)
+        .filter((w) => w.appId === initialAppId && w.isOpen)
+        .sort((a, b) => b.zIndex - a.zIndex)[0];
+      if (!topmost) return;
+      if (topmost.isMinimized) {
+        dispatch({ type: "UNMINIMIZE_MULTI_WINDOW", windowId: topmost.id });
+        return;
+      }
+      if (state.focusedWindowId === topmost.id) return;
+      dispatch({ type: "FOCUS_MULTI_WINDOW", windowId: topmost.id });
+      return;
+    }
+
+    const window = state.windows[initialAppId];
+    if (!window) return;
+    if (!window.isOpen) {
+      dispatch({ type: "OPEN_WINDOW", appId: initialAppId });
+      return;
+    }
+    if (window.isMinimized) {
+      dispatch({ type: "UNMINIMIZE_WINDOW", appId: initialAppId });
+      return;
+    }
+    if (state.focusedWindowId !== initialAppId) {
+      dispatch({ type: "FOCUS_WINDOW", appId: initialAppId });
+    }
+  }, [initialAppId, state.windows, state.focusedWindowId]);
 
   // Keep latest state available for cleanup flush
   useEffect(() => {
