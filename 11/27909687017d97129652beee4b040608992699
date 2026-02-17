@@ -1,0 +1,27 @@
+app/page.tsx
+  4649079e31b7c348 1,3,6
+components/desktop/desktop.tsx
+  4649079e31b7c348 314-315,317
+lib/desktop/app-shell-page.tsx
+  4649079e31b7c348 8,31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "1127909687017d97129652beee4b040608992699",
+  "prompts": {
+    "4649079e31b7c348": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "263d11f1-ee11-42e5-9ba9-8102128c1c0c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 7,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
