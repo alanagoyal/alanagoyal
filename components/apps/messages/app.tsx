@@ -27,10 +27,8 @@ interface AppProps {
 const STORAGE_KEY = "dialogueConversations";
 const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
 
-function truncateForNotification(content: string, max = 42): string {
-  const normalized = content.trim().replace(/\s+/g, " ");
-  if (normalized.length <= max) return normalized;
-  return `${normalized.slice(0, max - 1)}\u2026`;
+function formatNotificationBody(content: string): string {
+  return content.trim().replace(/\s+/g, " ");
 }
 
 function getConversationTime(conversation: Conversation): number {
@@ -438,7 +436,7 @@ export default function App({
               conversationId,
               sender: message.sender,
               title: message.sender,
-              body: truncateForNotification(message.content),
+              body: formatNotificationBody(message.content),
               type: "message",
             });
           }
@@ -514,13 +512,12 @@ export default function App({
                           REACTION_TEXT[reaction.type]
                         } \u201c`;
                         const suffix = "\u201d";
-                        const maxContent = 82 - prefix.length - suffix.length;
                         notificationsToEmit.push({
                           id: uuidv4(),
                           conversationId,
                           sender: reaction.sender,
                           title: reaction.sender,
-                          body: `${prefix}${truncateForNotification(msg.content, maxContent)}${suffix}`,
+                          body: `${prefix}${formatNotificationBody(msg.content)}${suffix}`,
                           type: "reaction",
                         });
                       });
