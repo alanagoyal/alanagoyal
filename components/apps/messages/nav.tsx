@@ -72,7 +72,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
           closeLabel={inShell ? "Close window" : "Close tab"}
         />
         <button
-          className={`sm:p-2 hover:bg-muted-foreground/10 rounded-lg ${
+          className={`desktop:p-2 hover:bg-muted-foreground/10 rounded-lg ${
             isMobileView ? "p-2" : ""
           }`}
           onClick={onNewChat}

@@ -25,7 +25,7 @@ interface WindowControlButtonProps {
 }
 
 const iconWrapperClasses =
-  "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 sm:group-hover:opacity-100";
+  "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 desktop:group-hover:opacity-100";
 
 function WindowControlButton({
   colorClass,

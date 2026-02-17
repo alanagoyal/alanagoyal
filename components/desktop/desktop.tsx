@@ -551,7 +551,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   }, []);
 
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0" data-shell="desktop">
       <Image
         src={getWallpaperPath(currentOS.id)}
         alt="Desktop wallpaper"

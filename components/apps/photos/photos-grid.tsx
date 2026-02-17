@@ -190,7 +190,7 @@ export function PhotosGrid({
                     "grid gap-2",
                     isMobileView
                       ? "grid-cols-3"
-                      : "grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+                      : "grid-cols-4 desktop:grid-cols-5"
                   )}
                 >
                   {groupPhotos.map((photo) => (

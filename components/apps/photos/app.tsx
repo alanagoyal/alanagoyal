@@ -34,22 +34,10 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
 
-  // Mobile view detection
+  // Mobile layout is determined by shell context, not viewport width
   useEffect(() => {
-    if (!isDesktop) {
-      setIsMobileView(true);
-      setIsLayoutInitialized(true);
-      return;
-    }
-
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-
-    handleResize();
+    setIsMobileView(!isDesktop);
     setIsLayoutInitialized(true);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
 
   // Mark view as loaded after first render

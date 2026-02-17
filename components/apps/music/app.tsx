@@ -50,22 +50,10 @@ export default function App({ isDesktop = false }: AppProps) {
   const windowFocus = useWindowFocus();
   const inShell = !!(isDesktop && windowFocus);
 
-  // Mobile view detection
+  // Mobile layout is determined by shell context, not viewport width
   useEffect(() => {
-    if (!isDesktop) {
-      setIsMobileView(true);
-      setIsLayoutInitialized(true);
-      return;
-    }
-
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-
-    handleResize();
+    setIsMobileView(!isDesktop);
     setIsLayoutInitialized(true);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, [isDesktop]);
 
   // Persist sidebar/view state

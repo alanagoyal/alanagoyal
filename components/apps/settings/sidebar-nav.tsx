@@ -36,7 +36,7 @@ export function SidebarNav({ isMobile, isScrolled, isDesktop = false }: SidebarN
       />
       {/* Invisible spacer matching NewNote structure in Notes */}
       <div className="flex flex-col items-center justify-center">
-        <div className={cn("sm:p-2 rounded-lg", isMobile && "p-2")}>
+        <div className={cn("desktop:p-2 rounded-lg", isMobile && "p-2")}>
           <div className="w-4 h-4" />
         </div>
       </div>
