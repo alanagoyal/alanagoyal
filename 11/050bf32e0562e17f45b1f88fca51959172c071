@@ -1,0 +1,25 @@
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  a156880592dfabb7 22,36,40,42
+lib/desktop/app-shell-page.tsx
+  a156880592dfabb7 8,15,19,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "11050bf32e0562e17f45b1f88fca51959172c071",
+  "prompts": {
+    "a156880592dfabb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3fe9afda-3d09-465f-8983-e55dcc095704",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 4,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
