@@ -1,28 +1,44 @@
 "use client";
 
+/**
+ * Desktop route synchronization.
+ *
+ * Page-level components use `useDesktopShellRoute` to read the current URL and
+ * derive which app/file to show. The hook automatically detects URL changes from
+ * history.pushState, history.replaceState, and popstate (back/forward navigation).
+ *
+ * `replaceDesktopRoute` is a convenience wrapper around history.replaceState, but
+ * calling history.replaceState directly also works — the hook intercepts both.
+ */
+
 import { useEffect, useState } from "react";
 import { APPS } from "@/lib/app-config";
 
 const MOBILE_BREAKPOINT = 768;
-const ROUTE_CHANGE_EVENT = "desktop-route-change";
+const HISTORY_STATE_CHANGE_EVENT = "historystatechange";
 const DIRECT_APP_ROUTE_IDS = new Set(
   APPS.map((app) => app.id).filter((id) => id !== "notes" && id !== "textedit" && id !== "preview")
 );
 
-let routeChangeDispatchScheduled = false;
+// Patch history.pushState/replaceState once so ANY call (ours or third-party)
+// fires an event the hook can listen for. Guarded for SSR.
+if (typeof window !== "undefined") {
+  const origPushState = history.pushState.bind(history);
+  const origReplaceState = history.replaceState.bind(history);
 
-export function notifyDesktopRouteChange(): void {
-  if (routeChangeDispatchScheduled) return;
-  routeChangeDispatchScheduled = true;
-  window.setTimeout(() => {
-    routeChangeDispatchScheduled = false;
-    window.dispatchEvent(new Event(ROUTE_CHANGE_EVENT));
-  }, 0);
+  history.pushState = function (...args: Parameters<typeof origPushState>) {
+    origPushState(...args);
+    window.dispatchEvent(new Event(HISTORY_STATE_CHANGE_EVENT));
+  };
+
+  history.replaceState = function (...args: Parameters<typeof origReplaceState>) {
+    origReplaceState(...args);
+    window.dispatchEvent(new Event(HISTORY_STATE_CHANGE_EVENT));
+  };
 }
 
 export function replaceDesktopRoute(url: string): void {
   window.history.replaceState(null, "", url);
-  notifyDesktopRouteChange();
 }
 
 export interface DesktopShellRouteState {
@@ -127,11 +143,11 @@ export function useDesktopShellRoute({
 
     window.addEventListener("resize", updateFromUrl);
     window.addEventListener("popstate", updateFromUrl);
-    window.addEventListener(ROUTE_CHANGE_EVENT, updateFromUrl);
+    window.addEventListener(HISTORY_STATE_CHANGE_EVENT, updateFromUrl);
     return () => {
       window.removeEventListener("resize", updateFromUrl);
       window.removeEventListener("popstate", updateFromUrl);
-      window.removeEventListener(ROUTE_CHANGE_EVENT, updateFromUrl);
+      window.removeEventListener(HISTORY_STATE_CHANGE_EVENT, updateFromUrl);
     };
   }, [defaultAppId, defaultNoteSlug, normalizeNotesRootOnDesktop]);
 
