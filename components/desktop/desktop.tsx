@@ -596,7 +596,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder">
+          <Window appId="finder" keepMountedWhenMinimized={true}>
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
           </Window>
 
