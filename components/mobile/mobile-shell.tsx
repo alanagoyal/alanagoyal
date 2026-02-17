@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { RecentsProvider } from "@/lib/recents-context";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
@@ -15,8 +16,11 @@ import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
 import { getTextEditContent } from "@/lib/file-storage";
 import { getTopmostWindowForApp } from "@/lib/window-context";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
+import { useSystemSettings } from "@/lib/system-settings-context";
+import { getWallpaperPath } from "@/lib/os-versions";
 
 const DEFAULT_APP = "notes";
+const WINDOW_STATE_STORAGE_KEY = "desktop-window-state";
 
 interface MobileShellProps {
   initialApp?: string;
@@ -24,7 +28,8 @@ interface MobileShellProps {
 }
 
 export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
-  const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
+  const { currentOS } = useSystemSettings();
+  const [activeAppId, setActiveAppId] = useState<string | null>(initialApp || DEFAULT_APP);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
@@ -33,6 +38,8 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
 
   // Determine active app from URL and load topmost windows on hydration
   useEffect(() => {
+    let nextActiveAppId: string | null = initialApp || DEFAULT_APP;
+
     // Load topmost TextEdit window from desktop session
     const textEditWindow = getTopmostWindowForApp("textedit");
     const hasSavedTextEdit = Boolean(textEditWindow?.metadata?.filePath);
@@ -61,28 +68,51 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     const searchParams = new URLSearchParams(window.location.search);
     const fileParam = searchParams.get("file");
     if (path.startsWith("/settings")) {
-      setActiveAppId("settings");
+      nextActiveAppId = "settings";
     } else if (path.startsWith("/messages")) {
-      setActiveAppId("messages");
+      nextActiveAppId = "messages";
     } else if (path.startsWith("/notes")) {
-      setActiveAppId("notes");
+      nextActiveAppId = "notes";
     } else if (path.startsWith("/iterm")) {
-      setActiveAppId("iterm");
+      nextActiveAppId = "iterm";
     } else if (path.startsWith("/finder")) {
-      setActiveAppId("finder");
+      nextActiveAppId = "finder";
     } else if (path.startsWith("/photos")) {
-      setActiveAppId("photos");
+      nextActiveAppId = "photos";
     } else if (path.startsWith("/calendar")) {
-      setActiveAppId("calendar");
+      nextActiveAppId = "calendar";
     } else if (path.startsWith("/music")) {
-      setActiveAppId("music");
+      nextActiveAppId = "music";
     } else if (path.startsWith("/textedit")) {
-      setActiveAppId("textedit");
+      nextActiveAppId = "textedit";
     } else if (path.startsWith("/preview")) {
-      setActiveAppId("preview");
+      nextActiveAppId = "preview";
     } else if (initialApp) {
-      setActiveAppId(initialApp);
+      nextActiveAppId = initialApp;
     }
+
+    // If route is "/" and this session currently has no focused/visible windows,
+    // preserve the blank desktop state when resizing into mobile.
+    if (!initialApp && path === "/") {
+      try {
+        const raw = window.sessionStorage.getItem(WINDOW_STATE_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            focusedWindowId?: string | null;
+            windows?: Record<string, { isOpen?: boolean; isMinimized?: boolean }>;
+          };
+          const windows = Object.values(parsed.windows ?? {});
+          const hasVisibleWindows = windows.some((w) => w.isOpen && !w.isMinimized);
+          if (!parsed.focusedWindowId && !hasVisibleWindows) {
+            nextActiveAppId = null;
+          }
+        }
+      } catch {
+        // Fall back to default app behavior.
+      }
+    }
+
+    setActiveAppId(nextActiveAppId);
 
     if (fileParam) {
       if (path.startsWith("/textedit") && !hasSavedTextEdit) {
@@ -107,12 +137,31 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   }, [initialApp]);
 
   if (!isHydrated) {
-    return <div className="min-h-dvh bg-background" />;
+    return (
+      <div className="relative min-h-dvh">
+        <Image
+          src={getWallpaperPath(currentOS.id)}
+          alt="Desktop wallpaper"
+          fill
+          className="object-cover"
+          priority
+          quality={90}
+        />
+      </div>
+    );
   }
 
   return (
     <RecentsProvider>
-      <div className="h-dvh flex flex-col bg-background">
+      <div className="relative h-dvh flex flex-col">
+        <Image
+          src={getWallpaperPath(currentOS.id)}
+          alt="Desktop wallpaper"
+          fill
+          className="object-cover -z-10"
+          priority
+          quality={90}
+        />
         {activeAppId === "notes" && (
           <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
         )}
