@@ -1,0 +1,81 @@
+app/(desktop)/notes/[slug]/page.tsx
+  8c207251c0e7dd27 8,72
+  a357203c1acf38a2 80
+app/(desktop)/notes/page.tsx
+  8c207251c0e7dd27 3,15
+  a357203c1acf38a2 14,18
+app/(desktop)/textedit/page.tsx
+  8c207251c0e7dd27 2,9,11
+app/home-client.tsx
+  a357203c1acf38a2 5-10
+app/(desktop)/photos/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/messages/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/music/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/settings/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/iterm/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/preview/page.tsx
+  8c207251c0e7dd27 2,9,11
+app/(desktop)/finder/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/page.tsx
+  8c207251c0e7dd27 4,15-17
+app/(desktop)/calendar/page.tsx
+  8c207251c0e7dd27 2,4-6
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  8c207251c0e7dd27 20,23-24,28-29,32-34
+  796f65d6a768a94f 27,30-31,35,37,39,42
+lib/desktop/app-shell-page.tsx
+  796f65d6a768a94f 25,28,33
+  8c207251c0e7dd27 12,20,22,26-27,30-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "1e944cd7a1b72d4d81e6ab80e65d0a4901ea1c5d",
+  "prompts": {
+    "796f65d6a768a94f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c6f14-45aa-7ce0-8472-34c85df9b127",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 100,
+      "total_deletions": 122,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    },
+    "8c207251c0e7dd27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c71e7-cc9c-7083-a55a-3281da81c596",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 66,
+      "total_deletions": 68,
+      "accepted_lines": 65,
+      "overriden_lines": 0
+    },
+    "a357203c1acf38a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c6eb1-dafe-78f3-820c-b5a10a178315",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 122,
+      "total_deletions": 56,
+      "accepted_lines": 31,
+      "overriden_lines": 0
+    }
+  }
+}
