@@ -26,6 +26,7 @@ import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
 import { saveMessagesConversation } from "@/lib/sidebar-persistence";
 import { setUrl } from "@/lib/set-url";
+import { getAppById } from "@/lib/app-config";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
@@ -124,7 +125,17 @@ function loadImageAndGetSize(
   });
 }
 
-function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
+function DesktopContent({
+  initialAppId,
+  initialNoteSlug,
+  initialTextEditFile,
+  initialPreviewFile,
+}: {
+  initialAppId?: string;
+  initialNoteSlug?: string;
+  initialTextEditFile?: string;
+  initialPreviewFile?: string;
+}) {
   const {
     openWindow,
     focusWindow,
@@ -208,6 +219,21 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
   const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  const initialDockAppIds = useMemo(() => {
+    const ids = new Set<string>();
+
+    if (initialAppId && getAppById(initialAppId)?.showOnDockByDefault === false) {
+      ids.add(initialAppId);
+    }
+    if (initialTextEditFile) {
+      ids.add("textedit");
+    }
+    if (initialPreviewFile) {
+      ids.add("preview");
+    }
+
+    return Array.from(ids);
+  }, [initialAppId, initialPreviewFile, initialTextEditFile]);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -689,6 +715,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
             appBadges={appBadges}
+            initialVisibleAppIds={initialDockAppIds}
           />
           <MessagesNotificationBanner
             notification={activeNotification}
@@ -712,7 +739,12 @@ export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, in
     <RecentsProvider>
       <FileMenuProvider>
         <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
+          <DesktopContent
+            initialAppId={initialAppId}
+            initialNoteSlug={initialNoteSlug}
+            initialTextEditFile={initialTextEditFile}
+            initialPreviewFile={initialPreviewFile}
+          />
         </WindowManagerProvider>
       </FileMenuProvider>
     </RecentsProvider>

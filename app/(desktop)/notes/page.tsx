@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { NotesDesktopPage } from "./[slug]/notes-desktop-page";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -10,8 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function NotesPage() {
+export default async function NotesPage() {
+  const initialIsMobile = await detectInitialIsMobile();
   // On mobile: shows sidebar (no note selected)
   // On desktop: shows notes window with about-me selected
-  return <NotesDesktopPage />;
+  return <NotesDesktopPage initialIsMobile={initialIsMobile} />;
 }

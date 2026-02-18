@@ -18,6 +18,7 @@ const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : null;
 
 const nextConfig = {
   images: {
+    qualities: [75, 90],
     remotePatterns: [
       // Supabase Storage for photos
       ...(supabaseHostname ? [{

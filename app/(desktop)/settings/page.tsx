@@ -1,7 +1,7 @@
-"use client";
-
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
-export default function SettingsPage() {
-  return <AppShellPage appId="settings" />;
+export default async function SettingsPage() {
+  const initialIsMobile = await detectInitialIsMobile();
+  return <AppShellPage appId="settings" initialIsMobile={initialIsMobile} />;
 }

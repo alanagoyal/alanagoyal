@@ -1,7 +1,7 @@
-"use client";
-
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
-export default function PhotosPage() {
-  return <AppShellPage appId="photos" />;
+export default async function PhotosPage() {
+  const initialIsMobile = await detectInitialIsMobile();
+  return <AppShellPage appId="photos" initialIsMobile={initialIsMobile} />;
 }

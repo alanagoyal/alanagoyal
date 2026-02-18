@@ -2,6 +2,10 @@
 
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
 
-export default function HomeClient() {
-  return <AppShellPage />;
+interface HomeClientProps {
+  initialIsMobile: boolean;
+}
+
+export default function HomeClient({ initialIsMobile }: HomeClientProps) {
+  return <AppShellPage initialIsMobile={initialIsMobile} />;
 }

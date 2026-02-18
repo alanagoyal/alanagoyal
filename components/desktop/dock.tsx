@@ -10,6 +10,7 @@ interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
   appBadges?: Record<string, number>;
+  initialVisibleAppIds?: string[];
 }
 
 function DockTooltip({ label }: { label: string }) {
@@ -97,7 +98,12 @@ function getInitialDockScale(): number {
   return clamp(parsed, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE);
 }
 
-export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
+export function Dock({
+  onTrashClick,
+  onFinderClick,
+  appBadges = {},
+  initialVisibleAppIds = [],
+}: DockProps) {
   const {
     openWindow,
     focusWindow,
@@ -113,14 +119,31 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   const previousUserSelectRef = useRef<string | null>(null);
   const previousCursorRef = useRef<string | null>(null);
 
-  // Track which apps are visible and their animation states
-  // Initialize with default dock apps so they don't animate on page load
+  const initialVisibleAppIdSet = useMemo(() => {
+    const validIds = new Set(APPS.map((app) => app.id));
+    return new Set(initialVisibleAppIds.filter((id) => validIds.has(id)));
+  }, [initialVisibleAppIds]);
+
+  // Track temporary startup visibility for deep-linked non-dock apps.
+  // Once those apps actually open, this set is cleared so normal close behavior resumes.
+  const [startupVisibleApps, setStartupVisibleApps] = useState<Set<string>>(
+    () => new Set(initialVisibleAppIdSet)
+  );
+
+  // Track which apps are visible and their animation states.
+  // Initialize with default dock apps + startup-visible apps so they don't animate on first paint.
+  const initialDockApps = useMemo(() => {
+    const dockApps = new Set(getDefaultDockApps());
+    initialVisibleAppIdSet.forEach((appId) => dockApps.add(appId));
+    return dockApps;
+  }, [initialVisibleAppIdSet]);
+
   const [visibleApps, setVisibleApps] = useState<Set<string>>(
-    () => new Set(getDefaultDockApps())
+    () => new Set(initialDockApps)
   );
   const [animationStates, setAnimationStates] = useState<Record<string, AnimationState>>(() => {
     const states: Record<string, AnimationState> = {};
-    getDefaultDockApps().forEach((appId) => {
+    initialDockApps.forEach((appId) => {
       states[appId] = "stable";
     });
     return states;
@@ -131,14 +154,27 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   // but will animate if closed and reopened (removed from this set on exit)
   const initialAppsRef = useRef<Set<string> | null>(null);
 
-  // Calculate which apps should currently be in the dock
   const currentAppsToShow = APPS.filter((app) => {
     const showByDefault = app.showOnDockByDefault !== false;
-    return showByDefault || hasOpenWindows(app.id);
+    return showByDefault || hasOpenWindows(app.id) || startupVisibleApps.has(app.id);
   }).map((app) => app.id);
 
   // Serialize for stable dependency comparison
   const currentAppsKey = currentAppsToShow.join(",");
+
+  useEffect(() => {
+    setStartupVisibleApps((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      prev.forEach((appId) => {
+        if (hasOpenWindows(appId)) {
+          next.delete(appId);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [hasOpenWindows, currentAppsKey]);
 
   // Capture initial apps on first render (includes restored windows from sessionStorage)
   // This runs during render to capture state before the first effect

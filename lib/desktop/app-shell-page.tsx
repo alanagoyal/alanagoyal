@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
+import { persistDeviceClassCookie } from "@/lib/device-class";
 
 interface AppShellPageProps {
   appId?: string;
   initialNoteSlug?: string;
   initialTextEditFile?: string;
   initialPreviewFile?: string;
+  initialIsMobile: boolean;
 }
 
 export function AppShellPage({
@@ -16,14 +18,24 @@ export function AppShellPage({
   initialNoteSlug,
   initialTextEditFile,
   initialPreviewFile,
+  initialIsMobile,
 }: AppShellPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [isMobile, setIsMobile] = useState(initialIsMobile);
 
   useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const updateMobile = (event?: MediaQueryListEvent) => {
+      setIsMobile(event ? event.matches : mediaQuery.matches);
+    };
+
+    updateMobile();
+    mediaQuery.addEventListener("change", updateMobile);
+    return () => mediaQuery.removeEventListener("change", updateMobile);
   }, []);
 
-  if (isMobile === null) return null;
+  useEffect(() => {
+    persistDeviceClassCookie(isMobile);
+  }, [isMobile]);
 
   if (isMobile) {
     return <MobileShell initialApp={appId || "notes"} initialNoteSlug={initialNoteSlug} />;

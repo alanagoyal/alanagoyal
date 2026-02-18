@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/notes/types";
 import { NotesDesktopPage } from "./notes-desktop-page";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
 // Enable ISR with a reasonable revalidation period for public notes
 export const revalidate = 86400; // 24 hours
@@ -68,6 +69,7 @@ export default async function NotePage({ params }: PageProps) {
   const { slug } = await params;
   const cleanSlug = slug.replace(/^notes\//, "");
   const note = await getNote(cleanSlug);
+  const initialIsMobile = await detectInitialIsMobile();
 
   // Invalid slug - redirect to error page
   if (!note) {
@@ -75,5 +77,5 @@ export default async function NotePage({ params }: PageProps) {
   }
 
   // Render Desktop with notes app focused on this specific note
-  return <NotesDesktopPage slug={cleanSlug} />;
+  return <NotesDesktopPage slug={cleanSlug} initialIsMobile={initialIsMobile} />;
 }

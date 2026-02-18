@@ -14,25 +14,37 @@ import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 import { setUrl } from "@/lib/set-url";
+import { persistDeviceClassCookie } from "@/lib/device-class";
 
 interface NotesDesktopPageProps {
   slug?: string;
+  initialIsMobile: boolean;
 }
 
-export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+export function NotesDesktopPage({ slug, initialIsMobile }: NotesDesktopPageProps) {
+  const [isMobile, setIsMobile] = useState(initialIsMobile);
 
   useEffect(() => {
-    const mobile = window.matchMedia("(pointer: coarse)").matches;
-    setIsMobile(mobile);
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const updateMobile = (event?: MediaQueryListEvent) => {
+      setIsMobile(event ? event.matches : mediaQuery.matches);
+    };
 
-    // On desktop, redirect /notes to /notes/about-me for URL consistency
-    if (!mobile && window.location.pathname === "/notes") {
-      setUrl("/notes/about-me");
-    }
+    updateMobile();
+    mediaQuery.addEventListener("change", updateMobile);
+    return () => mediaQuery.removeEventListener("change", updateMobile);
   }, []);
 
-  if (isMobile === null) return null;
+  useEffect(() => {
+    persistDeviceClassCookie(isMobile);
+  }, [isMobile]);
+
+  useEffect(() => {
+    // On desktop, redirect /notes to /notes/about-me for URL consistency
+    if (!isMobile && window.location.pathname === "/notes") {
+      setUrl("/notes/about-me");
+    }
+  }, [isMobile]);
 
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;

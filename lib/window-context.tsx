@@ -5,6 +5,7 @@ import React, {
   useContext,
   useReducer,
   useEffect,
+  useLayoutEffect,
   useCallback,
 } from "react";
 import {
@@ -866,48 +867,40 @@ export function WindowManagerProvider({
     null
   );
   const latestStateRef = React.useRef<WindowManagerState | null>(null);
+  const applyRequestedFocus = React.useCallback((baseState: WindowManagerState): WindowManagerState => {
+    if (!initialAppId) return baseState;
+
+    const focusedAppId = baseState.focusedWindowId
+      ? getAppIdFromWindowId(baseState.focusedWindowId)
+      : null;
+
+    if (focusedAppId === initialAppId) return baseState;
+
+    if (isMultiWindowApp(initialAppId)) {
+      const focusedState = focusTopmostWindowForApp(baseState, initialAppId);
+      return focusedState ?? baseState;
+    }
+
+    return withFocusedApp(baseState, initialAppId);
+  }, [initialAppId]);
+
   /**
-   * Compute initial state based on:
-   * 1. Whether user has saved state (sessionStorage)
-   * 2. Which app they're navigating to (initialAppId)
-   *
-   * Logic:
-   * - Returning visitor + specific app URL → saved state with that app focused
-   * - Returning visitor + no specific app → saved state as-is
-   * - New visitor + specific app URL → desktop default with that app focused
-   * - New visitor + no specific app → desktop default as-is
+   * Use a deterministic initial state for both SSR and first client render.
+   * Saved session state is restored in a layout effect to avoid hydration mismatch.
    */
   const computeInitialState = React.useCallback((): WindowManagerState => {
-    const savedState = loadStateFromStorage();
-
-    if (savedState) {
-      // Returning visitor: preserve their session state as-is unless a deep link requests focus
-      if (initialAppId) {
-        const focusedAppId = savedState.focusedWindowId
-          ? getAppIdFromWindowId(savedState.focusedWindowId)
-          : null;
-
-        if (focusedAppId !== initialAppId) {
-          if (isMultiWindowApp(initialAppId)) {
-            const focusedState = focusTopmostWindowForApp(savedState, initialAppId);
-            if (focusedState) {
-              return focusedState;
-            }
-          } else {
-            return withFocusedApp(savedState, initialAppId);
-          }
-        }
-      }
-      return savedState;
-    } else {
-      // New visitor: show desktop default layout, focus requested app if specified
-      const defaultState = getDesktopDefaultState();
-      return initialAppId ? withFocusedApp(defaultState, initialAppId) : defaultState;
-    }
-  }, [initialAppId]);
+    return applyRequestedFocus(getDesktopDefaultState());
+  }, [applyRequestedFocus]);
 
   const [state, dispatch] = useReducer(windowReducer, null, computeInitialState);
   const [isHydrated, setIsHydrated] = React.useState(false);
+
+  useLayoutEffect(() => {
+    const savedState = loadStateFromStorage();
+    if (!savedState) return;
+
+    dispatch({ type: "RESTORE_STATE", state: applyRequestedFocus(savedState) });
+  }, [applyRequestedFocus]);
 
   // Ref for menu open state - allows synchronous checks in event handlers
   const isMenuOpenRef = React.useRef(false);

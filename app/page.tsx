@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/config/site";
 import HomeClient from "./home-client";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
 export const metadata: Metadata = {
   title: siteConfig.title,
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  return <HomeClient />;
+export default async function Home() {
+  const initialIsMobile = await detectInitialIsMobile();
+  return <HomeClient initialIsMobile={initialIsMobile} />;
 }

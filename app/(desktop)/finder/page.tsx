@@ -1,7 +1,7 @@
-"use client";
-
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { detectInitialIsMobile } from "@/lib/server/device-detect";
 
-export default function FinderPage() {
-  return <AppShellPage appId="finder" />;
+export default async function FinderPage() {
+  const initialIsMobile = await detectInitialIsMobile();
+  return <AppShellPage appId="finder" initialIsMobile={initialIsMobile} />;
 }
