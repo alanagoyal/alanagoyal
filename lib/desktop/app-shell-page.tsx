@@ -23,9 +23,7 @@ export function AppShellPage({
     setIsMobile(window.matchMedia("(pointer: coarse)").matches);
   }, []);
 
-  if (isMobile === null) {
-    return <div className="min-h-dvh bg-background" />;
-  }
+  if (isMobile === null) return null;
 
   if (isMobile) {
     return <MobileShell initialApp={appId || "notes"} initialNoteSlug={initialNoteSlug} />;

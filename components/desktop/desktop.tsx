@@ -25,6 +25,7 @@ import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
 import { saveMessagesConversation } from "@/lib/sidebar-persistence";
+import { setUrl } from "@/lib/set-url";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
@@ -307,7 +308,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   useEffect(() => {
     const focusedWindowId = state.focusedWindowId;
     if (!focusedWindowId) {
-      window.history.replaceState(null, "", "/");
+      setUrl("/");
       return;
     }
 
@@ -318,22 +319,22 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        window.history.replaceState(null, "", `/textedit?file=${encodeURIComponent(filePath)}`);
+        setUrl(`/textedit?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "preview") {
       // For Preview, include the file path in URL
       const windowState = state.windows[focusedWindowId];
       const filePath = windowState?.metadata?.filePath as string;
       if (filePath) {
-        window.history.replaceState(null, "", `/preview?file=${encodeURIComponent(filePath)}`);
+        setUrl(`/preview?file=${encodeURIComponent(filePath)}`);
       }
     } else if (focusedAppId === "notes") {
       const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
-        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
       }
     } else {
-      window.history.replaceState(null, "", `/${focusedAppId}`);
+      setUrl(`/${focusedAppId}`);
     }
   }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
@@ -387,7 +388,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       setFinderTab("recents");
       openWindow("finder");
     }
-    window.history.replaceState(null, "", "/finder");
+    setUrl("/finder");
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   // Handler for Trash dock icon click
@@ -403,7 +404,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       openWindow("finder");
     }
-    window.history.replaceState(null, "", "/finder");
+    setUrl("/finder");
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   // Handler for opening apps from Finder
@@ -422,10 +423,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (appId === "notes") {
       const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/notes/")) {
-        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
       }
     } else {
-      window.history.replaceState(null, "", `/${appId}`);
+      setUrl(`/${appId}`);
     }
   }, [getWindow, restoreWindow, focusWindow, openWindow, initialNoteSlug]);
 
@@ -434,21 +435,21 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     setSettingsCategory("general");
     setSettingsPanel(null);
     openWindow("settings");
-    window.history.replaceState(null, "", "/settings");
+    setUrl("/settings");
   }, [openWindow]);
 
   const handleOpenWifiSettings = useCallback(() => {
     setSettingsCategory("wifi");
     setSettingsPanel(null);
     openWindow("settings");
-    window.history.replaceState(null, "", "/settings");
+    setUrl("/settings");
   }, [openWindow]);
 
   const handleOpenAbout = useCallback(() => {
     setSettingsCategory("general");
     setSettingsPanel("about");
     openWindow("settings");
-    window.history.replaceState(null, "", "/settings");
+    setUrl("/settings");
   }, [openWindow]);
 
   const handleSleep = useCallback(() => setMode("sleeping"), []);
@@ -475,9 +476,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       setRestoreDefaultOnUnlock(false);
       // Update URL to match default focused app
       if (DESKTOP_DEFAULT_FOCUSED_APP === "notes") {
-        window.history.replaceState(null, "", `/notes/${initialNoteSlug || "about-me"}`);
+        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
       } else {
-        window.history.replaceState(null, "", `/${DESKTOP_DEFAULT_FOCUSED_APP}`);
+        setUrl(`/${DESKTOP_DEFAULT_FOCUSED_APP}`);
       }
     }
   }, [restoreDefaultOnUnlock, restoreDesktopDefault, initialNoteSlug]);

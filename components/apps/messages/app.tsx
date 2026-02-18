@@ -8,6 +8,7 @@ import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { extractMessageContent } from "@/lib/messages/content";
+import { pushUrl } from "@/lib/set-url";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { loadMessagesConversation, saveMessagesConversation } from "@/lib/sidebar-persistence";
@@ -62,7 +63,7 @@ export default function App({
   const updateUrl = useCallback(
     (url: string) => {
       if (!isDesktop && !inShell) {
-        window.history.pushState({}, "", url);
+        pushUrl(url);
       }
     },
     [isDesktop, inShell]
