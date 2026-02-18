@@ -1,0 +1,43 @@
+components/desktop/desktop.tsx
+  c7e02f3d24658b19 3,268
+  626d4978657a5d23 278-280
+components/apps/finder/finder-app.tsx
+  626d4978657a5d23 12,573-575
+components/apps/preview/pdf-viewer.tsx
+  c7e02f3d24658b19 125
+components/apps/preview/preview-window.tsx
+  c7e02f3d24658b19 402
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "cab274420d5c3632a31c5e13fa67d75af6974602",
+  "prompts": {
+    "626d4978657a5d23": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2b637aef-2d15-47e1-9c22-7b91296c5093",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 21,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "c7e02f3d24658b19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "daa57501-fc8d-4ba8-84cc-9afcba0de3a6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
