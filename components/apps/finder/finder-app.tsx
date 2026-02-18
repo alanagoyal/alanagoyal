@@ -9,6 +9,7 @@ import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
+import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -569,19 +570,9 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       // Check if it's a preview file (image or PDF)
       if (isPreviewFile(file.name) && onOpenPreviewFile) {
-        // For GitHub files, construct the raw URL
-        if (file.path.startsWith(PROJECTS_DIR + "/")) {
-          const relativePath = file.path.slice(PROJECTS_DIR.length + 1);
-          const parts = relativePath.split("/");
-          const repo = parts[0];
-          const repoPath = parts.slice(1).join("/");
-          const fileUrl = `https://raw.githubusercontent.com/${USERNAME}/${repo}/main/${repoPath}`;
-          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
-        } else if (file.path.startsWith(`${HOME_DIR}/Documents/`)) {
-          // For Documents files, serve from public/documents
-          const fileName = file.path.slice(`${HOME_DIR}/Documents/`.length);
-          const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
-          onOpenPreviewFile(file.path, fileUrl, getPreviewFileType(file.name));
+        const previewMeta = getPreviewMetadataFromPath(file.path);
+        if (previewMeta) {
+          onOpenPreviewFile(file.path, previewMeta.fileUrl, previewMeta.fileType);
         }
         return;
       }
