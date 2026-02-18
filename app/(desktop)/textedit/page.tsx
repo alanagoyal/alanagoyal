@@ -1,25 +1,10 @@
-"use client";
-
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
 
-function TextEditPageContent() {
-  const searchParams = useSearchParams();
-  const initialFilePath = searchParams.get("file");
+type PageProps = {
+  searchParams: Promise<{ file?: string }>;
+};
 
-  return (
-    <AppShellPage
-      appId="textedit"
-      initialTextEditFile={initialFilePath || undefined}
-    />
-  );
-}
-
-export default function TextEditPage() {
-  return (
-    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
-      <TextEditPageContent />
-    </Suspense>
-  );
+export default async function TextEditPage({ searchParams }: PageProps) {
+  const { file } = await searchParams;
+  return <AppShellPage appId="textedit" initialTextEditFile={file} />;
 }

@@ -13,6 +13,7 @@
 import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
+import { setUrl } from "@/lib/set-url";
 
 interface NotesDesktopPageProps {
   slug?: string;
@@ -27,13 +28,11 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
 
     // On desktop, redirect /notes to /notes/about-me for URL consistency
     if (!mobile && window.location.pathname === "/notes") {
-      window.history.replaceState(null, "", "/notes/about-me");
+      setUrl("/notes/about-me");
     }
   }, []);
 
-  if (isMobile === null) {
-    return <div className="min-h-dvh bg-background" />;
-  }
+  if (isMobile === null) return null;
 
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;

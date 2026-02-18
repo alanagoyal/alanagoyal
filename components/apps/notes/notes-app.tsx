@@ -6,6 +6,7 @@ import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
+import { setUrl } from "@/lib/set-url";
 import Sidebar from "./sidebar";
 import Note from "./note";
 
@@ -72,7 +73,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
                 .single();
               if (fallbackFullNote) {
                 setSelectedNote(fallbackFullNote as NoteType);
-                window.history.replaceState(null, "", `/notes/${fallbackNote.slug}`);
+                setUrl(`/notes/${fallbackNote.slug}`);
               }
             }
           }
@@ -102,7 +103,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     if (fullNote) {
       setSelectedNote(fullNote as NoteType);
       // Update URL to reflect selected note
-      window.history.replaceState(null, "", `/notes/${note.slug}`);
+      setUrl(`/notes/${note.slug}`);
       // On mobile, hide sidebar when note is selected
       if (isMobile) {
         setShowSidebar(false);
@@ -114,7 +115,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     setShowSidebar(true);
     // Update URL when going back to sidebar on mobile
     if (isMobile) {
-      window.history.replaceState(null, "", "/notes");
+      setUrl("/notes");
     }
   }, [isMobile]);
 
@@ -122,7 +123,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
   const handleNoteCreated = useCallback((note: NoteType) => {
     setSelectedNote(note);
     // Update URL to reflect the new note
-    window.history.replaceState(null, "", `/notes/${note.slug}`);
+    setUrl(`/notes/${note.slug}`);
     if (isMobile) {
       setShowSidebar(false);
     }
