@@ -10,6 +10,7 @@ import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
+import { useRouter } from "next/navigation";
 
 const USERNAME = "alanagoyal";
 const HOME_DIR = `/Users/${USERNAME}`;
@@ -261,6 +262,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 }
 
 export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
+  const router = useRouter();
   const windowFocus = useWindowFocus();
   const { recents, addRecent, fileModifiedVersion } = useRecents();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -555,8 +557,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         // Use window manager callback (desktop shell)
         onOpenApp(appId);
       } else {
-        // Fallback to navigation (mobile or standalone)
-        window.location.href = file.path;
+        // Fallback to soft navigation (mobile or standalone)
+        router.push(file.path);
       }
     } else if (file.type === "file") {
       // Don't preview files in trash (they don't exist)
@@ -606,7 +608,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         setPreviewContent(content);
       }
     }
-  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent]);
+  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent, router]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
