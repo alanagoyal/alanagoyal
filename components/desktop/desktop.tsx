@@ -275,14 +275,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     }
 
     // Parse the file path to get URL and type
-    if (initialPreviewFile.startsWith(PROJECTS_DIR + "/")) {
-      const relativePath = initialPreviewFile.slice(PROJECTS_DIR.length + 1);
-      const parts = relativePath.split("/");
-      const repo = parts[0];
-      const repoPath = parts.slice(1).join("/");
-      const fileUrl = `https://raw.githubusercontent.com/alanagoyal/${repo}/main/${repoPath}`;
-      const ext = initialPreviewFile.split(".").pop()?.toLowerCase() || "";
-      const fileType: PreviewFileType = ext === "pdf" ? "pdf" : "image";
+    const previewMeta = getPreviewMetadataFromPath(initialPreviewFile);
+    if (previewMeta) {
+      const { fileUrl, fileType } = previewMeta;
 
       if (fileType === "pdf") {
         openMultiWindow("preview", initialPreviewFile, {
