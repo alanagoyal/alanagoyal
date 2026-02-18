@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RecentsProvider } from "@/lib/recents-context";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
@@ -15,8 +15,23 @@ import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
 import { getTextEditContent } from "@/lib/file-storage";
 import { getTopmostWindowForApp } from "@/lib/window-context";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
+import { APP_SHELL_URL_CHANGE_EVENT, pushUrl } from "@/lib/set-url";
 
 const DEFAULT_APP = "notes";
+
+function getAppIdFromPathname(pathname: string, fallbackApp?: string): string {
+  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/messages")) return "messages";
+  if (pathname.startsWith("/notes")) return "notes";
+  if (pathname.startsWith("/iterm")) return "iterm";
+  if (pathname.startsWith("/finder")) return "finder";
+  if (pathname.startsWith("/photos")) return "photos";
+  if (pathname.startsWith("/calendar")) return "calendar";
+  if (pathname.startsWith("/music")) return "music";
+  if (pathname.startsWith("/textedit")) return "textedit";
+  if (pathname.startsWith("/preview")) return "preview";
+  return fallbackApp || DEFAULT_APP;
+}
 
 interface MobileShellProps {
   initialApp?: string;
@@ -31,12 +46,16 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(null);
   const [topmostPreview, setTopmostPreview] = useState<{ filePath: string; fileUrl: string; fileType: PreviewFileType } | null>(null);
 
+  const handleOpenAppFromFinder = useCallback((nextAppId: string) => {
+    setActiveAppId(nextAppId);
+    pushUrl(`/${nextAppId}`);
+  }, []);
+
   // Determine active app from URL and load topmost windows on hydration
   useEffect(() => {
     // Load topmost TextEdit window from desktop session
     const textEditWindow = getTopmostWindowForApp("textedit");
-    const hasSavedTextEdit = Boolean(textEditWindow?.metadata?.filePath);
-    if (hasSavedTextEdit) {
+    if (textEditWindow?.metadata?.filePath) {
       setTopmostTextEdit({
         filePath: textEditWindow!.metadata!.filePath as string,
         content: (textEditWindow!.metadata!.content as string) ?? "",
@@ -45,10 +64,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
 
     // Load topmost Preview window from desktop session
     const previewWindow = getTopmostWindowForApp("preview");
-    const hasSavedPreview = Boolean(
-      previewWindow?.metadata?.filePath && previewWindow?.metadata?.fileUrl && previewWindow?.metadata?.fileType
-    );
-    if (hasSavedPreview) {
+    if (previewWindow?.metadata?.filePath && previewWindow?.metadata?.fileUrl && previewWindow?.metadata?.fileType) {
       setTopmostPreview({
         filePath: previewWindow!.metadata!.filePath as string,
         fileUrl: previewWindow!.metadata!.fileUrl as string,
@@ -56,54 +72,48 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       });
     }
 
-    // Set active app based on URL path
-    const path = window.location.pathname;
-    const searchParams = new URLSearchParams(window.location.search);
-    const fileParam = searchParams.get("file");
-    if (path.startsWith("/settings")) {
-      setActiveAppId("settings");
-    } else if (path.startsWith("/messages")) {
-      setActiveAppId("messages");
-    } else if (path.startsWith("/notes")) {
-      setActiveAppId("notes");
-    } else if (path.startsWith("/iterm")) {
-      setActiveAppId("iterm");
-    } else if (path.startsWith("/finder")) {
-      setActiveAppId("finder");
-    } else if (path.startsWith("/photos")) {
-      setActiveAppId("photos");
-    } else if (path.startsWith("/calendar")) {
-      setActiveAppId("calendar");
-    } else if (path.startsWith("/music")) {
-      setActiveAppId("music");
-    } else if (path.startsWith("/textedit")) {
-      setActiveAppId("textedit");
-    } else if (path.startsWith("/preview")) {
-      setActiveAppId("preview");
-    } else if (initialApp) {
-      setActiveAppId(initialApp);
-    }
+    const syncFromLocation = () => {
+      const path = window.location.pathname;
+      const searchParams = new URLSearchParams(window.location.search);
+      const fileParam = searchParams.get("file");
 
-    if (fileParam) {
-      if (path.startsWith("/textedit") && !hasSavedTextEdit) {
-        setTopmostTextEdit({
-          filePath: fileParam,
-          content: getTextEditContent(fileParam) ?? "",
+      setActiveAppId(getAppIdFromPathname(path, initialApp));
+
+      if (fileParam && path.startsWith("/textedit")) {
+        setTopmostTextEdit((current) => {
+          if (current?.filePath === fileParam) return current;
+          return {
+            filePath: fileParam,
+            content: getTextEditContent(fileParam) ?? "",
+          };
         });
       }
 
-      if (path.startsWith("/preview") && !hasSavedPreview) {
+      if (fileParam && path.startsWith("/preview")) {
         const previewMetadata = getPreviewMetadataFromPath(fileParam);
         if (previewMetadata) {
-          setTopmostPreview({
-            filePath: fileParam,
-            fileUrl: previewMetadata.fileUrl,
-            fileType: previewMetadata.fileType,
+          setTopmostPreview((current) => {
+            if (current?.filePath === fileParam) return current;
+            return {
+              filePath: fileParam,
+              fileUrl: previewMetadata.fileUrl,
+              fileType: previewMetadata.fileType,
+            };
           });
         }
       }
-    }
+    };
+
+    syncFromLocation();
     setIsHydrated(true);
+
+    window.addEventListener("popstate", syncFromLocation);
+    window.addEventListener(APP_SHELL_URL_CHANGE_EVENT, syncFromLocation);
+
+    return () => {
+      window.removeEventListener("popstate", syncFromLocation);
+      window.removeEventListener(APP_SHELL_URL_CHANGE_EVENT, syncFromLocation);
+    };
   }, [initialApp]);
 
   if (!isHydrated) {
@@ -119,7 +129,9 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
         {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
-        {activeAppId === "finder" && <FinderApp isMobile={true} inShell={false} />}
+        {activeAppId === "finder" && (
+          <FinderApp isMobile={true} inShell={false} onOpenApp={handleOpenAppFromFinder} />
+        )}
         {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
         {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
         {activeAppId === "music" && <MusicApp isMobile={true} />}
