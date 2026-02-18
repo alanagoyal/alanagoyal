@@ -428,3 +428,13 @@ export function clearAppState(appId: string): void {
       break;
   }
 }
+
+export function clearAllAppState(): void {
+  clearFinderState();
+  clearPhotosState();
+  clearSettingsState();
+  clearCalendarState();
+  clearMusicState();
+  clearMessagesState();
+  clearItermStorage();
+}

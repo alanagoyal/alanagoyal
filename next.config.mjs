@@ -2,7 +2,7 @@
  * @type {import('next').NextConfig}
  *
  * Routing behavior:
- * - /                    → redirects to /notes/about-me, shows default desktop layout
+ * - /                    → shows desktop with saved session state (default layout for new visitors)
  * - /notes               → on desktop: updates URL to /notes/about-me, notes focused
  *                          on mobile: shows sidebar (no redirect)
  * - /notes/{slug}        → shows the note (notes focused)

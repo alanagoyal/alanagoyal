@@ -15,7 +15,7 @@ import {
   Size,
 } from "@/types/window";
 import { APPS, getAppById } from "./app-config";
-import { clearAppState } from "./sidebar-persistence";
+import { clearAppState, clearAllAppState } from "./sidebar-persistence";
 
 const STORAGE_KEY = "desktop-window-state";
 
@@ -312,9 +312,9 @@ function windowReducer(
       const window = state.windows[appId];
       if (!window) return state;
 
-      // Find next window to focus
+      // Find next visible (non-minimized) window to focus
       const openWindows = Object.values(state.windows)
-        .filter((w) => w.isOpen && w.appId !== appId)
+        .filter((w) => w.isOpen && !w.isMinimized && w.appId !== appId)
         .sort((a, b) => b.zIndex - a.zIndex);
       const nextFocused = openWindows[0]?.appId || null;
 
@@ -971,7 +971,6 @@ export function WindowManagerProvider({
 
   const closeWindow = useCallback((appId: string) => {
     dispatch({ type: "CLOSE_WINDOW", appId });
-    // Clear sidebar/view state when app window is closed
     clearAppState(appId);
   }, []);
 
@@ -1038,6 +1037,7 @@ export function WindowManagerProvider({
   }, [state.focusedWindowId]);
 
   const restoreDesktopDefault = useCallback(() => {
+    clearAllAppState();
     dispatch({ type: "RESTORE_STATE", state: getDesktopDefaultState() });
   }, []);
 

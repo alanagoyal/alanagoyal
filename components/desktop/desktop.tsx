@@ -311,7 +311,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Update URL when focus changes
   useEffect(() => {
     const focusedWindowId = state.focusedWindowId;
-    if (!focusedWindowId) return;
+    if (!focusedWindowId) {
+      window.history.replaceState(null, "", "/");
+      return;
+    }
 
     const focusedAppId = getAppIdFromWindowId(focusedWindowId);
 
@@ -379,7 +382,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const handleFinderDockClick = useCallback(() => {
     const windowState = getWindow("finder");
     if (windowState?.isOpen) {
-      // Window exists - just focus it without changing the current view
       if (windowState.isMinimized) {
         restoreWindow("finder");
       } else {
@@ -596,7 +598,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder">
+          <Window appId="finder" keepMountedWhenMinimized={true}>
             <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
           </Window>
 
