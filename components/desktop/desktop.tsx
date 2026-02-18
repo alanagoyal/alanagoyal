@@ -208,6 +208,25 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
   const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  const startupVisibleDockAppIds = useMemo(() => {
+    const appIds = new Set<string>();
+
+    if (initialTextEditFile && !urlFileProcessed) {
+      const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
+      appIds.add(previewMetadata ? "preview" : "textedit");
+    }
+
+    if (initialPreviewFile && !urlPreviewProcessed) {
+      appIds.add("preview");
+    }
+
+    return Array.from(appIds);
+  }, [
+    initialTextEditFile,
+    urlFileProcessed,
+    initialPreviewFile,
+    urlPreviewProcessed,
+  ]);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -689,6 +708,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
             appBadges={appBadges}
+            startupVisibleAppIds={startupVisibleDockAppIds}
           />
           <MessagesNotificationBanner
             notification={activeNotification}
