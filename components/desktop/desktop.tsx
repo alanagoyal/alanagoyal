@@ -15,7 +15,14 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import type { PreviewFileType } from "@/components/apps/preview";
-import { resolveFileLaunchTarget, resolvePreviewFileTarget } from "@/lib/file-access";
+import {
+  DESKTOP_HELLO_FILE_PATH,
+  HOME_DIR,
+  PROJECTS_DIR,
+  resolveDesktopFileLaunchTarget,
+  resolvePreviewFileTarget,
+  type FileLaunchTarget,
+} from "@/lib/file-access";
 import { PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
@@ -48,10 +55,6 @@ interface DesktopProps {
   initialPreviewFile?: string;
 }
 
-// Constants for file paths
-const HOME_DIR = "/Users/alanagoyal";
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
-
 // Fetch file content from GitHub API
 async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
   try {
@@ -75,7 +78,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
     const repoFilePath = parts.slice(1).join("/");
     return fetchFileContentFromGitHub(repo, repoFilePath);
   }
-  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
+  if (filePath === DESKTOP_HELLO_FILE_PATH) {
     return "hello world!";
   }
   return "";
@@ -125,7 +128,13 @@ function loadImageAndGetSize(
   });
 }
 
-function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
+function DesktopContent({
+  initialNoteSlug,
+  initialLaunchTarget,
+}: {
+  initialNoteSlug?: string;
+  initialLaunchTarget: FileLaunchTarget | null;
+}) {
   const {
     openWindow,
     focusWindow,
@@ -206,39 +215,56 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     [previewWindows, isMobile]
   );
 
-  const initialTextEditTarget = useMemo(
-    () => resolveFileLaunchTarget(initialTextEditFile),
-    [initialTextEditFile]
-  );
-  const initialPreviewTarget = useMemo(
-    () => resolvePreviewFileTarget(initialPreviewFile),
-    [initialPreviewFile]
-  );
+  // Tracks whether URL launch bootstrap work (open window and/or hydrate metadata) is complete.
+  const [urlLaunchProcessed, setUrlLaunchProcessed] = useState(!initialLaunchTarget);
+  const existingLaunchWindow = useMemo(() => {
+    if (!initialLaunchTarget) return null;
+    const appWindows = initialLaunchTarget.appId === "textedit" ? textEditWindows : previewWindows;
+    return appWindows.find((windowState) => windowState.instanceId === initialLaunchTarget.filePath) ?? null;
+  }, [initialLaunchTarget, textEditWindows, previewWindows]);
+  const existingLaunchWindowId = existingLaunchWindow?.id;
 
-  // Track whether we've processed the URL file parameters
-  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditTarget);
-  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewTarget);
-
-  // Memoize the check for existing window to avoid effect re-runs
-  const existingTextEditWindow = initialTextEditTarget
-    ? textEditWindows.find((w) => w.instanceId === initialTextEditTarget.filePath)
-    : null;
-  const existingWindowId = existingTextEditWindow?.id;
-
-  // Open TextEdit file from URL on mount (only once)
   useEffect(() => {
-    if (urlFileProcessed || !initialTextEditTarget) return;
+    if (urlLaunchProcessed || !initialLaunchTarget) return;
 
-    if (initialTextEditTarget.appId === "preview") {
-      const { filePath, previewMeta } = initialTextEditTarget;
+    if (existingLaunchWindowId) {
+      if (initialLaunchTarget.appId !== "textedit") {
+        setUrlLaunchProcessed(true);
+        return;
+      }
+
+      const existingContent = existingLaunchWindow?.metadata?.content as string | undefined;
+      if (existingContent !== undefined) {
+        setUrlLaunchProcessed(true);
+        return;
+      }
+
+      const filePath = initialLaunchTarget.filePath;
+      const cachedContent = getTextEditContent(filePath);
+      if (cachedContent !== undefined) {
+        updateWindowMetadata(existingLaunchWindowId, { content: cachedContent });
+        setUrlLaunchProcessed(true);
+        return;
+      }
+
+      fetchFileContent(filePath).then((content) => {
+        updateWindowMetadata(existingLaunchWindowId, { content });
+        setUrlLaunchProcessed(true);
+      });
+      return;
+    }
+
+    if (initialLaunchTarget.appId === "preview") {
+      const { filePath, previewMeta } = initialLaunchTarget;
       const { fileUrl, fileType } = previewMeta;
+
       if (fileType === "pdf") {
         openMultiWindow("preview", filePath, {
           filePath,
           fileUrl,
           fileType,
         });
-        setUrlFileProcessed(true);
+        setUrlLaunchProcessed(true);
         return;
       }
 
@@ -249,75 +275,37 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           { filePath, fileUrl, fileType },
           size ?? undefined
         );
-        setUrlFileProcessed(true);
+        setUrlLaunchProcessed(true);
       });
       return;
     }
 
-    if (existingWindowId) {
-      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
-      setUrlFileProcessed(true);
-      return;
-    }
-
-    // Window doesn't exist, need to create it
-    const filePath = initialTextEditTarget.filePath;
+    const filePath = initialLaunchTarget.filePath;
     const cachedContent = getTextEditContent(filePath);
     if (cachedContent !== undefined) {
       openMultiWindow("textedit", filePath, {
         filePath,
         content: cachedContent,
       });
-      setUrlFileProcessed(true);
-    } else {
-      fetchFileContent(filePath).then((content) => {
-        openMultiWindow("textedit", filePath, {
-          filePath,
-          content,
-        });
-        setUrlFileProcessed(true);
-      });
-    }
-  }, [initialTextEditTarget, urlFileProcessed, existingWindowId, openMultiWindow]);
-
-  // Open Preview file from URL on mount (only once)
-  const existingPreviewWindow = initialPreviewTarget
-    ? previewWindows.find((w) => w.instanceId === initialPreviewTarget.filePath)
-    : null;
-  const existingPreviewWindowId = existingPreviewWindow?.id;
-
-  useEffect(() => {
-    if (urlPreviewProcessed || !initialPreviewTarget) return;
-
-    if (existingPreviewWindowId) {
-      // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
-      setUrlPreviewProcessed(true);
+      setUrlLaunchProcessed(true);
       return;
     }
 
-    const { filePath, previewMeta } = initialPreviewTarget;
-    const { fileUrl, fileType } = previewMeta;
-
-    if (fileType === "pdf") {
-      openMultiWindow("preview", filePath, {
+    fetchFileContent(filePath).then((content) => {
+      openMultiWindow("textedit", filePath, {
         filePath,
-        fileUrl,
-        fileType,
+        content,
       });
-      setUrlPreviewProcessed(true);
-    } else {
-      // For images, load to get dimensions first
-      loadImageAndGetSize(fileUrl).then((size) => {
-        openMultiWindow(
-          "preview",
-          filePath,
-          { filePath, fileUrl, fileType },
-          size ?? undefined
-        );
-        setUrlPreviewProcessed(true);
-      });
-    }
-  }, [initialPreviewTarget, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
+      setUrlLaunchProcessed(true);
+    });
+  }, [
+    existingLaunchWindow,
+    existingLaunchWindowId,
+    initialLaunchTarget,
+    openMultiWindow,
+    updateWindowMetadata,
+    urlLaunchProcessed,
+  ]);
 
   // Update URL when focus changes
   useEffect(() => {
@@ -714,11 +702,31 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 }
 
 export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, initialPreviewFile }: DesktopProps) {
+  const initialLaunchTarget = useMemo(() => {
+    if (initialPreviewFile) {
+      return resolvePreviewFileTarget(initialPreviewFile);
+    }
+    return resolveDesktopFileLaunchTarget(initialTextEditFile);
+  }, [initialPreviewFile, initialTextEditFile]);
+
+  const providerKey = useMemo(() => {
+    const appKey = initialAppId || "default";
+    if (!initialLaunchTarget) return appKey;
+    return `${appKey}:${initialLaunchTarget.appId}:${initialLaunchTarget.filePath}`;
+  }, [initialAppId, initialLaunchTarget]);
+
   return (
     <RecentsProvider>
       <FileMenuProvider>
-        <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
+        <WindowManagerProvider
+          key={providerKey}
+          initialAppId={initialAppId}
+          initialLaunchTarget={initialLaunchTarget}
+        >
+          <DesktopContent
+            initialNoteSlug={initialNoteSlug}
+            initialLaunchTarget={initialLaunchTarget}
+          />
         </WindowManagerProvider>
       </FileMenuProvider>
     </RecentsProvider>

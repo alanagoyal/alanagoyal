@@ -15,6 +15,7 @@ import {
   Size,
 } from "@/types/window";
 import { APPS, getAppById } from "./app-config";
+import type { FileLaunchTarget } from "./file-access";
 import { clearAppState, clearAllAppState } from "./sidebar-persistence";
 
 const STORAGE_KEY = "desktop-window-state";
@@ -188,6 +189,97 @@ function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string)
     },
     focusedWindowId: topmost.id,
     nextZIndex: savedState.nextZIndex + 1,
+  };
+}
+
+function withFocusedLaunchTarget(
+  savedState: WindowManagerState,
+  launchTarget: FileLaunchTarget
+): WindowManagerState {
+  const { appId, filePath } = launchTarget;
+  const app = getAppById(appId);
+  if (!app?.multiWindow) return savedState;
+
+  const existingWindow = Object.values(savedState.windows).find(
+    (w) => w.appId === appId && w.instanceId === filePath
+  );
+
+  if (existingWindow) {
+    const metadata =
+      appId === "preview"
+        ? {
+            ...(existingWindow.metadata ?? {}),
+            filePath,
+            fileUrl: launchTarget.previewMeta.fileUrl,
+            fileType: launchTarget.previewMeta.fileType,
+          }
+        : {
+            ...(existingWindow.metadata ?? {}),
+            filePath,
+          };
+
+    return {
+      ...savedState,
+      windows: {
+        ...savedState.windows,
+        [existingWindow.id]: {
+          ...existingWindow,
+          isOpen: true,
+          isMinimized: false,
+          zIndex: savedState.nextZIndex,
+          metadata,
+        },
+      },
+      focusedWindowId: existingWindow.id,
+      nextZIndex: savedState.nextZIndex + 1,
+    };
+  }
+
+  const openAppWindows = Object.values(savedState.windows).filter(
+    (w) => w.appId === appId && w.isOpen
+  );
+  const cascadeOffset = app.cascadeOffset ?? 30;
+  const position = {
+    x: app.defaultPosition.x + openAppWindows.length * cascadeOffset,
+    y: app.defaultPosition.y + openAppWindows.length * cascadeOffset,
+  };
+  const instanceNumber = savedState.nextInstanceNumber[appId] ?? 0;
+  const windowId = generateWindowId(appId, instanceNumber);
+
+  const metadata =
+    appId === "preview"
+      ? {
+          filePath,
+          fileUrl: launchTarget.previewMeta.fileUrl,
+          fileType: launchTarget.previewMeta.fileType,
+        }
+      : {
+          filePath,
+        };
+
+  return {
+    ...savedState,
+    windows: {
+      ...savedState.windows,
+      [windowId]: {
+        id: windowId,
+        appId,
+        instanceId: filePath,
+        isOpen: true,
+        isMinimized: false,
+        isMaximized: false,
+        position,
+        size: app.defaultSize,
+        zIndex: savedState.nextZIndex,
+        metadata,
+      },
+    },
+    focusedWindowId: windowId,
+    nextZIndex: savedState.nextZIndex + 1,
+    nextInstanceNumber: {
+      ...savedState.nextInstanceNumber,
+      [appId]: instanceNumber + 1,
+    },
   };
 }
 
@@ -856,11 +948,13 @@ const WindowManagerContext = createContext<WindowManagerContextValue | null>(
 interface WindowManagerProviderProps {
   children: React.ReactNode;
   initialAppId?: string; // If provided, this app will be opened and focused on load
+  initialLaunchTarget?: FileLaunchTarget | null;
 }
 
 export function WindowManagerProvider({
   children,
   initialAppId,
+  initialLaunchTarget,
 }: WindowManagerProviderProps) {
   const persistTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -879,6 +973,7 @@ export function WindowManagerProvider({
    */
   const computeInitialState = React.useCallback((): WindowManagerState => {
     const savedState = loadStateFromStorage();
+    let nextState: WindowManagerState;
 
     if (savedState) {
       // Returning visitor: preserve their session state as-is unless a deep link requests focus
@@ -891,20 +986,31 @@ export function WindowManagerProvider({
           if (isMultiWindowApp(initialAppId)) {
             const focusedState = focusTopmostWindowForApp(savedState, initialAppId);
             if (focusedState) {
-              return focusedState;
+              nextState = focusedState;
+            } else {
+              nextState = savedState;
             }
           } else {
-            return withFocusedApp(savedState, initialAppId);
+            nextState = withFocusedApp(savedState, initialAppId);
           }
+        } else {
+          nextState = savedState;
         }
+      } else {
+        nextState = savedState;
       }
-      return savedState;
     } else {
       // New visitor: show desktop default layout, focus requested app if specified
       const defaultState = getDesktopDefaultState();
-      return initialAppId ? withFocusedApp(defaultState, initialAppId) : defaultState;
+      nextState = initialAppId ? withFocusedApp(defaultState, initialAppId) : defaultState;
     }
-  }, [initialAppId]);
+
+    if (initialLaunchTarget) {
+      return withFocusedLaunchTarget(nextState, initialLaunchTarget);
+    }
+
+    return nextState;
+  }, [initialAppId, initialLaunchTarget]);
 
   const [state, dispatch] = useReducer(windowReducer, null, computeInitialState);
   const [isHydrated, setIsHydrated] = React.useState(false);

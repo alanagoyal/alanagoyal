@@ -1,5 +1,9 @@
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
+export const HOME_DIR = "/Users/alanagoyal";
+export const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+export const DESKTOP_HELLO_FILE_PATH = `${HOME_DIR}/Desktop/hello.md`;
+
 export type PreviewFileTarget = {
   appId: "preview";
   filePath: string;
@@ -38,6 +42,23 @@ export function resolveFileLaunchTarget(filePath?: string | null): FileLaunchTar
 
   const normalized = normalizeFilePath(filePath);
   if (!normalized) return null;
+
+  return {
+    appId: "textedit",
+    filePath: normalized,
+  };
+}
+
+export function canOpenInTextEdit(filePath: string): boolean {
+  return filePath.startsWith(PROJECTS_DIR + "/") || filePath === DESKTOP_HELLO_FILE_PATH;
+}
+
+export function resolveDesktopFileLaunchTarget(filePath?: string | null): FileLaunchTarget | null {
+  const previewTarget = resolvePreviewFileTarget(filePath);
+  if (previewTarget) return previewTarget;
+
+  const normalized = normalizeFilePath(filePath);
+  if (!normalized || !canOpenInTextEdit(normalized)) return null;
 
   return {
     appId: "textedit",
