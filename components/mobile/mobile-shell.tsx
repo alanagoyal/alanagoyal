@@ -13,8 +13,9 @@ import { MusicApp } from "@/components/apps/music/music-app";
 import { TextEditApp } from "@/components/apps/textedit";
 import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
 import { getTextEditContent } from "@/lib/file-storage";
+import { resolvePreviewFileTarget } from "@/lib/file-access";
+import { getAppIdFromPathname } from "@/lib/launch-target";
 import { getTopmostWindowForApp } from "@/lib/window-context";
-import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
 const DEFAULT_APP = "notes";
 
@@ -60,29 +61,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     const path = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     const fileParam = searchParams.get("file");
-    if (path.startsWith("/settings")) {
-      setActiveAppId("settings");
-    } else if (path.startsWith("/messages")) {
-      setActiveAppId("messages");
-    } else if (path.startsWith("/notes")) {
-      setActiveAppId("notes");
-    } else if (path.startsWith("/iterm")) {
-      setActiveAppId("iterm");
-    } else if (path.startsWith("/finder")) {
-      setActiveAppId("finder");
-    } else if (path.startsWith("/photos")) {
-      setActiveAppId("photos");
-    } else if (path.startsWith("/calendar")) {
-      setActiveAppId("calendar");
-    } else if (path.startsWith("/music")) {
-      setActiveAppId("music");
-    } else if (path.startsWith("/textedit")) {
-      setActiveAppId("textedit");
-    } else if (path.startsWith("/preview")) {
-      setActiveAppId("preview");
-    } else if (initialApp) {
-      setActiveAppId(initialApp);
-    }
+    setActiveAppId(getAppIdFromPathname(path, initialApp));
 
     if (fileParam) {
       if (path.startsWith("/textedit") && !hasSavedTextEdit) {
@@ -93,12 +72,12 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       }
 
       if (path.startsWith("/preview") && !hasSavedPreview) {
-        const previewMetadata = getPreviewMetadataFromPath(fileParam);
-        if (previewMetadata) {
+        const previewTarget = resolvePreviewFileTarget(fileParam);
+        if (previewTarget) {
           setTopmostPreview({
-            filePath: fileParam,
-            fileUrl: previewMetadata.fileUrl,
-            fileType: previewMetadata.fileType,
+            filePath: previewTarget.filePath,
+            fileUrl: previewTarget.previewMeta.fileUrl,
+            fileType: previewTarget.previewMeta.fileType,
           });
         }
       }

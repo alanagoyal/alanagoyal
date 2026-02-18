@@ -7,9 +7,9 @@ import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
+import { resolvePreviewFileTarget } from "@/lib/file-access";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
-import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import { useRouter } from "next/navigation";
 
 const USERNAME = "alanagoyal";
@@ -572,9 +572,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       // Check if it's a preview file (image or PDF)
       if (isPreviewFile(file.name) && onOpenPreviewFile) {
-        const previewMeta = getPreviewMetadataFromPath(file.path);
-        if (previewMeta) {
-          onOpenPreviewFile(file.path, previewMeta.fileUrl, previewMeta.fileType);
+        const previewTarget = resolvePreviewFileTarget(file.path);
+        if (previewTarget) {
+          onOpenPreviewFile(
+            previewTarget.filePath,
+            previewTarget.previewMeta.fileUrl,
+            previewTarget.previewMeta.fileType
+          );
         }
         return;
       }

@@ -15,7 +15,8 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import type { PreviewFileType } from "@/components/apps/preview";
-import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
+import { resolveFileLaunchTarget, resolvePreviewFileTarget } from "@/lib/file-access";
+import { PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -205,26 +206,35 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     [previewWindows, isMobile]
   );
 
+  const initialTextEditTarget = useMemo(
+    () => resolveFileLaunchTarget(initialTextEditFile),
+    [initialTextEditFile]
+  );
+  const initialPreviewTarget = useMemo(
+    () => resolvePreviewFileTarget(initialPreviewFile),
+    [initialPreviewFile]
+  );
+
   // Track whether we've processed the URL file parameters
-  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
-  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditTarget);
+  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewTarget);
 
   // Memoize the check for existing window to avoid effect re-runs
-  const existingTextEditWindow = initialTextEditFile
-    ? textEditWindows.find((w) => w.instanceId === initialTextEditFile)
+  const existingTextEditWindow = initialTextEditTarget
+    ? textEditWindows.find((w) => w.instanceId === initialTextEditTarget.filePath)
     : null;
   const existingWindowId = existingTextEditWindow?.id;
 
   // Open TextEdit file from URL on mount (only once)
   useEffect(() => {
-    if (urlFileProcessed || !initialTextEditFile) return;
+    if (urlFileProcessed || !initialTextEditTarget) return;
 
-    const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
-    if (previewMetadata) {
-      const { fileUrl, fileType } = previewMetadata;
+    if (initialTextEditTarget.appId === "preview") {
+      const { filePath, previewMeta } = initialTextEditTarget;
+      const { fileUrl, fileType } = previewMeta;
       if (fileType === "pdf") {
-        openMultiWindow("preview", initialTextEditFile, {
-          filePath: initialTextEditFile,
+        openMultiWindow("preview", filePath, {
+          filePath,
           fileUrl,
           fileType,
         });
@@ -235,8 +245,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       loadImageAndGetSize(fileUrl).then((size) => {
         openMultiWindow(
           "preview",
-          initialTextEditFile,
-          { filePath: initialTextEditFile, fileUrl, fileType },
+          filePath,
+          { filePath, fileUrl, fileType },
           size ?? undefined
         );
         setUrlFileProcessed(true);
@@ -251,32 +261,33 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     }
 
     // Window doesn't exist, need to create it
-    const cachedContent = getTextEditContent(initialTextEditFile);
+    const filePath = initialTextEditTarget.filePath;
+    const cachedContent = getTextEditContent(filePath);
     if (cachedContent !== undefined) {
-      openMultiWindow("textedit", initialTextEditFile, {
-        filePath: initialTextEditFile,
+      openMultiWindow("textedit", filePath, {
+        filePath,
         content: cachedContent,
       });
       setUrlFileProcessed(true);
     } else {
-      fetchFileContent(initialTextEditFile).then((content) => {
-        openMultiWindow("textedit", initialTextEditFile, {
-          filePath: initialTextEditFile,
+      fetchFileContent(filePath).then((content) => {
+        openMultiWindow("textedit", filePath, {
+          filePath,
           content,
         });
         setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
+  }, [initialTextEditTarget, urlFileProcessed, existingWindowId, openMultiWindow]);
 
   // Open Preview file from URL on mount (only once)
-  const existingPreviewWindow = initialPreviewFile
-    ? previewWindows.find((w) => w.instanceId === initialPreviewFile)
+  const existingPreviewWindow = initialPreviewTarget
+    ? previewWindows.find((w) => w.instanceId === initialPreviewTarget.filePath)
     : null;
   const existingPreviewWindowId = existingPreviewWindow?.id;
 
   useEffect(() => {
-    if (urlPreviewProcessed || !initialPreviewFile) return;
+    if (urlPreviewProcessed || !initialPreviewTarget) return;
 
     if (existingPreviewWindowId) {
       // Window already exists (restored from sessionStorage) - don't re-focus to preserve z-order
@@ -284,34 +295,29 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       return;
     }
 
-    // Parse the file path to get URL and type
-    const previewMeta = getPreviewMetadataFromPath(initialPreviewFile);
-    if (previewMeta) {
-      const { fileUrl, fileType } = previewMeta;
+    const { filePath, previewMeta } = initialPreviewTarget;
+    const { fileUrl, fileType } = previewMeta;
 
-      if (fileType === "pdf") {
-        openMultiWindow("preview", initialPreviewFile, {
-          filePath: initialPreviewFile,
-          fileUrl,
-          fileType,
-        });
-        setUrlPreviewProcessed(true);
-      } else {
-        // For images, load to get dimensions first
-        loadImageAndGetSize(fileUrl).then((size) => {
-          openMultiWindow(
-            "preview",
-            initialPreviewFile,
-            { filePath: initialPreviewFile, fileUrl, fileType },
-            size ?? undefined
-          );
-          setUrlPreviewProcessed(true);
-        });
-      }
-    } else {
+    if (fileType === "pdf") {
+      openMultiWindow("preview", filePath, {
+        filePath,
+        fileUrl,
+        fileType,
+      });
       setUrlPreviewProcessed(true);
+    } else {
+      // For images, load to get dimensions first
+      loadImageAndGetSize(fileUrl).then((size) => {
+        openMultiWindow(
+          "preview",
+          filePath,
+          { filePath, fileUrl, fileType },
+          size ?? undefined
+        );
+        setUrlPreviewProcessed(true);
+      });
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
+  }, [initialPreviewTarget, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
 
   // Update URL when focus changes
   useEffect(() => {
