@@ -10,6 +10,7 @@ interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
   appBadges?: Record<string, number>;
+  startupVisibleAppIds?: string[];
 }
 
 function DockTooltip({ label }: { label: string }) {
@@ -97,7 +98,12 @@ function getInitialDockScale(): number {
   return clamp(parsed, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE);
 }
 
-export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
+export function Dock({
+  onTrashClick,
+  onFinderClick,
+  appBadges = {},
+  startupVisibleAppIds = [],
+}: DockProps) {
   const {
     openWindow,
     focusWindow,
@@ -113,14 +119,25 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   const previousUserSelectRef = useRef<string | null>(null);
   const previousCursorRef = useRef<string | null>(null);
 
+  const startupVisibleAppsKey = startupVisibleAppIds.join(",");
+  const startupVisibleAppsSet = useMemo(
+    () => new Set(startupVisibleAppIds),
+    [startupVisibleAppsKey]
+  );
+  const initialVisibleAppIds = useMemo(() => {
+    const ids = new Set(getDefaultDockApps());
+    startupVisibleAppIds.forEach((appId) => ids.add(appId));
+    return Array.from(ids);
+  }, [startupVisibleAppsKey]);
+
   // Track which apps are visible and their animation states
-  // Initialize with default dock apps so they don't animate on page load
+  // Initialize with default dock apps + startup-visible apps so they don't animate on page load
   const [visibleApps, setVisibleApps] = useState<Set<string>>(
-    () => new Set(getDefaultDockApps())
+    () => new Set(initialVisibleAppIds)
   );
   const [animationStates, setAnimationStates] = useState<Record<string, AnimationState>>(() => {
     const states: Record<string, AnimationState> = {};
-    getDefaultDockApps().forEach((appId) => {
+    initialVisibleAppIds.forEach((appId) => {
       states[appId] = "stable";
     });
     return states;
@@ -134,7 +151,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   // Calculate which apps should currently be in the dock
   const currentAppsToShow = APPS.filter((app) => {
     const showByDefault = app.showOnDockByDefault !== false;
-    return showByDefault || hasOpenWindows(app.id);
+    return showByDefault || hasOpenWindows(app.id) || startupVisibleAppsSet.has(app.id);
   }).map((app) => app.id);
 
   // Serialize for stable dependency comparison
