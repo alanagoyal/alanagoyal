@@ -50,6 +50,38 @@ interface DesktopProps {
 // Constants for file paths
 const HOME_DIR = "/Users/alanagoyal";
 const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+const DESKTOP_HELLO_FILE_PATH = `${HOME_DIR}/Desktop/hello.md`;
+
+function canOpenInTextEditFromPath(filePath: string): boolean {
+  return filePath.startsWith(PROJECTS_DIR + "/") || filePath === DESKTOP_HELLO_FILE_PATH;
+}
+
+type InitialTextEditRouteTarget =
+  | {
+      appId: "preview";
+      filePath: string;
+      previewMeta: { fileUrl: string; fileType: "image" | "pdf" };
+    }
+  | {
+      appId: "textedit";
+      filePath: string;
+    }
+  | null;
+
+function getInitialTextEditRouteTarget(filePath?: string): InitialTextEditRouteTarget {
+  if (!filePath) return null;
+
+  const previewMeta = getPreviewMetadataFromPath(filePath);
+  if (previewMeta) {
+    return { appId: "preview", filePath, previewMeta };
+  }
+
+  if (canOpenInTextEditFromPath(filePath)) {
+    return { appId: "textedit", filePath };
+  }
+
+  return null;
+}
 
 // Fetch file content from GitHub API
 async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
@@ -74,7 +106,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
     const repoFilePath = parts.slice(1).join("/");
     return fetchFileContentFromGitHub(repo, repoFilePath);
   }
-  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
+  if (filePath === DESKTOP_HELLO_FILE_PATH) {
     return "hello world!";
   }
   return "";
@@ -212,18 +244,23 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         : null,
     [initialPreviewFile]
   );
+  const initialTextEditTarget = useMemo(
+    () => getInitialTextEditRouteTarget(initialTextEditFile),
+    [initialTextEditFile]
+  );
 
   // Track whether we've processed the URL file parameters
-  const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
+  const [urlFileProcessed, setUrlFileProcessed] = useState(
+    () => !initialTextEditTarget
+  );
   const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(
     () => !initialPreviewFile || !initialPreviewMetadata
   );
   const startupVisibleDockAppIds = useMemo(() => {
     const appIds = new Set<string>();
 
-    if (initialTextEditFile && !urlFileProcessed) {
-      const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
-      appIds.add(previewMetadata ? "preview" : "textedit");
+    if (initialTextEditTarget && !urlFileProcessed) {
+      appIds.add(initialTextEditTarget.appId);
     }
 
     if (initialPreviewFile && initialPreviewMetadata && !urlPreviewProcessed) {
@@ -232,7 +269,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
     return Array.from(appIds);
   }, [
-    initialTextEditFile,
+    initialTextEditTarget,
     urlFileProcessed,
     initialPreviewFile,
     initialPreviewMetadata,
@@ -248,13 +285,14 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Open TextEdit file from URL on mount (only once)
   useEffect(() => {
     if (urlFileProcessed || !initialTextEditFile) return;
+    if (!initialTextEditTarget) return;
 
-    const previewMetadata = getPreviewMetadataFromPath(initialTextEditFile);
-    if (previewMetadata) {
-      const { fileUrl, fileType } = previewMetadata;
+    if (initialTextEditTarget.appId === "preview") {
+      const { filePath, previewMeta } = initialTextEditTarget;
+      const { fileUrl, fileType } = previewMeta;
       if (fileType === "pdf") {
-        openMultiWindow("preview", initialTextEditFile, {
-          filePath: initialTextEditFile,
+        openMultiWindow("preview", filePath, {
+          filePath,
           fileUrl,
           fileType,
         });
@@ -265,8 +303,8 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       loadImageAndGetSize(fileUrl).then((size) => {
         openMultiWindow(
           "preview",
-          initialTextEditFile,
-          { filePath: initialTextEditFile, fileUrl, fileType },
+          filePath,
+          { filePath, fileUrl, fileType },
           size ?? undefined
         );
         setUrlFileProcessed(true);
@@ -289,15 +327,22 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       });
       setUrlFileProcessed(true);
     } else {
-      fetchFileContent(initialTextEditFile).then((content) => {
-        openMultiWindow("textedit", initialTextEditFile, {
-          filePath: initialTextEditFile,
+      const filePath = initialTextEditTarget.filePath;
+      fetchFileContent(filePath).then((content) => {
+        openMultiWindow("textedit", filePath, {
+          filePath,
           content,
         });
         setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
+  }, [
+    initialTextEditFile,
+    initialTextEditTarget,
+    urlFileProcessed,
+    existingWindowId,
+    openMultiWindow,
+  ]);
 
   // Open Preview file from URL on mount (only once)
   const existingPreviewWindow = initialPreviewFile
