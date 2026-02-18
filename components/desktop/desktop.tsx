@@ -205,9 +205,19 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     [previewWindows, isMobile]
   );
 
+  const initialPreviewMetadata = useMemo(
+    () =>
+      initialPreviewFile
+        ? getPreviewMetadataFromPath(initialPreviewFile)
+        : null,
+    [initialPreviewFile]
+  );
+
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
-  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(
+    () => !initialPreviewFile || !initialPreviewMetadata
+  );
   const startupVisibleDockAppIds = useMemo(() => {
     const appIds = new Set<string>();
 
@@ -216,7 +226,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       appIds.add(previewMetadata ? "preview" : "textedit");
     }
 
-    if (initialPreviewFile && !urlPreviewProcessed) {
+    if (initialPreviewFile && initialPreviewMetadata && !urlPreviewProcessed) {
       appIds.add("preview");
     }
 
@@ -225,6 +235,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     initialTextEditFile,
     urlFileProcessed,
     initialPreviewFile,
+    initialPreviewMetadata,
     urlPreviewProcessed,
   ]);
 
@@ -304,7 +315,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     }
 
     // Parse the file path to get URL and type
-    const previewMeta = getPreviewMetadataFromPath(initialPreviewFile);
+    const previewMeta = initialPreviewMetadata;
     if (previewMeta) {
       const { fileUrl, fileType } = previewMeta;
 
@@ -330,7 +341,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       setUrlPreviewProcessed(true);
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
+  }, [
+    initialPreviewFile,
+    initialPreviewMetadata,
+    urlPreviewProcessed,
+    existingPreviewWindowId,
+    openMultiWindow,
+  ]);
 
   // Update URL when focus changes
   useEffect(() => {
