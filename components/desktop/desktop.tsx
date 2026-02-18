@@ -188,11 +188,20 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   );
 
   const visiblePreviewWindows = useMemo(
-    () =>
-      previewWindows
-        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .slice(0, isMobile ? 1 : undefined),
+    () => {
+      const openPreviewWindows = previewWindows.filter(
+        (w) => w.isOpen && !w.isMinimized && w.metadata?.filePath
+      );
+
+      if (isMobile) {
+        return openPreviewWindows.sort((a, b) => b.zIndex - a.zIndex).slice(0, 1);
+      }
+
+      // Keep DOM order stable on desktop. Reordering iframe-backed windows on focus can trigger PDF reloads.
+      return openPreviewWindows.sort((a, b) =>
+        a.id.localeCompare(b.id, undefined, { numeric: true })
+      );
+    },
     [previewWindows, isMobile]
   );
 
