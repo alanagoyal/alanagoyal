@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const prefix = isMobileRequest(request) ? "/_mobile" : "/_desktop";
+  const prefix = isMobileRequest(request) ? "/mobile-notes" : "/desktop-notes";
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname = `${prefix}${pathname}`;
   return NextResponse.rewrite(rewriteUrl);

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
-import { Desktop } from "@/components/desktop/desktop";
+import { DesktopNotesShell } from "../desktop-notes-shell";
 import { getNoteBySlug, getPublicNoteSlugs } from "@/lib/notes/server-note";
 
 export const revalidate = 86400;
@@ -46,5 +46,5 @@ export default async function DesktopNotePage({ params }: PageProps) {
     return redirect("/notes/error");
   }
 
-  return <Desktop initialAppId="notes" initialNoteSlug={cleanSlug} />;
+  return <DesktopNotesShell initialSlug={cleanSlug} />;
 }

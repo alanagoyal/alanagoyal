@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { Desktop } from "@/components/desktop/desktop";
+import { DesktopNotesShell } from "./desktop-notes-shell";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -11,5 +11,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function DesktopNotesPage() {
-  return <Desktop initialAppId="notes" />;
+  return <DesktopNotesShell />;
 }
