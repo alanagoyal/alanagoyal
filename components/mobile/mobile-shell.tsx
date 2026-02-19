@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RecentsProvider } from "@/lib/recents-context";
 import { NotesApp } from "@/components/apps/notes/notes-app";
+import { Note as NoteType } from "@/lib/notes/types";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import { SettingsApp } from "@/components/apps/settings/settings-app";
 import { ITermApp } from "@/components/apps/iterm/iterm-app";
@@ -36,9 +37,10 @@ function getAppIdFromPathname(pathname: string, fallbackApp?: string): string {
 interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
+  initialNote?: NoteType;
 }
 
-export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
+export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
@@ -118,7 +120,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     <RecentsProvider>
       <div className="h-dvh flex flex-col bg-background">
         {activeAppId === "notes" && (
-          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
+          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} initialNote={initialNote} />
         )}
         {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}

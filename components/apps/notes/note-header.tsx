@@ -6,8 +6,6 @@ import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
 import { Note } from "@/lib/notes/types";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
@@ -35,7 +33,6 @@ export default function NoteHeader({
     theme?: "light" | "dark" | "auto";
   };
 
-  const pathname = usePathname();
   const { theme, systemTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -135,20 +132,11 @@ export default function NoteHeader({
 
   return (
     <>
-      {isMobile && (onBack || pathname !== "/notes") && (
-        onBack ? (
-          <button onClick={onBack} className="pt-2 flex items-center">
-            <Icons.back />
-            <span className="text-[#e2a727] text-base ml-1">Notes</span>
-          </button>
-        ) : (
-          <Link href="/notes">
-            <button className="pt-2 flex items-center">
-              <Icons.back />
-              <span className="text-[#e2a727] text-base ml-1">Notes</span>
-            </button>
-          </Link>
-        )
+      {isMobile && onBack && (
+        <button onClick={onBack} className="pt-2 flex items-center">
+          <Icons.back />
+          <span className="text-[#e2a727] text-base ml-1">Notes</span>
+        </button>
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">

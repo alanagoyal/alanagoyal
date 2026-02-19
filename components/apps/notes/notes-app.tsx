@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
@@ -14,24 +15,38 @@ interface NotesAppProps {
   isMobile?: boolean;
   inShell?: boolean; // When true, use callback navigation instead of route navigation
   initialSlug?: string; // If provided, select this note on load
+  initialNote?: NoteType;
 }
 
-export function NotesApp({ isMobile = false, inShell = false, initialSlug }: NotesAppProps) {
+export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
+  const isRouteDrivenMobile = isMobile && !inShell;
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(!initialSlug);
+  const [selectedNote, setSelectedNote] = useState<NoteType | null>(initialNote ?? null);
+  const [loading, setLoading] = useState(() => !(isRouteDrivenMobile && Boolean(initialSlug) && Boolean(initialNote)));
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingSelectionSlugRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (!initialNote) return;
+    setSelectedNote(initialNote);
+    setLoading(false);
+  }, [initialNote]);
+
   // Fetch public notes on mount
   useEffect(() => {
     let isCancelled = false;
 
     async function fetchNotes() {
+      if (isRouteDrivenMobile && initialSlug && initialNote?.slug === initialSlug) {
+        setSelectedNote(initialNote);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       const { data } = await supabase
@@ -48,9 +63,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         // On mobile without initialSlug, show sidebar only (no note selected)
         // On desktop or with initialSlug, select a note
         if (isMobile && !initialSlug) {
-          // Don't auto-select a note on mobile - show sidebar only
+          // In mobile list route (/notes), no note is selected.
           setSelectedNote(null);
-          setShowSidebar(true);
           setLoading(false);
           return;
         }
@@ -94,7 +108,11 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
               } else {
                 setSelectedNote(fallbackNote);
               }
-              setUrl(`/notes/${fallbackNote.slug}`);
+              if (isRouteDrivenMobile) {
+                router.replace(`/notes/${fallbackNote.slug}`);
+              } else {
+                setUrl(`/notes/${fallbackNote.slug}`);
+              }
             }
           }
         } else {
@@ -124,15 +142,17 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     return () => {
       isCancelled = true;
     };
-  }, [supabase, initialSlug, isMobile]);
+  }, [supabase, initialSlug, isMobile, isRouteDrivenMobile, initialNote, router]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     pendingSelectionSlugRef.current = note.slug;
+    if (isRouteDrivenMobile) {
+      router.push(`/notes/${note.slug}`);
+      return;
+    }
+
     setSelectedNote(note);
     setUrl(`/notes/${note.slug}`);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
 
     // Fetch full note data using RPC
     const { data: fullNote } = await supabase
@@ -141,27 +161,30 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     if (fullNote && pendingSelectionSlugRef.current === note.slug) {
       setSelectedNote(fullNote as NoteType);
     }
-  }, [supabase, isMobile]);
+  }, [supabase, isRouteDrivenMobile, router]);
 
   const handleBackToSidebar = useCallback(() => {
     pendingSelectionSlugRef.current = null;
-    setShowSidebar(true);
-    // Update URL when going back to sidebar on mobile
-    if (isMobile) {
-      setUrl("/notes");
+    if (isRouteDrivenMobile) {
+      router.push("/notes");
+      return;
     }
-  }, [isMobile]);
+    // Legacy mobile-in-place mode fallback.
+    if (isMobile) setUrl("/notes");
+  }, [isMobile, isRouteDrivenMobile, router]);
 
   // Handler for new note creation - sets note and updates URL
   const handleNoteCreated = useCallback((note: NoteType) => {
     pendingSelectionSlugRef.current = note.slug;
+    if (isRouteDrivenMobile) {
+      router.push(`/notes/${note.slug}`);
+      return;
+    }
+
     setSelectedNote(note);
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
-  }, [isMobile]);
+  }, [isRouteDrivenMobile, router]);
 
   // Show empty background while loading to prevent flash
   if (loading) {
@@ -170,6 +193,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
 
   // On mobile, show either sidebar or note content
   if (isMobile) {
+    const showSidebar = !initialSlug;
+    const noteToRender = initialNote?.slug === initialSlug ? initialNote : selectedNote;
+
     return (
       <SessionNotesProvider>
         <div
@@ -190,9 +216,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
             />
           ) : (
             <div className="h-full">
-              {selectedNote && (
+              {noteToRender && (
                 <div className="h-full p-3">
-                  <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} isMobile={true} />
+                  <Note key={noteToRender.id} note={noteToRender} onBack={handleBackToSidebar} isMobile={true} />
                 </div>
               )}
             </div>

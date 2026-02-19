@@ -1,10 +1,13 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/notes/types";
-import { NotesDesktopPage } from "./notes-desktop-page";
+import { Desktop } from "@/components/desktop/desktop";
+import { MobileShell } from "@/components/mobile/mobile-shell";
+import { isMobileUserAgent } from "@/lib/is-mobile-user-agent";
 
 // Enable ISR with a reasonable revalidation period for public notes
 export const revalidate = 86400; // 24 hours
@@ -68,12 +71,16 @@ export default async function NotePage({ params }: PageProps) {
   const { slug } = await params;
   const cleanSlug = slug.replace(/^notes\//, "");
   const note = await getNote(cleanSlug);
+  const userAgent = (await headers()).get("user-agent");
 
   // Invalid slug - redirect to error page
   if (!note) {
     return redirect("/notes/error");
   }
 
-  // Render Desktop with notes app focused on this specific note
-  return <NotesDesktopPage slug={cleanSlug} />;
+  if (isMobileUserAgent(userAgent)) {
+    return <MobileShell initialApp="notes" initialNoteSlug={cleanSlug} initialNote={note} />;
+  }
+
+  return <Desktop initialAppId="notes" initialNoteSlug={cleanSlug} />;
 }
