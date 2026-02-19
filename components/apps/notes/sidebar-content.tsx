@@ -110,6 +110,7 @@ export function SidebarContent({
                         setOpenSwipeItemSlug={setOpenSwipeItemSlug}
                         showDivider={index < groupedNotes[categoryKey].length - 1}
                         useCallbackNavigation={useCallbackNavigation}
+                        isMobile={isMobile}
                       />
                     )
                   )}
@@ -137,6 +138,7 @@ export function SidebarContent({
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
               useCallbackNavigation={useCallbackNavigation}
+              isMobile={isMobile}
             />
           ))}
         </ul>

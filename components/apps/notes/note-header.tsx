@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { useMobileDetect } from "./mobile-detector";
 import { Lock } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import Link from "next/link";
@@ -19,11 +18,13 @@ export default function NoteHeader({
   saveNote,
   canEdit,
   onBack,
+  isMobile,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
   onBack?: () => void; // Callback for back navigation in shell mode
+  isMobile: boolean;
 }) {
   type EmojiPickerProps = {
     data: unknown;
@@ -34,7 +35,6 @@ export default function NoteHeader({
     theme?: "light" | "dark" | "auto";
   };
 
-  const isMobile = useMobileDetect();
   const pathname = usePathname();
   const { theme, systemTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
