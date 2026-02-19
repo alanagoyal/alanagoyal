@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSwipeable } from "react-swipeable";
-import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { SwipeActions } from "./swipe-actions";
 import {
   ContextMenu,
@@ -39,6 +38,7 @@ interface NoteItemProps {
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
   showDivider?: boolean;
   useCallbackNavigation?: boolean;
+  isMobile: boolean;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -56,8 +56,8 @@ export const NoteItem = React.memo(function NoteItem({
   setOpenSwipeItemSlug,
   showDivider = false,
   useCallbackNavigation = false,
+  isMobile,
 }: NoteItemProps) {
-  const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
 

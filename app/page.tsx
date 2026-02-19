@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/config/site";
-import HomeClient from "./home-client";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { isMobileUserAgent } from "@/lib/is-mobile-user-agent";
 
 export const metadata: Metadata = {
   title: siteConfig.title,
@@ -11,6 +14,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  return <HomeClient />;
+export default async function Home() {
+  const userAgent = (await headers()).get("user-agent");
+
+  if (isMobileUserAgent(userAgent)) {
+    redirect("/notes");
+  }
+
+  return <AppShellPage />;
 }

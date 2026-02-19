@@ -1,5 +1,8 @@
 import { Metadata } from "next";
-import { NotesDesktopPage } from "./[slug]/notes-desktop-page";
+import { headers } from "next/headers";
+import { Desktop } from "@/components/desktop/desktop";
+import { MobileShell } from "@/components/mobile/mobile-shell";
+import { isMobileUserAgent } from "@/lib/is-mobile-user-agent";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -10,8 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function NotesPage() {
-  // On mobile: shows sidebar (no note selected)
-  // On desktop: shows notes window with about-me selected
-  return <NotesDesktopPage />;
+export default async function NotesPage() {
+  const userAgent = (await headers()).get("user-agent");
+
+  if (isMobileUserAgent(userAgent)) {
+    return <MobileShell initialApp="notes" />;
+  }
+
+  return <Desktop initialAppId="notes" initialNoteSlug="about-me" />;
 }
