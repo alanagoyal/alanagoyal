@@ -14,13 +14,14 @@ interface NotesAppProps {
   isMobile?: boolean;
   inShell?: boolean; // When true, use callback navigation instead of route navigation
   initialSlug?: string; // If provided, select this note on load
+  initialNote?: NoteType;
 }
 
-export function NotesApp({ isMobile = false, inShell = false, initialSlug }: NotesAppProps) {
+export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [selectedNote, setSelectedNote] = useState<NoteType | null>(initialNote ?? null);
+  const [loading, setLoading] = useState(() => !(isMobile && initialSlug && initialNote));
+  const [showSidebar, setShowSidebar] = useState(() => (isMobile ? !initialSlug : true));
   const supabase = createClient();
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
@@ -48,6 +49,13 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         // Use initialSlug if provided, otherwise "about-me", otherwise first note
         const targetSlug = initialSlug || "about-me";
         const defaultNote = data.find((n: NoteType) => n.slug === targetSlug);
+
+        // Mobile deep links can receive an initial note from the server;
+        // keep first paint stable and avoid re-fetching the same note.
+        if (selectedNote?.slug === targetSlug) {
+          setLoading(false);
+          return;
+        }
 
         if (defaultNote && !selectedNote) {
           // Note found in public notes - fetch full data
@@ -158,7 +166,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
             <div className="h-full">
               {selectedNote && (
                 <div className="h-full p-3">
-                  <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} />
+                  <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} isMobile={true} />
                 </div>
               )}
             </div>
@@ -229,7 +237,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
             {selectedNote ? (
               <div className="w-full min-h-full p-3">
-                <Note key={selectedNote.id} note={selectedNote} />
+                <Note key={selectedNote.id} note={selectedNote} isMobile={false} />
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

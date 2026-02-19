@@ -1,5 +1,7 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { siteConfig } from "@/config/site";
+import { isMobileRequest } from "@/lib/server/is-mobile-request";
 import HomeClient from "./home-client";
 
 export const metadata: Metadata = {
@@ -11,6 +13,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  if (await isMobileRequest()) {
+    redirect("/notes");
+  }
+
   return <HomeClient />;
 }

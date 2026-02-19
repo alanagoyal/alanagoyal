@@ -14,13 +14,16 @@ import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 import { setUrl } from "@/lib/set-url";
+import type { Note as NoteType } from "@/lib/notes/types";
 
 interface NotesDesktopPageProps {
   slug?: string;
+  initialIsMobile?: boolean;
+  initialNote?: NoteType;
 }
 
-export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+export function NotesDesktopPage({ slug, initialIsMobile, initialNote }: NotesDesktopPageProps) {
+  const [isMobile, setIsMobile] = useState<boolean | null>(initialIsMobile ?? null);
 
   useEffect(() => {
     const mobile = window.matchMedia("(pointer: coarse)").matches;
@@ -32,10 +35,12 @@ export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
     }
   }, []);
 
-  if (isMobile === null) return null;
+  if (isMobile === null) {
+    return <div className="h-dvh bg-background" />;
+  }
 
   if (isMobile) {
-    return <MobileShell initialApp="notes" initialNoteSlug={slug} />;
+    return <MobileShell initialApp="notes" initialNoteSlug={slug} initialNote={initialNote} />;
   }
 
   return <Desktop initialAppId="notes" initialNoteSlug={slug || "about-me"} />;
