@@ -20,7 +20,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(() => (isMobile ? !initialSlug : true));
   const supabase = createClient();
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
