@@ -1,0 +1,41 @@
+components/apps/notes/note-header.tsx
+  d4c0c86089b53d4d 19,25,135-136,139
+app/(desktop)/notes/[slug]/page.tsx
+  d4c0c86089b53d4d 2,8-10,74,81-85
+app/(desktop)/notes/page.tsx
+  d4c0c86089b53d4d 2-5,16-23
+components/apps/notes/notes-app.tsx
+  d4c0c86089b53d4d 3-4,18,21-22,24-27,31,33-37,41-42,44-51,58-59,62,66-67,76,81-82,85-86,88,93-94,104-105,108-109,111-113,118,125-126,129-130,135-136,138,140,142-145,148-156,161,164,167-170,172-174,178-183,187,196-198,219,221,292
+components/mobile/mobile-shell.tsx
+  d4c0c86089b53d4d 6,40,43,123
+components/apps/notes/note.tsx
+  d4c0c86089b53d4d 14,17,133
+components/apps/notes/note-item.tsx
+  d4c0c86089b53d4d 41,59
+app/page.tsx
+  d4c0c86089b53d4d 3-6,17-24
+lib/is-mobile-user-agent.ts
+  d4c0c86089b53d4d 1-7
+components/apps/notes/sidebar-content.tsx
+  d4c0c86089b53d4d 113,141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "1741e627388d8d86dfda20738682f206a0245898",
+  "prompts": {
+    "d4c0c86089b53d4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c7437-3783-7c10-aadf-4a8df769a734",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 146,
+      "overriden_lines": 0
+    }
+  }
+}
