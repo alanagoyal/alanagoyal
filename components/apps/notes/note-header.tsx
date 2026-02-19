@@ -135,7 +135,7 @@ export default function NoteHeader({
 
   return (
     <>
-      {isMobile && pathname !== "/notes" && (
+      {isMobile && (onBack || pathname !== "/notes") && (
         onBack ? (
           <button onClick={onBack} className="pt-2 flex items-center">
             <Icons.back />
