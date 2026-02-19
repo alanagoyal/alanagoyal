@@ -16,13 +16,24 @@ interface NotesAppProps {
   inShell?: boolean; // When true, use callback navigation instead of route navigation
   initialSlug?: string; // If provided, select this note on load
   initialNote?: NoteType;
+  initialNotes?: NoteType[];
 }
 
-export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
+export function NotesApp({
+  isMobile = false,
+  inShell = false,
+  initialSlug,
+  initialNote,
+  initialNotes,
+}: NotesAppProps) {
   const isRouteDrivenMobile = isMobile && !inShell;
-  const [notes, setNotes] = useState<NoteType[]>([]);
+  const [notes, setNotes] = useState<NoteType[]>(initialNotes ?? []);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(initialNote ?? null);
-  const [loading, setLoading] = useState(() => !(isRouteDrivenMobile && Boolean(initialSlug) && Boolean(initialNote)));
+  const [loading, setLoading] = useState(() => {
+    if (!isRouteDrivenMobile) return true;
+    if (!initialSlug) return false;
+    return !initialNote;
+  });
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
@@ -36,9 +47,15 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     setLoading(false);
   }, [initialNote]);
 
+  useEffect(() => {
+    if (!initialNotes) return;
+    setNotes(initialNotes);
+  }, [initialNotes]);
+
   // Fetch public notes on mount
   useEffect(() => {
     let isCancelled = false;
+    const isMobileListRoute = isRouteDrivenMobile && !initialSlug;
 
     async function fetchNotes() {
       if (isRouteDrivenMobile && initialSlug && initialNote?.slug === initialSlug) {
@@ -47,7 +64,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         return;
       }
 
-      setLoading(true);
+      if (!isMobileListRoute) {
+        setLoading(true);
+      }
 
       const { data } = await supabase
         .from("notes")

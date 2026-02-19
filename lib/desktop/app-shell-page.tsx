@@ -26,7 +26,14 @@ export function AppShellPage({
   if (isMobile === null) return null;
 
   if (isMobile) {
-    return <MobileShell initialApp={appId || "notes"} initialNoteSlug={initialNoteSlug} />;
+    return (
+      <MobileShell
+        initialApp={appId || "notes"}
+        initialNoteSlug={initialNoteSlug}
+        initialTextEditFile={initialTextEditFile}
+        initialPreviewFile={initialPreviewFile}
+      />
+    );
   }
 
   return (

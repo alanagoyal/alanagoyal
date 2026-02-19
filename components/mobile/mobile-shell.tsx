@@ -38,14 +38,39 @@ interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
   initialNote?: NoteType;
+  initialNotes?: NoteType[];
+  initialTextEditFile?: string;
+  initialPreviewFile?: string;
 }
 
-export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
+export function MobileShell({
+  initialApp,
+  initialNoteSlug,
+  initialNote,
+  initialNotes,
+  initialTextEditFile,
+  initialPreviewFile,
+}: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
-  const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(null);
-  const [topmostPreview, setTopmostPreview] = useState<{ filePath: string; fileUrl: string; fileType: PreviewFileType } | null>(null);
+  const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(() => {
+    if (!initialTextEditFile) return null;
+    return {
+      filePath: initialTextEditFile,
+      content: getTextEditContent(initialTextEditFile) ?? "",
+    };
+  });
+  const [topmostPreview, setTopmostPreview] = useState<{ filePath: string; fileUrl: string; fileType: PreviewFileType } | null>(() => {
+    if (!initialPreviewFile) return null;
+    const previewMetadata = getPreviewMetadataFromPath(initialPreviewFile);
+    if (!previewMetadata) return null;
+    return {
+      filePath: initialPreviewFile,
+      fileUrl: previewMetadata.fileUrl,
+      fileType: previewMetadata.fileType,
+    };
+  });
 
   const handleOpenAppFromFinder = useCallback((nextAppId: string) => {
     setActiveAppId(nextAppId);
@@ -120,7 +145,13 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
     <RecentsProvider>
       <div className="h-dvh flex flex-col bg-background">
         {activeAppId === "notes" && (
-          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} initialNote={initialNote} />
+          <NotesApp
+            isMobile={true}
+            inShell={false}
+            initialSlug={initialNoteSlug}
+            initialNote={initialNote}
+            initialNotes={initialNotes}
+          />
         )}
         {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
