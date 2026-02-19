@@ -1,0 +1,29 @@
+components/apps/notes/notes-app.tsx
+  d4c0c86089b53d4d 4,18,21-22,24-26,33-38,44-49,66,111-114,145,149-153,164,168-170,172-174,179-183,187,196-198,219,221
+components/apps/notes/note-header.tsx
+  d4c0c86089b53d4d 135-136,139
+app/(desktop)/notes/[slug]/page.tsx
+  d4c0c86089b53d4d 2,8-10,74,81-85
+components/mobile/mobile-shell.tsx
+  d4c0c86089b53d4d 6,40,43,123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "fb514a7ed4408ce270777cc0cc092d1d85f5ca1c",
+  "prompts": {
+    "d4c0c86089b53d4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c7437-3783-7c10-aadf-4a8df769a734",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 68,
+      "total_deletions": 87,
+      "accepted_lines": 66,
+      "overriden_lines": 0
+    }
+  }
+}
