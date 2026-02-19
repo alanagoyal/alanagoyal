@@ -40,7 +40,6 @@ interface MobileShellProps {
 
 export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
   const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(null);
@@ -105,7 +104,6 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     };
 
     syncFromLocation();
-    setIsHydrated(true);
 
     window.addEventListener("popstate", syncFromLocation);
     window.addEventListener(APP_SHELL_URL_CHANGE_EVENT, syncFromLocation);
@@ -115,10 +113,6 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
       window.removeEventListener(APP_SHELL_URL_CHANGE_EVENT, syncFromLocation);
     };
   }, [initialApp]);
-
-  if (!isHydrated) {
-    return <div className="min-h-dvh bg-background" />;
-  }
 
   return (
     <RecentsProvider>

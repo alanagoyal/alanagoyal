@@ -1,39 +1,12 @@
-"use client";
-
-/**
- * Shared page component for /notes and /notes/[slug] routes.
- *
- * Routing behavior:
- * - Desktop /notes:       Updates URL to /notes/about-me, shows desktop with default note
- * - Desktop /notes/slug:  Shows desktop with specified note
- * - Mobile /notes:        Shows sidebar only (no URL change)
- * - Mobile /notes/slug:   Shows full note view
- */
-
-import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
-import { setUrl } from "@/lib/set-url";
 
 interface NotesDesktopPageProps {
   slug?: string;
+  isMobile: boolean;
 }
 
-export function NotesDesktopPage({ slug }: NotesDesktopPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const mobile = window.matchMedia("(pointer: coarse)").matches;
-    setIsMobile(mobile);
-
-    // On desktop, redirect /notes to /notes/about-me for URL consistency
-    if (!mobile && window.location.pathname === "/notes") {
-      setUrl("/notes/about-me");
-    }
-  }, []);
-
-  if (isMobile === null) return null;
-
+export function NotesDesktopPage({ slug, isMobile }: NotesDesktopPageProps) {
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} />;
   }

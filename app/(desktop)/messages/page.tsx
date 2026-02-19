@@ -1,7 +1,7 @@
-"use client";
-
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { getIsMobileRequest } from "@/lib/device/get-is-mobile-request";
 
-export default function MessagesPage() {
-  return <AppShellPage appId="messages" />;
+export default async function MessagesPage() {
+  const isMobile = await getIsMobileRequest();
+  return <AppShellPage appId="messages" forceMobile={isMobile} />;
 }

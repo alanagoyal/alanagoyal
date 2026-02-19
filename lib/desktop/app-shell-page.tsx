@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 
@@ -9,6 +8,7 @@ interface AppShellPageProps {
   initialNoteSlug?: string;
   initialTextEditFile?: string;
   initialPreviewFile?: string;
+  forceMobile?: boolean;
 }
 
 export function AppShellPage({
@@ -16,16 +16,9 @@ export function AppShellPage({
   initialNoteSlug,
   initialTextEditFile,
   initialPreviewFile,
+  forceMobile = false,
 }: AppShellPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
-
-  if (isMobile === null) return null;
-
-  if (isMobile) {
+  if (forceMobile) {
     return <MobileShell initialApp={appId || "notes"} initialNoteSlug={initialNoteSlug} />;
   }
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/notes/types";
 import { NotesDesktopPage } from "./notes-desktop-page";
+import { getIsMobileRequest } from "@/lib/device/get-is-mobile-request";
 
 // Enable ISR with a reasonable revalidation period for public notes
 export const revalidate = 86400; // 24 hours
@@ -74,6 +75,7 @@ export default async function NotePage({ params }: PageProps) {
     return redirect("/notes/error");
   }
 
-  // Render Desktop with notes app focused on this specific note
-  return <NotesDesktopPage slug={cleanSlug} />;
+  const isMobile = await getIsMobileRequest();
+
+  return <NotesDesktopPage slug={cleanSlug} isMobile={isMobile} />;
 }
