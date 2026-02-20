@@ -9,6 +9,7 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { setUrl } from "@/lib/set-url";
 import Sidebar from "./sidebar";
 import Note from "./note";
+import { Icons } from "./icons";
 
 interface NotesAppProps {
   isMobile?: boolean;
@@ -194,7 +195,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
               {!selectedNote && (
                 <div className="h-full p-3">
                   <button onClick={handleBackToSidebar} className="pt-2 flex items-center">
-                    <span className="text-[#e2a727] text-base">{"< Notes"}</span>
+                    <Icons.back />
+                    <span className="text-[#e2a727] text-base ml-1">Notes</span>
                   </button>
                 </div>
               )}
