@@ -26,6 +26,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  // Track selected slug in a ref so the sync effect can read it without re-triggering.
+  const selectedSlugRef = useRef(selectedNote?.slug);
+  selectedSlugRef.current = selectedNote?.slug;
 
   // Fetch public notes once.
   useEffect(() => {
@@ -58,7 +61,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     async function syncSelectedNote() {
       // Desktop should use initialSlug only for initial selection.
       // After a user picks a note, don't force-sync back to initialSlug.
-      if (!isMobile && selectedNote?.slug) {
+      if (!isMobile && selectedSlugRef.current) {
         return;
       }
 
@@ -80,7 +83,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         return;
       }
 
-      if (selectedNote?.slug === targetSlug) {
+      if (selectedSlugRef.current === targetSlug) {
         return;
       }
 
@@ -125,7 +128,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     return () => {
       cancelled = true;
     };
-  }, [loading, isMobile, initialSlug, notes, selectedNote?.slug, supabase]);
+  }, [loading, isMobile, initialSlug, notes, supabase]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Update URL and UI immediately on selection.
