@@ -187,7 +187,7 @@ export default function NoteHeader({
           ) : (
             <span className="mr-2">{note.emoji}</span>
           )}
-          {note.public || !canEdit ? (
+          {note.public ? (
             <span className="text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]">
               {note.title}
             </span>
@@ -195,10 +195,11 @@ export default function NoteHeader({
             <Input
               id="title"
               value={note.title}
+              readOnly={!canEdit}
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
-              placeholder="Your title here..."
-              onChange={handleTitleChange}
-              autoFocus={!note.title}
+              placeholder={canEdit ? "Your title here..." : ""}
+              onChange={canEdit ? handleTitleChange : undefined}
+              autoFocus={canEdit && !note.title}
             />
           )}
         </div>
