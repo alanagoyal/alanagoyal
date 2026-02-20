@@ -133,9 +133,12 @@ export default function NoteHeader({
     };
   }, [showEmojiPicker]);
 
+  const isMobileView = Boolean(onBack) || isMobile === true;
+  const showBackButton = Boolean(onBack) || (isMobileView && pathname !== "/notes");
+
   return (
     <>
-      {isMobile && pathname !== "/notes" && (
+      {showBackButton && (
         onBack ? (
           <button onClick={onBack} className="pt-2 flex items-center">
             <Icons.back />
@@ -163,7 +166,7 @@ export default function NoteHeader({
           </div>
         </div>
         <div className="flex items-center relative">
-          {canEdit && !note.public && !isMobile ? (
+          {canEdit && !note.public && !isMobileView ? (
             <button
               ref={emojiButtonRef}
               onClick={async () => {
@@ -202,7 +205,7 @@ export default function NoteHeader({
             />
           )}
         </div>
-        {showEmojiPicker && !isMobile && !note.public && canEdit && typeof document !== "undefined" &&
+        {showEmojiPicker && !isMobileView && !note.public && canEdit && typeof document !== "undefined" &&
           createPortal(
             <div
               ref={pickerRef}
