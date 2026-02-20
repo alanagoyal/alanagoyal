@@ -1,0 +1,55 @@
+components/apps/notes/notes-app.tsx
+  a22d954e0a4fcf14 12,198-199
+lib/is-mobile-request.ts
+  a22d954e0a4fcf14 1-16
+app/(desktop)/notes/page.tsx
+  a22d954e0a4fcf14 2
+app/(desktop)/notes/[slug]/page.tsx
+  a22d954e0a4fcf14 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "9225308c95d66e8b211ed8b892e3d9ef6029cc52",
+  "prompts": {
+    "346abdca370d5a41": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c784c-f9b5-72b3-9210-bfe9f0bde895",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "a22d954e0a4fcf14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7d0e0de-1614-4c81-9fda-62b343708757",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 33,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    },
+    "bf4c0ac90e709ea6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c77d3-f399-78c3-9240-5865ad545b14",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
