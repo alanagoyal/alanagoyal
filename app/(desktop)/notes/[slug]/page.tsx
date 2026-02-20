@@ -22,6 +22,10 @@ const getNote = cache(async (slug: string) => {
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
+  // Check if Supabase URL is set
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return [];
+  }
   const supabase = createBrowserClient();
   const { data: posts } = await supabase
     .from("notes")

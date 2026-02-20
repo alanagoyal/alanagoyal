@@ -1,0 +1,16 @@
+name: alanagoyal
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      no_cache: true
+      args:
+        NEXT_PUBLIC_CATEGORY_OPTIONS: "$NEXT_PUBLIC_CATEGORY_OPTIONS"
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 3000:3000
+    volumes:
+      - ./supabase/config.toml:/app/supabase/config.toml

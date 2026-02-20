@@ -24,12 +24,15 @@ interface PhotoRow {
   collections: string[];
 }
 
-// Static collections (these don't change often)
-const COLLECTIONS: Collection[] = [
-  { id: "flowers", name: "Flowers", coverPhotoId: "IMG_6282" },
-  { id: "food", name: "Food", coverPhotoId: "IMG_7430" },
-  { id: "friends", name: "Friends", coverPhotoId: "IMG_6537" },
-];
+// Static collections
+// Use env var for categories if set - must be done at build time, especially if deploying with docker container
+const categoryOptions = process.env.NEXT_PUBLIC_CATEGORY_OPTIONS || "flowers,food,friends";
+const COLLECTIONS: Collection[] =
+  categoryOptions.split(',').map((option) => ({
+    id: option.trim(),
+    name: option.trim().replace(/[-_,]/g, ' ').replace(/(^|\s)[a-z]/g, (match) => match.toUpperCase()),
+    coverPhotoId: "IMG_7430"
+  }));
 
 // Load favorites from localStorage
 function loadFavorites(): Set<string> {

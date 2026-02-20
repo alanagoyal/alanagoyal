@@ -1,6 +1,14 @@
 import { initLogger } from "braintrust";
 
-export const logger = initLogger({
-  projectName: "messages",
-  apiKey: process.env.BRAINTRUST_API_KEY,
-});
+// Check if BRAINTRUST_API_KEY is non-empty
+export const logger = process.env.BRAINTRUST_API_KEY?.trim()
+  ? initLogger({
+      projectName: "messages",
+      apiKey: process.env.BRAINTRUST_API_KEY,
+    })
+  : {
+      // Fallback logger with no-op methods
+      log: () => {},
+      warn: () => {},
+      error: () => {},
+    };

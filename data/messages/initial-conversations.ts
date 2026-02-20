@@ -8,6 +8,17 @@ const getTimeAgo = (minutes: number) => {
 };
 
 // Create initial conversations with static IDs
+// A slight modification was made to two messages
+// to address log spam. The deeper issue is by
+// perhaps modifying the keying strategy on lines
+// 503-506 of components/apps/messages/message-bubble.tsx
+// but the juice might not be worth the squeeze. 
+// The only way this type of duplicate key can occur
+// is if more than one person reacts to the same 
+// message at the same exact moment with the same 
+// reaction. However, if reactions are batch processed
+// with a shared timestamp, then the chances of it 
+// occurring do go up.
 export const initialConversations: Conversation[] = [
   {
     id: "95e0aa74-5a00-432a-825c-434bbb1f79ab",
@@ -2807,7 +2818,7 @@ export const initialConversations: Conversation[] = [
           {
             type: "emphasize",
             sender: "Draymond Green",
-            timestamp: "2025-01-07T17:23:20.145Z",
+            timestamp: "2025-01-07T17:23:20.135Z",
           },
         ],
       },
@@ -2877,7 +2888,7 @@ export const initialConversations: Conversation[] = [
           {
             type: "laugh",
             sender: "Draymond Green",
-            timestamp: "2025-01-07T17:23:20.145Z",
+            timestamp: "2025-01-07T17:23:20.135Z",
           },
           {
             type: "laugh",

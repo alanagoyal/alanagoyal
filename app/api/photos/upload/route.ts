@@ -11,7 +11,9 @@ function getServiceClient() {
 }
 
 // Available collections for categorization
-const COLLECTIONS = ["flowers", "food", "friends"] as const;
+// Allow categories to be set by env var, must be set at build time
+const categoryOptions = process.env.NEXT_PUBLIC_CATEGORY_OPTIONS || "flowers,food,friends";
+const COLLECTIONS = categoryOptions.split(",").map(item => item.trim());
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB decoded
 const MAX_FILENAME_LENGTH = 255;
 const COLLECTION_SET = new Set<string>(COLLECTIONS);
@@ -89,19 +91,22 @@ async function categorizeImage(base64Image: string): Promise<string[]> {
     console.warn("OPENAI_API_KEY not set, skipping categorization");
     return [];
   }
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  // Allow base url to be set, in order to use an alternate OpenAI-compatible endpoint.
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, baseURL: process.env.OPENAI_BASE_URL });
 
   try {
+    // Allow model to be set by env var
+    const photosModel = process.env.PHOTOS_MODEL_NAME || "gpt-4o-mini";
+    // Use categories set by env var
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: photosModel,
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analyze this image and determine which single category best describes it. The available categories are: flowers, food, friends (photos of people/social gatherings).
+              text: `Analyze this image and determine which single category best describes it. The available categories are: ${categoryOptions}.
 
 Choose ONLY ONE category - the one that best fits the primary subject of the image.
 Return ONLY the category name as a string, e.g. "flowers" or "food" or "friends".

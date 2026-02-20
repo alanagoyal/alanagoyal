@@ -192,3 +192,5 @@ CREATE POLICY "Allow users to delete their own note images"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'note-images');
 
+-- Had to add this as it was the only way I could get anything to work.
+insert into public.notes(title,content,slug) values('about me', 'about me', 'about-me');

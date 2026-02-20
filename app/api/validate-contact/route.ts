@@ -1,11 +1,13 @@
 import { initLogger, invoke, wrapTraced } from "braintrust";
 import { NextResponse } from 'next/server';
 
-initLogger({
-  projectName: "messages",
-  apiKey: process.env.BRAINTRUST_API_KEY,
-  asyncFlush: true,
-});
+if (process.env.BRAINTRUST_API_KEY) {
+  initLogger({
+    projectName: "messages",
+    apiKey: process.env.BRAINTRUST_API_KEY,
+    asyncFlush: true,
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -42,14 +44,16 @@ export async function POST(req: Request) {
   }
 }
 
-const handleRequest = wrapTraced(async function handleRequest(name: string) {
+// Checks if BRAINTRUST_API_KEY exists, bypass tracing if it doesn't
+const handleRequest = (process.env.BRAINTRUST_API_KEY 
+  ? wrapTraced
+  : (fn: any) => fn
+)(async function handleRequest(name: string) {
   try {
     const result = await invoke({
       projectName: "messages",
       slug: "validate-name-317c",
-      input: {
-        name,
-      },
+      input: { name },
       stream: false,
     });
     return result;

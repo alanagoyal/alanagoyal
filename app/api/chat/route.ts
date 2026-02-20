@@ -12,11 +12,13 @@ import {
 } from "@/lib/messages/temporal-context";
 
 // Keep route execution under strict serverless limits (for example 15s).
-export const maxDuration = 14;
+// But allow for modification via env var
+export const maxDuration = process.env.MAX_ROUTE_DURATION || 14;
 
 let client: OpenAI | null = null;
 let loggerInitialized = false;
-const CHAT_REQUEST_TIMEOUT_MS = 9000;
+// Allow for modifiying timeout via env var
+const CHAT_REQUEST_TIMEOUT_MS = process.env.CHAT_REQUEST_TIMEOUT_MS || 9000;
 
 function parseToolCallArguments(
   rawArguments: string | undefined,
@@ -37,17 +39,29 @@ function parseToolCallArguments(
 
 function getClient() {
   if (!client) {
-    client = wrapOpenAI(
-      new OpenAI({
-        baseURL: "https://api.braintrust.dev/v1/proxy",
-        apiKey: process.env.BRAINTRUST_API_KEY!,
-        // Fail fast and let MessageQueue retry once on the client side.
-        timeout: 12000,
-        maxRetries: 0,
-      })
-    ) as unknown as OpenAI;
+    // Check if BRAINTRUST_API_KEY exists
+    if (process.env.BRAINTRUST_API_KEY) {
+      client = wrapOpenAI(
+        new OpenAI({
+          baseURL: "https://api.braintrust.dev/v1/proxy",
+          apiKey: process.env.BRAINTRUST_API_KEY!,
+          // Fail fast and let MessageQueue retry once on the client side.
+          timeout: 12000,
+          maxRetries: 0,
+        })
+      ) as unknown as OpenAI;
+    } else {
+      // If BRAINTRUST_API_KEY is empty, just use the OpenAI constructor directly
+      client = new OpenAI({
+        baseURL: process.env.OPENAI_BASE_URL,
+        apiKey: process.env.OPENAI_API_KEY,
+        timeout: 30000,
+        maxRetries: 3,
+      });
+    }
   }
-  if (!loggerInitialized) {
+  // Also check if BRAINTRUST_API_KEY exists
+  if (!loggerInitialized && process.env.BRAINTRUST_API_KEY) {
     initLogger({
       projectName: "messages",
       apiKey: process.env.BRAINTRUST_API_KEY,
@@ -166,10 +180,11 @@ export async function POST(req: Request) {
     const tools = isOneOnOne
       ? buildOneOnOneTools(recipients[0].name)
       : buildGroupTools(participantNames, state.lastSpeaker);
-
+    // Allow model to be set by env var
+    const selModel = process.env.CHAT_MODEL_NAME || "gpt-5.2";
     const response = await createChatCompletionWithTimeout(
       {
-        model: "gpt-5.2",
+        model: selModel,
         messages: chatMessages,
         tool_choice: "required",
         tools,

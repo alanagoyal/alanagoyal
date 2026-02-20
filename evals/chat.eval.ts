@@ -8,10 +8,12 @@ const noRepeat = LLMClassifierFromTemplate({
   useCoT: true,
 });
 
+// Disable sending logs to Braintrust if key is empty
 Eval("dialogue", {
   data: initDataset("dialogue", { dataset: "conversations" }),
   task: (input) => {
     return JSON.stringify(input);
   },
   scores: [noRepeat],
-});
+  noSendLogs: !process.env.BRAINTRUST_API_KEY,
+} as any);
