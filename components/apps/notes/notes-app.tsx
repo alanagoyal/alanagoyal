@@ -13,7 +13,7 @@ import { Icons } from "./icons";
 
 interface NotesAppProps {
   isMobile?: boolean;
-  inShell?: boolean; // When true, use callback navigation instead of route navigation
+  inShell?: boolean; // When true, enables drag overlay for desktop window shell
   initialSlug?: string; // If provided, select this note on load
   initialNote?: NoteType;
 }
