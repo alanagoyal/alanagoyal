@@ -7,9 +7,6 @@ import { isMobileRequest } from "@/lib/is-mobile-request";
 import { Note as NoteType } from "@/lib/notes/types";
 import { NotesDesktopPage } from "./notes-desktop-page";
 
-// Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 86400; // 24 hours
-
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
   const supabase = await createServerClient();
