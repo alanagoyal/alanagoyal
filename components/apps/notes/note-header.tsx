@@ -74,7 +74,7 @@ export default function NoteHeader({
   }, [canEdit, note.title]);
 
   const formattedDate = useMemo(() => {
-    const displayDate = getDisplayDateByCategory(note.category, note.id, note.created_at);
+    const displayDate = getDisplayDateByCategory(note.category, note.id, note.public ? undefined : note.created_at);
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
   }, [note.category, note.id, note.created_at]);
 
