@@ -29,6 +29,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Track selected slug in a ref so the sync effect can read it without re-triggering.
   const selectedSlugRef = useRef(selectedNote?.slug);
   selectedSlugRef.current = selectedNote?.slug;
+  // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
+  // without waiting for the effect cleanup to run on the next render.
+  const syncCancelledRef = useRef(false);
 
   // Fetch public notes once.
   useEffect(() => {
@@ -57,6 +60,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Keep selected note in sync with route slug.
   useEffect(() => {
     let cancelled = false;
+    syncCancelledRef.current = false;
+
+    const isCancelled = () => cancelled || syncCancelledRef.current;
 
     async function syncSelectedNote() {
       // Desktop should use initialSlug only for initial selection.
@@ -91,7 +97,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         .rpc("select_note", { note_slug_arg: targetSlug })
         .single();
 
-      if (cancelled) return;
+      if (isCancelled()) return;
 
       if (fullNote) {
         setSelectedNote(fullNote as NoteType);
@@ -108,7 +114,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
           .rpc("select_note", { note_slug_arg: fallbackSlug })
           .single();
 
-        if (cancelled) return;
+        if (isCancelled()) return;
 
         if (fallbackFullNote) {
           setSelectedNote(fallbackFullNote as NoteType);
@@ -149,7 +155,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   }, [supabase]);
 
   const handleBackToSidebar = useCallback(() => {
-    // Update URL when going back to sidebar on mobile
+    // Cancel any in-flight sync fetch so it doesn't override the back navigation.
+    syncCancelledRef.current = true;
+    setSelectedNote(null);
     if (isMobile) {
       setUrl("/notes");
     }
