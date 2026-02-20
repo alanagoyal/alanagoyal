@@ -55,6 +55,12 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     let cancelled = false;
 
     async function syncSelectedNote() {
+      // Desktop should use initialSlug only for initial selection.
+      // After a user picks a note, don't force-sync back to initialSlug.
+      if (!isMobile && selectedNote?.slug) {
+        return;
+      }
+
       // Mobile /notes should show the list view with no active note.
       if (isMobile && !initialSlug) {
         if (!loading) {
