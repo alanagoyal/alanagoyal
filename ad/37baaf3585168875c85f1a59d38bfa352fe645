@@ -1,0 +1,23 @@
+lib/notes/note-utils.ts
+  a22d954e0a4fcf14 87-88,90-101,103,108-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "ad37baaf3585168875c85f1a59d38bfa352fe645",
+  "prompts": {
+    "a22d954e0a4fcf14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7d0e0de-1614-4c81-9fda-62b343708757",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 19,
+      "total_deletions": 2,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    }
+  }
+}
