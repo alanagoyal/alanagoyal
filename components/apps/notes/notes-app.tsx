@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Note as NoteType } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
@@ -9,25 +9,34 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { setUrl } from "@/lib/set-url";
 import Sidebar from "./sidebar";
 import Note from "./note";
+import { Icons } from "./icons";
 
 interface NotesAppProps {
   isMobile?: boolean;
-  inShell?: boolean; // When true, use callback navigation instead of route navigation
+  inShell?: boolean; // When true, enables drag overlay for desktop window shell
   initialSlug?: string; // If provided, select this note on load
+  initialNote?: NoteType;
 }
 
-export function NotesApp({ isMobile = false, inShell = false, initialSlug }: NotesAppProps) {
+export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const [selectedNote, setSelectedNote] = useState<NoteType | null>(null);
+  const [selectedNote, setSelectedNote] = useState<NoteType | null>(initialNote ?? null);
   const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
+  // Track selected slug in a ref so the sync effect can read it without re-triggering.
+  const selectedSlugRef = useRef(selectedNote?.slug);
+  selectedSlugRef.current = selectedNote?.slug;
+  // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
+  // without waiting for the effect cleanup to run on the next render.
+  const syncCancelledRef = useRef(false);
 
-  // Fetch public notes on mount
+  // Fetch public notes once.
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchNotes() {
       const { data } = await supabase
         .from("notes")
@@ -35,85 +44,120 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         .eq("public", true)
         .order("created_at", { ascending: false });
 
-      if (data) {
-        setNotes(data);
-        // On mobile without initialSlug, show sidebar only (no note selected)
-        // On desktop or with initialSlug, select a note
-        if (isMobile && !initialSlug) {
-          // Don't auto-select a note on mobile - show sidebar only
-          setLoading(false);
-          return;
-        }
+      if (cancelled) return;
 
-        // Use initialSlug if provided, otherwise "about-me", otherwise first note
-        const targetSlug = initialSlug || "about-me";
-        const defaultNote = data.find((n: NoteType) => n.slug === targetSlug);
-
-        if (defaultNote && !selectedNote) {
-          // Note found in public notes - fetch full data
-          const { data: fullNote } = await supabase
-            .rpc("select_note", { note_slug_arg: defaultNote.slug })
-            .single();
-          if (fullNote) {
-            setSelectedNote(fullNote as NoteType);
-          }
-        } else if (!defaultNote && initialSlug && !selectedNote) {
-          // Note not in public notes - try to fetch directly (may be a private/session note)
-          const { data: fullNote } = await supabase
-            .rpc("select_note", { note_slug_arg: initialSlug })
-            .single();
-          if (fullNote) {
-            setSelectedNote(fullNote as NoteType);
-          } else {
-            // Note doesn't exist - fall back to first public note and update URL
-            const fallbackNote = data[0];
-            if (fallbackNote) {
-              const { data: fallbackFullNote } = await supabase
-                .rpc("select_note", { note_slug_arg: fallbackNote.slug })
-                .single();
-              if (fallbackFullNote) {
-                setSelectedNote(fallbackFullNote as NoteType);
-                setUrl(`/notes/${fallbackNote.slug}`);
-              }
-            }
-          }
-        } else if (!selectedNote) {
-          // No initialSlug provided and no note selected - use first note
-          const fallbackNote = data[0];
-          if (fallbackNote) {
-            const { data: fullNote } = await supabase
-              .rpc("select_note", { note_slug_arg: fallbackNote.slug })
-              .single();
-            if (fullNote) {
-              setSelectedNote(fullNote as NoteType);
-            }
-          }
-        }
-      }
+      setNotes(data ?? []);
       setLoading(false);
     }
+
     fetchNotes();
-  }, [supabase, initialSlug, isMobile, selectedNote]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
+  // Keep selected note in sync with route slug.
+  useEffect(() => {
+    let cancelled = false;
+    syncCancelledRef.current = false;
+
+    const isCancelled = () => cancelled || syncCancelledRef.current;
+
+    async function syncSelectedNote() {
+      // Desktop should use initialSlug only for initial selection.
+      // After a user picks a note, don't force-sync back to initialSlug.
+      if (!isMobile && selectedSlugRef.current) {
+        return;
+      }
+
+      // Mobile /notes should show the list view with no active note.
+      if (isMobile && !initialSlug) {
+        if (!loading) {
+          setSelectedNote(null);
+        }
+        return;
+      }
+
+      const fallbackSlug = notes.find((note) => note.slug === "about-me")?.slug ?? notes[0]?.slug;
+      const targetSlug = initialSlug || fallbackSlug;
+
+      if (!targetSlug) {
+        if (!loading) {
+          setSelectedNote(null);
+        }
+        return;
+      }
+
+      if (selectedSlugRef.current === targetSlug) {
+        return;
+      }
+
+      const { data: fullNote } = await supabase
+        .rpc("select_note", { note_slug_arg: targetSlug })
+        .single();
+
+      if (isCancelled()) return;
+
+      if (fullNote) {
+        setSelectedNote(fullNote as NoteType);
+        return;
+      }
+
+      if (loading) {
+        return;
+      }
+
+      // If slug is invalid, recover to a valid note URL when possible.
+      if (initialSlug && fallbackSlug && fallbackSlug !== targetSlug) {
+        const { data: fallbackFullNote } = await supabase
+          .rpc("select_note", { note_slug_arg: fallbackSlug })
+          .single();
+
+        if (isCancelled()) return;
+
+        if (fallbackFullNote) {
+          setSelectedNote(fallbackFullNote as NoteType);
+          setUrl(`/notes/${fallbackSlug}`);
+          return;
+        }
+      }
+
+      setSelectedNote(null);
+      if (initialSlug) {
+        setUrl("/notes");
+      }
+    }
+
+    syncSelectedNote();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, isMobile, initialSlug, notes, supabase]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
-    // Fetch full note data using RPC
+    // Update URL and UI immediately on selection.
+    setUrl(`/notes/${note.slug}`);
+    setSelectedNote(note);
+
+    // Fetch full note data using RPC.
     const { data: fullNote } = await supabase
       .rpc("select_note", { note_slug_arg: note.slug })
       .single();
+
     if (fullNote) {
-      setSelectedNote(fullNote as NoteType);
-      // Update URL to reflect selected note
-      setUrl(`/notes/${note.slug}`);
-      // On mobile, hide sidebar when note is selected
-      if (isMobile) {
-        setShowSidebar(false);
-      }
+      // Guard against stale async responses when users switch notes quickly.
+      setSelectedNote((current) => (
+        current?.slug === note.slug ? (fullNote as NoteType) : current
+      ));
     }
-  }, [supabase, isMobile]);
+  }, [supabase]);
 
   const handleBackToSidebar = useCallback(() => {
-    setShowSidebar(true);
-    // Update URL when going back to sidebar on mobile
+    // Cancel any in-flight sync fetch so it doesn't override the back navigation.
+    syncCancelledRef.current = true;
+    setSelectedNote(null);
     if (isMobile) {
       setUrl("/notes");
     }
@@ -124,15 +168,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
     setSelectedNote(note);
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
-  }, [isMobile]);
+  }, []);
 
-  // Show empty background while loading to prevent flash
-  if (loading) {
-    return <div className="h-full bg-background" />;
-  }
+  const showSidebar = isMobile && !initialSlug;
 
   // On mobile, show either sidebar or note content
   if (isMobile) {
@@ -146,19 +184,31 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           className="notes-app h-full bg-background text-foreground outline-none"
         >
           {showSidebar ? (
-            <Sidebar
-              notes={notes}
-              onNoteSelect={handleNoteSelect}
-              isMobile={true}
-              selectedSlug={selectedNote?.slug}
-              useCallbackNavigation
-              onNoteCreated={handleNoteCreated}
-            />
+            loading ? (
+              <div className="h-full bg-background" />
+            ) : (
+              <Sidebar
+                notes={notes}
+                onNoteSelect={handleNoteSelect}
+                isMobile={true}
+                selectedSlug={selectedNote?.slug}
+                useCallbackNavigation
+                onNoteCreated={handleNoteCreated}
+              />
+            )
           ) : (
             <div className="h-full">
               {selectedNote && (
                 <div className="h-full p-3">
-                  <Note key={selectedNote.id} note={selectedNote} onBack={handleBackToSidebar} />
+                  <Note key={selectedNote.id} note={selectedNote} isMobile={isMobile} onBack={handleBackToSidebar} />
+                </div>
+              )}
+              {!selectedNote && (
+                <div className="h-full p-3">
+                  <button onClick={handleBackToSidebar} className="pt-2 flex items-center">
+                    <Icons.back />
+                    <span className="text-[#e2a727] text-base ml-1">Notes</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -166,6 +216,11 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         </div>
       </SessionNotesProvider>
     );
+  }
+
+  // Show empty background while loading to prevent flash on desktop
+  if (loading) {
+    return <div className="h-full bg-background" />;
   }
 
   // Desktop view - show both sidebar and note
@@ -229,7 +284,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
             {selectedNote ? (
               <div className="w-full min-h-full p-3">
-                <Note key={selectedNote.id} note={selectedNote} />
+                <Note key={selectedNote.id} note={selectedNote} isMobile={false} />
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

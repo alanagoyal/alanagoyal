@@ -15,7 +15,8 @@ import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
 import { getTextEditContent } from "@/lib/file-storage";
 import { getTopmostWindowForApp } from "@/lib/window-context";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
-import { APP_SHELL_URL_CHANGE_EVENT, pushUrl } from "@/lib/set-url";
+import { APP_SHELL_URL_CHANGE_EVENT, pushUrl, setUrl } from "@/lib/set-url";
+import type { Note as NoteType } from "@/lib/notes/types";
 
 const DEFAULT_APP = "notes";
 
@@ -33,14 +34,28 @@ function getAppIdFromPathname(pathname: string, fallbackApp?: string): string {
   return fallbackApp || DEFAULT_APP;
 }
 
+function getNoteSlugFromPathname(pathname: string): string | undefined {
+  if (!pathname.startsWith("/notes/")) return undefined;
+
+  const slug = pathname.slice("/notes/".length).split("/")[0];
+  if (!slug) return undefined;
+
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 interface MobileShellProps {
   initialApp?: string;
   initialNoteSlug?: string;
+  initialNote?: NoteType;
 }
 
-export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
+export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
   const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [activeNoteSlug, setActiveNoteSlug] = useState<string | undefined>(initialNoteSlug);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
   const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(null);
@@ -74,12 +89,20 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
 
     const syncFromLocation = () => {
       const path = window.location.pathname;
+      const normalizedPath = path === "/" ? "/notes" : path;
+
+      if (path !== normalizedPath) {
+        setUrl(normalizedPath);
+      }
+
       const searchParams = new URLSearchParams(window.location.search);
       const fileParam = searchParams.get("file");
+      const nextAppId = getAppIdFromPathname(normalizedPath, initialApp);
 
-      setActiveAppId(getAppIdFromPathname(path, initialApp));
+      setActiveAppId(nextAppId);
+      setActiveNoteSlug(nextAppId === "notes" ? getNoteSlugFromPathname(normalizedPath) : undefined);
 
-      if (fileParam && path.startsWith("/textedit")) {
+      if (fileParam && normalizedPath.startsWith("/textedit")) {
         setTopmostTextEdit((current) => {
           if (current?.filePath === fileParam) return current;
           return {
@@ -89,7 +112,7 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
         });
       }
 
-      if (fileParam && path.startsWith("/preview")) {
+      if (fileParam && normalizedPath.startsWith("/preview")) {
         const previewMetadata = getPreviewMetadataFromPath(fileParam);
         if (previewMetadata) {
           setTopmostPreview((current) => {
@@ -105,7 +128,6 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     };
 
     syncFromLocation();
-    setIsHydrated(true);
 
     window.addEventListener("popstate", syncFromLocation);
     window.addEventListener(APP_SHELL_URL_CHANGE_EVENT, syncFromLocation);
@@ -116,15 +138,16 @@ export function MobileShell({ initialApp, initialNoteSlug }: MobileShellProps) {
     };
   }, [initialApp]);
 
-  if (!isHydrated) {
-    return <div className="min-h-dvh bg-background" />;
-  }
-
   return (
     <RecentsProvider>
       <div className="h-dvh flex flex-col bg-background">
         {activeAppId === "notes" && (
-          <NotesApp isMobile={true} inShell={false} initialSlug={initialNoteSlug} />
+          <NotesApp
+            isMobile={true}
+            inShell={false}
+            initialSlug={activeNoteSlug}
+            initialNote={activeNoteSlug === initialNoteSlug ? initialNote : undefined}
+          />
         )}
         {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}

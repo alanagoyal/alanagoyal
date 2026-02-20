@@ -1,13 +1,11 @@
 import { cache } from "react";
 import { createClient as createServerClient } from "@/utils/supabase/server";
-import { createClient as createBrowserClient } from "@/utils/supabase/client";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
+import { isMobileRequest } from "@/lib/is-mobile-request";
 import { Note as NoteType } from "@/lib/notes/types";
 import { NotesDesktopPage } from "./notes-desktop-page";
-
-// Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 86400; // 24 hours
 
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
@@ -22,13 +20,22 @@ const getNote = cache(async (slug: string) => {
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
-  const supabase = createBrowserClient();
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
   const { data: posts } = await supabase
     .from("notes")
     .select("slug")
     .eq("public", true);
 
-  return posts!.map(({ slug }) => ({
+  return (posts ?? []).map(({ slug }) => ({
     slug,
   }));
 }
@@ -68,6 +75,7 @@ export default async function NotePage({ params }: PageProps) {
   const { slug } = await params;
   const cleanSlug = slug.replace(/^notes\//, "");
   const note = await getNote(cleanSlug);
+  const initialIsMobile = await isMobileRequest();
 
   // Invalid slug - redirect to error page
   if (!note) {
@@ -75,5 +83,11 @@ export default async function NotePage({ params }: PageProps) {
   }
 
   // Render Desktop with notes app focused on this specific note
-  return <NotesDesktopPage slug={cleanSlug} />;
+  return (
+    <NotesDesktopPage
+      slug={cleanSlug}
+      initialIsMobile={initialIsMobile}
+      initialNote={note}
+    />
+  );
 }

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { useMobileDetect } from "./mobile-detector";
 import { Lock } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import Link from "next/link";
@@ -18,11 +17,13 @@ export default function NoteHeader({
   note,
   saveNote,
   canEdit,
+  isMobile,
   onBack,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  isMobile?: boolean;
   onBack?: () => void; // Callback for back navigation in shell mode
 }) {
   type EmojiPickerProps = {
@@ -34,7 +35,6 @@ export default function NoteHeader({
     theme?: "light" | "dark" | "auto";
   };
 
-  const isMobile = useMobileDetect();
   const pathname = usePathname();
   const { theme, systemTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
@@ -44,9 +44,9 @@ export default function NoteHeader({
   const [PickerComponent, setPickerComponent] = useState<React.ComponentType<EmojiPickerProps> | null>(null);
   const [emojiData, setEmojiData] = useState<unknown>(null);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
-  const [formattedDate, setFormattedDate] = useState("");
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
@@ -66,11 +66,16 @@ export default function NoteHeader({
     }
   }, [emojiPickerLoaded, emojiPickerLoading]);
 
+  // Focus title input when canEdit becomes true on a new (untitled) note.
   useEffect(() => {
+    if (canEdit && !note.title) {
+      titleInputRef.current?.focus();
+    }
+  }, [canEdit, note.title]);
+
+  const formattedDate = useMemo(() => {
     const displayDate = getDisplayDateByCategory(note.category, note.id);
-    setFormattedDate(
-      format(displayDate, "MMMM d, yyyy 'at' h:mm a")
-    );
+    return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
   }, [note.category, note.id]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
@@ -133,9 +138,12 @@ export default function NoteHeader({
     };
   }, [showEmojiPicker]);
 
+  const isMobileView = isMobile === true;
+  const showBackButton = Boolean(onBack) || (isMobileView && pathname !== "/notes");
+
   return (
     <>
-      {isMobile && pathname !== "/notes" && (
+      {showBackButton && (
         onBack ? (
           <button onClick={onBack} className="pt-2 flex items-center">
             <Icons.back />
@@ -152,7 +160,7 @@ export default function NoteHeader({
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
-          <p className="text-muted-foreground text-xs">{formattedDate}</p>
+          <p suppressHydrationWarning className="text-muted-foreground text-xs">{formattedDate}</p>
           <div className="ml-2 h-6 flex items-center">
             {!note.public && (
               <Badge className="text-xs justify-center items-center">
@@ -163,7 +171,7 @@ export default function NoteHeader({
           </div>
         </div>
         <div className="flex items-center relative">
-          {canEdit && !note.public && !isMobile ? (
+          {canEdit && !note.public && !isMobileView ? (
             <button
               ref={emojiButtonRef}
               onClick={async () => {
@@ -187,22 +195,23 @@ export default function NoteHeader({
           ) : (
             <span className="mr-2">{note.emoji}</span>
           )}
-          {note.public || !canEdit ? (
+          {note.public ? (
             <span className="text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]">
               {note.title}
             </span>
           ) : (
             <Input
+              ref={titleInputRef}
               id="title"
               value={note.title}
+              readOnly={!canEdit}
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
-              placeholder="Your title here..."
-              onChange={handleTitleChange}
-              autoFocus={!note.title}
+              placeholder={canEdit ? "Your title here..." : ""}
+              onChange={canEdit ? handleTitleChange : undefined}
             />
           )}
         </div>
-        {showEmojiPicker && !isMobile && !note.public && canEdit && typeof document !== "undefined" &&
+        {showEmojiPicker && !isMobileView && !note.public && canEdit && typeof document !== "undefined" &&
           createPortal(
             <div
               ref={pickerRef}
