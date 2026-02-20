@@ -74,9 +74,9 @@ export default function NoteHeader({
   }, [canEdit, note.title]);
 
   const formattedDate = useMemo(() => {
-    const displayDate = getDisplayDateByCategory(note.category, note.id);
+    const displayDate = getDisplayDateByCategory(note.category, note.id, note.created_at);
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id]);
+  }, [note.category, note.id, note.created_at]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;

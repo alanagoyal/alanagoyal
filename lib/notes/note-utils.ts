@@ -73,28 +73,29 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function getDisplayDateByCategory(category: string | undefined, noteId: string): Date {
+export function getDisplayDateByCategory(category: string | undefined, noteId: string, createdAt?: string): Date {
   const today = new Date();
+
+  // Notes with a real created_at from today: always use the actual timestamp.
+  // This handles private notes regardless of category (which may be null from RPC).
+  if (createdAt) {
+    const created = new Date(createdAt);
+    if (created.toDateString() === today.toDateString()) {
+      return created;
+    }
+  }
 
   switch (category) {
     case "today":
+      // Public/demo notes: seeded random time, capped at current hour to stay in the past
       const todayDate = new Date(today);
-      // Random time between 8:00 AM and current time
       const timeSeedToday = simpleHash(noteId + "todayTime");
-      const currentHour = today.getHours();
-      const currentMinute = today.getMinutes();
+      const maxHour = Math.max(9, today.getHours()); // at least 9AM for some range
+      const randomMinutesToday = Math.floor(seededRandom(timeSeedToday) * (maxHour * 60 - 8 * 60)) + 8 * 60;
+      const hourToday = Math.floor(randomMinutesToday / 60);
+      const minuteToday = randomMinutesToday % 60;
 
-      // If it's before 8 AM, use 8 AM as max time, otherwise use current time
-      const maxTotalMinutes = currentHour < 8
-        ? 8 * 60  // 8:00 AM in minutes
-        : currentHour * 60 + currentMinute;
-      const minTotalMinutes = 8 * 60; // 8:00 AM in minutes
-
-      const randomTotalMinutes = Math.floor(seededRandom(timeSeedToday) * (maxTotalMinutes - minTotalMinutes)) + minTotalMinutes;
-      const randomHour = Math.floor(randomTotalMinutes / 60);
-      const randomMinute = randomTotalMinutes % 60;
-
-      todayDate.setHours(randomHour, randomMinute, 0, 0);
+      todayDate.setHours(hourToday, minuteToday, 0, 0);
       return todayDate;
 
     case "yesterday":
