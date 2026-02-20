@@ -17,12 +17,14 @@ export default function NoteHeader({
   note,
   saveNote,
   canEdit,
+  sessionId,
   isMobile,
   onBack,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
+  sessionId?: string;
   isMobile?: boolean;
   onBack?: () => void; // Callback for back navigation in shell mode
 }) {
@@ -74,9 +76,13 @@ export default function NoteHeader({
   }, [canEdit, note.title]);
 
   const formattedDate = useMemo(() => {
-    const displayDate = getDisplayDateByCategory(note.category, note.id, note.created_at);
+    const displayDate = getDisplayDateByCategory(note.category, note.id, {
+      createdAt: note.created_at,
+      isPublic: note.public,
+      sessionId,
+    });
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id, note.created_at]);
+  }, [note.category, note.id, note.created_at, note.public, sessionId]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;
