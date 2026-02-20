@@ -10,10 +10,11 @@ import { Note as NoteType } from "@/lib/notes/types";
 
 interface NoteProps {
   note: NoteType;
+  isMobile?: boolean;
   onBack?: () => void; // Callback for back navigation in shell mode
 }
 
-export default function Note({ note: initialNote, onBack }: NoteProps) {
+export default function Note({ note: initialNote, isMobile, onBack }: NoteProps) {
   const supabase = createClient();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
@@ -129,7 +130,7 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
       }}
     >
       <SessionId setSessionId={setSessionId} />
-      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} onBack={onBack} />
+      <NoteHeader note={note} saveNote={saveNote} canEdit={canEdit} isMobile={isMobile} onBack={onBack} />
       <div className="relative" onClick={(e) => e.stopPropagation()}>
         {/* Click target for entering edit mode - covers visible area */}
         {canEdit && !note.public && !isEditing && (
