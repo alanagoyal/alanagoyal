@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient as createServerClient } from "@/utils/supabase/server";
-import { createClient as createBrowserClient } from "@/utils/supabase/client";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { isMobileRequest } from "@/lib/is-mobile-request";
@@ -20,13 +20,22 @@ const getNote = cache(async (slug: string) => {
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
-  const supabase = createBrowserClient();
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
   const { data: posts } = await supabase
     .from("notes")
     .select("slug")
     .eq("public", true);
 
-  return posts!.map(({ slug }) => ({
+  return (posts ?? []).map(({ slug }) => ({
     slug,
   }));
 }
