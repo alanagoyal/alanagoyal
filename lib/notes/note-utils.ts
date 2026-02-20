@@ -73,28 +73,26 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function getDisplayDateByCategory(category: string | undefined, noteId: string): Date {
+export function getDisplayDateByCategory(category: string | undefined, noteId: string, createdAt?: string): Date {
   const today = new Date();
 
   switch (category) {
     case "today":
+      // Private notes created today: use the real timestamp
+      if (createdAt) {
+        const created = new Date(createdAt);
+        if (created.toDateString() === today.toDateString()) {
+          return created;
+        }
+      }
+      // Public/demo notes: use a seeded random time for stable display
       const todayDate = new Date(today);
-      // Random time between 8:00 AM and current time
       const timeSeedToday = simpleHash(noteId + "todayTime");
-      const currentHour = today.getHours();
-      const currentMinute = today.getMinutes();
+      const randomMinutesToday = Math.floor(seededRandom(timeSeedToday) * (23 * 60 - 8 * 60)) + 8 * 60;
+      const hourToday = Math.floor(randomMinutesToday / 60);
+      const minuteToday = randomMinutesToday % 60;
 
-      // If it's before 8 AM, use 8 AM as max time, otherwise use current time
-      const maxTotalMinutes = currentHour < 8
-        ? 8 * 60  // 8:00 AM in minutes
-        : currentHour * 60 + currentMinute;
-      const minTotalMinutes = 8 * 60; // 8:00 AM in minutes
-
-      const randomTotalMinutes = Math.floor(seededRandom(timeSeedToday) * (maxTotalMinutes - minTotalMinutes)) + minTotalMinutes;
-      const randomHour = Math.floor(randomTotalMinutes / 60);
-      const randomMinute = randomTotalMinutes % 60;
-
-      todayDate.setHours(randomHour, randomMinute, 0, 0);
+      todayDate.setHours(hourToday, minuteToday, 0, 0);
       return todayDate;
 
     case "yesterday":
