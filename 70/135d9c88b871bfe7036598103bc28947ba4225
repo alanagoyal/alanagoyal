@@ -1,0 +1,36 @@
+lib/notes/note-utils.ts
+  a22d954e0a4fcf14 82,84-86,88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "70135d9c88b871bfe7036598103bc28947ba4225",
+  "prompts": {
+    "926a34f1759e9fcd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c7c7e-69ad-7700-9071-fb045ac0f8b7",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 448,
+      "overriden_lines": 0
+    },
+    "a22d954e0a4fcf14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7d0e0de-1614-4c81-9fda-62b343708757",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 15,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
