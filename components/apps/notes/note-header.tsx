@@ -133,7 +133,7 @@ export default function NoteHeader({
     };
   }, [showEmojiPicker]);
 
-  const isMobileView = Boolean(onBack) || isMobile === true;
+  const isMobileView = isMobile === true;
   const showBackButton = Boolean(onBack) || (isMobileView && pathname !== "/notes");
 
   return (
