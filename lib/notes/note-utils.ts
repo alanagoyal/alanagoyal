@@ -84,13 +84,30 @@ export function getDisplayDateByCategory(category: string | undefined, noteId: s
 
   switch (category) {
     case "today":
-      // Public/demo notes: random time between 8AM and current hour (never in the future)
+      // Public/demo notes: seeded random time, capped at current hour (never in the future).
+      // Cached in sessionStorage so the time stays stable across refreshes within the same session.
       const todayDate = new Date(today);
+      const todayStr = todayDate.toDateString();
+      const cacheKey = `note-display-time:${noteId}:${todayStr}`;
+
+      if (typeof window !== "undefined") {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const [h, m] = cached.split(":").map(Number);
+          todayDate.setHours(h, m, 0, 0);
+          return todayDate;
+        }
+      }
+
       const timeSeedToday = simpleHash(noteId + "todayTime");
-      const maxMinutesToday = Math.max(9 * 60, today.getHours() * 60); // At least 9AM, cap at current hour
+      const maxMinutesToday = Math.max(9 * 60, today.getHours() * 60);
       const randomMinutesToday = Math.floor(seededRandom(timeSeedToday) * (maxMinutesToday - 8 * 60)) + 8 * 60;
       const hourToday = Math.floor(randomMinutesToday / 60);
       const minuteToday = randomMinutesToday % 60;
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(cacheKey, `${hourToday}:${minuteToday}`);
+      }
 
       todayDate.setHours(hourToday, minuteToday, 0, 0);
       return todayDate;
