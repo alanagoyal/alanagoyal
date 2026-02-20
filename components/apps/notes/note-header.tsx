@@ -46,6 +46,7 @@ export default function NoteHeader({
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
@@ -64,6 +65,13 @@ export default function NoteHeader({
       setEmojiPickerLoading(false);
     }
   }, [emojiPickerLoaded, emojiPickerLoading]);
+
+  // Focus title input when canEdit becomes true on a new (untitled) note.
+  useEffect(() => {
+    if (canEdit && !note.title) {
+      titleInputRef.current?.focus();
+    }
+  }, [canEdit, note.title]);
 
   const formattedDate = useMemo(() => {
     const displayDate = getDisplayDateByCategory(note.category, note.id);
@@ -193,13 +201,13 @@ export default function NoteHeader({
             </span>
           ) : (
             <Input
+              ref={titleInputRef}
               id="title"
               value={note.title}
               readOnly={!canEdit}
               className="bg-background placeholder:text-muted-foreground text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]"
               placeholder={canEdit ? "Your title here..." : ""}
               onChange={canEdit ? handleTitleChange : undefined}
-              autoFocus={canEdit && !note.title}
             />
           )}
         </div>
