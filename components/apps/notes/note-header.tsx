@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,6 @@ export default function NoteHeader({
   const [PickerComponent, setPickerComponent] = useState<React.ComponentType<EmojiPickerProps> | null>(null);
   const [emojiData, setEmojiData] = useState<unknown>(null);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
-  const [formattedDate, setFormattedDate] = useState("");
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -66,11 +65,9 @@ export default function NoteHeader({
     }
   }, [emojiPickerLoaded, emojiPickerLoading]);
 
-  useEffect(() => {
+  const formattedDate = useMemo(() => {
     const displayDate = getDisplayDateByCategory(note.category, note.id);
-    setFormattedDate(
-      format(displayDate, "MMMM d, yyyy 'at' h:mm a")
-    );
+    return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
   }, [note.category, note.id]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
@@ -155,7 +152,7 @@ export default function NoteHeader({
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
-          <p className="text-muted-foreground text-xs">{formattedDate}</p>
+          <p suppressHydrationWarning className="text-muted-foreground text-xs">{formattedDate}</p>
           <div className="ml-2 h-6 flex items-center">
             {!note.public && (
               <Badge className="text-xs justify-center items-center">
