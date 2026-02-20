@@ -76,10 +76,13 @@ function seededRandom(seed: number): number {
 export function getDisplayDateByCategory(category: string | undefined, noteId: string, createdAt?: string): Date {
   const today = new Date();
 
-  // Private notes have a real created_at: use it directly so the display date
-  // is always accurate, even when category is null from a direct RPC fetch.
+  // Notes with a real created_at from today: always use the actual timestamp.
+  // This handles private notes regardless of category (which may be null from RPC).
   if (createdAt) {
-    return new Date(createdAt);
+    const created = new Date(createdAt);
+    if (created.toDateString() === today.toDateString()) {
+      return created;
+    }
   }
 
   switch (category) {
