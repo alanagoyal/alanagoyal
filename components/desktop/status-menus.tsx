@@ -70,7 +70,7 @@ interface BatteryMenuProps {
   onOpenSettings?: () => void;
 }
 
-export function BatteryMenu({ isOpen, onClose, onOpenSettings }: BatteryMenuProps) {
+export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [lowPowerMode, setLowPowerMode] = useState(false);
 
@@ -251,7 +251,7 @@ const focusModeConfig: Record<Exclude<FocusMode, "off">, { name: string; icon: R
   reduceInterruptions: { name: "Reduce Interruptions", icon: <SlidersHorizontal className="w-4 h-4" /> },
 };
 
-export function ControlCenterMenu({ isOpen, onClose, onOpenSettings }: ControlCenterMenuProps) {
+export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [showFocusMenu, setShowFocusMenu] = useState(false);
   const { brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode } = useSystemSettings();

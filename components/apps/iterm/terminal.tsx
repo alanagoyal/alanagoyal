@@ -324,7 +324,6 @@ Note: Projects folder contains my real GitHub repositories!`;
           }
 
           // Filter to show only items at the current level
-          const currentLevel = parsed.filePath ? parsed.filePath.split("/").length : 0;
           const items = tree.filter((item) => {
             if (!parsed.filePath) {
               // Root of repo: show only top-level items

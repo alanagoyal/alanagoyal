@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { APPS, getAppById } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
@@ -149,7 +150,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
   // Handle app visibility changes with animations
   // State machine: apps transition through entering -> stable -> exiting -> removed
   useEffect(() => {
-    const currentApps = new Set(currentAppsToShow);
+    const currentApps = new Set(currentAppsKey ? currentAppsKey.split(",") : []);
 
     // Find apps from initial mount that need to be added with stable state (no animation)
     // This handles restored windows from sessionStorage on page refresh
@@ -261,8 +262,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
         }, 350);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- visibleApps is a Set; we track changes via currentAppsKey
-  }, [currentAppsKey]);
+  }, [currentAppsKey, visibleApps]);
 
   const handleAppClick = (appId: string) => {
     // Special handling for Finder to reset tab to recents
@@ -499,13 +499,14 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
                 {app.id === "calendar" ? (
                   <CalendarDockIcon size={Math.round(metrics.icon * 0.79)} />
                 ) : (
-                  <img
+                  <Image
                     src={app.icon}
                     alt={app.name}
                     width={metrics.icon}
                     height={metrics.icon}
                     className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
                     draggable={false}
+                    unoptimized
                   />
                 )}
                 {badgeCount > 0 && (
@@ -583,13 +584,14 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
             className="relative flex items-center justify-center"
             style={{ width: `${metrics.icon}px`, height: `${metrics.icon}px` }}
           >
-            <img
+            <Image
               src="/trash.png"
               alt="Trash"
               width={metrics.icon}
               height={metrics.icon}
               className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
               draggable={false}
+              unoptimized
             />
           </div>
           {/* Trash doesn't show open indicator */}

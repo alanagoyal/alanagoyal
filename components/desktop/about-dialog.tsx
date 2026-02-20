@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { getAppById } from "@/lib/app-config";
 import { WindowControls } from "@/components/window-controls";
 
@@ -157,13 +158,14 @@ export function AboutDialog({
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-center gap-3 px-6 pb-6 pt-2 text-center">
+          <div className="flex flex-col items-center gap-3 px-6 pb-6 pt-2 text-center">
           {app && (
-              <img
+              <Image
                 src={app.icon}
                 alt={app.name}
                 width={64}
                 height={64}
+                unoptimized
               />
           )}
 

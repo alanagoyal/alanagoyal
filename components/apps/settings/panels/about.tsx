@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { getThumbnailPath } from "@/lib/os-versions";
@@ -192,13 +193,15 @@ export function AboutPanel({ isMobile = false, onCategorySelect }: AboutPanelPro
             onClick={() => onCategorySelect?.("appearance", { scrollToOSVersion: true })}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/70 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted relative">
+                <Image
                   src={thumbnailPath}
                   alt={`macOS ${currentOS.name}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                  unoptimized
                 />
               </div>
               <span className="text-xs">macOS {currentOS.name}</span>

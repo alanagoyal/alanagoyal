@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
@@ -329,15 +330,18 @@ export function PreviewWindow({
     if (needsFitSize && !fitSize) {
       return (
         <div ref={containerRef} className="w-full h-full relative">
-          <img
+          <Image
             src={fileUrl}
             alt=""
-            className="absolute invisible"
+            width={naturalSize?.width ?? 1}
+            height={naturalSize?.height ?? 1}
+            className="absolute invisible w-auto h-auto"
             onLoad={(e) => {
-              const img = e.target as HTMLImageElement;
+              const img = e.currentTarget;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
             onError={handleImageError}
+            unoptimized
           />
         </div>
       );
@@ -349,6 +353,8 @@ export function PreviewWindow({
     // Calculate explicit dimensions only when zoomed and fitSize is available
     const displayWidth = isZoomed ? fitSize!.width * zoom : undefined;
     const displayHeight = isZoomed ? fitSize!.height * zoom : undefined;
+    const renderedWidth = Math.max(1, Math.round(displayWidth ?? naturalSize?.width ?? 1));
+    const renderedHeight = Math.max(1, Math.round(displayHeight ?? naturalSize?.height ?? 1));
 
     return (
       <div
@@ -373,9 +379,11 @@ export function PreviewWindow({
             minHeight: "100%",
           }}
         >
-          <img
+          <Image
             src={fileUrl}
             alt={fileName}
+            width={renderedWidth}
+            height={renderedHeight}
             draggable={false}
             className={isZoomed ? "" : "w-full h-full object-contain"}
             style={{
@@ -387,9 +395,10 @@ export function PreviewWindow({
             }}
             onError={handleImageError}
             onLoad={(e) => {
-              const img = e.target as HTMLImageElement;
+              const img = e.currentTarget;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
+            unoptimized
           />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -270,9 +271,18 @@ export default function NoteContent({
   }, [stopPropagation]);
 
   const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    const src = typeof props.src === "string" ? props.src : "";
+    if (!src) return null;
+
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img {...props} alt={props.alt || "image"} className="w-full max-w-xl h-auto object-contain" />
+      <Image
+        src={src}
+        alt={props.alt || "image"}
+        width={1200}
+        height={800}
+        className="w-full max-w-xl h-auto object-contain"
+        unoptimized
+      />
     );
   }, []);
 

@@ -70,9 +70,6 @@ function getDefaultWindowState(appId: string): WindowState {
 // State Factory Functions
 // =============================================================================
 
-// Default app shown to new visitors (used when no initialAppId specified)
-const DEFAULT_APP = "notes";
-
 // Desktop default configuration (shown after logout/restart/shutdown)
 // Windows listed in z-index order (first = back, last = front)
 const DESKTOP_DEFAULT_CONFIG = {

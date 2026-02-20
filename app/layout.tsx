@@ -6,6 +6,7 @@ import { SystemSettingsProvider } from "@/lib/system-settings-context";
 import { AudioProvider } from "@/lib/music/audio-context";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: siteConfig.title,
   description: "Personal website of Alana Goyal",
   icons: {

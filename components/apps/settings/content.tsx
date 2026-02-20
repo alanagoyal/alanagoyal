@@ -57,7 +57,6 @@ export function Content({
   selectedPanel,
   onPanelSelect,
   onCategorySelect,
-  onBack,
   isMobile,
   scrollToOSVersion,
   onScrollComplete,

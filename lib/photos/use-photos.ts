@@ -53,7 +53,6 @@ function saveFavorites(favorites: Set<string>): void {
 
 export function usePhotos(): UsePhotosResult {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [favorites, setFavorites] = useState<Set<string>>(() => loadFavorites());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +79,6 @@ export function usePhotos(): UsePhotosResult {
       }));
 
       setPhotos(transformedPhotos);
-      setFavorites(currentFavorites);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch photos";
       setError(message);
@@ -95,16 +93,13 @@ export function usePhotos(): UsePhotosResult {
   }, [fetchPhotos]);
 
   const toggleFavorite = useCallback((photoId: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(photoId)) {
-        next.delete(photoId);
-      } else {
-        next.add(photoId);
-      }
-      saveFavorites(next);
-      return next;
-    });
+    const nextFavorites = loadFavorites();
+    if (nextFavorites.has(photoId)) {
+      nextFavorites.delete(photoId);
+    } else {
+      nextFavorites.add(photoId);
+    }
+    saveFavorites(nextFavorites);
 
     setPhotos((prev) =>
       prev.map((photo) =>

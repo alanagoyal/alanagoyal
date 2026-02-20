@@ -110,6 +110,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   // Keep a ref to the latest state for callbacks that need fresh values
   const stateRef = useRef(playbackState);
   stateRef.current = playbackState;
+  const systemVolumeRef = useRef(systemVolume);
+
+  useEffect(() => {
+    systemVolumeRef.current = systemVolume;
+  }, [systemVolume]);
 
   // Debounced save - only saves after 1 second of no changes
   const debouncedSave = useCallback((state: PlaybackState) => {
@@ -151,7 +156,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined" && !audioRef.current) {
       const audio = new Audio();
-      audio.volume = (systemVolume / 100) * playbackState.volume;
+      const initialState = stateRef.current;
+      audio.volume = (systemVolumeRef.current / 100) * initialState.volume;
 
       // Handle metadata load - update duration and seek to saved progress
       const handleLoadedMetadata = () => {
@@ -180,8 +186,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audio.addEventListener("error", handleError);
 
       // Restore track from persisted state (but don't auto-play)
-      if (playbackState.currentTrack?.previewUrl) {
-        audio.src = playbackState.currentTrack.previewUrl;
+      if (initialState.currentTrack?.previewUrl) {
+        audio.src = initialState.currentTrack.previewUrl;
       }
 
       audioRef.current = audio;
@@ -198,7 +204,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         audioRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Cleanup save timeout on unmount

@@ -506,14 +506,17 @@ export function Sidebar({
                                           return null;
                                         })()
                                       ) : null}
-                                      <div className="w-16 desktop:w-14 h-16 desktop:h-14 rounded-full overflow-hidden mb-1 shadow-md">
+                                      <div className="w-16 desktop:w-14 h-16 desktop:h-14 rounded-full overflow-hidden mb-1 shadow-md relative">
                                         {conversation.recipients[0].avatar ? (
-                                          <img
+                                          <Image
                                             src={
                                               conversation.recipients[0].avatar
                                             }
-                                            alt=""
-                                            className="w-full h-full object-cover"
+                                            alt={`${conversation.recipients[0].name} avatar`}
+                                            fill
+                                            sizes="(max-width: 768px) 64px, 56px"
+                                            className="object-cover"
+                                            unoptimized
                                           />
                                         ) : (
                                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">

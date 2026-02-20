@@ -1,4 +1,5 @@
 import { memo, useState, useEffect } from "react";
+import Image from "next/image";
 import { useSwipeable } from "react-swipeable";
 import { Conversation, REACTION_TEXT } from "@/types/messages";
 import { SwipeActions } from "./swipe-actions";
@@ -145,12 +146,15 @@ export const ConversationItem = memo(function ConversationItem({
         <div className="absolute left-0.5 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
       )}
       <div className="flex items-center gap-2 w-full px-4">
-        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 relative">
           {conversation.recipients[0].avatar ? (
-            <img
+            <Image
               src={conversation.recipients[0].avatar}
-              alt=""
-              className="w-full h-full object-cover"
+              alt={`${conversation.recipients[0].name} avatar`}
+              fill
+              sizes="40px"
+              className="object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
@@ -187,7 +191,7 @@ export const ConversationItem = memo(function ConversationItem({
             {conversation.isTyping ? (
               <div className="flex items-center py-0.5">
                 <div className="relative">
-                  <img
+                  <Image
                     src={
                       activeConversation === conversation.id
                         ? "/messages/typing-bubbles/typing-blue.svg"
@@ -196,7 +200,10 @@ export const ConversationItem = memo(function ConversationItem({
                         : "/messages/typing-bubbles/typing-light.svg"
                     }
                     alt="typing"
+                    width={45}
+                    height={20}
                     className="w-[45px] h-auto"
+                    unoptimized
                   />
                   <div className="absolute top-[40%] left-[35%] flex gap-[2px]">
                     <div

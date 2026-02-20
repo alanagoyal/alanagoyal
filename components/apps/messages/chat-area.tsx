@@ -35,6 +35,12 @@ interface ChatAreaProps {
   justSentMessageId?: string | null;
 }
 
+type NavigatorWithVirtualKeyboard = Navigator & {
+  virtualKeyboard?: {
+    overlaysContent: boolean;
+  };
+};
+
 export function ChatArea({
   isNewChat,
   activeConversation,
@@ -70,9 +76,9 @@ export function ChatArea({
   const messageInputRef = useRef<{ focus: () => void }>(null);
 
   useEffect(() => {
-    if ("virtualKeyboard" in navigator) {
-      // @ts-expect-error VirtualKeyboard API is not yet in TypeScript types
-      navigator.virtualKeyboard.overlaysContent = true;
+    const nav = navigator as NavigatorWithVirtualKeyboard;
+    if (nav.virtualKeyboard) {
+      nav.virtualKeyboard.overlaysContent = true;
     }
   }, []);
 

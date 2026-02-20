@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
@@ -154,7 +155,6 @@ function DesktopPreview({ theme }: { theme: ThemeOption }) {
 }
 
 function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: ThemeCardProps) {
-  const isLight = theme === "light";
   const isDark = theme === "dark";
 
   if (isMobile && theme !== "system") {
@@ -225,12 +225,14 @@ function OSVersionCard({
           <Check className="w-3 h-3 text-white" />
         </div>
       )}
-      <div className="w-16 h-16 rounded-full overflow-hidden bg-muted mb-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <div className="w-16 h-16 rounded-full overflow-hidden bg-muted mb-2 relative">
+        <Image
           src={thumbnailPath}
           alt={`macOS ${name}`}
-          className="w-full h-full object-cover"
+          fill
+          sizes="64px"
+          className="object-cover"
+          unoptimized
         />
       </div>
       <span className="text-xs font-medium">{name}</span>

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useSystemSettings } from "@/lib/system-settings-context";
 
 // Wi-Fi signal strength icon component
-function WifiSignal({ strength = 3, className }: { strength?: 1 | 2 | 3; className?: string }) {
+function WifiSignal({ className }: { className?: string }) {
   return (
     <Wifi className={cn("w-4 h-4", className)} />
   );
@@ -29,7 +29,7 @@ interface WifiPanelProps {
   isMobile?: boolean;
 }
 
-export function WifiPanel({ isMobile = false }: WifiPanelProps) {
+export function WifiPanel({}: WifiPanelProps) {
   const { wifiEnabled, setWifiEnabled } = useSystemSettings();
 
   // Desktop layout (macOS style)
@@ -79,7 +79,7 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
                   Connected
                 </span>
                 <Lock className="w-4 h-4 text-muted-foreground" />
-                <WifiSignal strength={3} className="text-muted-foreground" />
+                <WifiSignal className="text-muted-foreground" />
                 <button className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted/50 transition-colors">
                   Details...
                 </button>
@@ -121,7 +121,7 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-muted-foreground" />
-                    <WifiSignal strength={3} className="text-muted-foreground" />
+                    <WifiSignal className="text-muted-foreground" />
                     <button className="p-1 rounded-full hover:bg-muted transition-colors">
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -143,7 +143,7 @@ export function WifiPanel({ isMobile = false }: WifiPanelProps) {
                   <span className="text-xs">{network.name}</span>
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-muted-foreground" />
-                    <WifiSignal strength={3} className="text-muted-foreground" />
+                    <WifiSignal className="text-muted-foreground" />
                     <button className="p-1 rounded-full hover:bg-muted transition-colors">
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                     </button>
