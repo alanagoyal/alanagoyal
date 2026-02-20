@@ -1,0 +1,40 @@
+components/apps/notes/notes-app.tsx
+  346abdca370d5a41 3,17,20,22,24,29,31-32,40,42,45,47-50,52-61,63-64,66-71,73-84,86-112,115-121,124-128,132,134-137,155,169-171,180,188-192,202-204
+components/mobile/mobile-shell.tsx
+  346abdca370d5a41 18-19,37-49,53,56,58,92-97,100,102-103,105,115,146-150
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  346abdca370d5a41 17,21-22,25-27,30-35,38,42-46,49-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "62af3cd17a2ffc4a636d21fd2862edee55089ef1",
+  "prompts": {
+    "346abdca370d5a41": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c784c-f9b5-72b3-9210-bfe9f0bde895",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 339,
+      "total_deletions": 183,
+      "accepted_lines": 295,
+      "overriden_lines": 0
+    },
+    "bf4c0ac90e709ea6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c77d3-f399-78c3-9240-5865ad545b14",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 109,
+      "total_deletions": 196,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    }
+  }
+}
