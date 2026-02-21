@@ -172,20 +172,20 @@ export default function NoteHeader({
         )
       )}
       <div className="px-2 mb-4 relative">
-        <div className="flex justify-center items-center">
+        <div className="relative flex justify-center items-center">
+          {!note.public && (
+            <div className="absolute left-1/2 bottom-full -translate-x-1/2 mb-1">
+              <Badge className="text-xs justify-center items-center">
+                <Lock className="w-3 h-3 mr-1" />
+                Private
+              </Badge>
+            </div>
+          )}
           <p suppressHydrationWarning className="text-muted-foreground text-xs">
             <span className={hasMounted ? "visible" : "invisible"}>
               {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
             </span>
           </p>
-          <div className="ml-2 h-6 flex items-center">
-            {!note.public && (
-              <Badge className="text-xs justify-center items-center">
-                <Lock className="w-3 h-3 mr-1" />
-                Private
-              </Badge>
-            )}
-          </div>
         </div>
         <div className="flex items-center relative">
           {canEdit && !note.public && !isMobileView ? (
