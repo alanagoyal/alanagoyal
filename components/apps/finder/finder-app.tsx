@@ -1024,36 +1024,40 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const renderFileList = () => (
     <div className="px-4 pt-2 pb-8">
       <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
-        {files.map((file, index) => (
-          <button
-            key={file.path}
-            onClick={() => {
-              handleFileClick(file);
-              if (file.type === "dir" || file.type === "app") {
-                handleFileDoubleClick(file);
-              }
-            }}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700",
-              index < files.length - 1 && "border-b border-zinc-200 dark:border-zinc-700"
-            )}
-          >
-            <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-10 h-10 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-base text-zinc-900 dark:text-white truncate">
-                {file.displayName || file.name}
+        {files.map((file, index) => {
+          const isNavigable = file.type === "dir" || file.type === "app";
+          return (
+            <button
+              key={file.path}
+              onClick={() => {
+                handleFileClick(file);
+                if (isNavigable) {
+                  handleFileDoubleClick(file);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-3 text-left",
+                isNavigable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700",
+                index < files.length - 1 && "border-b border-zinc-200 dark:border-zinc-700"
+              )}
+            >
+              <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-10 h-10 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-base text-zinc-900 dark:text-white truncate">
+                  {file.displayName || file.name}
+                </div>
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {file.type === "dir" ? "Folder" : file.type === "app" ? "Application" : "File"}
+                </div>
               </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                {file.type === "dir" ? "Folder" : file.type === "app" ? "Application" : "File"}
-              </div>
-            </div>
-            {(file.type === "dir" || file.type === "app") && (
-              <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            )}
-          </button>
-        ))}
+              {isNavigable && (
+                <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              )}
+            </button>
+          );
+        })}
       </div>
       {files.length === 0 && !loading && (
         <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
