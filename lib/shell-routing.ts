@@ -32,7 +32,16 @@ interface ParsedShellLocation {
   filePath?: string;
 }
 
+interface ParseShellLocationOptions {
+  fallbackAppId?: string;
+  context?: ShellContext;
+}
+
 const FILE_QUERY_PARAM_APPS = new Set(["textedit", "preview"]);
+const MOBILE_APP_REDIRECTS: Record<string, string> = {
+  textedit: "finder",
+  preview: "finder",
+};
 
 export function normalizeShellPathname(pathname: string): string {
   return pathname === "/" ? SHELL_NOTES_ROOT_PATH : pathname;
@@ -65,8 +74,20 @@ export function getNotesRoute(noteSlug = SHELL_DEFAULT_NOTE_SLUG): string {
   return `${SHELL_NOTES_ROOT_PATH}/${encodeURIComponent(noteSlug)}`;
 }
 
+export function getShellAppIdForContext(appId: string, context: ShellContext = "desktop"): string {
+  if (context === "mobile") {
+    return MOBILE_APP_REDIRECTS[appId] ?? appId;
+  }
+  return appId;
+}
+
 export function getShellUrlForApp(appId: string, options: ShellUrlOptions = {}): string | null {
   const context = options.context ?? "desktop";
+  const contextualAppId = getShellAppIdForContext(appId, context);
+
+  if (contextualAppId !== appId) {
+    return `/${contextualAppId}`;
+  }
 
   if (appId === "notes") {
     if (context === "mobile") return SHELL_NOTES_ROOT_PATH;
@@ -89,11 +110,25 @@ export function getShellUrlForApp(appId: string, options: ShellUrlOptions = {}):
   return `/${appId}`;
 }
 
-export function parseShellLocation(pathname: string, search: string, fallbackAppId = SHELL_DEFAULT_APP_ID): ParsedShellLocation {
-  const normalizedPathname = normalizeShellPathname(pathname);
-  const appId = getShellAppIdFromPathname(normalizedPathname, fallbackAppId);
-  const noteSlug = appId === "notes" ? getNoteSlugFromShellPathname(normalizedPathname) : undefined;
-  const filePath = new URLSearchParams(search).get("file") ?? undefined;
+export function parseShellLocation(
+  pathname: string,
+  search: string,
+  options: ParseShellLocationOptions = {}
+): ParsedShellLocation {
+  const context = options.context ?? "desktop";
+  const fallbackAppId = getShellAppIdForContext(options.fallbackAppId ?? SHELL_DEFAULT_APP_ID, context);
+  const rawNormalizedPathname = normalizeShellPathname(pathname);
+  const rawAppId = getShellAppIdFromPathname(rawNormalizedPathname, fallbackAppId);
+  const appId = getShellAppIdForContext(rawAppId, context);
+
+  const normalizedPathname = appId === rawAppId
+    ? rawNormalizedPathname
+    : (getShellUrlForApp(appId, { context }) ?? rawNormalizedPathname);
+
+  const noteSlug = appId === "notes" ? getNoteSlugFromShellPathname(rawNormalizedPathname) : undefined;
+  const filePath = appId === rawAppId && FILE_QUERY_PARAM_APPS.has(appId)
+    ? (new URLSearchParams(search).get("file") ?? undefined)
+    : undefined;
 
   return {
     normalizedPathname,

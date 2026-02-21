@@ -10,14 +10,10 @@ import { FinderApp } from "@/components/apps/finder/finder-app";
 import { PhotosApp } from "@/components/apps/photos/photos-app";
 import { CalendarApp } from "@/components/apps/calendar/calendar-app";
 import { MusicApp } from "@/components/apps/music/music-app";
-import { TextEditApp } from "@/components/apps/textedit";
-import { PreviewApp, type PreviewFileType } from "@/components/apps/preview";
-import { getTextEditContent } from "@/lib/file-storage";
-import { getTopmostWindowForApp } from "@/lib/window-context";
-import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import { APP_SHELL_URL_CHANGE_EVENT, pushUrl, setUrl } from "@/lib/set-url";
 import type { Note as NoteType } from "@/lib/notes/types";
 import {
+  getShellAppIdForContext,
   getShellUrlForApp,
   parseShellLocation,
   SHELL_DEFAULT_APP_ID,
@@ -30,16 +26,15 @@ interface MobileShellProps {
 }
 
 export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
-  const [activeAppId, setActiveAppId] = useState<string>(initialApp || SHELL_DEFAULT_APP_ID);
+  const [activeAppId, setActiveAppId] = useState<string>(
+    getShellAppIdForContext(initialApp || SHELL_DEFAULT_APP_ID, "mobile")
+  );
   const [activeNoteSlug, setActiveNoteSlug] = useState<string | undefined>(initialNoteSlug);
 
-  // Topmost windows from desktop session (loaded from sessionStorage)
-  const [topmostTextEdit, setTopmostTextEdit] = useState<{ filePath: string; content: string } | null>(null);
-  const [topmostPreview, setTopmostPreview] = useState<{ filePath: string; fileUrl: string; fileType: PreviewFileType } | null>(null);
-
   const handleOpenAppFromFinder = useCallback((nextAppId: string) => {
-    setActiveAppId(nextAppId);
-    const nextUrl = getShellUrlForApp(nextAppId, { context: "mobile" });
+    const resolvedAppId = getShellAppIdForContext(nextAppId, "mobile");
+    setActiveAppId(resolvedAppId);
+    const nextUrl = getShellUrlForApp(resolvedAppId, { context: "mobile" });
     if (nextUrl) {
       pushUrl(nextUrl);
     }
@@ -47,31 +42,12 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
 
   // Determine active app from URL and load topmost windows on hydration
   useEffect(() => {
-    // Load topmost TextEdit window from desktop session
-    const textEditWindow = getTopmostWindowForApp("textedit");
-    if (textEditWindow?.metadata?.filePath) {
-      setTopmostTextEdit({
-        filePath: textEditWindow!.metadata!.filePath as string,
-        content: (textEditWindow!.metadata!.content as string) ?? "",
-      });
-    }
-
-    // Load topmost Preview window from desktop session
-    const previewWindow = getTopmostWindowForApp("preview");
-    if (previewWindow?.metadata?.filePath && previewWindow?.metadata?.fileUrl && previewWindow?.metadata?.fileType) {
-      setTopmostPreview({
-        filePath: previewWindow!.metadata!.filePath as string,
-        fileUrl: previewWindow!.metadata!.fileUrl as string,
-        fileType: previewWindow!.metadata!.fileType as PreviewFileType,
-      });
-    }
-
     const syncFromLocation = () => {
       const path = window.location.pathname;
-      const { normalizedPathname, appId: nextAppId, noteSlug, filePath } = parseShellLocation(
+      const { normalizedPathname, appId: nextAppId, noteSlug } = parseShellLocation(
         path,
         window.location.search,
-        initialApp || SHELL_DEFAULT_APP_ID
+        { fallbackAppId: initialApp || SHELL_DEFAULT_APP_ID, context: "mobile" }
       );
 
       if (path !== normalizedPathname) {
@@ -80,30 +56,6 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
 
       setActiveAppId(nextAppId);
       setActiveNoteSlug(noteSlug);
-
-      if (filePath && nextAppId === "textedit") {
-        setTopmostTextEdit((current) => {
-          if (current?.filePath === filePath) return current;
-          return {
-            filePath,
-            content: getTextEditContent(filePath) ?? "",
-          };
-        });
-      }
-
-      if (filePath && nextAppId === "preview") {
-        const previewMetadata = getPreviewMetadataFromPath(filePath);
-        if (previewMetadata) {
-          setTopmostPreview((current) => {
-            if (current?.filePath === filePath) return current;
-            return {
-              filePath,
-              fileUrl: previewMetadata.fileUrl,
-              fileType: previewMetadata.fileType,
-            };
-          });
-        }
-      }
     };
 
     syncFromLocation();
@@ -137,27 +89,6 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
         {activeAppId === "photos" && <PhotosApp isMobile={true} inShell={false} />}
         {activeAppId === "calendar" && <CalendarApp isMobile={true} inShell={false} />}
         {activeAppId === "music" && <MusicApp isMobile={true} />}
-        {activeAppId === "textedit" && (() => {
-          const filePath = topmostTextEdit?.filePath;
-          const content = topmostTextEdit?.content
-            ?? (filePath ? getTextEditContent(filePath) ?? "" : "");
-          return (
-            <TextEditApp
-              isMobile={true}
-              inShell={false}
-              initialFilePath={filePath}
-              initialContent={content}
-            />
-          );
-        })()}
-        {activeAppId === "preview" && (
-          <PreviewApp
-            isMobile={true}
-            filePath={topmostPreview?.filePath}
-            fileUrl={topmostPreview?.fileUrl}
-            fileType={topmostPreview?.fileType}
-          />
-        )}
       </div>
     </RecentsProvider>
   );
