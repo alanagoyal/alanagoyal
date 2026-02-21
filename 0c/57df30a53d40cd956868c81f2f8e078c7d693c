@@ -1,0 +1,35 @@
+lib/use-shell-is-mobile.ts
+  a6d5ae99a2562e96 1-26
+components/desktop/desktop.tsx
+  a6d5ae99a2562e96 29,326-335,389-392,408-410,426-432,441-444,451-454,461-464,489-494
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  a6d5ae99a2562e96 18-19,28,32-33,37-38,40,50
+components/apps/notes/mobile-detector.tsx
+  a6d5ae99a2562e96 1,4
+lib/desktop/app-shell-page.tsx
+  a6d5ae99a2562e96 5-6,21,26
+components/mobile/mobile-shell.tsx
+  a6d5ae99a2562e96 20-24,33,42-45,71-75,77-78,82,84,86,88-89,94-95,98,100
+lib/shell-routing.ts
+  a6d5ae99a2562e96 1-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "0c57df30a53d40cd956868c81f2f8e078c7d693c",
+  "prompts": {
+    "a6d5ae99a2562e96": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c817d-59be-7501-bfe1-4c73a71911ec",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 216,
+      "total_deletions": 118,
+      "accepted_lines": 215,
+      "overriden_lines": 0
+    }
+  }
+}
