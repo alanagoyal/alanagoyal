@@ -10,6 +10,13 @@ import { APPS } from "@/lib/app-config";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
+import {
+  fetchGitHubFileContentOrNull,
+  fetchGitHubRecentFiles,
+  fetchGitHubRepoTree,
+  fetchGitHubRepos,
+  type GitHubRecentFile,
+} from "@/lib/github-client";
 import { useRouter } from "next/navigation";
 
 const USERNAME = "alanagoyal";
@@ -94,74 +101,6 @@ function isPreviewFile(filename: string): boolean {
 
 function getPreviewFileType(filename: string): "image" | "pdf" {
   return isPdfFile(filename) ? "pdf" : "image";
-}
-
-// GitHub recent file type
-interface GitHubRecentFile {
-  path: string;
-  repo: string;
-  modifiedAt: string;
-}
-
-// GitHub cache
-interface GitHubCache {
-  repos: string[] | null;
-  repoTrees: Record<string, { name: string; type: "file" | "dir"; path: string }[]>;
-  lastFetch: number;
-}
-
-const githubCache: GitHubCache = {
-  repos: null,
-  repoTrees: {},
-  lastFetch: 0,
-};
-
-async function fetchGitHubRepos(): Promise<string[]> {
-  if (githubCache.repos && Date.now() - githubCache.lastFetch < 5 * 60 * 1000) {
-    return githubCache.repos;
-  }
-  try {
-    const response = await fetch("/api/github?type=repos");
-    if (!response.ok) throw new Error("Failed to fetch repos");
-    const data = await response.json();
-    githubCache.repos = data.repos;
-    githubCache.lastFetch = Date.now();
-    return data.repos;
-  } catch {
-    return githubCache.repos || [];
-  }
-}
-
-async function fetchRepoTree(repo: string): Promise<{ name: string; type: "file" | "dir"; path: string }[]> {
-  if (githubCache.repoTrees[repo]) {
-    return githubCache.repoTrees[repo];
-  }
-  try {
-    const response = await fetch(`/api/github?type=tree&repo=${encodeURIComponent(repo)}`);
-    if (!response.ok) throw new Error("Failed to fetch tree");
-    const data = await response.json();
-    githubCache.repoTrees[repo] = data.tree;
-    return data.tree;
-  } catch {
-    return [];
-  }
-}
-
-async function fetchFileContent(repo: string, path: string): Promise<string | null> {
-  const response = await fetch(
-    `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
-  );
-  if (response.status === 404) return null; // File not found
-  if (!response.ok) throw new Error("Failed to fetch file");
-  const data = await response.json();
-  return data.content ?? null;
-}
-
-async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
-  const response = await fetch("/api/github?type=recent-files", { signal });
-  if (!response.ok) throw new Error("Failed to fetch recent files");
-  const data = await response.json();
-  return data.files;
 }
 
 // Icon component
@@ -373,7 +312,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const repo = parts[0];
         const repoPath = parts.slice(1).join("/");
 
-        const tree = await fetchRepoTree(repo);
+        const tree = await fetchGitHubRepoTree(repo);
 
         // Filter to show only items at current level
         const items = tree.filter(item => {
@@ -587,7 +526,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const repo = parts[0];
         const filePath = parts.slice(1).join("/");
         try {
-          content = await fetchFileContent(repo, filePath);
+          content = await fetchGitHubFileContentOrNull(repo, filePath);
         } catch {
           content = null;
         }
