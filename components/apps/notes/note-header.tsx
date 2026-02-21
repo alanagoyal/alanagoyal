@@ -81,7 +81,7 @@ export default function NoteHeader({
   const formattedDate = useMemo(() => {
     // Render timestamps only after client mount to avoid SSR/client
     // timezone and hydration differences on refresh.
-    if (!hasMounted) {
+    if (note.public && !hasMounted) {
       return "";
     }
 
