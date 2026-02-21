@@ -1,0 +1,23 @@
+lib/recents-context.tsx
+  d750512448d84ac1 30,34,56,59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "b33dbc4cc9c5a10e10f325a0f919db7fb50f9b32",
+  "prompts": {
+    "d750512448d84ac1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c8196-a314-7540-aab4-9e0be9e6ae50",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
