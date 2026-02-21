@@ -7,6 +7,10 @@ import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { setUrl } from "@/lib/set-url";
+import {
+  withDisplayCreatedAt,
+  withDisplayCreatedAtForNotes,
+} from "@/lib/notes/display-created-at";
 import Sidebar from "./sidebar";
 import Note from "./note";
 import { Icons } from "./icons";
@@ -20,7 +24,9 @@ interface NotesAppProps {
 
 export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const [selectedNote, setSelectedNote] = useState<NoteType | null>(initialNote ?? null);
+  const [selectedNote, setSelectedNote] = useState<NoteType | null>(
+    initialNote ? withDisplayCreatedAt(initialNote) : null
+  );
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
@@ -32,6 +38,11 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
   // without waiting for the effect cleanup to run on the next render.
   const syncCancelledRef = useRef(false);
+
+  // Normalize preloaded notes to client-side display timestamps after mount.
+  useEffect(() => {
+    setSelectedNote((current) => (current ? withDisplayCreatedAt(current) : current));
+  }, []);
 
   // Fetch public notes once.
   useEffect(() => {
@@ -46,7 +57,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
       if (cancelled) return;
 
-      setNotes(data ?? []);
+      setNotes(withDisplayCreatedAtForNotes(((data as NoteType[] | null) ?? [])));
       setLoading(false);
     }
 
@@ -100,7 +111,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       if (isCancelled()) return;
 
       if (fullNote) {
-        setSelectedNote(fullNote as NoteType);
+        setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
         return;
       }
 
@@ -117,7 +128,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         if (isCancelled()) return;
 
         if (fallbackFullNote) {
-          setSelectedNote(fallbackFullNote as NoteType);
+          setSelectedNote(withDisplayCreatedAt(fallbackFullNote as NoteType));
           setUrl(`/notes/${fallbackSlug}`);
           return;
         }
@@ -139,7 +150,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Update URL and UI immediately on selection.
     setUrl(`/notes/${note.slug}`);
-    setSelectedNote(note);
+    setSelectedNote(withDisplayCreatedAt(note));
 
     // Fetch full note data using RPC.
     const { data: fullNote } = await supabase
@@ -149,7 +160,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     if (fullNote) {
       // Guard against stale async responses when users switch notes quickly.
       setSelectedNote((current) => (
-        current?.slug === note.slug ? (fullNote as NoteType) : current
+        current?.slug === note.slug
+          ? withDisplayCreatedAt(fullNote as NoteType)
+          : current
       ));
     }
   }, [supabase]);
@@ -165,7 +178,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
   // Handler for new note creation - sets note and updates URL
   const handleNoteCreated = useCallback((note: NoteType) => {
-    setSelectedNote(note);
+    setSelectedNote(withDisplayCreatedAt(note));
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
   }, []);

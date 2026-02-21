@@ -11,20 +11,18 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
-import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
+import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 
 export default function NoteHeader({
   note,
   saveNote,
   canEdit,
-  sessionId,
   isMobile,
   onBack,
 }: {
   note: Note;
   saveNote: (updates: Partial<Note>) => void;
   canEdit: boolean;
-  sessionId?: string;
   isMobile?: boolean;
   onBack?: () => void; // Callback for back navigation in shell mode
 }) {
@@ -87,13 +85,9 @@ export default function NoteHeader({
       return "";
     }
 
-    const displayDate = getDisplayDateByCategory(note.category, note.id, {
-      createdAt: note.created_at,
-      isPublic: note.public,
-      sessionId,
-    });
+    const displayDate = new Date(getDisplayCreatedAt(note));
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id, note.created_at, note.public, sessionId, hasMounted]);
+  }, [note, hasMounted]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;

@@ -134,7 +134,6 @@ export default function Note({ note: initialNote, isMobile, onBack }: NoteProps)
         note={note}
         saveNote={saveNote}
         canEdit={canEdit}
-        sessionId={sessionId}
         isMobile={isMobile}
         onBack={onBack}
       />
