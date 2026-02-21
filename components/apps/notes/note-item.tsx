@@ -121,7 +121,7 @@ export const NoteItem = React.memo(function NoteItem({
         }`}
       >
         <span className="text-black dark:text-white">
-          <span className={`inline-block min-w-[72px] ${hasMounted ? "visible" : "invisible"}`}>
+          <span className={`inline-block ${hasMounted ? "visible" : "invisible min-w-[72px]"}`}>
             {hasMounted
               ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
               : SIDEBAR_DATE_PLACEHOLDER}
