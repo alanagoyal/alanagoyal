@@ -46,6 +46,7 @@ export default function NoteHeader({
   const [PickerComponent, setPickerComponent] = useState<React.ComponentType<EmojiPickerProps> | null>(null);
   const [emojiData, setEmojiData] = useState<unknown>(null);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
+  const [hasMounted, setHasMounted] = useState(false);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -75,14 +76,24 @@ export default function NoteHeader({
     }
   }, [canEdit, note.title]);
 
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const formattedDate = useMemo(() => {
+    // Public note timestamps are client-session generated, so avoid server render
+    // to prevent post-refresh time jumps during hydration.
+    if (note.public && !hasMounted) {
+      return "";
+    }
+
     const displayDate = getDisplayDateByCategory(note.category, note.id, {
       createdAt: note.created_at,
       isPublic: note.public,
       sessionId,
     });
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id, note.created_at, note.public, sessionId]);
+  }, [note.category, note.id, note.created_at, note.public, sessionId, hasMounted]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;
