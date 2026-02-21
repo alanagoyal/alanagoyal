@@ -659,7 +659,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     <div className="px-4 py-2 flex items-center justify-between select-none bg-zinc-100/50 dark:bg-zinc-800/50">
       <WindowControls
         inShell={false}
-        closeOnly
         className="p-2"
       />
       {/* Spacer to match Settings */}
