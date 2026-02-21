@@ -1,0 +1,23 @@
+utils/supabase/server.ts
+  52940a5d30eb7d9d 18-20,26-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "07ebc9a80a8c00f523991ad789d72777dbf5b4b6",
+  "prompts": {
+    "52940a5d30eb7d9d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c81fc-bbbc-7740-b54c-650d8b78f6fa",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 19,
+      "total_deletions": 68,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    }
+  }
+}
