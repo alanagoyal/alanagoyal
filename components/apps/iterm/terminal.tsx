@@ -4,6 +4,11 @@ import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { useRecents } from "@/lib/recents-context";
+import {
+  fetchGitHubFileContent,
+  fetchGitHubRepoTree,
+  fetchGitHubRepos,
+} from "@/lib/github-client";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -112,76 +117,6 @@ function isTextFile(filename: string): boolean {
 interface TerminalProps {
   isMobile?: boolean;
   onOpenTextFile?: (filePath: string, content: string) => void;
-}
-
-// GitHub data cache
-interface GitHubCache {
-  repos: string[] | null;
-  repoTrees: Record<string, { name: string; type: "file" | "dir"; path: string }[]>;
-  fileContents: Record<string, string>;
-  lastFetch: number;
-}
-
-const githubCache: GitHubCache = {
-  repos: null,
-  repoTrees: {},
-  fileContents: {},
-  lastFetch: 0,
-};
-
-async function fetchGitHubRepos(): Promise<string[]> {
-  if (githubCache.repos && Date.now() - githubCache.lastFetch < 5 * 60 * 1000) {
-    return githubCache.repos;
-  }
-
-  try {
-    const response = await fetch("/api/github?type=repos");
-    if (!response.ok) throw new Error("Failed to fetch repos");
-    const data = await response.json();
-    githubCache.repos = data.repos;
-    githubCache.lastFetch = Date.now();
-    return data.repos;
-  } catch {
-    return githubCache.repos || [];
-  }
-}
-
-async function fetchRepoTree(repo: string): Promise<{ name: string; type: "file" | "dir"; path: string }[]> {
-  if (githubCache.repoTrees[repo]) {
-    return githubCache.repoTrees[repo];
-  }
-
-  try {
-    const response = await fetch(`/api/github?type=tree&repo=${encodeURIComponent(repo)}`);
-    if (!response.ok) throw new Error("Failed to fetch tree");
-    const data = await response.json();
-    githubCache.repoTrees[repo] = data.tree;
-    return data.tree;
-  } catch {
-    return [];
-  }
-}
-
-async function fetchFileContent(repo: string, path: string): Promise<string> {
-  const cacheKey = `${repo}/${path}`;
-  if (githubCache.fileContents[cacheKey]) {
-    return githubCache.fileContents[cacheKey];
-  }
-
-  try {
-    const response = await fetch(
-      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
-    );
-    if (!response.ok) {
-      if (response.status === 404) throw new Error("File not found");
-      throw new Error("Failed to fetch file");
-    }
-    const data = await response.json();
-    githubCache.fileContents[cacheKey] = data.content;
-    return data.content;
-  } catch (error) {
-    throw error;
-  }
 }
 
 export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
@@ -343,7 +278,7 @@ Note: Projects folder contains my real GitHub repositories!`;
             }
             // If going into repo subdirectory, verify it exists
             if (parsed.filePath) {
-              const tree = await fetchRepoTree(parsed.repo);
+              const tree = await fetchGitHubRepoTree(parsed.repo);
               const dirExists = tree.some(
                 (item) => item.type === "dir" && item.path === parsed.filePath
               );
@@ -382,7 +317,7 @@ Note: Projects folder contains my real GitHub repositories!`;
         // Handle path inside a repo
         const parsed = parseGitHubPath(target);
         if (parsed) {
-          const tree = await fetchRepoTree(parsed.repo);
+          const tree = await fetchGitHubRepoTree(parsed.repo);
           if (tree.length === 0) {
             output = `ls: ${args[0] || target}: No such file or directory`;
             break;
@@ -445,7 +380,7 @@ Note: Projects folder contains my real GitHub repositories!`;
         const parsed = parseGitHubPath(path);
         if (parsed && parsed.filePath) {
           try {
-            const content = await fetchFileContent(parsed.repo, parsed.filePath);
+            const content = await fetchGitHubFileContent(parsed.repo, parsed.filePath);
             output = content;
             // Add to recents
             const fileName = parsed.filePath.split("/").pop() || parsed.filePath;
@@ -538,7 +473,7 @@ Note: Projects folder contains my real GitHub repositories!`;
           const parsed = parseGitHubPath(path);
           if (parsed && parsed.filePath) {
             try {
-              content = await fetchFileContent(parsed.repo, parsed.filePath);
+              content = await fetchGitHubFileContent(parsed.repo, parsed.filePath);
             } catch (error) {
               output = `open: ${args[0]}: ${error instanceof Error ? error.message : "File not found"}`;
               break;
@@ -623,7 +558,7 @@ Note: Projects folder contains my real GitHub repositories!`;
           } else {
             const parsed = parseGitHubPath(targetDir);
             if (parsed) {
-              const tree = await fetchRepoTree(parsed.repo);
+              const tree = await fetchGitHubRepoTree(parsed.repo);
               candidates = tree
                 .filter((item) => {
                   if (!parsed.filePath) return !item.path.includes("/");

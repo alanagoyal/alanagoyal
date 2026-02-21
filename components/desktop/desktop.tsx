@@ -27,6 +27,7 @@ import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@
 import { saveMessagesConversation } from "@/lib/sidebar-persistence";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
+import { fetchGitHubFileContent } from "@/lib/github-client";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
@@ -55,12 +56,7 @@ const PROJECTS_DIR = `${HOME_DIR}/Projects`;
 // Fetch file content from GitHub API
 async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
   try {
-    const response = await fetch(
-      `/api/github?type=file&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`
-    );
-    if (!response.ok) throw new Error("Failed to fetch file");
-    const data = await response.json();
-    return data.content;
+    return await fetchGitHubFileContent(repo, path);
   } catch {
     return "";
   }
