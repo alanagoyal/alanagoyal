@@ -111,7 +111,7 @@ export const NoteItem = React.memo(function NoteItem({
         {item.emoji} {item.title}
       </h2>
       <p
-        className={`text-xs pl-2 flex items-baseline gap-0.5 overflow-hidden ${
+        className={`text-xs pl-2 flex items-baseline overflow-hidden ${
           !isMobile && (
             (isSearching && isHighlighted) ||
             (!isSearching && item.slug === selectedNoteSlug)
@@ -122,7 +122,7 @@ export const NoteItem = React.memo(function NoteItem({
       >
         <span className="text-black dark:text-white shrink-0">
           <span
-            className={`inline-block min-w-[72px] pr-1 tabular-nums ${
+            className={`inline-block whitespace-nowrap mr-1 tabular-nums ${
               hasMounted ? "visible" : "invisible"
             }`}
           >
