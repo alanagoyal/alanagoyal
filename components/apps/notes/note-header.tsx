@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 
+const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
+
 export default function NoteHeader({
   note,
   saveNote,
@@ -80,8 +82,8 @@ export default function NoteHeader({
 
   const formattedDate = useMemo(() => {
     // Render timestamps only after client mount to avoid SSR/client
-    // timezone and hydration differences on refresh.
-    if (note.public && !hasMounted) {
+    // timezone differences on refresh.
+    if (!hasMounted) {
       return "";
     }
 
@@ -171,7 +173,11 @@ export default function NoteHeader({
       )}
       <div className="px-2 mb-4 relative">
         <div className="flex justify-center items-center">
-          <p suppressHydrationWarning className="text-muted-foreground text-xs">{formattedDate}</p>
+          <p suppressHydrationWarning className="text-muted-foreground text-xs">
+            <span className={hasMounted ? "visible" : "invisible"}>
+              {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
+            </span>
+          </p>
           <div className="ml-2 h-6 flex items-center">
             {!note.public && (
               <Badge className="text-xs justify-center items-center">
