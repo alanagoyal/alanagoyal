@@ -13,6 +13,8 @@ import { Note } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { Dispatch, SetStateAction } from "react";
 
+const SIDEBAR_DATE_PLACEHOLDER = "00/00/0000";
+
 function previewContent(content: string): string {
   return content
     .replace(/!\[[^\]]*\]\([^\)]+\)/g, "")
@@ -119,9 +121,11 @@ export const NoteItem = React.memo(function NoteItem({
         }`}
       >
         <span className="text-black dark:text-white">
-          {hasMounted
-            ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
-            : ""}
+          <span className={`inline-block min-w-[72px] ${hasMounted ? "visible" : "invisible"}`}>
+            {hasMounted
+              ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
+              : SIDEBAR_DATE_PLACEHOLDER}
+          </span>
         </span>{" "}
         {previewContent(item.content)}
       </p>

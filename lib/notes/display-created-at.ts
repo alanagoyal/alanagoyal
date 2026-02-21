@@ -60,11 +60,26 @@ function toDayKey(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function randomInt(min: number, max: number): number {
+function simpleHash(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash) + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function deterministicInt(seedKey: string, min: number, max: number): number {
   if (max <= min) {
     return min;
   }
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const random = seededRandom(simpleHash(seedKey));
+  return Math.floor(random * (max - min + 1)) + min;
 }
 
 function withMinutes(baseDate: Date, totalMinutes: number): Date {
@@ -75,40 +90,62 @@ function withMinutes(baseDate: Date, totalMinutes: number): Date {
   return date;
 }
 
-function generatePublicDisplayDate(note: Note, now: Date): Date {
+function generatePublicDisplayDate(note: Note, now: Date, dayKey: string): Date {
+  const seedBase = `${dayKey}:${note.category ?? "unknown"}:${note.id}`;
+
   switch (note.category) {
     case "today": {
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const minMinutes = currentMinutes >= DAY_START_MINUTES ? DAY_START_MINUTES : 0;
-      const minutes = randomInt(minMinutes, currentMinutes);
+      // Cap to current hour to keep deterministic fallback stable across rapid refreshes.
+      const currentHourMinutes = now.getHours() * 60;
+      const minMinutes = currentHourMinutes >= DAY_START_MINUTES ? DAY_START_MINUTES : 0;
+      const minutes = deterministicInt(`${seedBase}:today`, minMinutes, currentHourMinutes);
       return withMinutes(now, minutes);
     }
 
     case "yesterday": {
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
-      const minutes = randomInt(DAY_START_MINUTES, DAY_END_MINUTES);
+      const minutes = deterministicInt(
+        `${seedBase}:yesterday`,
+        DAY_START_MINUTES,
+        DAY_END_MINUTES
+      );
       return withMinutes(yesterday, minutes);
     }
 
     case "7": {
       const date = new Date(now);
-      date.setDate(date.getDate() - randomInt(2, 7));
-      const minutes = randomInt(DAY_START_MINUTES, DAY_END_MINUTES);
+      const daysAgo = deterministicInt(`${seedBase}:7:days`, 2, 7);
+      date.setDate(date.getDate() - daysAgo);
+      const minutes = deterministicInt(
+        `${seedBase}:7:minutes`,
+        DAY_START_MINUTES,
+        DAY_END_MINUTES
+      );
       return withMinutes(date, minutes);
     }
 
     case "30": {
       const date = new Date(now);
-      date.setDate(date.getDate() - randomInt(8, 30));
-      const minutes = randomInt(DAY_START_MINUTES, DAY_END_MINUTES);
+      const daysAgo = deterministicInt(`${seedBase}:30:days`, 8, 30);
+      date.setDate(date.getDate() - daysAgo);
+      const minutes = deterministicInt(
+        `${seedBase}:30:minutes`,
+        DAY_START_MINUTES,
+        DAY_END_MINUTES
+      );
       return withMinutes(date, minutes);
     }
 
     case "older": {
       const date = new Date(now);
-      date.setDate(date.getDate() - randomInt(31, 365));
-      const minutes = randomInt(DAY_START_MINUTES, DAY_END_MINUTES);
+      const daysAgo = deterministicInt(`${seedBase}:older:days`, 31, 365);
+      date.setDate(date.getDate() - daysAgo);
+      const minutes = deterministicInt(
+        `${seedBase}:older:minutes`,
+        DAY_START_MINUTES,
+        DAY_END_MINUTES
+      );
       return withMinutes(date, minutes);
     }
 
@@ -130,8 +167,9 @@ export function withDisplayCreatedAt(note: Note): Note {
   }
 
   const now = new Date();
+  const dayKey = toDayKey(now);
   const cache = getDisplayCache();
-  const cacheKey = `${toDayKey(now)}:${note.category ?? "unknown"}:${note.id}`;
+  const cacheKey = `${dayKey}:${note.category ?? "unknown"}:${note.id}`;
   const cachedValue = cache[cacheKey];
 
   if (cachedValue) {
@@ -141,7 +179,7 @@ export function withDisplayCreatedAt(note: Note): Note {
     }
   }
 
-  const generatedDate = generatePublicDisplayDate(note, now);
+  const generatedDate = generatePublicDisplayDate(note, now, dayKey);
   const clampedDate = generatedDate > now ? now : generatedDate;
   const displayCreatedAt = clampedDate.toISOString();
 
