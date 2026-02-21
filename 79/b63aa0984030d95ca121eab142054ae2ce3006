@@ -1,0 +1,23 @@
+components/mobile/mobile-shell.tsx
+  60ce1d97cf3f7e70 3,15-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "79b63aa0984030d95ca121eab142054ae2ce3006",
+  "prompts": {
+    "60ce1d97cf3f7e70": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c81fc-1b18-7f40-a069-fe3ab82d882d",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 8,
+      "accepted_lines": 30,
+      "overriden_lines": 0
+    }
+  }
+}
