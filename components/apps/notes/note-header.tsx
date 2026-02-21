@@ -81,9 +81,9 @@ export default function NoteHeader({
   }, []);
 
   const formattedDate = useMemo(() => {
-    // Public note timestamps are client-session generated, so avoid server render
-    // to prevent post-refresh time jumps during hydration.
-    if (note.public && !hasMounted) {
+    // Render timestamps only after client mount to avoid SSR/client
+    // timezone and hydration differences on refresh.
+    if (!hasMounted) {
       return "";
     }
 

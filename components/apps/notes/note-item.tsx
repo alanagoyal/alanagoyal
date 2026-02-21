@@ -59,7 +59,12 @@ export const NoteItem = React.memo(function NoteItem({
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -114,11 +119,13 @@ export const NoteItem = React.memo(function NoteItem({
         }`}
       >
         <span className="text-black dark:text-white">
-          {getDisplayDateByCategory(item.category, item.id, {
-            createdAt: item.created_at,
-            isPublic: item.public,
-            sessionId,
-          }).toLocaleDateString("en-US")}
+          {hasMounted
+            ? getDisplayDateByCategory(item.category, item.id, {
+                createdAt: item.created_at,
+                isPublic: item.public,
+                sessionId,
+              }).toLocaleDateString("en-US")
+            : ""}
         </span>{" "}
         {previewContent(item.content)}
       </p>
