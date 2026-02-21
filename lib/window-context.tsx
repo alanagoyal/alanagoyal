@@ -316,7 +316,7 @@ function windowReducer(
       const openWindows = Object.values(state.windows)
         .filter((w) => w.isOpen && !w.isMinimized && w.appId !== appId)
         .sort((a, b) => b.zIndex - a.zIndex);
-      const nextFocused = openWindows[0]?.appId || null;
+      const nextFocused = openWindows[0]?.id || null;
 
       return {
         ...state,
@@ -341,7 +341,7 @@ function windowReducer(
       const openWindows = Object.values(state.windows)
         .filter((w) => w.isOpen && !w.isMinimized && w.appId !== appId)
         .sort((a, b) => b.zIndex - a.zIndex);
-      const nextFocused = openWindows[0]?.appId || null;
+      const nextFocused = openWindows[0]?.id || null;
 
       return {
         ...state,
