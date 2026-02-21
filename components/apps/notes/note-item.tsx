@@ -111,7 +111,7 @@ export const NoteItem = React.memo(function NoteItem({
         {item.emoji} {item.title}
       </h2>
       <p
-        className={`text-xs pl-2 flex items-baseline gap-1 ${
+        className={`text-xs pl-2 flex items-baseline gap-0.5 ${
           !isMobile && (
             (isSearching && isHighlighted) ||
             (!isSearching && item.slug === selectedNoteSlug)
@@ -122,20 +122,16 @@ export const NoteItem = React.memo(function NoteItem({
       >
         <span className="text-black dark:text-white shrink-0">
           <span
-            className={`inline-block w-[10ch] tabular-nums ${
+            className={`inline-block w-[10ch] text-right tabular-nums ${
               hasMounted ? "visible" : "invisible"
             }`}
           >
             {hasMounted
-              ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US", {
-                  month: "2-digit",
-                  day: "2-digit",
-                  year: "numeric",
-                })
+              ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
               : SIDEBAR_DATE_PLACEHOLDER}
           </span>
         </span>
-        <span className="min-w-0 flex-1 truncate">
+        <span className="block min-w-0 flex-1 truncate">
           {previewContent(item.content)}
         </span>
       </p>
