@@ -266,8 +266,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       // Special handling for Applications
       if (path === "applications") {
+        const mobileUnsupportedAppIds = new Set(["textedit", "preview"]);
         const apps: FileItem[] = APPS
           .filter(app => app.id !== "finder") // Exclude Finder from Applications
+          .filter(app => !isMobile || !mobileUnsupportedAppIds.has(app.id))
           .map(app => ({
             name: app.name,
             type: "app" as const,
@@ -346,7 +348,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
 
     setLoading(false);
-  }, []);
+  }, [isMobile]);
 
   // Load files when path changes
   useEffect(() => {
