@@ -175,7 +175,7 @@ export default function NoteHeader({
         <div className="relative flex justify-center items-center">
           {!note.public && (
             <div className="absolute left-1/2 bottom-full -translate-x-1/2 mb-1">
-              <Badge className="text-xs justify-center items-center">
+              <Badge className="text-xs justify-center items-center bg-muted-foreground/70 hover:bg-muted-foreground/70 text-white/90">
                 <Lock className="w-3 h-3 mr-1" />
                 Private
               </Badge>
