@@ -11,7 +11,9 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
-import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
+import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
+
+const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
 
 export default function NoteHeader({
   note,
@@ -44,6 +46,7 @@ export default function NoteHeader({
   const [PickerComponent, setPickerComponent] = useState<React.ComponentType<EmojiPickerProps> | null>(null);
   const [emojiData, setEmojiData] = useState<unknown>(null);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
+  const [hasMounted, setHasMounted] = useState(false);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -73,10 +76,20 @@ export default function NoteHeader({
     }
   }, [canEdit, note.title]);
 
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const formattedDate = useMemo(() => {
-    const displayDate = getDisplayDateByCategory(note.category, note.id);
+    // Render timestamps only after client mount to avoid SSR/client
+    // timezone differences on refresh.
+    if (!hasMounted) {
+      return "";
+    }
+
+    const displayDate = new Date(getDisplayCreatedAt(note));
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id]);
+  }, [note, hasMounted]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;
@@ -159,16 +172,20 @@ export default function NoteHeader({
         )
       )}
       <div className="px-2 mb-4 relative">
-        <div className="flex justify-center items-center">
-          <p suppressHydrationWarning className="text-muted-foreground text-xs">{formattedDate}</p>
-          <div className="ml-2 h-6 flex items-center">
-            {!note.public && (
-              <Badge className="text-xs justify-center items-center">
+        <div className="relative flex justify-center items-center">
+          {!note.public && (
+            <div className="absolute left-1/2 bottom-full -translate-x-1/2 mb-1">
+              <Badge className="text-xs justify-center items-center bg-muted-foreground/70 hover:bg-muted-foreground/70 text-white/90">
                 <Lock className="w-3 h-3 mr-1" />
                 Private
               </Badge>
-            )}
-          </div>
+            </div>
+          )}
+          <p suppressHydrationWarning className="text-muted-foreground text-xs">
+            <span className={hasMounted ? "visible" : "invisible"}>
+              {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
+            </span>
+          </p>
         </div>
         <div className="flex items-center relative">
           {canEdit && !note.public && !isMobileView ? (

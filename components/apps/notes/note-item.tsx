@@ -10,8 +10,10 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Note } from "@/lib/notes/types";
-import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
+import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { Dispatch, SetStateAction } from "react";
+
+const SIDEBAR_DATE_PLACEHOLDER = "00/00/0000";
 
 function previewContent(content: string): string {
   return content
@@ -59,7 +61,12 @@ export const NoteItem = React.memo(function NoteItem({
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -114,7 +121,11 @@ export const NoteItem = React.memo(function NoteItem({
         }`}
       >
         <span className="text-black dark:text-white">
-          {getDisplayDateByCategory(item.category, item.id).toLocaleDateString("en-US")}
+          <span className={`inline-block ${hasMounted ? "visible" : "invisible min-w-[72px]"}`}>
+            {hasMounted
+              ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
+              : SIDEBAR_DATE_PLACEHOLDER}
+          </span>
         </span>{" "}
         {previewContent(item.content)}
       </p>
