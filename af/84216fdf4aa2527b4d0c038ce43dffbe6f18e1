@@ -1,0 +1,29 @@
+components/desktop/desktop.tsx
+  534a2eb963dcacdb 30,59
+lib/github-client.ts
+  534a2eb963dcacdb 1-123
+components/apps/iterm/terminal.tsx
+  534a2eb963dcacdb 7-11,281,320,383,476,561
+components/apps/finder/finder-app.tsx
+  534a2eb963dcacdb 13-19,315,529
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "af84216fdf4aa2527b4d0c038ce43dffbe6f18e1",
+  "prompts": {
+    "534a2eb963dcacdb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c81fc-5810-7fa0-90c8-1d321232e1d4",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 144,
+      "total_deletions": 151,
+      "accepted_lines": 144,
+      "overriden_lines": 0
+    }
+  }
+}
