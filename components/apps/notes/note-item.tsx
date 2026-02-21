@@ -111,7 +111,7 @@ export const NoteItem = React.memo(function NoteItem({
         {item.emoji} {item.title}
       </h2>
       <p
-        className={`text-xs pl-2 flex items-baseline gap-0.5 ${
+        className={`text-xs pl-2 flex items-baseline gap-0.5 overflow-hidden ${
           !isMobile && (
             (isSearching && isHighlighted) ||
             (!isSearching && item.slug === selectedNoteSlug)
