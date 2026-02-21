@@ -257,7 +257,9 @@ function getSessionStablePublicDisplayDate(
   const sessionSeed = getSessionSeed(sessionId);
   const dayKey = getLocalDayKey(now);
   const normalizedCategory = category ?? "unknown";
-  const cacheKey = `${sessionSeed}:${dayKey}:${normalizedCategory}:${noteId}`;
+  // Keep cache keys independent of session ID so hydration/session init
+  // doesn't cause a one-time timestamp jump after refresh.
+  const cacheKey = `${dayKey}:${normalizedCategory}:${noteId}`;
   const cache = loadPublicDisplayDateCache();
   const cachedDateIso = cache[cacheKey];
 
@@ -265,6 +267,20 @@ function getSessionStablePublicDisplayDate(
     const cachedDate = new Date(cachedDateIso);
     if (isValidDate(cachedDate)) {
       return cachedDate;
+    }
+  }
+
+  // Backward compatibility: migrate any legacy session-scoped cache entry.
+  const legacyKey = `${sessionSeed}:${dayKey}:${normalizedCategory}:${noteId}`;
+  const legacyAnonymousKey = `anonymous-session:${dayKey}:${normalizedCategory}:${noteId}`;
+  const legacyDateIso =
+    cache[legacyKey] ?? (legacyKey !== legacyAnonymousKey ? cache[legacyAnonymousKey] : undefined);
+  if (legacyDateIso) {
+    const legacyDate = new Date(legacyDateIso);
+    if (isValidDate(legacyDate)) {
+      cache[cacheKey] = legacyDateIso;
+      persistPublicDisplayDateCache(cache);
+      return legacyDate;
     }
   }
 
