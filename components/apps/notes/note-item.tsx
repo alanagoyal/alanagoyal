@@ -131,7 +131,7 @@ export const NoteItem = React.memo(function NoteItem({
               : SIDEBAR_DATE_PLACEHOLDER}
           </span>
         </span>
-        <span className="block min-w-0 flex-1 truncate">
+        <span className="block w-0 min-w-0 flex-1 truncate">
           {previewContent(item.content)}
         </span>
       </p>
