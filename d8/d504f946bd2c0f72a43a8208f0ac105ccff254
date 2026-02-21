@@ -1,0 +1,23 @@
+lib/window-context.tsx
+  727a80cec6e9cf0f 319,344
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "d8d504f946bd2c0f72a43a8208f0ac105ccff254",
+  "prompts": {
+    "727a80cec6e9cf0f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c817c-fe67-7ff0-9af0-3a1ba6144b97",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
