@@ -122,7 +122,7 @@ export const NoteItem = React.memo(function NoteItem({
       >
         <span className="text-black dark:text-white shrink-0">
           <span
-            className={`inline-block w-[10ch] text-right tabular-nums ${
+            className={`inline-block min-w-[72px] pr-1 tabular-nums ${
               hasMounted ? "visible" : "invisible"
             }`}
           >
