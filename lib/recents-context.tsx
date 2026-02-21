@@ -27,11 +27,11 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [fileModifiedVersion, setFileModifiedVersion] = useState(0);
 
-  // Load recents from localStorage on mount
+  // Load recents from sessionStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const stored = sessionStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
@@ -53,10 +53,10 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save to localStorage when recents change (after hydration)
+  // Save to sessionStorage when recents change (after hydration)
   useEffect(() => {
     if (isHydrated && typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(recents));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(recents));
     }
   }, [recents, isHydrated]);
 
