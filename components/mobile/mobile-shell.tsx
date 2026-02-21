@@ -1,15 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { RecentsProvider } from "@/lib/recents-context";
-import { NotesApp } from "@/components/apps/notes/notes-app";
-import { MessagesApp } from "@/components/apps/messages/messages-app";
-import { SettingsApp } from "@/components/apps/settings/settings-app";
-import { ITermApp } from "@/components/apps/iterm/iterm-app";
-import { FinderApp } from "@/components/apps/finder/finder-app";
-import { PhotosApp } from "@/components/apps/photos/photos-app";
-import { CalendarApp } from "@/components/apps/calendar/calendar-app";
-import { MusicApp } from "@/components/apps/music/music-app";
 import { APP_SHELL_URL_CHANGE_EVENT, pushUrl, setUrl } from "@/lib/set-url";
 import type { Note as NoteType } from "@/lib/notes/types";
 import {
@@ -18,6 +11,35 @@ import {
   parseShellLocation,
   SHELL_DEFAULT_APP_ID,
 } from "@/lib/shell-routing";
+
+const NotesApp = dynamic(() => import("@/components/apps/notes/notes-app").then((mod) => mod.NotesApp), {
+  ssr: false,
+});
+const MessagesApp = dynamic(
+  () => import("@/components/apps/messages/messages-app").then((mod) => mod.MessagesApp),
+  { ssr: false }
+);
+const SettingsApp = dynamic(
+  () => import("@/components/apps/settings/settings-app").then((mod) => mod.SettingsApp),
+  { ssr: false }
+);
+const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then((mod) => mod.ITermApp), {
+  ssr: false,
+});
+const FinderApp = dynamic(
+  () => import("@/components/apps/finder/finder-app").then((mod) => mod.FinderApp),
+  { ssr: false }
+);
+const PhotosApp = dynamic(() => import("@/components/apps/photos/photos-app").then((mod) => mod.PhotosApp), {
+  ssr: false,
+});
+const CalendarApp = dynamic(
+  () => import("@/components/apps/calendar/calendar-app").then((mod) => mod.CalendarApp),
+  { ssr: false }
+);
+const MusicApp = dynamic(() => import("@/components/apps/music/music-app").then((mod) => mod.MusicApp), {
+  ssr: false,
+});
 
 interface MobileShellProps {
   initialApp?: string;
