@@ -84,10 +84,11 @@ export function getDisplayDateByCategory(category: string | undefined, noteId: s
 
   switch (category) {
     case "today":
-      // Public/demo notes: fixed 8AM-12PM range, same pattern as all other categories
+      // Public/demo notes: seeded random time between 8AM and current hour
       const todayDate = new Date(today);
       const timeSeedToday = simpleHash(noteId + "todayTime");
-      const randomMinutesToday = Math.floor(seededRandom(timeSeedToday) * (12 * 60 - 8 * 60)) + 8 * 60;
+      const maxMinutesToday = Math.max(9 * 60, today.getHours() * 60);
+      const randomMinutesToday = Math.floor(seededRandom(timeSeedToday) * (maxMinutesToday - 8 * 60)) + 8 * 60;
       const hourToday = Math.floor(randomMinutesToday / 60);
       const minuteToday = randomMinutesToday % 60;
 

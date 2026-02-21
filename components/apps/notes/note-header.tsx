@@ -74,9 +74,20 @@ export default function NoteHeader({
   }, [canEdit, note.title]);
 
   const formattedDate = useMemo(() => {
+    // Public "today" notes: cache the formatted time in sessionStorage so it
+    // stays stable across refreshes within the same browser session.
+    if (note.public && note.category === "today" && typeof window !== "undefined") {
+      const key = `note-time:${note.id}`;
+      const cached = sessionStorage.getItem(key);
+      if (cached) return cached;
+      const displayDate = getDisplayDateByCategory(note.category, note.id);
+      const result = format(displayDate, "MMMM d, yyyy 'at' h:mm a");
+      sessionStorage.setItem(key, result);
+      return result;
+    }
     const displayDate = getDisplayDateByCategory(note.category, note.id, note.public ? undefined : note.created_at);
     return format(displayDate, "MMMM d, yyyy 'at' h:mm a");
-  }, [note.category, note.id, note.created_at]);
+  }, [note.category, note.id, note.created_at, note.public]);
 
   const handleEmojiSelect = (emojiObject: { native: string }) => {
     const newEmoji = emojiObject.native;
