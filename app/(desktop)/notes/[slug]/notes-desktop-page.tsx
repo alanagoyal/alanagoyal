@@ -15,6 +15,8 @@ import { Desktop } from "@/components/desktop/desktop";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 import { setUrl } from "@/lib/set-url";
 import type { Note as NoteType } from "@/lib/notes/types";
+import { getNotesRoute, SHELL_DEFAULT_NOTE_SLUG, SHELL_NOTES_ROOT_PATH } from "@/lib/shell-routing";
+import { useShellIsMobile } from "@/lib/use-shell-is-mobile";
 
 interface NotesDesktopPageProps {
   slug?: string;
@@ -23,27 +25,19 @@ interface NotesDesktopPageProps {
 }
 
 export function NotesDesktopPage({ slug, initialIsMobile = false, initialNote }: NotesDesktopPageProps) {
-  const [isMobile, setIsMobile] = useState<boolean>(initialIsMobile);
+  const isMobile = useShellIsMobile(initialIsMobile ? true : undefined);
   const [isClientReady, setIsClientReady] = useState<boolean>(initialIsMobile);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(pointer: coarse)");
-    const syncIsMobile = () => {
-      setIsMobile(mediaQuery.matches);
-    };
-    syncIsMobile();
+    if (isMobile === null) return;
+
     setIsClientReady(true);
 
     // On desktop, redirect /notes to /notes/about-me for URL consistency
-    if (!mediaQuery.matches && window.location.pathname === "/notes") {
-      setUrl("/notes/about-me");
+    if (!isMobile && window.location.pathname === SHELL_NOTES_ROOT_PATH) {
+      setUrl(getNotesRoute());
     }
-
-    mediaQuery.addEventListener("change", syncIsMobile);
-    return () => {
-      mediaQuery.removeEventListener("change", syncIsMobile);
-    };
-  }, []);
+  }, [isMobile]);
 
   if (isMobile) {
     return <MobileShell initialApp="notes" initialNoteSlug={slug} initialNote={initialNote} />;
@@ -53,5 +47,5 @@ export function NotesDesktopPage({ slug, initialIsMobile = false, initialNote }:
     return <div className="h-dvh bg-background" />;
   }
 
-  return <Desktop initialAppId="notes" initialNoteSlug={slug || "about-me"} />;
+  return <Desktop initialAppId="notes" initialNoteSlug={slug || SHELL_DEFAULT_NOTE_SLUG} />;
 }

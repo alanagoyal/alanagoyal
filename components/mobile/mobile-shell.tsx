@@ -17,35 +17,11 @@ import { getTopmostWindowForApp } from "@/lib/window-context";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import { APP_SHELL_URL_CHANGE_EVENT, pushUrl, setUrl } from "@/lib/set-url";
 import type { Note as NoteType } from "@/lib/notes/types";
-
-const DEFAULT_APP = "notes";
-
-function getAppIdFromPathname(pathname: string, fallbackApp?: string): string {
-  if (pathname.startsWith("/settings")) return "settings";
-  if (pathname.startsWith("/messages")) return "messages";
-  if (pathname.startsWith("/notes")) return "notes";
-  if (pathname.startsWith("/iterm")) return "iterm";
-  if (pathname.startsWith("/finder")) return "finder";
-  if (pathname.startsWith("/photos")) return "photos";
-  if (pathname.startsWith("/calendar")) return "calendar";
-  if (pathname.startsWith("/music")) return "music";
-  if (pathname.startsWith("/textedit")) return "textedit";
-  if (pathname.startsWith("/preview")) return "preview";
-  return fallbackApp || DEFAULT_APP;
-}
-
-function getNoteSlugFromPathname(pathname: string): string | undefined {
-  if (!pathname.startsWith("/notes/")) return undefined;
-
-  const slug = pathname.slice("/notes/".length).split("/")[0];
-  if (!slug) return undefined;
-
-  try {
-    return decodeURIComponent(slug);
-  } catch {
-    return slug;
-  }
-}
+import {
+  getShellUrlForApp,
+  parseShellLocation,
+  SHELL_DEFAULT_APP_ID,
+} from "@/lib/shell-routing";
 
 interface MobileShellProps {
   initialApp?: string;
@@ -54,7 +30,7 @@ interface MobileShellProps {
 }
 
 export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
-  const [activeAppId, setActiveAppId] = useState<string>(initialApp || DEFAULT_APP);
+  const [activeAppId, setActiveAppId] = useState<string>(initialApp || SHELL_DEFAULT_APP_ID);
   const [activeNoteSlug, setActiveNoteSlug] = useState<string | undefined>(initialNoteSlug);
 
   // Topmost windows from desktop session (loaded from sessionStorage)
@@ -63,7 +39,10 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
 
   const handleOpenAppFromFinder = useCallback((nextAppId: string) => {
     setActiveAppId(nextAppId);
-    pushUrl(`/${nextAppId}`);
+    const nextUrl = getShellUrlForApp(nextAppId, { context: "mobile" });
+    if (nextUrl) {
+      pushUrl(nextUrl);
+    }
   }, []);
 
   // Determine active app from URL and load topmost windows on hydration
@@ -89,36 +68,36 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
 
     const syncFromLocation = () => {
       const path = window.location.pathname;
-      const normalizedPath = path === "/" ? "/notes" : path;
+      const { normalizedPathname, appId: nextAppId, noteSlug, filePath } = parseShellLocation(
+        path,
+        window.location.search,
+        initialApp || SHELL_DEFAULT_APP_ID
+      );
 
-      if (path !== normalizedPath) {
-        setUrl(normalizedPath);
+      if (path !== normalizedPathname) {
+        setUrl(normalizedPathname);
       }
 
-      const searchParams = new URLSearchParams(window.location.search);
-      const fileParam = searchParams.get("file");
-      const nextAppId = getAppIdFromPathname(normalizedPath, initialApp);
-
       setActiveAppId(nextAppId);
-      setActiveNoteSlug(nextAppId === "notes" ? getNoteSlugFromPathname(normalizedPath) : undefined);
+      setActiveNoteSlug(noteSlug);
 
-      if (fileParam && normalizedPath.startsWith("/textedit")) {
+      if (filePath && nextAppId === "textedit") {
         setTopmostTextEdit((current) => {
-          if (current?.filePath === fileParam) return current;
+          if (current?.filePath === filePath) return current;
           return {
-            filePath: fileParam,
-            content: getTextEditContent(fileParam) ?? "",
+            filePath,
+            content: getTextEditContent(filePath) ?? "",
           };
         });
       }
 
-      if (fileParam && normalizedPath.startsWith("/preview")) {
-        const previewMetadata = getPreviewMetadataFromPath(fileParam);
+      if (filePath && nextAppId === "preview") {
+        const previewMetadata = getPreviewMetadataFromPath(filePath);
         if (previewMetadata) {
           setTopmostPreview((current) => {
-            if (current?.filePath === fileParam) return current;
+            if (current?.filePath === filePath) return current;
             return {
-              filePath: fileParam,
+              filePath,
               fileUrl: previewMetadata.fileUrl,
               fileType: previewMetadata.fileType,
             };

@@ -1,11 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useShellIsMobile } from "@/lib/use-shell-is-mobile";
 
 export function useMobileDetect() {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
-
-  return isMobile;
+  return useShellIsMobile();
 }

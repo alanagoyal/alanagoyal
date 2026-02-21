@@ -26,6 +26,7 @@ import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
 import { saveMessagesConversation } from "@/lib/sidebar-persistence";
 import { setUrl } from "@/lib/set-url";
+import { getShellUrlForApp } from "@/lib/shell-routing";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 
@@ -322,28 +323,16 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     }
 
     const focusedAppId = getAppIdFromWindowId(focusedWindowId);
-
-    if (focusedAppId === "textedit") {
-      // For TextEdit, include the file path in URL
-      const windowState = state.windows[focusedWindowId];
-      const filePath = windowState?.metadata?.filePath as string;
-      if (filePath) {
-        setUrl(`/textedit?file=${encodeURIComponent(filePath)}`);
-      }
-    } else if (focusedAppId === "preview") {
-      // For Preview, include the file path in URL
-      const windowState = state.windows[focusedWindowId];
-      const filePath = windowState?.metadata?.filePath as string;
-      if (filePath) {
-        setUrl(`/preview?file=${encodeURIComponent(filePath)}`);
-      }
-    } else if (focusedAppId === "notes") {
-      const currentPath = window.location.pathname;
-      if (!currentPath.startsWith("/notes/")) {
-        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
-      }
-    } else {
-      setUrl(`/${focusedAppId}`);
+    const focusedWindow = state.windows[focusedWindowId];
+    const filePath = focusedWindow?.metadata?.filePath as string | undefined;
+    const nextUrl = getShellUrlForApp(focusedAppId, {
+      context: "desktop",
+      currentPathname: window.location.pathname,
+      noteSlug: initialNoteSlug,
+      filePath,
+    });
+    if (nextUrl) {
+      setUrl(nextUrl);
     }
   }, [state.focusedWindowId, state.windows, initialNoteSlug]);
 
@@ -397,7 +386,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       setFinderTab("recents");
       openWindow("finder");
     }
-    setUrl("/finder");
+    const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   // Handler for Trash dock icon click
@@ -413,7 +405,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       openWindow("finder");
     }
-    setUrl("/finder");
+    const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   // Handler for opening apps from Finder
@@ -428,14 +423,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     } else {
       openWindow(appId);
     }
-    // Update URL based on app
-    if (appId === "notes") {
-      const currentPath = window.location.pathname;
-      if (!currentPath.startsWith("/notes/")) {
-        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
-      }
-    } else {
-      setUrl(`/${appId}`);
+    const nextUrl = getShellUrlForApp(appId, {
+      context: "desktop",
+      currentPathname: window.location.pathname,
+      noteSlug: initialNoteSlug,
+    });
+    if (nextUrl) {
+      setUrl(nextUrl);
     }
   }, [getWindow, restoreWindow, focusWindow, openWindow, initialNoteSlug]);
 
@@ -444,21 +438,30 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     setSettingsCategory("general");
     setSettingsPanel(null);
     openWindow("settings");
-    setUrl("/settings");
+    const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
   }, [openWindow]);
 
   const handleOpenWifiSettings = useCallback(() => {
     setSettingsCategory("wifi");
     setSettingsPanel(null);
     openWindow("settings");
-    setUrl("/settings");
+    const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
   }, [openWindow]);
 
   const handleOpenAbout = useCallback(() => {
     setSettingsCategory("general");
     setSettingsPanel("about");
     openWindow("settings");
-    setUrl("/settings");
+    const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
   }, [openWindow]);
 
   const handleSleep = useCallback(() => setMode("sleeping"), []);
@@ -483,11 +486,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (restoreDefaultOnUnlock) {
       restoreDesktopDefault();
       setRestoreDefaultOnUnlock(false);
-      // Update URL to match default focused app
-      if (DESKTOP_DEFAULT_FOCUSED_APP === "notes") {
-        setUrl(`/notes/${initialNoteSlug || "about-me"}`);
-      } else {
-        setUrl(`/${DESKTOP_DEFAULT_FOCUSED_APP}`);
+      const nextUrl = getShellUrlForApp(DESKTOP_DEFAULT_FOCUSED_APP, {
+        context: "desktop",
+        noteSlug: initialNoteSlug,
+      });
+      if (nextUrl) {
+        setUrl(nextUrl);
       }
     }
   }, [restoreDefaultOnUnlock, restoreDesktopDefault, initialNoteSlug]);
