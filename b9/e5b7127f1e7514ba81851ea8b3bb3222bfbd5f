@@ -1,0 +1,35 @@
+app/(desktop)/notes/[slug]/notes-desktop-page.tsx
+  d6915835e3ec41a2 7,43
+components/desktop/desktop.tsx
+  d6915835e3ec41a2 27-28,174-177,332,338,430,435,492,498
+app/(desktop)/notes/page.tsx
+  d6915835e3ec41a2 18
+next.config.mjs
+  d6915835e3ec41a2 6
+lib/sidebar-persistence.ts
+  d6915835e3ec41a2 43,307,372-406,461-462,479
+lib/shell-routing.ts
+  d6915835e3ec41a2 73-74,96-99
+components/apps/notes/notes-app.tsx
+  d6915835e3ec41a2 10-13,22-25,27-64,74,83-84,89-93,110-117,124-125,127,132-136,140-146,148-149,169,176-179,185,192-196,198-199,220-222,225-226,228-233,242,248-250,253-254,262,276-277,283-284,302,307,316-317,321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "b9e5b7127f1e7514ba81851ea8b3bb3222bfbd5f",
+  "prompts": {
+    "d6915835e3ec41a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c86bf-57cb-7623-92c2-c1459e4379f1",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 533,
+      "total_deletions": 101,
+      "accepted_lines": 462,
+      "overriden_lines": 3
+    }
+  }
+}
