@@ -140,6 +140,8 @@ curl -X POST "https://yourdomain.com/notes/revalidate" \
 
 or redeploy on vercel to refresh all pages.
 
+`REVALIDATE_TOKEN` must stay server-side only. do not expose it via `NEXT_PUBLIC_*` variables.
+
 ### ios shortcut for photos
 
 upload photos directly from your iphone using the share sheet:
@@ -198,7 +200,6 @@ OPENAI_API_KEY="<your-openai-api-key>"
 # site config (optional)
 NEXT_PUBLIC_SITE_URL="https://yourdomain.com"
 REVALIDATE_TOKEN="<your-revalidate-token>"
-NEXT_PUBLIC_REVALIDATE_TOKEN="<your-revalidate-token>"
 ```
 
 **notes:**

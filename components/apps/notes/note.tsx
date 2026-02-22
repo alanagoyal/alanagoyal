@@ -7,6 +7,7 @@ import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
 import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Note as NoteType } from "@/lib/notes/types";
+import { revalidateNotePath } from "@/app/(desktop)/notes/revalidate/actions";
 
 interface NoteProps {
   note: NoteType;
@@ -87,15 +88,10 @@ export default function Note({ note: initialNote, isMobile, onBack }: NoteProps)
             // Execute all updates in parallel for efficiency
             await Promise.all(promises);
 
-            // Revalidate and refresh after all updates
-            await fetch("/notes/revalidate", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_TOKEN || '',
-              },
-              body: JSON.stringify({ slug: currentNote.slug }),
-            });
+            // Public note pages are cached and need explicit server-side revalidation.
+            if (currentNote.public) {
+              await revalidateNotePath(currentNote.slug);
+            }
             refreshSessionNotes();
           }
         } catch (error) {
