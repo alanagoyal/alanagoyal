@@ -243,8 +243,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         return;
       }
 
-      // If slug is invalid, recover to a valid note URL when possible.
-      if (routeSlug && fallbackSlug && fallbackSlug !== targetSlug) {
+      // If the requested slug is invalid, recover to a valid topmost note when possible.
+      if (fallbackSlug && fallbackSlug !== targetSlug) {
         const { data: fallbackFullNote } = await supabase
           .rpc("select_note", { note_slug_arg: fallbackSlug })
           .single();
