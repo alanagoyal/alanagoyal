@@ -12,7 +12,7 @@ interface BootSequenceProps {
 
 export function BootSequence({ onComplete, autoStart = true }: BootSequenceProps) {
   const [progress, setProgress] = useState(0);
-  const [started, setStarted] = useState(autoStart);
+  const started = autoStart;
 
   useEffect(() => {
     if (!started) return;
@@ -30,8 +30,6 @@ export function BootSequence({ onComplete, autoStart = true }: BootSequenceProps
 
     return () => clearInterval(interval);
   }, [started, onComplete]);
-
-  const start = () => setStarted(true);
 
   if (!started) {
     return null;

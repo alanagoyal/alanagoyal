@@ -55,12 +55,6 @@ function formatTimeDisplay(time: string): string {
   return `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
 }
 
-// Format date for display
-function formatDateDisplay(dateStr: string): string {
-  const date = parseISO(dateStr);
-  return format(date, "MMM d, yyyy");
-}
-
 export function EventForm({
   open,
   onOpenChange,

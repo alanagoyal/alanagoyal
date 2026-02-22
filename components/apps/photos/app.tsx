@@ -7,7 +7,6 @@ import { PhotoViewer } from "./photo-viewer";
 import { Nav } from "./nav";
 import { Photo, PhotosView, TimeFilter } from "@/types/photos";
 import { usePhotos } from "@/lib/photos/use-photos";
-import { useWindowFocus } from "@/lib/window-focus-context";
 import { loadPhotosView, savePhotosView, loadPhotosSelectedId, savePhotosSelectedId } from "@/lib/sidebar-persistence";
 
 interface AppProps {
@@ -15,7 +14,7 @@ interface AppProps {
   inShell?: boolean;
 }
 
-export default function App({ isDesktop = false, inShell = false }: AppProps) {
+export default function App({ isDesktop = false }: AppProps) {
   // Fetch photos from Supabase
   const { photos, collections, loading, error, toggleFavorite } = usePhotos();
 
@@ -32,7 +31,6 @@ export default function App({ isDesktop = false, inShell = false }: AppProps) {
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const windowFocus = useWindowFocus();
 
   // Mobile layout is determined by shell context, not viewport width
   useEffect(() => {

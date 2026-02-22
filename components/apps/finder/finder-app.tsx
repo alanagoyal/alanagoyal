@@ -98,11 +98,6 @@ function isPdfFile(filename: string): boolean {
 function isPreviewFile(filename: string): boolean {
   return isImageFile(filename) || isPdfFile(filename);
 }
-
-function getPreviewFileType(filename: string): "image" | "pdf" {
-  return isPdfFile(filename) ? "pdf" : "image";
-}
-
 // Icon component
 function FileIcon({ type, name, icon, className }: { type: "file" | "dir" | "app"; name: string; icon?: string; className?: string }) {
   // File type icons based on extension

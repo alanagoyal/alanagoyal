@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { PreviewFileType } from "./preview-window";
@@ -180,15 +181,18 @@ export function PreviewApp({
     if (needsFitSize && !fitSize) {
       return (
         <div ref={scrollContainerRef} className="w-full h-full relative">
-          <img
+          <Image
             src={fileUrl}
             alt=""
-            className="absolute invisible"
+            width={naturalSize?.width ?? 1}
+            height={naturalSize?.height ?? 1}
+            className="absolute invisible w-auto h-auto"
             onLoad={(e) => {
-              const img = e.target as HTMLImageElement;
+              const img = e.currentTarget;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
             onError={handleImageError}
+            unoptimized
           />
         </div>
       );
@@ -198,6 +202,8 @@ export function PreviewApp({
     const canPan = isZoomed && zoom > 1;
     const displayWidth = isZoomed ? fitSize!.width * zoom : undefined;
     const displayHeight = isZoomed ? fitSize!.height * zoom : undefined;
+    const renderedWidth = Math.max(1, Math.round(displayWidth ?? naturalSize?.width ?? 1));
+    const renderedHeight = Math.max(1, Math.round(displayHeight ?? naturalSize?.height ?? 1));
 
     return (
       <div
@@ -224,9 +230,11 @@ export function PreviewApp({
             minHeight: "100%",
           }}
         >
-          <img
+          <Image
             src={fileUrl}
             alt={fileName}
+            width={renderedWidth}
+            height={renderedHeight}
             draggable={false}
             className={isZoomed ? "" : "w-full h-full object-contain"}
             style={{
@@ -238,9 +246,10 @@ export function PreviewApp({
             }}
             onError={handleImageError}
             onLoad={(e) => {
-              const img = e.target as HTMLImageElement;
+              const img = e.currentTarget;
               setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
             }}
+            unoptimized
           />
         </div>
       </div>

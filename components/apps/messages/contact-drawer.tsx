@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -105,14 +106,17 @@ export function ContactDrawer({
                 {recipients.slice(0, 4).map((recipient, index) => (
                   <div
                     key={recipient.name}
-                    className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
+                    className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 relative"
                     style={getOffset(index, Math.min(recipients.length, 4))}
                   >
                     {recipient.avatar ? (
-                      <img
+                      <Image
                         src={recipient.avatar}
-                        alt=""
-                        className="w-full h-full object-cover"
+                        alt={`${recipient.name} avatar`}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] relative">
@@ -165,12 +169,15 @@ export function ContactDrawer({
                     }
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 relative">
                         {recipient.avatar ? (
-                          <img
+                          <Image
                             src={recipient.avatar}
-                            alt=""
-                            className="w-full h-full object-cover"
+                            alt={`${recipient.name} avatar`}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A]">
