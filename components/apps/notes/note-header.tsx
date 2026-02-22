@@ -14,6 +14,8 @@ import { Icons } from "./icons";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 
 const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
+const PRIVATE_BADGE_CLASS =
+  "text-xs justify-center items-center bg-muted-foreground/70 hover:bg-muted-foreground/70 text-white/90";
 
 export default function NoteHeader({
   note,
@@ -173,9 +175,9 @@ export default function NoteHeader({
       )}
       <div className="px-2 mb-4 relative">
         <div className="relative flex justify-center items-center">
-          {!note.public && (
+          {!note.public && isMobileView && (
             <div className="absolute left-1/2 bottom-full -translate-x-1/2 mb-1">
-              <Badge className="text-xs justify-center items-center bg-muted-foreground/70 hover:bg-muted-foreground/70 text-white/90">
+              <Badge className={PRIVATE_BADGE_CLASS}>
                 <Lock className="w-3 h-3 mr-1" />
                 Private
               </Badge>
@@ -186,6 +188,14 @@ export default function NoteHeader({
               {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
             </span>
           </p>
+          {!note.public && !isMobileView && (
+            <div className="ml-2 h-6 flex items-center">
+              <Badge className={PRIVATE_BADGE_CLASS}>
+                <Lock className="w-3 h-3 mr-1" />
+                Private
+              </Badge>
+            </div>
+          )}
         </div>
         <div className="flex items-center relative">
           {canEdit && !note.public && !isMobileView ? (
