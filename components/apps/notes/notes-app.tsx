@@ -40,6 +40,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     initialNote?.slug ?? null
   );
   const [selectionResetKey, setSelectionResetKey] = useState(0);
+  const [selectionResolved, setSelectionResolved] = useState<boolean>(
+    isMobile ? true : !!initialNote?.slug
+  );
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
@@ -58,6 +61,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const requestFirstNoteReset = useCallback(() => {
     syncCancelledRef.current = true;
     forceFirstNoteRef.current = true;
+    setSelectionResolved(false);
     setSelectedNote(null);
     setSelectedNoteSlug(null);
     setSelectionResetKey((current) => current + 1);
@@ -122,6 +126,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       // Desktop should use initialSlug only for initial selection.
       // After a user picks a note, don't force-sync back to initialSlug.
       if (!isMobile && selectedSlugRef.current && !forceFirstNoteRef.current) {
+        setSelectionResolved(true);
         return;
       }
 
@@ -130,6 +135,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         if (!loading) {
           setSelectedNote(null);
           setSelectedNoteSlug(null);
+          setSelectionResolved(true);
         }
         return;
       }
@@ -188,6 +194,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         if (!loading) {
           setSelectedNote(null);
           setSelectedNoteSlug(null);
+          setSelectionResolved(true);
           saveNotesSelectedSlug(null);
           if (shouldForceFirstNote) {
             forceFirstNoteRef.current = false;
@@ -206,6 +213,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
           clearNotesResetToFirstFlag();
         }
         setSelectedNoteSlug(targetSlug);
+        setSelectionResolved(true);
         saveNotesSelectedSlug(targetSlug);
         if (currentUrlSlug !== targetSlug) {
           setUrl(`/notes/${targetSlug}`);
@@ -218,6 +226,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         (note) => note.slug === targetSlug
       );
       setSelectedNoteSlug(targetSlug);
+      setSelectionResolved(true);
       setSelectedNote(
         optimisticNote ? withDisplayCreatedAt(optimisticNote) : null
       );
@@ -231,6 +240,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       if (fullNote) {
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
         setSelectedNoteSlug(targetSlug);
+        setSelectionResolved(true);
         saveNotesSelectedSlug(targetSlug);
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
@@ -256,6 +266,8 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
         if (fallbackFullNote) {
           setSelectedNote(withDisplayCreatedAt(fallbackFullNote as NoteType));
+          setSelectedNoteSlug(fallbackSlug);
+          setSelectionResolved(true);
           saveNotesSelectedSlug(fallbackSlug);
           setUrl(`/notes/${fallbackSlug}`);
           return;
@@ -264,6 +276,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
       setSelectedNote(null);
       setSelectedNoteSlug(null);
+      setSelectionResolved(true);
       saveNotesSelectedSlug(null);
       if (initialSlug && !shouldForceFirstNote) {
         setUrl("/notes");
@@ -286,6 +299,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     setUrl(`/notes/${note.slug}`);
     setSelectedNote(withDisplayCreatedAt(note));
     setSelectedNoteSlug(note.slug);
+    setSelectionResolved(true);
     saveNotesSelectedSlug(note.slug);
 
     // Fetch full note data using RPC.
@@ -318,6 +332,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const handleNoteCreated = useCallback((note: NoteType) => {
     setSelectedNote(withDisplayCreatedAt(note));
     setSelectedNoteSlug(note.slug);
+    setSelectionResolved(true);
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
     saveNotesSelectedSlug(note.slug);
@@ -374,6 +389,23 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Show empty background while loading to prevent flash on desktop
   if (loading) {
     return <div className="h-full bg-background" />;
+  }
+
+  if (!selectionResolved) {
+    return (
+      <div className="notes-app h-full flex bg-background text-foreground">
+        <div className="w-[320px] border-r border-muted-foreground/20 bg-muted p-3">
+          <div className="h-7 rounded-md bg-muted-foreground/10 mb-3 animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+          </div>
+        </div>
+        <div className="flex-1" />
+      </div>
+    );
   }
 
   // Desktop view - show both sidebar and note
