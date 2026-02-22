@@ -326,6 +326,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   }, [persistDesktopSelection]);
 
   const showSidebar = isMobile && !initialSlug;
+  const selectedSlugForSidebar = isMobile
+    ? (selectedNote?.slug ?? null)
+    : (selectedNote?.slug ?? getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? null);
 
   // On mobile, show either sidebar or note content
   if (isMobile) {
@@ -349,7 +352,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
                 notes={notes}
                 onNoteSelect={handleNoteSelect}
                 isMobile={true}
-                selectedSlug={selectedNote?.slug}
+                selectedSlug={selectedSlugForSidebar}
                 useCallbackNavigation
                 onNoteCreated={handleNoteCreated}
               />
@@ -398,7 +401,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
               notes={notes}
               onNoteSelect={handleNoteSelect}
               isMobile={false}
-              selectedSlug={selectedNote?.slug}
+              selectedSlug={selectedSlugForSidebar}
               useCallbackNavigation
               onNoteCreated={handleNoteCreated}
             />

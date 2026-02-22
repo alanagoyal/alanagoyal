@@ -127,11 +127,11 @@ export default function Sidebar({
     // Use external selectedSlug prop if provided (for desktop environment)
     if (externalSelectedSlug !== undefined) {
       setSelectedNoteSlug(externalSelectedSlug);
-    } else if (pathname) {
+    } else if (!useCallbackNavigation && pathname) {
       const slug = pathname.split("/").pop();
       setSelectedNoteSlug(slug || null);
     }
-  }, [pathname, externalSelectedSlug]);
+  }, [pathname, externalSelectedSlug, useCallbackNavigation]);
 
   useEffect(() => {
     if (selectedNoteSlug) {
