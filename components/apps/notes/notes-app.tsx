@@ -36,6 +36,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(
     initialNote ? withDisplayCreatedAt(initialNote) : null
   );
+  const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(
+    initialNote?.slug ?? null
+  );
   const [selectionResetKey, setSelectionResetKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
@@ -43,8 +46,10 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
   // Track selected slug in a ref so the sync effect can read it without re-triggering.
-  const selectedSlugRef = useRef(selectedNote?.slug);
-  selectedSlugRef.current = selectedNote?.slug;
+  const selectedSlugRef = useRef(selectedNoteSlug);
+  selectedSlugRef.current = selectedNoteSlug;
+  const selectedNoteRef = useRef(selectedNote);
+  selectedNoteRef.current = selectedNote;
   // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
   // without waiting for the effect cleanup to run on the next render.
   const syncCancelledRef = useRef(false);
@@ -54,6 +59,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     syncCancelledRef.current = true;
     forceFirstNoteRef.current = true;
     setSelectedNote(null);
+    setSelectedNoteSlug(null);
     setSelectionResetKey((current) => current + 1);
   }, []);
 
@@ -115,7 +121,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     async function syncSelectedNote() {
       // Desktop should use initialSlug only for initial selection.
       // After a user picks a note, don't force-sync back to initialSlug.
-      if (!isMobile && selectedSlugRef.current) {
+      if (!isMobile && selectedSlugRef.current && !forceFirstNoteRef.current) {
         return;
       }
 
@@ -123,6 +129,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       if (isMobile && !initialSlug) {
         if (!loading) {
           setSelectedNote(null);
+          setSelectedNoteSlug(null);
         }
         return;
       }
@@ -180,6 +187,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       if (!targetSlug) {
         if (!loading) {
           setSelectedNote(null);
+          setSelectedNoteSlug(null);
           saveNotesSelectedSlug(null);
           if (shouldForceFirstNote) {
             forceFirstNoteRef.current = false;
@@ -189,17 +197,30 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         return;
       }
 
-      if (selectedSlugRef.current === targetSlug) {
+      if (
+        selectedSlugRef.current === targetSlug &&
+        selectedNoteRef.current?.slug === targetSlug
+      ) {
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
           clearNotesResetToFirstFlag();
         }
+        setSelectedNoteSlug(targetSlug);
         saveNotesSelectedSlug(targetSlug);
         if (currentUrlSlug !== targetSlug) {
           setUrl(`/notes/${targetSlug}`);
         }
         return;
       }
+
+      // Keep sidebar/content stable while full note data hydrates.
+      const optimisticNote = notesForSidebarRanking.find(
+        (note) => note.slug === targetSlug
+      );
+      setSelectedNoteSlug(targetSlug);
+      setSelectedNote(
+        optimisticNote ? withDisplayCreatedAt(optimisticNote) : null
+      );
 
       const { data: fullNote } = await supabase
         .rpc("select_note", { note_slug_arg: targetSlug })
@@ -209,6 +230,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
       if (fullNote) {
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
+        setSelectedNoteSlug(targetSlug);
         saveNotesSelectedSlug(targetSlug);
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
@@ -241,6 +263,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
 
       setSelectedNote(null);
+      setSelectedNoteSlug(null);
       saveNotesSelectedSlug(null);
       if (initialSlug && !shouldForceFirstNote) {
         setUrl("/notes");
@@ -262,6 +285,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     // Update URL and UI immediately on selection.
     setUrl(`/notes/${note.slug}`);
     setSelectedNote(withDisplayCreatedAt(note));
+    setSelectedNoteSlug(note.slug);
     saveNotesSelectedSlug(note.slug);
 
     // Fetch full note data using RPC.
@@ -283,6 +307,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     // Cancel any in-flight sync fetch so it doesn't override the back navigation.
     syncCancelledRef.current = true;
     setSelectedNote(null);
+    setSelectedNoteSlug(null);
     saveNotesSelectedSlug(null);
     if (isMobile) {
       setUrl("/notes");
@@ -292,6 +317,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Handler for new note creation - sets note and updates URL
   const handleNoteCreated = useCallback((note: NoteType) => {
     setSelectedNote(withDisplayCreatedAt(note));
+    setSelectedNoteSlug(note.slug);
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
     saveNotesSelectedSlug(note.slug);
@@ -318,7 +344,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
                 notes={notes}
                 onNoteSelect={handleNoteSelect}
                 isMobile={true}
-                selectedSlug={selectedNote?.slug ?? null}
+                selectedSlug={selectedNoteSlug}
                 useCallbackNavigation
                 onNoteCreated={handleNoteCreated}
               />
@@ -364,7 +390,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
               notes={notes}
               onNoteSelect={handleNoteSelect}
               isMobile={false}
-              selectedSlug={selectedNote?.slug ?? null}
+              selectedSlug={selectedNoteSlug}
               useCallbackNavigation
               onNoteCreated={handleNoteCreated}
             />
