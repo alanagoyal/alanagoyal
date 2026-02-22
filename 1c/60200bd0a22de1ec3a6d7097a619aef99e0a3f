@@ -1,0 +1,23 @@
+components/apps/notes/note-header.tsx
+  68e55bdcba0b9923 17-18,178,180,191-198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "1c60200bd0a22de1ec3a6d7097a619aef99e0a3f",
+  "prompts": {
+    "68e55bdcba0b9923": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c82e1-4b4e-7853-9c3e-263fdaf42fad",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 2,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}
