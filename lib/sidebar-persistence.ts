@@ -34,6 +34,7 @@ const STORAGE_KEYS = {
   FINDER_SIDEBAR: "finder-sidebar",
   FINDER_PATH: "finder-path",
   NOTES_RESET: "notes-reset-to-first-open",
+  NOTES_SELECTED: "notes-selected-note",
   PHOTOS_VIEW: "photos-view",
   PHOTOS_SELECTED: "photos-selected-id",
   SETTINGS_STATE: "settings-state",
@@ -175,11 +176,36 @@ export function clearNotesResetToFirstFlag(): void {
   }
 }
 
-export function clearNotesState(): void {
+export function loadNotesSelectedSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.NOTES_SELECTED);
+  } catch {
+    return null;
+  }
+}
+
+export function saveNotesSelectedSlug(slug: string | null): void {
   if (typeof window === "undefined") return;
   try {
+    if (slug) {
+      sessionStorage.setItem(STORAGE_KEYS.NOTES_SELECTED, slug);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.NOTES_SELECTED);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearNotesState(emitEvent = true): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.NOTES_SELECTED);
     sessionStorage.setItem(STORAGE_KEYS.NOTES_RESET, "1");
-    window.dispatchEvent(new Event(NOTES_RESET_TO_FIRST_EVENT));
+    if (emitEvent) {
+      window.dispatchEvent(new Event(NOTES_RESET_TO_FIRST_EVENT));
+    }
   } catch {
     // Ignore storage errors
   }
@@ -437,7 +463,7 @@ export function clearMessagesState(): void {
 export function clearAppState(appId: string): void {
   switch (appId) {
     case "notes":
-      clearNotesState();
+      clearNotesState(false);
       break;
     case "finder":
       clearFinderState();
@@ -464,7 +490,7 @@ export function clearAppState(appId: string): void {
 }
 
 export function clearAllAppState(): void {
-  clearNotesState();
+  clearNotesState(true);
   clearFinderState();
   clearPhotosState();
   clearSettingsState();

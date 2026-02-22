@@ -16,7 +16,10 @@ import {
   NOTES_RESET_TO_FIRST_EVENT,
   hasNotesResetToFirstFlag,
   clearNotesResetToFirstFlag,
+  loadNotesSelectedSlug,
+  saveNotesSelectedSlug,
 } from "@/lib/sidebar-persistence";
+import { getNoteSlugFromShellPathname } from "@/lib/shell-routing";
 import Sidebar from "./sidebar";
 import Note from "./note";
 import { Icons } from "./icons";
@@ -132,10 +135,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       let notesForSidebarRanking = notes;
       let pinnedNotes = defaultPinnedNotes;
       let sessionId = "";
+      let persistedSelectedSlug: string | null = null;
+      let currentUrlSlug: string | undefined;
       if (typeof window !== "undefined") {
         try {
           sessionId = localStorage.getItem("session_id") || "";
           const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+          persistedSelectedSlug = loadNotesSelectedSlug();
+          currentUrlSlug = getNoteSlugFromShellPathname(window.location.pathname);
           if (storedPinnedNotes) {
             const parsedPinnedNotes = JSON.parse(storedPinnedNotes);
             if (Array.isArray(parsedPinnedNotes)) {
@@ -166,11 +173,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         ?? notesForSidebarRanking[0]?.slug
         ?? notes[0]?.slug;
       const shouldForceFirstNote = !isMobile && forceFirstNoteRef.current;
-      const targetSlug = shouldForceFirstNote ? fallbackSlug : (initialSlug || fallbackSlug);
+      const targetSlug = shouldForceFirstNote
+        ? fallbackSlug
+        : (currentUrlSlug || persistedSelectedSlug || initialSlug || fallbackSlug);
 
       if (!targetSlug) {
         if (!loading) {
           setSelectedNote(null);
+          saveNotesSelectedSlug(null);
           if (shouldForceFirstNote) {
             forceFirstNoteRef.current = false;
             clearNotesResetToFirstFlag();
@@ -183,6 +193,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
           clearNotesResetToFirstFlag();
+        }
+        saveNotesSelectedSlug(targetSlug);
+        if (currentUrlSlug !== targetSlug) {
           setUrl(`/notes/${targetSlug}`);
         }
         return;
@@ -196,9 +209,12 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
       if (fullNote) {
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
+        saveNotesSelectedSlug(targetSlug);
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
           clearNotesResetToFirstFlag();
+        }
+        if (currentUrlSlug !== targetSlug) {
           setUrl(`/notes/${targetSlug}`);
         }
         return;
@@ -218,12 +234,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
         if (fallbackFullNote) {
           setSelectedNote(withDisplayCreatedAt(fallbackFullNote as NoteType));
+          saveNotesSelectedSlug(fallbackSlug);
           setUrl(`/notes/${fallbackSlug}`);
           return;
         }
       }
 
       setSelectedNote(null);
+      saveNotesSelectedSlug(null);
       if (initialSlug && !shouldForceFirstNote) {
         setUrl("/notes");
       }
@@ -244,6 +262,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     // Update URL and UI immediately on selection.
     setUrl(`/notes/${note.slug}`);
     setSelectedNote(withDisplayCreatedAt(note));
+    saveNotesSelectedSlug(note.slug);
 
     // Fetch full note data using RPC.
     const { data: fullNote } = await supabase
@@ -264,6 +283,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     // Cancel any in-flight sync fetch so it doesn't override the back navigation.
     syncCancelledRef.current = true;
     setSelectedNote(null);
+    saveNotesSelectedSlug(null);
     if (isMobile) {
       setUrl("/notes");
     }
@@ -274,6 +294,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     setSelectedNote(withDisplayCreatedAt(note));
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
+    saveNotesSelectedSlug(note.slug);
   }, []);
 
   const showSidebar = isMobile && !initialSlug;

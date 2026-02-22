@@ -96,7 +96,11 @@ export function getShellUrlForApp(appId: string, options: ShellUrlOptions = {}):
       return options.currentPathname;
     }
 
-    return getNotesRoute(options.noteSlug);
+    if (options.noteSlug) {
+      return getNotesRoute(options.noteSlug);
+    }
+
+    return null;
   }
 
   if (FILE_QUERY_PARAM_APPS.has(appId)) {
