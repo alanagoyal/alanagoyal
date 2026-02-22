@@ -38,19 +38,26 @@ export function SessionNotesProvider({
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>(initialSessionId ?? "");
   const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
-  // Intentionally bootstrap from initial props only once to avoid clobbering live context state
-  // after mount. If a future flow needs runtime session switching, key this provider by session.
-  const didHydrateFromInitialPropsRef = useRef(false);
+  const seededSessionIdRef = useRef(initialSessionId ?? "");
 
   useEffect(() => {
-    if (didHydrateFromInitialPropsRef.current) return;
-    const hasInitialSessionId = typeof initialSessionId === "string" && initialSessionId.length > 0;
-    const hasInitialNotes = Array.isArray(initialNotes) && initialNotes.length > 0;
-    if (!hasInitialSessionId && !hasInitialNotes) return;
+    const seedSessionId = initialSessionId ?? "";
+    const seedNotes = initialNotes ?? [];
+    const hasSeedData = seedSessionId.length > 0 || seedNotes.length > 0;
+    if (!hasSeedData) return;
 
-    setSessionId(initialSessionId ?? "");
-    setNotes(initialNotes ?? []);
-    didHydrateFromInitialPropsRef.current = true;
+    // Session identity changed: re-seed provider state from incoming bootstrap data.
+    if (seededSessionIdRef.current !== seedSessionId) {
+      seededSessionIdRef.current = seedSessionId;
+      setSessionId(seedSessionId);
+      setNotes(seedNotes);
+      return;
+    }
+
+    // Same session: only backfill notes when provider is still empty.
+    if (seedNotes.length > 0) {
+      setNotes((current) => (current.length === 0 ? seedNotes : current));
+    }
   }, [initialSessionId, initialNotes]);
 
   const refreshSessionNotes = useCallback(async () => {
