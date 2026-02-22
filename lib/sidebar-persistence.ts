@@ -33,6 +33,7 @@ const STORAGE_KEYS = {
   // Session storage (resets on window close)
   FINDER_SIDEBAR: "finder-sidebar",
   FINDER_PATH: "finder-path",
+  NOTES_RESET: "notes-reset-to-first-open",
   PHOTOS_VIEW: "photos-view",
   PHOTOS_SELECTED: "photos-selected-id",
   SETTINGS_STATE: "settings-state",
@@ -42,6 +43,8 @@ const STORAGE_KEYS = {
   MUSIC_STATE: "music-state",
   MESSAGES_CONVERSATION: "messages-conversation",
 } as const;
+
+export const NOTES_RESET_TO_FIRST_EVENT = "notes-reset-to-first";
 
 // ============================================================================
 // Generic Factory (for simple enum-like sidebar values)
@@ -149,6 +152,29 @@ export function clearFinderState(): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(STORAGE_KEYS.FINDER_PATH);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function consumeNotesResetToFirstFlag(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const shouldReset = sessionStorage.getItem(STORAGE_KEYS.NOTES_RESET) === "1";
+    if (shouldReset) {
+      sessionStorage.removeItem(STORAGE_KEYS.NOTES_RESET);
+    }
+    return shouldReset;
+  } catch {
+    return false;
+  }
+}
+
+export function clearNotesState(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.NOTES_RESET, "1");
+    window.dispatchEvent(new Event(NOTES_RESET_TO_FIRST_EVENT));
   } catch {
     // Ignore storage errors
   }
@@ -405,6 +431,9 @@ export function clearMessagesState(): void {
 
 export function clearAppState(appId: string): void {
   switch (appId) {
+    case "notes":
+      clearNotesState();
+      break;
     case "finder":
       clearFinderState();
       break;
@@ -430,6 +459,7 @@ export function clearAppState(appId: string): void {
 }
 
 export function clearAllAppState(): void {
+  clearNotesState();
   clearFinderState();
   clearPhotosState();
   clearSettingsState();

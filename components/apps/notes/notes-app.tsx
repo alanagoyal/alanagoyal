@@ -11,6 +11,10 @@ import {
   withDisplayCreatedAt,
   withDisplayCreatedAtForNotes,
 } from "@/lib/notes/display-created-at";
+import {
+  NOTES_RESET_TO_FIRST_EVENT,
+  consumeNotesResetToFirstFlag,
+} from "@/lib/sidebar-persistence";
 import Sidebar from "./sidebar";
 import Note from "./note";
 import { Icons } from "./icons";
@@ -27,6 +31,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(
     initialNote ? withDisplayCreatedAt(initialNote) : null
   );
+  const [selectionResetKey, setSelectionResetKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
@@ -38,6 +43,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
   // without waiting for the effect cleanup to run on the next render.
   const syncCancelledRef = useRef(false);
+  const forceFirstNoteRef = useRef(false);
+
+  const requestFirstNoteReset = useCallback(() => {
+    syncCancelledRef.current = true;
+    forceFirstNoteRef.current = true;
+    setSelectedNote(null);
+    setSelectionResetKey((current) => current + 1);
+  }, []);
 
   // Normalize preloaded notes to client-side display timestamps after mount.
   useEffect(() => {
@@ -68,6 +81,25 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     };
   }, [supabase]);
 
+  useEffect(() => {
+    if (isMobile || typeof window === "undefined") return;
+
+    if (consumeNotesResetToFirstFlag()) {
+      requestFirstNoteReset();
+    }
+
+    const handleNotesReset = () => {
+      if (consumeNotesResetToFirstFlag()) {
+        requestFirstNoteReset();
+      }
+    };
+
+    window.addEventListener(NOTES_RESET_TO_FIRST_EVENT, handleNotesReset);
+    return () => {
+      window.removeEventListener(NOTES_RESET_TO_FIRST_EVENT, handleNotesReset);
+    };
+  }, [isMobile, requestFirstNoteReset]);
+
   // Keep selected note in sync with route slug.
   useEffect(() => {
     let cancelled = false;
@@ -91,11 +123,15 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
 
       const fallbackSlug = notes.find((note) => note.slug === "about-me")?.slug ?? notes[0]?.slug;
-      const targetSlug = initialSlug || fallbackSlug;
+      const shouldForceFirstNote = !isMobile && forceFirstNoteRef.current;
+      const targetSlug = shouldForceFirstNote ? fallbackSlug : (initialSlug || fallbackSlug);
 
       if (!targetSlug) {
         if (!loading) {
           setSelectedNote(null);
+          if (shouldForceFirstNote) {
+            forceFirstNoteRef.current = false;
+          }
         }
         return;
       }
@@ -112,6 +148,10 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
       if (fullNote) {
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
+        if (shouldForceFirstNote) {
+          forceFirstNoteRef.current = false;
+          setUrl(`/notes/${targetSlug}`);
+        }
         return;
       }
 
@@ -120,7 +160,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
 
       // If slug is invalid, recover to a valid note URL when possible.
-      if (initialSlug && fallbackSlug && fallbackSlug !== targetSlug) {
+      if (initialSlug && !shouldForceFirstNote && fallbackSlug && fallbackSlug !== targetSlug) {
         const { data: fallbackFullNote } = await supabase
           .rpc("select_note", { note_slug_arg: fallbackSlug })
           .single();
@@ -135,8 +175,11 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
 
       setSelectedNote(null);
-      if (initialSlug) {
+      if (initialSlug && !shouldForceFirstNote) {
         setUrl("/notes");
+      }
+      if (shouldForceFirstNote) {
+        forceFirstNoteRef.current = false;
       }
     }
 
@@ -145,7 +188,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     return () => {
       cancelled = true;
     };
-  }, [loading, isMobile, initialSlug, notes, supabase]);
+  }, [loading, isMobile, initialSlug, notes, selectionResetKey, supabase]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
     // Update URL and UI immediately on selection.
