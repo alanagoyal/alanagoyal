@@ -9,7 +9,6 @@ import {
   useContext,
 } from "react";
 import { usePathname } from "next/navigation";
-import SessionId from "./session-id";
 import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarContent } from "./sidebar-content";
@@ -125,7 +124,7 @@ export default function Sidebar({
   const {
     notes: sessionNotes,
     sessionId,
-    setSessionId,
+    isReady: sessionNotesReady,
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
@@ -527,38 +526,49 @@ export default function Sidebar({
         bottomMargin="0px"
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
-          <SessionId setSessionId={setSessionId} />
-          <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
-            <SearchBar
-              notes={notes}
-              onSearchResults={setLocalSearchResults}
-              sessionId={sessionId}
-              inputRef={searchInputRef}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              setHighlightedIndex={setHighlightedIndex}
-              clearSearch={clearSearch}
-            />
-            <SidebarContent
-              groupedNotes={groupedNotes}
-              selectedNoteSlug={selectedNoteSlug}
-              onNoteSelect={handleNoteSelect}
-              sessionId={sessionId}
-              handlePinToggle={handlePinToggle}
-              pinnedNotes={pinnedNotes}
-              localSearchResults={localSearchResults}
-              highlightedIndex={highlightedIndex}
-              categoryOrder={categoryOrder}
-              labels={labels}
-              handleNoteDelete={handleNoteDelete}
-              openSwipeItemSlug={openSwipeItemSlug}
-              setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-              clearSearch={clearSearch}
-              setSelectedNoteSlug={setSelectedNoteSlug}
-              useCallbackNavigation={useCallbackNavigation}
-              isMobile={isMobile}
-            />
-          </div>
+          {sessionNotesReady ? (
+            <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
+              <SearchBar
+                notes={notes}
+                onSearchResults={setLocalSearchResults}
+                sessionId={sessionId}
+                inputRef={searchInputRef}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                setHighlightedIndex={setHighlightedIndex}
+                clearSearch={clearSearch}
+              />
+              <SidebarContent
+                groupedNotes={groupedNotes}
+                selectedNoteSlug={selectedNoteSlug}
+                onNoteSelect={handleNoteSelect}
+                sessionId={sessionId}
+                handlePinToggle={handlePinToggle}
+                pinnedNotes={pinnedNotes}
+                localSearchResults={localSearchResults}
+                highlightedIndex={highlightedIndex}
+                categoryOrder={categoryOrder}
+                labels={labels}
+                handleNoteDelete={handleNoteDelete}
+                openSwipeItemSlug={openSwipeItemSlug}
+                setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+                clearSearch={clearSearch}
+                setSelectedNoteSlug={setSelectedNoteSlug}
+                useCallbackNavigation={useCallbackNavigation}
+                isMobile={isMobile}
+              />
+            </div>
+          ) : (
+            <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2 py-2`}>
+              <div className="h-7 rounded-md bg-muted-foreground/10 mb-3 animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
       </div>
