@@ -119,6 +119,10 @@ export default function Sidebar({
     [publicNotes, sessionNotes]
   );
 
+  const selectNoteInApp = useCallback((note: Note) => {
+    onNoteSelect(note);
+  }, [onNoteSelect]);
+
   useEffect(() => {
     // Use external selectedSlug prop if provided (for desktop environment)
     if (externalSelectedSlug !== undefined) {
@@ -214,7 +218,7 @@ export default function Sidebar({
 
         if (nextNote) {
           if (useCallbackNavigation) {
-            onNoteSelect(nextNote);
+            selectNoteInApp(nextNote);
           } else {
             router.push(`/notes/${nextNote.slug}`);
           }
@@ -228,7 +232,7 @@ export default function Sidebar({
         }
       }
     },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults, useCallbackNavigation, onNoteSelect]
+    [flattenedNotes, selectedNoteSlug, router, localSearchResults, useCallbackNavigation, selectNoteInApp]
   );
 
   const handlePinToggle = useCallback(
@@ -256,11 +260,11 @@ export default function Sidebar({
       } else if (useCallbackNavigation && !isMobile) {
         // Only auto-select on desktop, not mobile (pin should stay on sidebar)
         const note = notes.find((n) => n.slug === slug);
-        if (note) onNoteSelect(note);
+        if (note) selectNoteInApp(note);
       }
 
     },
-    [router, isMobile, useCallbackNavigation, clearSearch, notes, onNoteSelect]
+    [router, isMobile, useCallbackNavigation, clearSearch, notes, selectNoteInApp]
   );
 
   const handleNoteDelete = useCallback(
@@ -303,7 +307,7 @@ export default function Sidebar({
           router.push(nextNote ? `/notes/${nextNote.slug}` : "/notes/about-me");
         } else if (useCallbackNavigation && !isMobile && nextNote) {
           // Only auto-select next note on desktop, not mobile
-          onNoteSelect(nextNote);
+          selectNoteInApp(nextNote);
         }
 
         clearSearch();
@@ -325,7 +329,7 @@ export default function Sidebar({
       clearSearch,
       refreshSessionNotes,
       router,
-      onNoteSelect,
+      selectNoteInApp,
     ]
   );
 
@@ -333,7 +337,7 @@ export default function Sidebar({
     if (localSearchResults && localSearchResults[highlightedIndex]) {
       const selectedNote = localSearchResults[highlightedIndex];
       if (useCallbackNavigation) {
-        onNoteSelect(selectedNote);
+        selectNoteInApp(selectedNote);
       } else {
         router.push(`/notes/${selectedNote.slug}`);
       }
@@ -343,7 +347,7 @@ export default function Sidebar({
       }, 0);
       clearSearch();
     }
-  }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, onNoteSelect]);
+  }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, selectNoteInApp]);
 
   // Register file menu actions for desktop menubar
   useEffect(() => {
@@ -470,13 +474,13 @@ export default function Sidebar({
 
   const handleNoteSelect = useCallback(
     (note: Note) => {
-      onNoteSelect(note);
+      selectNoteInApp(note);
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${note.slug}`);
       }
       clearSearch();
     },
-    [clearSearch, onNoteSelect, isMobile, useCallbackNavigation, router]
+    [clearSearch, selectNoteInApp, isMobile, useCallbackNavigation, router]
   );
 
   return (

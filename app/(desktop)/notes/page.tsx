@@ -15,6 +15,6 @@ export default async function NotesPage() {
   const initialIsMobile = await isMobileRequest();
 
   // On mobile: shows sidebar (no note selected)
-  // On desktop: shows notes window with about-me selected
+  // On desktop: shows notes window (selection is resolved client-side)
   return <NotesDesktopPage initialIsMobile={initialIsMobile} />;
 }

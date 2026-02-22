@@ -40,6 +40,7 @@ const STORAGE_KEYS = {
   CALENDAR_DATE: "calendar-date",
   CALENDAR_SCROLL: "calendar-scroll",
   MUSIC_STATE: "music-state",
+  NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
 } as const;
 
@@ -303,6 +304,7 @@ export function clearCalendarState(): void {
 
 import type { MusicView } from "@/components/apps/music/types";
 import { clearItermStorage } from "@/components/apps/iterm/terminal";
+import { clearNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 
 // Valid views for validation - must match MusicView type
 const MUSIC_VIEWS: readonly MusicView[] = [
@@ -367,6 +369,42 @@ export function clearMusicState(): void {
 }
 
 // ============================================================================
+// Notes Persistence
+// ============================================================================
+
+export function loadNotesSelectedSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.NOTES_SELECTED);
+  } catch {
+    return null;
+  }
+}
+
+export function saveNotesSelectedSlug(slug: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (slug) {
+      sessionStorage.setItem(STORAGE_KEYS.NOTES_SELECTED, slug);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.NOTES_SELECTED);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearNotesState(): void {
+  clearNotesSelectedSlugMemory();
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.NOTES_SELECTED);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// ============================================================================
 // Messages Persistence
 // ============================================================================
 
@@ -420,6 +458,9 @@ export function clearAppState(appId: string): void {
     case "music":
       clearMusicState();
       break;
+    case "notes":
+      clearNotesState();
+      break;
     case "messages":
       clearMessagesState();
       break;
@@ -435,6 +476,7 @@ export function clearAllAppState(): void {
   clearSettingsState();
   clearCalendarState();
   clearMusicState();
+  clearNotesState();
   clearMessagesState();
   clearItermStorage();
 }

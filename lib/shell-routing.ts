@@ -70,7 +70,8 @@ export function getNoteSlugFromShellPathname(pathname: string): string | undefin
   }
 }
 
-export function getNotesRoute(noteSlug = SHELL_DEFAULT_NOTE_SLUG): string {
+export function getNotesRoute(noteSlug?: string): string {
+  if (!noteSlug) return SHELL_NOTES_ROOT_PATH;
   return `${SHELL_NOTES_ROOT_PATH}/${encodeURIComponent(noteSlug)}`;
 }
 
@@ -91,6 +92,10 @@ export function getShellUrlForApp(appId: string, options: ShellUrlOptions = {}):
 
   if (appId === "notes") {
     if (context === "mobile") return SHELL_NOTES_ROOT_PATH;
+
+    if (options.noteSlug) {
+      return getNotesRoute(options.noteSlug);
+    }
 
     if (options.currentPathname && isNotesDetailPathname(options.currentPathname)) {
       return options.currentPathname;

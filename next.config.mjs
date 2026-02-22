@@ -3,7 +3,7 @@
  *
  * Routing behavior:
  * - /                    → shows desktop with saved session state (default layout for new visitors)
- * - /notes               → on desktop: updates URL to /notes/about-me, notes focused
+ * - /notes               → on desktop: notes focused (selection resolved client-side)
  *                          on mobile: shows sidebar (no redirect)
  * - /notes/{slug}        → shows the note (notes focused)
  * - /{app}               → shows default desktop with that app focused

@@ -7,6 +7,10 @@ import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { setUrl } from "@/lib/set-url";
+import { loadNotesSelectedSlug, saveNotesSelectedSlug } from "@/lib/sidebar-persistence";
+import { getNoteSlugFromShellPathname } from "@/lib/shell-routing";
+import { getNotesSelectedSlugMemory, setNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
+import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
 import {
   withDisplayCreatedAt,
   withDisplayCreatedAtForNotes,
@@ -14,6 +18,49 @@ import {
 import Sidebar from "./sidebar";
 import Note from "./note";
 import { Icons } from "./icons";
+
+// Module state survives Notes unmount/remount within a single page session.
+// It resets on hard refresh/navigation.
+let hasMountedNotesInPageSession = false;
+const SIDEBAR_CATEGORY_ORDER = ["pinned", "today", "yesterday", "7", "30", "older"] as const;
+type DesktopStartupMode = "first-mount" | "remount";
+
+function getPinnedSlugsForFallback(notes: NoteType[]): Set<string> {
+  const defaultPinned = new Set(
+    notes
+      .filter((note) => note.slug === "about-me" || note.slug === "quick-links")
+      .map((note) => note.slug)
+  );
+
+  if (typeof window === "undefined") {
+    return defaultPinned;
+  }
+
+  try {
+    const raw = localStorage.getItem("pinnedNotes");
+    if (!raw) return defaultPinned;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return defaultPinned;
+    return new Set(parsed.filter((slug): slug is string => typeof slug === "string"));
+  } catch {
+    return defaultPinned;
+  }
+}
+
+function getTopmostNoteSlug(notes: NoteType[]): string | undefined {
+  if (notes.length === 0) return undefined;
+
+  const pinnedSlugs = getPinnedSlugsForFallback(notes);
+  const grouped = groupNotesByCategory(notes, pinnedSlugs);
+  sortGroupedNotes(grouped);
+
+  for (const category of SIDEBAR_CATEGORY_ORDER) {
+    const firstNote = grouped[category]?.[0];
+    if (firstNote?.slug) return firstNote.slug;
+  }
+
+  return notes[0]?.slug;
+}
 
 interface NotesAppProps {
   isMobile?: boolean;
@@ -24,6 +71,7 @@ interface NotesAppProps {
 
 export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
+  const [notesForFallback, setNotesForFallback] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(
     initialNote ? withDisplayCreatedAt(initialNote) : null
   );
@@ -32,33 +80,80 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const windowFocus = useWindowFocus();
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
-  // Track selected slug in a ref so the sync effect can read it without re-triggering.
-  const selectedSlugRef = useRef(selectedNote?.slug);
-  selectedSlugRef.current = selectedNote?.slug;
+  // Track selected slug in a ref so async startup sync doesn't overwrite newer manual selection.
+  const selectedSlugRef = useRef<string | undefined>(selectedNote?.slug);
   // Allows handleBackToSidebar to cancel in-flight sync fetches immediately,
   // without waiting for the effect cleanup to run on the next render.
   const syncCancelledRef = useRef(false);
+  const desktopStartupModeRef = useRef<DesktopStartupMode | null>(null);
+  const persistDesktopSelection = useCallback((slug: string) => {
+    if (isMobile) return;
+    setNotesSelectedSlugMemory(slug);
+    saveNotesSelectedSlug(slug);
+  }, [isMobile]);
+  const resolveDesktopStartupMode = useCallback((): DesktopStartupMode => {
+    if (desktopStartupModeRef.current) {
+      return desktopStartupModeRef.current;
+    }
+
+    const mode: DesktopStartupMode = hasMountedNotesInPageSession ? "remount" : "first-mount";
+    hasMountedNotesInPageSession = true;
+    desktopStartupModeRef.current = mode;
+    return mode;
+  }, []);
 
   // Normalize preloaded notes to client-side display timestamps after mount.
   useEffect(() => {
     setSelectedNote((current) => (current ? withDisplayCreatedAt(current) : current));
   }, []);
 
+  // Keep ref aligned with committed selected note state.
+  useEffect(() => {
+    selectedSlugRef.current = selectedNote?.slug;
+    if (!isMobile && selectedNote?.slug) {
+      persistDesktopSelection(selectedNote.slug);
+    }
+  }, [isMobile, persistDesktopSelection, selectedNote?.slug]);
+
   // Fetch public notes once.
   useEffect(() => {
     let cancelled = false;
 
     async function fetchNotes() {
-      const { data } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("public", true)
-        .order("created_at", { ascending: false });
+      try {
+        const sessionId =
+          typeof window !== "undefined" ? localStorage.getItem("session_id") : null;
 
-      if (cancelled) return;
+        const [publicResult, sessionResult] = await Promise.all([
+          supabase
+            .from("notes")
+            .select("*")
+            .eq("public", true)
+            .order("created_at", { ascending: false }),
+          sessionId
+            ? supabase.rpc("select_session_notes", { session_id_arg: sessionId })
+            : Promise.resolve({ data: [] as NoteType[] }),
+        ]);
 
-      setNotes(withDisplayCreatedAtForNotes(((data as NoteType[] | null) ?? [])));
-      setLoading(false);
+        if (cancelled) return;
+
+        const publicNotes = ((publicResult.data as NoteType[] | null) ?? []);
+        const sessionNotes = ((sessionResult.data as NoteType[] | null) ?? []);
+        const allNotes = [...publicNotes, ...sessionNotes];
+        const uniqueBySlug = new Map<string, NoteType>();
+        for (const note of allNotes) {
+          uniqueBySlug.set(note.slug, note);
+        }
+
+        setNotes(withDisplayCreatedAtForNotes(publicNotes));
+        setNotesForFallback(withDisplayCreatedAtForNotes(Array.from(uniqueBySlug.values())));
+      } catch (error) {
+        console.error("Failed to fetch notes for sidebar/fallback selection:", error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
 
     fetchNotes();
@@ -70,28 +165,41 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
   // Keep selected note in sync with route slug.
   useEffect(() => {
+    const desktopStartupMode = isMobile ? null : resolveDesktopStartupMode();
+
     let cancelled = false;
     syncCancelledRef.current = false;
 
     const isCancelled = () => cancelled || syncCancelledRef.current;
 
     async function syncSelectedNote() {
-      // Desktop should use initialSlug only for initial selection.
-      // After a user picks a note, don't force-sync back to initialSlug.
+      const routeSlug = getNoteSlugFromShellPathname(window.location.pathname);
+
+      // Desktop should only use URL/persisted state for initial selection.
+      // After a user picks a note, don't force-sync back during this mount.
       if (!isMobile && selectedSlugRef.current) {
         return;
       }
 
       // Mobile /notes should show the list view with no active note.
-      if (isMobile && !initialSlug) {
+      if (isMobile && !routeSlug) {
         if (!loading) {
           setSelectedNote(null);
         }
         return;
       }
 
-      const fallbackSlug = notes.find((note) => note.slug === "about-me")?.slug ?? notes[0]?.slug;
-      const targetSlug = initialSlug || fallbackSlug;
+      const persistedSlug = isMobile ? null : loadNotesSelectedSlug();
+      const memorySlug = isMobile ? null : getNotesSelectedSlugMemory();
+      const fallbackSlug = getTopmostNoteSlug(
+        notesForFallback.length > 0 ? notesForFallback : notes
+      );
+      const isFirstDesktopMount = desktopStartupMode === "first-mount";
+      const targetSlug = isMobile
+        ? (routeSlug || fallbackSlug)
+        : (isFirstDesktopMount
+          ? (routeSlug || memorySlug || persistedSlug || fallbackSlug)
+          : (memorySlug || persistedSlug || fallbackSlug));
 
       if (!targetSlug) {
         if (!loading) {
@@ -109,9 +217,20 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         .single();
 
       if (isCancelled()) return;
+      if (selectedSlugRef.current && selectedSlugRef.current !== targetSlug) {
+        return;
+      }
 
       if (fullNote) {
+        selectedSlugRef.current = targetSlug;
+        persistDesktopSelection(targetSlug);
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
+        if (!isMobile) {
+          const expectedPath = `/notes/${encodeURIComponent(targetSlug)}`;
+          if (window.location.pathname !== expectedPath) {
+            setUrl(expectedPath);
+          }
+        }
         return;
       }
 
@@ -120,22 +239,27 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
 
       // If slug is invalid, recover to a valid note URL when possible.
-      if (initialSlug && fallbackSlug && fallbackSlug !== targetSlug) {
+      if (routeSlug && fallbackSlug && fallbackSlug !== targetSlug) {
         const { data: fallbackFullNote } = await supabase
           .rpc("select_note", { note_slug_arg: fallbackSlug })
           .single();
 
         if (isCancelled()) return;
+        if (selectedSlugRef.current && selectedSlugRef.current !== fallbackSlug) {
+          return;
+        }
 
         if (fallbackFullNote) {
+          selectedSlugRef.current = fallbackSlug;
+          persistDesktopSelection(fallbackSlug);
           setSelectedNote(withDisplayCreatedAt(fallbackFullNote as NoteType));
-          setUrl(`/notes/${fallbackSlug}`);
+          setUrl(`/notes/${encodeURIComponent(fallbackSlug)}`);
           return;
         }
       }
 
       setSelectedNote(null);
-      if (initialSlug) {
+      if (routeSlug) {
         setUrl("/notes");
       }
     }
@@ -145,9 +269,19 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     return () => {
       cancelled = true;
     };
-  }, [loading, isMobile, initialSlug, notes, supabase]);
+  }, [
+    loading,
+    isMobile,
+    notes,
+    notesForFallback,
+    persistDesktopSelection,
+    resolveDesktopStartupMode,
+    supabase,
+  ]);
 
   const handleNoteSelect = useCallback(async (note: NoteType) => {
+    selectedSlugRef.current = note.slug;
+    persistDesktopSelection(note.slug);
     // Update URL and UI immediately on selection.
     setUrl(`/notes/${note.slug}`);
     setSelectedNote(withDisplayCreatedAt(note));
@@ -165,11 +299,12 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
           : current
       ));
     }
-  }, [supabase]);
+  }, [persistDesktopSelection, supabase]);
 
   const handleBackToSidebar = useCallback(() => {
     // Cancel any in-flight sync fetch so it doesn't override the back navigation.
     syncCancelledRef.current = true;
+    selectedSlugRef.current = undefined;
     setSelectedNote(null);
     if (isMobile) {
       setUrl("/notes");
@@ -178,10 +313,12 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
   // Handler for new note creation - sets note and updates URL
   const handleNoteCreated = useCallback((note: NoteType) => {
+    selectedSlugRef.current = note.slug;
+    persistDesktopSelection(note.slug);
     setSelectedNote(withDisplayCreatedAt(note));
     // Update URL to reflect the new note
     setUrl(`/notes/${note.slug}`);
-  }, []);
+  }, [persistDesktopSelection]);
 
   const showSidebar = isMobile && !initialSlug;
 

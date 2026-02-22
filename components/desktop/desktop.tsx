@@ -24,7 +24,8 @@ import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
 import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
-import { saveMessagesConversation } from "@/lib/sidebar-persistence";
+import { loadNotesSelectedSlug, saveMessagesConversation } from "@/lib/sidebar-persistence";
+import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
 import { fetchGitHubFileContent } from "@/lib/github-client";
@@ -170,6 +171,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
   const nextMessagesSelectRequestIdRef = useRef(1);
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const getNotesSlugForRouting = useCallback(
+    () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
+    []
+  );
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
@@ -324,13 +329,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     const nextUrl = getShellUrlForApp(focusedAppId, {
       context: "desktop",
       currentPathname: window.location.pathname,
-      noteSlug: initialNoteSlug,
+      noteSlug: getNotesSlugForRouting(),
       filePath,
     });
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [state.focusedWindowId, state.windows, initialNoteSlug]);
+  }, [state.focusedWindowId, state.windows, getNotesSlugForRouting]);
 
   const isActive = mode === "active";
 
@@ -422,12 +427,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     const nextUrl = getShellUrlForApp(appId, {
       context: "desktop",
       currentPathname: window.location.pathname,
-      noteSlug: initialNoteSlug,
+      noteSlug: getNotesSlugForRouting(),
     });
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, initialNoteSlug]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
@@ -484,13 +489,13 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       setRestoreDefaultOnUnlock(false);
       const nextUrl = getShellUrlForApp(DESKTOP_DEFAULT_FOCUSED_APP, {
         context: "desktop",
-        noteSlug: initialNoteSlug,
+        noteSlug: getNotesSlugForRouting(),
       });
       if (nextUrl) {
         setUrl(nextUrl);
       }
     }
-  }, [restoreDefaultOnUnlock, restoreDesktopDefault, initialNoteSlug]);
+  }, [restoreDefaultOnUnlock, restoreDesktopDefault, getNotesSlugForRouting]);
 
   const handleMessagesUnreadBadgeChange = useCallback((count: number) => {
     const safeCount = Math.max(0, Math.floor(count));
