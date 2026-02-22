@@ -318,7 +318,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
                 notes={notes}
                 onNoteSelect={handleNoteSelect}
                 isMobile={true}
-                selectedSlug={selectedNote?.slug}
+                selectedSlug={selectedNote?.slug ?? null}
                 useCallbackNavigation
                 onNoteCreated={handleNoteCreated}
               />
@@ -364,7 +364,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
               notes={notes}
               onNoteSelect={handleNoteSelect}
               isMobile={false}
-              selectedSlug={selectedNote?.slug}
+              selectedSlug={selectedNote?.slug ?? null}
               useCallbackNavigation
               onNoteCreated={handleNoteCreated}
             />

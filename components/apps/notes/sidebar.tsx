@@ -45,6 +45,17 @@ const labels = {
 
 const categoryOrder = [...NOTE_SIDEBAR_CATEGORY_ORDER];
 
+function parsePinnedNotes(raw: string | null): Set<string> | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return new Set(parsed.filter((slug): slug is string => typeof slug === "string"));
+  } catch {
+    return null;
+  }
+}
+
 export default function Sidebar({
   notes: publicNotes,
   onNoteSelect,
@@ -65,7 +76,10 @@ export default function Sidebar({
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
-  const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
+  const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    return parsePinnedNotes(localStorage.getItem("pinnedNotes")) ?? new Set();
+  });
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [localSearchResults, setLocalSearchResults] = useState<Note[] | null>(
@@ -140,26 +154,25 @@ export default function Sidebar({
   }, [selectedNoteSlug, notes]);
 
   useEffect(() => {
-    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
-    if (storedPinnedNotes) {
-      setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
-    } else {
-      const initialPinnedNotes = new Set(
-        notes
-          .filter(
-            (note) =>
-              note.slug === "about-me" ||
-              note.slug === "quick-links" ||
-              note.session_id === sessionId
-          )
-          .map((note) => note.slug)
-      );
-      setPinnedNotes(initialPinnedNotes);
-      localStorage.setItem(
-        "pinnedNotes",
-        JSON.stringify(Array.from(initialPinnedNotes))
-      );
-    }
+    if (typeof window === "undefined") return;
+    const storedPinnedNotes = parsePinnedNotes(localStorage.getItem("pinnedNotes"));
+    if (storedPinnedNotes) return;
+
+    const initialPinnedNotes = new Set(
+      notes
+        .filter(
+          (note) =>
+            note.slug === "about-me" ||
+            note.slug === "quick-links" ||
+            note.session_id === sessionId
+        )
+        .map((note) => note.slug)
+    );
+    setPinnedNotes(initialPinnedNotes);
+    localStorage.setItem(
+      "pinnedNotes",
+      JSON.stringify(Array.from(initialPinnedNotes))
+    );
   }, [notes, sessionId]);
 
   useEffect(() => {
