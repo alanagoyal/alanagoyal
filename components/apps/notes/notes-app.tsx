@@ -11,6 +11,7 @@ import {
   withDisplayCreatedAt,
   withDisplayCreatedAtForNotes,
 } from "@/lib/notes/display-created-at";
+import { getTopSidebarNote } from "@/lib/notes/note-utils";
 import {
   NOTES_RESET_TO_FIRST_EVENT,
   hasNotesResetToFirstFlag,
@@ -123,7 +124,47 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         return;
       }
 
-      const fallbackSlug = notes.find((note) => note.slug === "about-me")?.slug ?? notes[0]?.slug;
+      const defaultPinnedNotes = new Set(
+        notes
+          .filter((note) => note.slug === "about-me" || note.slug === "quick-links")
+          .map((note) => note.slug)
+      );
+      let notesForSidebarRanking = notes;
+      let pinnedNotes = defaultPinnedNotes;
+      let sessionId = "";
+      if (typeof window !== "undefined") {
+        try {
+          sessionId = localStorage.getItem("session_id") || "";
+          const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+          if (storedPinnedNotes) {
+            const parsedPinnedNotes = JSON.parse(storedPinnedNotes);
+            if (Array.isArray(parsedPinnedNotes)) {
+              pinnedNotes = new Set(
+                parsedPinnedNotes.filter((slug): slug is string => typeof slug === "string")
+              );
+            }
+          }
+        } catch {
+          // Ignore storage parsing errors and keep defaults.
+        }
+      }
+      if (sessionId) {
+        const { data: sessionNotes } = await supabase.rpc("select_session_notes", {
+          session_id_arg: sessionId,
+        });
+
+        if (isCancelled()) return;
+
+        if (Array.isArray(sessionNotes)) {
+          notesForSidebarRanking = [
+            ...notes,
+            ...(sessionNotes as NoteType[]),
+          ];
+        }
+      }
+      const fallbackSlug = getTopSidebarNote(notesForSidebarRanking, pinnedNotes, sessionId)?.slug
+        ?? notesForSidebarRanking[0]?.slug
+        ?? notes[0]?.slug;
       const shouldForceFirstNote = !isMobile && forceFirstNoteRef.current;
       const targetSlug = shouldForceFirstNote ? fallbackSlug : (initialSlug || fallbackSlug);
 

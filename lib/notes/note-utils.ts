@@ -1,6 +1,14 @@
 import { Note } from "@/lib/notes/types";
 
 export type GroupedNotes = Record<string, Note[]>;
+export const NOTE_SIDEBAR_CATEGORY_ORDER = [
+  "pinned",
+  "today",
+  "yesterday",
+  "7",
+  "30",
+  "older",
+] as const;
 
 export function groupNotesByCategory(notes: Note[], pinnedNotes: Set<string>) {
   const groupedNotes: GroupedNotes = {
@@ -54,4 +62,21 @@ export function sortGroupedNotes(groupedNotes: GroupedNotes) {
       b.created_at.localeCompare(a.created_at)
     );
   });
+}
+
+export function flattenGroupedNotesBySidebarOrder(groupedNotes: GroupedNotes): Note[] {
+  return NOTE_SIDEBAR_CATEGORY_ORDER.flatMap((category) => groupedNotes[category] ?? []);
+}
+
+export function getTopSidebarNote(
+  notes: Note[],
+  pinnedNotes: Set<string>,
+  sessionId: string
+): Note | null {
+  const userSpecificNotes = notes.filter(
+    (note) => note.public || note.session_id === sessionId
+  );
+  const groupedNotes = groupNotesByCategory(userSpecificNotes, pinnedNotes);
+  sortGroupedNotes(groupedNotes);
+  return flattenGroupedNotesBySidebarOrder(groupedNotes)[0] ?? null;
 }

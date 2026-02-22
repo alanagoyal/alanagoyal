@@ -17,6 +17,7 @@ import { SearchBar } from "./search";
 import {
   groupNotesByCategory,
   sortGroupedNotes,
+  NOTE_SIDEBAR_CATEGORY_ORDER,
   type GroupedNotes,
 } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
@@ -42,7 +43,7 @@ const labels = {
   older: "Older",
 };
 
-const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
+const categoryOrder = [...NOTE_SIDEBAR_CATEGORY_ORDER];
 
 export default function Sidebar({
   notes: publicNotes,
