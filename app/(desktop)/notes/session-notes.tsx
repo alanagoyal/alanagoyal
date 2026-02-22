@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Note } from "@/lib/notes/types";
@@ -27,12 +28,28 @@ export const SessionNotesContext = createContext<SessionNotes>({
 
 export function SessionNotesProvider({
   children,
+  initialSessionId,
+  initialNotes,
 }: {
   children: React.ReactNode;
+  initialSessionId?: string;
+  initialNotes?: Note[];
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [sessionId, setSessionId] = useState<string>(initialSessionId ?? "");
+  const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
+  const didHydrateFromInitialPropsRef = useRef(false);
+
+  useEffect(() => {
+    if (didHydrateFromInitialPropsRef.current) return;
+    const hasInitialSessionId = typeof initialSessionId === "string" && initialSessionId.length > 0;
+    const hasInitialNotes = Array.isArray(initialNotes) && initialNotes.length > 0;
+    if (!hasInitialSessionId && !hasInitialNotes) return;
+
+    setSessionId(initialSessionId ?? "");
+    setNotes(initialNotes ?? []);
+    didHydrateFromInitialPropsRef.current = true;
+  }, [initialSessionId, initialNotes]);
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {

@@ -72,6 +72,8 @@ interface NotesAppProps {
 export function NotesApp({ isMobile = false, inShell = false, initialSlug, initialNote }: NotesAppProps) {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [notesForFallback, setNotesForFallback] = useState<NoteType[]>([]);
+  const [sessionIdForSidebar, setSessionIdForSidebar] = useState<string>("");
+  const [sessionNotesForSidebar, setSessionNotesForSidebar] = useState<NoteType[]>([]);
   const [selectedNote, setSelectedNote] = useState<NoteType | null>(
     initialNote ? withDisplayCreatedAt(initialNote) : null
   );
@@ -139,12 +141,15 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
         const publicNotes = ((publicResult.data as NoteType[] | null) ?? []);
         const sessionNotes = ((sessionResult.data as NoteType[] | null) ?? []);
+        const normalizedSessionNotes = withDisplayCreatedAtForNotes(sessionNotes);
         const allNotes = [...publicNotes, ...sessionNotes];
         const uniqueBySlug = new Map<string, NoteType>();
         for (const note of allNotes) {
           uniqueBySlug.set(note.slug, note);
         }
 
+        setSessionIdForSidebar(sessionId ?? "");
+        setSessionNotesForSidebar(normalizedSessionNotes);
         setNotes(withDisplayCreatedAtForNotes(publicNotes));
         setNotesForFallback(withDisplayCreatedAtForNotes(Array.from(uniqueBySlug.values())));
       } catch (error) {
@@ -325,7 +330,10 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   // On mobile, show either sidebar or note content
   if (isMobile) {
     return (
-      <SessionNotesProvider>
+      <SessionNotesProvider
+        initialSessionId={sessionIdForSidebar}
+        initialNotes={sessionNotesForSidebar}
+      >
         <div
           ref={containerRef}
           data-app="notes"
@@ -375,7 +383,10 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
 
   // Desktop view - show both sidebar and note
   return (
-    <SessionNotesProvider>
+    <SessionNotesProvider
+      initialSessionId={sessionIdForSidebar}
+      initialNotes={sessionNotesForSidebar}
+    >
       <div
         ref={containerRef}
         data-app="notes"
