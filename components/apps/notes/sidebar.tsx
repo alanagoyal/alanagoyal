@@ -62,6 +62,7 @@ export default function Sidebar({
   selectedSlug: externalSelectedSlug,
   useCallbackNavigation = false,
   onNoteCreated,
+  sidebarContentReady = true,
 }: {
   notes: Note[];
   onNoteSelect: (note: Note) => void;
@@ -69,6 +70,7 @@ export default function Sidebar({
   selectedSlug?: string | null;
   useCallbackNavigation?: boolean;
   onNoteCreated?: (note: Note) => void;
+  sidebarContentReady?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -132,6 +134,7 @@ export default function Sidebar({
     () => [...publicNotes, ...sessionNotes],
     [publicNotes, sessionNotes]
   );
+  const isSidebarContentReady = sessionNotesReady && sidebarContentReady;
 
   useEffect(() => {
     // Use external selectedSlug prop if provided (for desktop environment)
@@ -526,18 +529,18 @@ export default function Sidebar({
         bottomMargin="0px"
       >
         <div ref={scrollViewportRef} className="flex flex-col w-full">
-          {sessionNotesReady ? (
-            <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
-              <SearchBar
-                notes={notes}
-                onSearchResults={setLocalSearchResults}
-                sessionId={sessionId}
-                inputRef={searchInputRef}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                setHighlightedIndex={setHighlightedIndex}
-                clearSearch={clearSearch}
-              />
+          <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
+            <SearchBar
+              notes={isSidebarContentReady ? notes : []}
+              onSearchResults={setLocalSearchResults}
+              sessionId={sessionId}
+              inputRef={searchInputRef}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              setHighlightedIndex={setHighlightedIndex}
+              clearSearch={clearSearch}
+            />
+            {isSidebarContentReady ? (
               <SidebarContent
                 groupedNotes={groupedNotes}
                 selectedNoteSlug={selectedNoteSlug}
@@ -557,18 +560,10 @@ export default function Sidebar({
                 useCallbackNavigation={useCallbackNavigation}
                 isMobile={isMobile}
               />
-            </div>
-          ) : (
-            <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2 py-2`}>
-              <div className="h-7 rounded-md bg-muted-foreground/10 mb-3 animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-                <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-              </div>
-            </div>
-          )}
+            ) : (
+              <div className="h-1" />
+            )}
+          </div>
         </div>
       </ScrollArea>
       </div>

@@ -386,28 +386,6 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
     );
   }
 
-  // Show empty background while loading to prevent flash on desktop
-  if (loading) {
-    return <div className="h-full bg-background" />;
-  }
-
-  if (!selectionResolved) {
-    return (
-      <div className="notes-app h-full flex bg-background text-foreground">
-        <div className="w-[320px] border-r border-muted-foreground/20 bg-muted p-3">
-          <div className="h-7 rounded-md bg-muted-foreground/10 mb-3 animate-pulse" />
-          <div className="space-y-2">
-            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-            <div className="h-6 rounded bg-muted-foreground/10 animate-pulse" />
-          </div>
-        </div>
-        <div className="flex-1" />
-      </div>
-    );
-  }
-
   // Desktop view - show both sidebar and note
   return (
     <SessionNotesProvider>
@@ -419,12 +397,13 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         className="notes-app h-full flex bg-background text-foreground relative outline-none"
       >
             <Sidebar
-              notes={notes}
+              notes={loading ? [] : notes}
               onNoteSelect={handleNoteSelect}
               isMobile={false}
-              selectedSlug={selectedNoteSlug}
+              selectedSlug={selectionResolved ? selectedNoteSlug : null}
               useCallbackNavigation
               onNoteCreated={handleNoteCreated}
+              sidebarContentReady={!loading && selectionResolved}
             />
         <div className="flex-grow h-full overflow-hidden relative">
           {/* Drag overlay - matches nav height, doesn't affect layout */}
@@ -467,7 +446,9 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
             />
           )}
           <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
-            {selectedNote ? (
+            {loading || !selectionResolved ? (
+              <div className="w-full min-h-full p-3" />
+            ) : selectedNote ? (
               <div className="w-full min-h-full p-3">
                 <Note key={selectedNote.id} note={selectedNote} isMobile={false} />
               </div>
