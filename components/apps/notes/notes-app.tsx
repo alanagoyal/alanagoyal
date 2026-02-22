@@ -13,7 +13,8 @@ import {
 } from "@/lib/notes/display-created-at";
 import {
   NOTES_RESET_TO_FIRST_EVENT,
-  consumeNotesResetToFirstFlag,
+  hasNotesResetToFirstFlag,
+  clearNotesResetToFirstFlag,
 } from "@/lib/sidebar-persistence";
 import Sidebar from "./sidebar";
 import Note from "./note";
@@ -84,12 +85,12 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   useEffect(() => {
     if (isMobile || typeof window === "undefined") return;
 
-    if (consumeNotesResetToFirstFlag()) {
+    if (hasNotesResetToFirstFlag()) {
       requestFirstNoteReset();
     }
 
     const handleNotesReset = () => {
-      if (consumeNotesResetToFirstFlag()) {
+      if (hasNotesResetToFirstFlag()) {
         requestFirstNoteReset();
       }
     };
@@ -131,12 +132,18 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
           setSelectedNote(null);
           if (shouldForceFirstNote) {
             forceFirstNoteRef.current = false;
+            clearNotesResetToFirstFlag();
           }
         }
         return;
       }
 
       if (selectedSlugRef.current === targetSlug) {
+        if (shouldForceFirstNote) {
+          forceFirstNoteRef.current = false;
+          clearNotesResetToFirstFlag();
+          setUrl(`/notes/${targetSlug}`);
+        }
         return;
       }
 
@@ -150,6 +157,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         setSelectedNote(withDisplayCreatedAt(fullNote as NoteType));
         if (shouldForceFirstNote) {
           forceFirstNoteRef.current = false;
+          clearNotesResetToFirstFlag();
           setUrl(`/notes/${targetSlug}`);
         }
         return;
@@ -180,6 +188,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
       }
       if (shouldForceFirstNote) {
         forceFirstNoteRef.current = false;
+        clearNotesResetToFirstFlag();
       }
     }
 

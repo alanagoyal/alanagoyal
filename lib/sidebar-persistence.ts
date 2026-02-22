@@ -157,16 +157,21 @@ export function clearFinderState(): void {
   }
 }
 
-export function consumeNotesResetToFirstFlag(): boolean {
+export function hasNotesResetToFirstFlag(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const shouldReset = sessionStorage.getItem(STORAGE_KEYS.NOTES_RESET) === "1";
-    if (shouldReset) {
-      sessionStorage.removeItem(STORAGE_KEYS.NOTES_RESET);
-    }
-    return shouldReset;
+    return sessionStorage.getItem(STORAGE_KEYS.NOTES_RESET) === "1";
   } catch {
     return false;
+  }
+}
+
+export function clearNotesResetToFirstFlag(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.NOTES_RESET);
+  } catch {
+    // Ignore storage errors
   }
 }
 
