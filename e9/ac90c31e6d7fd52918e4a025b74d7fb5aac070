@@ -1,0 +1,25 @@
+app/api/validate-contact/route.ts
+  13551dd49c0d958a 2-12,14-24,32-73,76-78,80-92,97,99-100,107,109-110,117-126,130,132-133,140-145
+app/api/chat/route.ts
+  13551dd49c0d958a 4,14-15,23-30,115-156,158-165,167-176,181,183,186-188,192,249,251,266,271,277-278,285,288,292,296-297,302-388
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "e9ac90c31e6d7fd52918e4a025b74d7fb5aac070",
+  "prompts": {
+    "13551dd49c0d958a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c82f5-713d-7593-9c18-6d1c4bd538fc",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 309,
+      "total_deletions": 64,
+      "accepted_lines": 286,
+      "overriden_lines": 0
+    }
+  }
+}
