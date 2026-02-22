@@ -38,6 +38,8 @@ export function SessionNotesProvider({
   const supabase = useMemo(() => createBrowserClient(), []);
   const [sessionId, setSessionId] = useState<string>(initialSessionId ?? "");
   const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
+  // Intentionally bootstrap from initial props only once to avoid clobbering live context state
+  // after mount. If a future flow needs runtime session switching, key this provider by session.
   const didHydrateFromInitialPropsRef = useRef(false);
 
   useEffect(() => {
