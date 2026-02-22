@@ -1,0 +1,25 @@
+lib/sidebar-persistence.ts
+  2e44bab379f6ec06 36,47-48,160-177,434-436,462
+components/apps/notes/notes-app.tsx
+  2e44bab379f6ec06 14-17,34,46-53,84-101,126-127,132-134,151-154,163,178,181-182,191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "3c9228409ad5f9e507817dcf98e58511250a238f",
+  "prompts": {
+    "2e44bab379f6ec06": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c82f7-ee7d-7552-9d0c-b88706b93f83",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 77,
+      "total_deletions": 4,
+      "accepted_lines": 77,
+      "overriden_lines": 0
+    }
+  }
+}
