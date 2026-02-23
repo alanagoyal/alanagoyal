@@ -39,6 +39,7 @@ export function SessionNotesProvider({
   const [sessionId, setSessionId] = useState<string>(initialSessionId ?? "");
   const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
   const seededSessionIdRef = useRef(initialSessionId ?? "");
+  const skipInitialFetchRef = useRef((initialSessionId ?? "").length > 0 && (initialNotes ?? []).length > 0);
 
   useEffect(() => {
     const seedSessionId = initialSessionId ?? "";
@@ -68,6 +69,11 @@ export function SessionNotesProvider({
   }, [supabase, sessionId]);
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
+
     refreshSessionNotes();
   }, [refreshSessionNotes, sessionId, supabase]);
 
