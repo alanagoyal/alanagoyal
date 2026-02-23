@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Note } from "@/lib/notes/types";
@@ -27,12 +28,37 @@ export const SessionNotesContext = createContext<SessionNotes>({
 
 export function SessionNotesProvider({
   children,
+  initialSessionId,
+  initialNotes,
 }: {
   children: React.ReactNode;
+  initialSessionId?: string;
+  initialNotes?: Note[];
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [sessionId, setSessionId] = useState<string>(initialSessionId ?? "");
+  const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
+  const seededSessionIdRef = useRef(initialSessionId ?? "");
+
+  useEffect(() => {
+    const seedSessionId = initialSessionId ?? "";
+    const seedNotes = initialNotes ?? [];
+    const hasSeedData = seedSessionId.length > 0 || seedNotes.length > 0;
+    if (!hasSeedData) return;
+
+    // Session identity changed: re-seed provider state from incoming bootstrap data.
+    if (seededSessionIdRef.current !== seedSessionId) {
+      seededSessionIdRef.current = seedSessionId;
+      setSessionId(seedSessionId);
+      setNotes(seedNotes);
+      return;
+    }
+
+    // Same session: only backfill notes when provider is still empty.
+    if (seedNotes.length > 0) {
+      setNotes((current) => (current.length === 0 ? seedNotes : current));
+    }
+  }, [initialSessionId, initialNotes]);
 
   const refreshSessionNotes = useCallback(async () => {
     if (sessionId) {
