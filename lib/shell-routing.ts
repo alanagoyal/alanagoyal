@@ -51,9 +51,13 @@ export function isNotesDetailPathname(pathname: string): boolean {
   return pathname.startsWith(`${SHELL_NOTES_ROOT_PATH}/`);
 }
 
+function matchesRouteSegment(pathname: string, routePrefix: string): boolean {
+  return pathname === routePrefix || pathname.startsWith(`${routePrefix}/`);
+}
+
 export function getShellAppIdFromPathname(pathname: string, fallbackAppId = SHELL_DEFAULT_APP_ID): string {
   const normalizedPathname = normalizeShellPathname(pathname);
-  const routeMatch = APP_ROUTE_PREFIXES.find(({ prefix }) => normalizedPathname.startsWith(prefix));
+  const routeMatch = APP_ROUTE_PREFIXES.find(({ prefix }) => matchesRouteSegment(normalizedPathname, prefix));
   return routeMatch?.appId ?? fallbackAppId;
 }
 
