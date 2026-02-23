@@ -33,6 +33,12 @@ function getTaskText(node: React.ReactNode): string {
   return getTaskText(node.props.children);
 }
 
+function normalizeTabsForMarkdown(content: string): string {
+  // Preserve literal tab characters in markdown rendering without triggering
+  // indented code blocks for lines that start with tabs.
+  return content.replace(/\t/g, "&#9;");
+}
+
 export default function NoteContent({
   note,
   saveNote,
@@ -312,7 +318,7 @@ export default function NoteContent({
               img: renderImage,
             }}
           >
-            {note.content || "Start writing..."}
+            {normalizeTabsForMarkdown(note.content || "Start writing...")}
           </ReactMarkdown>
         </div>
       )}
