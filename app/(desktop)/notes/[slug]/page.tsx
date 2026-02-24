@@ -77,9 +77,9 @@ export default async function NotePage({ params }: PageProps) {
   const note = await getNote(cleanSlug);
   const initialIsMobile = await isMobileRequest();
 
-  // Invalid slug - redirect to error page
+  // Invalid slug - redirect back to the notes app
   if (!note) {
-    return redirect("/notes/error");
+    return redirect("/notes");
   }
 
   // Render Desktop with notes app focused on this specific note

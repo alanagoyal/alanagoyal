@@ -3,18 +3,20 @@ export const SHELL_DEFAULT_APP_ID = "notes";
 export const SHELL_DEFAULT_NOTE_SLUG = "about-me";
 export const SHELL_NOTES_ROOT_PATH = "/notes";
 
-const APP_ROUTE_PREFIXES = [
-  { prefix: "/settings", appId: "settings" },
-  { prefix: "/messages", appId: "messages" },
-  { prefix: "/notes", appId: "notes" },
-  { prefix: "/iterm", appId: "iterm" },
-  { prefix: "/finder", appId: "finder" },
-  { prefix: "/photos", appId: "photos" },
-  { prefix: "/calendar", appId: "calendar" },
-  { prefix: "/music", appId: "music" },
-  { prefix: "/textedit", appId: "textedit" },
-  { prefix: "/preview", appId: "preview" },
-] as const;
+const APP_ROUTE_SEGMENTS = {
+  settings: "settings",
+  messages: "messages",
+  notes: "notes",
+  iterm: "iterm",
+  finder: "finder",
+  photos: "photos",
+  calendar: "calendar",
+  music: "music",
+  textedit: "textedit",
+  preview: "preview",
+} as const;
+
+const APP_ROUTE_SEGMENT_SET = new Set(Object.keys(APP_ROUTE_SEGMENTS));
 
 type ShellContext = "desktop" | "mobile";
 
@@ -53,8 +55,12 @@ export function isNotesDetailPathname(pathname: string): boolean {
 
 export function getShellAppIdFromPathname(pathname: string, fallbackAppId = SHELL_DEFAULT_APP_ID): string {
   const normalizedPathname = normalizeShellPathname(pathname);
-  const routeMatch = APP_ROUTE_PREFIXES.find(({ prefix }) => normalizedPathname.startsWith(prefix));
-  return routeMatch?.appId ?? fallbackAppId;
+  const segments = normalizedPathname.split("/").filter(Boolean);
+  const firstSegment = segments[0];
+  if (firstSegment && APP_ROUTE_SEGMENT_SET.has(firstSegment)) {
+    return APP_ROUTE_SEGMENTS[firstSegment as keyof typeof APP_ROUTE_SEGMENTS];
+  }
+  return fallbackAppId;
 }
 
 export function getNoteSlugFromShellPathname(pathname: string): string | undefined {
