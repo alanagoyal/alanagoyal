@@ -8,7 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { setUrl } from "@/lib/set-url";
 import { loadNotesSelectedSlug, saveNotesSelectedSlug } from "@/lib/sidebar-persistence";
-import { getNoteSlugFromShellPathname } from "@/lib/shell-routing";
+import {
+  getNoteSlugFromShellPathname,
+  SHELL_NOTES_ROOT_PATH,
+} from "@/lib/shell-routing";
 import { getNotesSelectedSlugMemory, setNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { groupNotesByCategory, sortGroupedNotes } from "@/lib/notes/note-utils";
 import {
@@ -62,6 +65,16 @@ function getTopmostNoteSlug(notes: NoteType[]): string | undefined {
   return notes[0]?.slug;
 }
 
+
+function isNotesRoute(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname === SHELL_NOTES_ROOT_PATH ||
+    pathname.startsWith(`${SHELL_NOTES_ROOT_PATH}/`)
+  );
+}
+
+
 interface NotesAppProps {
   isMobile?: boolean;
   inShell?: boolean; // When true, enables drag overlay for desktop window shell
@@ -80,6 +93,16 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
   const windowFocus = useWindowFocus();
+  const canUpdateNotesUrl = useCallback(() => {
+    if (windowFocus?.isFocused) return true;
+    if (typeof window === "undefined") return false;
+    return isNotesRoute(window.location.pathname);
+  }, [windowFocus]);
+  const safeSetNotesUrl = useCallback((url: string) => {
+    if (canUpdateNotesUrl()) {
+      setUrl(url);
+    }
+  }, [canUpdateNotesUrl]);
   // Container ref for scoping dialogs to this app (fallback when not in desktop shell)
   const containerRef = useRef<HTMLDivElement>(null);
   // Track selected slug in a ref so async startup sync doesn't overwrite newer manual selection.
@@ -233,7 +256,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
         if (!isMobile) {
           const expectedPath = `/notes/${encodeURIComponent(targetSlug)}`;
           if (window.location.pathname !== expectedPath) {
-            setUrl(expectedPath);
+            safeSetNotesUrl(expectedPath);
           }
         }
         return;
@@ -258,14 +281,14 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug, initi
           selectedSlugRef.current = fallbackSlug;
           persistDesktopSelection(fallbackSlug);
           setSelectedNote(withDisplayCreatedAt(fallbackFullNote as NoteType));
-          setUrl(`/notes/${encodeURIComponent(fallbackSlug)}`);
+          safeSetNotesUrl(`/notes/${encodeURIComponent(fallbackSlug)}`);
           return;
         }
       }
 
       setSelectedNote(null);
       if (routeSlug) {
-        setUrl("/notes");
+        safeSetNotesUrl("/notes");
       }
     }
 
