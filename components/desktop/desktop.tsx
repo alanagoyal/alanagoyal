@@ -16,6 +16,7 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
+import { HOME_DIR, PROJECTS_DIR, isSupportedTextEditPath } from "@/lib/file-route-utils";
 import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -50,21 +51,17 @@ interface DesktopProps {
   initialPreviewFile?: string;
 }
 
-// Constants for file paths
-const HOME_DIR = "/Users/alanagoyal";
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
-
 // Fetch file content from GitHub API
-async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string> {
+async function fetchFileContentFromGitHub(repo: string, path: string): Promise<string | null> {
   try {
     return await fetchGitHubFileContent(repo, path);
   } catch {
-    return "";
+    return null;
   }
 }
 
 // Fetch file content given a full path
-async function fetchFileContent(filePath: string): Promise<string> {
+async function fetchFileContent(filePath: string): Promise<string | null> {
   if (filePath.startsWith(PROJECTS_DIR + "/")) {
     const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
     const parts = relativePath.split("/");
@@ -75,7 +72,7 @@ async function fetchFileContent(filePath: string): Promise<string> {
   if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
     return "hello world!";
   }
-  return "";
+  return null;
 }
 
 // Calculate optimal window size for an image based on its dimensions
@@ -175,6 +172,25 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
   );
+  const focusFinderWindow = useCallback(() => {
+    const windowState = getWindow("finder");
+    if (windowState?.isOpen) {
+      if (windowState.isMinimized) {
+        restoreWindow("finder");
+      } else {
+        focusWindow("finder");
+      }
+      return;
+    }
+    openWindow("finder");
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+
+  const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
+    focusFinderWindow();
+    setUrl("/finder");
+    markProcessed();
+  }, [focusFinderWindow]);
+
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
@@ -261,7 +277,15 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
       });
       setUrlFileProcessed(true);
     } else {
+      if (!isSupportedTextEditPath(initialTextEditFile)) {
+        handleInvalidFileRoute(() => setUrlFileProcessed(true));
+        return;
+      }
       fetchFileContent(initialTextEditFile).then((content) => {
+        if (content === null) {
+          handleInvalidFileRoute(() => setUrlFileProcessed(true));
+          return;
+        }
         openMultiWindow("textedit", initialTextEditFile, {
           filePath: initialTextEditFile,
           content,
@@ -269,7 +293,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         setUrlFileProcessed(true);
       });
     }
-  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow]);
+  }, [initialTextEditFile, urlFileProcessed, existingWindowId, openMultiWindow, handleInvalidFileRoute]);
 
   // Open Preview file from URL on mount (only once)
   const existingPreviewWindow = initialPreviewFile
@@ -311,9 +335,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         });
       }
     } else {
-      setUrlPreviewProcessed(true);
+      handleInvalidFileRoute(() => setUrlPreviewProcessed(true));
     }
-  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow]);
+  }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow, handleInvalidFileRoute]);
 
   // Update URL when focus changes
   useEffect(() => {
