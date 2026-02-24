@@ -7,8 +7,9 @@
  *                          on mobile: shows sidebar (no redirect)
  * - /notes/{slug}        → shows the note (notes focused)
  * - /{app}               → shows default desktop with that app focused
- * - /notes/{invalid}     → redirects to /notes/error
+ * - /notes/{invalid}     → redirects to /notes (notes app chooses top/default note)
  * - /{legacy-slug}       → redirects to /notes/{legacy-slug} (server-side, permanent)
+ * - /{app}/{extra}       → redirects to /{app} for root-only apps via App Router catch-all pages
  * - /{other}             → 404
  */
 
