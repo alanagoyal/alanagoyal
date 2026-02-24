@@ -11,8 +11,14 @@ import {
   formatConversationReversed,
   getConversationState,
 } from "@/lib/messages/temporal-context";
-import { checkRateLimit, applyRateLimitHeaders, pickMostConstrainedRateLimit } from "@/lib/server/rate-limit";
-import { applySessionCookie, getClientIdentity, parseJsonBodyWithLimit } from "@/lib/server/request-security";
+import {
+  applyRateLimitHeaders,
+  applySessionCookie,
+  checkRateLimit,
+  getClientIdentity,
+  parseJsonBodyWithLimit,
+  pickMostConstrainedRateLimit,
+} from "@/lib/server/request-security";
 
 // Keep route execution under strict serverless limits (for example 15s).
 export const maxDuration = 14;
@@ -180,7 +186,26 @@ export async function POST(req: NextRequest) {
       isOneOnOne: isOneOnOneRaw = false,
     } = parsedBody.body;
 
-    const recipients = sanitizeRecipients(recipientsRaw);
+    if (Array.isArray(recipientsRaw) && recipientsRaw.length > CHAT_MAX_RECIPIENTS) {
+      return jsonResponse(
+        { error: `Too many recipients (max ${CHAT_MAX_RECIPIENTS})` },
+        { status: 400 }
+      );
+    }
+
+    const isRecipientLike = (value: unknown): value is Recipient => {
+      if (!value || typeof value !== "object") return false;
+      const maybeName = (value as { name?: unknown }).name;
+      return (
+        typeof maybeName === "string" &&
+        maybeName.trim().length > 0 &&
+        maybeName.trim().length <= CHAT_MAX_RECIPIENT_NAME_CHARS
+      );
+    };
+
+    const recipients = (Array.isArray(recipientsRaw) ? recipientsRaw : []).filter(
+      isRecipientLike
+    );
 
     if (recipients.length === 0) {
       return jsonResponse(
@@ -189,7 +214,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const messages = sanitizeMessages(messagesRaw);
+    if (Array.isArray(messagesRaw) && messagesRaw.length > CHAT_MAX_MESSAGES) {
+      return jsonResponse(
+        { error: `Too many messages (max ${CHAT_MAX_MESSAGES})` },
+        { status: 400 }
+      );
+    }
+
+    const isMessageLike = (value: unknown): value is Message => {
+      if (!value || typeof value !== "object") return false;
+      const v = value as { sender?: unknown; content?: unknown };
+      return (
+        typeof v.sender === "string" &&
+        typeof v.content === "string" &&
+        v.content.length <= CHAT_MAX_MESSAGE_CHARS
+      );
+    };
+
+    const messages = (Array.isArray(messagesRaw) ? messagesRaw : []).filter(
+      isMessageLike
+    );
+
+    const totalMessageChars = messages.reduce((sum, message) => {
+      return sum + message.content.length;
+    }, 0);
+    if (totalMessageChars > CHAT_MAX_TOTAL_MESSAGE_CHARS) {
+      return jsonResponse(
+        { error: `Message content too large (max ${CHAT_MAX_TOTAL_MESSAGE_CHARS} chars total)` },
+        { status: 400 }
+      );
+    }
+
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
 
     // Get conversation state
@@ -297,95 +352,6 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function sanitizeRecipients(rawRecipients: unknown): Recipient[] {
-  const source = Array.isArray(rawRecipients) ? rawRecipients : [];
-  const recipients: Recipient[] = [];
-
-  for (const value of source) {
-    if (!value || typeof value !== "object") continue;
-
-    const maybeName = (value as { name?: unknown }).name;
-    if (typeof maybeName !== "string") continue;
-
-    const name = maybeName.trim();
-    if (!name || name.length > CHAT_MAX_RECIPIENT_NAME_CHARS) continue;
-
-    const maybeId = (value as { id?: unknown }).id;
-    const id =
-      typeof maybeId === "string" && maybeId.trim().length > 0
-        ? maybeId.trim()
-        : crypto.randomUUID();
-
-    recipients.push({ id, name });
-    if (recipients.length >= CHAT_MAX_RECIPIENTS) break;
-  }
-
-  return recipients;
-}
-
-function sanitizeMessages(rawMessages: unknown): Message[] {
-  const source = Array.isArray(rawMessages) ? rawMessages : [];
-  const normalized: Message[] = [];
-
-  for (let index = 0; index < source.length; index++) {
-    const value = source[index];
-    if (!value || typeof value !== "object") continue;
-
-    const maybeSender = (value as { sender?: unknown }).sender;
-    const maybeContent = (value as { content?: unknown }).content;
-    if (typeof maybeSender !== "string" || typeof maybeContent !== "string") {
-      continue;
-    }
-
-    const sender = maybeSender.trim().slice(0, CHAT_MAX_RECIPIENT_NAME_CHARS);
-    const content = maybeContent.trim().slice(0, CHAT_MAX_MESSAGE_CHARS);
-    if (!sender || !content) continue;
-
-    const maybeTimestamp = (value as { timestamp?: unknown }).timestamp;
-    const timestamp =
-      typeof maybeTimestamp === "string" && maybeTimestamp.trim().length > 0
-        ? maybeTimestamp
-        : new Date().toISOString();
-
-    const maybeId = (value as { id?: unknown }).id;
-    const id =
-      typeof maybeId === "string" && maybeId.trim().length > 0
-        ? maybeId.trim()
-        : `msg-${index}`;
-
-    normalized.push({
-      id,
-      sender,
-      content,
-      timestamp,
-    });
-  }
-
-  const boundedMessages = normalized.slice(-CHAT_MAX_MESSAGES);
-  let totalChars = boundedMessages.reduce((sum, message) => {
-    return sum + message.content.length;
-  }, 0);
-
-  while (
-    boundedMessages.length > 1 &&
-    totalChars > CHAT_MAX_TOTAL_MESSAGE_CHARS
-  ) {
-    const removed = boundedMessages.shift();
-    if (!removed) break;
-    totalChars -= removed.content.length;
-  }
-
-  if (boundedMessages.length === 1 && totalChars > CHAT_MAX_TOTAL_MESSAGE_CHARS) {
-    const [message] = boundedMessages;
-    boundedMessages[0] = {
-      ...message,
-      content: message.content.slice(0, CHAT_MAX_TOTAL_MESSAGE_CHARS),
-    };
-  }
-
-  return boundedMessages;
 }
 
 function buildOneOnOnePrompt(

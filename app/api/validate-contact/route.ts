@@ -2,13 +2,11 @@ import { initLogger, invoke, wrapTraced } from "braintrust";
 import { NextRequest, NextResponse } from "next/server";
 import {
   applyRateLimitHeaders,
-  checkRateLimit,
-  pickMostConstrainedRateLimit,
-} from "@/lib/server/rate-limit";
-import {
   applySessionCookie,
+  checkRateLimit,
   getClientIdentity,
   parseJsonBodyWithLimit,
+  pickMostConstrainedRateLimit,
 } from "@/lib/server/request-security";
 
 const VALIDATE_CONTACT_MAX_BODY_BYTES = 4 * 1024;
