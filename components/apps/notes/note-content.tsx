@@ -12,6 +12,9 @@ import {
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
 
+const SPACE_TAB = "  ";
+const NBSP_TAB = "\u00a0\u00a0";
+
 function getTaskText(node: React.ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
     return String(node);
@@ -166,8 +169,10 @@ export default function NoteContent({
         const line = content.substring(lineStart, actualLineEnd);
         let outdented = line;
 
-        if (line.startsWith('  ')) {
-          outdented = line.substring(2);
+        if (line.startsWith(NBSP_TAB)) {
+          outdented = line.substring(NBSP_TAB.length);
+        } else if (line.startsWith(SPACE_TAB)) {
+          outdented = line.substring(SPACE_TAB.length);
         } else if (line.startsWith('\t')) {
           outdented = line.substring(1);
         } else if (line.startsWith(' ')) {
@@ -184,8 +189,8 @@ export default function NoteContent({
           textarea.setSelectionRange(start - charsDiff, end - charsDiff);
         }, 0);
       } else {
-        // Tab: Indent (add 2 spaces)
-        const indent = '  ';
+        // Tab: Indent using NBSP so repeated tabs don't become markdown indented code blocks
+        const indent = NBSP_TAB;
         const newContent = content.substring(0, lineStart) + indent + content.substring(lineStart);
 
         saveNote({ content: newContent });
