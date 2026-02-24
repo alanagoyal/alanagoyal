@@ -148,6 +148,25 @@
   border-radius: 3px;
 }
 
+.markdown-body pre code {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  font-size: 100%;
+}
+
+.dark .markdown-body code {
+  background-color: #30363d;
+}
+
+.dark .markdown-body pre {
+  background-color: #1f2937;
+}
+
+.dark .markdown-body pre code {
+  background-color: transparent;
+}
+
 .markdown-body table {
   border-collapse: collapse;
   width: 100%;
