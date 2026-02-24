@@ -8,14 +8,19 @@ import { Note as NoteType } from "@/lib/notes/types";
 import { NotesDesktopPage } from "./notes-desktop-page";
 
 // Cached function to fetch a note by slug - eliminates duplicate fetches
-const getNote = cache(async (slug: string) => {
+const getNote = cache(async (slug: string): Promise<NoteType | null> => {
   const supabase = await createServerClient();
-  const { data: note } = (await supabase
+  const { data: note, error } = await supabase
     .rpc("select_note", {
       note_slug_arg: slug,
     })
-    .single()) as { data: NoteType | null };
-  return note;
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load note "${slug}": ${error.message}`);
+  }
+
+  return note as NoteType | null;
 });
 
 // Dynamically determine if this is a user note
@@ -77,9 +82,9 @@ export default async function NotePage({ params }: PageProps) {
   const note = await getNote(cleanSlug);
   const initialIsMobile = await isMobileRequest();
 
-  // Invalid slug - redirect to error page
+  // Invalid slug - fall back to the default notes view
   if (!note) {
-    return redirect("/notes/error");
+    return redirect("/notes");
   }
 
   // Render Desktop with notes app focused on this specific note
