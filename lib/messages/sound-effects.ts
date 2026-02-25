@@ -1,3 +1,5 @@
+import { detectMobileClientFromWindow } from "@/lib/device-detection";
+
 class SoundEffectPlayer {
   private static instance: SoundEffectPlayer;
   private sentSound: HTMLAudioElement | null = null;
@@ -9,22 +11,21 @@ class SoundEffectPlayer {
   private volume: number = 0.5;
 
   private constructor() {
-    if (typeof window !== 'undefined') {
-      // Check if device is mobile
-      this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (typeof window !== "undefined") {
+      this.isMobile = detectMobileClientFromWindow();
 
       // Get sound preference from localStorage, default to !isMobile if not set
-      const storedEnabled = localStorage.getItem('soundEnabled');
-      this.enabled = storedEnabled !== null ? storedEnabled === 'true' : !this.isMobile;
+      const storedEnabled = localStorage.getItem("soundEnabled");
+      this.enabled = storedEnabled !== null ? storedEnabled === "true" : !this.isMobile;
 
       // Get volume from localStorage
-      const storedVolume = localStorage.getItem('soundVolume');
+      const storedVolume = localStorage.getItem("soundVolume");
       this.volume = storedVolume !== null ? parseFloat(storedVolume) : 0.5;
 
-      this.sentSound = new Audio('/messages/sound-effects/sent.m4a');
-      this.receivedSound = new Audio('/messages/sound-effects/received.m4a');
-      this.unreadSound = new Audio('/messages/sound-effects/unread.m4a');
-      this.reactionSound = new Audio('/messages/sound-effects/reaction.m4a');
+      this.sentSound = new Audio("/messages/sound-effects/sent.m4a");
+      this.receivedSound = new Audio("/messages/sound-effects/received.m4a");
+      this.unreadSound = new Audio("/messages/sound-effects/unread.m4a");
+      this.reactionSound = new Audio("/messages/sound-effects/reaction.m4a");
 
       this.applyVolume();
     }
@@ -45,7 +46,7 @@ class SoundEffectPlayer {
   }
 
   public playSentSound() {
-    if (this.enabled && typeof window !== 'undefined' && this.sentSound) {
+    if (this.enabled && typeof window !== "undefined" && this.sentSound) {
       this.sentSound.currentTime = 0;
       this.sentSound.play().catch(() => {
         // Silently handle autoplay restrictions
@@ -54,7 +55,7 @@ class SoundEffectPlayer {
   }
 
   public playUnreadSound() {
-    if (this.enabled && typeof window !== 'undefined' && this.unreadSound) {
+    if (this.enabled && typeof window !== "undefined" && this.unreadSound) {
       this.unreadSound.currentTime = 0;
       this.unreadSound.play().catch(() => {
         // Silently handle autoplay restrictions
@@ -63,7 +64,7 @@ class SoundEffectPlayer {
   }
 
   public playReceivedSound() {
-    if (this.enabled && typeof window !== 'undefined' && this.receivedSound) {
+    if (this.enabled && typeof window !== "undefined" && this.receivedSound) {
       this.receivedSound.currentTime = 0;
       this.receivedSound.play().catch(() => {
         // Silently handle autoplay restrictions
@@ -72,7 +73,7 @@ class SoundEffectPlayer {
   }
 
   public playReactionSound() {
-    if (this.enabled && typeof window !== 'undefined' && this.reactionSound) {
+    if (this.enabled && typeof window !== "undefined" && this.reactionSound) {
       this.reactionSound.currentTime = 0;
       this.reactionSound.play().catch(() => {
         // Silently handle autoplay restrictions
@@ -82,8 +83,8 @@ class SoundEffectPlayer {
 
   public toggleSound() {
     this.enabled = !this.enabled;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('soundEnabled', this.enabled.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("soundEnabled", this.enabled.toString());
     }
   }
 
@@ -102,8 +103,8 @@ class SoundEffectPlayer {
   public setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(1, volume));
     this.applyVolume();
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('soundVolume', this.volume.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("soundVolume", this.volume.toString());
     }
   }
 }
