@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SHELL_POINTER_MEDIA_QUERY } from "@/lib/shell-routing";
+import {
+  SHELL_POINTER_MEDIA_QUERY,
+  detectMobileClientFromWindow,
+} from "@/lib/device-detection";
+
+const SHELL_ADDITIONAL_MEDIA_QUERIES = ["(any-pointer: coarse)", "(any-hover: none)"] as const;
 
 export function useShellIsMobile(initialIsMobile?: boolean): boolean | null {
   const [isMobile, setIsMobile] = useState<boolean | null>(
@@ -9,16 +14,28 @@ export function useShellIsMobile(initialIsMobile?: boolean): boolean | null {
   );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(SHELL_POINTER_MEDIA_QUERY);
+    const mediaQueries = [
+      window.matchMedia(SHELL_POINTER_MEDIA_QUERY),
+      ...SHELL_ADDITIONAL_MEDIA_QUERIES.map((query) => window.matchMedia(query)),
+    ];
+
     const syncIsMobile = () => {
-      setIsMobile(mediaQuery.matches);
+      setIsMobile(detectMobileClientFromWindow());
     };
 
     syncIsMobile();
-    mediaQuery.addEventListener("change", syncIsMobile);
+
+    mediaQueries.forEach((mediaQuery) => {
+      mediaQuery.addEventListener("change", syncIsMobile);
+    });
+
+    window.addEventListener("resize", syncIsMobile);
 
     return () => {
-      mediaQuery.removeEventListener("change", syncIsMobile);
+      mediaQueries.forEach((mediaQuery) => {
+        mediaQuery.removeEventListener("change", syncIsMobile);
+      });
+      window.removeEventListener("resize", syncIsMobile);
     };
   }, []);
 

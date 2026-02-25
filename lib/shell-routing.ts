@@ -1,4 +1,3 @@
-export const SHELL_POINTER_MEDIA_QUERY = "(pointer: coarse)";
 export const SHELL_DEFAULT_APP_ID = "notes";
 export const SHELL_DEFAULT_NOTE_SLUG = "about-me";
 export const SHELL_NOTES_ROOT_PATH = "/notes";
