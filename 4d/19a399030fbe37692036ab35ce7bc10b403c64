@@ -1,0 +1,29 @@
+lib/device-detection.ts
+  d7ece9add10af30a 1-70
+lib/messages/sound-effects.ts
+  d7ece9add10af30a 1-2,14-15,18-19,22,25-28,49,58,67,76,86-87,106-107
+lib/is-mobile-request.ts
+  d7ece9add10af30a 2,7-10
+lib/use-shell-is-mobile.ts
+  d7ece9add10af30a 5-7,9,17-21,23,27-32,35-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "4d19a399030fbe37692036ab35ce7bc10b403c64",
+  "prompts": {
+    "d7ece9add10af30a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c92a3-c49e-7d12-ad54-f4ed4e5ff6e9",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 116,
+      "total_deletions": 34,
+      "accepted_lines": 115,
+      "overriden_lines": 0
+    }
+  }
+}
