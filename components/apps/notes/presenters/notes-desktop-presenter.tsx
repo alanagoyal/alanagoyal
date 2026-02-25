@@ -10,7 +10,7 @@ import Note from "../note";
 type WindowFocusValue = ReturnType<typeof useWindowFocus>;
 
 interface NotesDesktopPresenterProps {
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef: RefObject<HTMLDivElement>;
   handleNoteCreated: (note: NoteType) => void;
   handleNoteSelect: (note: NoteType) => Promise<void>;
   inShell: boolean;
