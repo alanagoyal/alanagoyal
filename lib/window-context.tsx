@@ -18,6 +18,7 @@ import { APPS, getAppById } from "./app-config";
 import { clearAppState, clearAllAppState } from "./sidebar-persistence";
 
 const STORAGE_KEY = "desktop-window-state";
+const WINDOW_STATE_PERSIST_DEBOUNCE_MS = 1000;
 
 // =============================================================================
 // Multi-Window Helpers
@@ -218,10 +219,10 @@ function loadStateFromStorage(): WindowManagerState | null {
   return null;
 }
 
-function saveStateToStorage(state: WindowManagerState): void {
+function saveSerializedStateToStorage(serializedState: string): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sessionStorage.setItem(STORAGE_KEY, serializedState);
   } catch (e) {
     console.error("Failed to save window state:", e);
   }
@@ -863,6 +864,7 @@ export function WindowManagerProvider({
     null
   );
   const latestStateRef = React.useRef<WindowManagerState | null>(null);
+  const lastPersistedStateRef = React.useRef<string | null>(null);
   /**
    * Compute initial state based on:
    * 1. Whether user has saved state (sessionStorage)
@@ -939,9 +941,13 @@ export function WindowManagerProvider({
     }
 
     persistTimeoutRef.current = setTimeout(() => {
-      saveStateToStorage(state);
+      const serializedState = JSON.stringify(state);
+      if (serializedState !== lastPersistedStateRef.current) {
+        saveSerializedStateToStorage(serializedState);
+        lastPersistedStateRef.current = serializedState;
+      }
       persistTimeoutRef.current = null;
-    }, 200);
+    }, WINDOW_STATE_PERSIST_DEBOUNCE_MS);
 
     return () => {
       if (persistTimeoutRef.current) {
@@ -957,7 +963,11 @@ export function WindowManagerProvider({
         clearTimeout(persistTimeoutRef.current);
       }
       if (latestStateRef.current) {
-        saveStateToStorage(latestStateRef.current);
+        const serializedState = JSON.stringify(latestStateRef.current);
+        if (serializedState !== lastPersistedStateRef.current) {
+          saveSerializedStateToStorage(serializedState);
+          lastPersistedStateRef.current = serializedState;
+        }
       }
     };
   }, []);
