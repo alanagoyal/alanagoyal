@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
+import { NextRequest, NextResponse } from "next/server";
 import { Recipient, Message } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
@@ -10,6 +11,14 @@ import {
   formatConversationReversed,
   getConversationState,
 } from "@/lib/messages/temporal-context";
+import {
+  applyRateLimitHeaders,
+  applySessionCookie,
+  checkRateLimit,
+  getClientIdentity,
+  parseJsonBodyWithLimit,
+  pickMostConstrainedRateLimit,
+} from "@/lib/server/request-security";
 
 // Keep route execution under strict serverless limits (for example 15s).
 export const maxDuration = 14;
@@ -17,6 +26,14 @@ export const maxDuration = 14;
 let client: OpenAI | null = null;
 let loggerInitialized = false;
 const CHAT_REQUEST_TIMEOUT_MS = 9000;
+const CHAT_MAX_BODY_BYTES = 128 * 1024;
+const CHAT_MAX_RECIPIENTS = 4;
+const CHAT_MAX_RECIPIENT_NAME_CHARS = 80;
+const CHAT_MAX_MESSAGES = 60;
+const CHAT_MAX_MESSAGE_CHARS = 1200;
+const CHAT_MAX_TOTAL_MESSAGE_CHARS = 12000;
+const CHAT_RATE_LIMIT_SESSION = { scope: "chat_session", limit: 30, windowMs: 60_000 } as const;
+const CHAT_RATE_LIMIT_IP = { scope: "chat_ip", limit: 120, windowMs: 60_000 } as const;
 
 function parseToolCallArguments(
   rawArguments: string | undefined,
@@ -101,25 +118,89 @@ async function createChatCompletionWithTimeout(
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const identity = getClientIdentity(req);
+  const sessionRateLimit = checkRateLimit(identity.sessionId, CHAT_RATE_LIMIT_SESSION);
+  const ipRateLimit = checkRateLimit(identity.ip, CHAT_RATE_LIMIT_IP);
+  const activeRateLimit = pickMostConstrainedRateLimit([
+    sessionRateLimit,
+    ipRateLimit,
+  ]);
+
+  const jsonResponse = (
+    body: unknown,
+    init?: ResponseInit,
+    rateLimit = activeRateLimit
+  ) => {
+    const response = NextResponse.json(body, init);
+    applyRateLimitHeaders(response.headers, rateLimit);
+    applySessionCookie(response, identity);
+    return response;
+  };
+
+  if (!sessionRateLimit.allowed || !ipRateLimit.allowed) {
+    const blockedRateLimit = !sessionRateLimit.allowed
+      ? sessionRateLimit
+      : ipRateLimit;
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil(blockedRateLimit.retryAfterMs / 1000)
+    );
+    const response = jsonResponse(
+      {
+        actions: [{ action: "wait" }],
+        degraded: true,
+        reason: "rate_limited",
+        retryAfterSeconds,
+      },
+      { status: 200 },
+      blockedRateLimit
+    );
+    response.headers.set("Retry-After", retryAfterSeconds.toString());
+    return response;
+  }
+
   try {
-    const body = await req.json().catch(() => ({}));
+    const parsedBody = await parseJsonBodyWithLimit<Record<string, unknown>>(
+      req,
+      CHAT_MAX_BODY_BYTES
+    );
+
+    if (!parsedBody.ok) {
+      if (parsedBody.reason === "too_large") {
+        return jsonResponse(
+          {
+            actions: [{ action: "wait" }],
+            degraded: true,
+            reason: "payload_too_large",
+          },
+          { status: 200 }
+        );
+      }
+      return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
     const {
       recipients: recipientsRaw,
       messages: messagesRaw,
       isOneOnOne: isOneOnOneRaw = false,
-    } = body as Record<string, unknown>;
+    } = parsedBody.body;
+
+    if (Array.isArray(recipientsRaw) && recipientsRaw.length > CHAT_MAX_RECIPIENTS) {
+      return jsonResponse(
+        { error: `Too many recipients (max ${CHAT_MAX_RECIPIENTS})` },
+        { status: 400 }
+      );
+    }
 
     const isRecipientLike = (value: unknown): value is Recipient => {
       if (!value || typeof value !== "object") return false;
       const maybeName = (value as { name?: unknown }).name;
-      return typeof maybeName === "string" && maybeName.trim().length > 0;
-    };
-
-    const isMessageLike = (value: unknown): value is Message => {
-      if (!value || typeof value !== "object") return false;
-      const v = value as { sender?: unknown; content?: unknown };
-      return typeof v.sender === "string" && typeof v.content === "string";
+      return (
+        typeof maybeName === "string" &&
+        maybeName.trim().length > 0 &&
+        maybeName.trim().length <= CHAT_MAX_RECIPIENT_NAME_CHARS
+      );
     };
 
     const recipients = (Array.isArray(recipientsRaw) ? recipientsRaw : []).filter(
@@ -127,15 +208,42 @@ export async function POST(req: Request) {
     );
 
     if (recipients.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Missing or invalid recipients" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: "Missing or invalid recipients" },
+        { status: 400 }
       );
     }
+
+    if (Array.isArray(messagesRaw) && messagesRaw.length > CHAT_MAX_MESSAGES) {
+      return jsonResponse(
+        { error: `Too many messages (max ${CHAT_MAX_MESSAGES})` },
+        { status: 400 }
+      );
+    }
+
+    const isMessageLike = (value: unknown): value is Message => {
+      if (!value || typeof value !== "object") return false;
+      const v = value as { sender?: unknown; content?: unknown };
+      return (
+        typeof v.sender === "string" &&
+        typeof v.content === "string" &&
+        v.content.length <= CHAT_MAX_MESSAGE_CHARS
+      );
+    };
 
     const messages = (Array.isArray(messagesRaw) ? messagesRaw : []).filter(
       isMessageLike
     );
+
+    const totalMessageChars = messages.reduce((sum, message) => {
+      return sum + message.content.length;
+    }, 0);
+    if (totalMessageChars > CHAT_MAX_TOTAL_MESSAGE_CHARS) {
+      return jsonResponse(
+        { error: `Message content too large (max ${CHAT_MAX_TOTAL_MESSAGE_CHARS} chars total)` },
+        { status: 400 }
+      );
+    }
 
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
 
@@ -155,7 +263,12 @@ export async function POST(req: Request) {
     // Build the prompt
     const prompt = isOneOnOne
       ? buildOneOnOnePrompt(recipients[0], conversation, state)
-      : buildGroupPrompt(recipients, participantDescriptions, conversationReversed, state);
+      : buildGroupPrompt(
+          recipients,
+          participantDescriptions,
+          conversationReversed,
+          state
+        );
 
     const chatMessages: ChatCompletionMessageParam[] = [
       { role: "system", content: prompt },
@@ -186,11 +299,11 @@ export async function POST(req: Request) {
 
     const toolCalls = response.choices[0]?.message?.tool_calls;
     if (!toolCalls || toolCalls.length === 0) {
-      console.error("No tool calls in response. Message:", JSON.stringify(response.choices[0]?.message, null, 2));
-      return new Response(
-        JSON.stringify({ actions: [{ action: "wait" }] }),
-        { headers: { "Content-Type": "application/json" } }
+      console.error(
+        "No tool calls in response. Message:",
+        JSON.stringify(response.choices[0]?.message, null, 2)
       );
+      return jsonResponse({ actions: [{ action: "wait" }] });
     }
 
     // Return all actions (supports react + respond in same turn)
@@ -205,43 +318,38 @@ export async function POST(req: Request) {
       };
     });
 
-    return new Response(
-      JSON.stringify({ actions }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ actions });
   } catch (error) {
     console.error("Error:", error);
 
     if (isQuotaError(error)) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        {
           error: "API quota exceeded",
           code: "quota_exceeded",
-          details: "The AI API quota has been exceeded. Messages will not receive replies until the quota resets.",
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
+          details:
+            "The AI API quota has been exceeded. Messages will not receive replies until the quota resets.",
+        },
+        { status: 429 }
       );
     }
 
     // Degrade gracefully on transient upstream failures so the UI keeps working
     // instead of surfacing a hard error from /api/chat.
     if (isTransientUpstreamError(error)) {
-      return new Response(
-        JSON.stringify({
-          actions: [{ action: "wait" }],
-          degraded: true,
-          reason: "upstream_unavailable",
-        }),
-        { headers: { "Content-Type": "application/json" } }
-      );
+      return jsonResponse({
+        actions: [{ action: "wait" }],
+        degraded: true,
+        reason: "upstream_unavailable",
+      });
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         error: "Failed to generate message",
         details: error instanceof Error ? error.message : String(error),
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      },
+      { status: 500 }
     );
   }
 }
