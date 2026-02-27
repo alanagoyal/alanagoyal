@@ -49,6 +49,7 @@ export function NotesApp({
   });
 
   const showSidebar = isMobile && !initialSlug;
+
   if (isMobile) {
     return (
       <SessionNotesProvider
