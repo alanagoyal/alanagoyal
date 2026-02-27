@@ -49,8 +49,6 @@ export function NotesApp({
   });
 
   const showSidebar = isMobile && !initialSlug;
-  const showSelectNoteEmptyState = !loading && !selectedSlugForSidebar;
-
   if (isMobile) {
     return (
       <SessionNotesProvider
@@ -89,7 +87,6 @@ export function NotesApp({
         notes={notes}
         selectedNote={selectedNote}
         selectedSlugForSidebar={selectedSlugForSidebar}
-        showSelectNoteEmptyState={showSelectNoteEmptyState}
         windowFocus={windowFocus}
       />
     </SessionNotesProvider>

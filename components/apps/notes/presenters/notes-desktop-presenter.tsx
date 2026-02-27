@@ -17,7 +17,6 @@ interface NotesDesktopPresenterProps {
   notes: NoteType[];
   selectedNote: NoteType | null;
   selectedSlugForSidebar: string | null;
-  showSelectNoteEmptyState: boolean;
   windowFocus: WindowFocusValue;
 }
 
@@ -29,7 +28,6 @@ export function NotesDesktopPresenter({
   notes,
   selectedNote,
   selectedSlugForSidebar,
-  showSelectNoteEmptyState,
   windowFocus,
 }: NotesDesktopPresenterProps) {
   return (
@@ -90,10 +88,6 @@ export function NotesDesktopPresenter({
           {selectedNote ? (
             <div className="w-full min-h-full p-3">
               <Note key={selectedNote.id} note={selectedNote} isMobile={false} />
-            </div>
-          ) : showSelectNoteEmptyState ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Select a note</p>
             </div>
           ) : (
             <div className="h-full bg-background" />
