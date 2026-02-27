@@ -122,9 +122,8 @@ export const NoteItem = React.memo(function NoteItem({
       >
         <span className="text-black dark:text-white shrink-0">
           <span
-            className={`inline-block whitespace-nowrap mr-1 tabular-nums ${
-              hasMounted ? "visible" : "invisible"
-            }`}
+            className="inline-block whitespace-nowrap mr-1 tabular-nums"
+            style={{ visibility: hasMounted ? "visible" : "hidden" }}
           >
             {hasMounted
               ? new Date(getDisplayCreatedAt(item)).toLocaleDateString("en-US")
