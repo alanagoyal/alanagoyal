@@ -90,9 +90,7 @@ export function NotesDesktopPresenter({
               <Note key={selectedNote.id} note={selectedNote} isMobile={false} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Select a note</p>
-            </div>
+            <div className="h-full bg-background" />
           )}
         </ScrollArea>
       </div>
