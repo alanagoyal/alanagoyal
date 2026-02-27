@@ -184,7 +184,7 @@ export default function NoteHeader({
             </div>
           )}
           <p suppressHydrationWarning className="text-muted-foreground text-xs">
-            <span className={hasMounted ? "visible" : "invisible"}>
+            <span style={{ visibility: hasMounted ? "visible" : "hidden" }}>
               {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
             </span>
           </p>
