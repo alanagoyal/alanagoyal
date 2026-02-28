@@ -20,6 +20,16 @@ this file captures the patterns and conventions that matter most when working in
 | `components/desktop/` | desktop shell (dock, menu bar, window, notification center) |
 | `components/apps/` | all app implementations |
 
+## living docs
+
+read before building, update when you ship:
+
+| file | update when |
+|------|-------------|
+| `AGENTS.md` | new patterns or conventions emerge |
+| `docs/design-system.md` | new UI components or design tokens added |
+| `README.md` | new apps added or architecture changes |
+
 ## conventions
 
 - **state persistence**: sessionStorage for view state, localStorage only for user-created content. window close clears view state via `clearAppState()` automatically
