@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useWindowManager } from "@/lib/window-context";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePhotos } from "@/lib/photos/use-photos";
 import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
@@ -29,9 +30,9 @@ interface NotificationCenterProps {
   onClose: () => void;
 }
 
-const cardClass = "bg-black/5 dark:bg-white/10 rounded-md p-3 mb-1.5";
+const cardClass = "bg-muted rounded-md p-3 mb-1.5";
 const clickableCardClass =
-  "bg-black/5 dark:bg-white/10 rounded-md p-3 mb-1.5 hover:bg-black/[0.08] dark:hover:bg-white/[0.15] transition-colors cursor-pointer";
+  "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
@@ -174,7 +175,7 @@ function MessagesWidget() {
         <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold flex-1">Messages</span>
         {totalUnread > 0 && (
-          <span className="bg-blue-500 text-white text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+          <span className="bg-[#0A7CFF] text-white text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
             {totalUnread}
           </span>
         )}
@@ -320,20 +321,22 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
   return (
     <div
       ref={menuRef}
-      className="absolute top-7 right-0 w-80 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-black/10 dark:border-white/10 p-2 z-[70] max-h-[calc(100vh-3rem)] overflow-y-auto"
+      className="absolute top-7 right-0 w-80 rounded-lg bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl shadow-2xl border border-muted-foreground/20 p-2 z-[70] max-h-[calc(100vh-3rem)]"
     >
-      {/* Date Header */}
-      <div className="px-1 pt-1 pb-2">
-        <p className="text-xs font-semibold uppercase text-muted-foreground">
-          {weekday}
-        </p>
-        <p className="text-2xl font-bold">{monthDay}</p>
-      </div>
+      <ScrollArea className="h-full">
+        {/* Date Header */}
+        <div className="px-1 pt-1 pb-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            {weekday}
+          </p>
+          <p className="text-2xl font-bold">{monthDay}</p>
+        </div>
 
-      <CalendarWidget />
-      <MessagesWidget />
-      <WeatherWidget weather={weather} />
-      <PhotosWidget photos={photos} />
+        <CalendarWidget />
+        <MessagesWidget />
+        <WeatherWidget weather={weather} />
+        <PhotosWidget photos={photos} />
+      </ScrollArea>
     </div>
   );
 }
