@@ -111,6 +111,28 @@ export async function fetchGitHubFileContentOrNull(
   }
 }
 
+export function getCachedRepoTrees(): Record<string, GitHubTreeItem[]> {
+  return cache.repoTrees;
+}
+
+export async function prefetchAllRepoTrees(
+  onTreeFetched?: (repo: string, tree: GitHubTreeItem[]) => void
+): Promise<void> {
+  const repos = await fetchGitHubRepos();
+  const concurrency = 6;
+  let i = 0;
+
+  async function next(): Promise<void> {
+    while (i < repos.length) {
+      const repo = repos[i++];
+      const tree = await fetchGitHubRepoTree(repo);
+      onTreeFetched?.(repo, tree);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => next()));
+}
+
 export async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
   const data = await fetchGitHubJson<{ files?: GitHubRecentFile[] }>(
     "/api/github?type=recent-files",
