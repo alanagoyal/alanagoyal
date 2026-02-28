@@ -2,6 +2,8 @@
 
 macos desktop environment on the web. next.js, react, tailwind, supabase.
 
+this file captures the patterns and conventions that matter most when working in this codebase. it should grow as new patterns emerge and stay trimmed as old ones become obvious.
+
 ## how to work in this repo
 
 1. read `docs/design-system.md` before touching any UI — it defines colors, tokens, sidebar patterns, and has a checklist for new apps
