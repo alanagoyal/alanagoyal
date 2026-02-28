@@ -6,7 +6,6 @@ interface IndexEntry {
   path: string;
   icon?: string;
   nameLower: string;
-  pathLower: string;
   section: SidebarItem;
   charBitmap: number;
 }
@@ -65,7 +64,7 @@ function fuzzyMatch(query: string, target: string): { score: number; positions: 
 
 function toIndexEntry(e: EntryInput): IndexEntry {
   const nameLower = e.name.toLowerCase();
-  return { name: e.name, type: e.type, path: e.path, icon: e.icon, nameLower, pathLower: e.path.toLowerCase(), section: e.section, charBitmap: charBitmap(nameLower) };
+  return { name: e.name, type: e.type, path: e.path, icon: e.icon, nameLower, section: e.section, charBitmap: charBitmap(nameLower) };
 }
 
 export class FinderSearchEngine {
@@ -99,7 +98,6 @@ export class FinderSearchEngine {
 
     const q = query.toLowerCase();
     const qBitmap = charBitmap(q);
-    const shortQuery = q.length <= 2;
     const candidates = (scope === "current" && section)
       ? this.index.filter((e) => e.section === section)
       : this.index;
@@ -108,20 +106,11 @@ export class FinderSearchEngine {
 
     for (let i = 0; i < candidates.length; i++) {
       const entry = candidates[i];
+      if ((qBitmap & entry.charBitmap) !== qBitmap) continue;
 
-      if ((qBitmap & entry.charBitmap) === qBitmap) {
-        const m = fuzzyMatch(q, entry.nameLower);
-        if (m) {
-          results.push({ entry, score: m.score * 2, matchPositions: m.positions });
-          continue;
-        }
-      }
-
-      if (shortQuery) continue;
-
-      const pm = fuzzyMatch(q, entry.pathLower);
-      if (pm) {
-        results.push({ entry, score: pm.score, matchPositions: pm.positions });
+      const m = fuzzyMatch(q, entry.nameLower);
+      if (m) {
+        results.push({ entry, score: m.score, matchPositions: m.positions });
       }
     }
 
