@@ -1244,7 +1244,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return (
       <div ref={searchResultsRef} className="flex flex-col">
         {/* Column headers */}
-        <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="sticky top-0 z-[1] flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900">
           <div className="flex-1 min-w-0">Name</div>
           <div className="w-32 text-left">Kind</div>
           <div className="w-52 text-left">Location</div>
