@@ -274,6 +274,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     const nextIndex = historyIndex + 1;
     setHistoryIndex(nextIndex);
     setCurrentPathRaw(pathHistory[nextIndex]);
+    setSelectedSidebar(getSidebarForPath(pathHistory[nextIndex]));
   }, [canGoForward, historyIndex, pathHistory]);
 
   const inDesktopShell = !!(inShell && windowFocus);
@@ -533,19 +534,18 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   }
 
   useEffect(() => {
-    let cancelled = false;
+    const abortController = new AbortController();
     const repoEntry = (repo: string): EntryInput => ({
       name: repo, type: "dir", path: `${PROJECTS_DIR}/${repo}`, section: "projects",
     });
 
     fetchGitHubRepos().then((repos) => {
-      if (cancelled) return;
+      if (abortController.signal.aborted) return;
       searchEngine.addEntries(repos.map(repoEntry));
       setSearchIndexSize(searchEngine.version);
     });
 
     prefetchAllRepoTrees((repo, tree) => {
-      if (cancelled) return;
       const basePath = `${PROJECTS_DIR}/${repo}`;
       searchEngine.addEntries([
         repoEntry(repo),
@@ -557,9 +557,9 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         })),
       ]);
       setSearchIndexSize(searchEngine.version);
-    });
+    }, abortController.signal);
 
-    return () => { cancelled = true; };
+    return () => { abortController.abort(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const computedSearchResults = useMemo(() => {
@@ -763,6 +763,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       const prevIndex = historyIndex - 1;
       setHistoryIndex(prevIndex);
       setCurrentPathRaw(pathHistory[prevIndex]);
+      setSelectedSidebar(getSidebarForPath(pathHistory[prevIndex]));
     }
   }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebarItem, historyIndex, pathHistory, setCurrentPath]);
 

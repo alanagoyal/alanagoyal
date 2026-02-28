@@ -116,16 +116,19 @@ export function getCachedRepoTrees(): Record<string, GitHubTreeItem[]> {
 }
 
 export async function prefetchAllRepoTrees(
-  onTreeFetched?: (repo: string, tree: GitHubTreeItem[]) => void
+  onTreeFetched?: (repo: string, tree: GitHubTreeItem[]) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   const repos = await fetchGitHubRepos();
+  if (signal?.aborted) return;
   const concurrency = 6;
   let i = 0;
 
   async function next(): Promise<void> {
-    while (i < repos.length) {
+    while (i < repos.length && !signal?.aborted) {
       const repo = repos[i++];
       const tree = await fetchGitHubRepoTree(repo);
+      if (signal?.aborted) return;
       onTreeFetched?.(repo, tree);
     }
   }
