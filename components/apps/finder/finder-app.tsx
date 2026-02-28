@@ -84,7 +84,6 @@ interface FinderAppProps {
   initialTab?: SidebarItem;
 }
 
-// Module-level search engine (persists across re-renders)
 const searchEngine = new FinderSearchEngine();
 
 // Image extensions that should open in Preview
@@ -684,7 +683,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       if (windowFocus && !windowFocus.isFocused) return;
       if (isMobile) return;
 
-      // Escape handling for search
       if (e.key === "Escape" && searchActive) {
         e.preventDefault();
         if (searchQuery) {
@@ -696,7 +694,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         return;
       }
 
-      // Cmd+F to open search
       if ((e.metaKey || e.ctrlKey) && e.key === "f") {
         e.preventDefault();
         setSearchActive(true);
@@ -706,7 +703,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       if (!searchActive) return;
 
-      // Arrow keys for result navigation
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSearchHighlightIndex((prev) => Math.min(prev + 1, computedSearchResults.length - 1));
@@ -718,7 +714,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         return;
       }
 
-      // Enter to open highlighted result
       if (e.key === "Enter" && computedSearchResults.length > 0 && searchHighlightIndex >= 0) {
         e.preventDefault();
         const result = computedSearchResults[searchHighlightIndex];
@@ -742,8 +737,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     if (!searchActive || computedSearchResults.length === 0 || searchHighlightIndex < 0) return;
     const container = searchResultsRef.current;
     if (!container) return;
-    // List view: header is children[0], rows wrapper is children[1], rows are children[1].children[i]
-    // Icon view: grid items are direct children
     const row = viewMode === "list"
       ? (container.children[1]?.children[searchHighlightIndex] as HTMLElement)
       : (container.children[searchHighlightIndex] as HTMLElement);
@@ -1203,7 +1196,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     </div>
   );
 
-  // Get location label for search result
   const getLocationLabel = (path: string): string => {
     if (path.startsWith(PROJECTS_DIR + "/")) {
       const rel = path.slice(PROJECTS_DIR.length + 1);
@@ -1219,7 +1211,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return path;
   };
 
-  // Render search results — respects current viewMode
   const renderSearchResults = () => {
     if (computedSearchResults.length === 0) {
       return (
@@ -1263,16 +1254,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       );
     }
 
-    // List view
     return (
       <div ref={searchResultsRef} className="flex flex-col">
-        {/* Column headers */}
         <div className="sticky top-0 z-[1] flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900">
           <div className="flex-1 min-w-0">Name</div>
           <div className="w-32 text-left">Kind</div>
           <div className="w-52 text-left">Location</div>
         </div>
-        {/* Result rows */}
         <div className="flex-1">
           {computedSearchResults.map((result, i) => {
             const isSelected = i === searchHighlightIndex;
@@ -1400,7 +1388,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         </div>
       )}
 
-      {/* Breadcrumb (always visible) */}
       <div className="flex flex-1 min-w-0 items-center justify-center px-2">
         {isMobile ? (
           <span className="text-sm font-medium text-zinc-900 dark:text-white">
@@ -1416,10 +1403,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         )}
       </div>
 
-      {/* Right side: view dropdown + search (desktop only) */}
       {!isMobile && (
         <div className="flex items-center gap-1 justify-end w-[250px] shrink-0" onMouseDown={(e) => e.stopPropagation()}>
-          {/* View mode dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowViewDropdown(!showViewDropdown)}
@@ -1480,7 +1465,6 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             )}
           </div>
 
-          {/* Search — macOS style: icon that expands to input in top-right */}
           {searchActive ? (
             <div className="relative w-48">
               <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
