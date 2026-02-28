@@ -1,0 +1,34 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "a4754f4adbf451d67b31946db7028c3c9dd687e1",
+  "prompts": {
+    "d45ecceda06d8be8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019c9b0f-2bc3-7f90-b8ac-6d6a8c79b18b",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 295,
+      "overriden_lines": 0
+    },
+    "f531ffd6d1531923": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ca521-d69f-7a23-bf91-148219af00cf",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
