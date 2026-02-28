@@ -9,7 +9,7 @@ i'm obsessed with re-creating apple products. this is a macos-inspired personal 
 a macos sierra 10.12 themed desktop with:
 - **window management**: draggable, resizable windows with minimize, maximize, and close
 - **dock**: app launcher with hover tooltips
-- **menu bar**: functional apple menu, file menu, app menu, and status menus (wifi, bluetooth, control center)
+- **menu bar**: functional apple menu, file menu, app menu, status menus (wifi, bluetooth, control center), and notification center with live widgets (calendar, messages, weather, photos)
 - **system states**: lock screen, sleep mode, restart, and shutdown overlays
 
 ### apps
