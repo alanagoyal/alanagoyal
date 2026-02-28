@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   Calendar,
-  MessageSquare,
+  MessageCircle,
   ImageIcon,
   Sun,
   Cloud,
@@ -28,11 +28,13 @@ import type { Photo } from "@/types/photos";
 interface NotificationCenterProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenMessagesConversation?: (conversationId: string) => void;
 }
 
 const cardClass = "bg-muted rounded-md p-3 mb-1.5";
 const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
+const weatherCardClass = `${cardClass} h-[134px]`;
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
@@ -50,10 +52,18 @@ function getWeatherInfo(code: number): {
 }
 
 // --- Calendar Widget ---
-function CalendarWidget() {
+function CalendarWidget({
+  onActivate,
+  refreshKey,
+}: {
+  onActivate: () => void;
+  refreshKey: number;
+}) {
   const { openWindow } = useWindowManager();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [calendarColors, setCalendarColors] = useState<Record<string, string>>({});
 
-  const { events, calendarColors } = useMemo(() => {
+  useEffect(() => {
     const today = new Date();
     let userEvents: CalendarEvent[] = [];
     try {
@@ -64,21 +74,44 @@ function CalendarWidget() {
     }
 
     const allEvents = getEventsForDay(userEvents, today);
+    const now = new Date();
+    const parseTimeForToday = (time: string | undefined): Date | null => {
+      if (!time) return null;
+      const [hours, minutes] = time.split(":").map(Number);
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+      const parsed = new Date(today);
+      parsed.setHours(hours, minutes, 0, 0);
+      return parsed;
+    };
+    const visibleEvents = allEvents.filter((event) => {
+      if (event.isAllDay) return true;
+
+      const start = parseTimeForToday(event.startTime);
+      const end = parseTimeForToday(event.endTime);
+      if (start && end) {
+        // Keep future and in-progress events.
+        return end >= now;
+      }
+      if (start) {
+        return start >= now;
+      }
+      return false;
+    });
     const calendars = loadCalendars();
     const colors: Record<string, string> = {};
     for (const c of calendars) {
       colors[c.id] = c.color;
     }
 
-    // Sort: all-day first, then by startTime
-    allEvents.sort((a, b) => {
+    // Sort: all-day first, then by startTime.
+    visibleEvents.sort((a, b) => {
       if (a.isAllDay && !b.isAllDay) return -1;
       if (!a.isAllDay && b.isAllDay) return 1;
       return (a.startTime || "").localeCompare(b.startTime || "");
     });
-
-    return { events: allEvents, calendarColors: colors };
-  }, []);
+    setEvents(visibleEvents);
+    setCalendarColors(colors);
+  }, [refreshKey]);
 
   const displayed = events.slice(0, 4);
   const overflow = events.length - 4;
@@ -86,7 +119,10 @@ function CalendarWidget() {
   return (
     <div
       className={clickableCardClass}
-      onClick={() => openWindow("calendar")}
+      onClick={() => {
+        openWindow("calendar");
+        onActivate();
+      }}
     >
       <div className="flex items-center gap-1.5 mb-2">
         <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
@@ -127,10 +163,20 @@ function CalendarWidget() {
 }
 
 // --- Messages Widget ---
-function MessagesWidget() {
+function MessagesWidget({
+  onActivate,
+  refreshKey,
+  onOpenConversation,
+}: {
+  onActivate: () => void;
+  refreshKey: number;
+  onOpenConversation?: (conversationId: string) => void;
+}) {
   const { openWindow } = useWindowManager();
+  const [totalUnread, setTotalUnread] = useState(0);
+  const [latestConversation, setLatestConversation] = useState<Conversation | null>(null);
 
-  const { totalUnread, latestConversation } = useMemo(() => {
+  useEffect(() => {
     let conversations: Conversation[] = [];
     try {
       const stored = localStorage.getItem("dialogueConversations");
@@ -151,9 +197,9 @@ function MessagesWidget() {
           new Date(b.lastMessageTime).getTime() -
           new Date(a.lastMessageTime).getTime()
       );
-
-    return { totalUnread: total, latestConversation: unreadConversations[0] || null };
-  }, []);
+    setTotalUnread(total);
+    setLatestConversation(unreadConversations[0] || null);
+  }, [refreshKey]);
 
   const senderName = latestConversation?.recipients[0]?.name;
   const lastMessage =
@@ -169,10 +215,17 @@ function MessagesWidget() {
   return (
     <div
       className={clickableCardClass}
-      onClick={() => openWindow("messages")}
+      onClick={() => {
+        if (latestConversation?.id && onOpenConversation) {
+          onOpenConversation(latestConversation.id);
+        } else {
+          openWindow("messages");
+        }
+        onActivate();
+      }}
     >
       <div className="flex items-center gap-1.5 mb-2">
-        <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+        <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold flex-1">Messages</span>
         {totalUnread > 0 && (
           <span className="bg-[#0A7CFF] text-white text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
@@ -209,22 +262,16 @@ interface WeatherData {
   low: number;
 }
 
-function WeatherWidget({ weather }: { weather: WeatherData | null }) {
-  if (!weather) return null;
-
-  const weatherInfo = getWeatherInfo(weather.code);
-
+function WeatherWidgetSkeleton() {
   return (
-    <div className={cardClass}>
-      <p className="text-sm font-medium">San Francisco</p>
-      <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
-      <div className="flex items-center gap-1.5 mt-3">
-        <div className="text-muted-foreground">{weatherInfo.icon}</div>
-        <div>
-          <p className="text-xs font-medium">{weatherInfo.description}</p>
-          <p className="text-[10px] text-muted-foreground">
-            H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
-          </p>
+    <div className={weatherCardClass}>
+      <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+      <div className="h-10 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse mt-2" />
+      <div className="flex items-center gap-2 mt-3">
+        <div className="h-8 w-8 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+        <div className="space-y-1.5">
+          <div className="h-3 w-16 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          <div className="h-3 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
         </div>
       </div>
     </div>
@@ -232,7 +279,15 @@ function WeatherWidget({ weather }: { weather: WeatherData | null }) {
 }
 
 // --- Photos Widget ---
-function PhotosWidget({ photos }: { photos: Photo[] }) {
+function PhotosWidget({
+  photos,
+  loading,
+  onActivate,
+}: {
+  photos: Photo[];
+  loading: boolean;
+  onActivate: () => void;
+}) {
   const { openWindow } = useWindowManager();
 
   const recentPhotos = useMemo(() => {
@@ -244,12 +299,28 @@ function PhotosWidget({ photos }: { photos: Photo[] }) {
       .slice(0, 3);
   }, [photos]);
 
+  if (loading) {
+    return (
+      <div className={cardClass}>
+        <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse mb-2" />
+        <div className="grid grid-cols-3 gap-1.5">
+          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
   if (recentPhotos.length === 0) return null;
 
   return (
     <div
       className={clickableCardClass}
-      onClick={() => openWindow("photos")}
+      onClick={() => {
+        openWindow("photos");
+        onActivate();
+      }}
     >
       <div className="flex items-center gap-1.5 mb-2">
         <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
@@ -275,18 +346,60 @@ function PhotosWidget({ photos }: { photos: Photo[] }) {
   );
 }
 
+function WeatherWidget({
+  weather,
+  loading,
+}: {
+  weather: WeatherData | null;
+  loading: boolean;
+}) {
+  if (loading) {
+    return <WeatherWidgetSkeleton />;
+  }
+  if (!weather) return null;
+
+  const weatherInfo = getWeatherInfo(weather.code);
+
+  return (
+    <div className={weatherCardClass}>
+      <p className="text-sm font-medium">San Francisco</p>
+      <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
+      <div className="flex items-center gap-1.5 mt-3">
+        <div className="text-muted-foreground">{weatherInfo.icon}</div>
+        <div>
+          <p className="text-xs font-medium">{weatherInfo.description}</p>
+          <p className="text-[10px] text-muted-foreground">
+            H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Notification Center ---
-export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+export function NotificationCenter({
+  isOpen,
+  onClose,
+  onOpenMessagesConversation,
+}: NotificationCenterProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   useClickOutside(menuRef, onClose, isOpen);
+  const [openRefreshKey, setOpenRefreshKey] = useState(0);
 
-  // Fetch photos eagerly on mount so they're ready before panel opens
-  const { photos } = usePhotos();
-
-  // Fetch weather eagerly on mount so it's ready before panel opens
-  const [weather, setWeather] = useState<WeatherData | null>(null);
   useEffect(() => {
+    if (!isOpen) return;
+    setOpenRefreshKey((key) => key + 1);
+  }, [isOpen]);
+
+  const { photos, loading: photosLoading } = usePhotos({ enabled: isOpen });
+
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  useEffect(() => {
+    if (!isOpen) return;
     let cancelled = false;
+    setWeatherLoading(true);
     (async () => {
       try {
         const res = await fetch(
@@ -304,10 +417,14 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
         }
       } catch {
         // silently fail
+      } finally {
+        if (!cancelled) {
+          setWeatherLoading(false);
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -331,11 +448,14 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
           </p>
           <p className="text-2xl font-bold">{monthDay}</p>
         </div>
-
-        <CalendarWidget />
-        <MessagesWidget />
-        <WeatherWidget weather={weather} />
-        <PhotosWidget photos={photos} />
+        <CalendarWidget onActivate={onClose} refreshKey={openRefreshKey} />
+        <MessagesWidget
+          onActivate={onClose}
+          refreshKey={openRefreshKey}
+          onOpenConversation={onOpenMessagesConversation}
+        />
+        <PhotosWidget photos={photos} loading={photosLoading} onActivate={onClose} />
+        <WeatherWidget weather={weather} loading={weatherLoading} />
       </ScrollArea>
     </div>
   );

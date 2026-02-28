@@ -15,6 +15,10 @@ interface UsePhotosResult {
   refetch: () => Promise<void>;
 }
 
+interface UsePhotosOptions {
+  enabled?: boolean;
+}
+
 // Database row type (snake_case from Supabase)
 interface PhotoRow {
   id: string;
@@ -51,13 +55,15 @@ function saveFavorites(favorites: Set<string>): void {
   localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...favorites]));
 }
 
-export function usePhotos(): UsePhotosResult {
+export function usePhotos(options?: UsePhotosOptions): UsePhotosResult {
+  const enabled = options?.enabled ?? true;
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPhotos = useCallback(async () => {
     try {
+      setLoading(true);
       setError(null);
       const supabase = createClient();
 
@@ -89,8 +95,12 @@ export function usePhotos(): UsePhotosResult {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     fetchPhotos();
-  }, [fetchPhotos]);
+  }, [enabled, fetchPhotos]);
 
   const toggleFavorite = useCallback((photoId: string) => {
     const nextFavorites = loadFavorites();

@@ -579,6 +579,23 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     openWindow("messages");
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
+  const handleOpenMessagesConversation = useCallback((conversationId: string) => {
+    saveMessagesConversation(conversationId);
+    const requestId = nextMessagesSelectRequestIdRef.current++;
+    setMessagesSelectRequest({ conversationId, requestId });
+
+    const messagesWindow = getWindow("messages");
+    if (messagesWindow?.isOpen) {
+      if (messagesWindow.isMinimized) {
+        restoreWindow("messages");
+      } else {
+        focusWindow("messages");
+      }
+      return;
+    }
+    openWindow("messages");
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+
   const handleMessagesSelectRequestHandled = useCallback((requestId: number) => {
     setMessagesSelectRequest((prev) => {
       if (!prev || prev.requestId !== requestId) return prev;
@@ -605,6 +622,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
         onShutdown={handleShutdown}
         onLockScreen={handleLockScreen}
         onLogout={handleLogout}
+        onOpenMessagesConversation={handleOpenMessagesConversation}
       />
 
       {isActive && (

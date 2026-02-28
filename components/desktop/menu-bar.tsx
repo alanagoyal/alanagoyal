@@ -27,6 +27,7 @@ interface MenuBarProps {
   onShutdown?: () => void;
   onLockScreen?: () => void;
   onLogout?: () => void;
+  onOpenMessagesConversation?: (conversationId: string) => void;
 }
 
 export function MenuBar({
@@ -38,6 +39,7 @@ export function MenuBar({
   onShutdown,
   onLockScreen,
   onLogout,
+  onOpenMessagesConversation,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
@@ -257,6 +259,7 @@ export function MenuBar({
       <NotificationCenter
         isOpen={openMenu === "notificationCenter"}
         onClose={closeMenu}
+        onOpenMessagesConversation={onOpenMessagesConversation}
       />
 
       <AboutDialog
