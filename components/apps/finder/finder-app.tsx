@@ -261,11 +261,14 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
+  const historyIndexRef = useRef(historyIndex);
+  historyIndexRef.current = historyIndex;
+
   const setCurrentPath = useCallback((path: string) => {
     setCurrentPathRaw(path);
-    setPathHistory((prev) => [...prev.slice(0, historyIndex + 1), path]);
+    setPathHistory((prev) => [...prev.slice(0, historyIndexRef.current + 1), path]);
     setHistoryIndex((prev) => prev + 1);
-  }, [historyIndex]);
+  }, []);
 
   const canGoForward = historyIndex < pathHistory.length - 1;
 
