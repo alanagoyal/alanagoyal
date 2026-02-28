@@ -10,12 +10,13 @@ import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { cn } from "@/lib/utils";
 import { AppleMenu } from "./apple-menu";
 import { BatteryMenu, WifiMenu, ControlCenterMenu } from "./status-menus";
+import { NotificationCenter } from "./notification-center";
 import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -183,7 +184,18 @@ export function MenuBar({
         </button>
 
         {/* Date/Time */}
-        <span className="text-sm text-black dark:text-white ml-2">{currentTime}</span>
+        <button
+          onClick={() => toggleMenu("notificationCenter")}
+          className={cn(
+            "text-sm px-2 py-0.5 rounded transition-colors ml-1",
+            openMenu === "notificationCenter"
+              ? "bg-white/30 dark:bg-white/20"
+              : "hover:bg-white/10",
+            "text-black dark:text-white"
+          )}
+        >
+          {currentTime}
+        </button>
       </div>
 
       {/* Menus */}
@@ -240,6 +252,11 @@ export function MenuBar({
         onDeleteChat={fileMenuActions.onDeleteChat}
         chatIsPinned={fileMenuActions.chatIsPinned}
         hideAlertsActive={fileMenuActions.hideAlertsActive}
+      />
+
+      <NotificationCenter
+        isOpen={openMenu === "notificationCenter"}
+        onClose={closeMenu}
       />
 
       <AboutDialog
