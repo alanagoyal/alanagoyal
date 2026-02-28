@@ -240,7 +240,9 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return persistedPath || "recents";
   };
 
-  const [currentPath, setCurrentPath] = useState(getInitialPath);
+  const [currentPath, setCurrentPathRaw] = useState(getInitialPath);
+  const [pathHistory, setPathHistory] = useState<string[]>(() => [getInitialPath()]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -258,6 +260,21 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const [searchIndexSize, setSearchIndexSize] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
+
+  const setCurrentPath = useCallback((path: string) => {
+    setCurrentPathRaw(path);
+    setPathHistory((prev) => [...prev.slice(0, historyIndex + 1), path]);
+    setHistoryIndex((prev) => prev + 1);
+  }, [historyIndex]);
+
+  const canGoForward = historyIndex < pathHistory.length - 1;
+
+  const handleForward = useCallback(() => {
+    if (!canGoForward) return;
+    const nextIndex = historyIndex + 1;
+    setHistoryIndex(nextIndex);
+    setCurrentPathRaw(pathHistory[nextIndex]);
+  }, [canGoForward, historyIndex, pathHistory]);
 
   const inDesktopShell = !!(inShell && windowFocus);
 
@@ -477,7 +494,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       setCurrentPath(getPathForSidebarItem(initialTab));
       setSelectedFile(null);
     }
-  }, [initialTab, getPathForSidebarItem]);
+  }, [initialTab, getPathForSidebarItem, setCurrentPath]);
 
   const indexBuilt = useRef(false);
   if (!indexBuilt.current) {
@@ -489,6 +506,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const section: SidebarItem = item.path.includes("/Desktop") ? "desktop"
           : item.path.includes("/Documents") ? "documents"
           : item.path.includes("/Downloads") ? "downloads"
+          : item.path.includes("/Projects") ? "projects"
           : "desktop";
         entries.push({ ...item, section });
       }
@@ -515,19 +533,22 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   }
 
   useEffect(() => {
-    const repoEntries = (repo: string): EntryInput => ({
+    let cancelled = false;
+    const repoEntry = (repo: string): EntryInput => ({
       name: repo, type: "dir", path: `${PROJECTS_DIR}/${repo}`, section: "projects",
     });
 
     fetchGitHubRepos().then((repos) => {
-      searchEngine.addEntries(repos.map(repoEntries));
+      if (cancelled) return;
+      searchEngine.addEntries(repos.map(repoEntry));
       setSearchIndexSize(searchEngine.version);
     });
 
     prefetchAllRepoTrees((repo, tree) => {
+      if (cancelled) return;
       const basePath = `${PROJECTS_DIR}/${repo}`;
       searchEngine.addEntries([
-        repoEntries(repo),
+        repoEntry(repo),
         ...tree.map((item) => ({
           name: item.name,
           type: item.type as "file" | "dir",
@@ -537,6 +558,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       ]);
       setSearchIndexSize(searchEngine.version);
     });
+
+    return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const computedSearchResults = useMemo(() => {
@@ -558,7 +581,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   useEffect(() => {
     setSearchHighlightIndex(-1);
-  }, [searchQuery]);
+  }, [searchQuery, searchScope, selectedSidebar]);
 
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
@@ -568,7 +591,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     if (isMobile) {
       setShowSidebar(false);
     }
-  }, [getPathForSidebarItem, isMobile]);
+  }, [getPathForSidebarItem, isMobile, setCurrentPath]);
 
   // Handle file/folder click
   const handleFileClick = useCallback((file: FileItem) => {
@@ -639,7 +662,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         setPreviewContent(content);
       }
     }
-  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent, router]);
+  }, [onOpenApp, onOpenTextFile, onOpenPreviewFile, addRecent, router, setCurrentPath]);
 
   const openSearchResult = useCallback((file: FileItem) => {
     setSearchActive(false);
@@ -651,7 +674,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     } else {
       handleFileDoubleClick(file);
     }
-  }, [handleFileDoubleClick]);
+  }, [handleFileDoubleClick, setCurrentPath]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -716,19 +739,17 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     if (!searchActive || computedSearchResults.length === 0 || searchHighlightIndex < 0) return;
     const container = searchResultsRef.current;
     if (!container) return;
-    // In list view: +1 for header row. In icon view: no header offset.
-    const offset = viewMode === "list" ? searchHighlightIndex + 1 : searchHighlightIndex;
-    const row = container.children[offset] as HTMLElement;
-    if (row) {
-      row.scrollIntoView({ block: "nearest" });
-    }
+    // List view: header is children[0], rows wrapper is children[1], rows are children[1].children[i]
+    // Icon view: grid items are direct children
+    const row = viewMode === "list"
+      ? (container.children[1]?.children[searchHighlightIndex] as HTMLElement)
+      : (container.children[searchHighlightIndex] as HTMLElement);
+    row?.scrollIntoView({ block: "nearest" });
   }, [searchHighlightIndex, searchActive, computedSearchResults.length, viewMode]);
 
-  // Handle back navigation
   const handleBack = useCallback(() => {
-    const parentPath = currentPath.split("/").slice(0, -1).join("/");
-
     if (isMobile && !showSidebar) {
+      const parentPath = currentPath.split("/").slice(0, -1).join("/");
       const sidebarPath = getPathForSidebarItem(selectedSidebar);
       if (currentPath !== sidebarPath && (parentPath.startsWith(HOME_DIR) || currentPath.startsWith("trash/"))) {
         setCurrentPath(parentPath || "trash");
@@ -738,11 +759,12 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       return;
     }
 
-    // Desktop: go up a directory
-    if (parentPath.startsWith(HOME_DIR) || currentPath.startsWith(PROJECTS_DIR) || currentPath.startsWith("trash/")) {
-      setCurrentPath(parentPath || HOME_DIR);
+    if (historyIndex > 0) {
+      const prevIndex = historyIndex - 1;
+      setHistoryIndex(prevIndex);
+      setCurrentPathRaw(pathHistory[prevIndex]);
     }
-  }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebarItem]);
+  }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebarItem, historyIndex, pathHistory, setCurrentPath]);
 
   // Get breadcrumb parts
   const getBreadcrumbs = useCallback(() => {
@@ -762,11 +784,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Check if can go back
   const canGoBack = useCallback(() => {
-    if (currentPath === "recents" || currentPath === "applications" || currentPath === "trash") return false;
-    // Allow back navigation within trash subdirectories
-    if (currentPath.startsWith("trash/")) return true;
-    return currentPath !== HOME_DIR && currentPath !== PROJECTS_DIR;
-  }, [currentPath]);
+    return historyIndex > 0;
+  }, [historyIndex]);
 
   // Render mobile sidebar nav (traffic lights only, like Settings SidebarNav)
   const renderMobileSidebarNav = () => (
@@ -1361,8 +1380,14 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             </svg>
           </button>
           <button
-            disabled
-            className="p-1 rounded text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
+            onClick={handleForward}
+            disabled={!canGoForward}
+            className={cn(
+              "p-1 rounded",
+              canGoForward
+                ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                : "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
+            )}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 18l6-6-6-6" />
