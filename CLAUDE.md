@@ -25,6 +25,3 @@ macos desktop environment on the web. next.js, react, tailwind, supabase.
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
 - **menu system**: menus are mutually exclusive via `openMenu` state in `menu-bar.tsx`. panel-style menus follow the `status-menus.tsx` pattern. use `useClickOutside()` for dismissal
 
-## build
-
-`npm run build` to verify. no test framework; the build is the only gate.
