@@ -84,8 +84,6 @@ interface FinderAppProps {
   initialTab?: SidebarItem;
 }
 
-const searchEngine = new FinderSearchEngine();
-
 // Image extensions that should open in Preview
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
 
@@ -259,11 +257,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   const [searchIndexSize, setSearchIndexSize] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
+  const searchPrefetchStartedRef = useRef(false);
+  const searchEngine = useMemo(() => new FinderSearchEngine(), []);
 
   const historyIndexRef = useRef(historyIndex);
   historyIndexRef.current = historyIndex;
+  const currentPathRef = useRef(currentPath);
+  currentPathRef.current = currentPath;
 
   const setCurrentPath = useCallback((path: string) => {
+    if (path === currentPathRef.current) return;
     setCurrentPathRaw(path);
     setPathHistory((prev) => [...prev.slice(0, historyIndexRef.current + 1), path]);
     setHistoryIndex((prev) => prev + 1);
@@ -499,18 +502,20 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   }, [initialTab, getPathForSidebarItem, setCurrentPath]);
 
-  const indexBuilt = useRef(false);
-  if (!indexBuilt.current) {
-    indexBuilt.current = true;
+  useEffect(() => {
     const entries: EntryInput[] = [];
 
     for (const items of Object.values(STATIC_FILES)) {
       for (const item of items) {
-        const section: SidebarItem = item.path.includes("/Desktop") ? "desktop"
-          : item.path.includes("/Documents") ? "documents"
-          : item.path.includes("/Downloads") ? "downloads"
-          : item.path.includes("/Projects") ? "projects"
-          : "desktop";
+        const section: SidebarItem = item.path.includes("/Desktop")
+          ? "desktop"
+          : item.path.includes("/Documents")
+            ? "documents"
+            : item.path.includes("/Downloads")
+              ? "downloads"
+              : item.path.includes("/Projects")
+                ? "projects"
+                : "desktop";
         entries.push({ ...item, section });
       }
     }
@@ -521,48 +526,77 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     for (const app of APPS) {
       if (app.id === "finder") continue;
-      entries.push({ name: app.name, type: "app", path: `/${app.id}`, icon: app.icon, section: "applications" });
+      entries.push({
+        name: app.name,
+        type: "app",
+        path: `/${app.id}`,
+        icon: app.icon,
+        section: "applications",
+      });
     }
 
     for (const [repo, tree] of Object.entries(getCachedRepoTrees())) {
       const basePath = `${PROJECTS_DIR}/${repo}`;
       entries.push({ name: repo, type: "dir", path: basePath, section: "projects" });
       for (const item of tree) {
-        entries.push({ name: item.name, type: item.type, path: `${basePath}/${item.path}`, section: "projects" });
+        entries.push({
+          name: item.name,
+          type: item.type,
+          path: `${basePath}/${item.path}`,
+          section: "projects",
+        });
       }
     }
 
     searchEngine.buildIndex(entries);
-  }
+    setSearchIndexSize(searchEngine.version);
+  }, [searchEngine]);
 
   useEffect(() => {
-    const abortController = new AbortController();
+    if (!searchActive || searchPrefetchStartedRef.current) return;
+    searchPrefetchStartedRef.current = true;
+    let cancelled = false;
+
     const repoEntry = (repo: string): EntryInput => ({
       name: repo, type: "dir", path: `${PROJECTS_DIR}/${repo}`, section: "projects",
     });
 
-    fetchGitHubRepos().then((repos) => {
-      if (abortController.signal.aborted) return;
-      searchEngine.addEntries(repos.map(repoEntry));
-      setSearchIndexSize(searchEngine.version);
-    });
+    const hydrateProjectsIndex = async () => {
+      try {
+        const repos = await fetchGitHubRepos();
+        if (cancelled) return;
+        searchEngine.addEntries(repos.map(repoEntry));
+        setSearchIndexSize(searchEngine.version);
 
-    prefetchAllRepoTrees((repo, tree) => {
-      const basePath = `${PROJECTS_DIR}/${repo}`;
-      searchEngine.addEntries([
-        repoEntry(repo),
-        ...tree.map((item) => ({
-          name: item.name,
-          type: item.type as "file" | "dir",
-          path: `${basePath}/${item.path}`,
-          section: "projects" as SidebarItem,
-        })),
-      ]);
-      setSearchIndexSize(searchEngine.version);
-    }, abortController.signal);
+        await prefetchAllRepoTrees();
+        if (cancelled) return;
 
-    return () => { abortController.abort(); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        const projectEntries: EntryInput[] = [];
+        for (const [repo, tree] of Object.entries(getCachedRepoTrees())) {
+          const basePath = `${PROJECTS_DIR}/${repo}`;
+          projectEntries.push(repoEntry(repo));
+          for (const item of tree) {
+            projectEntries.push({
+              name: item.name,
+              type: item.type,
+              path: `${basePath}/${item.path}`,
+              section: "projects",
+            });
+          }
+        }
+
+        searchEngine.addEntries(projectEntries);
+        setSearchIndexSize(searchEngine.version);
+      } catch {
+        // Ignore network failures and preserve partial index results.
+      }
+    };
+
+    void hydrateProjectsIndex();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchActive, searchEngine]);
 
   const computedSearchResults = useMemo(() => {
     void searchIndexSize;
@@ -579,7 +613,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       scope: searchScope,
       section: searchScope === "current" ? selectedSidebar : undefined,
     });
-  }, [searchQuery, searchScope, selectedSidebar, searchActive, searchIndexSize, files]);
+  }, [searchQuery, searchScope, selectedSidebar, searchActive, searchIndexSize, files, searchEngine]);
 
   useEffect(() => {
     setSearchHighlightIndex(-1);
@@ -1220,7 +1254,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     if (computedSearchResults.length === 0) {
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          <p>No results</p>
+          <p className="text-sm">No results</p>
         </div>
       );
     }
@@ -1233,7 +1267,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             const isSelected = i === searchHighlightIndex;
             return (
               <button
-                key={i}
+                key={file.path}
                 onClick={(e) => { e.stopPropagation(); setSearchHighlightIndex(i); }}
                 onDoubleClick={() => openSearchResult({
                   name: file.name, type: file.type, path: file.path, icon: file.icon,
@@ -1272,7 +1306,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             const file = result.entry;
             return (
               <button
-                key={i}
+                key={file.path}
                 onClick={(e) => { e.stopPropagation(); setSearchHighlightIndex(i); }}
                 onDoubleClick={() => openSearchResult({
                   name: file.name, type: file.type, path: file.path, icon: file.icon,
