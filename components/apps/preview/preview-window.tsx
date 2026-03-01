@@ -435,7 +435,7 @@ export function PreviewWindow({
       >
         {/* Title bar */}
         <div
-          className="px-4 py-2 flex items-center justify-between select-none bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700 cursor-default"
+          className="px-4 py-2 flex min-w-0 items-center justify-between select-none bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700 cursor-default"
           onMouseDown={handleDragStart}
         >
           <WindowControls
@@ -447,12 +447,12 @@ export function PreviewWindow({
             isMaximized={isMaximized}
             closeLabel="Close window"
           />
-          <div className="flex-1 text-center">
-            <span className="text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
+          <div className="flex-1 min-w-0 px-2 text-center">
+            <span className="block truncate text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
           {/* Zoom controls for images - stopPropagation prevents window drag */}
           {fileType === "image" && (
-            <div className="flex items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
               <button
                 onClick={zoomOut}
                 className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
@@ -476,7 +476,7 @@ export function PreviewWindow({
               </button>
             </div>
           )}
-          {fileType === "pdf" && <div className="w-[68px]" />}
+          {fileType === "pdf" && <div className="w-[68px] shrink-0" />}
         </div>
 
         {/* Content */}

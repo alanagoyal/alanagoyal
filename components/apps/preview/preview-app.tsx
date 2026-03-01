@@ -264,13 +264,13 @@ export function PreviewApp({
       )}
     >
       {/* Header bar */}
-      <div className="px-4 py-3 flex items-center justify-between bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700">
-        <div className="flex-1 text-center">
-          <span className="text-zinc-600 dark:text-zinc-400 text-sm truncate">{fileName}</span>
+      <div className="px-4 py-3 flex min-w-0 items-center justify-between bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700">
+        <div className="flex-1 min-w-0 px-2 text-center">
+          <span className="block truncate text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
         </div>
         {/* Zoom controls for images */}
         {fileType === "image" && (
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={zoomOut}
               className="p-1.5 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"

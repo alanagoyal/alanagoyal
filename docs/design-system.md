@@ -141,6 +141,25 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 
 The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
 
+### Preventing Title/Path Overflow
+
+When center content is dynamic (file names, folder paths, breadcrumb strings), long text can push nav controls out of layout. Use this structure:
+
+- Nav row: `min-w-0`
+- Left/right control groups: `shrink-0`
+- Center lane: `flex-1 min-w-0`
+- Title/breadcrumb text: `block truncate` (optionally set `title={fullValue}` for hover)
+
+```tsx
+<div className="flex min-w-0 items-center justify-between px-4 py-2 select-none">
+  <div className="shrink-0">{/* left controls */}</div>
+  <div className="flex-1 min-w-0 px-2 text-center">
+    <span className="block truncate">{titleOrPath}</span>
+  </div>
+  <div className="shrink-0">{/* right controls */}</div>
+</div>
+```
+
 ### Preventing Drag on Interactive Elements
 
 When the nav bar has `onMouseDown={windowFocus?.onDragStart}` for window dragging, any buttons inside will also trigger the drag. **Always add `onMouseDown={(e) => e.stopPropagation()}` to interactive elements** in the nav bar:
