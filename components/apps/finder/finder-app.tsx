@@ -1005,7 +1005,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   // Render nav bar
   const renderNav = () => (
     <div
-      className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none"
+      className="flex min-w-0 items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none"
       onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
     >
       {/* Traffic lights (desktop) */}
@@ -1020,7 +1020,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       {/* Navigation arrows (desktop) */}
       {!isMobile && (
-        <div className="flex items-center gap-1 ml-2" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="ml-2 flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
           <button
             onClick={handleBack}
             disabled={!canGoBack()}
@@ -1047,28 +1047,24 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       )}
 
       {/* Breadcrumb (desktop) / Title (mobile) */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 min-w-0 items-center justify-center px-2">
         {isMobile ? (
           <span className="text-sm font-medium text-zinc-900 dark:text-white">
             {getBreadcrumbs().slice(-1)[0]}
           </span>
         ) : (
-          <div className="flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {getBreadcrumbs().map((part, i) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="text-zinc-400">/</span>}
-                <span className={i === getBreadcrumbs().length - 1 ? "text-zinc-900 dark:text-white font-medium" : ""}>
-                  {part}
-                </span>
-              </span>
-            ))}
+          <div
+            className="max-w-full truncate text-sm text-zinc-600 dark:text-zinc-400"
+            title={getBreadcrumbs().join(" / ")}
+          >
+            {getBreadcrumbs().join(" / ")}
           </div>
         )}
       </div>
 
       {/* View mode dropdown (desktop only) */}
       {!isMobile && (
-        <div className="relative" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="relative shrink-0" onMouseDown={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowViewDropdown(!showViewDropdown)}
             className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
