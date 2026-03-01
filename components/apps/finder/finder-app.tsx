@@ -682,6 +682,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     const handleKeyDown = (e: KeyboardEvent) => {
       if (windowFocus && !windowFocus.isFocused) return;
       if (isMobile) return;
+      const target = e.target as HTMLElement | null;
+      const isTypingTarget =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable;
 
       if (e.key === "Escape" && searchActive) {
         e.preventDefault();
@@ -694,7 +699,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         return;
       }
 
-      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTypingTarget) {
         e.preventDefault();
         setSearchActive(true);
         setTimeout(() => searchInputRef.current?.focus(), 0);
@@ -1496,7 +1501,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
             <button
               onClick={() => { setSearchActive(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
               className="p-1 rounded text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-700"
-              title="Search (Cmd+F)"
+              title="Search (/)"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
