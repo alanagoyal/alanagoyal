@@ -25,6 +25,8 @@ const cache: GitHubClientCache = {
   repoTrees: {},
   fileContents: {},
 };
+const repoTreeRequests = new Map<string, Promise<GitHubTreeItem[]>>();
+let prefetchAllRepoTreesRequest: Promise<void> | null = null;
 
 interface FetchJsonOptions {
   signal?: AbortSignal;
@@ -66,17 +68,42 @@ export async function fetchGitHubRepoTree(repo: string): Promise<GitHubTreeItem[
     return cache.repoTrees[repo];
   }
 
-  try {
-    const data = await fetchGitHubJson<{ tree?: GitHubTreeItem[] }>(
-      `/api/github?type=tree&repo=${encodeURIComponent(repo)}`,
-      { errorMessage: "Failed to fetch tree" }
-    );
-    const tree = data.tree ?? [];
-    cache.repoTrees[repo] = tree;
-    return tree;
-  } catch {
-    return [];
+  const inFlight = repoTreeRequests.get(repo);
+  if (inFlight) return inFlight;
+
+  const request = (async () => {
+    try {
+      const data = await fetchGitHubJson<{ tree?: GitHubTreeItem[] }>(
+        `/api/github?type=tree&repo=${encodeURIComponent(repo)}`,
+        { errorMessage: "Failed to fetch tree" }
+      );
+      const tree = data.tree ?? [];
+      cache.repoTrees[repo] = tree;
+      return tree;
+    } catch {
+      return [];
+    } finally {
+      repoTreeRequests.delete(repo);
+    }
+  })();
+
+  repoTreeRequests.set(repo, request);
+  return request;
+}
+
+async function runPrefetchAllRepoTrees(): Promise<void> {
+  const repos = await fetchGitHubRepos();
+  const concurrency = 6;
+  let i = 0;
+
+  async function next(): Promise<void> {
+    while (i < repos.length) {
+      const repo = repos[i++];
+      await fetchGitHubRepoTree(repo);
+    }
   }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => next()));
 }
 
 export async function fetchGitHubFileContent(repo: string, path: string): Promise<string> {
@@ -109,6 +136,19 @@ export async function fetchGitHubFileContentOrNull(
     }
     throw error;
   }
+}
+
+export function getCachedRepoTrees(): Record<string, GitHubTreeItem[]> {
+  return cache.repoTrees;
+}
+
+export async function prefetchAllRepoTrees(): Promise<void> {
+  if (!prefetchAllRepoTreesRequest) {
+    prefetchAllRepoTreesRequest = runPrefetchAllRepoTrees().finally(() => {
+      prefetchAllRepoTreesRequest = null;
+    });
+  }
+  await prefetchAllRepoTreesRequest;
 }
 
 export async function fetchGitHubRecentFiles(signal?: AbortSignal): Promise<GitHubRecentFile[]> {
