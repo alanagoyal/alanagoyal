@@ -1434,7 +1434,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
           </span>
         ) : (
           <div
-            className="max-w-full truncate text-sm text-zinc-600 dark:text-zinc-400"
+            className="w-full truncate text-center text-sm text-zinc-600 dark:text-zinc-400"
             title={getBreadcrumbs().join(" / ")}
           >
             {getBreadcrumbs().join(" / ")}
@@ -1443,7 +1443,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       </div>
 
       {!isMobile && (
-        <div className="flex items-center gap-1 justify-end w-[250px] shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        <div
+          className={cn(
+            "flex items-center gap-1 justify-end shrink-0",
+            searchActive ? "w-[250px]" : "w-auto"
+          )}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div className="relative">
             <button
               onClick={() => setShowViewDropdown(!showViewDropdown)}
