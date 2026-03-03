@@ -287,7 +287,8 @@ function SidebarCityItem({
       className={cn(
         "relative w-full rounded-lg px-2 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
         "bg-white/[0.07]",
-        isDesktopSelected && "bg-white/[0.16]"
+        isDesktopSelected &&
+          "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
       )}
       style={{
         backgroundImage: getSidebarCardBackground(scene),
