@@ -1,0 +1,65 @@
+lib/app-config.ts
+  e8f9203abdeadb2b 71-82
+AGENTS.md
+  e8f9203abdeadb2b 39
+components/mobile/mobile-shell.tsx
+  e8f9203abdeadb2b 40-43,117
+components/apps/finder/finder-app.tsx
+  e8f9203abdeadb2b 304,530
+README.md
+  e8f9203abdeadb2b 66-70
+lib/shell-routing.ts
+  e8f9203abdeadb2b 13
+components/desktop/notification-center.tsx
+  e8f9203abdeadb2b 37-38,268,278,353,357,359-360,364-375,379,381,387-388,471
+types/apps.ts
+  e8f9203abdeadb2b 14
+components/desktop/desktop.tsx
+  e8f9203abdeadb2b 41,666-667
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "e3235be50c7bad0e60fb32a63b9f39eaab222631",
+  "prompts": {
+    "ab34a7349a1ff529": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cab3a-bc22-76f2-aef9-932e6f4ae86f",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 68,
+      "total_deletions": 23,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    },
+    "f531ffd6d1531923": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ca521-d69f-7a23-bf91-148219af00cf",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 342,
+      "overriden_lines": 0
+    }
+  }
+}
