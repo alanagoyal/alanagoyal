@@ -616,37 +616,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   }, [windowFocus, isMobileView, searchActive, searchQuery]);
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-background" data-app="weather">
-      <div
-        className={cn(
-          "sticky top-0 z-[1] flex min-w-0 items-center justify-between px-4 py-2 bg-muted border-b border-muted-foreground/20 select-none"
-        )}
-        onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
-      >
-        <div className="shrink-0" onMouseDown={(event) => event.stopPropagation()}>
-          <WindowControls
-            inShell={inDesktopShell}
-            showWhenNotInShell={!isMobileView}
-            className="p-2"
-            onClose={
-              inDesktopShell
-                ? windowFocus?.closeWindow
-                : !isMobileView
-                  ? () => window.close()
-                  : undefined
-            }
-            onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
-            onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
-            isMaximized={windowFocus?.isMaximized ?? false}
-            closeLabel={inDesktopShell ? "Close window" : "Close tab"}
-          />
-        </div>
-        <div className="flex-1 min-w-0 px-2 text-center">
-          <span className="block truncate text-sm font-semibold">Weather</span>
-        </div>
-        <div className="shrink-0 min-w-[88px]" aria-hidden />
-      </div>
-
+    <div ref={containerRef} className="h-full flex bg-background" data-app="weather">
       <div className="flex-1 min-h-0 relative overflow-hidden" style={{ background: activeScene.background }}>
         <div className="pointer-events-none absolute inset-0">
           {activeScene.showSunGlow && (
@@ -701,50 +671,86 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
           <div className={cn("relative z-[1] h-full flex", bodyTextClass)}>
           {!isMobileView && (
             <aside className={cn("w-[320px] shrink-0 border-r flex flex-col", sidebarShellClass)}>
-              <div className="px-3 py-2">
-                <div className="relative">
-                  <Search
-                    className={cn(
-                      "absolute left-2 top-1/2 -translate-y-1/2",
-                      activeScene.isDark ? "text-white/70" : "text-muted-foreground"
-                    )}
-                    size={14}
+              <div
+                className={cn(
+                  "sticky top-0 z-[2] backdrop-blur-md",
+                  activeScene.isDark ? "bg-black/18" : "bg-white/28"
+                )}
+              >
+                <div
+                  className="px-4 py-2 flex items-center justify-between select-none"
+                  onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
+                >
+                  <WindowControls
+                    inShell={inDesktopShell}
+                    showWhenNotInShell={!isMobileView}
+                    className="p-2"
+                    onClose={
+                      inDesktopShell
+                        ? windowFocus?.closeWindow
+                        : !isMobileView
+                          ? () => window.close()
+                          : undefined
+                    }
+                    onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
+                    onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
+                    isMaximized={windowFocus?.isMaximized ?? false}
+                    closeLabel={inDesktopShell ? "Close window" : "Close tab"}
                   />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    onFocus={() => setSearchActive(true)}
-                    onBlur={() => setSearchActive(false)}
-                    aria-label="Search cities"
-                    placeholder="Search"
-                    className={cn(
-                      "w-full pl-8 pr-8 py-0.5 rounded-lg focus:outline-none text-sm",
-                      activeScene.isDark
-                        ? "bg-black/30 border border-white/20 text-white placeholder:text-white/65"
-                        : "bg-[#E8E8E7]/90 border border-white/35 text-foreground placeholder:text-muted-foreground"
-                    )}
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setSearchQuery("");
-                        searchInputRef.current?.focus();
-                      }}
+                  <div className="w-8 h-8" aria-hidden />
+                </div>
+                <div
+                  className="px-3 pb-2 select-none"
+                  onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
+                >
+                  <div className="relative">
+                    <Search
                       className={cn(
-                        "absolute right-2 top-1/2 -translate-y-1/2",
-                        activeScene.isDark
-                          ? "text-white/70 hover:text-white"
-                          : "text-muted-foreground hover:text-foreground"
+                        "pointer-events-none absolute left-2 top-1/2 -translate-y-1/2",
+                        activeScene.isDark ? "text-white/70" : "text-muted-foreground"
                       )}
-                      aria-label="Clear search"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
+                      size={14}
+                    />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onFocus={() => setSearchActive(true)}
+                      onBlur={() => setSearchActive(false)}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      aria-label="Search cities"
+                      placeholder="Search"
+                      className={cn(
+                        "w-full pl-8 pr-8 py-0.5 rounded-lg focus:outline-none text-sm",
+                        activeScene.isDark
+                          ? "bg-black/30 border border-white/20 text-white placeholder:text-white/65"
+                          : "bg-[#E8E8E7]/90 border border-white/35 text-foreground placeholder:text-muted-foreground"
+                      )}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                        onClick={() => {
+                          setSearchQuery("");
+                          searchInputRef.current?.focus();
+                        }}
+                        className={cn(
+                          "absolute right-2 top-1/2 -translate-y-1/2",
+                          activeScene.isDark
+                            ? "text-white/70 hover:text-white"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               <ScrollArea className="flex-1" bottomMargin="0">
@@ -775,7 +781,13 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
             </aside>
           )}
 
-          <main className="flex-1 min-w-0 min-h-0 bg-transparent">
+          <main className="flex-1 min-w-0 min-h-0 bg-transparent relative">
+            {!isMobileView && inDesktopShell && (
+              <div
+                className="absolute top-0 left-0 right-0 h-12 z-10 select-none"
+                onMouseDown={windowFocus?.onDragStart}
+              />
+            )}
             <ScrollArea className="h-full" bottomMargin="0">
               <div className="p-4 space-y-4">
                 {isMobileView && (
