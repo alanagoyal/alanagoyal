@@ -12,6 +12,7 @@ import {
   Search,
   Sun,
   Wind,
+  X,
 } from "lucide-react";
 import { WindowControls } from "@/components/window-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -445,12 +446,15 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const windowFocus = useWindowFocus();
   const inDesktopShell = !!(inShell && windowFocus && !isMobileView);
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>({});
   const [selectedCityId, setSelectedCityId] = useState("san-francisco");
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchActive, setSearchActive] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
 
   const loadWeather = useCallback(async (silent = false) => {
@@ -526,6 +530,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
       })),
     [weatherByCity]
   );
+  const filteredCityCards = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return cityCards;
+    return cityCards.filter((city) => city.name.toLowerCase().includes(normalizedQuery));
+  }, [cityCards, searchQuery]);
 
   const dailyRange = useMemo(() => {
     const daily = selectedWeather?.daily ?? [];
@@ -568,6 +577,44 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const bodyTextClass = activeScene.isDark ? "text-white" : "text-slate-900";
   const mutedTextClass = activeScene.isDark ? "text-white/80" : "text-slate-700/85";
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (windowFocus && !windowFocus.isFocused) return;
+      if (isMobileView) return;
+      const target = event.target as HTMLElement | null;
+      const isTypingTarget =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable;
+      const isSearchFocused = document.activeElement === searchInputRef.current;
+
+      if (event.key === "Escape" && (isSearchFocused || searchActive || !!searchQuery)) {
+        event.preventDefault();
+        if (searchQuery) {
+          setSearchQuery("");
+        }
+        setSearchActive(false);
+        (document.activeElement as HTMLElement | null)?.blur();
+        return;
+      }
+
+      if (
+        event.key === "/" &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !isTypingTarget
+      ) {
+        event.preventDefault();
+        setSearchActive(true);
+        window.setTimeout(() => searchInputRef.current?.focus(), 0);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [windowFocus, isMobileView, searchActive, searchQuery]);
+
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-background" data-app="weather">
       <div
@@ -597,9 +644,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         <div className="flex-1 min-w-0 px-2 text-center">
           <span className="block truncate text-sm font-semibold">Weather</span>
         </div>
-        <div className="shrink-0 min-w-[88px] text-right text-xs text-muted-foreground tabular-nums">
-          {selectedWeather ? `Updated ${formatUpdatedTime(selectedWeather.updatedAt)}` : ""}
-        </div>
+        <div className="shrink-0 min-w-[88px]" aria-hidden />
       </div>
 
       <div className="flex-1 min-h-0 relative overflow-hidden" style={{ background: activeScene.background }}>
@@ -666,9 +711,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     size={14}
                   />
                   <input
+                    ref={searchInputRef}
                     type="text"
-                    value=""
-                    readOnly
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onFocus={() => setSearchActive(true)}
+                    onBlur={() => setSearchActive(false)}
                     aria-label="Search cities"
                     placeholder="Search"
                     className={cn(
@@ -678,11 +726,30 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         : "bg-[#E8E8E7]/90 border border-white/35 text-foreground placeholder:text-muted-foreground"
                     )}
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setSearchQuery("");
+                        searchInputRef.current?.focus();
+                      }}
+                      className={cn(
+                        "absolute right-2 top-1/2 -translate-y-1/2",
+                        activeScene.isDark
+                          ? "text-white/70 hover:text-white"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
               <ScrollArea className="flex-1" bottomMargin="0">
                 <div className="px-2 pb-2 space-y-2">
-                  {cityCards.map((city) => (
+                  {filteredCityCards.map((city) => (
                     <SidebarCityItem
                       key={city.id}
                       cityName={city.name}
@@ -693,6 +760,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       onSelect={() => setSelectedCityId(city.id)}
                     />
                   ))}
+                  {filteredCityCards.length === 0 && (
+                    <p
+                      className={cn(
+                        "px-2 py-3 text-sm",
+                        activeScene.isDark ? "text-white/75" : "text-muted-foreground"
+                      )}
+                    >
+                      No matching locations
+                    </p>
+                  )}
                 </div>
               </ScrollArea>
             </aside>
@@ -927,6 +1004,17 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     </div>
                   </section>
                 </div>
+
+                {selectedWeather && (
+                  <p
+                    className={cn(
+                      "pt-1 pb-2 text-center text-[11px]",
+                      activeScene.isDark ? "text-white/65" : "text-slate-700/65"
+                    )}
+                  >
+                    Updated {formatUpdatedTime(selectedWeather.updatedAt)}
+                  </p>
+                )}
               </div>
             </ScrollArea>
           </main>
