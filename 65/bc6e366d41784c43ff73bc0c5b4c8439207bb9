@@ -1,0 +1,23 @@
+components/apps/weather/weather-app.tsx
+  e8f9203abdeadb2b 619,674-677,680-684,698,700-723,725,727-728,730-753,784-790
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "65bc6e366d41784c43ff73bc0c5b4c8439207bb9",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 129,
+      "total_deletions": 117,
+      "accepted_lines": 857,
+      "overriden_lines": 0
+    }
+  }
+}
