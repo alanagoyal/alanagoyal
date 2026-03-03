@@ -301,6 +301,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         const mobileUnsupportedAppIds = new Set(["textedit", "preview"]);
         const apps: FileItem[] = APPS
           .filter(app => app.id !== "finder") // Exclude Finder from Applications
+          .filter(app => app.showInFinderApplications !== false)
           .filter(app => !isMobile || !mobileUnsupportedAppIds.has(app.id))
           .map(app => ({
             name: app.name,
@@ -526,6 +527,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     for (const app of APPS) {
       if (app.id === "finder") continue;
+      if (app.showInFinderApplications === false) continue;
       entries.push({
         name: app.name,
         type: "app",

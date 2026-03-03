@@ -10,6 +10,7 @@ const APP_ROUTE_SEGMENTS = {
   finder: "finder",
   photos: "photos",
   calendar: "calendar",
+  weather: "weather",
   music: "music",
   textedit: "textedit",
   preview: "preview",

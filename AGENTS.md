@@ -36,4 +36,4 @@ read before building, update when you ship:
 - **window management**: `useWindowManager()` for operations, `useWindowFocus()` for focus state
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
 - **menu system**: menus are mutually exclusive via `openMenu` state in `menu-bar.tsx`. panel-style menus follow the `status-menus.tsx` pattern. use `useClickOutside()` for dismissal
-
+- **app discoverability**: use `showOnDockByDefault` and `showInFinderApplications` in `lib/app-config.ts` to control whether apps appear in Dock by default or Finder > Applications

@@ -34,7 +34,8 @@ interface NotificationCenterProps {
 const cardClass = "bg-muted rounded-md p-3 mb-1.5";
 const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
-const weatherCardClass = `${cardClass} h-[134px]`;
+const weatherCardClass = "h-[134px]";
+const clickableWeatherCardClass = `${clickableCardClass} ${weatherCardClass}`;
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
@@ -264,7 +265,7 @@ interface WeatherData {
 
 function WeatherWidgetSkeleton() {
   return (
-    <div className={weatherCardClass}>
+    <>
       <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
       <div className="h-10 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse mt-2" />
       <div className="flex items-center gap-2 mt-3">
@@ -274,7 +275,7 @@ function WeatherWidgetSkeleton() {
           <div className="h-3 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -349,30 +350,42 @@ function PhotosWidget({
 function WeatherWidget({
   weather,
   loading,
+  onActivate,
 }: {
   weather: WeatherData | null;
   loading: boolean;
+  onActivate: () => void;
 }) {
-  if (loading) {
-    return <WeatherWidgetSkeleton />;
-  }
-  if (!weather) return null;
-
-  const weatherInfo = getWeatherInfo(weather.code);
+  const { openWindow } = useWindowManager();
+  const weatherInfo = weather ? getWeatherInfo(weather.code) : null;
 
   return (
-    <div className={weatherCardClass}>
-      <p className="text-sm font-medium">San Francisco</p>
-      <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
-      <div className="flex items-center gap-1.5 mt-3">
-        <div className="text-muted-foreground">{weatherInfo.icon}</div>
-        <div>
-          <p className="text-xs font-medium">{weatherInfo.description}</p>
-          <p className="text-[10px] text-muted-foreground">
-            H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
-          </p>
-        </div>
-      </div>
+    <div
+      className={clickableWeatherCardClass}
+      onClick={() => {
+        openWindow("weather");
+        onActivate();
+      }}
+    >
+      {loading && <WeatherWidgetSkeleton />}
+      {!loading && !weather && (
+        <p className="text-xs text-muted-foreground">Weather unavailable</p>
+      )}
+      {!loading && weather && (
+        <>
+          <p className="text-sm font-medium">San Francisco</p>
+          <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
+          <div className="flex items-center gap-1.5 mt-3">
+            <div className="text-muted-foreground">{weatherInfo?.icon}</div>
+            <div>
+              <p className="text-xs font-medium">{weatherInfo?.description}</p>
+              <p className="text-[10px] text-muted-foreground">
+                H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
+              </p>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -455,7 +468,7 @@ export function NotificationCenter({
           onOpenConversation={onOpenMessagesConversation}
         />
         <PhotosWidget photos={photos} loading={photosLoading} onActivate={onClose} />
-        <WeatherWidget weather={weather} loading={weatherLoading} />
+        <WeatherWidget weather={weather} loading={weatherLoading} onActivate={onClose} />
       </ScrollArea>
     </div>
   );
