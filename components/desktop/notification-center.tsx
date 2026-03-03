@@ -21,6 +21,7 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
 import { loadCalendars } from "@/components/apps/calendar/data";
+import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
 import type { Photo } from "@/types/photos";
@@ -36,6 +37,89 @@ const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
 const weatherCardClass = "h-[134px]";
 const clickableWeatherCardClass = `${clickableCardClass} ${weatherCardClass}`;
+
+type DayPhase = "night" | "dawn" | "day" | "dusk";
+type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
+
+interface WeatherWidgetScene {
+  background: string;
+  isDark: boolean;
+  showStars: boolean;
+}
+
+function getDayPhase(iso: string): DayPhase {
+  if (!iso) return "day";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "day";
+  const hour = date.getHours();
+  if (hour < 5 || hour >= 20) return "night";
+  if (hour < 8) return "dawn";
+  if (hour < 17) return "day";
+  return "dusk";
+}
+
+function getWeatherMood(code: number): WeatherMood {
+  if (code === 0) return "clear";
+  if (code <= 3) return "cloudy";
+  if (code <= 48) return "fog";
+  if (code <= 77) return "snow";
+  if (code <= 82) return "rain";
+  return "thunder";
+}
+
+function getWeatherWidgetScene(currentTimeIso: string, weatherCode: number): WeatherWidgetScene {
+  const phase = getDayPhase(currentTimeIso);
+  const mood = getWeatherMood(weatherCode);
+
+  if (phase === "night") {
+    return {
+      background:
+        mood === "rain" || mood === "thunder"
+          ? "linear-gradient(180deg, #080f2a 0%, #111b3f 45%, #243362 100%)"
+          : "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
+      isDark: true,
+      showStars: mood === "clear" || mood === "cloudy",
+    };
+  }
+
+  if (phase === "dusk") {
+    return {
+      background: "linear-gradient(180deg, #1d2f63 0%, #3f4f8d 36%, #8f83a8 64%, #dd9d77 100%)",
+      isDark: true,
+      showStars: false,
+    };
+  }
+
+  if (phase === "dawn") {
+    return {
+      background: "linear-gradient(180deg, #284f8e 0%, #4f78b2 38%, #8faccf 64%, #f5c38f 100%)",
+      isDark: false,
+      showStars: false,
+    };
+  }
+
+  if (mood === "fog") {
+    return {
+      background: "linear-gradient(180deg, #5e7898 0%, #8097b0 48%, #a8b6c4 100%)",
+      isDark: false,
+      showStars: false,
+    };
+  }
+
+  if (mood === "rain" || mood === "thunder") {
+    return {
+      background: "linear-gradient(180deg, #35567d 0%, #4e6f95 42%, #6284ac 100%)",
+      isDark: false,
+      showStars: false,
+    };
+  }
+
+  return {
+    background: "linear-gradient(180deg, #3f83c4 0%, #63a7df 44%, #8dc4ee 100%)",
+    isDark: false,
+    showStars: false,
+  };
+}
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
@@ -258,21 +342,23 @@ function MessagesWidget({
 // --- Weather Widget ---
 interface WeatherData {
   temp: number;
+  currentTime: string;
   code: number;
   high: number;
   low: number;
 }
 
-function WeatherWidgetSkeleton() {
+function WeatherWidgetSkeleton({ isDark }: { isDark: boolean }) {
+  const skeletonClass = isDark ? "bg-white/20" : "bg-black/10";
   return (
     <>
-      <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-      <div className="h-10 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse mt-2" />
+      <div className={cn("h-4 w-24 rounded animate-pulse", skeletonClass)} />
+      <div className={cn("h-10 w-20 rounded animate-pulse mt-2", skeletonClass)} />
       <div className="flex items-center gap-2 mt-3">
-        <div className="h-8 w-8 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+        <div className={cn("h-8 w-8 rounded animate-pulse", skeletonClass)} />
         <div className="space-y-1.5">
-          <div className="h-3 w-16 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-          <div className="h-3 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          <div className={cn("h-3 w-16 rounded animate-pulse", skeletonClass)} />
+          <div className={cn("h-3 w-20 rounded animate-pulse", skeletonClass)} />
         </div>
       </div>
     </>
@@ -358,34 +444,59 @@ function WeatherWidget({
 }) {
   const { openWindow } = useWindowManager();
   const weatherInfo = weather ? getWeatherInfo(weather.code) : null;
+  const scene = getWeatherWidgetScene(
+    weather?.currentTime ?? new Date().toISOString(),
+    weather?.code ?? 1
+  );
+  const textClassName = scene.isDark ? "text-white" : "text-slate-900";
+  const mutedTextClassName = scene.isDark ? "text-white/75" : "text-slate-700/80";
+  const iconClassName = scene.isDark ? "text-white/80" : "text-slate-700/75";
 
   return (
     <div
-      className={clickableWeatherCardClass}
+      className={cn(
+        clickableWeatherCardClass,
+        "relative overflow-hidden border",
+        scene.isDark ? "border-white/20 text-white" : "border-white/35 text-slate-900"
+      )}
+      style={{ background: scene.background }}
       onClick={() => {
         openWindow("weather");
         onActivate();
       }}
     >
-      {loading && <WeatherWidgetSkeleton />}
-      {!loading && !weather && (
-        <p className="text-xs text-muted-foreground">Weather unavailable</p>
+      {scene.showStars && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
+            backgroundSize: "180px 120px",
+          }}
+        />
       )}
-      {!loading && weather && (
-        <>
-          <p className="text-sm font-medium">San Francisco</p>
-          <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
-          <div className="flex items-center gap-1.5 mt-3">
-            <div className="text-muted-foreground">{weatherInfo?.icon}</div>
-            <div>
-              <p className="text-xs font-medium">{weatherInfo?.description}</p>
-              <p className="text-[10px] text-muted-foreground">
-                H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
-              </p>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15" />
+      <div className={cn("relative z-[1]", textClassName)}>
+        {loading && <WeatherWidgetSkeleton isDark={scene.isDark} />}
+        {!loading && !weather && (
+          <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
+        )}
+        {!loading && weather && (
+          <>
+            <p className="text-sm font-medium">San Francisco</p>
+            <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
+            <div className="flex items-center gap-1.5 mt-3">
+              <div className={iconClassName}>{weatherInfo?.icon}</div>
+              <div>
+                <p className="text-xs font-medium">{weatherInfo?.description}</p>
+                <p className={cn("text-[10px]", mutedTextClassName)}>
+                  H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
+                </p>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -423,6 +534,7 @@ export function NotificationCenter({
         if (!cancelled) {
           setWeather({
             temp: data.current.temperature_2m,
+            currentTime: data.current.time ?? new Date().toISOString(),
             code: data.current.weather_code,
             high: data.daily.temperature_2m_max[0],
             low: data.daily.temperature_2m_min[0],
