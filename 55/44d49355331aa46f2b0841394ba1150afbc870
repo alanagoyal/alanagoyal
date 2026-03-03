@@ -1,0 +1,27 @@
+components/desktop/notification-center.tsx
+  e8f9203abdeadb2b 24-29,52-72,383,494-500
+lib/weather.ts
+  e8f9203abdeadb2b 1-207
+components/apps/weather/weather-app.tsx
+  e8f9203abdeadb2b 19-25,143-144,146,148,150,152,154,156-160,194-212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "5544d49355331aa46f2b0841394ba1150afbc870",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 288,
+      "total_deletions": 296,
+      "accepted_lines": 280,
+      "overriden_lines": 0
+    }
+  }
+}
