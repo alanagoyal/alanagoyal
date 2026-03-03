@@ -149,7 +149,6 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
   const phase = getDayPhase(currentTimeIso);
   const mood = getWeatherMood(weatherCode);
 
-  const isDark = phase === "night" || phase === "dusk";
   const showStars = phase === "night" && (mood === "clear" || mood === "cloudy");
   const showRain = mood === "rain" || mood === "thunder";
   const showFog = mood === "fog";
@@ -186,8 +185,8 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
   if (phase === "dusk") {
     return {
       background:
-        "linear-gradient(180deg, #1d2f63 0%, #3f4f8d 36%, #8f83a8 64%, #dd9d77 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(80,101,166,0.85), rgba(132,150,209,0.72))",
+        "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
+      heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
       isDark: true,
       showStars: false,
       showRain,
@@ -200,8 +199,8 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
   if (phase === "dawn") {
     return {
       background:
-        "linear-gradient(180deg, #284f8e 0%, #4f78b2 38%, #8faccf 64%, #f5c38f 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(88,129,189,0.86), rgba(129,165,215,0.76))",
+        "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
+      heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
       isDark: false,
       showStars: false,
       showRain,
@@ -214,8 +213,8 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
   if (mood === "fog") {
     return {
       background:
-        "linear-gradient(180deg, #5e7898 0%, #8097b0 48%, #a8b6c4 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(103,131,163,0.82), rgba(151,175,198,0.72))",
+        "linear-gradient(180deg, #3d5068 0%, #566d86 48%, #70869d 100%)",
+      heroGradient: "linear-gradient(140deg, rgba(72,98,127,0.86), rgba(104,127,152,0.74))",
       isDark: false,
       showStars: false,
       showRain: false,
@@ -228,8 +227,8 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
   if (mood === "rain" || mood === "thunder") {
     return {
       background:
-        "linear-gradient(180deg, #35567d 0%, #4e6f95 42%, #6284ac 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(67,103,145,0.86), rgba(106,139,178,0.74))",
+        "linear-gradient(180deg, #264561 0%, #355a79 42%, #4a6f8f 100%)",
+      heroGradient: "linear-gradient(140deg, rgba(49,81,118,0.9), rgba(79,112,146,0.78))",
       isDark: false,
       showStars: false,
       showRain: true,
@@ -241,8 +240,8 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
 
   return {
     background:
-      "linear-gradient(180deg, #3f83c4 0%, #63a7df 44%, #8dc4ee 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(73,125,190,0.84), rgba(123,176,225,0.74))",
+      "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(58,95,142,0.88), rgba(92,124,164,0.76))",
     isDark: false,
     showStars: false,
     showRain: false,
@@ -250,6 +249,44 @@ function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherSc
     showCloudBands,
     showSunGlow,
   };
+}
+
+function getSidebarCardBackground(scene: WeatherScene | null): string {
+  const baseScene =
+    scene?.background ??
+    "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
+  const overlays = [
+    "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%)",
+  ];
+
+  if (scene?.showFog) {
+    overlays.push(
+      "linear-gradient(180deg, rgba(214,229,247,0.08) 40%, rgba(214,229,247,0.2) 100%)"
+    );
+  }
+  if (scene?.showCloudBands) {
+    overlays.push(
+      "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
+    );
+  }
+  if (scene?.showRain) {
+    overlays.push(
+      "repeating-linear-gradient(112deg, rgba(214,231,255,0.26) 0px, rgba(214,231,255,0.26) 2px, transparent 2px, transparent 16px)"
+    );
+  }
+  if (scene?.showStars) {
+    overlays.push(
+      "radial-gradient(1.6px 1.6px at 12px 18px, rgba(255,255,255,0.78), transparent 60%), radial-gradient(1.3px 1.3px at 58px 32px, rgba(255,255,255,0.68), transparent 60%)"
+    );
+  }
+  if (scene?.showSunGlow) {
+    overlays.push(
+      "radial-gradient(80px 56px at 82% 14%, rgba(255,217,125,0.22), transparent 70%)"
+    );
+  }
+
+  overlays.push(baseScene);
+  return overlays.join(", ");
 }
 
 function getWeatherDescription(code: number): string {
@@ -354,15 +391,15 @@ async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
 function SidebarCityItem({
   cityName,
   weather,
+  scene,
   isSelected,
-  isDarkTheme,
   isMobileView,
   onSelect,
 }: {
   cityName: string;
   weather: CityWeather | null;
+  scene: WeatherScene | null;
   isSelected: boolean;
-  isDarkTheme: boolean;
   isMobileView: boolean;
   onSelect: () => void;
 }) {
@@ -379,13 +416,15 @@ function SidebarCityItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative w-full rounded-lg px-2 py-1.5 h-[70px] text-left transition-colors border backdrop-blur-sm",
-        isDarkTheme ? "text-white/95 border-white/20" : "text-foreground border-muted-foreground/20",
-        isDesktopSelected &&
-          (isDarkTheme
-            ? "bg-white/[0.08] border-white/45 shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
-            : "bg-black/[0.05] border-black/30 shadow-[0_0_0_1px_rgba(255,255,255,0.4)]")
+        "relative w-full rounded-lg px-2 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
+        "bg-white/[0.07]",
+        isDesktopSelected && "bg-white/[0.16]"
       )}
+      style={{
+        backgroundImage: getSidebarCardBackground(scene),
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -393,13 +432,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "text-xs",
-              isDesktopSelected
-                ? isDarkTheme
-                  ? "text-white/85"
-                  : "text-foreground/85"
-                : isDarkTheme
-                  ? "text-white/70"
-                  : "text-muted-foreground"
+              isDesktopSelected ? "text-white/90" : "text-white/76"
             )}
           >
             {timeLabel}
@@ -407,13 +440,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "text-xs truncate",
-              isDesktopSelected
-                ? isDarkTheme
-                  ? "text-white/90"
-                  : "text-foreground/90"
-                : isDarkTheme
-                  ? "text-white/75"
-                  : "text-muted-foreground"
+              isDesktopSelected ? "text-white/95" : "text-white/84"
             )}
           >
             {descriptionLabel}
@@ -424,13 +451,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "text-[10px]",
-              isDesktopSelected
-                ? isDarkTheme
-                  ? "text-white/85"
-                  : "text-foreground/85"
-                : isDarkTheme
-                  ? "text-white/70"
-                  : "text-muted-foreground"
+              isDesktopSelected ? "text-white/90" : "text-white/78"
             )}
           >
             {highLowLabel}
@@ -450,16 +471,13 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
   const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>({});
   const [selectedCityId, setSelectedCityId] = useState("san-francisco");
-  const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
 
-  const loadWeather = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-
+  const loadWeather = useCallback(async () => {
     try {
       const responses = await Promise.allSettled(CITIES.map((city) => fetchCityWeather(city)));
       const nextWeatherByCity: Record<string, CityWeather> = {};
@@ -485,15 +503,13 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
       if (!hasFetchedAnyDataRef.current) {
         setFailed(true);
       }
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadWeather(false);
+    void loadWeather();
     const interval = window.setInterval(() => {
-      void loadWeather(true);
+      void loadWeather();
     }, 10 * 60 * 1000);
     return () => window.clearInterval(interval);
   }, [loadWeather]);
@@ -527,6 +543,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         id: city.id,
         name: city.name,
         weather: weatherByCity[city.id] ?? null,
+        scene: weatherByCity[city.id]
+          ? getWeatherScene(
+              weatherByCity[city.id].currentTime,
+              weatherByCity[city.id].weatherCode
+            )
+          : null,
       })),
     [weatherByCity]
   );
@@ -565,17 +587,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     [selectedWeather?.currentTime, selectedWeather?.weatherCode]
   );
 
-  const sidebarShellClass = activeScene.isDark
-    ? "bg-black/18 border-white/20 backdrop-blur-md"
-    : "bg-white/28 border-white/35 backdrop-blur-md";
-  const mainCardClass = activeScene.isDark
-    ? "bg-black/20 border-white/20 backdrop-blur-sm"
-    : "bg-white/35 border-white/35 backdrop-blur-sm";
-  const innerCardClass = activeScene.isDark
-    ? "bg-black/25 border-white/20"
-    : "bg-white/50 border-white/35";
-  const bodyTextClass = activeScene.isDark ? "text-white" : "text-slate-900";
-  const mutedTextClass = activeScene.isDark ? "text-white/80" : "text-slate-700/85";
+  const sidebarShellClass = "backdrop-blur-md";
+  const mainCardClass = "bg-white/[0.12] backdrop-blur-sm";
+  const innerCardClass = "bg-white/[0.08]";
+  const bodyTextClass = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]";
+  const mutedTextClass = "text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
+  const sidebarBackgroundImage = `linear-gradient(180deg, rgba(8,16,34,0.2) 0%, rgba(8,16,34,0.34) 100%), ${activeScene.background}`;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -621,8 +638,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         <div className="pointer-events-none absolute inset-0">
           {activeScene.showSunGlow && (
             <>
-              <div className="absolute -top-14 right-[16%] h-52 w-52 rounded-full bg-yellow-100/35 blur-3xl" />
-              <div className="absolute top-4 right-[22%] h-24 w-24 rounded-full bg-yellow-200/50 blur-2xl" />
+              <div className="absolute -top-14 right-[16%] h-52 w-52 rounded-full bg-yellow-100/18 blur-3xl" />
+              <div className="absolute top-4 right-[22%] h-24 w-24 rounded-full bg-yellow-200/30 blur-2xl" />
             </>
           )}
           {activeScene.showStars && (
@@ -670,13 +687,18 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         {(!failed || hasFetchedAnyDataRef.current) && (
           <div className={cn("relative z-[1] h-full flex", bodyTextClass)}>
           {!isMobileView && (
-            <aside className={cn("w-[320px] shrink-0 border-r flex flex-col", sidebarShellClass)}>
+            <aside
+              className={cn("relative overflow-hidden w-[320px] shrink-0 flex flex-col", sidebarShellClass)}
+              style={{ backgroundImage: sidebarBackgroundImage }}
+            >
               <div
-                className={cn(
-                  "sticky top-0 z-[2] backdrop-blur-md",
-                  activeScene.isDark ? "bg-black/18" : "bg-white/28"
-                )}
-              >
+                className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-32"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(8,16,34,0.32) 0%, rgba(8,16,34,0.2) 56%, rgba(8,16,34,0) 100%)",
+                }}
+              />
+              <div className="sticky top-0 z-[2]">
                 <div
                   className="px-4 py-2 flex items-center justify-between select-none"
                   onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
@@ -707,7 +729,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     <Search
                       className={cn(
                         "pointer-events-none absolute left-2 top-1/2 -translate-y-1/2",
-                        activeScene.isDark ? "text-white/70" : "text-muted-foreground"
+                        "text-white/70"
                       )}
                       size={14}
                     />
@@ -723,9 +745,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       placeholder="Search"
                       className={cn(
                         "w-full pl-8 pr-8 py-0.5 rounded-lg focus:outline-none text-sm",
-                        activeScene.isDark
-                          ? "bg-black/30 border border-white/20 text-white placeholder:text-white/65"
-                          : "bg-[#E8E8E7]/90 border border-white/35 text-foreground placeholder:text-muted-foreground"
+                        "bg-white/[0.12] text-white placeholder:text-white/65"
                       )}
                     />
                     {searchQuery && (
@@ -741,9 +761,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         }}
                         className={cn(
                           "absolute right-2 top-1/2 -translate-y-1/2",
-                          activeScene.isDark
-                            ? "text-white/70 hover:text-white"
-                            : "text-muted-foreground hover:text-foreground"
+                          "text-white/70 hover:text-white"
                         )}
                         aria-label="Clear search"
                       >
@@ -760,8 +778,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       key={city.id}
                       cityName={city.name}
                       weather={city.weather}
+                      scene={city.scene}
                       isSelected={city.id === selectedCityId}
-                      isDarkTheme={activeScene.isDark}
                       isMobileView={isMobileView}
                       onSelect={() => setSelectedCityId(city.id)}
                     />
@@ -770,7 +788,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     <p
                       className={cn(
                         "px-2 py-3 text-sm",
-                        activeScene.isDark ? "text-white/75" : "text-muted-foreground"
+                        "text-white/75"
                       )}
                     >
                       No matching locations
@@ -800,10 +818,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         className={cn(
                           "shrink-0 pb-1 text-sm",
                           city.id === selectedCityId
-                            ? "text-[#0A7CFF] border-b-2 border-[#0A7CFF] font-medium"
-                            : activeScene.isDark
-                              ? "text-white/80"
-                              : "text-muted-foreground"
+                            ? "text-[#0A7CFF] font-medium"
+                            : "text-white/82"
                         )}
                       >
                         {city.name}
@@ -812,7 +828,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 )}
 
-                <section className={cn("rounded-2xl border overflow-hidden text-white", mainCardClass)}>
+                <section className={cn("rounded-2xl overflow-hidden text-white", mainCardClass)}>
                   <div className="px-5 py-6" style={{ background: activeScene.heroGradient }}>
                     <div className="text-center">
                       {selectedWeather ? (
@@ -851,7 +867,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 </section>
 
-                <section className={cn("rounded-2xl border p-3", mainCardClass)}>
+                <section className={cn("rounded-2xl p-3", mainCardClass)}>
                   {selectedWeather ? (
                     <p className={cn("text-sm font-medium", mutedTextClass)}>
                       {`${getWeatherDescription(selectedWeather.weatherCode)} expected around ${formatHourLabel(
@@ -861,17 +877,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   ) : (
                     <div className="h-5 w-[75%] rounded bg-white/20 animate-pulse" />
                   )}
-                  <div
-                    className={cn(
-                      "mt-3 border-t pt-3 grid gap-2",
-                      activeScene.isDark ? "border-white/20" : "border-white/35",
-                      hourlyGridColsClass
-                    )}
-                  >
+                    <div
+                      className={cn(
+                        "mt-3 pt-3 grid gap-2",
+                        hourlyGridColsClass
+                      )}
+                    >
                     {(selectedWeather?.hourly ?? Array.from({ length: 10 })).map((hour, index) => (
                       <div
                         key={selectedWeather ? `${hour.time}-${index}` : `loading-hour-${index}`}
-                        className={cn("min-w-0 rounded-lg border px-2 py-2 text-center", innerCardClass)}
+                        className={cn("min-w-0 rounded-lg px-2 py-2 text-center", innerCardClass)}
                       >
                         <p className="text-xs font-semibold">
                           {selectedWeather
@@ -911,11 +926,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     compactMainContent ? "grid-cols-1" : "grid-cols-1 xl:grid-cols-2"
                   )}
                 >
-                  <section className={cn("rounded-2xl border p-3", mainCardClass)}>
+                  <section className={cn("rounded-2xl p-3", mainCardClass)}>
                     <p className={cn("text-xs font-semibold uppercase tracking-wide", mutedTextClass)}>
                       10-Day Forecast
                     </p>
-                    <div className={cn("mt-2 divide-y", activeScene.isDark ? "divide-white/20" : "divide-white/35")}>
+                    <div className="mt-2">
                       {(selectedWeather?.daily ?? Array.from({ length: 10 })).map((day, index) => {
                         if (!selectedWeather) {
                           return (
@@ -952,7 +967,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                             <p className={cn(mutedTextClass, denseMainContent ? "text-xs" : "text-sm")}>
                               {Math.round(day.low)}°
                             </p>
-                            <div className={cn("h-1.5 rounded-full border relative overflow-hidden", innerCardClass)}>
+                            <div className={cn("h-1.5 rounded-full relative overflow-hidden", innerCardClass)}>
                               <div
                                 className="absolute top-0 h-full rounded-full bg-gradient-to-r from-[#72b9ff] to-[#ffd46b]"
                                 style={{
@@ -970,12 +985,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     </div>
                   </section>
 
-                  <section className={cn("rounded-2xl border p-3", mainCardClass)}>
+                  <section className={cn("rounded-2xl p-3", mainCardClass)}>
                     <p className={cn("text-xs font-semibold uppercase tracking-wide", mutedTextClass)}>
                       Conditions
                     </p>
                     <div className={cn("mt-2 grid gap-2", denseMainContent ? "grid-cols-1" : "grid-cols-2")}>
-                      <div className={cn("rounded-xl border p-3", innerCardClass)}>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
                         <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
                           <Droplets size={14} />
                           <span className="text-xs">Humidity</span>
@@ -984,7 +999,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                           {selectedWeather ? `${Math.round(selectedWeather.humidity)}%` : "--"}
                         </p>
                       </div>
-                      <div className={cn("rounded-xl border p-3", innerCardClass)}>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
                         <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
                           <Wind size={14} />
                           <span className="text-xs">Wind</span>
@@ -993,7 +1008,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                           {selectedWeather ? `${Math.round(selectedWeather.windMph)} mph` : "--"}
                         </p>
                       </div>
-                      <div className={cn("rounded-xl border p-3", innerCardClass)}>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
                         <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
                           <Sun size={14} />
                           <span className="text-xs">Feels Like</span>
@@ -1002,7 +1017,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                           {selectedWeather ? `${Math.round(selectedWeather.feelsLike)}°` : "--"}
                         </p>
                       </div>
-                      <div className={cn("rounded-xl border p-3", innerCardClass)}>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
                         <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
                           <CloudRain size={14} />
                           <span className="text-xs">Max Rain</span>
@@ -1021,7 +1036,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   <p
                     className={cn(
                       "pt-1 pb-2 text-center text-[11px]",
-                      activeScene.isDark ? "text-white/65" : "text-slate-700/65"
+                      "text-white/65"
                     )}
                   >
                     Updated {formatUpdatedTime(selectedWeather.updatedAt)}

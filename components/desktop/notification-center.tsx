@@ -35,16 +35,19 @@ interface NotificationCenterProps {
 const cardClass = "bg-muted rounded-md p-3 mb-1.5";
 const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
-const weatherCardClass = "h-[134px]";
-const clickableWeatherCardClass = `${clickableCardClass} ${weatherCardClass}`;
+const weatherCardClass = "h-[134px] rounded-md p-3 mb-1.5";
+const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
 type DayPhase = "night" | "dawn" | "day" | "dusk";
 type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
 
 interface WeatherWidgetScene {
   background: string;
-  isDark: boolean;
   showStars: boolean;
+  showRain: boolean;
+  showFog: boolean;
+  showCloudBands: boolean;
+  showSunGlow: boolean;
 }
 
 function getDayPhase(iso: string): DayPhase {
@@ -70,6 +73,11 @@ function getWeatherMood(code: number): WeatherMood {
 function getWeatherWidgetScene(currentTimeIso: string, weatherCode: number): WeatherWidgetScene {
   const phase = getDayPhase(currentTimeIso);
   const mood = getWeatherMood(weatherCode);
+  const showStars = phase === "night" && (mood === "clear" || mood === "cloudy");
+  const showRain = mood === "rain" || mood === "thunder";
+  const showFog = mood === "fog";
+  const showCloudBands = mood === "cloudy" || mood === "rain" || mood === "fog";
+  const showSunGlow = phase === "day" && mood === "clear";
 
   if (phase === "night") {
     return {
@@ -77,47 +85,65 @@ function getWeatherWidgetScene(currentTimeIso: string, weatherCode: number): Wea
         mood === "rain" || mood === "thunder"
           ? "linear-gradient(180deg, #080f2a 0%, #111b3f 45%, #243362 100%)"
           : "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
-      isDark: true,
-      showStars: mood === "clear" || mood === "cloudy",
+      showStars,
+      showRain,
+      showFog,
+      showCloudBands: true,
+      showSunGlow: false,
     };
   }
 
   if (phase === "dusk") {
     return {
-      background: "linear-gradient(180deg, #1d2f63 0%, #3f4f8d 36%, #8f83a8 64%, #dd9d77 100%)",
-      isDark: true,
+      background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
       showStars: false,
+      showRain,
+      showFog,
+      showCloudBands: true,
+      showSunGlow: false,
     };
   }
 
   if (phase === "dawn") {
     return {
-      background: "linear-gradient(180deg, #284f8e 0%, #4f78b2 38%, #8faccf 64%, #f5c38f 100%)",
-      isDark: false,
+      background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
       showStars: false,
+      showRain,
+      showFog,
+      showCloudBands: true,
+      showSunGlow: false,
     };
   }
 
   if (mood === "fog") {
     return {
-      background: "linear-gradient(180deg, #5e7898 0%, #8097b0 48%, #a8b6c4 100%)",
-      isDark: false,
+      background: "linear-gradient(180deg, #3d5068 0%, #566d86 48%, #70869d 100%)",
       showStars: false,
+      showRain: false,
+      showFog: true,
+      showCloudBands: true,
+      showSunGlow: false,
     };
   }
 
   if (mood === "rain" || mood === "thunder") {
     return {
-      background: "linear-gradient(180deg, #35567d 0%, #4e6f95 42%, #6284ac 100%)",
-      isDark: false,
+      background: "linear-gradient(180deg, #264561 0%, #355a79 42%, #4a6f8f 100%)",
       showStars: false,
+      showRain: true,
+      showFog: false,
+      showCloudBands: true,
+      showSunGlow: false,
     };
   }
 
   return {
-    background: "linear-gradient(180deg, #3f83c4 0%, #63a7df 44%, #8dc4ee 100%)",
-    isDark: false,
+    background: "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
     showStars: false,
+    showRain: false,
+    showFog: false,
+    showCloudBands,
+    showSunGlow,
   };
 }
 
@@ -348,8 +374,8 @@ interface WeatherData {
   low: number;
 }
 
-function WeatherWidgetSkeleton({ isDark }: { isDark: boolean }) {
-  const skeletonClass = isDark ? "bg-white/20" : "bg-black/10";
+function WeatherWidgetSkeleton() {
+  const skeletonClass = "bg-white/20";
   return (
     <>
       <div className={cn("h-4 w-24 rounded animate-pulse", skeletonClass)} />
@@ -448,16 +474,15 @@ function WeatherWidget({
     weather?.currentTime ?? new Date().toISOString(),
     weather?.code ?? 1
   );
-  const textClassName = scene.isDark ? "text-white" : "text-slate-900";
-  const mutedTextClassName = scene.isDark ? "text-white/75" : "text-slate-700/80";
-  const iconClassName = scene.isDark ? "text-white/80" : "text-slate-700/75";
+  const textClassName = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
+  const mutedTextClassName = "text-white/78 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]";
+  const iconClassName = "text-white/82";
 
   return (
     <div
       className={cn(
         clickableWeatherCardClass,
-        "relative overflow-hidden border",
-        scene.isDark ? "border-white/20 text-white" : "border-white/35 text-slate-900"
+        "relative overflow-hidden text-white"
       )}
       style={{ background: scene.background }}
       onClick={() => {
@@ -465,6 +490,12 @@ function WeatherWidget({
         onActivate();
       }}
     >
+      {scene.showSunGlow && (
+        <>
+          <div className="pointer-events-none absolute -top-12 right-[12%] h-32 w-32 rounded-full bg-yellow-100/16 blur-3xl" />
+          <div className="pointer-events-none absolute top-1 right-[19%] h-14 w-14 rounded-full bg-yellow-200/24 blur-2xl" />
+        </>
+      )}
       {scene.showStars && (
         <div
           className="pointer-events-none absolute inset-0 opacity-70"
@@ -475,9 +506,32 @@ function WeatherWidget({
           }}
         />
       )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15" />
+      {scene.showCloudBands && (
+        <>
+          <div className="pointer-events-none absolute left-[8%] top-[14%] h-10 w-28 rounded-full bg-white/16 blur-2xl" />
+          <div className="pointer-events-none absolute right-[6%] top-[28%] h-9 w-24 rounded-full bg-white/14 blur-2xl" />
+          <div className="pointer-events-none absolute left-[26%] bottom-[20%] h-10 w-32 rounded-full bg-white/12 blur-2xl" />
+        </>
+      )}
+      {scene.showFog && (
+        <>
+          <div className="pointer-events-none absolute inset-x-0 bottom-[8%] h-12 bg-white/16 blur-2xl" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-white/18 blur-3xl" />
+        </>
+      )}
+      {scene.showRain && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(112deg, rgba(210,230,255,0.72) 0px, rgba(210,230,255,0.72) 2px, transparent 2px, transparent 15px)",
+            backgroundSize: "180px 180px",
+          }}
+        />
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
       <div className={cn("relative z-[1]", textClassName)}>
-        {loading && <WeatherWidgetSkeleton isDark={scene.isDark} />}
+        {loading && <WeatherWidgetSkeleton />}
         {!loading && !weather && (
           <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
         )}
