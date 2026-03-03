@@ -21,6 +21,12 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
 import { loadCalendars } from "@/components/apps/calendar/data";
+import {
+  buildOpenMeteoForecastUrl,
+  getWeatherDescription,
+  getWeatherIconName,
+  getWeatherScene,
+} from "@/lib/weather";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
@@ -38,128 +44,32 @@ const clickableCardClass =
 const weatherCardClass = "h-[134px] rounded-md p-3 mb-1.5";
 const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
-type DayPhase = "night" | "dawn" | "day" | "dusk";
-type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
-
-interface WeatherWidgetScene {
-  background: string;
-  showStars: boolean;
-  showRain: boolean;
-  showFog: boolean;
-  showCloudBands: boolean;
-  showSunGlow: boolean;
-}
-
-function getDayPhase(iso: string): DayPhase {
-  if (!iso) return "day";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "day";
-  const hour = date.getHours();
-  if (hour < 5 || hour >= 20) return "night";
-  if (hour < 8) return "dawn";
-  if (hour < 17) return "day";
-  return "dusk";
-}
-
-function getWeatherMood(code: number): WeatherMood {
-  if (code === 0) return "clear";
-  if (code <= 3) return "cloudy";
-  if (code <= 48) return "fog";
-  if (code <= 77) return "snow";
-  if (code <= 82) return "rain";
-  return "thunder";
-}
-
-function getWeatherWidgetScene(currentTimeIso: string, weatherCode: number): WeatherWidgetScene {
-  const phase = getDayPhase(currentTimeIso);
-  const mood = getWeatherMood(weatherCode);
-  const showStars = phase === "night" && (mood === "clear" || mood === "cloudy");
-  const showRain = mood === "rain" || mood === "thunder";
-  const showFog = mood === "fog";
-  const showCloudBands = mood === "cloudy" || mood === "rain" || mood === "fog";
-  const showSunGlow = phase === "day" && mood === "clear";
-
-  if (phase === "night") {
-    return {
-      background:
-        mood === "rain" || mood === "thunder"
-          ? "linear-gradient(180deg, #080f2a 0%, #111b3f 45%, #243362 100%)"
-          : "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
-      showStars,
-      showRain,
-      showFog,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (phase === "dusk") {
-    return {
-      background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
-      showStars: false,
-      showRain,
-      showFog,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (phase === "dawn") {
-    return {
-      background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
-      showStars: false,
-      showRain,
-      showFog,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (mood === "fog") {
-    return {
-      background: "linear-gradient(180deg, #3d5068 0%, #566d86 48%, #70869d 100%)",
-      showStars: false,
-      showRain: false,
-      showFog: true,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (mood === "rain" || mood === "thunder") {
-    return {
-      background: "linear-gradient(180deg, #264561 0%, #355a79 42%, #4a6f8f 100%)",
-      showStars: false,
-      showRain: true,
-      showFog: false,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  return {
-    background: "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
-    showStars: false,
-    showRain: false,
-    showFog: false,
-    showCloudBands,
-    showSunGlow,
-  };
-}
-
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
   icon: React.ReactNode;
   description: string;
 } {
-  if (code === 0) return { icon: <Sun className="w-8 h-8" />, description: "Clear" };
-  if (code <= 3) return { icon: <Cloud className="w-8 h-8" />, description: "Cloudy" };
-  if (code <= 48) return { icon: <CloudFog className="w-8 h-8" />, description: "Foggy" };
-  if (code <= 57) return { icon: <CloudDrizzle className="w-8 h-8" />, description: "Drizzle" };
-  if (code <= 67) return { icon: <CloudRain className="w-8 h-8" />, description: "Rainy" };
-  if (code <= 77) return { icon: <CloudSnow className="w-8 h-8" />, description: "Snowy" };
-  if (code <= 82) return { icon: <CloudRain className="w-8 h-8" />, description: "Showers" };
-  return { icon: <CloudLightning className="w-8 h-8" />, description: "Thunderstorm" };
+  const description = getWeatherDescription(code);
+  const iconName = getWeatherIconName(code);
+
+  switch (iconName) {
+    case "sun":
+      return { icon: <Sun className="w-8 h-8" />, description };
+    case "cloud":
+      return { icon: <Cloud className="w-8 h-8" />, description };
+    case "fog":
+      return { icon: <CloudFog className="w-8 h-8" />, description };
+    case "drizzle":
+      return { icon: <CloudDrizzle className="w-8 h-8" />, description };
+    case "rain":
+      return { icon: <CloudRain className="w-8 h-8" />, description };
+    case "snow":
+      return { icon: <CloudSnow className="w-8 h-8" />, description };
+    case "thunder":
+      return { icon: <CloudLightning className="w-8 h-8" />, description };
+    default:
+      return { icon: <Cloud className="w-8 h-8" />, description };
+  }
 }
 
 // --- Calendar Widget ---
@@ -470,7 +380,7 @@ function WeatherWidget({
 }) {
   const { openWindow } = useWindowManager();
   const weatherInfo = weather ? getWeatherInfo(weather.code) : null;
-  const scene = getWeatherWidgetScene(
+  const scene = getWeatherScene(
     weather?.currentTime ?? new Date().toISOString(),
     weather?.code ?? 1
   );
@@ -581,7 +491,13 @@ export function NotificationCenter({
     (async () => {
       try {
         const res = await fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=37.78&longitude=-122.42&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=1"
+          buildOpenMeteoForecastUrl({
+            latitude: 37.78,
+            longitude: -122.42,
+            currentFields: ["temperature_2m", "weather_code"],
+            dailyFields: ["temperature_2m_max", "temperature_2m_min"],
+            forecastDays: 1,
+          })
         );
         if (!res.ok) return;
         const data = await res.json();

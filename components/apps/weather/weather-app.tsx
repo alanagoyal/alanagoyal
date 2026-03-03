@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 import { WindowControls } from "@/components/window-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  buildOpenMeteoForecastUrl,
+  getWeatherDescription,
+  getWeatherIconName,
+  getWeatherScene,
+  type WeatherScene,
+} from "@/lib/weather";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 
@@ -86,20 +93,6 @@ interface CityConfig {
   longitude: number;
 }
 
-type DayPhase = "night" | "dawn" | "day" | "dusk";
-type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
-
-interface WeatherScene {
-  background: string;
-  heroGradient: string;
-  isDark: boolean;
-  showStars: boolean;
-  showRain: boolean;
-  showFog: boolean;
-  showCloudBands: boolean;
-  showSunGlow: boolean;
-}
-
 const CITIES: CityConfig[] = [
   { id: "san-francisco", name: "San Francisco", latitude: 37.78, longitude: -122.42 },
   { id: "seattle", name: "Seattle", latitude: 47.61, longitude: -122.33 },
@@ -107,149 +100,6 @@ const CITIES: CityConfig[] = [
   { id: "la-quinta", name: "La Quinta", latitude: 33.66, longitude: -116.31 },
   { id: "new-york", name: "New York", latitude: 40.71, longitude: -74.01 },
 ];
-
-function buildWeatherUrl(city: CityConfig): string {
-  const params = new URLSearchParams({
-    latitude: String(city.latitude),
-    longitude: String(city.longitude),
-    current:
-      "temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m",
-    daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
-    hourly: "temperature_2m,weather_code,precipitation_probability",
-    temperature_unit: "fahrenheit",
-    wind_speed_unit: "mph",
-    timezone: "auto",
-    forecast_days: "10",
-  });
-
-  return `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
-}
-
-function getDayPhase(iso: string): DayPhase {
-  if (!iso) return "day";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "day";
-  const hour = date.getHours();
-  if (hour < 5 || hour >= 20) return "night";
-  if (hour < 8) return "dawn";
-  if (hour < 17) return "day";
-  return "dusk";
-}
-
-function getWeatherMood(code: number): WeatherMood {
-  if (code === 0) return "clear";
-  if (code <= 3) return "cloudy";
-  if (code <= 48) return "fog";
-  if (code <= 77) return "snow";
-  if (code <= 82) return "rain";
-  return "thunder";
-}
-
-function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherScene {
-  const phase = getDayPhase(currentTimeIso);
-  const mood = getWeatherMood(weatherCode);
-
-  const showStars = phase === "night" && (mood === "clear" || mood === "cloudy");
-  const showRain = mood === "rain" || mood === "thunder";
-  const showFog = mood === "fog";
-  const showCloudBands = mood === "cloudy" || mood === "rain" || mood === "fog";
-  const showSunGlow = phase === "day" && mood === "clear";
-
-  if (phase === "night") {
-    if (mood === "rain" || mood === "thunder") {
-      return {
-        background:
-          "linear-gradient(180deg, #080f2a 0%, #111b3f 45%, #243362 100%)",
-        heroGradient: "linear-gradient(140deg, rgba(37,56,106,0.9), rgba(52,74,130,0.85))",
-        isDark: true,
-        showStars,
-        showRain,
-        showFog,
-        showCloudBands: true,
-        showSunGlow: false,
-      };
-    }
-    return {
-      background:
-        "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(41,63,121,0.9), rgba(73,103,175,0.78))",
-      isDark: true,
-      showStars,
-      showRain,
-      showFog,
-      showCloudBands,
-      showSunGlow: false,
-    };
-  }
-
-  if (phase === "dusk") {
-    return {
-      background:
-        "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
-      isDark: true,
-      showStars: false,
-      showRain,
-      showFog,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (phase === "dawn") {
-    return {
-      background:
-        "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
-      isDark: false,
-      showStars: false,
-      showRain,
-      showFog,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (mood === "fog") {
-    return {
-      background:
-        "linear-gradient(180deg, #3d5068 0%, #566d86 48%, #70869d 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(72,98,127,0.86), rgba(104,127,152,0.74))",
-      isDark: false,
-      showStars: false,
-      showRain: false,
-      showFog: true,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  if (mood === "rain" || mood === "thunder") {
-    return {
-      background:
-        "linear-gradient(180deg, #264561 0%, #355a79 42%, #4a6f8f 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(49,81,118,0.9), rgba(79,112,146,0.78))",
-      isDark: false,
-      showStars: false,
-      showRain: true,
-      showFog: false,
-      showCloudBands: true,
-      showSunGlow: false,
-    };
-  }
-
-  return {
-    background:
-      "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(58,95,142,0.88), rgba(92,124,164,0.76))",
-    isDark: false,
-    showStars: false,
-    showRain: false,
-    showFog: false,
-    showCloudBands,
-    showSunGlow,
-  };
-}
 
 function getSidebarCardBackground(scene: WeatherScene | null): string {
   const baseScene =
@@ -289,26 +139,25 @@ function getSidebarCardBackground(scene: WeatherScene | null): string {
   return overlays.join(", ");
 }
 
-function getWeatherDescription(code: number): string {
-  if (code === 0) return "Clear";
-  if (code <= 3) return "Partly Cloudy";
-  if (code <= 48) return "Foggy";
-  if (code <= 57) return "Drizzle";
-  if (code <= 67) return "Rainy";
-  if (code <= 77) return "Snowy";
-  if (code <= 82) return "Showers";
-  return "Thunderstorm";
-}
-
 function WeatherIcon({ code, className }: { code: number; className?: string }) {
-  if (code === 0) return <Sun className={className} />;
-  if (code <= 3) return <Cloud className={className} />;
-  if (code <= 48) return <CloudFog className={className} />;
-  if (code <= 57) return <CloudDrizzle className={className} />;
-  if (code <= 67) return <CloudRain className={className} />;
-  if (code <= 77) return <CloudSnow className={className} />;
-  if (code <= 82) return <CloudRain className={className} />;
-  return <CloudLightning className={className} />;
+  switch (getWeatherIconName(code)) {
+    case "sun":
+      return <Sun className={className} />;
+    case "cloud":
+      return <Cloud className={className} />;
+    case "fog":
+      return <CloudFog className={className} />;
+    case "drizzle":
+      return <CloudDrizzle className={className} />;
+    case "rain":
+      return <CloudRain className={className} />;
+    case "snow":
+      return <CloudSnow className={className} />;
+    case "thunder":
+      return <CloudLightning className={className} />;
+    default:
+      return <Cloud className={className} />;
+  }
 }
 
 function parseDateOnly(dateString: string): Date {
@@ -341,7 +190,27 @@ function formatWeekday(dateString: string, index: number): string {
 }
 
 async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
-  const res = await fetch(buildWeatherUrl(city));
+  const res = await fetch(
+    buildOpenMeteoForecastUrl({
+      latitude: city.latitude,
+      longitude: city.longitude,
+      currentFields: [
+        "temperature_2m",
+        "weather_code",
+        "apparent_temperature",
+        "relative_humidity_2m",
+        "wind_speed_10m",
+      ],
+      dailyFields: [
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_probability_max",
+      ],
+      hourlyFields: ["temperature_2m", "weather_code", "precipitation_probability"],
+      forecastDays: 10,
+    })
+  );
   if (!res.ok) {
     throw new Error(`Weather request failed for ${city.name}: ${res.status}`);
   }
