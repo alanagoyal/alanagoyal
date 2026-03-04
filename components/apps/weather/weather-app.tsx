@@ -25,9 +25,12 @@ import {
 } from "@/lib/weather";
 import {
   loadWeatherCustomCities,
+  loadWeatherDataCache,
   loadWeatherSelectedCity,
   saveWeatherCustomCities,
+  saveWeatherDataCache,
   saveWeatherSelectedCity,
+  type WeatherDataCache,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
 import { useWindowFocus } from "@/lib/window-focus-context";
@@ -106,6 +109,57 @@ interface CityWeather {
 }
 
 type CityConfig = WeatherCustomCity;
+
+function restoreWeatherDataFromCache(cache: WeatherDataCache): Record<string, CityWeather> {
+  const restored: Record<string, CityWeather> = {};
+
+  for (const [cityId, weather] of Object.entries(cache)) {
+    const updatedAt = new Date(weather.updatedAt);
+    if (Number.isNaN(updatedAt.getTime())) continue;
+
+    restored[cityId] = {
+      cityId: weather.cityId,
+      cityName: weather.cityName,
+      currentTime: weather.currentTime,
+      currentTemp: weather.currentTemp,
+      weatherCode: weather.weatherCode,
+      high: weather.high,
+      low: weather.low,
+      feelsLike: weather.feelsLike,
+      humidity: weather.humidity,
+      windMph: weather.windMph,
+      hourly: weather.hourly,
+      daily: weather.daily,
+      updatedAt,
+    };
+  }
+
+  return restored;
+}
+
+function serializeWeatherDataForCache(weatherByCity: Record<string, CityWeather>): WeatherDataCache {
+  const cache: WeatherDataCache = {};
+
+  for (const [cityId, weather] of Object.entries(weatherByCity)) {
+    cache[cityId] = {
+      cityId: weather.cityId,
+      cityName: weather.cityName,
+      currentTime: weather.currentTime,
+      currentTemp: weather.currentTemp,
+      weatherCode: weather.weatherCode,
+      high: weather.high,
+      low: weather.low,
+      feelsLike: weather.feelsLike,
+      humidity: weather.humidity,
+      windMph: weather.windMph,
+      hourly: weather.hourly,
+      daily: weather.daily,
+      updatedAt: weather.updatedAt.toISOString(),
+    };
+  }
+
+  return cache;
+}
 
 const DEFAULT_CITIES: CityConfig[] = [
   { id: "san-francisco", name: "San Francisco", latitude: 37.78, longitude: -122.42 },
@@ -421,7 +475,9 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [customCities, setCustomCities] = useState<CityConfig[]>(() =>
     loadWeatherCustomCities()
   );
-  const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>({});
+  const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>(
+    () => restoreWeatherDataFromCache(loadWeatherDataCache())
+  );
   const [selectedCityId, setSelectedCityId] = useState(
     () => loadWeatherSelectedCity() ?? DEFAULT_CITIES[0]?.id ?? "san-francisco"
   );
@@ -455,6 +511,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     if (!selectedCityId) return;
     saveWeatherSelectedCity(selectedCityId);
   }, [selectedCityId]);
+
+  useEffect(() => {
+    saveWeatherDataCache(serializeWeatherDataForCache(weatherByCity));
+  }, [weatherByCity]);
+
+  useEffect(() => {
+    if (Object.keys(weatherByCity).length > 0) {
+      hasFetchedAnyDataRef.current = true;
+    }
+  }, [weatherByCity]);
 
   useEffect(() => {
     setSelectedCityId((currentSelectedCityId) => {

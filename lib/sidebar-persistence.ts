@@ -43,6 +43,7 @@ const STORAGE_KEYS = {
   NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
   WEATHER_SELECTED_CITY: "weather-selected-city",
+  WEATHER_DATA_CACHE: "weather-data-cache",
   // Local storage (durable user content)
   WEATHER_CUSTOM_CITIES: "weather-custom-cities",
 } as const;
@@ -455,6 +456,39 @@ export interface WeatherCustomCity {
   longitude: number;
 }
 
+export interface WeatherCachedHourForecast {
+  time: string;
+  temperature: number;
+  weatherCode: number;
+  precipitationChance: number;
+}
+
+export interface WeatherCachedDailyForecast {
+  date: string;
+  high: number;
+  low: number;
+  weatherCode: number;
+  precipitationChance: number;
+}
+
+export interface WeatherCachedCity {
+  cityId: string;
+  cityName: string;
+  currentTime: string;
+  currentTemp: number;
+  weatherCode: number;
+  high: number;
+  low: number;
+  feelsLike: number;
+  humidity: number;
+  windMph: number;
+  hourly: WeatherCachedHourForecast[];
+  daily: WeatherCachedDailyForecast[];
+  updatedAt: string;
+}
+
+export type WeatherDataCache = Record<string, WeatherCachedCity>;
+
 function parseWeatherCustomCities(payload: string | null): WeatherCustomCity[] {
   if (!payload) return [];
 
@@ -477,6 +511,55 @@ function parseWeatherCustomCities(payload: string | null): WeatherCustomCity[] {
   } catch {
     return [];
   }
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isValidWeatherHour(value: unknown): value is WeatherCachedHourForecast {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<WeatherCachedHourForecast>;
+  return (
+    typeof candidate.time === "string" &&
+    isFiniteNumber(candidate.temperature) &&
+    isFiniteNumber(candidate.weatherCode) &&
+    isFiniteNumber(candidate.precipitationChance)
+  );
+}
+
+function isValidWeatherDay(value: unknown): value is WeatherCachedDailyForecast {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<WeatherCachedDailyForecast>;
+  return (
+    typeof candidate.date === "string" &&
+    isFiniteNumber(candidate.high) &&
+    isFiniteNumber(candidate.low) &&
+    isFiniteNumber(candidate.weatherCode) &&
+    isFiniteNumber(candidate.precipitationChance)
+  );
+}
+
+function isValidWeatherCacheEntry(value: unknown): value is WeatherCachedCity {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<WeatherCachedCity>;
+  return (
+    typeof candidate.cityId === "string" &&
+    typeof candidate.cityName === "string" &&
+    typeof candidate.currentTime === "string" &&
+    isFiniteNumber(candidate.currentTemp) &&
+    isFiniteNumber(candidate.weatherCode) &&
+    isFiniteNumber(candidate.high) &&
+    isFiniteNumber(candidate.low) &&
+    isFiniteNumber(candidate.feelsLike) &&
+    isFiniteNumber(candidate.humidity) &&
+    isFiniteNumber(candidate.windMph) &&
+    typeof candidate.updatedAt === "string" &&
+    Array.isArray(candidate.hourly) &&
+    candidate.hourly.every(isValidWeatherHour) &&
+    Array.isArray(candidate.daily) &&
+    candidate.daily.every(isValidWeatherDay)
+  );
 }
 
 export function loadWeatherCustomCities(): WeatherCustomCity[] {
@@ -533,10 +616,40 @@ export function saveWeatherSelectedCity(cityId: string): void {
   }
 }
 
+export function loadWeatherDataCache(): WeatherDataCache {
+  if (typeof window === "undefined") return {};
+  try {
+    const payload = sessionStorage.getItem(STORAGE_KEYS.WEATHER_DATA_CACHE);
+    if (!payload) return {};
+
+    const parsed = JSON.parse(payload);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+    const cache: WeatherDataCache = {};
+    for (const [cityId, value] of Object.entries(parsed)) {
+      if (!isValidWeatherCacheEntry(value)) continue;
+      cache[cityId] = value;
+    }
+    return cache;
+  } catch {
+    return {};
+  }
+}
+
+export function saveWeatherDataCache(cache: WeatherDataCache): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.WEATHER_DATA_CACHE, JSON.stringify(cache));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearWeatherState(): void {
   if (typeof window === "undefined") return;
   try {
     // Keep WEATHER_CUSTOM_CITIES (localStorage) since it's user-created content.
+    // Keep WEATHER_DATA_CACHE so weather can render instantly after refresh/reopen.
     // Only clear volatile weather view state on app close.
     sessionStorage.removeItem(STORAGE_KEYS.WEATHER_SELECTED_CITY);
     // Legacy cleanup for older sessionStorage key.
