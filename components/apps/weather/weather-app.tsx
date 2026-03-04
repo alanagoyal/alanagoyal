@@ -25,7 +25,9 @@ import {
 } from "@/lib/weather";
 import {
   loadWeatherCustomCities,
+  loadWeatherSelectedCity,
   saveWeatherCustomCities,
+  saveWeatherSelectedCity,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
 import { useWindowFocus } from "@/lib/window-focus-context";
@@ -420,7 +422,9 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     loadWeatherCustomCities()
   );
   const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>({});
-  const [selectedCityId, setSelectedCityId] = useState("san-francisco");
+  const [selectedCityId, setSelectedCityId] = useState(
+    () => loadWeatherSelectedCity() ?? DEFAULT_CITIES[0]?.id ?? "san-francisco"
+  );
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
   const [searchQuery, setSearchQuery] = useState("");
@@ -445,6 +449,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   useEffect(() => {
     saveWeatherCustomCities(customCities);
   }, [customCities]);
+
+  useEffect(() => {
+    if (!selectedCityId) return;
+    saveWeatherSelectedCity(selectedCityId);
+  }, [selectedCityId]);
 
   useEffect(() => {
     setSelectedCityId((currentSelectedCityId) => {

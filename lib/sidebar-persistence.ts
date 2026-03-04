@@ -42,6 +42,8 @@ const STORAGE_KEYS = {
   MUSIC_STATE: "music-state",
   NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
+  WEATHER_SELECTED_CITY: "weather-selected-city",
+  // Local storage (durable user content)
   WEATHER_CUSTOM_CITIES: "weather-custom-cities",
 } as const;
 
@@ -453,13 +455,11 @@ export interface WeatherCustomCity {
   longitude: number;
 }
 
-export function loadWeatherCustomCities(): WeatherCustomCity[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const saved = sessionStorage.getItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
-    if (!saved) return [];
+function parseWeatherCustomCities(payload: string | null): WeatherCustomCity[] {
+  if (!payload) return [];
 
-    const parsed = JSON.parse(saved);
+  try {
+    const parsed = JSON.parse(payload);
     if (!Array.isArray(parsed)) return [];
 
     return parsed.filter((city): city is WeatherCustomCity => {
@@ -479,10 +479,55 @@ export function loadWeatherCustomCities(): WeatherCustomCity[] {
   }
 }
 
+export function loadWeatherCustomCities(): WeatherCustomCity[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const localSaved = localStorage.getItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
+    const localCities = parseWeatherCustomCities(localSaved);
+    if (localCities.length > 0 || localSaved === "[]") {
+      return localCities;
+    }
+
+    // One-time migration from older sessionStorage implementation.
+    const legacySessionSaved = sessionStorage.getItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
+    const migratedCities = parseWeatherCustomCities(legacySessionSaved);
+    if (migratedCities.length > 0 || legacySessionSaved === "[]") {
+      localStorage.setItem(
+        STORAGE_KEYS.WEATHER_CUSTOM_CITIES,
+        JSON.stringify(migratedCities)
+      );
+      sessionStorage.removeItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
+      return migratedCities;
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export function saveWeatherCustomCities(cities: WeatherCustomCity[]): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES, JSON.stringify(cities));
+    localStorage.setItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES, JSON.stringify(cities));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function loadWeatherSelectedCity(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.WEATHER_SELECTED_CITY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveWeatherSelectedCity(cityId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.WEATHER_SELECTED_CITY, cityId);
   } catch {
     // Ignore storage errors
   }
@@ -491,6 +536,10 @@ export function saveWeatherCustomCities(cities: WeatherCustomCity[]): void {
 export function clearWeatherState(): void {
   if (typeof window === "undefined") return;
   try {
+    // Keep WEATHER_CUSTOM_CITIES (localStorage) since it's user-created content.
+    // Only clear volatile weather view state on app close.
+    sessionStorage.removeItem(STORAGE_KEYS.WEATHER_SELECTED_CITY);
+    // Legacy cleanup for older sessionStorage key.
     sessionStorage.removeItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
   } catch {
     // Ignore storage errors
