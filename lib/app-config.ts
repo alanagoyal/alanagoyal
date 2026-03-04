@@ -78,7 +78,6 @@ export const APPS: AppConfig[] = [
     minSize: { width: 560, height: 420 },
     menuBarTitle: "Weather",
     showOnDockByDefault: false,
-    showInFinderApplications: false,
   },
   {
     id: "iterm",

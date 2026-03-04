@@ -43,6 +43,7 @@ const FILE_QUERY_PARAM_APPS = new Set(["textedit", "preview"]);
 const MOBILE_APP_REDIRECTS: Record<string, string> = {
   textedit: "finder",
   preview: "finder",
+  weather: "notes",
 };
 
 export function normalizeShellPathname(pathname: string): string {

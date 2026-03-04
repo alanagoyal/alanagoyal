@@ -257,6 +257,14 @@ className="text-base sm:text-sm"
 className={isMobileView ? "py-3" : "py-1.5"}
 ```
 
+### Non-Dock App Mobile Rules
+
+For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
+
+- Hide them from Finder Applications on mobile (`MOBILE_UNSUPPORTED_FINDER_APP_IDS` pattern).
+- Guard their routes on mobile and redirect to `/` (home) if visited directly.
+- Keep desktop behavior unchanged.
+
 ## Layout Structure
 
 ### Split View (Desktop)
@@ -435,3 +443,4 @@ When creating a new app, ensure:
 - [ ] User-created list/content uses `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
+- [ ] Non-dock desktop-only apps are hidden from Finder Applications on mobile and mobile route access redirects to `/`
