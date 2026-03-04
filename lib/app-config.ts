@@ -78,6 +78,12 @@ export const APPS: AppConfig[] = [
     minSize: { width: 560, height: 420 },
     menuBarTitle: "Weather",
     showOnDockByDefault: false,
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/",
+      showInFinderApplications: false,
+    },
   },
   {
     id: "iterm",
@@ -112,6 +118,12 @@ export const APPS: AppConfig[] = [
     minSize: { width: 400, height: 300 },
     menuBarTitle: "TextEdit",
     showOnDockByDefault: false,
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "finder",
+      directRouteRedirectTo: "/",
+      showInFinderApplications: false,
+    },
     multiWindow: true,
     cascadeOffset: 30,
   },
@@ -126,6 +138,12 @@ export const APPS: AppConfig[] = [
     minSize: { width: 400, height: 300 },
     menuBarTitle: "Preview",
     showOnDockByDefault: false,
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "finder",
+      directRouteRedirectTo: "/",
+      showInFinderApplications: false,
+    },
     multiWindow: true,
     cascadeOffset: 30,
   },

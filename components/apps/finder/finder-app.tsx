@@ -7,6 +7,7 @@ import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import { APPS } from "@/lib/app-config";
+import { getFinderVisibleApps } from "@/lib/app-availability";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
@@ -74,8 +75,6 @@ const TRASH_FILES: FileItem[] = [
   { name: "backup-2024", type: "dir", path: "trash/backup-2024" },
   { name: "config.old.json", type: "file", path: "trash/config.old.json" },
 ];
-
-const MOBILE_UNSUPPORTED_FINDER_APP_IDS = new Set(["textedit", "preview", "weather"]);
 
 interface FinderAppProps {
   isMobile?: boolean;
@@ -275,6 +274,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   }, []);
 
   const canGoForward = historyIndex < pathHistory.length - 1;
+  const finderContext = isMobile ? "mobile" : "desktop";
+  const finderVisibleApps = useMemo(
+    () => getFinderVisibleApps(finderContext),
+    [finderContext]
+  );
 
   const handleForward = useCallback(() => {
     if (!canGoForward) return;
@@ -300,10 +304,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       // Special handling for Applications
       if (path === "applications") {
-        const apps: FileItem[] = APPS
-          .filter(app => app.id !== "finder") // Exclude Finder from Applications
-          .filter(app => app.showInFinderApplications !== false)
-          .filter(app => !isMobile || !MOBILE_UNSUPPORTED_FINDER_APP_IDS.has(app.id))
+        const apps: FileItem[] = finderVisibleApps
           .map(app => ({
             name: app.name,
             type: "app" as const,
@@ -382,7 +383,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
 
     setLoading(false);
-  }, [isMobile]);
+  }, [finderVisibleApps]);
 
   // Load files when path changes
   useEffect(() => {
@@ -526,10 +527,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       entries.push({ ...item, section: "trash" });
     }
 
-    for (const app of APPS) {
-      if (app.id === "finder") continue;
-      if (app.showInFinderApplications === false) continue;
-      if (isMobile && MOBILE_UNSUPPORTED_FINDER_APP_IDS.has(app.id)) continue;
+    for (const app of finderVisibleApps) {
       entries.push({
         name: app.name,
         type: "app",
@@ -554,7 +552,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     searchEngine.buildIndex(entries);
     setSearchIndexSize(searchEngine.version);
-  }, [searchEngine, isMobile]);
+  }, [searchEngine, finderVisibleApps]);
 
   useEffect(() => {
     if (!searchActive || searchPrefetchStartedRef.current) return;
