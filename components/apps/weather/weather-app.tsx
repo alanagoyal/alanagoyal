@@ -171,6 +171,10 @@ const DEFAULT_CITIES: CityConfig[] = [
 ];
 
 const OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
+const WEATHER_FETCH_MAX_RETRIES = 2;
+const WEATHER_FETCH_BASE_RETRY_MS = 450;
+const WEATHER_FETCH_MAX_RETRY_MS = 5000;
+const WEATHER_FETCH_BATCH_SIZE = 3;
 
 function toCityId(name: string, latitude: number, longitude: number): string {
   const slug = name
@@ -322,30 +326,90 @@ function formatWeekday(dateString: string, index: number): string {
   return parseDateOnly(dateString).toLocaleDateString("en-US", { weekday: "short" });
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function parseRetryAfterMs(value: string | null): number | null {
+  if (!value) return null;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(seconds * 1000, WEATHER_FETCH_MAX_RETRY_MS);
+  }
+
+  const retryDate = Date.parse(value);
+  if (Number.isFinite(retryDate)) {
+    const delay = retryDate - Date.now();
+    if (delay > 0) {
+      return Math.min(delay, WEATHER_FETCH_MAX_RETRY_MS);
+    }
+  }
+
+  return null;
+}
+
+function getRetryDelayMs(attempt: number): number {
+  const exponentialDelay = WEATHER_FETCH_BASE_RETRY_MS * (2 ** attempt);
+  const jitter = Math.floor(Math.random() * 180);
+  return Math.min(exponentialDelay + jitter, WEATHER_FETCH_MAX_RETRY_MS);
+}
+
+function isRetryableWeatherStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
-  const res = await fetch(
-    buildOpenMeteoForecastUrl({
-      latitude: city.latitude,
-      longitude: city.longitude,
-      currentFields: [
-        "temperature_2m",
-        "weather_code",
-        "apparent_temperature",
-        "relative_humidity_2m",
-        "wind_speed_10m",
-      ],
-      dailyFields: [
-        "weather_code",
-        "temperature_2m_max",
-        "temperature_2m_min",
-        "precipitation_probability_max",
-      ],
-      hourlyFields: ["temperature_2m", "weather_code", "precipitation_probability"],
-      forecastDays: 10,
-    })
-  );
-  if (!res.ok) {
+  const requestUrl = buildOpenMeteoForecastUrl({
+    latitude: city.latitude,
+    longitude: city.longitude,
+    currentFields: [
+      "temperature_2m",
+      "weather_code",
+      "apparent_temperature",
+      "relative_humidity_2m",
+      "wind_speed_10m",
+    ],
+    dailyFields: [
+      "weather_code",
+      "temperature_2m_max",
+      "temperature_2m_min",
+      "precipitation_probability_max",
+    ],
+    hourlyFields: ["temperature_2m", "weather_code", "precipitation_probability"],
+    forecastDays: 10,
+  });
+
+  let res: Response | null = null;
+  for (let attempt = 0; attempt <= WEATHER_FETCH_MAX_RETRIES; attempt += 1) {
+    try {
+      res = await fetch(requestUrl);
+    } catch {
+      if (attempt >= WEATHER_FETCH_MAX_RETRIES) {
+        throw new Error(`Weather request failed for ${city.name}: network error`);
+      }
+      await sleep(getRetryDelayMs(attempt));
+      continue;
+    }
+
+    if (res.ok) {
+      break;
+    }
+
+    const shouldRetry = attempt < WEATHER_FETCH_MAX_RETRIES && isRetryableWeatherStatus(res.status);
+    if (shouldRetry) {
+      const retryAfterDelay = parseRetryAfterMs(res.headers.get("retry-after"));
+      await sleep(retryAfterDelay ?? getRetryDelayMs(attempt));
+      continue;
+    }
+
     throw new Error(`Weather request failed for ${city.name}: ${res.status}`);
+  }
+
+  if (!res || !res.ok) {
+    throw new Error(`Weather request failed for ${city.name}: unavailable`);
   }
 
   const data = (await res.json()) as OpenMeteoResponse;
@@ -487,6 +551,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [searchActive, setSearchActive] = useState(false);
   const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
   const hasFetchedAnyDataRef = useRef(false);
   const latestWeatherRequestIdRef = useRef(0);
   const trimmedSearchQuery = searchQuery.trim();
@@ -536,18 +601,29 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     const requestId = ++latestWeatherRequestIdRef.current;
 
     try {
-      const responses = await Promise.allSettled(
-        allCities.map((city) => fetchCityWeather(city))
-      );
+      const responses: PromiseSettledResult<CityWeather>[] = [];
+      for (let index = 0; index < allCities.length; index += WEATHER_FETCH_BATCH_SIZE) {
+        const cityBatch = allCities.slice(index, index + WEATHER_FETCH_BATCH_SIZE);
+        const batchResponses = await Promise.allSettled(
+          cityBatch.map((city) => fetchCityWeather(city))
+        );
+        if (requestId !== latestWeatherRequestIdRef.current) {
+          return;
+        }
+        responses.push(...batchResponses);
+      }
       if (requestId !== latestWeatherRequestIdRef.current) {
         return;
       }
 
       const nextWeatherByCity: Record<string, CityWeather> = {};
+      let failedResponseCount = 0;
 
       for (const result of responses) {
         if (result.status === "fulfilled") {
           nextWeatherByCity[result.value.cityId] = result.value;
+        } else {
+          failedResponseCount += 1;
         }
       }
 
@@ -572,12 +648,19 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         return mergedWeatherByCity;
       });
       setFailed(false);
+      setRefreshNotice(
+        failedResponseCount > 0
+          ? "Some locations could not refresh right now. Showing the latest available weather."
+          : null
+      );
     } catch {
       if (requestId !== latestWeatherRequestIdRef.current) {
         return;
       }
       if (!hasFetchedAnyDataRef.current) {
         setFailed(true);
+      } else {
+        setRefreshNotice("Weather service is busy right now. Showing cached weather.");
       }
     }
   }, [allCities]);
@@ -1198,14 +1281,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                 </div>
 
                 {selectedWeather && (
-                  <p
-                    className={cn(
-                      "pt-1 pb-2 text-center text-[11px]",
-                      "text-white/65"
+                  <div className="pt-1 pb-2 text-center">
+                    <p className={cn("text-[11px]", "text-white/65")}>
+                      Updated {formatUpdatedTime(selectedWeather.updatedAt)}
+                    </p>
+                    {refreshNotice && (
+                      <p className={cn("mt-1 text-[11px]", "text-white/72")}>
+                        {refreshNotice}
+                      </p>
                     )}
-                  >
-                    Updated {formatUpdatedTime(selectedWeather.updatedAt)}
-                  </p>
+                  </div>
                 )}
               </div>
             </ScrollArea>
