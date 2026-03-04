@@ -1,0 +1,31 @@
+app/(desktop)/weather/[...slug]/page.tsx
+  e8f9203abdeadb2b 3-4,10-15
+app/(desktop)/weather/page.tsx
+  e8f9203abdeadb2b 2-9
+docs/design-system.md
+  e8f9203abdeadb2b 260-267,446
+lib/shell-routing.ts
+  e8f9203abdeadb2b 46
+components/apps/finder/finder-app.tsx
+  e8f9203abdeadb2b 78-79,306,532,557
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "7bc0fae4b1030561dfab07b356398f341ab0680c",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 31,
+      "total_deletions": 8,
+      "accepted_lines": 31,
+      "overriden_lines": 0
+    }
+  }
+}
