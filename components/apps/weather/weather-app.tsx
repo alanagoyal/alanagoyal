@@ -837,7 +837,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
               </div>
               <ScrollArea className="flex-1" bottomMargin="0" viewportClassName="px-1">
                 {trimmedSearchQuery ? (
-                  <div className="px-2 pb-3">
+                  <div className="px-2 pt-1 pb-3">
                     {searchLoading && (
                       <p className="px-1 py-2 text-sm text-white/76">Searching...</p>
                     )}
@@ -868,7 +868,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                     </div>
                   </div>
                 ) : (
-                  <div className="px-2 pb-2 space-y-2">
+                  <div className="px-2 pt-1 pb-2 space-y-2">
                     {cityCards.map((city) => (
                       <SidebarCityItem
                         key={city.id}
