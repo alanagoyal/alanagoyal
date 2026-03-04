@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useWindowFocus } from "@/lib/window-focus-context";
 import { WindowControls } from "@/components/window-controls";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
+import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { ViewType } from "./types";
 
 interface NavProps {
@@ -33,32 +34,26 @@ export function Nav({
   inShell = false,
   isMobile = false,
 }: NavProps) {
-  const windowFocus = useWindowFocus();
-  const inDesktopShell = !!(inShell && windowFocus);
+  const nav = useWindowNavBehavior({ isDesktop: inShell, isMobile });
 
   if (isMobile) {
     return (
-      <div
-        className="px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none bg-background"
-        onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
-      >
-        <WindowControls
-          inShell={inDesktopShell}
-          className="p-2"
-          onClose={inDesktopShell ? windowFocus?.closeWindow : undefined}
-          onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
-          onToggleMaximize={
-            inDesktopShell ? windowFocus?.toggleMaximize : undefined
-          }
-          isMaximized={windowFocus?.isMaximized ?? false}
-          closeLabel={inDesktopShell ? "Close window" : "Close tab"}
-        />
-        <div className="flex flex-col items-center justify-center">
-          <div className="p-2">
-            <div className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
+      <WindowNavShell
+        isMobile={true}
+        onMouseDown={nav.onDragStart}
+        left={
+          <WindowControls
+            inShell={nav.inShell}
+            className="p-2"
+            onClose={nav.onClose}
+            onMinimize={nav.onMinimize}
+            onToggleMaximize={nav.onToggleMaximize}
+            isMaximized={nav.isMaximized}
+            closeLabel={nav.closeLabel}
+          />
+        }
+        right={<WindowNavSpacer isMobile={true} />}
+      />
     );
   }
 
@@ -67,26 +62,18 @@ export function Nav({
       className={cn(
         "px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted"
       )}
-      onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
+      onMouseDown={nav.onDragStart}
     >
       {/* Left section - window controls and add button */}
       <div className="flex items-center gap-1 desktop:gap-2 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
         <WindowControls
-          inShell={inDesktopShell}
+          inShell={nav.inShell}
           className="p-2"
-          onClose={
-            inDesktopShell
-              ? windowFocus?.closeWindow
-              : !isMobile
-                ? () => window.close()
-                : undefined
-          }
-          onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
-          onToggleMaximize={
-            inDesktopShell ? windowFocus?.toggleMaximize : undefined
-          }
-          isMaximized={windowFocus?.isMaximized ?? false}
-          closeLabel={inDesktopShell ? "Close window" : "Close tab"}
+          onClose={nav.onClose}
+          onMinimize={nav.onMinimize}
+          onToggleMaximize={nav.onToggleMaximize}
+          isMaximized={nav.isMaximized}
+          closeLabel={nav.closeLabel}
         />
 
         <Button

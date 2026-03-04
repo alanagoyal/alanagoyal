@@ -2,7 +2,8 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWindowFocus } from "@/lib/window-focus-context";
+import { WindowNavShell } from "@/components/window-nav-shell";
+import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 
 interface NavProps {
   canGoBack: boolean;
@@ -16,36 +17,33 @@ interface NavProps {
 }
 
 export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDesktop = false, title, backTitle }: NavProps) {
-  const windowFocus = useWindowFocus();
-
-  // When in desktop shell, use window controls from context
-  const inShell = !!(isDesktop && windowFocus);
+  const nav = useWindowNavBehavior({ isDesktop, isMobile });
 
   // Mobile layout
   if (isMobile) {
     return (
-      <div
-        className="px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none bg-background"
-        onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
-      >
-        <button
-          onClick={onBack}
-          onMouseDown={(e) => e.stopPropagation()}
-          disabled={!canGoBack}
-          className={cn(
-            "flex items-center gap-1 rounded-lg px-1 py-1 transition-colors text-[#0A7CFF]",
-            canGoBack ? "hover:bg-muted-foreground/10" : "opacity-0 pointer-events-none"
-          )}
-          aria-label="Go back"
-        >
-          <ChevronLeft className="w-6 h-6" />
-          {backTitle && <span className="text-sm">{backTitle}</span>}
-        </button>
-        <span className="text-sm font-medium text-foreground truncate px-2">
-          {title || ""}
-        </span>
-        <div className="w-[56px] shrink-0" aria-hidden />
-      </div>
+      <WindowNavShell
+        isMobile={true}
+        onMouseDown={nav.onDragStart}
+        left={
+          <button
+            onClick={onBack}
+            onMouseDown={(e) => e.stopPropagation()}
+            disabled={!canGoBack}
+            className={cn(
+              "flex items-center gap-1 rounded-lg px-1 py-1 transition-colors text-[#0A7CFF]",
+              canGoBack ? "hover:bg-muted-foreground/10" : "opacity-0 pointer-events-none"
+            )}
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-6 h-6" />
+            {backTitle && <span className="text-sm">{backTitle}</span>}
+          </button>
+        }
+        center={<span className="text-sm font-medium text-foreground truncate">{title || ""}</span>}
+        centerClassName="px-2 text-center"
+        right={<div className="w-[56px] shrink-0" aria-hidden />}
+      />
     );
   }
 
@@ -55,7 +53,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
       className={cn(
         "px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted"
       )}
-      onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
+      onMouseDown={nav.onDragStart}
     >
       <button
         onClick={onBack}

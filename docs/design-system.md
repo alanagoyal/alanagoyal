@@ -141,6 +141,35 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 
 The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
 
+### Shared Nav Components
+
+Use shared nav primitives instead of hand-rolling spacing and drag behavior:
+
+- `WindowNavShell` (`components/window-nav-shell.tsx`): slot-based nav row (`left`, optional `center`, `right`) with consistent sticky spacing and mobile/desktop backgrounds.
+- `WindowNavSpacer` (`components/window-nav-shell.tsx`): standard invisible right-side spacer that balances traffic-light controls.
+- `useWindowNavBehavior` (`lib/use-window-nav-behavior.ts`): shared shell/close/minimize/maximize/drag behavior.
+
+```tsx
+const nav = useWindowNavBehavior({ isDesktop, isMobile: isMobileView });
+
+<WindowNavShell
+  isMobile={isMobileView}
+  isScrolled={isScrolled}
+  onMouseDown={nav.onDragStart}
+  left={
+    <WindowControls
+      inShell={nav.inShell}
+      onClose={nav.onClose}
+      onMinimize={nav.onMinimize}
+      onToggleMaximize={nav.onToggleMaximize}
+      isMaximized={nav.isMaximized}
+      closeLabel={nav.closeLabel}
+    />
+  }
+  right={<WindowNavSpacer isMobile={isMobileView} />}
+/>
+```
+
 ### Preventing Title/Path Overflow
 
 When center content is dynamic (file names, folder paths, breadcrumb strings), long text can push nav controls out of layout. Use this structure:
