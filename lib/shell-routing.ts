@@ -1,3 +1,5 @@
+import { getMobileShellFallbackAppId } from "@/lib/app-availability";
+
 export const SHELL_DEFAULT_APP_ID = "notes";
 export const SHELL_DEFAULT_NOTE_SLUG = "about-me";
 export const SHELL_NOTES_ROOT_PATH = "/notes";
@@ -40,11 +42,6 @@ interface ParseShellLocationOptions {
 }
 
 const FILE_QUERY_PARAM_APPS = new Set(["textedit", "preview"]);
-const MOBILE_APP_REDIRECTS: Record<string, string> = {
-  textedit: "finder",
-  preview: "finder",
-  weather: "notes",
-};
 
 export function normalizeShellPathname(pathname: string): string {
   return pathname === "/" ? SHELL_NOTES_ROOT_PATH : pathname;
@@ -84,7 +81,7 @@ export function getNotesRoute(noteSlug?: string): string {
 
 export function getShellAppIdForContext(appId: string, context: ShellContext = "desktop"): string {
   if (context === "mobile") {
-    return MOBILE_APP_REDIRECTS[appId] ?? appId;
+    return getMobileShellFallbackAppId(appId);
   }
   return appId;
 }

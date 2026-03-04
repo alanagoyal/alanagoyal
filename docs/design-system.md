@@ -261,8 +261,9 @@ className={isMobileView ? "py-3" : "py-1.5"}
 
 For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
 
-- Hide them from Finder Applications on mobile (`MOBILE_UNSUPPORTED_FINDER_APP_IDS` pattern).
-- Guard their routes on mobile and redirect to `/` (home) if visited directly.
+- Define their mobile behavior in `lib/app-config.ts` via `mobile` policy fields.
+- Hide them from Finder Applications on mobile via `mobile.showInFinderApplications: false`.
+- Use a shared route guard (`redirectIfUnsupportedOnMobile(appId)`) so direct mobile visits redirect to policy target (default `/`).
 - Keep desktop behavior unchanged.
 
 ## Layout Structure
