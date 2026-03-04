@@ -245,9 +245,7 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   date          - Display current date/time
   uptime        - Display system uptime
   history       - Show command history
-  neofetch      - Display system info
-
-Note: Projects folder contains my real GitHub repositories!`;
+  neofetch      - Display system info`;
         break;
 
       case "clear":
