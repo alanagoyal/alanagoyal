@@ -1,0 +1,27 @@
+lib/sidebar-persistence.ts
+  e8f9203abdeadb2b 45-46,458-459,461-462,482-503,512-527,530,539-542
+docs/design-system.md
+  e8f9203abdeadb2b 399,401-407,435
+components/apps/weather/weather-app.tsx
+  e8f9203abdeadb2b 28,30,426,453-456
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "f1d2909e0eaf251d7ad4e7a0fc23ea0ded447a90",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 76,
+      "total_deletions": 8,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    }
+  }
+}
