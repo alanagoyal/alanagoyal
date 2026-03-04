@@ -515,7 +515,7 @@ export const MessageBubble = memo(function MessageBubble({
                             style={getReactionStyle(reaction, isMe, isMobileView)}
                           >
                             {reaction.sender === "me" && !isMobileView && (
-                              <Image
+                              <img
                                 src={getReactionIconSvg(
                                   reaction.sender === "me",
                                   isMe,
@@ -526,7 +526,7 @@ export const MessageBubble = memo(function MessageBubble({
                                 width={32}
                                 height={32}
                                 alt={`${reaction.type} reaction`}
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+                                className="absolute top-1/2 left-1/2 z-10 h-8 w-8 -translate-x-1/2 -translate-y-1/2"
                               />
                             )}
                           </div>

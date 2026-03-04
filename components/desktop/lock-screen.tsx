@@ -58,7 +58,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
           fill
           className="object-cover"
           priority
-          quality={90}
+          quality={75}
         />
       </div>
 
