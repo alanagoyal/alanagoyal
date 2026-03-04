@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "2ded3fb4793d66b6d51f720ef0abf6e538fc128a",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 94,
+      "total_deletions": 0,
+      "accepted_lines": 94,
+      "overriden_lines": 0
+    }
+  }
+}
