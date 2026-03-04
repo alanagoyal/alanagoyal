@@ -21,7 +21,7 @@ export function SidebarNav({ isMobile, isScrolled, isDesktop = false }: SidebarN
       className={cn(
         "px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none",
         isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
-        isMobile ? "bg-muted/30" : "bg-muted",
+        isMobile ? "bg-background" : "bg-muted",
       )}
       onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
     >

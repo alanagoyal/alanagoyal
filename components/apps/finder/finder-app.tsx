@@ -827,7 +827,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Render mobile sidebar nav (traffic lights only, like Settings SidebarNav)
   const renderMobileSidebarNav = () => (
-    <div className="px-4 py-2 flex items-center justify-between select-none bg-zinc-100/50 dark:bg-zinc-800/50">
+    <div className="px-4 py-2 flex items-center justify-between select-none bg-background">
       <WindowControls
         inShell={false}
         className="p-2"
@@ -843,7 +843,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Render mobile content nav (back button + title, like Settings Nav)
   const renderMobileContentNav = (title: string, backTitle: string) => (
-    <div className="flex items-center justify-between px-4 relative min-h-24 py-2 select-none bg-zinc-100/50 dark:bg-zinc-800/50">
+    <div className="flex items-center justify-between px-4 relative min-h-24 py-2 select-none bg-background">
       {/* Back button */}
       <div className="absolute left-2 top-1/2 -translate-y-1/2">
         <button
@@ -893,7 +893,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     // Mobile sidebar - iOS Files style with cards
     if (isMobile) {
       return (
-        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-zinc-100/50 dark:bg-zinc-800/50">
+        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-background">
           <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
             {SIDEBAR_ITEMS.map((item, index) => (
               <button
@@ -1561,7 +1561,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return (
       <div
         ref={containerRef}
-        className="flex flex-col h-dvh w-full bg-zinc-100/50 dark:bg-zinc-900"
+        className="flex flex-col h-dvh w-full bg-background"
         data-app="finder"
       >
         {showSidebar ? (

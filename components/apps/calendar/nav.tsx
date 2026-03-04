@@ -34,102 +34,122 @@ export function Nav({
   isMobile = false,
 }: NavProps) {
   const windowFocus = useWindowFocus();
-  const showWindowControls = inShell && windowFocus;
+  const inDesktopShell = !!(inShell && windowFocus);
+
+  if (isMobile) {
+    return (
+      <div
+        className="px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none bg-background"
+        onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
+      >
+        <WindowControls
+          inShell={inDesktopShell}
+          className="p-2"
+          onClose={inDesktopShell ? windowFocus?.closeWindow : undefined}
+          onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
+          onToggleMaximize={
+            inDesktopShell ? windowFocus?.toggleMaximize : undefined
+          }
+          isMaximized={windowFocus?.isMaximized ?? false}
+          closeLabel={inDesktopShell ? "Close window" : "Close tab"}
+        />
+        <div className="flex flex-col items-center justify-center">
+          <div className="p-2">
+            <div className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={cn(
-        "px-2 desktop:px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted border-b border-border/50"
+        "px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted"
       )}
-      onMouseDown={showWindowControls ? windowFocus?.onDragStart : undefined}
+      onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
     >
       {/* Left section - window controls and add button */}
       <div className="flex items-center gap-1 desktop:gap-2 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
         <WindowControls
-          inShell={!!showWindowControls}
+          inShell={inDesktopShell}
           className="p-2"
           onClose={
-            showWindowControls
+            inDesktopShell
               ? windowFocus?.closeWindow
               : !isMobile
                 ? () => window.close()
                 : undefined
           }
-          onMinimize={showWindowControls ? windowFocus?.minimizeWindow : undefined}
+          onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
           onToggleMaximize={
-            showWindowControls ? windowFocus?.toggleMaximize : undefined
+            inDesktopShell ? windowFocus?.toggleMaximize : undefined
           }
           isMaximized={windowFocus?.isMaximized ?? false}
-          closeLabel={showWindowControls ? "Close window" : "Close tab"}
+          closeLabel={inDesktopShell ? "Close window" : "Close tab"}
         />
 
-        {!isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onNewEvent}
-            className="h-8 w-8"
-            title="New Event"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNewEvent}
+          className="h-8 w-8"
+          title="New Event"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Center section - view switcher (hidden on mobile) */}
-      {!isMobile && (
-        <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
-          {VIEW_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => onViewChange(option.value)}
-              className={cn(
-                "px-2 desktop:px-3 py-1 text-xs desktop:text-sm font-medium rounded-md transition-colors",
-                view === option.value
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex items-center bg-background/50 rounded-lg p-0.5 border border-border/50 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        {VIEW_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => onViewChange(option.value)}
+            className={cn(
+              "px-2 desktop:px-3 py-1 text-xs desktop:text-sm font-medium rounded-md transition-colors",
+              view === option.value
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
 
       {/* Spacer */}
       <div className="flex-1" />
 
       {/* Right section - navigation (hidden on mobile, shown in view header instead) */}
-      {!isMobile && (
-        <div className="flex items-center gap-0.5 desktop:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onNavigate("prev")}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+      <div className="flex items-center gap-0.5 desktop:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onNavigate("prev")}
+          className="h-8 w-8"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onToday}
-            className="h-8 px-2 desktop:px-3 text-xs desktop:text-sm"
-          >
-            Today
-          </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onToday}
+          className="h-8 px-2 desktop:px-3 text-xs desktop:text-sm"
+        >
+          Today
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onNavigate("next")}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onNavigate("next")}
+          className="h-8 w-8"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -91,7 +91,7 @@ export function Sidebar({
   // Mobile layout - iOS style
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full select-none w-full bg-muted/30">
+      <div className="flex flex-col h-full select-none w-full bg-background">
         {/* Nav with window controls */}
         <SidebarNav isMobile={isMobile} isScrolled={isScrolled} isDesktop={isDesktop} />
 
@@ -99,7 +99,7 @@ export function Sidebar({
         <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea
             className="h-full"
-            viewportClassName="bg-muted/30"
+            viewportClassName="bg-background"
             onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
               const viewport = e.currentTarget.querySelector(
                 "[data-radix-scroll-area-viewport]"

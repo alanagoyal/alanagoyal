@@ -33,6 +33,11 @@ export function Nav({ isMobileView, isScrolled, isDesktop = false }: NavProps) {
         isMaximized={windowFocus?.isMaximized ?? false}
         closeLabel={inShell ? "Close window" : "Close tab"}
       />
+      <div className="flex flex-col items-center justify-center">
+        <div className={cn("desktop:p-2 rounded-lg", isMobileView && "p-2")}>
+          <div className="w-4 h-4" />
+        </div>
+      </div>
     </div>
   );
 }

@@ -150,7 +150,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-muted/30" data-app="settings">
+      <div className="h-full flex flex-col bg-background" data-app="settings">
         {showSidebar ? (
           <Sidebar
             selectedCategory={selectedCategory}

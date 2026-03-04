@@ -15,36 +15,29 @@ export function Nav({ isMobile, isDesktop = false }: NavProps) {
   // When in desktop shell, use window controls from context
   const inShell = !!(isDesktop && windowFocus);
 
-  // Handle close - storage is cleared automatically by closeWindow → clearAppState
-  // On mobile, pass undefined to preserve original behavior (button disabled)
-  const handleClose = (inShell || !isMobile) ? () => {
-    if (inShell) {
-      windowFocus?.closeWindow();
-    } else {
-      window.close();
-    }
-  } : undefined;
-
   return (
     <div
       className={cn(
-        "px-4 py-2 flex min-w-0 items-center justify-between select-none bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700",
+        "px-4 py-2 flex min-w-0 items-center justify-between sticky top-0 z-[1] select-none",
+        isMobile ? "bg-background" : "bg-muted",
       )}
       onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
     >
       <WindowControls
         inShell={inShell}
+        showWhenNotInShell={!isDesktop}
         className="p-2"
-        onClose={handleClose}
+        onClose={inShell ? windowFocus?.closeWindow : !isMobile ? () => window.close() : undefined}
         onMinimize={inShell ? windowFocus?.minimizeWindow : undefined}
         onToggleMaximize={inShell ? windowFocus?.toggleMaximize : undefined}
         isMaximized={windowFocus?.isMaximized ?? false}
         closeLabel={inShell ? "Close window" : "Close tab"}
       />
-      <div className="flex-1 min-w-0 px-2 text-center">
-        <span className="block truncate text-zinc-500 dark:text-zinc-400 text-sm">alanagoyal@Alanas-MacBook-Air</span>
+      <div className="flex flex-col items-center justify-center">
+        <div className={cn("desktop:p-2 rounded-lg", isMobile && "p-2")}>
+          <div className="w-4 h-4" />
+        </div>
       </div>
-      <div className="w-[68px] shrink-0" /> {/* Spacer to balance the layout */}
     </div>
   );
 }

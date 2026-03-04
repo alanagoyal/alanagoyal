@@ -628,7 +628,9 @@ Note: Projects folder contains my real GitHub repositories!`;
   return (
     <div
       ref={terminalRef}
-      className={`h-full w-full max-w-full bg-white dark:bg-zinc-900 font-mono ${isMobile ? "text-base" : "text-xs"} overflow-y-auto overflow-x-hidden p-2 cursor-text text-zinc-900 dark:text-white`}
+      className={`h-full w-full max-w-full bg-background font-mono overflow-y-auto overflow-x-hidden cursor-text text-foreground ${
+        isMobile ? "text-base leading-tight pt-0 pb-2 pl-6 pr-2" : "text-xs pt-0 pb-2 px-2"
+      }`}
       onClick={handleTerminalClick}
     >
       {history.map((entry, i) => (
@@ -643,7 +645,7 @@ Note: Projects folder contains my real GitHub repositories!`;
           )}
         </div>
       ))}
-      <div className="flex items-center max-w-full">
+      <div className="flex items-baseline max-w-full">
         <span className="whitespace-pre-wrap break-all">{getPrompt()}</span>
         <input
           ref={inputRef}

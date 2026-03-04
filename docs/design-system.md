@@ -291,6 +291,14 @@ For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
 └──────────────────┘     └──────────────────┘
 ```
 
+### Mobile Surface Consistency
+
+For app-level mobile views, keep base surfaces consistent with semantic tokens:
+
+- Top-level mobile app container must use `bg-background`.
+- Mobile top bars/nav bars should also default to `bg-background` unless a documented app-specific exception exists.
+- Do not use hardcoded `bg-zinc-*` or raw grayscale values for primary mobile app backgrounds.
+
 ## Common Patterns
 
 ### Empty State
