@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
-import { WindowControls } from "@/components/window-controls";
+import { FinderNav, FinderSidebarMobileNav } from "./nav";
 import { APPS } from "@/lib/app-config";
 import { getFinderVisibleApps } from "@/lib/app-availability";
 import { getFileModifiedDate } from "@/lib/file-storage";
@@ -826,24 +826,11 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   }, [historyIndex]);
 
   // Render mobile sidebar nav (traffic lights only, like Settings SidebarNav)
-  const renderMobileSidebarNav = () => (
-    <div className="px-4 py-2 flex items-center justify-between select-none bg-zinc-100/50 dark:bg-zinc-800/50">
-      <WindowControls
-        inShell={false}
-        className="p-2"
-      />
-      {/* Spacer to match Settings */}
-      <div className="flex flex-col items-center justify-center">
-        <div className="p-2">
-          <div className="w-4 h-4" />
-        </div>
-      </div>
-    </div>
-  );
+  const renderMobileSidebarNav = () => <FinderSidebarMobileNav />;
 
   // Render mobile content nav (back button + title, like Settings Nav)
   const renderMobileContentNav = (title: string, backTitle: string) => (
-    <div className="flex items-center justify-between px-4 relative min-h-24 py-2 select-none bg-zinc-100/50 dark:bg-zinc-800/50">
+    <div className="flex items-center justify-between px-4 relative min-h-24 py-2 select-none bg-background">
       {/* Back button */}
       <div className="absolute left-2 top-1/2 -translate-y-1/2">
         <button
@@ -893,7 +880,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     // Mobile sidebar - iOS Files style with cards
     if (isMobile) {
       return (
-        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-zinc-100/50 dark:bg-zinc-800/50">
+        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-background">
           <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
             {SIDEBAR_ITEMS.map((item, index) => (
               <button
@@ -1381,179 +1368,34 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
   // Render nav bar
   const renderNav = () => (
-    <div
-      className="flex min-w-0 items-center gap-2 px-4 h-10 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none"
-      onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
-    >
-      {/* Traffic lights (desktop) */}
-      <WindowControls
-        inShell={inDesktopShell}
-        showWhenNotInShell={!isMobile}
-        onClose={inDesktopShell ? windowFocus?.closeWindow : undefined}
-        onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
-        onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
-        isMaximized={windowFocus?.isMaximized ?? false}
-      />
-
-      {/* Navigation arrows (desktop) */}
-      {!isMobile && (
-        <div className="ml-2 flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
-          <button
-            onClick={handleBack}
-            disabled={!canGoBack()}
-            className={cn(
-              "p-1 rounded",
-              canGoBack()
-                ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                : "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
-            )}
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          <button
-            onClick={handleForward}
-            disabled={!canGoForward}
-            className={cn(
-              "p-1 rounded",
-              canGoForward
-                ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                : "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
-            )}
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <div className="flex flex-1 min-w-0 items-center justify-center px-2">
-        {isMobile ? (
-          <span className="text-sm font-medium text-zinc-900 dark:text-white">
-            {getBreadcrumbs().slice(-1)[0]}
-          </span>
-        ) : (
-          <div
-            className="w-full truncate text-center text-sm text-zinc-600 dark:text-zinc-400"
-            title={getBreadcrumbs().join(" / ")}
-          >
-            {getBreadcrumbs().join(" / ")}
-          </div>
-        )}
-      </div>
-
-      {!isMobile && (
-        <div
-          className={cn(
-            "flex items-center gap-1 justify-end shrink-0",
-            searchActive ? "w-[250px]" : "w-auto"
-          )}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <div className="relative">
-            <button
-              onClick={() => setShowViewDropdown(!showViewDropdown)}
-              onMouseDown={(e) => { if (searchActive) e.preventDefault(); }}
-              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
-            >
-              {viewMode === "icons" ? (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z" />
-                </svg>
-              )}
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            {showViewDropdown && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowViewDropdown(false)}
-                />
-                <div
-                  className="absolute right-0 top-full mt-1 z-20 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl rounded-md shadow-lg border border-black/10 dark:border-white/10 py-1 min-w-32"
-                  onMouseDown={(e) => { if (searchActive) e.preventDefault(); }}
-                >
-                  <button
-                    onClick={() => { setViewMode("icons"); setShowViewDropdown(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
-                  >
-                    {viewMode === "icons" ? (
-                      <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7" />
-                      </svg>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span>as Icons</span>
-                  </button>
-                  <button
-                    onClick={() => { setViewMode("list"); setShowViewDropdown(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
-                  >
-                    {viewMode === "list" ? (
-                      <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7" />
-                      </svg>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span>as List</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          {searchActive ? (
-            <div className="relative w-48">
-              <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onBlur={() => { if (!searchQuery) setSearchActive(false); }}
-                className="w-full pl-7 pr-7 py-0.5 rounded-lg bg-[#E8E8E7] dark:bg-[#353533] text-sm placeholder:text-muted-foreground outline-none border border-zinc-400/50 dark:border-zinc-500/50"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  onMouseDown={(e) => e.preventDefault()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={() => { setSearchActive(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
-              className="p-1 rounded text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-700"
-              title="Search (/)"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+    <FinderNav
+      isDesktopShell={inDesktopShell}
+      breadcrumbs={getBreadcrumbs()}
+      canGoBack={canGoBack()}
+      canGoForward={canGoForward}
+      onBack={handleBack}
+      onForward={handleForward}
+      searchActive={searchActive}
+      searchQuery={searchQuery}
+      showViewDropdown={showViewDropdown}
+      viewMode={viewMode}
+      searchInputRef={searchInputRef}
+      onToggleViewDropdown={() => setShowViewDropdown((prev) => !prev)}
+      onCloseViewDropdown={() => setShowViewDropdown(false)}
+      onSetViewMode={(mode) => {
+        setViewMode(mode);
+        setShowViewDropdown(false);
+      }}
+      onSearchQueryChange={setSearchQuery}
+      onSearchActivate={() => {
+        setSearchActive(true);
+        window.setTimeout(() => searchInputRef.current?.focus(), 0);
+      }}
+      onSearchBlur={() => {
+        if (!searchQuery) setSearchActive(false);
+      }}
+      onSearchClear={() => setSearchQuery("")}
+    />
   );
 
   // Mobile view
@@ -1561,7 +1403,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return (
       <div
         ref={containerRef}
-        className="flex flex-col h-dvh w-full bg-zinc-100/50 dark:bg-zinc-900"
+        className="flex flex-col h-dvh w-full bg-background"
         data-app="finder"
       >
         {showSidebar ? (

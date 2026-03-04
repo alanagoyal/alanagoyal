@@ -1,8 +1,9 @@
 import { Icons } from "./icons";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useWindowFocus } from "@/lib/window-focus-context";
 import { WindowControls } from "@/components/window-controls";
+import { useWindowFocus } from "@/lib/window-focus-context";
+import { WindowNavShell } from "@/components/window-nav-shell";
+import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 
 interface NavProps {
   onNewChat: () => void;
@@ -13,9 +14,7 @@ interface NavProps {
 
 export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: NavProps) {
   const windowFocus = useWindowFocus();
-
-  // When in desktop shell, use window controls from context
-  const inShell = !!(isDesktop && windowFocus);
+  const nav = useWindowNavBehavior({ isDesktop, isMobile: isMobileView });
 
   // Keyboard shortcut for creating a new chat
   useEffect(() => {
@@ -52,25 +51,23 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
   }, [onNewChat, windowFocus]);
 
   return (
-    <>
-      <div
-        className={cn(
-          "px-4 py-2 flex items-center justify-between sticky top-0 z-[1] select-none",
-          isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",
-          isMobileView ? "bg-background" : "bg-muted",
-        )}
-        onMouseDown={inShell ? windowFocus?.onDragStart : undefined}
-      >
+    <WindowNavShell
+      isMobile={isMobileView}
+      isScrolled={isScrolled}
+      onMouseDown={nav.onDragStart}
+      left={
         <WindowControls
-          inShell={inShell}
+          inShell={nav.inShell}
           showWhenNotInShell={!isDesktop}
           className="p-2"
-          onClose={inShell ? windowFocus?.closeWindow : !isDesktop ? () => window.close() : undefined}
-          onMinimize={inShell ? windowFocus?.minimizeWindow : undefined}
-          onToggleMaximize={inShell ? windowFocus?.toggleMaximize : undefined}
-          isMaximized={windowFocus?.isMaximized ?? false}
-          closeLabel={inShell ? "Close window" : "Close tab"}
+          onClose={nav.onClose}
+          onMinimize={nav.onMinimize}
+          onToggleMaximize={nav.onToggleMaximize}
+          isMaximized={nav.isMaximized}
+          closeLabel={nav.closeLabel}
         />
+      }
+      right={
         <button
           className={`desktop:p-2 hover:bg-muted-foreground/10 rounded-lg ${
             isMobileView ? "p-2" : ""
@@ -81,7 +78,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
         >
           <Icons.new />
         </button>
-      </div>
-    </>
+      }
+    />
   );
 }

@@ -14,6 +14,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
+import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
 import { WindowControls } from "@/components/window-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -922,28 +923,30 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                 }}
               />
               <div className="sticky top-0 z-[2]">
-                <div
-                  className="px-4 py-2 flex items-center justify-between select-none"
+                <WindowNavShell
+                  isMobile={false}
+                  className="bg-transparent px-4 py-2"
                   onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
-                >
-                  <WindowControls
-                    inShell={inDesktopShell}
-                    showWhenNotInShell={!isMobileView}
-                    className="p-2"
-                    onClose={
-                      inDesktopShell
-                        ? windowFocus?.closeWindow
-                        : !isMobileView
-                          ? () => window.close()
-                          : undefined
-                    }
-                    onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
-                    onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
-                    isMaximized={windowFocus?.isMaximized ?? false}
-                    closeLabel={inDesktopShell ? "Close window" : "Close tab"}
-                  />
-                  <div className="w-8 h-8" aria-hidden />
-                </div>
+                  left={
+                    <WindowControls
+                      inShell={inDesktopShell}
+                      showWhenNotInShell={!isMobileView}
+                      className="p-2"
+                      onClose={
+                        inDesktopShell
+                          ? windowFocus?.closeWindow
+                          : !isMobileView
+                            ? () => window.close()
+                            : undefined
+                      }
+                      onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
+                      onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
+                      isMaximized={windowFocus?.isMaximized ?? false}
+                      closeLabel={inDesktopShell ? "Close window" : "Close tab"}
+                    />
+                  }
+                  right={<WindowNavSpacer isMobile={false} />}
+                />
                 <div
                   className="px-3 pb-2 select-none"
                   onMouseDown={inDesktopShell ? windowFocus?.onDragStart : undefined}
