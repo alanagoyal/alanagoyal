@@ -432,6 +432,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
+  const latestWeatherRequestIdRef = useRef(0);
   const trimmedSearchQuery = searchQuery.trim();
 
   const allCities = useMemo(() => {
@@ -466,10 +467,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
   const loadWeather = useCallback(async () => {
     if (allCities.length === 0) return;
+    const requestId = ++latestWeatherRequestIdRef.current;
+
     try {
       const responses = await Promise.allSettled(
         allCities.map((city) => fetchCityWeather(city))
       );
+      if (requestId !== latestWeatherRequestIdRef.current) {
+        return;
+      }
+
       const nextWeatherByCity: Record<string, CityWeather> = {};
 
       for (const result of responses) {
@@ -498,12 +505,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
         return mergedWeatherByCity;
       });
-      setSelectedCityId((currentSelectedCityId) => {
-        if (nextWeatherByCity[currentSelectedCityId]) return currentSelectedCityId;
-        return allCities.find((city) => nextWeatherByCity[city.id])?.id ?? currentSelectedCityId;
-      });
       setFailed(false);
     } catch {
+      if (requestId !== latestWeatherRequestIdRef.current) {
+        return;
+      }
       if (!hasFetchedAnyDataRef.current) {
         setFailed(true);
       }
@@ -574,7 +580,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     [allCities, weatherByCity]
   );
 
-  const selectedWeather = weatherByCity[selectedCityId] ?? firstAvailableWeather;
+  const selectedCity = useMemo(
+    () => allCities.find((city) => city.id === selectedCityId) ?? null,
+    [allCities, selectedCityId]
+  );
+  const selectedWeather = weatherByCity[selectedCityId] ?? null;
   const cityCards = useMemo(
     () =>
       allCities.map((city) => ({
@@ -642,10 +652,10 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const activeScene = useMemo(
     () =>
       getWeatherScene(
-        selectedWeather?.currentTime ?? "",
-        selectedWeather?.weatherCode ?? 1
+        (selectedWeather ?? firstAvailableWeather)?.currentTime ?? "",
+        (selectedWeather ?? firstAvailableWeather)?.weatherCode ?? 1
       ),
-    [selectedWeather?.currentTime, selectedWeather?.weatherCode]
+    [selectedWeather, firstAvailableWeather]
   );
 
   const sidebarShellClass = "backdrop-blur-md";
@@ -944,7 +954,9 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         </>
                       ) : (
                         <>
-                          <div className="h-6 w-40 mx-auto rounded bg-white/20 animate-pulse" />
+                          <p className={cn("font-medium tracking-tight", compactMainContent ? "text-lg" : "text-xl")}>
+                            {selectedCity?.name ?? "Weather"}
+                          </p>
                           <div className="h-20 w-36 mt-3 mx-auto rounded bg-white/20 animate-pulse" />
                           <div className="h-6 w-28 mt-2 mx-auto rounded bg-white/20 animate-pulse" />
                           <div className="h-5 w-32 mt-2 mx-auto rounded bg-white/20 animate-pulse" />
