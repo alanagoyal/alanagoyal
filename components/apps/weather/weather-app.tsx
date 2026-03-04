@@ -23,6 +23,11 @@ import {
   getWeatherScene,
   type WeatherScene,
 } from "@/lib/weather";
+import {
+  loadWeatherCustomCities,
+  saveWeatherCustomCities,
+  type WeatherCustomCity,
+} from "@/lib/sidebar-persistence";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +58,18 @@ interface OpenMeteoResponse {
     weather_code: number[];
     precipitation_probability: number[];
   };
+}
+
+interface OpenMeteoGeocodingResponse {
+  results?: Array<{
+    name: string;
+    id?: number;
+    country?: string;
+    country_code?: string;
+    admin1?: string;
+    latitude: number;
+    longitude: number;
+  }>;
 }
 
 interface HourForecast {
@@ -86,20 +103,80 @@ interface CityWeather {
   updatedAt: Date;
 }
 
-interface CityConfig {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-}
+type CityConfig = WeatherCustomCity;
 
-const CITIES: CityConfig[] = [
+const DEFAULT_CITIES: CityConfig[] = [
   { id: "san-francisco", name: "San Francisco", latitude: 37.78, longitude: -122.42 },
   { id: "seattle", name: "Seattle", latitude: 47.61, longitude: -122.33 },
-  { id: "los-gatos", name: "Los Gatos", latitude: 37.24, longitude: -121.96 },
-  { id: "la-quinta", name: "La Quinta", latitude: 33.66, longitude: -116.31 },
+  { id: "los-angeles", name: "Los Angeles", latitude: 34.05, longitude: -118.24 },
   { id: "new-york", name: "New York", latitude: 40.71, longitude: -74.01 },
+  { id: "london", name: "London", latitude: 51.51, longitude: -0.13 },
+  { id: "paris", name: "Paris", latitude: 48.86, longitude: 2.35 },
 ];
+
+const OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
+
+function toCityId(name: string, latitude: number, longitude: number): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  return `${slug}-${Math.round(latitude * 100)}-${Math.round(longitude * 100)}`;
+}
+
+function parseCustomCityName(result: NonNullable<OpenMeteoGeocodingResponse["results"]>[number]): string {
+  const parts = [result.name, result.admin1, result.country].filter(Boolean);
+  const uniqueParts: string[] = [];
+  for (const part of parts) {
+    if (!part) continue;
+    if (!uniqueParts.includes(part)) {
+      uniqueParts.push(part);
+    }
+  }
+  return uniqueParts.join(", ");
+}
+
+function getCityCoordinateKey(city: Pick<CityConfig, "latitude" | "longitude">): string {
+  return `${city.latitude.toFixed(2)}:${city.longitude.toFixed(2)}`;
+}
+
+function findMatchingCity(cities: CityConfig[], target: CityConfig): CityConfig | null {
+  const targetKey = getCityCoordinateKey(target);
+  return cities.find((city) => getCityCoordinateKey(city) === targetKey) ?? null;
+}
+
+async function geocodeCities(query: string): Promise<CityConfig[]> {
+  const params = new URLSearchParams({
+    name: query,
+    count: "8",
+    language: "en",
+    format: "json",
+  });
+  const res = await fetch(`${OPEN_METEO_GEOCODING_URL}?${params.toString()}`);
+  if (!res.ok) return [];
+  const data = (await res.json()) as OpenMeteoGeocodingResponse;
+  const seenCoordinates = new Set<string>();
+  const results: CityConfig[] = [];
+
+  for (const result of data.results ?? []) {
+    const name = parseCustomCityName(result);
+    const latitude = result.latitude;
+    const longitude = result.longitude;
+    const key = getCityCoordinateKey({ latitude, longitude });
+    if (seenCoordinates.has(key)) continue;
+    seenCoordinates.add(key);
+
+    results.push({
+      id: toCityId(name, latitude, longitude),
+      name,
+      latitude,
+      longitude,
+    });
+  }
+
+  return results;
+}
 
 function getSidebarCardBackground(scene: WeatherScene | null): string {
   const baseScene =
@@ -285,7 +362,7 @@ function SidebarCityItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative w-full rounded-lg px-2 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
+        "relative w-full max-w-full rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
         "bg-white/[0.07]",
         isDesktopSelected &&
           "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
@@ -296,9 +373,9 @@ function SidebarCityItem({
         backgroundPosition: "center",
       }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_96px] items-start gap-2">
         <div className="min-w-0">
-          <p className="text-base font-medium truncate">{cityName}</p>
+          <p className="truncate whitespace-nowrap text-base font-medium">{cityName}</p>
           <p
             className={cn(
               "text-xs",
@@ -316,11 +393,11 @@ function SidebarCityItem({
             {descriptionLabel}
           </p>
         </div>
-        <div className="shrink-0 text-right">
-          <p className="text-4xl font-light leading-none">{temperatureLabel}</p>
+        <div className="text-right">
+          <p className="truncate text-4xl font-light leading-none">{temperatureLabel}</p>
           <p
             className={cn(
-              "text-[10px]",
+              "truncate text-[10px]",
               isDesktopSelected ? "text-white/90" : "text-white/78"
             )}
           >
@@ -339,17 +416,51 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const [customCities, setCustomCities] = useState<CityConfig[]>(() =>
+    loadWeatherCustomCities()
+  );
   const [weatherByCity, setWeatherByCity] = useState<Record<string, CityWeather>>({});
   const [selectedCityId, setSelectedCityId] = useState("san-francisco");
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
+  const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
+  const trimmedSearchQuery = searchQuery.trim();
+
+  const allCities = useMemo(() => {
+    const merged: CityConfig[] = [];
+    const seenCoordinates = new Set<string>();
+    for (const city of [...DEFAULT_CITIES, ...customCities]) {
+      const key = getCityCoordinateKey(city);
+      if (seenCoordinates.has(key)) continue;
+      seenCoordinates.add(key);
+      merged.push(city);
+    }
+    return merged;
+  }, [customCities]);
+
+  useEffect(() => {
+    saveWeatherCustomCities(customCities);
+  }, [customCities]);
+
+  useEffect(() => {
+    setSelectedCityId((currentSelectedCityId) => {
+      if (allCities.some((city) => city.id === currentSelectedCityId)) {
+        return currentSelectedCityId;
+      }
+      return allCities[0]?.id ?? currentSelectedCityId;
+    });
+  }, [allCities]);
 
   const loadWeather = useCallback(async () => {
+    if (allCities.length === 0) return;
     try {
-      const responses = await Promise.allSettled(CITIES.map((city) => fetchCityWeather(city)));
+      const responses = await Promise.allSettled(
+        allCities.map((city) => fetchCityWeather(city))
+      );
       const nextWeatherByCity: Record<string, CityWeather> = {};
 
       for (const result of responses) {
@@ -363,10 +474,24 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
       }
 
       hasFetchedAnyDataRef.current = true;
-      setWeatherByCity(nextWeatherByCity);
+      setWeatherByCity((previousWeatherByCity) => {
+        const cityIds = new Set(allCities.map((city) => city.id));
+        const mergedWeatherByCity = {
+          ...previousWeatherByCity,
+          ...nextWeatherByCity,
+        };
+
+        for (const cityId of Object.keys(mergedWeatherByCity)) {
+          if (!cityIds.has(cityId)) {
+            delete mergedWeatherByCity[cityId];
+          }
+        }
+
+        return mergedWeatherByCity;
+      });
       setSelectedCityId((currentSelectedCityId) => {
         if (nextWeatherByCity[currentSelectedCityId]) return currentSelectedCityId;
-        return CITIES.find((city) => nextWeatherByCity[city.id])?.id ?? currentSelectedCityId;
+        return allCities.find((city) => nextWeatherByCity[city.id])?.id ?? currentSelectedCityId;
       });
       setFailed(false);
     } catch {
@@ -374,7 +499,41 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         setFailed(true);
       }
     }
-  }, []);
+  }, [allCities]);
+
+  useEffect(() => {
+    if (!trimmedSearchQuery) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    const timeout = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const results = await geocodeCities(trimmedSearchQuery);
+          if (!cancelled) {
+            setSearchResults(results);
+          }
+        } catch {
+          if (!cancelled) {
+            setSearchResults([]);
+          }
+        } finally {
+          if (!cancelled) {
+            setSearchLoading(false);
+          }
+        }
+      })();
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [trimmedSearchQuery]);
 
   useEffect(() => {
     void loadWeather();
@@ -400,16 +559,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
   const firstAvailableWeather = useMemo(
     () =>
-      CITIES.map((city) => weatherByCity[city.id]).find(
+      allCities.map((city) => weatherByCity[city.id]).find(
         (weather): weather is CityWeather => !!weather
       ) ?? null,
-    [weatherByCity]
+    [allCities, weatherByCity]
   );
 
   const selectedWeather = weatherByCity[selectedCityId] ?? firstAvailableWeather;
   const cityCards = useMemo(
     () =>
-      CITIES.map((city) => ({
+      allCities.map((city) => ({
         id: city.id,
         name: city.name,
         weather: weatherByCity[city.id] ?? null,
@@ -420,13 +579,36 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
             )
           : null,
       })),
-    [weatherByCity]
+    [allCities, weatherByCity]
   );
-  const filteredCityCards = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-    if (!normalizedQuery) return cityCards;
-    return cityCards.filter((city) => city.name.toLowerCase().includes(normalizedQuery));
-  }, [cityCards, searchQuery]);
+  const searchResultItems = useMemo(
+    () =>
+      searchResults.map((result) => ({
+        city: result,
+        existingCityId: findMatchingCity(allCities, result)?.id ?? null,
+      })),
+    [allCities, searchResults]
+  );
+
+  const handleSelectSearchResult = useCallback(
+    (result: CityConfig, existingCityId: string | null) => {
+      const targetCityId = existingCityId ?? result.id;
+
+      if (!existingCityId) {
+        setCustomCities((previousCities) => {
+          const existing = findMatchingCity([...DEFAULT_CITIES, ...previousCities], result);
+          if (existing) return previousCities;
+          return [...previousCities, result];
+        });
+      }
+
+      setSelectedCityId(targetCityId);
+      setSearchQuery("");
+      setSearchActive(false);
+      searchInputRef.current?.blur();
+    },
+    []
+  );
 
   const dailyRange = useMemo(() => {
     const daily = selectedWeather?.daily ?? [];
@@ -558,7 +740,10 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
           <div className={cn("relative z-[1] h-full flex", bodyTextClass)}>
           {!isMobileView && (
             <aside
-              className={cn("relative overflow-hidden w-[320px] shrink-0 flex flex-col", sidebarShellClass)}
+              className={cn(
+                "relative overflow-hidden w-[320px] min-w-[320px] max-w-[320px] shrink-0 flex flex-col",
+                sidebarShellClass
+              )}
               style={{ backgroundImage: sidebarBackgroundImage }}
             >
               <div
@@ -641,30 +826,53 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 </div>
               </div>
-              <ScrollArea className="flex-1" bottomMargin="0">
-                <div className="px-2 pb-2 space-y-2">
-                  {filteredCityCards.map((city) => (
-                    <SidebarCityItem
-                      key={city.id}
-                      cityName={city.name}
-                      weather={city.weather}
-                      scene={city.scene}
-                      isSelected={city.id === selectedCityId}
-                      isMobileView={isMobileView}
-                      onSelect={() => setSelectedCityId(city.id)}
-                    />
-                  ))}
-                  {filteredCityCards.length === 0 && (
-                    <p
-                      className={cn(
-                        "px-2 py-3 text-sm",
-                        "text-white/75"
-                      )}
-                    >
-                      No matching locations
-                    </p>
-                  )}
-                </div>
+              <ScrollArea className="flex-1" bottomMargin="0" viewportClassName="px-1">
+                {trimmedSearchQuery ? (
+                  <div className="px-2 pb-3">
+                    {searchLoading && (
+                      <p className="px-1 py-2 text-sm text-white/76">Searching...</p>
+                    )}
+                    {!searchLoading && searchResultItems.length === 0 && (
+                      <p className="px-1 py-2 text-sm text-white/76">No matching locations</p>
+                    )}
+                    <div className="space-y-1">
+                      {searchResultItems.map(({ city, existingCityId }) => {
+                        const [primaryName, ...secondaryParts] = city.name.split(", ");
+                        const secondaryName = secondaryParts.join(", ");
+
+                        return (
+                          <button
+                            key={city.id}
+                            type="button"
+                            onClick={() => handleSelectSearchResult(city, existingCityId)}
+                            className="w-full rounded-md px-1.5 py-1.5 text-left text-white/90 transition-colors"
+                          >
+                            <p className="truncate text-sm [text-shadow:0_1px_2px_rgba(5,14,31,0.45)]">
+                              <span className="font-medium text-white/95">{primaryName}</span>
+                              {secondaryName && (
+                                <span className="font-medium text-white/76">{` ${secondaryName}`}</span>
+                              )}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-2 pb-2 space-y-2">
+                    {cityCards.map((city) => (
+                      <SidebarCityItem
+                        key={city.id}
+                        cityName={city.name}
+                        weather={city.weather}
+                        scene={city.scene}
+                        isSelected={city.id === selectedCityId}
+                        isMobileView={isMobileView}
+                        onSelect={() => setSelectedCityId(city.id)}
+                      />
+                    ))}
+                  </div>
+                )}
               </ScrollArea>
             </aside>
           )}

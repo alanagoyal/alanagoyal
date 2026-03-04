@@ -42,6 +42,7 @@ const STORAGE_KEYS = {
   MUSIC_STATE: "music-state",
   NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
+  WEATHER_CUSTOM_CITIES: "weather-custom-cities",
 } as const;
 
 // ============================================================================
@@ -441,6 +442,61 @@ export function clearMessagesState(): void {
   }
 }
 
+// ============================================================================
+// Weather Persistence
+// ============================================================================
+
+export interface WeatherCustomCity {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+export function loadWeatherCustomCities(): WeatherCustomCity[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((city): city is WeatherCustomCity => {
+      return (
+        city &&
+        typeof city === "object" &&
+        typeof city.id === "string" &&
+        typeof city.name === "string" &&
+        typeof city.latitude === "number" &&
+        Number.isFinite(city.latitude) &&
+        typeof city.longitude === "number" &&
+        Number.isFinite(city.longitude)
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function saveWeatherCustomCities(cities: WeatherCustomCity[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES, JSON.stringify(cities));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearWeatherState(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.WEATHER_CUSTOM_CITIES);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearAppState(appId: string): void {
   switch (appId) {
     case "finder":
@@ -464,6 +520,9 @@ export function clearAppState(appId: string): void {
     case "messages":
       clearMessagesState();
       break;
+    case "weather":
+      clearWeatherState();
+      break;
     case "iterm":
       clearItermStorage();
       break;
@@ -478,5 +537,6 @@ export function clearAllAppState(): void {
   clearMusicState();
   clearNotesState();
   clearMessagesState();
+  clearWeatherState();
   clearItermStorage();
 }
