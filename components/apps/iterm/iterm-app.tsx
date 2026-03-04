@@ -26,18 +26,8 @@ export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: 
       )}
     >
       <Nav isMobile={isMobile} isDesktop={inShell} />
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-background">
-        <div
-          className={cn(
-            "text-muted-foreground",
-            isMobile ? "pl-6 pr-2 pt-1.5 pb-0 text-base" : "px-2 pt-1.5 pb-0 text-xs"
-          )}
-        >
-          alanagoyal@Alanas-MacBook-Air
-        </div>
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <Terminal isMobile={isMobile} onOpenTextFile={onOpenTextFile} />
-        </div>
+      <div className="flex-1 min-h-0 overflow-hidden bg-background">
+        <Terminal isMobile={isMobile} onOpenTextFile={onOpenTextFile} />
       </div>
     </div>
   );

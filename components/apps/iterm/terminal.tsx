@@ -629,7 +629,7 @@ Note: Projects folder contains my real GitHub repositories!`;
     <div
       ref={terminalRef}
       className={`h-full w-full max-w-full bg-background font-mono overflow-y-auto overflow-x-hidden cursor-text text-foreground ${
-        isMobile ? "text-base leading-tight pt-0 pb-2 pl-6 pr-2" : "text-xs pt-0 pb-2 px-2"
+        isMobile ? "text-base leading-tight pt-2 pb-2 pl-6 pr-2" : "text-xs pt-2 pb-2 px-2"
       }`}
       onClick={handleTerminalClick}
     >
