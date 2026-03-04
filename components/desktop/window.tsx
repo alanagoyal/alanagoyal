@@ -41,6 +41,7 @@ export function Window({
 
   const isFocused = state.focusedWindowId === appId;
   const usesTransformPositioning = appId !== "messages";
+  const isBorderlessWindow = appId === "weather";
 
   // Track if window was focused before current interaction
   // Used to implement "click-to-focus" - first click only focuses, doesn't trigger actions
@@ -192,7 +193,10 @@ export function Window({
       <div
         ref={innerWrapperRef}
         className={cn(
-          "absolute inset-0 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 flex flex-col",
+          "absolute inset-0 overflow-hidden shadow-2xl flex flex-col",
+          isBorderlessWindow
+            ? "bg-transparent border-0"
+            : "bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10",
           isMaximized ? "rounded-none" : "rounded-xl",
           !isFocused && "[&_*]:!cursor-default"
         )}

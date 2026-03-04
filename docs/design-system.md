@@ -257,6 +257,14 @@ className="text-base sm:text-sm"
 className={isMobileView ? "py-3" : "py-1.5"}
 ```
 
+### Non-Dock App Mobile Rules
+
+For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
+
+- Hide them from Finder Applications on mobile (`MOBILE_UNSUPPORTED_FINDER_APP_IDS` pattern).
+- Guard their routes on mobile and redirect to `/` (home) if visited directly.
+- Keep desktop behavior unchanged.
+
 ## Layout Structure
 
 ### Split View (Desktop)
@@ -396,6 +404,15 @@ Most apps only need view-state persistence via `sessionStorage`. Use `localStora
 1. **Close = clear**: When a window is closed (red button or Cmd+Q), its view state is cleared via `clearAppState(appId)`.
 2. **Minimize = preserve**: Minimized windows keep their state in memory. Unminimizing restores exactly where the user left off.
 3. **No cross-window leaking**: Using `sessionStorage` ensures two browser tabs have independent state.
+4. **Mixed persistence for list apps**: If an app has user-managed collections (cities, playlists, etc.), persist the collection in `localStorage`, but keep the currently selected item in `sessionStorage`.
+
+### Standard Behavior for List + Detail Apps
+
+Use this exact behavior unless the app explicitly needs something else:
+
+- **User-added list entries**: Persist across refresh and app close/open (`localStorage`).
+- **Current selection**: Persist across refresh and minimize (`sessionStorage`).
+- **Close and reopen app**: Reset selection to the top/default list item by clearing selection in `clearAppState(appId)`.
 
 ### Wiring Up State Clearing
 
@@ -423,5 +440,7 @@ When creating a new app, ensure:
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
 - [ ] View state uses `sessionStorage` (not `localStorage`) — via `sidebar-persistence.ts`
+- [ ] User-created list/content uses `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
+- [ ] Non-dock desktop-only apps are hidden from Finder Applications on mobile and mobile route access redirects to `/`

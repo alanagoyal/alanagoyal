@@ -21,6 +21,13 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
 import { loadCalendars } from "@/components/apps/calendar/data";
+import {
+  buildOpenMeteoForecastUrl,
+  getWeatherDescription,
+  getWeatherIconName,
+  getWeatherScene,
+} from "@/lib/weather";
+import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
 import type { Photo } from "@/types/photos";
@@ -34,21 +41,35 @@ interface NotificationCenterProps {
 const cardClass = "bg-muted rounded-md p-3 mb-1.5";
 const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
-const weatherCardClass = `${cardClass} h-[134px]`;
+const weatherCardClass = "h-[134px] rounded-md p-3 mb-1.5";
+const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
   icon: React.ReactNode;
   description: string;
 } {
-  if (code === 0) return { icon: <Sun className="w-8 h-8" />, description: "Clear" };
-  if (code <= 3) return { icon: <Cloud className="w-8 h-8" />, description: "Cloudy" };
-  if (code <= 48) return { icon: <CloudFog className="w-8 h-8" />, description: "Foggy" };
-  if (code <= 57) return { icon: <CloudDrizzle className="w-8 h-8" />, description: "Drizzle" };
-  if (code <= 67) return { icon: <CloudRain className="w-8 h-8" />, description: "Rainy" };
-  if (code <= 77) return { icon: <CloudSnow className="w-8 h-8" />, description: "Snowy" };
-  if (code <= 82) return { icon: <CloudRain className="w-8 h-8" />, description: "Showers" };
-  return { icon: <CloudLightning className="w-8 h-8" />, description: "Thunderstorm" };
+  const description = getWeatherDescription(code);
+  const iconName = getWeatherIconName(code);
+
+  switch (iconName) {
+    case "sun":
+      return { icon: <Sun className="w-8 h-8" />, description };
+    case "cloud":
+      return { icon: <Cloud className="w-8 h-8" />, description };
+    case "fog":
+      return { icon: <CloudFog className="w-8 h-8" />, description };
+    case "drizzle":
+      return { icon: <CloudDrizzle className="w-8 h-8" />, description };
+    case "rain":
+      return { icon: <CloudRain className="w-8 h-8" />, description };
+    case "snow":
+      return { icon: <CloudSnow className="w-8 h-8" />, description };
+    case "thunder":
+      return { icon: <CloudLightning className="w-8 h-8" />, description };
+    default:
+      return { icon: <Cloud className="w-8 h-8" />, description };
+  }
 }
 
 // --- Calendar Widget ---
@@ -257,24 +278,26 @@ function MessagesWidget({
 // --- Weather Widget ---
 interface WeatherData {
   temp: number;
+  currentTime: string;
   code: number;
   high: number;
   low: number;
 }
 
 function WeatherWidgetSkeleton() {
+  const skeletonClass = "bg-white/20";
   return (
-    <div className={weatherCardClass}>
-      <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-      <div className="h-10 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse mt-2" />
+    <>
+      <div className={cn("h-4 w-24 rounded animate-pulse", skeletonClass)} />
+      <div className={cn("h-10 w-20 rounded animate-pulse mt-2", skeletonClass)} />
       <div className="flex items-center gap-2 mt-3">
-        <div className="h-8 w-8 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+        <div className={cn("h-8 w-8 rounded animate-pulse", skeletonClass)} />
         <div className="space-y-1.5">
-          <div className="h-3 w-16 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-          <div className="h-3 w-20 rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          <div className={cn("h-3 w-16 rounded animate-pulse", skeletonClass)} />
+          <div className={cn("h-3 w-20 rounded animate-pulse", skeletonClass)} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -349,29 +372,94 @@ function PhotosWidget({
 function WeatherWidget({
   weather,
   loading,
+  onActivate,
 }: {
   weather: WeatherData | null;
   loading: boolean;
+  onActivate: () => void;
 }) {
-  if (loading) {
-    return <WeatherWidgetSkeleton />;
-  }
-  if (!weather) return null;
-
-  const weatherInfo = getWeatherInfo(weather.code);
+  const { openWindow } = useWindowManager();
+  const weatherInfo = weather ? getWeatherInfo(weather.code) : null;
+  const scene = getWeatherScene(
+    weather?.currentTime ?? new Date().toISOString(),
+    weather?.code ?? 1
+  );
+  const textClassName = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
+  const mutedTextClassName = "text-white/78 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]";
+  const iconClassName = "text-white/82";
 
   return (
-    <div className={weatherCardClass}>
-      <p className="text-sm font-medium">San Francisco</p>
-      <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
-      <div className="flex items-center gap-1.5 mt-3">
-        <div className="text-muted-foreground">{weatherInfo.icon}</div>
-        <div>
-          <p className="text-xs font-medium">{weatherInfo.description}</p>
-          <p className="text-[10px] text-muted-foreground">
-            H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
-          </p>
-        </div>
+    <div
+      className={cn(
+        clickableWeatherCardClass,
+        "relative overflow-hidden text-white"
+      )}
+      style={{ background: scene.background }}
+      onClick={() => {
+        openWindow("weather");
+        onActivate();
+      }}
+    >
+      {scene.showSunGlow && (
+        <>
+          <div className="pointer-events-none absolute -top-12 right-[12%] h-32 w-32 rounded-full bg-yellow-100/16 blur-3xl" />
+          <div className="pointer-events-none absolute top-1 right-[19%] h-14 w-14 rounded-full bg-yellow-200/24 blur-2xl" />
+        </>
+      )}
+      {scene.showStars && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
+            backgroundSize: "180px 120px",
+          }}
+        />
+      )}
+      {scene.showCloudBands && (
+        <>
+          <div className="pointer-events-none absolute left-[8%] top-[14%] h-10 w-28 rounded-full bg-white/16 blur-2xl" />
+          <div className="pointer-events-none absolute right-[6%] top-[28%] h-9 w-24 rounded-full bg-white/14 blur-2xl" />
+          <div className="pointer-events-none absolute left-[26%] bottom-[20%] h-10 w-32 rounded-full bg-white/12 blur-2xl" />
+        </>
+      )}
+      {scene.showFog && (
+        <>
+          <div className="pointer-events-none absolute inset-x-0 bottom-[8%] h-12 bg-white/16 blur-2xl" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-white/18 blur-3xl" />
+        </>
+      )}
+      {scene.showRain && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(112deg, rgba(210,230,255,0.72) 0px, rgba(210,230,255,0.72) 2px, transparent 2px, transparent 15px)",
+            backgroundSize: "180px 180px",
+          }}
+        />
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
+      <div className={cn("relative z-[1]", textClassName)}>
+        {loading && <WeatherWidgetSkeleton />}
+        {!loading && !weather && (
+          <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
+        )}
+        {!loading && weather && (
+          <>
+            <p className="text-sm font-medium">San Francisco</p>
+            <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
+            <div className="flex items-center gap-1.5 mt-3">
+              <div className={iconClassName}>{weatherInfo?.icon}</div>
+              <div>
+                <p className="text-xs font-medium">{weatherInfo?.description}</p>
+                <p className={cn("text-[10px]", mutedTextClassName)}>
+                  H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -403,13 +491,20 @@ export function NotificationCenter({
     (async () => {
       try {
         const res = await fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=37.78&longitude=-122.42&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=1"
+          buildOpenMeteoForecastUrl({
+            latitude: 37.78,
+            longitude: -122.42,
+            currentFields: ["temperature_2m", "weather_code"],
+            dailyFields: ["temperature_2m_max", "temperature_2m_min"],
+            forecastDays: 1,
+          })
         );
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) {
           setWeather({
             temp: data.current.temperature_2m,
+            currentTime: data.current.time ?? new Date().toISOString(),
             code: data.current.weather_code,
             high: data.daily.temperature_2m_max[0],
             low: data.daily.temperature_2m_min[0],
@@ -455,7 +550,7 @@ export function NotificationCenter({
           onOpenConversation={onOpenMessagesConversation}
         />
         <PhotosWidget photos={photos} loading={photosLoading} onActivate={onClose} />
-        <WeatherWidget weather={weather} loading={weatherLoading} />
+        <WeatherWidget weather={weather} loading={weatherLoading} onActivate={onClose} />
       </ScrollArea>
     </div>
   );

@@ -63,6 +63,11 @@ a macos sierra 10.12 themed desktop with:
 - airdrop and focus mode toggles
 - about this mac
 
+**weather** - weather forecast app
+- opens from notification center weather widget or `/weather`
+- current conditions with hourly forecast
+- non-dock app (appears in dock only while open)
+
 ### mobile
 
 responsive mobile interface with:

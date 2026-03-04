@@ -10,6 +10,7 @@ const APP_ROUTE_SEGMENTS = {
   finder: "finder",
   photos: "photos",
   calendar: "calendar",
+  weather: "weather",
   music: "music",
   textedit: "textedit",
   preview: "preview",
@@ -42,6 +43,7 @@ const FILE_QUERY_PARAM_APPS = new Set(["textedit", "preview"]);
 const MOBILE_APP_REDIRECTS: Record<string, string> = {
   textedit: "finder",
   preview: "finder",
+  weather: "notes",
 };
 
 export function normalizeShellPathname(pathname: string): string {

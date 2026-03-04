@@ -75,6 +75,8 @@ const TRASH_FILES: FileItem[] = [
   { name: "config.old.json", type: "file", path: "trash/config.old.json" },
 ];
 
+const MOBILE_UNSUPPORTED_FINDER_APP_IDS = new Set(["textedit", "preview", "weather"]);
+
 interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
@@ -298,10 +300,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
       // Special handling for Applications
       if (path === "applications") {
-        const mobileUnsupportedAppIds = new Set(["textedit", "preview"]);
         const apps: FileItem[] = APPS
           .filter(app => app.id !== "finder") // Exclude Finder from Applications
-          .filter(app => !isMobile || !mobileUnsupportedAppIds.has(app.id))
+          .filter(app => app.showInFinderApplications !== false)
+          .filter(app => !isMobile || !MOBILE_UNSUPPORTED_FINDER_APP_IDS.has(app.id))
           .map(app => ({
             name: app.name,
             type: "app" as const,
@@ -526,6 +528,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     for (const app of APPS) {
       if (app.id === "finder") continue;
+      if (app.showInFinderApplications === false) continue;
+      if (isMobile && MOBILE_UNSUPPORTED_FINDER_APP_IDS.has(app.id)) continue;
       entries.push({
         name: app.name,
         type: "app",
@@ -550,7 +554,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
 
     searchEngine.buildIndex(entries);
     setSearchIndexSize(searchEngine.version);
-  }, [searchEngine]);
+  }, [searchEngine, isMobile]);
 
   useEffect(() => {
     if (!searchActive || searchPrefetchStartedRef.current) return;
