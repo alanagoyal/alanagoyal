@@ -1,0 +1,25 @@
+components/apps/weather/weather-app.tsx
+  e8f9203abdeadb2b 26-30,63-74,106,108,111,113-114,117-147,149-180,365,376,378,396-397,400,419-421,428-429,431-456,459,462,477-491,494,502-536,562,565,571,582-588,590-610,744,829-863,874
+lib/sidebar-persistence.ts
+  e8f9203abdeadb2b 45,445-499,523-524,540
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "7fc4a0f90a2fad462c557a69ca789f0a2078a5a6",
+  "prompts": {
+    "e8f9203abdeadb2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cb0b3-70fc-7ac2-a436-50ce3084dc2a",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 336,
+      "total_deletions": 68,
+      "accepted_lines": 306,
+      "overriden_lines": 0
+    }
+  }
+}
