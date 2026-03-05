@@ -1,0 +1,23 @@
+components/apps/iterm/terminal.tsx
+  32970bf4b030f18b 20,55-86,161,206-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "ec06a3b6cfb3df7262f30ddbb3890fbad12353f5",
+  "prompts": {
+    "32970bf4b030f18b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cbb24-81f5-70c1-a69b-da83559a0742",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 39,
+      "total_deletions": 1,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    }
+  }
+}
