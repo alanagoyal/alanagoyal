@@ -17,6 +17,7 @@ const PROJECTS_DIR = "/Users/alanagoyal/Projects";
 
 // Storage key for persisting terminal state
 const ITERM_STORAGE_KEY = "iterm-terminal-state";
+const ITERM_LAST_LOGIN_KEY = "iterm-last-login";
 
 interface HistoryEntry {
   type: "input" | "output";
@@ -49,6 +50,43 @@ function loadItermStorage(): ItermStorageState | null {
     // Invalid data, ignore
   }
   return null;
+}
+
+function loadLastLogin(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(ITERM_LAST_LOGIN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveLastLogin(timestamp: string) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(ITERM_LAST_LOGIN_KEY, timestamp);
+  } catch {
+    // Storage unavailable, ignore
+  }
+}
+
+function formatLastLogin(timestamp: string): string {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString();
+}
+
+function createInitialHistory(): HistoryEntry[] {
+  const entries: HistoryEntry[] = [];
+  const previousLastLogin = loadLastLogin();
+  const formatted = previousLastLogin ? formatLastLogin(previousLastLogin) : "";
+
+  if (formatted) {
+    entries.push({ type: "output", content: `Last login: ${formatted}` });
+  }
+
+  entries.push({ type: "output", content: "Type 'help' for available commands" });
+  return entries;
 }
 
 // Maximum number of history entries to persist (prevents sessionStorage bloat)
@@ -125,7 +163,7 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
 
   // Initialize state from persisted sessionStorage (loaded fresh each mount)
   const [history, setHistory] = useState<HistoryEntry[]>(
-    () => loadItermStorage()?.history ?? [{ type: "output", content: "Type 'help' for available commands" }]
+    () => loadItermStorage()?.history ?? createInitialHistory()
   );
   const [currentInput, setCurrentInput] = useState("");
   const [currentDir, setCurrentDir] = useState(
@@ -169,6 +207,11 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   useEffect(() => {
     saveItermStorage({ history, commandHistory, currentDir });
   }, [history, commandHistory, currentDir]);
+
+  // Save current open time so the next terminal open can display it as "Last login".
+  useEffect(() => {
+    saveLastLogin(new Date().toISOString());
+  }, []);
 
   // Focus input on click
   const handleTerminalClick = useCallback(() => {
