@@ -24,15 +24,15 @@ interface GitHubTreeItem {
   sha: string;
 }
 
-// In-memory cache with localStorage persistence
+// In-memory cache with sessionStorage persistence
 const STORAGE_KEY = "github_cache";
 const cache = new Map<string, CacheEntry<unknown>>();
 
-// Load cache from localStorage on init
+// Load cache from sessionStorage on init
 function loadCache(): void {
   if (typeof window === "undefined") return;
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       Object.entries(parsed).forEach(([key, value]) => {
@@ -40,11 +40,11 @@ function loadCache(): void {
       });
     }
   } catch {
-    // Silently ignore localStorage errors (quota exceeded, private browsing, etc.)
+    // Silently ignore sessionStorage errors (quota exceeded, private browsing, etc.)
   }
 }
 
-// Save cache to localStorage
+// Save cache to sessionStorage
 function saveCache(): void {
   if (typeof window === "undefined") return;
   try {
@@ -52,9 +52,9 @@ function saveCache(): void {
     cache.forEach((value, key) => {
       obj[key] = value;
     });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
   } catch {
-    // Silently ignore localStorage errors (quota exceeded, private browsing, etc.)
+    // Silently ignore sessionStorage errors (quota exceeded, private browsing, etc.)
   }
 }
 

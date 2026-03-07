@@ -432,17 +432,19 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 
 | Tier | Storage | Lifetime | Use Case |
 |------|---------|----------|----------|
-| **View state** | `sessionStorage` | Per-tab, clears on tab close | Sidebar selection, scroll position, current directory, terminal history |
-| **Content data** | `localStorage` | Permanent, shared across tabs | User-created content (notes, drafts) that should survive restarts |
+| **View/runtime state** | `sessionStorage` | Per-tab, clears on tab close | Sidebar selection, scroll position, window positions, dock scale, recents, terminal history |
+| **Session cache/runtime buffers** | `sessionStorage` | Per-tab, clears on tab close | API/UI caches and in-progress runtime state (e.g., GitHub cache, music playback queue/progress, Notes pinned ordering) |
+| **Durable data + preferences** | `localStorage` | Persistent, shared across tabs | User-created content and user preferences that should survive restarts (notes/messages data, settings, sound prefs) |
 
-Most apps only need view-state persistence via `sessionStorage`. Use `localStorage` only when data represents user-created content that would be surprising to lose.
+Rule of thumb: if losing it on browser restart is acceptable, use `sessionStorage`. If users expect it to persist (content or preferences), use `localStorage`.
 
 ### Rules
 
 1. **Close = clear**: When a window is closed (red button or Cmd+Q), its view state is cleared via `clearAppState(appId)`.
 2. **Minimize = preserve**: Minimized windows keep their state in memory. Unminimizing restores exactly where the user left off.
 3. **No cross-window leaking**: Using `sessionStorage` ensures two browser tabs have independent state.
-4. **Mixed persistence for list apps**: If an app has user-managed collections (cities, playlists, etc.), persist the collection in `localStorage`, but keep the currently selected item in `sessionStorage`.
+4. **Mixed persistence for list apps**: Persist user-managed collections in `localStorage`, but keep active selection/sort/filter/navigation in `sessionStorage`.
+5. **Ephemeral caches belong in session storage**: Network caches and runtime buffers should use `sessionStorage` unless there's a product requirement for cross-session persistence.
 
 ### Standard Behavior for List + Detail Apps
 
@@ -477,8 +479,8 @@ When creating a new app, ensure:
 - [ ] Responsive patterns use `isMobileView` prop
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
-- [ ] View state uses `sessionStorage` (not `localStorage`) — via `sidebar-persistence.ts`
-- [ ] User-created list/content uses `localStorage` and should not be cleared on app close
+- [ ] View/runtime/cache state uses `sessionStorage` (not `localStorage`) — via `sidebar-persistence.ts` where possible
+- [ ] Durable user content/preferences use `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
 - [ ] Non-dock desktop-only apps are hidden from Finder Applications on mobile and mobile route access redirects to `/`

@@ -143,7 +143,7 @@ export default function Sidebar({
   }, [selectedNoteSlug, notes]);
 
   useEffect(() => {
-    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
+    const storedPinnedNotes = sessionStorage.getItem("pinnedNotes");
     if (storedPinnedNotes) {
       setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
     } else {
@@ -158,7 +158,7 @@ export default function Sidebar({
           .map((note) => note.slug)
       );
       setPinnedNotes(initialPinnedNotes);
-      localStorage.setItem(
+      sessionStorage.setItem(
         "pinnedNotes",
         JSON.stringify(Array.from(initialPinnedNotes))
       );
@@ -246,7 +246,7 @@ export default function Sidebar({
         } else {
           newPinned.delete(slug);
         }
-        localStorage.setItem(
+        sessionStorage.setItem(
           "pinnedNotes",
           JSON.stringify(Array.from(newPinned))
         );
