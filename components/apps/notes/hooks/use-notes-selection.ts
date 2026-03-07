@@ -36,7 +36,15 @@ function getPinnedSlugsForFallback(notes: NoteType[]): Set<string> {
   }
 
   try {
-    const raw = localStorage.getItem("pinnedNotes");
+    let raw = sessionStorage.getItem("pinnedNotes");
+    if (!raw) {
+      // One-time migration from previous localStorage key.
+      const legacy = localStorage.getItem("pinnedNotes");
+      if (legacy) {
+        sessionStorage.setItem("pinnedNotes", legacy);
+        raw = legacy;
+      }
+    }
     if (!raw) return defaultPinned;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return defaultPinned;

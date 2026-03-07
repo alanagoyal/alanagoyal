@@ -143,9 +143,18 @@ export default function Sidebar({
   }, [selectedNoteSlug, notes]);
 
   useEffect(() => {
-    const storedPinnedNotes = localStorage.getItem("pinnedNotes");
-    if (storedPinnedNotes) {
-      setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
+    const storedPinnedNotes = sessionStorage.getItem("pinnedNotes");
+    if (!storedPinnedNotes) {
+      // One-time migration from previous localStorage key.
+      const legacyPinnedNotes = localStorage.getItem("pinnedNotes");
+      if (legacyPinnedNotes) {
+        sessionStorage.setItem("pinnedNotes", legacyPinnedNotes);
+      }
+    }
+    const resolvedPinnedNotes =
+      storedPinnedNotes ?? sessionStorage.getItem("pinnedNotes");
+    if (resolvedPinnedNotes) {
+      setPinnedNotes(new Set(JSON.parse(resolvedPinnedNotes)));
     } else {
       const initialPinnedNotes = new Set(
         notes
@@ -158,7 +167,7 @@ export default function Sidebar({
           .map((note) => note.slug)
       );
       setPinnedNotes(initialPinnedNotes);
-      localStorage.setItem(
+      sessionStorage.setItem(
         "pinnedNotes",
         JSON.stringify(Array.from(initialPinnedNotes))
       );
@@ -246,7 +255,7 @@ export default function Sidebar({
         } else {
           newPinned.delete(slug);
         }
-        localStorage.setItem(
+        sessionStorage.setItem(
           "pinnedNotes",
           JSON.stringify(Array.from(newPinned))
         );

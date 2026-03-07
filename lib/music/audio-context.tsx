@@ -45,7 +45,7 @@ interface PersistedState {
 function loadStoredState(): Partial<PlaybackState> {
   if (typeof window === "undefined") return {};
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed: PersistedState = JSON.parse(stored);
       return {
@@ -68,7 +68,7 @@ function loadStoredState(): Partial<PlaybackState> {
 function saveState(state: PersistedState) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     // Ignore - quota exceeded or private browsing
   }
