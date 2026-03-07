@@ -1,0 +1,31 @@
+components/apps/notes/sidebar.tsx
+  32970bf4b030f18b 146-157,170,258
+lib/music/audio-context.tsx
+  32970bf4b030f18b 48,71
+lib/github.ts
+  32970bf4b030f18b 27,31,35,43,47,55,57
+components/apps/notes/hooks/use-notes-selection.ts
+  32970bf4b030f18b 39-47
+docs/design-system.md
+  32970bf4b030f18b 435-437,439,446-447,482-483
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "6ebbca03a0b11d89e590918e22202c87cc327498",
+  "prompts": {
+    "32970bf4b030f18b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cbb24-81f5-70c1-a69b-da83559a0742",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 40,
+      "total_deletions": 21,
+      "accepted_lines": 40,
+      "overriden_lines": 0
+    }
+  }
+}
