@@ -144,17 +144,8 @@ export default function Sidebar({
 
   useEffect(() => {
     const storedPinnedNotes = sessionStorage.getItem("pinnedNotes");
-    if (!storedPinnedNotes) {
-      // One-time migration from previous localStorage key.
-      const legacyPinnedNotes = localStorage.getItem("pinnedNotes");
-      if (legacyPinnedNotes) {
-        sessionStorage.setItem("pinnedNotes", legacyPinnedNotes);
-      }
-    }
-    const resolvedPinnedNotes =
-      storedPinnedNotes ?? sessionStorage.getItem("pinnedNotes");
-    if (resolvedPinnedNotes) {
-      setPinnedNotes(new Set(JSON.parse(resolvedPinnedNotes)));
+    if (storedPinnedNotes) {
+      setPinnedNotes(new Set(JSON.parse(storedPinnedNotes)));
     } else {
       const initialPinnedNotes = new Set(
         notes
