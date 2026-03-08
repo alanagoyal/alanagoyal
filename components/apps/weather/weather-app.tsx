@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Cloud,
   CloudDrizzle,
@@ -213,18 +213,45 @@ const WEATHER_RAIN_DROPS = [
   { left: "93%", top: "-18%", height: 15, duration: 1.1, delay: 0.65, drift: 5, opacity: 0.58 },
 ] as const;
 
+const WEATHER_SIDEBAR_RAIN_FREEZE_TIME = 4.6;
+
+const WEATHER_SIDEBAR_RAIN_DROPS = WEATHER_RAIN_DROPS.map((drop, index) => {
+  const cycleTime = WEATHER_SIDEBAR_RAIN_FREEZE_TIME + index * 0.08;
+  const progress = ((cycleTime - drop.delay) % drop.duration + drop.duration) % drop.duration / drop.duration;
+  const startTop = parseFloat(drop.top);
+  const top = startTop + progress * 126;
+  const xOffset = Number((drop.drift * progress).toFixed(2));
+
+  return {
+    ...drop,
+    top: `${top}%`,
+    height: Math.max(9, Math.round(drop.height * (0.78 + progress * 0.16))),
+    drift: xOffset,
+    opacity: Number(Math.min(0.74, drop.opacity + 0.04 + progress * 0.08).toFixed(2)),
+  };
+});
+
 const WEATHER_SNOW_FLAKES = [
   { left: "6%", top: "-8%", size: 5, duration: 5.8, delay: 0.3, drift: 12, opacity: 0.78 },
   { left: "14%", top: "-18%", size: 6, duration: 6.4, delay: 1.2, drift: 14, opacity: 0.72 },
   { left: "21%", top: "-10%", size: 4, duration: 5.2, delay: 0.7, drift: 10, opacity: 0.82 },
+  { left: "25%", top: "-5%", size: 5, duration: 5.7, delay: 1.6, drift: 11, opacity: 0.76 },
   { left: "29%", top: "-20%", size: 7, duration: 7.1, delay: 1.8, drift: 16, opacity: 0.68 },
+  { left: "34%", top: "-26%", size: 4, duration: 5.1, delay: 2.3, drift: 9, opacity: 0.84 },
   { left: "38%", top: "-14%", size: 5, duration: 6.2, delay: 0.1, drift: 13, opacity: 0.8 },
+  { left: "42%", top: "-4%", size: 6, duration: 6.6, delay: 1.0, drift: 15, opacity: 0.7 },
   { left: "47%", top: "-6%", size: 6, duration: 5.6, delay: 2.1, drift: 11, opacity: 0.74 },
+  { left: "51%", top: "-24%", size: 5, duration: 6.0, delay: 0.8, drift: 12, opacity: 0.79 },
   { left: "55%", top: "-16%", size: 4, duration: 4.9, delay: 1.4, drift: 9, opacity: 0.84 },
+  { left: "60%", top: "-7%", size: 6, duration: 6.9, delay: 2.4, drift: 16, opacity: 0.69 },
   { left: "64%", top: "-12%", size: 7, duration: 7.4, delay: 0.9, drift: 17, opacity: 0.7 },
+  { left: "69%", top: "-19%", size: 4, duration: 5.3, delay: 1.5, drift: 10, opacity: 0.82 },
   { left: "73%", top: "-22%", size: 5, duration: 6.1, delay: 2.6, drift: 12, opacity: 0.78 },
+  { left: "77%", top: "-11%", size: 5, duration: 5.9, delay: 0.4, drift: 13, opacity: 0.77 },
   { left: "82%", top: "-9%", size: 6, duration: 5.4, delay: 1.7, drift: 14, opacity: 0.76 },
+  { left: "86%", top: "-23%", size: 4, duration: 5.0, delay: 2.0, drift: 9, opacity: 0.83 },
   { left: "91%", top: "-18%", size: 4, duration: 4.8, delay: 0.5, drift: 10, opacity: 0.82 },
+  { left: "95%", top: "-6%", size: 5, duration: 6.3, delay: 1.3, drift: 12, opacity: 0.75 },
 ] as const;
 
 const WEATHER_LIGHTNING_BOLTS = [
@@ -297,14 +324,13 @@ function findMatchingCity(cities: CityConfig[], target: CityConfig): CityConfig 
   return cities.find((city) => getCityCoordinateKey(city) === targetKey) ?? null;
 }
 
-const DEFAULT_SIDEBAR_CARD_BACKGROUND =
-  "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%), linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
+const DEFAULT_WEATHER_BACKGROUND = "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
 
 const MAIN_CLOUD_BAND_TONES: Record<WeatherScene["cloudTone"], [string, string, string]> = {
   storm: ["bg-slate-200/[0.14]", "bg-slate-100/10", "bg-slate-100/[0.08]"],
   rain: ["bg-slate-100/[0.16]", "bg-slate-100/[0.13]", "bg-slate-100/[0.11]"],
   fog: ["bg-slate-100/[0.18]", "bg-slate-100/[0.16]", "bg-slate-100/[0.2]"],
-  cloudy: ["bg-white/[0.2]", "bg-white/[0.18]", "bg-white/[0.14]"],
+  cloudy: ["bg-white/[0.34]", "bg-white/[0.28]", "bg-white/[0.24]"],
   default: ["bg-white/16", "bg-white/14", "bg-white/12"],
 };
 
@@ -359,6 +385,308 @@ function WeatherIcon({ code, className }: { code: number; className?: string }) 
     default:
       return <Cloud className={className} />;
   }
+}
+
+function WeatherEffects({
+  scene,
+  surface,
+}: {
+  scene: WeatherScene;
+  surface: "main" | "sidebar";
+}) {
+  const effects = surface === "main" ? scene.mainEffects : scene.sidebarEffects;
+  const cloudClasses = MAIN_CLOUD_BAND_TONES[scene.cloudTone];
+  const hasEffect = (effect: WeatherScene["mainEffects"][number]) => effects.includes(effect);
+  const isSidebar = surface === "sidebar";
+  const isAnimatedCloudyMain = hasEffect("cloudDrift") && !isSidebar;
+  const isAnimatedFogMain = hasEffect("fogDrift") && !isSidebar;
+
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {isSidebar && (
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,16,34,0.18)_0%,rgba(8,16,34,0.34)_100%)]" />
+      )}
+
+      {hasEffect("cloudShade") && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isSidebar
+              ? scene.cloudTone === "fog"
+                ? "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(186,203,220,0.24) 100%)"
+                : "linear-gradient(180deg, rgba(10,18,34,0.18) 0%, rgba(10,18,34,0.36) 100%)"
+              : scene.cloudTone === "fog"
+                ? "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(186,203,220,0.18) 100%)"
+                : "linear-gradient(180deg, rgba(12,20,34,0.10) 0%, rgba(12,20,34,0.22) 100%)",
+          }}
+        />
+      )}
+
+      {hasEffect("cloudDrift") && !isSidebar && (
+        <div
+          className="weather-cloud-pan absolute left-[-30%] top-[14%] h-44 w-[58rem] opacity-90"
+          style={
+            {
+              ["--cloud-pan-distance" as string]: "42%",
+              ["--cloud-pan-duration" as string]: "12s",
+              animationDelay: "-2s",
+            } as CSSProperties
+          }
+        >
+          <div className="absolute left-[2%] top-[34%] h-20 w-56 rounded-full bg-white/24 blur-xl" />
+          <div className="absolute left-[14%] top-[14%] h-28 w-72 rounded-full bg-white/30 blur-xl" />
+          <div className="absolute left-[31%] top-[6%] h-32 w-80 rounded-full bg-white/34 blur-xl" />
+          <div className="absolute left-[50%] top-[18%] h-30 w-72 rounded-full bg-white/28 blur-xl" />
+          <div className="absolute left-[68%] top-[28%] h-24 w-64 rounded-full bg-white/22 blur-xl" />
+          <div className="absolute left-[12%] top-[44%] h-18 w-[76%] rounded-full bg-white/18 blur-2xl" />
+        </div>
+      )}
+
+      {hasEffect("sunGlow") && (
+        isSidebar ? (
+          <div className="absolute right-[8%] top-[8%] h-20 w-20 rounded-full bg-yellow-100/18 blur-2xl" />
+        ) : (
+          <>
+            <div className="absolute -top-14 right-[16%] h-52 w-52 rounded-full bg-yellow-100/18 blur-3xl" />
+            <div className="absolute top-4 right-[22%] h-24 w-24 rounded-full bg-yellow-200/30 blur-2xl" />
+          </>
+        )
+      )}
+
+      {hasEffect("stars") && (
+        <div
+          className={cn("absolute inset-0", isSidebar ? "opacity-68" : "opacity-75")}
+          style={{
+            backgroundImage: isSidebar
+              ? "radial-gradient(1.6px 1.6px at 18px 18px, rgba(255,255,255,0.78), transparent 60%), radial-gradient(1.3px 1.3px at 78px 34px, rgba(255,255,255,0.68), transparent 60%), radial-gradient(1.2px 1.2px at 138px 22px, rgba(255,255,255,0.62), transparent 60%)"
+              : "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
+            backgroundSize: isSidebar ? "160px 90px" : "180px 120px",
+          }}
+        />
+      )}
+
+      {hasEffect("cloudBands") && (
+        <>
+          <div
+            className={cn(
+              "absolute rounded-full",
+              isSidebar
+                ? "left-[10%] top-[14%] h-10 w-28 blur-2xl"
+                : isAnimatedCloudyMain
+                  ? "left-[6%] top-[8%] h-36 w-[34rem] blur-3xl"
+                  : "left-[14%] top-[12%] h-24 w-80 blur-3xl",
+              isAnimatedCloudyMain && "weather-cloud-drift",
+              cloudClasses[0]
+            )}
+            style={
+              isAnimatedCloudyMain
+                ? ({
+                    ["--cloud-drift-x" as string]: "88px",
+                    ["--cloud-drift-y" as string]: "12px",
+                    ["--cloud-drift-duration" as string]: "18s",
+                    animationDelay: "-3s",
+                  } as CSSProperties)
+                : undefined
+            }
+          />
+          <div
+            className={cn(
+              "absolute rounded-full",
+              isSidebar
+                ? "right-[6%] top-[26%] h-9 w-24 blur-2xl"
+                : isAnimatedCloudyMain
+                  ? "right-[-4%] top-[20%] h-32 w-[28rem] blur-3xl"
+                  : "right-[6%] top-[26%] h-20 w-72 blur-3xl",
+              isAnimatedCloudyMain && "weather-cloud-drift",
+              cloudClasses[1]
+            )}
+            style={
+              isAnimatedCloudyMain
+                ? ({
+                    ["--cloud-drift-x" as string]: "-72px",
+                    ["--cloud-drift-y" as string]: "16px",
+                    ["--cloud-drift-duration" as string]: "22s",
+                    animationDelay: "-8s",
+                  } as CSSProperties)
+                : undefined
+            }
+          />
+          <div
+            className={cn(
+              "absolute rounded-full",
+              isSidebar
+                ? "left-[26%] bottom-[18%] h-10 w-32 blur-2xl"
+                : isAnimatedCloudyMain
+                  ? "left-[18%] bottom-[16%] h-32 w-[40rem] blur-3xl"
+                  : "left-[32%] bottom-[24%] h-24 w-96 blur-3xl",
+              isAnimatedCloudyMain && "weather-cloud-drift",
+              cloudClasses[2]
+            )}
+            style={
+              isAnimatedCloudyMain
+                ? ({
+                    ["--cloud-drift-x" as string]: "54px",
+                    ["--cloud-drift-y" as string]: "-10px",
+                    ["--cloud-drift-duration" as string]: "20s",
+                    animationDelay: "-12s",
+                  } as CSSProperties)
+                : undefined
+            }
+          />
+        </>
+      )}
+
+      {hasEffect("fog") && (
+        isSidebar ? (
+          <>
+            <div className="absolute inset-x-[4%] top-[20%] h-10 rounded-full bg-white/14 blur-2xl" />
+            <div className="absolute inset-x-0 bottom-[8%] h-12 bg-white/20 blur-2xl" />
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-white/26 blur-3xl" />
+          </>
+        ) : (
+          <>
+            {isAnimatedFogMain && (
+              <>
+                <div
+                  className="weather-fog-pan absolute left-[-18%] top-[18%] h-28 w-[70%] rounded-full bg-white/18 blur-3xl"
+                  style={
+                    {
+                      ["--fog-pan-distance" as string]: "16%",
+                      ["--fog-pan-duration" as string]: "18s",
+                      animationDelay: "-4s",
+                    } as CSSProperties
+                  }
+                />
+                <div
+                  className="weather-fog-pan absolute right-[-16%] top-[40%] h-24 w-[64%] rounded-full bg-white/14 blur-3xl"
+                  style={
+                    {
+                      ["--fog-pan-distance" as string]: "-14%",
+                      ["--fog-pan-duration" as string]: "22s",
+                      animationDelay: "-10s",
+                    } as CSSProperties
+                  }
+                />
+              </>
+            )}
+            <div className="absolute inset-x-[6%] top-[22%] h-28 rounded-full bg-white/12 blur-3xl" />
+            <div className="absolute inset-x-[2%] top-[46%] h-28 rounded-full bg-white/16 blur-3xl" />
+            <div className="absolute inset-x-0 bottom-[10%] h-36 bg-white/22 blur-2xl" />
+            <div className="absolute inset-x-0 bottom-0 h-48 bg-white/30 blur-3xl" />
+          </>
+        )
+      )}
+
+      {hasEffect("rainSheet") && (
+        <div
+          className="absolute inset-0"
+          style={{
+            opacity: isSidebar ? 0.5 : 0.22,
+            backgroundImage:
+              "repeating-linear-gradient(112deg, rgba(231,241,255,0) 0px, rgba(231,241,255,0) 18px, rgba(231,241,255,0.34) 18px, rgba(231,241,255,0.76) 19.5px, rgba(173,205,255,0.56) 21px, rgba(173,205,255,0) 23px)",
+            backgroundSize: isSidebar ? "180px 120px" : undefined,
+          }}
+        />
+      )}
+
+      {hasEffect("rainDrops") && (
+        <div className="absolute inset-0 overflow-hidden">
+          {(isSidebar ? WEATHER_SIDEBAR_RAIN_DROPS : WEATHER_RAIN_DROPS).map((drop, index) => (
+            <div
+              key={`${drop.left}-${index}`}
+              className={cn("absolute rounded-full", !isSidebar && "weather-rain-drop")}
+              style={{
+                left: drop.left,
+                top: drop.top,
+                width: isSidebar ? "2px" : "2px",
+                height: `${drop.height}px`,
+                opacity: drop.opacity,
+                background:
+                  "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.92) 38%, rgba(173,205,255,0.92) 100%)",
+                boxShadow: isSidebar
+                  ? "0 0 4px rgba(196,220,255,0.14)"
+                  : "0 0 6px rgba(196,220,255,0.18)",
+                transform: isSidebar ? `translateX(${drop.drift}px)` : undefined,
+                ["--rain-duration" as string]: isSidebar ? undefined : `${drop.duration}s`,
+                ["--rain-delay" as string]: isSidebar ? undefined : `${drop.delay}s`,
+                ["--rain-drift" as string]: isSidebar ? undefined : `${drop.drift}px`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {hasEffect("snow") && (
+        isSidebar ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(3px 3px at 12% 22%, rgba(255,255,255,0.88), transparent 72%), radial-gradient(2.5px 2.5px at 26% 36%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 42% 18%, rgba(255,255,255,0.9), transparent 72%), radial-gradient(2px 2px at 58% 42%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 74% 24%, rgba(255,255,255,0.86), transparent 72%), radial-gradient(2.5px 2.5px at 88% 38%, rgba(255,255,255,0.8), transparent 72%)",
+            }}
+          />
+        ) : (
+          <div className="absolute inset-0 overflow-hidden">
+            {WEATHER_SNOW_FLAKES.map((flake, index) => (
+              <div
+                key={`${flake.left}-${index}`}
+                className="weather-snow-flake absolute rounded-full"
+                style={{
+                  left: flake.left,
+                  top: flake.top,
+                  width: `${flake.size}px`,
+                  height: `${flake.size}px`,
+                  opacity: flake.opacity,
+                  background:
+                    "radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), rgba(231,239,255,0.82) 60%, rgba(231,239,255,0.08) 100%)",
+                  boxShadow: "0 0 8px rgba(233,241,255,0.22)",
+                  ["--snow-duration" as string]: `${flake.duration}s`,
+                  ["--snow-delay" as string]: `${flake.delay}s`,
+                  ["--snow-drift" as string]: `${flake.drift}px`,
+                }}
+              />
+            ))}
+          </div>
+        )
+      )}
+
+      {hasEffect("lightning") && (
+        isSidebar ? (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(72px_110px_at_78%_14%,rgba(244,248,255,0.28),rgba(214,228,255,0.06)_34%,transparent_72%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,10,22,0.06)_0%,rgba(5,10,22,0.24)_100%)]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute left-[10%] top-[16%] h-24 w-[34%] rounded-full bg-slate-950/14 blur-3xl" />
+            <div className="absolute right-[12%] top-[14%] h-28 w-[38%] rounded-full bg-slate-950/16 blur-3xl" />
+            <div className="weather-storm-flash absolute inset-0 bg-[radial-gradient(56%_38%_at_76%_14%,rgba(239,245,255,0.55),rgba(214,229,255,0.18)_20%,transparent_58%)] mix-blend-screen" />
+            {WEATHER_LIGHTNING_BOLTS.map((bolt, index) => (
+              <div
+                key={`${bolt.left}-${index}`}
+                className="weather-lightning-bolt absolute"
+                style={{
+                  left: bolt.left,
+                  top: bolt.top,
+                  width: bolt.width,
+                  height: bolt.height,
+                  animationDelay: bolt.delay,
+                  clipPath: bolt.clipPath,
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(221,235,255,0.94) 44%, rgba(157,201,255,0.82) 76%, rgba(157,201,255,0) 100%)",
+                  filter:
+                    "drop-shadow(0 0 8px rgba(223,236,255,0.8)) drop-shadow(0 0 20px rgba(119,178,255,0.34))",
+                }}
+              />
+            ))}
+            <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(180deg,transparent_0%,rgba(8,15,28,0.08)_42%,rgba(8,15,28,0.26)_100%)]" />
+          </>
+        )
+      )}
+
+      {!isSidebar && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />}
+    </div>
+  );
 }
 
 function parseDateOnly(dateString: string): Date {
@@ -546,17 +874,15 @@ function SidebarCityItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative w-full max-w-full rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
+        "relative w-full max-w-full overflow-hidden rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
         "bg-white/[0.07]",
         isDesktopSelected &&
           "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
       )}
-      style={{
-        backgroundImage: scene?.sidebarCardBackground ?? DEFAULT_SIDEBAR_CARD_BACKGROUND,
-        backgroundPosition: "center",
-      }}
+      style={{ background: scene?.background ?? DEFAULT_WEATHER_BACKGROUND }}
     >
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_96px] items-start gap-2">
+      {scene && <WeatherEffects scene={scene} surface="sidebar" />}
+      <div className="relative z-[1] grid min-w-0 grid-cols-[minmax(0,1fr)_96px] items-start gap-2">
         <div className="min-w-0">
           <p className="truncate whitespace-nowrap text-base font-medium">{cityName}</p>
           <p
@@ -595,9 +921,13 @@ function SidebarCityItem({
 function WeatherScenePreviewControls({
   value,
   onChange,
+  backgroundOnly,
+  onToggleBackgroundOnly,
 }: {
   value: WeatherScenePreviewMode;
   onChange: (value: WeatherScenePreviewMode) => void;
+  backgroundOnly: boolean;
+  onToggleBackgroundOnly: () => void;
 }) {
   return (
     <section className="rounded-2xl bg-white/[0.1] p-3 backdrop-blur-sm">
@@ -634,6 +964,28 @@ function WeatherScenePreviewControls({
           );
         })}
       </div>
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-white/[0.06] px-3 py-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/72">
+            Background Only
+          </p>
+          <p className="mt-0.5 text-xs text-white/68">
+            Hide main cards to inspect the main background + animation.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleBackgroundOnly}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+            backgroundOnly
+              ? "border-white/55 bg-white/22 text-white"
+              : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+          )}
+        >
+          {backgroundOnly ? "On" : "Off"}
+        </button>
+      </div>
     </section>
   );
 }
@@ -663,6 +1015,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
   const [scenePreviewMode, setScenePreviewMode] =
     useState<WeatherScenePreviewMode>("auto");
+  const [backgroundOnlyPreview, setBackgroundOnlyPreview] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
   const latestWeatherRequestIdRef = useRef(0);
   const trimmedSearchQuery = searchQuery.trim();
@@ -927,7 +1280,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const bodyTextClass = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]";
   const mutedTextClass = "text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
   const sidebarBackgroundImage = activeScene.sidebarShellBackground;
-  const mainCloudBandClasses = MAIN_CLOUD_BAND_TONES[activeScene.cloudTone];
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -970,137 +1322,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   return (
     <div ref={containerRef} className="h-full flex bg-background" data-app="weather">
       <div className="flex-1 min-h-0 relative overflow-hidden" style={{ background: activeScene.background }}>
-        <div className="pointer-events-none absolute inset-0">
-          {activeScene.showSunGlow && (
-            <>
-              <div className="absolute -top-14 right-[16%] h-52 w-52 rounded-full bg-yellow-100/18 blur-3xl" />
-              <div className="absolute top-4 right-[22%] h-24 w-24 rounded-full bg-yellow-200/30 blur-2xl" />
-            </>
-          )}
-          {activeScene.showStars && (
-            <div
-              className="absolute inset-0 opacity-75"
-              style={{
-                backgroundImage:
-                  "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
-                backgroundSize: "180px 120px",
-              }}
-            />
-          )}
-          {activeScene.showCloudBands && (
-            <>
-              <div
-                className={cn(
-                  "absolute left-[14%] top-[12%] h-24 w-80 rounded-full blur-3xl",
-                  mainCloudBandClasses[0]
-                )}
-              />
-              <div
-                className={cn(
-                  "absolute right-[6%] top-[26%] h-20 w-72 rounded-full blur-3xl",
-                  mainCloudBandClasses[1]
-                )}
-              />
-              <div
-                className={cn(
-                  "absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full blur-3xl",
-                  mainCloudBandClasses[2]
-                )}
-              />
-              {activeScene.showLightning && (
-                <>
-                  <div className="absolute left-[10%] top-[16%] h-24 w-[34%] rounded-full bg-slate-950/14 blur-3xl" />
-                  <div className="absolute right-[12%] top-[14%] h-28 w-[38%] rounded-full bg-slate-950/16 blur-3xl" />
-                </>
-              )}
-              {activeScene.mood === "rain" && (
-                <>
-                  <div className="absolute left-[10%] top-[15%] h-24 w-[32%] rounded-full bg-slate-900/[0.10] blur-3xl" />
-                  <div className="absolute right-[12%] top-[14%] h-28 w-[36%] rounded-full bg-slate-900/[0.11] blur-3xl" />
-                </>
-              )}
-            </>
-          )}
-          {activeScene.showFog && (
-            <>
-              <div className="absolute inset-x-[8%] top-[22%] h-28 rounded-full bg-white/10 blur-3xl" />
-              <div className="absolute inset-x-[4%] top-[46%] h-24 rounded-full bg-white/12 blur-3xl" />
-              <div className="absolute inset-x-0 bottom-[8%] h-32 bg-white/18 blur-2xl" />
-              <div className="absolute inset-x-0 bottom-0 h-40 bg-white/24 blur-3xl" />
-            </>
-          )}
-          {activeScene.showRain && (
-            <div className="absolute inset-0 overflow-hidden">
-              {WEATHER_RAIN_DROPS.map((drop, index) => (
-                <div
-                  key={`${drop.left}-${index}`}
-                  className="weather-rain-drop absolute rounded-full"
-                  style={{
-                    left: drop.left,
-                    top: drop.top,
-                    width: "2px",
-                    height: `${drop.height}px`,
-                    opacity: drop.opacity,
-                    background:
-                      "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.92) 38%, rgba(173,205,255,0.92) 100%)",
-                    boxShadow: "0 0 6px rgba(196,220,255,0.18)",
-                    ["--rain-duration" as string]: `${drop.duration}s`,
-                    ["--rain-delay" as string]: `${drop.delay}s`,
-                    ["--rain-drift" as string]: `${drop.drift}px`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          {activeScene.showSnow && (
-            <div className="absolute inset-0 overflow-hidden">
-              {WEATHER_SNOW_FLAKES.map((flake, index) => (
-                <div
-                  key={`${flake.left}-${index}`}
-                  className="weather-snow-flake absolute rounded-full"
-                  style={{
-                    left: flake.left,
-                    top: flake.top,
-                    width: `${flake.size}px`,
-                    height: `${flake.size}px`,
-                    opacity: flake.opacity,
-                    background:
-                      "radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), rgba(231,239,255,0.82) 60%, rgba(231,239,255,0.08) 100%)",
-                    boxShadow: "0 0 8px rgba(233,241,255,0.22)",
-                    ["--snow-duration" as string]: `${flake.duration}s`,
-                    ["--snow-delay" as string]: `${flake.delay}s`,
-                    ["--snow-drift" as string]: `${flake.drift}px`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          {activeScene.showLightning && (
-            <>
-              <div className="weather-storm-flash absolute inset-0 bg-[radial-gradient(56%_38%_at_76%_14%,rgba(239,245,255,0.55),rgba(214,229,255,0.18)_20%,transparent_58%)] mix-blend-screen" />
-              {WEATHER_LIGHTNING_BOLTS.map((bolt, index) => (
-                <div
-                  key={`${bolt.left}-${index}`}
-                  className="weather-lightning-bolt absolute"
-                  style={{
-                    left: bolt.left,
-                    top: bolt.top,
-                    width: bolt.width,
-                    height: bolt.height,
-                    animationDelay: bolt.delay,
-                    clipPath: bolt.clipPath,
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(221,235,255,0.94) 44%, rgba(157,201,255,0.82) 76%, rgba(157,201,255,0) 100%)",
-                    filter:
-                      "drop-shadow(0 0 8px rgba(223,236,255,0.8)) drop-shadow(0 0 20px rgba(119,178,255,0.34))",
-                  }}
-                />
-              ))}
-              <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(180deg,transparent_0%,rgba(8,15,28,0.08)_42%,rgba(8,15,28,0.26)_100%)]" />
-            </>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
-        </div>
+        <WeatherEffects scene={activeScene} surface="main" />
 
         {failed && !hasFetchedAnyDataRef.current && (
           <div className="relative z-[1] h-full flex items-center justify-center px-4 text-sm text-white/90">
@@ -1238,6 +1460,10 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       <WeatherScenePreviewControls
                         value={scenePreviewMode}
                         onChange={setScenePreviewMode}
+                        backgroundOnly={backgroundOnlyPreview}
+                        onToggleBackgroundOnly={() =>
+                          setBackgroundOnlyPreview((current) => !current)
+                        }
                       />
                     )}
                     {cityCards.map((city) => (
@@ -1290,9 +1516,15 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   <WeatherScenePreviewControls
                     value={scenePreviewMode}
                     onChange={setScenePreviewMode}
+                    backgroundOnly={backgroundOnlyPreview}
+                    onToggleBackgroundOnly={() =>
+                      setBackgroundOnlyPreview((current) => !current)
+                    }
                   />
                 )}
 
+                {!backgroundOnlyPreview && (
+                  <>
                 <section className={cn("rounded-2xl overflow-hidden text-white", mainCardClass)}>
                   <div className="px-5 py-6" style={{ background: activeScene.heroGradient }}>
                     <div className="text-center">
@@ -1510,6 +1742,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       </p>
                     )}
                   </div>
+                )}
+                  </>
                 )}
               </div>
             </ScrollArea>

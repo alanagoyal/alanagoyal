@@ -1,11 +1,15 @@
 export type DayPhase = "night" | "dawn" | "day" | "dusk";
 export type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
-export type WeatherSceneLayer =
+export type WeatherSceneEffect =
   | "sunGlow"
   | "stars"
+  | "cloudShade"
   | "cloudBands"
+  | "cloudDrift"
+  | "fogDrift"
   | "fog"
-  | "rain"
+  | "rainSheet"
+  | "rainDrops"
   | "snow"
   | "lightning";
 export type WeatherCloudTone = "default" | "cloudy" | "fog" | "rain" | "storm";
@@ -25,10 +29,10 @@ export interface WeatherScene {
   mood: WeatherMood;
   background: string;
   heroGradient: string;
-  sidebarCardBackground: string;
   sidebarShellBackground: string;
   cloudTone: WeatherCloudTone;
-  layers: WeatherSceneLayer[];
+  mainEffects: WeatherSceneEffect[];
+  sidebarEffects: WeatherSceneEffect[];
   isDark: boolean;
   showStars: boolean;
   showRain: boolean;
@@ -44,7 +48,6 @@ interface WeatherThemeDefinition {
   heroGradient: string;
   cloudTone: WeatherCloudTone;
   isDark: boolean;
-  layers: WeatherSceneLayer[];
 }
 
 function getWeatherThemeKey(phase: DayPhase, mood: WeatherMood): WeatherThemeKey {
@@ -57,35 +60,31 @@ const WEATHER_THEME_DEFINITIONS: Record<WeatherThemeKey, WeatherThemeDefinition>
     heroGradient: "linear-gradient(140deg, rgba(41,63,121,0.9), rgba(73,103,175,0.78))",
     cloudTone: "default",
     isDark: true,
-    layers: ["stars"],
   },
   "night-cloudy": {
-    background: "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(41,63,121,0.9), rgba(73,103,175,0.78))",
+    background: "linear-gradient(180deg, #081028 0%, #121d40 40%, #263967 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(30,45,90,0.94), rgba(54,78,132,0.82))",
     cloudTone: "cloudy",
     isDark: true,
-    layers: ["stars", "cloudBands"],
   },
   "night-fog": {
-    background: "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(41,63,121,0.9), rgba(73,103,175,0.78))",
+    background: "linear-gradient(180deg, #0a1231 0%, #18254d 42%, #3e5282 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(47,69,124,0.9), rgba(86,114,171,0.76))",
     cloudTone: "fog",
     isDark: true,
-    layers: ["cloudBands", "fog"],
   },
   "night-rain": {
-    background: "linear-gradient(180deg, #080f2a 0%, #111b3f 45%, #243362 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(37,56,106,0.9), rgba(52,74,130,0.85))",
-    cloudTone: "rain",
+    background: "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
+    heroGradient:
+      "linear-gradient(140deg, rgba(38,57,89,0.92), rgba(73,97,131,0.84) 55%, rgba(125,149,177,0.74) 100%)",
+    cloudTone: "storm",
     isDark: true,
-    layers: ["cloudBands", "rain"],
   },
   "night-snow": {
     background: "linear-gradient(180deg, #0a1231 0%, #15224a 42%, #314482 100%)",
     heroGradient: "linear-gradient(140deg, rgba(41,63,121,0.9), rgba(73,103,175,0.78))",
     cloudTone: "default",
     isDark: true,
-    layers: ["snow"],
   },
   "night-thunder": {
     background:
@@ -94,42 +93,37 @@ const WEATHER_THEME_DEFINITIONS: Record<WeatherThemeKey, WeatherThemeDefinition>
       "linear-gradient(140deg, rgba(17,31,58,0.94), rgba(39,62,101,0.9) 55%, rgba(82,112,156,0.76) 100%)",
     cloudTone: "storm",
     isDark: true,
-    layers: ["cloudBands", "rain", "lightning"],
   },
   "dawn-clear": {
     background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
     heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
     cloudTone: "default",
     isDark: false,
-    layers: ["cloudBands"],
   },
   "dawn-cloudy": {
-    background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
+    background: "linear-gradient(180deg, #233f67 0%, #35516f 38%, #52687f 68%, #7b7f86 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(55,83,119,0.92), rgba(86,112,142,0.8))",
     cloudTone: "cloudy",
     isDark: false,
-    layers: ["cloudBands"],
   },
   "dawn-fog": {
-    background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
+    background: "linear-gradient(180deg, #24406c 0%, #3d5e86 38%, #5b7a9b 64%, #888588 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(71,103,145,0.88), rgba(109,137,172,0.74))",
     cloudTone: "fog",
     isDark: false,
-    layers: ["cloudBands", "fog"],
   },
   "dawn-rain": {
     background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
-    cloudTone: "rain",
+    heroGradient:
+      "linear-gradient(140deg, rgba(76,100,129,0.9), rgba(118,139,161,0.8) 56%, rgba(169,178,184,0.72) 100%)",
+    cloudTone: "storm",
     isDark: false,
-    layers: ["cloudBands", "rain"],
   },
   "dawn-snow": {
     background: "linear-gradient(180deg, #1f3a66 0%, #34567f 38%, #4c6f95 64%, #7e7d83 100%)",
     heroGradient: "linear-gradient(140deg, rgba(58,91,136,0.88), rgba(89,121,161,0.76))",
     cloudTone: "default",
     isDark: false,
-    layers: ["cloudBands", "snow"],
   },
   "dawn-thunder": {
     background:
@@ -138,44 +132,37 @@ const WEATHER_THEME_DEFINITIONS: Record<WeatherThemeKey, WeatherThemeDefinition>
       "linear-gradient(140deg, rgba(38,61,90,0.92), rgba(79,102,128,0.82) 56%, rgba(129,141,152,0.72) 100%)",
     cloudTone: "storm",
     isDark: false,
-    layers: ["cloudBands", "rain", "lightning"],
   },
   "day-clear": {
     background: "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
     heroGradient: "linear-gradient(140deg, rgba(58,95,142,0.88), rgba(92,124,164,0.76))",
     cloudTone: "default",
     isDark: false,
-    layers: ["sunGlow"],
   },
   "day-cloudy": {
-    background: "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(58,95,142,0.88), rgba(92,124,164,0.76))",
+    background: "linear-gradient(180deg, #3d5778 0%, #556f8f 42%, #7088a3 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(73,101,131,0.9), rgba(103,128,151,0.8))",
     cloudTone: "cloudy",
     isDark: false,
-    layers: ["cloudBands"],
   },
   "day-fog": {
-    background: "linear-gradient(180deg, #3d5068 0%, #566d86 48%, #70869d 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(72,98,127,0.86), rgba(104,127,152,0.74))",
+    background: "linear-gradient(180deg, #355f8d 0%, #4b74a1 44%, #6c8daf 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(82,120,164,0.86), rgba(118,148,184,0.74))",
     cloudTone: "fog",
     isDark: false,
-    layers: ["cloudBands", "fog"],
   },
   "day-rain": {
-    background:
-      "radial-gradient(118% 78% at 50% 2%, rgba(190,214,244,0.14) 0%, rgba(190,214,244,0) 46%), linear-gradient(180deg, #2a4764 0%, #41617e 40%, #6784a0 100%)",
+    background: "linear-gradient(180deg, #314663 0%, #4f647f 42%, #73879f 100%)",
     heroGradient:
-      "linear-gradient(140deg, rgba(52,80,110,0.92), rgba(86,114,144,0.82) 58%, rgba(127,153,178,0.72) 100%)",
-    cloudTone: "rain",
+      "linear-gradient(140deg, rgba(97,124,151,0.88), rgba(134,159,180,0.8) 58%, rgba(185,201,211,0.72) 100%)",
+    cloudTone: "storm",
     isDark: false,
-    layers: ["cloudBands", "rain"],
   },
   "day-snow": {
     background: "linear-gradient(180deg, #314663 0%, #4f647f 42%, #73879f 100%)",
     heroGradient: "linear-gradient(140deg, rgba(71,94,123,0.9), rgba(111,132,154,0.78))",
     cloudTone: "default",
     isDark: false,
-    layers: ["snow"],
   },
   "day-thunder": {
     background:
@@ -184,42 +171,37 @@ const WEATHER_THEME_DEFINITIONS: Record<WeatherThemeKey, WeatherThemeDefinition>
       "linear-gradient(140deg, rgba(31,49,72,0.92), rgba(67,91,120,0.84) 58%, rgba(114,137,161,0.74) 100%)",
     cloudTone: "storm",
     isDark: true,
-    layers: ["cloudBands", "rain", "lightning"],
   },
   "dusk-clear": {
     background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
     heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
     cloudTone: "default",
     isDark: true,
-    layers: ["cloudBands"],
   },
   "dusk-cloudy": {
-    background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
+    background: "linear-gradient(180deg, #162544 0%, #2c4166 40%, #4c5f7a 72%, #797274 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(46,69,106,0.92), rgba(77,100,132,0.8))",
     cloudTone: "cloudy",
     isDark: true,
-    layers: ["cloudBands"],
   },
   "dusk-fog": {
-    background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
+    background: "linear-gradient(180deg, #1d2d55 0%, #365080 40%, #617493 70%, #8f817e 100%)",
+    heroGradient: "linear-gradient(140deg, rgba(66,92,140,0.88), rgba(103,128,173,0.74))",
     cloudTone: "fog",
     isDark: true,
-    layers: ["cloudBands", "fog"],
   },
   "dusk-rain": {
     background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
-    heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
-    cloudTone: "rain",
+    heroGradient:
+      "linear-gradient(140deg, rgba(69,94,124,0.9), rgba(107,128,151,0.82) 58%, rgba(151,161,169,0.72) 100%)",
+    cloudTone: "storm",
     isDark: true,
-    layers: ["cloudBands", "rain"],
   },
   "dusk-snow": {
     background: "linear-gradient(180deg, #18284f 0%, #2e4677 40%, #536a93 70%, #8a7a77 100%)",
     heroGradient: "linear-gradient(140deg, rgba(55,79,132,0.9), rgba(88,114,165,0.78))",
     cloudTone: "default",
     isDark: true,
-    layers: ["cloudBands", "snow"],
   },
   "dusk-thunder": {
     background:
@@ -228,72 +210,62 @@ const WEATHER_THEME_DEFINITIONS: Record<WeatherThemeKey, WeatherThemeDefinition>
       "linear-gradient(140deg, rgba(31,48,76,0.94), rgba(60,82,114,0.86) 58%, rgba(112,128,147,0.74) 100%)",
     cloudTone: "storm",
     isDark: true,
-    layers: ["cloudBands", "rain", "lightning"],
   },
 };
 
-function hasWeatherLayer(layers: WeatherSceneLayer[], layer: WeatherSceneLayer): boolean {
-  return layers.includes(layer);
+function hasWeatherEffect(effects: WeatherSceneEffect[], effect: WeatherSceneEffect): boolean {
+  return effects.includes(effect);
 }
 
-function buildWeatherSidebarCardBackground(
-  background: string,
-  layers: WeatherSceneLayer[],
-  cloudTone: WeatherCloudTone
-): string {
-  const overlays = [
-    "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%)",
-  ];
+const STORM_RAIN_EFFECTS: WeatherSceneEffect[] = ["cloudBands", "rainDrops"];
 
-  if (hasWeatherLayer(layers, "fog")) {
-    overlays.push(
-      "linear-gradient(180deg, rgba(214,229,247,0.08) 40%, rgba(214,229,247,0.2) 100%)"
-    );
+function getWeatherSurfaceEffects(
+  phase: DayPhase,
+  mood: WeatherMood,
+  surface: "main" | "sidebar"
+): WeatherSceneEffect[] {
+  if (mood === "thunder") {
+    return surface === "main"
+      ? [...STORM_RAIN_EFFECTS, "lightning"]
+      : STORM_RAIN_EFFECTS;
   }
-  if (hasWeatherLayer(layers, "cloudBands")) {
-    if (cloudTone === "cloudy") {
-      overlays.push(
-        "radial-gradient(90px 42px at 22% 24%, rgba(255,255,255,0.2), transparent 72%), radial-gradient(120px 52px at 72% 28%, rgba(255,255,255,0.18), transparent 72%), radial-gradient(120px 46px at 48% 84%, rgba(255,255,255,0.12), transparent 72%)"
-      );
-    } else if (cloudTone === "fog") {
-      overlays.push(
-        "linear-gradient(180deg, rgba(236,241,247,0.16) 12%, rgba(236,241,247,0.04) 40%, rgba(236,241,247,0.18) 78%, rgba(236,241,247,0.28) 100%)"
-      );
-    } else {
-      overlays.push(
-        "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
-      );
+
+  if (mood === "rain") {
+    return STORM_RAIN_EFFECTS;
+  }
+
+  if (mood === "fog") {
+    return surface === "main"
+      ? ["cloudShade", "cloudBands", "fog", "fogDrift"]
+      : ["cloudShade", "fog"];
+  }
+
+  if (mood === "cloudy") {
+    return surface === "main"
+      ? ["cloudShade", "cloudBands", "cloudDrift"]
+      : ["cloudShade", "cloudBands"];
+  }
+
+  if (mood === "snow") {
+    if (phase === "dawn" || phase === "dusk") {
+      return ["cloudBands", "snow"];
     }
-  }
-  if (hasWeatherLayer(layers, "rain")) {
-    overlays.push(
-      "radial-gradient(1.2px 6px at 10% 18%, rgba(221,237,255,0.48), transparent 78%), radial-gradient(1.2px 6px at 22% 34%, rgba(221,237,255,0.44), transparent 78%), radial-gradient(1.2px 7px at 36% 16%, rgba(221,237,255,0.5), transparent 78%), radial-gradient(1px 5px at 48% 38%, rgba(221,237,255,0.42), transparent 78%), radial-gradient(1.2px 6px at 62% 22%, rgba(221,237,255,0.46), transparent 78%), radial-gradient(1px 5px at 74% 40%, rgba(221,237,255,0.4), transparent 78%), radial-gradient(1.2px 7px at 88% 20%, rgba(221,237,255,0.5), transparent 78%)"
-    );
-  }
-  if (hasWeatherLayer(layers, "snow")) {
-    overlays.push(
-      "radial-gradient(3px 3px at 12% 22%, rgba(255,255,255,0.88), transparent 72%), radial-gradient(2.5px 2.5px at 26% 36%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 42% 18%, rgba(255,255,255,0.9), transparent 72%), radial-gradient(2px 2px at 58% 42%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 74% 24%, rgba(255,255,255,0.86), transparent 72%), radial-gradient(2.5px 2.5px at 88% 38%, rgba(255,255,255,0.8), transparent 72%)"
-    );
-  }
-  if (hasWeatherLayer(layers, "lightning")) {
-    overlays.push(
-      "radial-gradient(72px 110px at 78% 14%, rgba(244,248,255,0.28), rgba(214,228,255,0.06) 34%, transparent 72%)",
-      "linear-gradient(180deg, rgba(5,10,22,0.06) 0%, rgba(5,10,22,0.24) 100%)"
-    );
-  }
-  if (hasWeatherLayer(layers, "stars")) {
-    overlays.push(
-      "radial-gradient(1.6px 1.6px at 12px 18px, rgba(255,255,255,0.78), transparent 60%), radial-gradient(1.3px 1.3px at 58px 32px, rgba(255,255,255,0.68), transparent 60%)"
-    );
-  }
-  if (hasWeatherLayer(layers, "sunGlow")) {
-    overlays.push(
-      "radial-gradient(80px 56px at 82% 14%, rgba(255,217,125,0.22), transparent 70%)"
-    );
+    return ["snow"];
   }
 
-  overlays.push(background);
-  return overlays.join(", ");
+  if (phase === "night") {
+    if (mood === "clear") return ["stars"];
+  }
+
+  if (phase === "dawn" || phase === "dusk") {
+    return ["cloudBands"];
+  }
+
+  if (phase === "day" && mood === "clear") {
+    return ["sunGlow"];
+  }
+
+  return [];
 }
 
 function buildWeatherSidebarShellBackground(background: string): string {
@@ -360,6 +332,7 @@ export function getWeatherMood(code: number): WeatherMood {
   if (code === 0) return "clear";
   if (code <= 3) return "cloudy";
   if (code <= 48) return "fog";
+  if (code <= 67) return "rain";
   if (code <= 77) return "snow";
   if (code <= 82) return "rain";
   return "thunder";
@@ -368,9 +341,22 @@ export function getWeatherMood(code: number): WeatherMood {
 export function getWeatherScene(currentTimeIso: string, weatherCode: number): WeatherScene {
   const phase = getDayPhase(currentTimeIso);
   const mood = getWeatherMood(weatherCode);
-  const key = getWeatherThemeKey(phase, mood);
+  const visualMood: WeatherMood =
+    mood === "cloudy"
+      ? "cloudy"
+      : mood === "fog"
+        ? "fog"
+        : mood === "rain"
+          ? "rain"
+          : mood === "snow"
+            ? "snow"
+          : mood === "thunder"
+            ? "thunder"
+            : "clear";
+  const key = getWeatherThemeKey(phase, visualMood);
   const theme = WEATHER_THEME_DEFINITIONS[key];
-  const layers = theme.layers;
+  const mainEffects = getWeatherSurfaceEffects(phase, visualMood, "main");
+  const sidebarEffects = getWeatherSurfaceEffects(phase, visualMood, "sidebar");
 
   return {
     key,
@@ -378,22 +364,19 @@ export function getWeatherScene(currentTimeIso: string, weatherCode: number): We
     mood,
     background: theme.background,
     heroGradient: theme.heroGradient,
-    sidebarCardBackground: buildWeatherSidebarCardBackground(
-      theme.background,
-      layers,
-      theme.cloudTone
-    ),
     sidebarShellBackground: buildWeatherSidebarShellBackground(theme.background),
     cloudTone: theme.cloudTone,
-    layers,
+    mainEffects,
+    sidebarEffects,
     isDark: theme.isDark,
-    showStars: hasWeatherLayer(layers, "stars"),
-    showRain: hasWeatherLayer(layers, "rain"),
-    showSnow: hasWeatherLayer(layers, "snow"),
-    showFog: hasWeatherLayer(layers, "fog"),
-    showCloudBands: hasWeatherLayer(layers, "cloudBands"),
-    showSunGlow: hasWeatherLayer(layers, "sunGlow"),
-    showLightning: hasWeatherLayer(layers, "lightning"),
+    showStars: hasWeatherEffect(mainEffects, "stars"),
+    showRain:
+      hasWeatherEffect(mainEffects, "rainSheet") || hasWeatherEffect(mainEffects, "rainDrops"),
+    showSnow: hasWeatherEffect(mainEffects, "snow"),
+    showFog: hasWeatherEffect(mainEffects, "fog"),
+    showCloudBands: hasWeatherEffect(mainEffects, "cloudBands"),
+    showSunGlow: hasWeatherEffect(mainEffects, "sunGlow"),
+    showLightning: hasWeatherEffect(mainEffects, "lightning"),
   };
 }
 
