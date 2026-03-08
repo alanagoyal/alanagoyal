@@ -601,7 +601,6 @@ function SidebarCityItem({
       )}
       style={{
         backgroundImage: getSidebarCardBackground(scene),
-        backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
@@ -1042,6 +1041,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   "absolute left-[14%] top-[12%] h-24 w-80 rounded-full blur-3xl",
                   activeScene.showLightning
                     ? "bg-slate-200/[0.14]"
+                    : activeScene.mood === "rain"
+                      ? "bg-slate-100/[0.16]"
                     : activeScene.mood === "cloudy"
                       ? "bg-white/[0.2]"
                       : activeScene.mood === "fog"
@@ -1054,6 +1055,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   "absolute right-[6%] top-[26%] h-20 w-72 rounded-full blur-3xl",
                   activeScene.showLightning
                     ? "bg-slate-100/10"
+                    : activeScene.mood === "rain"
+                      ? "bg-slate-100/[0.13]"
                     : activeScene.mood === "cloudy"
                       ? "bg-white/[0.18]"
                       : activeScene.mood === "fog"
@@ -1066,6 +1069,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   "absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full blur-3xl",
                   activeScene.showLightning
                     ? "bg-slate-100/[0.08]"
+                    : activeScene.mood === "rain"
+                      ? "bg-slate-100/[0.11]"
                     : activeScene.mood === "cloudy"
                       ? "bg-white/[0.14]"
                       : activeScene.mood === "fog"
@@ -1077,6 +1082,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                 <>
                   <div className="absolute left-[10%] top-[16%] h-24 w-[34%] rounded-full bg-slate-950/14 blur-3xl" />
                   <div className="absolute right-[12%] top-[14%] h-28 w-[38%] rounded-full bg-slate-950/16 blur-3xl" />
+                </>
+              )}
+              {activeScene.mood === "rain" && (
+                <>
+                  <div className="absolute left-[10%] top-[15%] h-24 w-[32%] rounded-full bg-slate-900/[0.10] blur-3xl" />
+                  <div className="absolute right-[12%] top-[14%] h-28 w-[36%] rounded-full bg-slate-900/[0.11] blur-3xl" />
                 </>
               )}
             </>
@@ -1098,16 +1109,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   style={{
                     left: drop.left,
                     top: drop.top,
-                    width: activeScene.showLightning ? "2px" : "1.5px",
+                    width: "2px",
                     height: `${drop.height}px`,
                     opacity: drop.opacity,
                     background:
-                      activeScene.showLightning
-                        ? "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.92) 38%, rgba(173,205,255,0.92) 100%)"
-                        : "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.8) 42%, rgba(185,214,255,0.82) 100%)",
-                    boxShadow: activeScene.showLightning
-                      ? "0 0 6px rgba(196,220,255,0.18)"
-                      : "none",
+                      "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.92) 38%, rgba(173,205,255,0.92) 100%)",
+                    boxShadow: "0 0 6px rgba(196,220,255,0.18)",
                     ["--rain-duration" as string]: `${drop.duration}s`,
                     ["--rain-delay" as string]: `${drop.delay}s`,
                     ["--rain-drift" as string]: `${drop.drift}px`,

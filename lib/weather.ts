@@ -267,8 +267,10 @@ export function getWeatherScene(currentTimeIso: string, weatherCode: number): We
   if (mood === "rain") {
     return {
       mood,
-      background: "linear-gradient(180deg, #264561 0%, #355a79 42%, #4a6f8f 100%)",
-      heroGradient: "linear-gradient(140deg, rgba(49,81,118,0.9), rgba(79,112,146,0.78))",
+      background:
+        "radial-gradient(118% 78% at 50% 2%, rgba(190,214,244,0.14) 0%, rgba(190,214,244,0) 46%), linear-gradient(180deg, #2a4764 0%, #41617e 40%, #6784a0 100%)",
+      heroGradient:
+        "linear-gradient(140deg, rgba(52,80,110,0.92), rgba(86,114,144,0.82) 58%, rgba(127,153,178,0.72) 100%)",
       isDark: false,
       showStars: false,
       showRain: true,
