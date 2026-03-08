@@ -268,3 +268,129 @@ html, body {
 .animate-dock-exit {
   animation: dockExit 0.35s ease-in forwards;
 }
+
+@keyframes weatherRainDropFall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10vh, 0);
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--rain-drift, 6px), 118vh, 0);
+  }
+}
+
+@keyframes weatherSnowFlakeFall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10vh, 0) scale(0.92);
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(calc(var(--snow-drift, 14px) * 0.45), 54vh, 0)
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--snow-drift, 14px), 118vh, 0) scale(0.96);
+  }
+}
+
+@keyframes weatherStormFlash {
+  0%, 18%, 100% {
+    opacity: 0;
+  }
+  19% {
+    opacity: 0.08;
+  }
+  20% {
+    opacity: 0.58;
+  }
+  21% {
+    opacity: 0.12;
+  }
+  22% {
+    opacity: 0.32;
+  }
+  24%, 66% {
+    opacity: 0;
+  }
+  67% {
+    opacity: 0.12;
+  }
+  68% {
+    opacity: 0.38;
+  }
+  69% {
+    opacity: 0;
+  }
+}
+
+@keyframes weatherLightningStrike {
+  0%, 18%, 100% {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.9);
+  }
+  19% {
+    opacity: 0.96;
+    transform: translateY(0) scaleY(1);
+  }
+  20% {
+    opacity: 0.22;
+  }
+  21% {
+    opacity: 0.84;
+  }
+  23%, 66% {
+    opacity: 0;
+    transform: translateY(2px) scaleY(1.03);
+  }
+  67% {
+    opacity: 0.78;
+    transform: translateY(0) scaleY(1);
+  }
+  68% {
+    opacity: 0;
+  }
+}
+
+.weather-rain-drop {
+  animation: weatherRainDropFall var(--rain-duration, 1.2s) linear infinite;
+  animation-delay: var(--rain-delay, 0s);
+  will-change: transform, opacity;
+}
+
+.weather-snow-flake {
+  animation: weatherSnowFlakeFall var(--snow-duration, 6s) linear infinite;
+  animation-delay: var(--snow-delay, 0s);
+  will-change: transform, opacity;
+}
+
+.weather-storm-flash {
+  animation: weatherStormFlash 9s linear infinite;
+  will-change: opacity;
+}
+
+.weather-lightning-bolt {
+  animation: weatherLightningStrike 9s linear infinite;
+  opacity: 0;
+  transform-origin: top center;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-rain-drop,
+  .weather-snow-flake,
+  .weather-storm-flash,
+  .weather-lightning-bolt {
+    animation: none;
+  }
+}

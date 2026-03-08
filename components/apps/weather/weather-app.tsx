@@ -21,6 +21,7 @@ import {
   buildOpenMeteoForecastUrl,
   getWeatherDescription,
   getWeatherIconName,
+  type WeatherMood,
   getWeatherScene,
   type WeatherScene,
 } from "@/lib/weather";
@@ -177,6 +178,95 @@ const WEATHER_FETCH_BASE_RETRY_MS = 450;
 const WEATHER_FETCH_MAX_RETRY_MS = 5000;
 const WEATHER_FETCH_BATCH_SIZE = 3;
 
+type WeatherScenePreviewMode = "auto" | WeatherMood;
+
+const WEATHER_SCENE_PREVIEW_OPTIONS: WeatherScenePreviewMode[] = [
+  "auto",
+  "clear",
+  "cloudy",
+  "fog",
+  "rain",
+  "snow",
+  "thunder",
+];
+const WEATHER_SCENE_PREVIEW_ENABLED = process.env.NODE_ENV !== "production";
+
+const WEATHER_RAIN_DROPS = [
+  { left: "4%", top: "-18%", height: 16, duration: 1.2, delay: 0.1, drift: 4, opacity: 0.5 },
+  { left: "9%", top: "-8%", height: 18, duration: 1.4, delay: 0.8, drift: 6, opacity: 0.42 },
+  { left: "14%", top: "-22%", height: 14, duration: 1.05, delay: 0.2, drift: 5, opacity: 0.58 },
+  { left: "18%", top: "-12%", height: 20, duration: 1.35, delay: 1.1, drift: 7, opacity: 0.46 },
+  { left: "23%", top: "-26%", height: 15, duration: 1.1, delay: 0.4, drift: 5, opacity: 0.54 },
+  { left: "28%", top: "-10%", height: 17, duration: 1.25, delay: 1.4, drift: 6, opacity: 0.44 },
+  { left: "33%", top: "-20%", height: 19, duration: 1.45, delay: 0.7, drift: 8, opacity: 0.4 },
+  { left: "38%", top: "-14%", height: 13, duration: 0.95, delay: 0.3, drift: 4, opacity: 0.6 },
+  { left: "43%", top: "-24%", height: 18, duration: 1.2, delay: 1.6, drift: 6, opacity: 0.48 },
+  { left: "48%", top: "-9%", height: 16, duration: 1.15, delay: 0.5, drift: 5, opacity: 0.56 },
+  { left: "53%", top: "-19%", height: 21, duration: 1.5, delay: 1.3, drift: 7, opacity: 0.38 },
+  { left: "58%", top: "-6%", height: 14, duration: 1.05, delay: 0.9, drift: 4, opacity: 0.58 },
+  { left: "63%", top: "-21%", height: 18, duration: 1.25, delay: 0.15, drift: 6, opacity: 0.5 },
+  { left: "68%", top: "-13%", height: 15, duration: 1.1, delay: 1.0, drift: 5, opacity: 0.6 },
+  { left: "73%", top: "-25%", height: 20, duration: 1.4, delay: 0.55, drift: 7, opacity: 0.42 },
+  { left: "78%", top: "-11%", height: 14, duration: 1.0, delay: 1.55, drift: 4, opacity: 0.62 },
+  { left: "83%", top: "-23%", height: 17, duration: 1.2, delay: 0.35, drift: 5, opacity: 0.54 },
+  { left: "88%", top: "-7%", height: 19, duration: 1.35, delay: 1.25, drift: 7, opacity: 0.44 },
+  { left: "93%", top: "-18%", height: 15, duration: 1.1, delay: 0.65, drift: 5, opacity: 0.58 },
+] as const;
+
+const WEATHER_SNOW_FLAKES = [
+  { left: "6%", top: "-8%", size: 5, duration: 5.8, delay: 0.3, drift: 12, opacity: 0.78 },
+  { left: "14%", top: "-18%", size: 6, duration: 6.4, delay: 1.2, drift: 14, opacity: 0.72 },
+  { left: "21%", top: "-10%", size: 4, duration: 5.2, delay: 0.7, drift: 10, opacity: 0.82 },
+  { left: "29%", top: "-20%", size: 7, duration: 7.1, delay: 1.8, drift: 16, opacity: 0.68 },
+  { left: "38%", top: "-14%", size: 5, duration: 6.2, delay: 0.1, drift: 13, opacity: 0.8 },
+  { left: "47%", top: "-6%", size: 6, duration: 5.6, delay: 2.1, drift: 11, opacity: 0.74 },
+  { left: "55%", top: "-16%", size: 4, duration: 4.9, delay: 1.4, drift: 9, opacity: 0.84 },
+  { left: "64%", top: "-12%", size: 7, duration: 7.4, delay: 0.9, drift: 17, opacity: 0.7 },
+  { left: "73%", top: "-22%", size: 5, duration: 6.1, delay: 2.6, drift: 12, opacity: 0.78 },
+  { left: "82%", top: "-9%", size: 6, duration: 5.4, delay: 1.7, drift: 14, opacity: 0.76 },
+  { left: "91%", top: "-18%", size: 4, duration: 4.8, delay: 0.5, drift: 10, opacity: 0.82 },
+] as const;
+
+const WEATHER_LIGHTNING_BOLTS = [
+  {
+    left: "61%",
+    top: "10%",
+    width: "40px",
+    height: "20%",
+    delay: "0s",
+    clipPath:
+      "polygon(48% 0%, 68% 0%, 56% 34%, 72% 34%, 38% 68%, 52% 68%, 28% 100%, 40% 62%, 24% 62%)",
+  },
+  {
+    left: "69%",
+    top: "14%",
+    width: "32px",
+    height: "15%",
+    delay: "0.16s",
+    clipPath:
+      "polygon(44% 0%, 66% 0%, 54% 38%, 72% 38%, 34% 100%, 46% 62%, 26% 62%)",
+  },
+  {
+    left: "74%",
+    top: "8%",
+    width: "28px",
+    height: "12%",
+    delay: "2.7s",
+    clipPath:
+      "polygon(46% 0%, 64% 0%, 54% 34%, 70% 34%, 36% 100%, 46% 64%, 28% 64%)",
+  },
+] as const;
+
+function getSceneCodeOverride(mood: WeatherScenePreviewMode): number | null {
+  if (mood === "clear") return 0;
+  if (mood === "cloudy") return 3;
+  if (mood === "fog") return 45;
+  if (mood === "rain") return 63;
+  if (mood === "snow") return 71;
+  if (mood === "thunder") return 95;
+  return null;
+}
+
 function toCityId(name: string, latitude: number, longitude: number): string {
   const slug = name
     .toLowerCase()
@@ -253,13 +343,34 @@ function getSidebarCardBackground(scene: WeatherScene | null): string {
     );
   }
   if (scene?.showCloudBands) {
-    overlays.push(
-      "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
-    );
+    if (scene.mood === "cloudy") {
+      overlays.push(
+        "radial-gradient(90px 42px at 22% 24%, rgba(255,255,255,0.2), transparent 72%), radial-gradient(120px 52px at 72% 28%, rgba(255,255,255,0.18), transparent 72%), radial-gradient(120px 46px at 48% 84%, rgba(255,255,255,0.12), transparent 72%)"
+      );
+    } else if (scene.mood === "fog") {
+      overlays.push(
+        "linear-gradient(180deg, rgba(236,241,247,0.16) 12%, rgba(236,241,247,0.04) 40%, rgba(236,241,247,0.18) 78%, rgba(236,241,247,0.28) 100%)"
+      );
+    } else {
+      overlays.push(
+        "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
+      );
+    }
   }
   if (scene?.showRain) {
     overlays.push(
-      "repeating-linear-gradient(112deg, rgba(214,231,255,0.26) 0px, rgba(214,231,255,0.26) 2px, transparent 2px, transparent 16px)"
+      "radial-gradient(1.2px 6px at 10% 18%, rgba(221,237,255,0.48), transparent 78%), radial-gradient(1.2px 6px at 22% 34%, rgba(221,237,255,0.44), transparent 78%), radial-gradient(1.2px 7px at 36% 16%, rgba(221,237,255,0.5), transparent 78%), radial-gradient(1px 5px at 48% 38%, rgba(221,237,255,0.42), transparent 78%), radial-gradient(1.2px 6px at 62% 22%, rgba(221,237,255,0.46), transparent 78%), radial-gradient(1px 5px at 74% 40%, rgba(221,237,255,0.4), transparent 78%), radial-gradient(1.2px 7px at 88% 20%, rgba(221,237,255,0.5), transparent 78%)"
+    );
+  }
+  if (scene?.showSnow) {
+    overlays.push(
+      "radial-gradient(3px 3px at 12% 22%, rgba(255,255,255,0.88), transparent 72%), radial-gradient(2.5px 2.5px at 26% 36%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 42% 18%, rgba(255,255,255,0.9), transparent 72%), radial-gradient(2px 2px at 58% 42%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 74% 24%, rgba(255,255,255,0.86), transparent 72%), radial-gradient(2.5px 2.5px at 88% 38%, rgba(255,255,255,0.8), transparent 72%)"
+    );
+  }
+  if (scene?.showLightning) {
+    overlays.push(
+      "radial-gradient(72px 110px at 78% 14%, rgba(244,248,255,0.28), rgba(214,228,255,0.06) 34%, transparent 72%)",
+      "linear-gradient(180deg, rgba(5,10,22,0.06) 0%, rgba(5,10,22,0.24) 100%)"
     );
   }
   if (scene?.showStars) {
@@ -530,6 +641,52 @@ function SidebarCityItem({
   );
 }
 
+function WeatherScenePreviewControls({
+  value,
+  onChange,
+}: {
+  value: WeatherScenePreviewMode;
+  onChange: (value: WeatherScenePreviewMode) => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-white/[0.1] p-3 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/72">
+            Scene Preview
+          </p>
+          <p className="mt-1 text-xs text-white/72">
+            Force a weather mood to preview backgrounds and motion.
+          </p>
+        </div>
+        <p className="shrink-0 text-xs font-medium capitalize text-white/84">
+          {value}
+        </p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {WEATHER_SCENE_PREVIEW_OPTIONS.map((option) => {
+          const isActive = option === value;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(option)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+                isActive
+                  ? "border-white/55 bg-white/22 text-white"
+                  : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+              )}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProps) {
   const isMobileView = isMobile;
   const windowFocus = useWindowFocus();
@@ -553,6 +710,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
+  const [scenePreviewMode, setScenePreviewMode] =
+    useState<WeatherScenePreviewMode>("auto");
   const hasFetchedAnyDataRef = useRef(false);
   const latestWeatherRequestIdRef = useRef(0);
   const trimmedSearchQuery = searchQuery.trim();
@@ -744,11 +903,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         scene: weatherByCity[city.id]
           ? getWeatherScene(
               weatherByCity[city.id].currentTime,
-              weatherByCity[city.id].weatherCode
+              getSceneCodeOverride(scenePreviewMode) ??
+                weatherByCity[city.id].weatherCode
             )
           : null,
       })),
-    [allCities, weatherByCity]
+    [allCities, weatherByCity, scenePreviewMode]
   );
   const searchResultItems = useMemo(
     () =>
@@ -803,9 +963,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     () =>
       getWeatherScene(
         (selectedWeather ?? firstAvailableWeather)?.currentTime ?? "",
-        (selectedWeather ?? firstAvailableWeather)?.weatherCode ?? 1
+        getSceneCodeOverride(scenePreviewMode) ??
+          (selectedWeather ?? firstAvailableWeather)?.weatherCode ??
+          1
       ),
-    [selectedWeather, firstAvailableWeather]
+    [selectedWeather, firstAvailableWeather, scenePreviewMode]
   );
 
   const sidebarShellClass = "backdrop-blur-md";
@@ -875,26 +1037,131 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
           )}
           {activeScene.showCloudBands && (
             <>
-              <div className="absolute left-[14%] top-[12%] h-24 w-80 rounded-full bg-white/16 blur-3xl" />
-              <div className="absolute right-[6%] top-[26%] h-20 w-72 rounded-full bg-white/14 blur-3xl" />
-              <div className="absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full bg-white/12 blur-3xl" />
+              <div
+                className={cn(
+                  "absolute left-[14%] top-[12%] h-24 w-80 rounded-full blur-3xl",
+                  activeScene.showLightning
+                    ? "bg-slate-200/[0.14]"
+                    : activeScene.mood === "cloudy"
+                      ? "bg-white/[0.2]"
+                      : activeScene.mood === "fog"
+                        ? "bg-slate-100/[0.18]"
+                        : "bg-white/16"
+                )}
+              />
+              <div
+                className={cn(
+                  "absolute right-[6%] top-[26%] h-20 w-72 rounded-full blur-3xl",
+                  activeScene.showLightning
+                    ? "bg-slate-100/10"
+                    : activeScene.mood === "cloudy"
+                      ? "bg-white/[0.18]"
+                      : activeScene.mood === "fog"
+                        ? "bg-slate-100/[0.16]"
+                        : "bg-white/14"
+                )}
+              />
+              <div
+                className={cn(
+                  "absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full blur-3xl",
+                  activeScene.showLightning
+                    ? "bg-slate-100/[0.08]"
+                    : activeScene.mood === "cloudy"
+                      ? "bg-white/[0.14]"
+                      : activeScene.mood === "fog"
+                        ? "bg-slate-100/[0.2]"
+                        : "bg-white/12"
+                )}
+              />
+              {activeScene.showLightning && (
+                <>
+                  <div className="absolute left-[10%] top-[16%] h-24 w-[34%] rounded-full bg-slate-950/14 blur-3xl" />
+                  <div className="absolute right-[12%] top-[14%] h-28 w-[38%] rounded-full bg-slate-950/16 blur-3xl" />
+                </>
+              )}
             </>
           )}
           {activeScene.showFog && (
             <>
+              <div className="absolute inset-x-[8%] top-[22%] h-28 rounded-full bg-white/10 blur-3xl" />
+              <div className="absolute inset-x-[4%] top-[46%] h-24 rounded-full bg-white/12 blur-3xl" />
               <div className="absolute inset-x-0 bottom-[8%] h-32 bg-white/18 blur-2xl" />
-              <div className="absolute inset-x-0 bottom-0 h-40 bg-white/22 blur-3xl" />
+              <div className="absolute inset-x-0 bottom-0 h-40 bg-white/24 blur-3xl" />
             </>
           )}
           {activeScene.showRain && (
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(112deg, rgba(210,230,255,0.75) 0px, rgba(210,230,255,0.75) 2px, transparent 2px, transparent 16px)",
-                backgroundSize: "220px 220px",
-              }}
-            />
+            <div className="absolute inset-0 overflow-hidden">
+              {WEATHER_RAIN_DROPS.map((drop, index) => (
+                <div
+                  key={`${drop.left}-${index}`}
+                  className="weather-rain-drop absolute rounded-full"
+                  style={{
+                    left: drop.left,
+                    top: drop.top,
+                    width: activeScene.showLightning ? "2px" : "1.5px",
+                    height: `${drop.height}px`,
+                    opacity: drop.opacity,
+                    background:
+                      activeScene.showLightning
+                        ? "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.92) 38%, rgba(173,205,255,0.92) 100%)"
+                        : "linear-gradient(180deg, rgba(236,244,255,0) 0%, rgba(236,244,255,0.8) 42%, rgba(185,214,255,0.82) 100%)",
+                    boxShadow: activeScene.showLightning
+                      ? "0 0 6px rgba(196,220,255,0.18)"
+                      : "none",
+                    ["--rain-duration" as string]: `${drop.duration}s`,
+                    ["--rain-delay" as string]: `${drop.delay}s`,
+                    ["--rain-drift" as string]: `${drop.drift}px`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {activeScene.showSnow && (
+            <div className="absolute inset-0 overflow-hidden">
+              {WEATHER_SNOW_FLAKES.map((flake, index) => (
+                <div
+                  key={`${flake.left}-${index}`}
+                  className="weather-snow-flake absolute rounded-full"
+                  style={{
+                    left: flake.left,
+                    top: flake.top,
+                    width: `${flake.size}px`,
+                    height: `${flake.size}px`,
+                    opacity: flake.opacity,
+                    background:
+                      "radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), rgba(231,239,255,0.82) 60%, rgba(231,239,255,0.08) 100%)",
+                    boxShadow: "0 0 8px rgba(233,241,255,0.22)",
+                    ["--snow-duration" as string]: `${flake.duration}s`,
+                    ["--snow-delay" as string]: `${flake.delay}s`,
+                    ["--snow-drift" as string]: `${flake.drift}px`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {activeScene.showLightning && (
+            <>
+              <div className="weather-storm-flash absolute inset-0 bg-[radial-gradient(56%_38%_at_76%_14%,rgba(239,245,255,0.55),rgba(214,229,255,0.18)_20%,transparent_58%)] mix-blend-screen" />
+              {WEATHER_LIGHTNING_BOLTS.map((bolt, index) => (
+                <div
+                  key={`${bolt.left}-${index}`}
+                  className="weather-lightning-bolt absolute"
+                  style={{
+                    left: bolt.left,
+                    top: bolt.top,
+                    width: bolt.width,
+                    height: bolt.height,
+                    animationDelay: bolt.delay,
+                    clipPath: bolt.clipPath,
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(221,235,255,0.94) 44%, rgba(157,201,255,0.82) 76%, rgba(157,201,255,0) 100%)",
+                    filter:
+                      "drop-shadow(0 0 8px rgba(223,236,255,0.8)) drop-shadow(0 0 20px rgba(119,178,255,0.34))",
+                  }}
+                />
+              ))}
+              <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(180deg,transparent_0%,rgba(8,15,28,0.08)_42%,rgba(8,15,28,0.26)_100%)]" />
+            </>
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
         </div>
@@ -1031,6 +1298,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 ) : (
                   <div className="px-2 pt-1 pb-2 space-y-2">
+                    {WEATHER_SCENE_PREVIEW_ENABLED && (
+                      <WeatherScenePreviewControls
+                        value={scenePreviewMode}
+                        onChange={setScenePreviewMode}
+                      />
+                    )}
                     {cityCards.map((city) => (
                       <SidebarCityItem
                         key={city.id}
@@ -1075,6 +1348,13 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       </button>
                     ))}
                   </div>
+                )}
+
+                {isMobileView && WEATHER_SCENE_PREVIEW_ENABLED && (
+                  <WeatherScenePreviewControls
+                    value={scenePreviewMode}
+                    onChange={setScenePreviewMode}
+                  />
                 )}
 
                 <section className={cn("rounded-2xl overflow-hidden text-white", mainCardClass)}>
