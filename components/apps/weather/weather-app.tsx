@@ -297,6 +297,17 @@ function findMatchingCity(cities: CityConfig[], target: CityConfig): CityConfig 
   return cities.find((city) => getCityCoordinateKey(city) === targetKey) ?? null;
 }
 
+const DEFAULT_SIDEBAR_CARD_BACKGROUND =
+  "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%), linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
+
+const MAIN_CLOUD_BAND_TONES: Record<WeatherScene["cloudTone"], [string, string, string]> = {
+  storm: ["bg-slate-200/[0.14]", "bg-slate-100/10", "bg-slate-100/[0.08]"],
+  rain: ["bg-slate-100/[0.16]", "bg-slate-100/[0.13]", "bg-slate-100/[0.11]"],
+  fog: ["bg-slate-100/[0.18]", "bg-slate-100/[0.16]", "bg-slate-100/[0.2]"],
+  cloudy: ["bg-white/[0.2]", "bg-white/[0.18]", "bg-white/[0.14]"],
+  default: ["bg-white/16", "bg-white/14", "bg-white/12"],
+};
+
 async function geocodeCities(query: string): Promise<CityConfig[]> {
   const params = new URLSearchParams({
     name: query,
@@ -327,65 +338,6 @@ async function geocodeCities(query: string): Promise<CityConfig[]> {
   }
 
   return results;
-}
-
-function getSidebarCardBackground(scene: WeatherScene | null): string {
-  const baseScene =
-    scene?.background ??
-    "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
-  const overlays = [
-    "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%)",
-  ];
-
-  if (scene?.showFog) {
-    overlays.push(
-      "linear-gradient(180deg, rgba(214,229,247,0.08) 40%, rgba(214,229,247,0.2) 100%)"
-    );
-  }
-  if (scene?.showCloudBands) {
-    if (scene.mood === "cloudy") {
-      overlays.push(
-        "radial-gradient(90px 42px at 22% 24%, rgba(255,255,255,0.2), transparent 72%), radial-gradient(120px 52px at 72% 28%, rgba(255,255,255,0.18), transparent 72%), radial-gradient(120px 46px at 48% 84%, rgba(255,255,255,0.12), transparent 72%)"
-      );
-    } else if (scene.mood === "fog") {
-      overlays.push(
-        "linear-gradient(180deg, rgba(236,241,247,0.16) 12%, rgba(236,241,247,0.04) 40%, rgba(236,241,247,0.18) 78%, rgba(236,241,247,0.28) 100%)"
-      );
-    } else {
-      overlays.push(
-        "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
-      );
-    }
-  }
-  if (scene?.showRain) {
-    overlays.push(
-      "radial-gradient(1.2px 6px at 10% 18%, rgba(221,237,255,0.48), transparent 78%), radial-gradient(1.2px 6px at 22% 34%, rgba(221,237,255,0.44), transparent 78%), radial-gradient(1.2px 7px at 36% 16%, rgba(221,237,255,0.5), transparent 78%), radial-gradient(1px 5px at 48% 38%, rgba(221,237,255,0.42), transparent 78%), radial-gradient(1.2px 6px at 62% 22%, rgba(221,237,255,0.46), transparent 78%), radial-gradient(1px 5px at 74% 40%, rgba(221,237,255,0.4), transparent 78%), radial-gradient(1.2px 7px at 88% 20%, rgba(221,237,255,0.5), transparent 78%)"
-    );
-  }
-  if (scene?.showSnow) {
-    overlays.push(
-      "radial-gradient(3px 3px at 12% 22%, rgba(255,255,255,0.88), transparent 72%), radial-gradient(2.5px 2.5px at 26% 36%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 42% 18%, rgba(255,255,255,0.9), transparent 72%), radial-gradient(2px 2px at 58% 42%, rgba(255,255,255,0.78), transparent 72%), radial-gradient(3px 3px at 74% 24%, rgba(255,255,255,0.86), transparent 72%), radial-gradient(2.5px 2.5px at 88% 38%, rgba(255,255,255,0.8), transparent 72%)"
-    );
-  }
-  if (scene?.showLightning) {
-    overlays.push(
-      "radial-gradient(72px 110px at 78% 14%, rgba(244,248,255,0.28), rgba(214,228,255,0.06) 34%, transparent 72%)",
-      "linear-gradient(180deg, rgba(5,10,22,0.06) 0%, rgba(5,10,22,0.24) 100%)"
-    );
-  }
-  if (scene?.showStars) {
-    overlays.push(
-      "radial-gradient(1.6px 1.6px at 12px 18px, rgba(255,255,255,0.78), transparent 60%), radial-gradient(1.3px 1.3px at 58px 32px, rgba(255,255,255,0.68), transparent 60%)"
-    );
-  }
-  if (scene?.showSunGlow) {
-    overlays.push(
-      "radial-gradient(80px 56px at 82% 14%, rgba(255,217,125,0.22), transparent 70%)"
-    );
-  }
-
-  overlays.push(baseScene);
-  return overlays.join(", ");
 }
 
 function WeatherIcon({ code, className }: { code: number; className?: string }) {
@@ -600,7 +552,7 @@ function SidebarCityItem({
           "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
       )}
       style={{
-        backgroundImage: getSidebarCardBackground(scene),
+        backgroundImage: scene?.sidebarCardBackground ?? DEFAULT_SIDEBAR_CARD_BACKGROUND,
         backgroundPosition: "center",
       }}
     >
@@ -974,7 +926,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const innerCardClass = "bg-white/[0.08]";
   const bodyTextClass = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]";
   const mutedTextClass = "text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
-  const sidebarBackgroundImage = `linear-gradient(180deg, rgba(8,16,34,0.2) 0%, rgba(8,16,34,0.34) 100%), ${activeScene.background}`;
+  const sidebarBackgroundImage = activeScene.sidebarShellBackground;
+  const mainCloudBandClasses = MAIN_CLOUD_BAND_TONES[activeScene.cloudTone];
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1039,43 +992,19 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
               <div
                 className={cn(
                   "absolute left-[14%] top-[12%] h-24 w-80 rounded-full blur-3xl",
-                  activeScene.showLightning
-                    ? "bg-slate-200/[0.14]"
-                    : activeScene.mood === "rain"
-                      ? "bg-slate-100/[0.16]"
-                    : activeScene.mood === "cloudy"
-                      ? "bg-white/[0.2]"
-                      : activeScene.mood === "fog"
-                        ? "bg-slate-100/[0.18]"
-                        : "bg-white/16"
+                  mainCloudBandClasses[0]
                 )}
               />
               <div
                 className={cn(
                   "absolute right-[6%] top-[26%] h-20 w-72 rounded-full blur-3xl",
-                  activeScene.showLightning
-                    ? "bg-slate-100/10"
-                    : activeScene.mood === "rain"
-                      ? "bg-slate-100/[0.13]"
-                    : activeScene.mood === "cloudy"
-                      ? "bg-white/[0.18]"
-                      : activeScene.mood === "fog"
-                        ? "bg-slate-100/[0.16]"
-                        : "bg-white/14"
+                  mainCloudBandClasses[1]
                 )}
               />
               <div
                 className={cn(
                   "absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full blur-3xl",
-                  activeScene.showLightning
-                    ? "bg-slate-100/[0.08]"
-                    : activeScene.mood === "rain"
-                      ? "bg-slate-100/[0.11]"
-                    : activeScene.mood === "cloudy"
-                      ? "bg-white/[0.14]"
-                      : activeScene.mood === "fog"
-                        ? "bg-slate-100/[0.2]"
-                        : "bg-white/12"
+                  mainCloudBandClasses[2]
                 )}
               />
               {activeScene.showLightning && (
