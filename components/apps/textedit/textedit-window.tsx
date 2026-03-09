@@ -16,9 +16,7 @@ import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 
 interface TextEditWindowProps {
   windowId: string; // Unique window identifier for multi-window support
-  filePath?: string;
-  documentName?: string;
-  isUntitled?: boolean;
+  filePath: string;
   content: string;
   position: Position;
   size: Size;
@@ -37,8 +35,6 @@ interface TextEditWindowProps {
 export function TextEditWindow({
   windowId,
   filePath,
-  documentName,
-  isUntitled = false,
   content,
   position,
   size,
@@ -56,8 +52,7 @@ export function TextEditWindow({
   // windowId is used for identification in multi-window scenarios
   void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileName = documentName || filePath?.split("/").pop() || "Untitled";
+  const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
 
   const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
@@ -97,11 +92,6 @@ export function TextEditWindow({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFocused, onClose]);
-
-  useEffect(() => {
-    if (!isFocused || !isUntitled) return;
-    textareaRef.current?.focus();
-  }, [isFocused, isUntitled]);
 
   const windowStyle: React.CSSProperties = isMaximized
     ? { top: MENU_BAR_HEIGHT, left: 0, right: 0, bottom: DOCK_HEIGHT, width: "auto", height: "auto", zIndex: MAXIMIZED_Z_INDEX }
@@ -166,7 +156,6 @@ export function TextEditWindow({
         {/* Content */}
         <div className="flex-1 min-h-0">
           <textarea
-            ref={textareaRef}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto text-zinc-900 dark:text-white"

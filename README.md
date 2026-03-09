@@ -37,11 +37,11 @@ a macos sierra 10.12 themed desktop with:
 
 **textedit** - plain text editor
 - opens existing text files in their own windows
-- opening `/textedit` with no file creates a new untitled document
+- direct opens without a file fall back to Finder
 
 **preview** - image and pdf viewer
 - opens images and pdfs in their own windows
-- opening `/preview` with no file shows a no-document launcher state
+- direct opens without a file fall back to Finder
 - document-app launch behavior is documented in `docs/document-apps.md`
 
 **finder** - file browser

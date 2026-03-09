@@ -10,7 +10,6 @@ import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon"
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
-  onOpenMultiWindowApp?: (appId: string) => void;
   appBadges?: Record<string, number>;
 }
 
@@ -102,7 +101,6 @@ function getInitialDockScale(): number {
 export function Dock({
   onTrashClick,
   onFinderClick,
-  onOpenMultiWindowApp,
   appBadges = {},
 }: DockProps) {
   const {
@@ -283,8 +281,6 @@ export function Dock({
     if (app?.multiWindow) {
       if (hasOpenWindows(appId)) {
         bringAppToFront(appId);
-      } else {
-        onOpenMultiWindowApp?.(appId);
       }
       return;
     }

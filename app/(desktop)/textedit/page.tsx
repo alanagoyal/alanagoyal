@@ -8,7 +8,7 @@ type PageProps = {
 
 export default async function TextEditPage({ searchParams }: PageProps) {
   const { file } = await searchParams;
-  if (file && !isSupportedTextEditPath(file)) {
+  if (!file || !isSupportedTextEditPath(file)) {
     return redirect("/finder");
   }
   return <AppShellPage appId="textedit" initialTextEditFile={file} />;

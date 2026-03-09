@@ -5,15 +5,12 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { PreviewFileType } from "./preview-window";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
-import { PreviewEmptyState } from "./preview-empty-state";
 
 interface PreviewAppProps {
   isMobile?: boolean;
   filePath?: string;
   fileUrl?: string;
   fileType?: PreviewFileType;
-  documentName?: string;
-  onBrowseFiles?: () => void;
 }
 
 export function PreviewApp({
@@ -21,11 +18,9 @@ export function PreviewApp({
   filePath,
   fileUrl,
   fileType = "image",
-  documentName = "Preview",
-  onBrowseFiles,
 }: PreviewAppProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const fileName = documentName || filePath?.split("/").pop() || "Preview";
+  const fileName = filePath?.split("/").pop() || "Untitled";
 
   const [zoom, setZoom] = useState(1);
   const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
@@ -140,7 +135,16 @@ export function PreviewApp({
           isMobile ? "h-dvh w-full" : "h-full"
         )}
       >
-        <PreviewEmptyState onBrowseFiles={onBrowseFiles} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-zinc-500 dark:text-zinc-400">
+            <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <p className="text-sm">No file selected</p>
+          </div>
+        </div>
       </div>
     );
   }

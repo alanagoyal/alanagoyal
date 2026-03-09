@@ -8,7 +8,7 @@ type PageProps = {
 
 export default async function PreviewPage({ searchParams }: PageProps) {
   const { file } = await searchParams;
-  if (file && !getPreviewMetadataFromPath(file)) {
+  if (!file || !getPreviewMetadataFromPath(file)) {
     return redirect("/finder");
   }
   return <AppShellPage appId="preview" initialPreviewFile={file} />;
