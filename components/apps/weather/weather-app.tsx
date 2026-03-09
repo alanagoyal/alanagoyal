@@ -17,10 +17,12 @@ import {
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
 import { WindowControls } from "@/components/window-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WeatherSceneEffects } from "@/components/apps/weather/weather-scene-effects";
 import {
   buildOpenMeteoForecastUrl,
   getWeatherDescription,
   getWeatherIconName,
+  type WeatherMood,
   getWeatherScene,
   type WeatherScene,
 } from "@/lib/weather";
@@ -177,6 +179,29 @@ const WEATHER_FETCH_BASE_RETRY_MS = 450;
 const WEATHER_FETCH_MAX_RETRY_MS = 5000;
 const WEATHER_FETCH_BATCH_SIZE = 3;
 
+type WeatherScenePreviewMode = "auto" | WeatherMood;
+
+const WEATHER_SCENE_PREVIEW_OPTIONS: WeatherScenePreviewMode[] = [
+  "auto",
+  "clear",
+  "cloudy",
+  "fog",
+  "rain",
+  "snow",
+  "thunder",
+];
+const WEATHER_SCENE_PREVIEW_ENABLED = process.env.NODE_ENV !== "production";
+
+function getSceneCodeOverride(mood: WeatherScenePreviewMode): number | null {
+  if (mood === "clear") return 0;
+  if (mood === "cloudy") return 3;
+  if (mood === "fog") return 45;
+  if (mood === "rain") return 63;
+  if (mood === "snow") return 71;
+  if (mood === "thunder") return 95;
+  return null;
+}
+
 function toCityId(name: string, latitude: number, longitude: number): string {
   const slug = name
     .toLowerCase()
@@ -206,6 +231,8 @@ function findMatchingCity(cities: CityConfig[], target: CityConfig): CityConfig 
   const targetKey = getCityCoordinateKey(target);
   return cities.find((city) => getCityCoordinateKey(city) === targetKey) ?? null;
 }
+
+const DEFAULT_WEATHER_BACKGROUND = "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
 
 async function geocodeCities(query: string): Promise<CityConfig[]> {
   const params = new URLSearchParams({
@@ -237,44 +264,6 @@ async function geocodeCities(query: string): Promise<CityConfig[]> {
   }
 
   return results;
-}
-
-function getSidebarCardBackground(scene: WeatherScene | null): string {
-  const baseScene =
-    scene?.background ??
-    "linear-gradient(180deg, #2e5786 0%, #3f6998 44%, #537cad 100%)";
-  const overlays = [
-    "linear-gradient(180deg, rgba(8,16,34,0.18) 0%, rgba(8,16,34,0.34) 100%)",
-  ];
-
-  if (scene?.showFog) {
-    overlays.push(
-      "linear-gradient(180deg, rgba(214,229,247,0.08) 40%, rgba(214,229,247,0.2) 100%)"
-    );
-  }
-  if (scene?.showCloudBands) {
-    overlays.push(
-      "linear-gradient(130deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 56%, rgba(255,255,255,0.14) 100%)"
-    );
-  }
-  if (scene?.showRain) {
-    overlays.push(
-      "repeating-linear-gradient(112deg, rgba(214,231,255,0.26) 0px, rgba(214,231,255,0.26) 2px, transparent 2px, transparent 16px)"
-    );
-  }
-  if (scene?.showStars) {
-    overlays.push(
-      "radial-gradient(1.6px 1.6px at 12px 18px, rgba(255,255,255,0.78), transparent 60%), radial-gradient(1.3px 1.3px at 58px 32px, rgba(255,255,255,0.68), transparent 60%)"
-    );
-  }
-  if (scene?.showSunGlow) {
-    overlays.push(
-      "radial-gradient(80px 56px at 82% 14%, rgba(255,217,125,0.22), transparent 70%)"
-    );
-  }
-
-  overlays.push(baseScene);
-  return overlays.join(", ");
 }
 
 function WeatherIcon({ code, className }: { code: number; className?: string }) {
@@ -483,18 +472,15 @@ function SidebarCityItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative w-full max-w-full rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
+        "relative w-full max-w-full overflow-hidden rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
         "bg-white/[0.07]",
         isDesktopSelected &&
           "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
       )}
-      style={{
-        backgroundImage: getSidebarCardBackground(scene),
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      style={{ background: scene?.background ?? DEFAULT_WEATHER_BACKGROUND }}
     >
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_96px] items-start gap-2">
+      {scene && <WeatherSceneEffects scene={scene} surface="preview" />}
+      <div className="relative z-[1] grid min-w-0 grid-cols-[minmax(0,1fr)_96px] items-start gap-2">
         <div className="min-w-0">
           <p className="truncate whitespace-nowrap text-base font-medium">{cityName}</p>
           <p
@@ -530,6 +516,78 @@ function SidebarCityItem({
   );
 }
 
+function WeatherScenePreviewControls({
+  value,
+  onChange,
+  backgroundOnly,
+  onToggleBackgroundOnly,
+}: {
+  value: WeatherScenePreviewMode;
+  onChange: (value: WeatherScenePreviewMode) => void;
+  backgroundOnly: boolean;
+  onToggleBackgroundOnly: () => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-white/[0.1] p-3 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/72">
+            Scene Preview
+          </p>
+          <p className="mt-1 text-xs text-white/72">
+            Force a weather mood to preview backgrounds and motion.
+          </p>
+        </div>
+        <p className="shrink-0 text-xs font-medium capitalize text-white/84">
+          {value}
+        </p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {WEATHER_SCENE_PREVIEW_OPTIONS.map((option) => {
+          const isActive = option === value;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(option)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+                isActive
+                  ? "border-white/55 bg-white/22 text-white"
+                  : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+              )}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-white/[0.06] px-3 py-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/72">
+            Background Only
+          </p>
+          <p className="mt-0.5 text-xs text-white/68">
+            Hide main cards to inspect the main background + animation.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleBackgroundOnly}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+            backgroundOnly
+              ? "border-white/55 bg-white/22 text-white"
+              : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+          )}
+        >
+          {backgroundOnly ? "On" : "Off"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProps) {
   const isMobileView = isMobile;
   const windowFocus = useWindowFocus();
@@ -553,6 +611,9 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
+  const [scenePreviewMode, setScenePreviewMode] =
+    useState<WeatherScenePreviewMode>("auto");
+  const [backgroundOnlyPreview, setBackgroundOnlyPreview] = useState(false);
   const hasFetchedAnyDataRef = useRef(false);
   const latestWeatherRequestIdRef = useRef(0);
   const trimmedSearchQuery = searchQuery.trim();
@@ -744,11 +805,12 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
         scene: weatherByCity[city.id]
           ? getWeatherScene(
               weatherByCity[city.id].currentTime,
-              weatherByCity[city.id].weatherCode
+              getSceneCodeOverride(scenePreviewMode) ??
+                weatherByCity[city.id].weatherCode
             )
           : null,
       })),
-    [allCities, weatherByCity]
+    [allCities, weatherByCity, scenePreviewMode]
   );
   const searchResultItems = useMemo(
     () =>
@@ -803,9 +865,11 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     () =>
       getWeatherScene(
         (selectedWeather ?? firstAvailableWeather)?.currentTime ?? "",
-        (selectedWeather ?? firstAvailableWeather)?.weatherCode ?? 1
+        getSceneCodeOverride(scenePreviewMode) ??
+          (selectedWeather ?? firstAvailableWeather)?.weatherCode ??
+          1
       ),
-    [selectedWeather, firstAvailableWeather]
+    [selectedWeather, firstAvailableWeather, scenePreviewMode]
   );
 
   const sidebarShellClass = "backdrop-blur-md";
@@ -813,7 +877,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const innerCardClass = "bg-white/[0.08]";
   const bodyTextClass = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]";
   const mutedTextClass = "text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
-  const sidebarBackgroundImage = `linear-gradient(180deg, rgba(8,16,34,0.2) 0%, rgba(8,16,34,0.34) 100%), ${activeScene.background}`;
+  const sidebarBackgroundImage = activeScene.sidebarShellBackground;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -856,48 +920,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   return (
     <div ref={containerRef} className="h-full flex bg-background" data-app="weather">
       <div className="flex-1 min-h-0 relative overflow-hidden" style={{ background: activeScene.background }}>
-        <div className="pointer-events-none absolute inset-0">
-          {activeScene.showSunGlow && (
-            <>
-              <div className="absolute -top-14 right-[16%] h-52 w-52 rounded-full bg-yellow-100/18 blur-3xl" />
-              <div className="absolute top-4 right-[22%] h-24 w-24 rounded-full bg-yellow-200/30 blur-2xl" />
-            </>
-          )}
-          {activeScene.showStars && (
-            <div
-              className="absolute inset-0 opacity-75"
-              style={{
-                backgroundImage:
-                  "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
-                backgroundSize: "180px 120px",
-              }}
-            />
-          )}
-          {activeScene.showCloudBands && (
-            <>
-              <div className="absolute left-[14%] top-[12%] h-24 w-80 rounded-full bg-white/16 blur-3xl" />
-              <div className="absolute right-[6%] top-[26%] h-20 w-72 rounded-full bg-white/14 blur-3xl" />
-              <div className="absolute left-[32%] bottom-[24%] h-24 w-96 rounded-full bg-white/12 blur-3xl" />
-            </>
-          )}
-          {activeScene.showFog && (
-            <>
-              <div className="absolute inset-x-0 bottom-[8%] h-32 bg-white/18 blur-2xl" />
-              <div className="absolute inset-x-0 bottom-0 h-40 bg-white/22 blur-3xl" />
-            </>
-          )}
-          {activeScene.showRain && (
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(112deg, rgba(210,230,255,0.75) 0px, rgba(210,230,255,0.75) 2px, transparent 2px, transparent 16px)",
-                backgroundSize: "220px 220px",
-              }}
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
-        </div>
+        <WeatherSceneEffects scene={activeScene} surface="main" />
 
         {failed && !hasFetchedAnyDataRef.current && (
           <div className="relative z-[1] h-full flex items-center justify-center px-4 text-sm text-white/90">
@@ -1031,6 +1054,16 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 ) : (
                   <div className="px-2 pt-1 pb-2 space-y-2">
+                    {WEATHER_SCENE_PREVIEW_ENABLED && (
+                      <WeatherScenePreviewControls
+                        value={scenePreviewMode}
+                        onChange={setScenePreviewMode}
+                        backgroundOnly={backgroundOnlyPreview}
+                        onToggleBackgroundOnly={() =>
+                          setBackgroundOnlyPreview((current) => !current)
+                        }
+                      />
+                    )}
                     {cityCards.map((city) => (
                       <SidebarCityItem
                         key={city.id}
@@ -1077,6 +1110,19 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 )}
 
+                {isMobileView && WEATHER_SCENE_PREVIEW_ENABLED && (
+                  <WeatherScenePreviewControls
+                    value={scenePreviewMode}
+                    onChange={setScenePreviewMode}
+                    backgroundOnly={backgroundOnlyPreview}
+                    onToggleBackgroundOnly={() =>
+                      setBackgroundOnlyPreview((current) => !current)
+                    }
+                  />
+                )}
+
+                {!backgroundOnlyPreview && (
+                  <>
                 <section className={cn("rounded-2xl overflow-hidden text-white", mainCardClass)}>
                   <div className="px-5 py-6" style={{ background: activeScene.heroGradient }}>
                     <div className="text-center">
@@ -1294,6 +1340,8 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                       </p>
                     )}
                   </div>
+                )}
+                  </>
                 )}
               </div>
             </ScrollArea>
