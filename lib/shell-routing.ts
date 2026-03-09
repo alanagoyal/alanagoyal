@@ -110,7 +110,7 @@ export function getShellUrlForApp(appId: string, options: ShellUrlOptions = {}):
 
   if (FILE_QUERY_PARAM_APPS.has(appId)) {
     if (!options.filePath) {
-      return context === "desktop" ? null : `/${appId}`;
+      return `/${appId}`;
     }
 
     return `/${appId}?file=${encodeURIComponent(options.filePath)}`;

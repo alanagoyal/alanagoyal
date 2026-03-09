@@ -120,7 +120,17 @@ function loadImageAndGetSize(
   });
 }
 
-function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
+function DesktopContent({
+  initialAppId,
+  initialNoteSlug,
+  initialTextEditFile,
+  initialPreviewFile,
+}: {
+  initialAppId?: string;
+  initialNoteSlug?: string;
+  initialTextEditFile?: string;
+  initialPreviewFile?: string;
+}) {
   const {
     openWindow,
     focusWindow,
@@ -138,6 +148,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     toggleMaximizeMultiWindow,
     updateWindowMetadata,
     getWindowsByApp,
+    bringAppToFront,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const { touchRecent } = useRecents();
@@ -195,12 +206,28 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
+  const createTransientInstanceId = useCallback((prefix: string) => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }, []);
+  const openUntitledTextEditWindow = useCallback(() => {
+    openMultiWindow("textedit", createTransientInstanceId("untitled"), {
+      content: "",
+      documentName: "Untitled",
+      isUntitled: true,
+    });
+  }, [createTransientInstanceId, openMultiWindow]);
+  const openEmptyPreviewWindow = useCallback(() => {
+    openMultiWindow("preview", createTransientInstanceId("preview-home"), {
+      documentName: "Preview",
+      isEmptyState: true,
+    });
+  }, [createTransientInstanceId, openMultiWindow]);
 
   // Memoize filtered/sorted windows to avoid recomputing on every render
   const visibleTextEditWindows = useMemo(
     () =>
       textEditWindows
-        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+        .filter((w) => w.isOpen && !w.isMinimized)
         .sort((a, b) => b.zIndex - a.zIndex)
         .slice(0, isMobile ? 1 : undefined),
     [textEditWindows, isMobile]
@@ -209,7 +236,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const visiblePreviewWindows = useMemo(
     () => {
       const openPreviewWindows = previewWindows.filter(
-        (w) => w.isOpen && !w.isMinimized && w.metadata?.filePath
+        (w) => w.isOpen && !w.isMinimized
       );
 
       if (isMobile) {
@@ -227,6 +254,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
   const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+  const [initialTextEditLaunchProcessed, setInitialTextEditLaunchProcessed] = useState(
+    initialAppId !== "textedit" || Boolean(initialTextEditFile)
+  );
+  const [initialPreviewLaunchProcessed, setInitialPreviewLaunchProcessed] = useState(
+    initialAppId !== "preview" || Boolean(initialPreviewFile)
+  );
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -340,6 +373,42 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     }
   }, [initialPreviewFile, urlPreviewProcessed, existingPreviewWindowId, openMultiWindow, handleInvalidFileRoute]);
 
+  useEffect(() => {
+    if (initialTextEditLaunchProcessed || initialTextEditFile) return;
+    if (initialAppId !== "textedit") return;
+
+    if (textEditWindows.some((w) => w.isOpen)) {
+      setInitialTextEditLaunchProcessed(true);
+      return;
+    }
+
+    openUntitledTextEditWindow();
+    setInitialTextEditLaunchProcessed(true);
+  }, [
+    initialTextEditLaunchProcessed,
+    initialTextEditFile,
+    openUntitledTextEditWindow,
+    textEditWindows,
+  ]);
+
+  useEffect(() => {
+    if (initialPreviewLaunchProcessed || initialPreviewFile) return;
+    if (initialAppId !== "preview") return;
+
+    if (previewWindows.some((w) => w.isOpen)) {
+      setInitialPreviewLaunchProcessed(true);
+      return;
+    }
+
+    openEmptyPreviewWindow();
+    setInitialPreviewLaunchProcessed(true);
+  }, [
+    initialPreviewLaunchProcessed,
+    initialPreviewFile,
+    openEmptyPreviewWindow,
+    previewWindows,
+  ]);
+
   // Update URL when focus changes
   useEffect(() => {
     const focusedWindowId = state.focusedWindowId;
@@ -439,15 +508,29 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
-    const windowState = getWindow(appId);
-    if (windowState?.isOpen) {
-      if (windowState.isMinimized) {
-        restoreWindow(appId);
+    if (appId === "textedit") {
+      if (textEditWindows.some((windowState) => windowState.isOpen)) {
+        bringAppToFront("textedit");
       } else {
-        focusWindow(appId);
+        openUntitledTextEditWindow();
+      }
+    } else if (appId === "preview") {
+      if (previewWindows.some((windowState) => windowState.isOpen)) {
+        bringAppToFront("preview");
+      } else {
+        openEmptyPreviewWindow();
       }
     } else {
-      openWindow(appId);
+      const windowState = getWindow(appId);
+      if (windowState?.isOpen) {
+        if (windowState.isMinimized) {
+          restoreWindow(appId);
+        } else {
+          focusWindow(appId);
+        }
+      } else {
+        openWindow(appId);
+      }
     }
     const nextUrl = getShellUrlForApp(appId, {
       context: "desktop",
@@ -457,7 +540,18 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting]);
+  }, [
+    getWindow,
+    restoreWindow,
+    focusWindow,
+    openWindow,
+    getNotesSlugForRouting,
+    textEditWindows,
+    previewWindows,
+    bringAppToFront,
+    openUntitledTextEditWindow,
+    openEmptyPreviewWindow,
+  ]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
@@ -674,13 +768,15 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           {/* TextEdit - multi-window support */}
           {/* On small screens, only show the topmost window */}
           {visibleTextEditWindows.map((windowState) => {
-              const filePath = windowState.metadata!.filePath as string;
+              const filePath = windowState.metadata?.filePath as string | undefined;
               const content = (windowState.metadata?.content as string) ?? "";
               return (
                 <TextEditWindow
                   key={windowState.id}
                   windowId={windowState.id}
                   filePath={filePath}
+                  documentName={windowState.metadata?.documentName as string | undefined}
+                  isUntitled={Boolean(windowState.metadata?.isUntitled)}
                   content={content}
                   position={windowState.position}
                   size={windowState.size}
@@ -696,8 +792,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
                   onContentChange={(newContent) => {
                     // Update metadata and save to localStorage
                     updateWindowMetadata(windowState.id, { content: newContent });
-                    saveTextEditContent(filePath, newContent);
-                    debouncedTouchRecent(filePath);
+                    if (filePath) {
+                      saveTextEditContent(filePath, newContent);
+                      debouncedTouchRecent(filePath);
+                    }
                   }}
                 />
               );
@@ -705,9 +803,9 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
           {/* Preview - multi-window support for images and PDFs */}
           {visiblePreviewWindows.map((windowState) => {
-              const filePath = windowState.metadata!.filePath as string;
-              const fileUrl = windowState.metadata!.fileUrl as string;
-              const fileType = windowState.metadata!.fileType as PreviewFileType;
+              const filePath = windowState.metadata?.filePath as string | undefined;
+              const fileUrl = windowState.metadata?.fileUrl as string | undefined;
+              const fileType = windowState.metadata?.fileType as PreviewFileType | undefined;
               const zoom = (windowState.metadata?.zoom as number) ?? 1;
               const scrollLeft = (windowState.metadata?.scrollLeft as number) ?? 0;
               const scrollTop = (windowState.metadata?.scrollTop as number) ?? 0;
@@ -717,6 +815,11 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
                   filePath={filePath}
                   fileUrl={fileUrl}
                   fileType={fileType}
+                  documentName={windowState.metadata?.documentName as string | undefined}
+                  onBrowseFiles={() => {
+                    focusFinderWindow();
+                    setUrl("/finder");
+                  }}
                   position={windowState.position}
                   size={windowState.size}
                   zIndex={windowState.zIndex}
@@ -740,6 +843,7 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
+            onOpenMultiWindowApp={handleOpenApp}
             appBadges={appBadges}
           />
           <MessagesNotificationBanner
@@ -764,7 +868,12 @@ export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, in
     <RecentsProvider>
       <FileMenuProvider>
         <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
+          <DesktopContent
+            initialAppId={initialAppId}
+            initialNoteSlug={initialNoteSlug}
+            initialTextEditFile={initialTextEditFile}
+            initialPreviewFile={initialPreviewFile}
+          />
         </WindowManagerProvider>
       </FileMenuProvider>
     </RecentsProvider>

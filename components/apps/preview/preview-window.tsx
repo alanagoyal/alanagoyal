@@ -15,13 +15,16 @@ import {
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
+import { PreviewEmptyState } from "@/components/apps/preview/preview-empty-state";
 
 export type PreviewFileType = "image" | "pdf";
 
 interface PreviewWindowProps {
-  filePath: string;
-  fileUrl: string;
-  fileType: PreviewFileType;
+  filePath?: string;
+  fileUrl?: string;
+  fileType?: PreviewFileType;
+  documentName?: string;
+  onBrowseFiles?: () => void;
   position: Position;
   size: Size;
   zIndex: number;
@@ -43,7 +46,9 @@ interface PreviewWindowProps {
 export function PreviewWindow({
   filePath,
   fileUrl,
-  fileType,
+  fileType = "image",
+  documentName = "Preview",
+  onBrowseFiles,
   position,
   size,
   zIndex,
@@ -63,7 +68,7 @@ export function PreviewWindow({
 }: PreviewWindowProps) {
   const windowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fileName = filePath?.split("/").pop() || "Untitled";
+  const fileName = documentName || filePath?.split("/").pop() || "Preview";
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
   const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
@@ -288,6 +293,10 @@ export function PreviewWindow({
   }, []);
 
   const renderContent = () => {
+    if (!fileUrl) {
+      return <PreviewEmptyState onBrowseFiles={onBrowseFiles} />;
+    }
+
     if (fileType === "pdf") {
       return (
         <PdfViewer
@@ -451,7 +460,7 @@ export function PreviewWindow({
             <span className="block truncate text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
           {/* Zoom controls for images - stopPropagation prevents window drag */}
-          {fileType === "image" && (
+          {fileUrl && fileType === "image" && (
             <div className="flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
               <button
                 onClick={zoomOut}
@@ -476,7 +485,7 @@ export function PreviewWindow({
               </button>
             </div>
           )}
-          {fileType === "pdf" && <div className="w-[68px] shrink-0" />}
+          {(!fileUrl || fileType === "pdf") && <div className="w-[68px] shrink-0" />}
         </div>
 
         {/* Content */}

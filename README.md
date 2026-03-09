@@ -35,6 +35,15 @@ a macos sierra 10.12 themed desktop with:
 - github integration (browse your repos)
 - basic shell commands (ls, cd, cat, pwd, clear, etc.)
 
+**textedit** - plain text editor
+- opens existing text files in their own windows
+- opening `/textedit` with no file creates a new untitled document
+
+**preview** - image and pdf viewer
+- opens images and pdfs in their own windows
+- opening `/preview` with no file shows a no-document launcher state
+- document-app launch behavior is documented in `docs/document-apps.md`
+
 **finder** - file browser
 - sidebar navigation (recents, applications, desktop, documents, downloads, projects)
 - browse local files and github repositories
