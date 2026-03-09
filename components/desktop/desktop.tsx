@@ -448,6 +448,7 @@ function DesktopContent({
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
     if (appId === "textedit" || appId === "preview") {
+      setFinderTab("recents");
       focusFinderWindow();
       setUrl("/finder");
     } else {
