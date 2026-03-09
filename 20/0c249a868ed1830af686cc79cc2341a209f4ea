@@ -1,0 +1,42 @@
+components/apps/weather/weather-app.tsx
+  a9b89a35df39beb8 3,20,482,923
+components/apps/weather/weather-scene-effects.tsx
+  a9b89a35df39beb8 1-125,127-134,137-457
+components/desktop/notification-center.tsx
+  a9b89a35df39beb8 24,404
+lib/weather.ts
+  a9b89a35df39beb8 14,34,49,51-57,60-64,66-70,72-76,78-82,84,87-215,217,222,225,229,339,341,343,354
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "200c249a868ed1830af686cc79cc2341a209f4ea",
+  "prompts": {
+    "32970bf4b030f18b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cbb24-81f5-70c1-a69b-da83559a0742",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    },
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 653,
+      "total_deletions": 659,
+      "accepted_lines": 630,
+      "overriden_lines": 0
+    }
+  }
+}
