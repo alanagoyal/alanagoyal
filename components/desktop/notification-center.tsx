@@ -21,6 +21,7 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
 import { loadCalendars } from "@/components/apps/calendar/data";
+import { WeatherSceneEffects } from "@/components/apps/weather/weather-scene-effects";
 import {
   buildOpenMeteoForecastUrl,
   getWeatherDescription,
@@ -400,45 +401,7 @@ function WeatherWidget({
         onActivate();
       }}
     >
-      {scene.showSunGlow && (
-        <>
-          <div className="pointer-events-none absolute -top-12 right-[12%] h-32 w-32 rounded-full bg-yellow-100/16 blur-3xl" />
-          <div className="pointer-events-none absolute top-1 right-[19%] h-14 w-14 rounded-full bg-yellow-200/24 blur-2xl" />
-        </>
-      )}
-      {scene.showStars && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-70"
-          style={{
-            backgroundImage:
-              "radial-gradient(2px 2px at 12px 18px, rgba(255,255,255,0.95), transparent 60%), radial-gradient(1.5px 1.5px at 52px 36px, rgba(255,255,255,0.85), transparent 60%), radial-gradient(2px 2px at 98px 62px, rgba(255,255,255,0.9), transparent 60%), radial-gradient(1.5px 1.5px at 154px 28px, rgba(255,255,255,0.8), transparent 60%)",
-            backgroundSize: "180px 120px",
-          }}
-        />
-      )}
-      {scene.showCloudBands && (
-        <>
-          <div className="pointer-events-none absolute left-[8%] top-[14%] h-10 w-28 rounded-full bg-white/16 blur-2xl" />
-          <div className="pointer-events-none absolute right-[6%] top-[28%] h-9 w-24 rounded-full bg-white/14 blur-2xl" />
-          <div className="pointer-events-none absolute left-[26%] bottom-[20%] h-10 w-32 rounded-full bg-white/12 blur-2xl" />
-        </>
-      )}
-      {scene.showFog && (
-        <>
-          <div className="pointer-events-none absolute inset-x-0 bottom-[8%] h-12 bg-white/16 blur-2xl" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-white/18 blur-3xl" />
-        </>
-      )}
-      {scene.showRain && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(112deg, rgba(210,230,255,0.72) 0px, rgba(210,230,255,0.72) 2px, transparent 2px, transparent 15px)",
-            backgroundSize: "180px 180px",
-          }}
-        />
-      )}
+      <WeatherSceneEffects scene={scene} surface="preview" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
       <div className={cn("relative z-[1]", textClassName)}>
         {loading && <WeatherWidgetSkeleton />}
