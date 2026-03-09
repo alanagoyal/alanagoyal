@@ -25,6 +25,7 @@ This note captures how file-backed document apps should launch in the desktop sh
 
 - `app/(desktop)/textedit/page.tsx` and `app/(desktop)/preview/page.tsx` enforce the file requirement for direct routes.
 - `components/desktop/desktop.tsx` treats `TextEdit` and `Preview` as Finder-routed apps when no document is available, switching Finder to `Recents` so the user can pick a file immediately.
+- `components/apps/finder/finder-app.tsx` listens for an explicit navigation request ID so repeated launches can force `Recents` even if Finder was previously asked to go there.
 - `lib/shell-routing.ts` only generates desktop URLs for these apps when a `filePath` is present.
 
 ## Manual Test Plan

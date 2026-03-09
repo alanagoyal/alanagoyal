@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
@@ -83,6 +83,7 @@ interface FinderAppProps {
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
   initialTab?: SidebarItem;
+  navigationRequestId?: number;
 }
 
 // Image extensions that should open in Preview
@@ -199,7 +200,15 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
+export function FinderApp({
+  isMobile = false,
+  inShell = false,
+  onOpenApp,
+  onOpenTextFile,
+  onOpenPreviewFile,
+  initialTab,
+  navigationRequestId,
+}: FinderAppProps) {
   const router = useRouter();
   const windowFocus = useWindowFocus();
   const { recents, addRecent, fileModifiedVersion } = useRecents();
@@ -496,14 +505,14 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   }, [currentPath, sortedRecentFiles]);
 
-  // Respond to initialTab changes from external navigation (e.g., dock clicks)
-  useEffect(() => {
+  // Apply external navigation requests before paint to avoid flashing the old Finder view.
+  useLayoutEffect(() => {
     if (initialTab) {
       setSelectedSidebar(initialTab);
       setCurrentPath(getPathForSidebarItem(initialTab));
       setSelectedFile(null);
     }
-  }, [initialTab, getPathForSidebarItem, setCurrentPath]);
+  }, [initialTab, navigationRequestId, getPathForSidebarItem, setCurrentPath]);
 
   useEffect(() => {
     const entries: EntryInput[] = [];

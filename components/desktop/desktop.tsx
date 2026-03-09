@@ -171,6 +171,7 @@ function DesktopContent({
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
+  const [finderNavigationRequestId, setFinderNavigationRequestId] = useState(0);
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
@@ -193,12 +194,17 @@ function DesktopContent({
     }
     openWindow("finder");
   }, [getWindow, restoreWindow, focusWindow, openWindow]);
+  const requestFinderTab = useCallback((tab: FinderTab) => {
+    setFinderTab(tab);
+    setFinderNavigationRequestId((current) => current + 1);
+  }, []);
 
   const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
+    requestFinderTab("recents");
     focusFinderWindow();
     setUrl("/finder");
     markProcessed();
-  }, [focusFinderWindow]);
+  }, [focusFinderWindow, requestFinderTab]);
 
   // Get TextEdit and Preview windows from window manager
   const textEditWindows = getWindowsByApp("textedit");
@@ -417,18 +423,18 @@ function DesktopContent({
       }
     } else {
       // No window open - open fresh at Recents
-      setFinderTab("recents");
+      requestFinderTab("recents");
       openWindow("finder");
     }
     const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, requestFinderTab]);
 
   // Handler for Trash dock icon click
   const handleTrashClick = useCallback(() => {
-    setFinderTab("trash");
+    requestFinderTab("trash");
     const windowState = getWindow("finder");
     if (windowState?.isOpen) {
       if (windowState.isMinimized) {
@@ -443,12 +449,12 @@ function DesktopContent({
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, requestFinderTab]);
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
     if (appId === "textedit" || appId === "preview") {
-      setFinderTab("recents");
+      requestFinderTab("recents");
       focusFinderWindow();
       setUrl("/finder");
     } else {
@@ -471,7 +477,7 @@ function DesktopContent({
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, focusFinderWindow]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, focusFinderWindow, requestFinderTab]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
@@ -666,7 +672,14 @@ function DesktopContent({
           </Window>
 
           <Window appId="finder" keepMountedWhenMinimized={true}>
-            <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
+            <FinderApp
+              inShell={true}
+              onOpenApp={handleOpenApp}
+              onOpenTextFile={handleOpenTextFile}
+              onOpenPreviewFile={handleOpenPreviewFile}
+              initialTab={finderTab}
+              navigationRequestId={finderNavigationRequestId}
+            />
           </Window>
 
           <Window appId="photos">
