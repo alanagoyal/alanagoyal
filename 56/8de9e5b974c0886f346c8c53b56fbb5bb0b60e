@@ -1,0 +1,58 @@
+docs/document-apps.md
+  a9b89a35df39beb8 1-40
+app/(desktop)/preview/page.tsx
+  a9b89a35df39beb8 11
+components/apps/textedit/textedit-window.tsx
+  a9b89a35df39beb8 19-21,40-41,59-60,101-105,169
+components/desktop/dock.tsx
+  a9b89a35df39beb8 13,105-106,286-287
+README.md
+  a9b89a35df39beb8 38-46
+AGENTS.md
+  a9b89a35df39beb8 31,42
+components/apps/preview/preview-app.tsx
+  a9b89a35df39beb8 8,15-16,24-25,28,143
+components/apps/preview/preview-window.tsx
+  a9b89a35df39beb8 18,23-27,49-51,71,296-299,463,488
+components/apps/preview/preview-empty-state.tsx
+  a9b89a35df39beb8 1-48
+lib/shell-routing.ts
+  a9b89a35df39beb8 113
+app/(desktop)/textedit/page.tsx
+  a9b89a35df39beb8 11
+components/desktop/desktop.tsx
+  a9b89a35df39beb8 124,127,129,132,151,209-224,230,239,257-262,376-401,403-411,511-513,515,517-519,521,524-531,533,548-553,771,778-779,795,798,806-808,818-822,846,872
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "568de9e5b974c0886f346c8c53b56fbb5bb0b60e",
+  "prompts": {
+    "32970bf4b030f18b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cbb24-81f5-70c1-a69b-da83559a0742",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    },
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 273,
+      "total_deletions": 42,
+      "accepted_lines": 248,
+      "overriden_lines": 0
+    }
+  }
+}
