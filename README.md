@@ -67,6 +67,7 @@ a macos sierra 10.12 themed desktop with:
 - opens from notification center weather widget or `/weather`
 - current conditions with hourly forecast
 - non-dock app (appears in dock only while open)
+- shared weather scene renderer and palettes documented in `docs/weather-scenes.md`
 
 ### mobile
 
