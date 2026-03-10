@@ -230,6 +230,12 @@ function DesktopContent({
       currentPath: initialPath,
     }, options?.size, options?.position);
   }, [openMultiWindow]);
+  const openDedicatedFinderWindow = useCallback((
+    initialPath: string,
+    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+  ) => {
+    openFinderWindow(initialPath, options);
+  }, [openFinderWindow]);
   const focusFinderApp = useCallback(() => {
     if (finderWindows.some((windowState) => windowState.isOpen)) {
       bringAppToFront("finder");
@@ -237,7 +243,7 @@ function DesktopContent({
     }
     openFinderWindow("recents");
   }, [finderWindows, bringAppToFront, openFinderWindow]);
-  const focusOrOpenTrashFinder = useCallback(() => {
+  const focusOrOpenTrashFinderWindow = useCallback(() => {
     const existingTrashWindow = [...finderWindows]
       .filter((windowState) => windowState.isOpen && String(windowState.metadata?.currentPath ?? "").startsWith("trash"))
       .sort((a, b) => b.zIndex - a.zIndex)[0];
@@ -247,8 +253,8 @@ function DesktopContent({
       return;
     }
 
-    openFinderWindow("trash");
-  }, [finderWindows, focusMultiWindow, openFinderWindow]);
+    openDedicatedFinderWindow("trash");
+  }, [finderWindows, focusMultiWindow, openDedicatedFinderWindow]);
   const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
     focusFinderApp();
     setUrl("/finder");
@@ -259,7 +265,7 @@ function DesktopContent({
     () =>
       finderWindows
         .filter((w) => w.isOpen)
-        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
+        .sort((a, b) => a.zIndex - b.zIndex),
     [finderWindows]
   );
 
@@ -479,12 +485,8 @@ function DesktopContent({
 
   // Handler for Trash dock icon click
   const handleTrashClick = useCallback(() => {
-    focusOrOpenTrashFinder();
-    const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
-    if (nextUrl) {
-      setUrl(nextUrl);
-    }
-  }, [focusOrOpenTrashFinder]);
+    focusOrOpenTrashFinderWindow();
+  }, [focusOrOpenTrashFinderWindow]);
 
   const focusTopDocumentWindow = useCallback((windows: typeof textEditWindows) => {
     const topWindow = [...windows]
@@ -500,9 +502,11 @@ function DesktopContent({
   }, [focusMultiWindow]);
 
   const openDocumentAppPicker = useCallback((appId: DocumentAppId) => {
-    openFinderWindow(getDocumentAppFinderTarget(appId), getDocumentPickerFinderWindowPlacement());
-    setUrl("/finder");
-  }, [openFinderWindow]);
+    openDedicatedFinderWindow(
+      getDocumentAppFinderTarget(appId),
+      getDocumentPickerFinderWindowPlacement()
+    );
+  }, [openDedicatedFinderWindow]);
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
