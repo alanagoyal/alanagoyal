@@ -463,14 +463,33 @@ function DesktopContent({
     }
   }, [focusOrOpenTrashFinder]);
 
+  const focusTopDocumentWindow = useCallback((windows: typeof textEditWindows) => {
+    const topWindow = [...windows]
+      .filter((windowState) => windowState.isOpen && !!windowState.metadata?.filePath)
+      .sort((a, b) => b.zIndex - a.zIndex)[0];
+
+    if (!topWindow) {
+      return false;
+    }
+
+    focusMultiWindow(topWindow.id);
+    return true;
+  }, [focusMultiWindow]);
+
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
     if (appId === "textedit") {
-      openFinderWindow(PROJECTS_DIR);
-      setUrl("/finder");
+      const focusedExistingWindow = focusTopDocumentWindow(textEditWindows);
+      if (!focusedExistingWindow) {
+        openFinderWindow(PROJECTS_DIR);
+        setUrl("/finder");
+      }
     } else if (appId === "preview") {
-      openFinderWindow(`${HOME_DIR}/Documents`);
-      setUrl("/finder");
+      const focusedExistingWindow = focusTopDocumentWindow(previewWindows);
+      if (!focusedExistingWindow) {
+        openFinderWindow(`${HOME_DIR}/Documents`);
+        setUrl("/finder");
+      }
     } else {
       const windowState = getWindow(appId);
       if (windowState?.isOpen) {
@@ -491,7 +510,7 @@ function DesktopContent({
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, openFinderWindow]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, openFinderWindow, focusTopDocumentWindow, textEditWindows, previewWindows]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
