@@ -1,0 +1,81 @@
+components/apps/music/now-playing-bar.tsx
+  1c913bfabbc5624f 109,123,132,147,161,198
+components/apps/preview/preview-app.tsx
+  1c913bfabbc5624f 276,287
+components/apps/preview/preview-window.tsx
+  1c913bfabbc5624f 458,469
+components/apps/photos/photos-grid.tsx
+  1c913bfabbc5624f 129
+components/apps/settings/panels/bluetooth.tsx
+  1c913bfabbc5624f 259
+components/apps/settings/panels/wifi.tsx
+  1c913bfabbc5624f 83,125,147
+components/apps/calendar/event-form.tsx
+  1c913bfabbc5624f 189,208,370
+components/apps/finder/nav.tsx
+  1c913bfabbc5624f 99,113,147,173,186,221,232
+components/apps/messages/search-bar.tsx
+  1c913bfabbc5624f 71
+components/apps/music/content-views/playlist-view.tsx
+  1c913bfabbc5624f 107,123
+components/apps/preview/pdf-viewer.tsx
+  1c913bfabbc5624f 68,75,88
+components/apps/finder/finder-app.tsx
+  1c913bfabbc5624f 832,1445
+components/apps/calendar/year-view.tsx
+  1c913bfabbc5624f 168
+components/apps/settings/panels/about.tsx
+  1c913bfabbc5624f 194
+components/desktop/file-menu.tsx
+  1c913bfabbc5624f 132,136
+components/desktop/apple-menu.tsx
+  1c913bfabbc5624f 135,137,140
+components/ui/dialog.tsx
+  1c913bfabbc5624f 55
+components/desktop/app-menu.tsx
+  1c913bfabbc5624f 79,81,84
+components/apps/messages/contact-drawer.tsx
+  1c913bfabbc5624f 91,152,221
+components/apps/messages/nav.tsx
+  1c913bfabbc5624f 72
+components/apps/notes/search.tsx
+  1c913bfabbc5624f 89
+components/apps/notes/new-note.tsx
+  1c913bfabbc5624f 93
+components/ui/button.tsx
+  1c913bfabbc5624f 13,15,17,19-21
+components/desktop/status-menus.tsx
+  1c913bfabbc5624f 102,199,232,393,444
+components/apps/messages/message-input.tsx
+  1c913bfabbc5624f 400
+components/apps/messages/chat-header.tsx
+  1c913bfabbc5624f 90
+components/apps/settings/sidebar.tsx
+  1c913bfabbc5624f 129,283
+components/apps/music/app.tsx
+  1c913bfabbc5624f 245
+components/desktop/dock.tsx
+  1c913bfabbc5624f 583
+components/apps/music/content-views/browse-view.tsx
+  1c913bfabbc5624f 306,315
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "cc0021894b35e4b6244c651bc2ebe827b37ce526",
+  "prompts": {
+    "1c913bfabbc5624f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cd5ac-834c-7fa0-b288-4e0a83e013bb",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 69,
+      "total_deletions": 69,
+      "accepted_lines": 69,
+      "overriden_lines": 0
+    }
+  }
+}
