@@ -7,6 +7,17 @@ export interface ImageUploadResult {
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const VALID_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+
+function isAnimatedGif(file: File): boolean {
+  return file.type === "image/gif";
+}
 
 /**
  * Compress an image file using Canvas API
@@ -24,9 +35,15 @@ async function compressImage(file: File, maxSize: number): Promise<File> {
     const img = new Image();
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
+    const objectUrl = URL.createObjectURL(file);
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+    };
 
     img.onload = async () => {
       if (!ctx) {
+        cleanup();
         reject(new Error("Failed to get canvas context"));
         return;
       }
@@ -60,6 +77,7 @@ async function compressImage(file: File, maxSize: number): Promise<File> {
             type: "image/jpeg",
             lastModified: Date.now(),
           });
+          cleanup();
           resolve(compressedFile);
           return;
         }
@@ -83,6 +101,7 @@ async function compressImage(file: File, maxSize: number): Promise<File> {
             type: "image/jpeg",
             lastModified: Date.now(),
           });
+          cleanup();
           resolve(compressedFile);
           return;
         }
@@ -98,14 +117,19 @@ async function compressImage(file: File, maxSize: number): Promise<File> {
           type: "image/jpeg",
           lastModified: Date.now(),
         });
+        cleanup();
         resolve(compressedFile);
       } else {
+        cleanup();
         reject(new Error("Failed to compress image"));
       }
     };
 
-    img.onerror = () => reject(new Error("Failed to load image"));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      cleanup();
+      reject(new Error("Failed to load image"));
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -121,8 +145,7 @@ export async function uploadNoteImage(
 ): Promise<ImageUploadResult> {
   try {
     // Validate file type
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    if (!validTypes.includes(file.type)) {
+    if (!VALID_IMAGE_TYPES.includes(file.type as (typeof VALID_IMAGE_TYPES)[number])) {
       return {
         success: false,
         error: "Invalid file type. Only JPEG, PNG, GIF, and WebP images are supported.",
@@ -132,6 +155,13 @@ export async function uploadNoteImage(
     // Compress image if over size limit
     let fileToUpload = file;
     if (file.size > MAX_FILE_SIZE) {
+      if (isAnimatedGif(file)) {
+        return {
+          success: false,
+          error: "Animated GIFs must be 5MB or smaller.",
+        };
+      }
+
       try {
         fileToUpload = await compressImage(file, MAX_FILE_SIZE);
       } catch {
@@ -203,6 +233,16 @@ export function getImageFromClipboard(
   }
 
   return null;
+}
+
+export function getImagesFromDataTransfer(
+  dataTransfer: DataTransfer | null
+): File[] {
+  if (!dataTransfer?.files) return [];
+
+  return Array.from(dataTransfer.files).filter((file) =>
+    VALID_IMAGE_TYPES.includes(file.type as (typeof VALID_IMAGE_TYPES)[number])
+  );
 }
 
 /**
