@@ -39,5 +39,5 @@ read before building, update when you ship:
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
 - **menu system**: menus are mutually exclusive via `openMenu` state in `menu-bar.tsx`. panel-style menus follow the `status-menus.tsx` pattern. use `useClickOutside()` for dismissal
 - **app discoverability + availability**: define Dock, Finder, and mobile support policy in `lib/app-config.ts` (`showOnDockByDefault`, `showInFinderApplications`, and `mobile.*`). avoid hardcoded app-id allow/deny lists in app components
-- **document apps**: `TextEdit` and `Preview` are file-backed in this codebase. keep their Finder fallback and route behavior aligned with `components/desktop/desktop.tsx`, route files, and `docs/document-apps.md`
+- **finder + document apps**: Finder is multi-window on desktop. keep per-window Finder browsing state inside the Finder window/app pair, and keep TextEdit/Preview launch roots aligned with `components/desktop/desktop.tsx`, route files, and `docs/document-apps.md`
 - **weather scenes**: weather visuals are shared between the weather app and notification center. use `components/apps/weather/weather-scene-effects.tsx` for scene rendering and `lib/weather.ts` for palettes/effect selection instead of duplicating scene markup

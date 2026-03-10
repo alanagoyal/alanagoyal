@@ -787,6 +787,11 @@ function windowReducer(
       const { windowId, metadata } = action;
       const window = state.windows[windowId];
       if (!window) return state;
+      const currentMetadata = window.metadata ?? {};
+      const hasActualChange = Object.entries(metadata).some(
+        ([key, value]) => !Object.is(currentMetadata[key], value)
+      );
+      if (!hasActualChange) return state;
 
       return {
         ...state,
@@ -794,7 +799,7 @@ function windowReducer(
           ...state.windows,
           [windowId]: {
             ...window,
-            metadata: { ...window.metadata, ...metadata },
+            metadata: { ...currentMetadata, ...metadata },
           },
         },
       };

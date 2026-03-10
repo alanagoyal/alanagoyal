@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
@@ -82,8 +82,8 @@ interface FinderAppProps {
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
-  initialTab?: SidebarItem;
-  navigationRequestId?: number;
+  initialPath?: string;
+  onPathChange?: (path: string) => void;
 }
 
 // Image extensions that should open in Preview
@@ -206,8 +206,8 @@ export function FinderApp({
   onOpenApp,
   onOpenTextFile,
   onOpenPreviewFile,
-  initialTab,
-  navigationRequestId,
+  initialPath,
+  onPathChange,
 }: FinderAppProps) {
   const router = useRouter();
   const windowFocus = useWindowFocus();
@@ -240,11 +240,13 @@ export function FinderApp({
     return "recents";
   };
 
-  // Get initial path - prefer persisted path, fall back to initialTab prop, then "recents"
+  // Get initial path - desktop shell windows are path-driven, mobile/standalone can still use persisted Finder state.
   const getInitialPath = (): string => {
-    if (initialTab) return getPathForSidebarItem(initialTab);
-    const persistedPath = loadFinderPath();
-    return persistedPath || "recents";
+    if (initialPath) return initialPath;
+    if (!inShell) {
+      return loadFinderPath() || "recents";
+    }
+    return "recents";
   };
 
   const [currentPath, setCurrentPathRaw] = useState(getInitialPath);
@@ -274,6 +276,7 @@ export function FinderApp({
   historyIndexRef.current = historyIndex;
   const currentPathRef = useRef(currentPath);
   currentPathRef.current = currentPath;
+  const lastReportedPathRef = useRef<string | null>(null);
 
   const setCurrentPath = useCallback((path: string) => {
     if (path === currentPathRef.current) return;
@@ -399,10 +402,16 @@ export function FinderApp({
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
 
-  // Persist current path (sidebar is derived from path on load)
+  // Desktop windows sync path back into window metadata; standalone/mobile Finder keeps the legacy session path.
   useEffect(() => {
-    saveFinderPath(currentPath);
-  }, [currentPath]);
+    if (lastReportedPathRef.current !== currentPath) {
+      onPathChange?.(currentPath);
+      lastReportedPathRef.current = currentPath;
+    }
+    if (!inShell) {
+      saveFinderPath(currentPath);
+    }
+  }, [currentPath, inShell, onPathChange]);
 
   // Fetch GitHub files when entering Recents (only fetches, doesn't sort)
   useEffect(() => {
@@ -504,15 +513,6 @@ export function FinderApp({
       setFiles(sortedRecentFiles);
     }
   }, [currentPath, sortedRecentFiles]);
-
-  // Apply external navigation requests before paint to avoid flashing the old Finder view.
-  useLayoutEffect(() => {
-    if (initialTab) {
-      setSelectedSidebar(initialTab);
-      setCurrentPath(getPathForSidebarItem(initialTab));
-      setSelectedFile(null);
-    }
-  }, [initialTab, navigationRequestId, getPathForSidebarItem, setCurrentPath]);
 
   useEffect(() => {
     const entries: EntryInput[] = [];
