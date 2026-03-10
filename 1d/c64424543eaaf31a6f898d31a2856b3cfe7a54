@@ -1,0 +1,25 @@
+supabase/migrations/20260310000000_app_content_entries.sql
+  1c913bfabbc5624f 1-66
+components/apps/weather/weather-app.tsx
+  1c913bfabbc5624f 39-42,592,603,623,630,830,843
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "1dc64424543eaaf31a6f898d31a2856b3cfe7a54",
+  "prompts": {
+    "1c913bfabbc5624f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cd5ac-834c-7fa0-b288-4e0a83e013bb",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 163,
+      "total_deletions": 55,
+      "accepted_lines": 142,
+      "overriden_lines": 0
+    }
+  }
+}
