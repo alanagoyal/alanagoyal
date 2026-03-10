@@ -1,0 +1,23 @@
+components/desktop/desktop.tsx
+  a9b89a35df39beb8 130-147,151-152,154-155,157-163,264-265,276,323,325
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "40373f6500ca37382be8a137aea2ec2e8ff51179",
+  "prompts": {
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 34,
+      "total_deletions": 14,
+      "accepted_lines": 34,
+      "overriden_lines": 0
+    }
+  }
+}
