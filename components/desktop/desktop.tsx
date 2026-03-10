@@ -15,7 +15,13 @@ import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
-import { HOME_DIR, PROJECTS_DIR, isSupportedTextEditPath } from "@/lib/file-route-utils";
+import {
+  type DocumentAppId,
+  getDocumentAppFinderTarget,
+  PROJECTS_DIR,
+  getLocalTextFileContent,
+  isSupportedTextEditPath,
+} from "@/lib/file-route-utils";
 import { DOCK_HEIGHT, MENU_BAR_HEIGHT } from "@/lib/use-window-behavior";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
@@ -70,10 +76,7 @@ async function fetchFileContent(filePath: string): Promise<string | null> {
     const repoFilePath = parts.slice(1).join("/");
     return fetchFileContentFromGitHub(repo, repoFilePath);
   }
-  if (filePath === `${HOME_DIR}/Documents/hello.md`) {
-    return "hello world!";
-  }
-  return null;
+  return getLocalTextFileContent(filePath);
 }
 
 // Calculate optimal window size for an image based on its dimensions
@@ -193,6 +196,11 @@ function DesktopContent({
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
+  const initialDocumentRouteAppId =
+    initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
+  const [documentAppRouteProcessed, setDocumentAppRouteProcessed] = useState(
+    !(initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile))
+  );
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
@@ -207,6 +215,13 @@ function DesktopContent({
   const finderWindows = getWindowsByApp("finder");
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
+  const documentAppWindows = useMemo(
+    () => ({
+      textedit: textEditWindows,
+      preview: previewWindows,
+    }),
+    [textEditWindows, previewWindows]
+  );
   const openFinderWindow = useCallback((
     initialPath = "recents",
     options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
@@ -484,19 +499,17 @@ function DesktopContent({
     return true;
   }, [focusMultiWindow]);
 
+  const openDocumentAppPicker = useCallback((appId: DocumentAppId) => {
+    openFinderWindow(getDocumentAppFinderTarget(appId), getDocumentPickerFinderWindowPlacement());
+    setUrl("/finder");
+  }, [openFinderWindow]);
+
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
-    if (appId === "textedit") {
-      const focusedExistingWindow = focusTopDocumentWindow(textEditWindows);
+    if (appId === "textedit" || appId === "preview") {
+      const focusedExistingWindow = focusTopDocumentWindow(documentAppWindows[appId]);
       if (!focusedExistingWindow) {
-        openFinderWindow(`${HOME_DIR}/Documents`, getDocumentPickerFinderWindowPlacement());
-        setUrl("/finder");
-      }
-    } else if (appId === "preview") {
-      const focusedExistingWindow = focusTopDocumentWindow(previewWindows);
-      if (!focusedExistingWindow) {
-        openFinderWindow(`${HOME_DIR}/Desktop`, getDocumentPickerFinderWindowPlacement());
-        setUrl("/finder");
+        openDocumentAppPicker(appId);
       }
     } else {
       const windowState = getWindow(appId);
@@ -518,7 +531,16 @@ function DesktopContent({
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, openFinderWindow, focusTopDocumentWindow, textEditWindows, previewWindows]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, focusTopDocumentWindow, documentAppWindows, openDocumentAppPicker]);
+
+  useEffect(() => {
+    if (documentAppRouteProcessed) return;
+
+    if (initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile)) {
+      handleOpenApp(initialDocumentRouteAppId);
+      setDocumentAppRouteProcessed(true);
+    }
+  }, [documentAppRouteProcessed, initialDocumentRouteAppId, initialTextEditFile, initialPreviewFile, handleOpenApp]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {

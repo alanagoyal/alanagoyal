@@ -7,6 +7,12 @@ import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { FinderNav, FinderSidebarMobileNav } from "./nav";
 import { APPS } from "@/lib/app-config";
+import {
+  HOME_DIR,
+  LOCAL_FINDER_FILES,
+  getLocalTextFileContent,
+  PROJECTS_DIR,
+} from "@/lib/file-route-utils";
 import { getFinderVisibleApps } from "@/lib/app-availability";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
@@ -23,9 +29,7 @@ import {
 import { useRouter } from "next/navigation";
 import { FinderSearchEngine, type EntryInput } from "./search-engine";
 
-const USERNAME = "alanagoyal";
-const HOME_DIR = `/Users/${USERNAME}`;
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
 interface FileItem {
   name: string;
@@ -34,25 +38,6 @@ interface FileItem {
   icon?: string;
   displayName?: string;
 }
-
-// Static file system structure
-const STATIC_FILES: Record<string, FileItem[]> = {
-  [HOME_DIR]: [
-    { name: "Desktop", type: "dir", path: `${HOME_DIR}/Desktop` },
-    { name: "Documents", type: "dir", path: `${HOME_DIR}/Documents` },
-    { name: "Downloads", type: "dir", path: `${HOME_DIR}/Downloads` },
-    { name: "Projects", type: "dir", path: `${HOME_DIR}/Projects` },
-  ],
-  [`${HOME_DIR}/Desktop`]: [
-    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital I - Form D.pdf` },
-    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital II - Form D.pdf` },
-    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital III - Form D.pdf` },
-  ],
-  [`${HOME_DIR}/Documents`]: [
-    { name: "hello.md", type: "file", path: `${HOME_DIR}/Documents/hello.md` },
-  ],
-  [`${HOME_DIR}/Downloads`]: [],
-};
 
 // Sidebar items
 export type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects" | "trash";
@@ -385,8 +370,8 @@ export function FinderApp({
       }
 
       // Static file system
-      if (STATIC_FILES[path]) {
-        setFiles(STATIC_FILES[path]);
+      if (LOCAL_FINDER_FILES[path]) {
+        setFiles(LOCAL_FINDER_FILES[path]);
       } else {
         setFiles([]);
       }
@@ -517,7 +502,7 @@ export function FinderApp({
   useEffect(() => {
     const entries: EntryInput[] = [];
 
-    for (const items of Object.values(STATIC_FILES)) {
+    for (const items of Object.values(LOCAL_FINDER_FILES)) {
       for (const item of items) {
         const section: SidebarItem = item.path.includes("/Desktop")
           ? "desktop"
@@ -692,8 +677,8 @@ export function FinderApp({
         } catch {
           content = null;
         }
-      } else if (file.path === `${HOME_DIR}/Documents/hello.md`) {
-        content = "hello world!";
+      } else {
+        content = getLocalTextFileContent(file.path);
       }
 
       // Handle file not found (shouldn't happen after tree verification, but just in case)
