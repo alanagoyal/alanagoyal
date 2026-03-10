@@ -1,0 +1,27 @@
+docs/document-apps.md
+  a9b89a35df39beb8 11,18,30,42-43
+README.md
+  a9b89a35df39beb8 41,46
+components/desktop/desktop.tsx
+  a9b89a35df39beb8 73,492,498
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "a2d905cda4b040dbabe3963768e13c9d4f36e596",
+  "prompts": {
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 19,
+      "total_deletions": 19,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
