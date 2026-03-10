@@ -127,20 +127,40 @@ function createWindowInstanceId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function getDocumentPickerFinderWindowPlacement() {
+function getCenteredFinderWindowPlacement(size: { width: number; height: number }) {
+  const availableHeight = window.innerHeight - MENU_BAR_HEIGHT - DOCK_HEIGHT;
+  return {
+    size,
+    position: {
+      x: Math.max(24, Math.round((window.innerWidth - size.width) / 2)),
+      y: Math.max(24, Math.round(MENU_BAR_HEIGHT + (availableHeight - size.height) / 2)),
+    },
+  };
+}
+
+function getDefaultFinderWindowPlacement() {
+  const finderApp = getAppById("finder");
+  const defaultSize = finderApp?.defaultSize ?? { width: 900, height: 600 };
+  return getCenteredFinderWindowPlacement(defaultSize);
+}
+
+function getTrashFinderWindowPlacement() {
   const finderApp = getAppById("finder");
   const defaultSize = finderApp?.defaultSize ?? { width: 900, height: 600 };
   const size = {
-    width: Math.max(720, defaultSize.width - 120),
-    height: Math.max(440, defaultSize.height - 120),
+    width: Math.max(760, defaultSize.width - 140),
+    height: Math.max(500, defaultSize.height - 80),
   };
-  const availableHeight = window.innerHeight - MENU_BAR_HEIGHT - DOCK_HEIGHT;
-  const position = {
-    x: Math.max(24, Math.round((window.innerWidth - size.width) / 2)),
-    y: Math.max(24, Math.round(MENU_BAR_HEIGHT + (availableHeight - size.height) / 2)),
-  };
+  return getCenteredFinderWindowPlacement(size);
+}
 
-  return { size, position };
+function getDocumentPickerFinderWindowPlacement() {
+  const trashPlacement = getTrashFinderWindowPlacement();
+  const size = {
+    width: trashPlacement.size.width,
+    height: Math.max(460, trashPlacement.size.height - 60),
+  };
+  return getCenteredFinderWindowPlacement(size);
 }
 
 function DesktopContent({
@@ -241,8 +261,8 @@ function DesktopContent({
       bringAppToFront("finder");
       return;
     }
-    openFinderWindow("recents");
-  }, [finderWindows, bringAppToFront, openFinderWindow]);
+    openDedicatedFinderWindow("recents", getDefaultFinderWindowPlacement());
+  }, [finderWindows, bringAppToFront, openDedicatedFinderWindow]);
   const focusOrOpenTrashFinderWindow = useCallback(() => {
     const existingTrashWindow = [...finderWindows]
       .filter((windowState) => windowState.isOpen && String(windowState.metadata?.currentPath ?? "").startsWith("trash"))
@@ -253,7 +273,7 @@ function DesktopContent({
       return;
     }
 
-    openDedicatedFinderWindow("trash");
+    openDedicatedFinderWindow("trash", getTrashFinderWindowPlacement());
   }, [finderWindows, focusMultiWindow, openDedicatedFinderWindow]);
   const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
     focusFinderApp();
@@ -300,9 +320,9 @@ function DesktopContent({
       return;
     }
 
-    openFinderWindow("recents");
+    openDedicatedFinderWindow("recents", getDefaultFinderWindowPlacement());
     setFinderRouteProcessed(true);
-  }, [finderRouteProcessed, initialAppId, finderWindows, focusFinderApp, openFinderWindow]);
+  }, [finderRouteProcessed, initialAppId, finderWindows, focusFinderApp, openDedicatedFinderWindow]);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
