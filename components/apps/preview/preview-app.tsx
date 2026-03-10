@@ -273,7 +273,7 @@ export function PreviewApp({
           <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={zoomOut}
-              className="p-1.5 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+              className="p-1.5 rounded can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
               title="Zoom out"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -284,7 +284,7 @@ export function PreviewApp({
             <span className="text-zinc-600 dark:text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
             <button
               onClick={zoomIn}
-              className="p-1.5 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+              className="p-1.5 rounded can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
               title="Zoom in"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

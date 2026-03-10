@@ -83,7 +83,7 @@ export function MessagesNotificationBanner({
           onClick={handleDismissClick}
           role="button"
           aria-label="Dismiss notification"
-          className="absolute -left-2.5 -top-1.5 w-[22px] h-[22px] rounded-full bg-[#c8c8cc]/90 dark:bg-[#525258]/90 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_1px_4px_rgba(0,0,0,0.18)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] text-zinc-500/90 dark:text-zinc-400 grid place-items-center text-[14px] leading-none font-normal opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150"
+          className="absolute -left-2.5 -top-1.5 w-[22px] h-[22px] rounded-full bg-[#c8c8cc]/90 dark:bg-[#525258]/90 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_1px_4px_rgba(0,0,0,0.18)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] text-zinc-500/90 dark:text-zinc-400 grid place-items-center text-[14px] leading-none font-normal opacity-0 pointer-events-none can-hover:group-hover:opacity-100 can-hover:group-hover:pointer-events-auto transition-opacity duration-150"
         >
           ✕
         </span>

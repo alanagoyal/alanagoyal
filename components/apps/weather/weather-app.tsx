@@ -554,7 +554,7 @@ function WeatherScenePreviewControls({
                 "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
                 isActive
                   ? "border-white/55 bg-white/22 text-white"
-                  : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+                  : "border-white/12 bg-white/[0.06] text-white/72 can-hover:hover:bg-white/[0.1]"
               )}
             >
               {option}
@@ -578,7 +578,7 @@ function WeatherScenePreviewControls({
             "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
             backgroundOnly
               ? "border-white/55 bg-white/22 text-white"
-              : "border-white/12 bg-white/[0.06] text-white/72 hover:bg-white/[0.1]"
+              : "border-white/12 bg-white/[0.06] text-white/72 can-hover:hover:bg-white/[0.1]"
           )}
         >
           {backgroundOnly ? "On" : "Off"}
@@ -1010,7 +1010,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         }}
                         className={cn(
                           "absolute right-2 top-1/2 -translate-y-1/2",
-                          "text-white/70 hover:text-white"
+                          "text-white/70 can-hover:hover:text-white"
                         )}
                         aria-label="Clear search"
                       >

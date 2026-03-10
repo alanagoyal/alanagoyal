@@ -87,7 +87,7 @@ function RecipientPill({
             onRemove(index);
           }}
           onMouseDown={(e) => e.preventDefault()}
-          className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
+          className="ml-1.5 can-hover:hover:text-red-600 dark:can-hover:hover:text-red-400"
           aria-label={`Remove ${trimmedRecipient}`}
         >
           <Icons.close className="h-3 w-3" />
@@ -196,7 +196,7 @@ function RecipientSearch({
           className={cn(
             "flex items-center justify-center w-8 h-8",
             searchValue && displayPeople.length === 0
-              ? "text-muted-foreground hover:text-foreground"
+              ? "text-muted-foreground can-hover:hover:text-foreground"
               : "invisible"
           )}
         >
@@ -231,14 +231,18 @@ function RecipientSearch({
                   ref={selectedIndex === index ? selectedItemRef : null}
                   className={`p-2 cursor-pointer rounded-md ${
                     selectedIndex === index
-                      ? "bg-[#0A7CFF] hover:bg-[#0A7CFF]"
+                      ? "bg-[#0A7CFF] can-hover:hover:bg-[#0A7CFF]"
                       : ""
                   }`}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handlePersonSelect(person);
                   }}
-                  onMouseEnter={() => setSelectedIndex(index)}
+                  onMouseEnter={() => {
+                    if (!isMobileView) {
+                      setSelectedIndex(index);
+                    }
+                  }}
                   tabIndex={0}
                 >
                   <div className="flex flex-col">

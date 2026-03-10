@@ -397,7 +397,7 @@ export const MessageInput = forwardRef<
             onFocus={() => {
               void loadEmojiPicker();
             }}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground can-hover:hover:text-foreground transition-colors"
           >
             <Icons.smile className="h-5 w-5" />
           </button>

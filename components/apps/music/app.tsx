@@ -242,7 +242,7 @@ export default function App({ isDesktop = false }: AppProps) {
             <div className="px-4 py-3 flex items-center gap-3 sticky top-0 z-[1] select-none bg-background">
               <button
                 onClick={handleBack}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted can-hover:hover:bg-muted/80 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>

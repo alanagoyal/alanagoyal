@@ -97,7 +97,7 @@ export function Nav({
               "px-2 desktop:px-3 py-1 text-xs desktop:text-sm font-medium rounded-md transition-colors",
               view === option.value
                 ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground can-hover:hover:text-foreground"
             )}
           >
             {option.label}

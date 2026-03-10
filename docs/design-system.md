@@ -54,7 +54,7 @@ Sidebars should NOT have hover states on items. Use solid background for selecte
 )}>
 
 // Incorrect - avoid hover states in sidebars
-<div className="hover:bg-muted/50"> // Don't do this
+<div className="can-hover:hover:bg-muted/50"> // Don't do this
 
 // Incorrect - applying selected background on mobile
 <div className={isSelected && "bg-[#0A7CFF]"}> // Don't do this on mobile
@@ -128,9 +128,9 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 <div className="sticky top-0 z-[1] flex items-center justify-between px-4 py-2 bg-muted select-none">
   {/* Left: window controls or back button */}
   <div className="flex items-center gap-1.5">
-    <button className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-700" />
-    <button className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-700" />
-    <button className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-700" />
+    <button className="w-3 h-3 rounded-full bg-red-500 can-hover:hover:bg-red-700" />
+    <button className="w-3 h-3 rounded-full bg-yellow-500 can-hover:hover:bg-yellow-700" />
+    <button className="w-3 h-3 rounded-full bg-green-500 can-hover:hover:bg-green-700" />
   </div>
 
   {/* Center: title (optional) */}
@@ -140,6 +140,15 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 ```
 
 The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
+
+### Hover States
+
+Any hover-only affordance must be gated behind the `can-hover` variant so it does not stick on touch devices:
+
+```tsx
+<button className="can-hover:hover:bg-accent can-hover:hover:text-accent-foreground" />
+<div className="group can-hover:group-hover:opacity-100" />
+```
 
 ### Shared Nav Components
 
@@ -243,7 +252,7 @@ Consistent search bar styling across apps:
   {value && (
     <button
       onClick={onClear}
-      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
     >
       <X size={14} />
     </button>

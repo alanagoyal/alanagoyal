@@ -57,7 +57,7 @@ export function SongsView({ songs, isMobileView }: SongsViewProps) {
                   onClick={() => handleTrackPlay(track)}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group overflow-hidden",
-                    isCurrentTrack ? "bg-red-500/10" : "hover:bg-muted"
+                    isCurrentTrack ? "bg-red-500/10" : "can-hover:hover:bg-muted"
                   )}
                 >
                   <span
@@ -69,10 +69,10 @@ export function SongsView({ songs, isMobileView }: SongsViewProps) {
                     {isPlaying ? (
                       <Pause className="w-4 h-4 mx-auto" />
                     ) : (
-                      <span className="group-hover:hidden">{index + 1}</span>
+                      <span className="can-hover:group-hover:hidden">{index + 1}</span>
                     )}
                     {!isPlaying && (
-                      <Play className="w-4 h-4 mx-auto hidden group-hover:block" />
+                      <Play className="w-4 h-4 mx-auto hidden can-hover:group-hover:block" />
                     )}
                   </span>
                   <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">

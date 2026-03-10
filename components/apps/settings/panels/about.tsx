@@ -191,7 +191,7 @@ export function AboutPanel({ isMobile = false, onCategorySelect }: AboutPanelPro
         <div className="rounded-xl bg-muted/50 overflow-hidden">
           <button
             onClick={() => onCategorySelect?.("appearance", { scrollToOSVersion: true })}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/70 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 can-hover:hover:bg-muted/70 transition-colors"
           >
               <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-muted relative">

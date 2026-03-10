@@ -186,7 +186,7 @@ export function EventForm({
               <button
                 type="button"
                 onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
-                className="flex items-center gap-1 p-1 rounded hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-1 p-1 rounded can-hover:hover:bg-muted/50 transition-colors"
               >
                 <div
                   className="w-3 h-3 rounded-full shrink-0"
@@ -205,7 +205,7 @@ export function EventForm({
                         setShowCalendarDropdown(false);
                       }}
                       className={cn(
-                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors",
+                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm can-hover:hover:bg-muted/50 transition-colors",
                         calendarId === calendar.id && "bg-muted/30"
                       )}
                     >
@@ -367,7 +367,7 @@ export function EventForm({
           <Button
             size="sm"
             onClick={handleSave}
-            className="bg-muted hover:bg-muted/80 text-foreground"
+            className="bg-muted can-hover:hover:bg-muted/80 text-foreground"
           >
             {isEditing ? "Save" : "Add"}
           </Button>

@@ -106,7 +106,7 @@ function ChartGrid({
                 <div
                   className={cn(
                     "absolute inset-0 transition-colors flex items-center justify-center",
-                    isActive ? "bg-black/40" : "bg-black/0 group-hover:bg-black/40"
+                    isActive ? "bg-black/40" : "bg-black/0 can-hover:group-hover:bg-black/40"
                   )}
                 >
                   {loadingTrack === item.id ? (
@@ -116,7 +116,7 @@ function ChartGrid({
                   ) : isActive ? (
                     <Play className="w-10 h-10 text-white" />
                   ) : (
-                    <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Play className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
               </div>
@@ -303,7 +303,7 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
                   e.stopPropagation();
                   handleCarouselPrev();
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 can-hover:group-hover:opacity-100 transition-opacity can-hover:hover:bg-black/70"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
@@ -312,7 +312,7 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
                   e.stopPropagation();
                   handleCarouselNext();
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 can-hover:group-hover:opacity-100 transition-opacity can-hover:hover:bg-black/70"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -330,7 +330,7 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
                       "w-1.5 h-1.5 rounded-full transition-colors",
                       index === carouselIndex
                         ? "bg-white"
-                        : "bg-white/40 hover:bg-white/60"
+                        : "bg-white/40 can-hover:hover:bg-white/60"
                     )}
                   />
                 ))}

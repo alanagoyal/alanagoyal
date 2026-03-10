@@ -99,6 +99,7 @@ export default {
   plugins: [
     tailwindcssAnimate,
     plugin(({ addVariant }) => {
+      addVariant("can-hover", "@media (hover: hover) and (pointer: fine)");
       addVariant("desktop", "[data-shell='desktop'] &");
     }),
   ],

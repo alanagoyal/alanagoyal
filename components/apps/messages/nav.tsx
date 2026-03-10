@@ -69,7 +69,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, isDesktop = false }: 
       }
       right={
         <button
-          className={`desktop:p-2 hover:bg-muted-foreground/10 rounded-lg ${
+          className={`desktop:p-2 can-hover:hover:bg-muted-foreground/10 rounded-lg ${
             isMobileView ? "p-2" : ""
           }`}
           onClick={onNewChat}

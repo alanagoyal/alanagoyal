@@ -126,7 +126,7 @@ export function PhotosGrid({
           {isMobileView && (
             <button
               onClick={onBack}
-              className="flex items-center text-[#0A84FF] hover:text-[#0A84FF]/80 -ml-2"
+              className="flex items-center text-[#0A84FF] can-hover:hover:text-[#0A84FF]/80 -ml-2"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -150,7 +150,7 @@ export function PhotosGrid({
                   "px-3 py-1 text-xs rounded-md transition-colors capitalize",
                   timeFilter === filter
                     ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground can-hover:hover:text-foreground"
                 )}
               >
                 {filter === "all" ? "All Photos" : filter}
@@ -217,7 +217,11 @@ export function PhotosGrid({
                           onPhotoSelect?.(photo.id);
                         }
                       }}
-                      onMouseEnter={() => preloadImage(photo.url)}
+                      onMouseEnter={() => {
+                        if (!isMobileView) {
+                          preloadImage(photo.url);
+                        }
+                      }}
                     >
                       <div className="relative w-full h-full overflow-hidden bg-muted group rounded-sm pointer-events-none">
                         <Image
@@ -247,7 +251,7 @@ export function PhotosGrid({
                             "absolute bottom-1 left-1 p-0.5 rounded-full transition-opacity pointer-events-auto",
                             photo.isFavorite
                               ? "opacity-100"
-                              : "opacity-0 group-hover:opacity-100"
+                              : "opacity-0 can-hover:group-hover:opacity-100"
                           )}
                         >
                           <Heart

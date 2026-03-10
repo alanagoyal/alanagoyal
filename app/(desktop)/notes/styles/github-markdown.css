@@ -49,8 +49,10 @@
   text-decoration: underline;
 }
 
-.markdown-body a:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .markdown-body a:hover {
+    text-decoration: underline;
+  }
 }
 
 .markdown-body ul {
@@ -189,8 +191,10 @@
   text-decoration: underline;
 }
 
-.markdown-body table a:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .markdown-body table a:hover {
+    text-decoration: underline;
+  }
 }
 
 .dark .markdown-body table th,

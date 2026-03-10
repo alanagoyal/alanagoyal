@@ -106,7 +106,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                   "p-2 rounded-full transition-colors",
                   isShuffle
                     ? "text-red-500"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground can-hover:hover:text-foreground"
                 )}
                 title={isShuffle ? "Shuffle On" : "Shuffle Off"}
               >
@@ -120,7 +120,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
               className={cn(
                 "p-2 rounded-full transition-colors",
                 canGoPrevious
-                  ? "text-muted-foreground hover:text-foreground"
+                  ? "text-muted-foreground can-hover:hover:text-foreground"
                   : "text-muted-foreground/30 cursor-not-allowed"
               )}
             >
@@ -129,7 +129,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
 
             <button
               onClick={handlePlayPause}
-              className="p-2 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
+              className="p-2 rounded-full bg-foreground text-background can-hover:hover:opacity-90 transition-opacity"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5" />
@@ -144,7 +144,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
               className={cn(
                 "p-2 rounded-full transition-colors",
                 canGoNext
-                  ? "text-muted-foreground hover:text-foreground"
+                  ? "text-muted-foreground can-hover:hover:text-foreground"
                   : "text-muted-foreground/30 cursor-not-allowed"
               )}
             >
@@ -158,7 +158,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                   "p-2 rounded-full transition-colors",
                   repeatMode !== "off"
                     ? "text-red-500"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground can-hover:hover:text-foreground"
                 )}
               >
                 {repeatMode === "one" ? (
@@ -195,7 +195,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
           <div className="flex items-center gap-2 w-[150px]">
             <button
               onClick={handleVolumeToggle}
-              className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 rounded-full text-muted-foreground can-hover:hover:text-foreground transition-colors"
             >
               {volume === 0 ? (
                 <VolumeX className="w-4 h-4" />

@@ -489,7 +489,7 @@ export function Dock({
                 "group relative flex flex-col items-center outline-none transition-all duration-300 flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
-                animState === "stable" && "hover:scale-110 active:scale-95"
+                animState === "stable" && "can-hover:hover:scale-110 active:scale-95"
               )}
             >
               {hoveredApp === app.id && animState === "stable" && !isResizingDock && (
@@ -580,7 +580,7 @@ export function Dock({
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
+          className="group relative flex flex-col items-center transition-transform can-hover:hover:scale-110 active:scale-95 outline-none flex-shrink-0"
         >
           {hoveredApp === "trash" && !isResizingDock && <DockTooltip label="Trash" />}
           <div

@@ -104,7 +104,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
             <div className="flex items-center gap-3 mt-4">
               <button
                 onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-sm font-medium can-hover:hover:bg-red-600 transition-colors"
               >
                 {isPlayingPlaylist ? (
                   <>
@@ -120,7 +120,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
               </button>
               <button
                 onClick={handleShufflePlay}
-                className="p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                className="p-2.5 rounded-full bg-muted can-hover:hover:bg-muted/80 transition-colors"
                 title="Shuffle Play"
               >
                 <Shuffle className="w-4 h-4" />
@@ -153,7 +153,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                   onClick={() => handleTrackPlay(track)}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group overflow-hidden",
-                    isCurrentTrack ? "bg-red-500/10" : "hover:bg-muted"
+                    isCurrentTrack ? "bg-red-500/10" : "can-hover:hover:bg-muted"
                   )}
                 >
                   <span
@@ -165,10 +165,10 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                     {isPlaying ? (
                       <Pause className="w-4 h-4 mx-auto" />
                     ) : (
-                      <span className="group-hover:hidden">{index + 1}</span>
+                      <span className="can-hover:group-hover:hidden">{index + 1}</span>
                     )}
                     {!isPlaying && (
-                      <Play className="w-4 h-4 mx-auto hidden group-hover:block" />
+                      <Play className="w-4 h-4 mx-auto hidden can-hover:group-hover:block" />
                     )}
                   </span>
                   <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">

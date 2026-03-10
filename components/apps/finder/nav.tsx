@@ -96,7 +96,7 @@ export function FinderNav({
               className={cn(
                 "p-1 rounded",
                 canGoBack
-                  ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  ? "text-zinc-600 dark:text-zinc-400 can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700"
                   : "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
               )}
             >
@@ -110,7 +110,7 @@ export function FinderNav({
               className={cn(
                 "p-1 rounded",
                 canGoForward
-                  ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  ? "text-zinc-600 dark:text-zinc-400 can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700"
                   : "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
               )}
             >
@@ -144,7 +144,7 @@ export function FinderNav({
               onMouseDown={(event) => {
                 if (searchActive) event.preventDefault();
               }}
-              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+              className="flex items-center gap-1 px-2 py-1 rounded can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
             >
               {viewMode === "icons" ? (
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -170,7 +170,7 @@ export function FinderNav({
                 >
                   <button
                     onClick={() => onSetViewMode("icons")}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors"
                   >
                     {viewMode === "icons" ? (
                       <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -183,7 +183,7 @@ export function FinderNav({
                   </button>
                   <button
                     onClick={() => onSetViewMode("list")}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors"
                   >
                     {viewMode === "list" ? (
                       <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -218,7 +218,7 @@ export function FinderNav({
                 <button
                   onClick={onSearchClear}
                   onMouseDown={(event) => event.preventDefault()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12" />
@@ -229,7 +229,7 @@ export function FinderNav({
           ) : (
             <button
               onClick={onSearchActivate}
-              className="p-1 rounded text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              className="p-1 rounded text-muted-foreground can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700"
               title="Search (/)"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

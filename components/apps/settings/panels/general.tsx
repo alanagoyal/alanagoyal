@@ -56,7 +56,7 @@ export function GeneralPanel({ onPanelSelect, onCategorySelect, isMobile = false
             disabled={!item.navigable}
             className={cn(
               "w-full flex items-center justify-between px-4 py-3 transition-colors",
-              item.navigable ? "hover:bg-muted cursor-pointer" : "cursor-default",
+              item.navigable ? "can-hover:hover:bg-muted cursor-pointer" : "cursor-default",
               index !== items.length - 1 && "border-b border-border/50"
             )}
           >
