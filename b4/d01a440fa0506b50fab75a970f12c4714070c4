@@ -1,0 +1,35 @@
+lib/app-config.ts
+  a9b89a35df39beb8 14-15
+AGENTS.md
+  a9b89a35df39beb8 42
+components/apps/finder/finder-app.tsx
+  a9b89a35df39beb8 85-86,209-210,243,245-248,279,405,407-411,414
+README.md
+  a9b89a35df39beb8 41,46,52
+docs/document-apps.md
+  a9b89a35df39beb8 3,11,18,24,29-31,40-46
+components/apps/finder/finder-window.tsx
+  a9b89a35df39beb8 1-235
+components/desktop/desktop.tsx
+  a9b89a35df39beb8 37,122-125,127,132,152,179,190-201,204-212,216-217,219,222,224-230,265-276,450,455,459,464,468-472,494,704-723,727-729,827
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "b4d01a440fa0506b50fab75a970f12c4714070c4",
+  "prompts": {
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 378,
+      "total_deletions": 98,
+      "accepted_lines": 363,
+      "overriden_lines": 0
+    }
+  }
+}
