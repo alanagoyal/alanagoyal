@@ -126,7 +126,7 @@ export function PhotosGrid({
           {isMobileView && (
             <button
               onClick={onBack}
-              className="flex items-center text-[#0A84FF] can-hover:hover:text-[#0A84FF]/80 -ml-2"
+              className="flex items-center text-[#0A84FF] hover:text-[#0A84FF]/80 -ml-2"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>

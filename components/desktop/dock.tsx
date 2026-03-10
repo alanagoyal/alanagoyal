@@ -580,7 +580,7 @@ export function Dock({
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center transition-transform can-hover:hover:scale-110 active:scale-95 outline-none flex-shrink-0"
+          className="group relative flex flex-col items-center transition-transform hover:scale-110 active:scale-95 outline-none flex-shrink-0"
         >
           {hoveredApp === "trash" && !isResizingDock && <DockTooltip label="Trash" />}
           <div

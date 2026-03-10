@@ -80,7 +80,7 @@ export function WifiPanel({}: WifiPanelProps) {
                 </span>
                 <Lock className="w-4 h-4 text-muted-foreground" />
                 <WifiSignal className="text-muted-foreground" />
-                <button className="px-3 py-1 text-xs border border-border rounded-md can-hover:hover:bg-muted/50 transition-colors">
+                <button className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted/50 transition-colors">
                   Details...
                 </button>
               </div>
@@ -122,7 +122,7 @@ export function WifiPanel({}: WifiPanelProps) {
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-muted-foreground" />
                     <WifiSignal className="text-muted-foreground" />
-                    <button className="p-1 rounded-full can-hover:hover:bg-muted transition-colors">
+                    <button className="p-1 rounded-full hover:bg-muted transition-colors">
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
@@ -144,7 +144,7 @@ export function WifiPanel({}: WifiPanelProps) {
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-muted-foreground" />
                     <WifiSignal className="text-muted-foreground" />
-                    <button className="p-1 rounded-full can-hover:hover:bg-muted transition-colors">
+                    <button className="p-1 rounded-full hover:bg-muted transition-colors">
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>

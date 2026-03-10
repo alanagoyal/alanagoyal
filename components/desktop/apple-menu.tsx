@@ -132,12 +132,12 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-3 py-1.5 text-xs text-left can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors group"
+      className="w-full flex items-center gap-3 px-3 py-1.5 text-xs text-left hover:bg-blue-500 hover:text-white transition-colors group"
     >
-      <span className="text-muted-foreground can-hover:group-hover:text-white">{icon}</span>
+      <span className="text-muted-foreground group-hover:text-white">{icon}</span>
       <span>{label}</span>
       {shortcut && (
-        <span className="ml-auto text-xs text-muted-foreground can-hover:group-hover:text-white/70">
+        <span className="ml-auto text-xs text-muted-foreground group-hover:text-white/70">
           {shortcut}
         </span>
       )}

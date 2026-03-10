@@ -87,7 +87,7 @@ function RecipientPill({
             onRemove(index);
           }}
           onMouseDown={(e) => e.preventDefault()}
-          className="ml-1.5 can-hover:hover:text-red-600 dark:can-hover:hover:text-red-400"
+          className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
           aria-label={`Remove ${trimmedRecipient}`}
         >
           <Icons.close className="h-3 w-3" />

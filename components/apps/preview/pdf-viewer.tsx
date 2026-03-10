@@ -65,14 +65,14 @@ export function PdfViewer({
                 setPdfLoading(true);
                 setPdfAttempt((attempt) => attempt + 1);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
             >
               Retry
             </button>
             <a
               href={pdfProxyUrl}
               download={fileName}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -85,7 +85,7 @@ export function PdfViewer({
               href={fileUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg can-hover:hover:bg-zinc-200/60 dark:can-hover:hover:bg-zinc-700/60 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 transition-colors"
             >
               Open Original
             </a>

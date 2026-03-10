@@ -99,7 +99,7 @@ export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
 
       <button
         onClick={() => setLowPowerMode(!lowPowerMode)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors group"
+        className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors group"
       >
         <div className={cn(
           "flex items-center justify-center w-6 h-6 rounded",
@@ -196,7 +196,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           {/* Other Networks */}
           <button
             onClick={() => setShowOtherNetworks(!showOtherNetworks)}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors group"
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-blue-500 hover:text-white transition-colors group"
           >
             <span>Other Networks</span>
             <ChevronRight className={cn(
@@ -229,7 +229,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           onOpenWifiSettings?.();
           onClose();
         }}
-        className="w-full px-3 py-1.5 text-xs text-left can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors"
+        className="w-full px-3 py-1.5 text-xs text-left hover:bg-blue-500 hover:text-white transition-colors"
       >
         Wi-Fi Settings...
       </button>
@@ -390,7 +390,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                     play(DEFAULT_TRACK, [DEFAULT_TRACK]);
                   }
                 }}
-                className="p-0.5 rounded text-foreground can-hover:hover:text-foreground/80 transition-colors"
+                className="p-0.5 rounded text-foreground hover:text-foreground/80 transition-colors"
               >
                 {isPlaying ? (
                   <Pause className="w-4 h-4" />
@@ -441,7 +441,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                   <button
                     key={mode}
                     onClick={() => handleFocusSelect(mode)}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-left can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-blue-500 hover:text-white transition-colors"
                   >
                     <div className={cn(
                       "flex items-center justify-center w-5 h-5 rounded-full",

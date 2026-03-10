@@ -165,7 +165,7 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
     <div>
       {/* Month name */}
       <button
-        className="text-red-500 font-semibold mb-2 can-hover:hover:underline text-left"
+        className="text-red-500 font-semibold mb-2 hover:underline text-left"
         onClick={() => onMonthClick?.(monthDate)}
       >
         {format(monthDate, "MMMM")}

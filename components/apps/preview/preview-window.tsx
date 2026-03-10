@@ -455,7 +455,7 @@ export function PreviewWindow({
             <div className="flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
               <button
                 onClick={zoomOut}
-                className="p-1 rounded can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 can-hover:hover:text-zinc-800 dark:can-hover:hover:text-zinc-200 transition-colors"
+                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
                 title="Zoom out (Cmd -)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -466,7 +466,7 @@ export function PreviewWindow({
               <span className="text-zinc-600 dark:text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
               <button
                 onClick={zoomIn}
-                className="p-1 rounded can-hover:hover:bg-zinc-300 dark:can-hover:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 can-hover:hover:text-zinc-800 dark:can-hover:hover:text-zinc-200 transition-colors"
+                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
                 title="Zoom in (Cmd +)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

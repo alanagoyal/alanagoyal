@@ -126,7 +126,7 @@ export function Sidebar({
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       aria-label="Clear search"
                     >
                       <X className="h-4 w-4" />
@@ -280,7 +280,7 @@ export function Sidebar({
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       aria-label="Clear search"
                     >
                       <X className="h-4 w-4" />

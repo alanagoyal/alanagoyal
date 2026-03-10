@@ -256,7 +256,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
                       </span>
                     </div>
                   </div>
-                  <button className="p-1.5 rounded-full border border-border can-hover:hover:bg-muted transition-colors">
+                  <button className="p-1.5 rounded-full border border-border hover:bg-muted transition-colors">
                     <Info className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
