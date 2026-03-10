@@ -1,3 +1,5 @@
+import { getLocalPreviewAssetUrl, PROJECTS_DIR } from "@/lib/file-route-utils";
+
 export const PREVIEW_TITLE_BAR_HEIGHT = 44;
 
 export function getPdfProxyUrl(fileUrl: string): string {
@@ -6,9 +8,6 @@ export function getPdfProxyUrl(fileUrl: string): string {
   }
   return `/api/preview/pdf?url=${encodeURIComponent(fileUrl)}`;
 }
-
-const HOME_DIR = "/Users/alanagoyal";
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
 
 export function getPreviewMetadataFromPath(
@@ -27,9 +26,9 @@ export function getPreviewMetadataFromPath(
     return { fileUrl, fileType };
   }
 
-  if (filePath.startsWith(`${HOME_DIR}/Documents/`)) {
-    const fileName = filePath.slice(`${HOME_DIR}/Documents/`.length);
-    const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
+  const localPreviewUrl = getLocalPreviewAssetUrl(filePath);
+  if (localPreviewUrl) {
+    const fileUrl = localPreviewUrl;
     return { fileUrl, fileType };
   }
 

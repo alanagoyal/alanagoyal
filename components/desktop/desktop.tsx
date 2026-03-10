@@ -13,11 +13,16 @@ import { Window } from "./window";
 import { MessagesNotificationBanner } from "./messages-notification-banner";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
-import type { SidebarItem as FinderTab } from "@/components/apps/finder/finder-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
-import { HOME_DIR, PROJECTS_DIR, isSupportedTextEditPath } from "@/lib/file-route-utils";
-import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
+import {
+  type DocumentAppId,
+  getDocumentAppFinderTarget,
+  PROJECTS_DIR,
+  getLocalTextFileContent,
+  isSupportedTextEditPath,
+} from "@/lib/file-route-utils";
+import { DOCK_HEIGHT, MENU_BAR_HEIGHT } from "@/lib/use-window-behavior";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -32,6 +37,7 @@ import { getShellUrlForApp } from "@/lib/shell-routing";
 import { fetchGitHubFileContent } from "@/lib/github-client";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
+import { getAppById } from "@/lib/app-config";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -70,10 +76,7 @@ async function fetchFileContent(filePath: string): Promise<string | null> {
     const repoFilePath = parts.slice(1).join("/");
     return fetchFileContentFromGitHub(repo, repoFilePath);
   }
-  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
-    return "hello world!";
-  }
-  return null;
+  return getLocalTextFileContent(filePath);
 }
 
 // Calculate optimal window size for an image based on its dimensions
@@ -120,7 +123,57 @@ function loadImageAndGetSize(
   });
 }
 
-function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFile }: { initialNoteSlug?: string; initialTextEditFile?: string; initialPreviewFile?: string }) {
+function createWindowInstanceId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getCenteredFinderWindowPlacement(size: { width: number; height: number }) {
+  const availableHeight = window.innerHeight - MENU_BAR_HEIGHT - DOCK_HEIGHT;
+  return {
+    size,
+    position: {
+      x: Math.max(24, Math.round((window.innerWidth - size.width) / 2)),
+      y: Math.max(24, Math.round(MENU_BAR_HEIGHT + (availableHeight - size.height) / 2)),
+    },
+  };
+}
+
+function getDefaultFinderWindowPlacement() {
+  const finderApp = getAppById("finder");
+  const defaultSize = finderApp?.defaultSize ?? { width: 900, height: 600 };
+  return getCenteredFinderWindowPlacement(defaultSize);
+}
+
+function getTrashFinderWindowPlacement() {
+  const finderApp = getAppById("finder");
+  const defaultSize = finderApp?.defaultSize ?? { width: 900, height: 600 };
+  const size = {
+    width: Math.max(760, defaultSize.width - 140),
+    height: Math.max(500, defaultSize.height - 80),
+  };
+  return getCenteredFinderWindowPlacement(size);
+}
+
+function getDocumentPickerFinderWindowPlacement() {
+  const trashPlacement = getTrashFinderWindowPlacement();
+  const size = {
+    width: trashPlacement.size.width,
+    height: Math.max(460, trashPlacement.size.height - 60),
+  };
+  return getCenteredFinderWindowPlacement(size);
+}
+
+function DesktopContent({
+  initialAppId,
+  initialNoteSlug,
+  initialTextEditFile,
+  initialPreviewFile,
+}: {
+  initialAppId?: string;
+  initialNoteSlug?: string;
+  initialTextEditFile?: string;
+  initialPreviewFile?: string;
+}) {
   const {
     openWindow,
     focusWindow,
@@ -136,12 +189,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     moveMultiWindow,
     resizeMultiWindow,
     toggleMaximizeMultiWindow,
+    bringAppToFront,
     updateWindowMetadata,
     getWindowsByApp,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const { touchRecent } = useRecents();
-  const isMobile = useMobileDetect();
 
   // Debounce touchRecent to avoid excessive re-renders
   const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -162,7 +215,12 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
-  const [finderTab, setFinderTab] = useState<FinderTab | undefined>(undefined);
+  const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
+  const initialDocumentRouteAppId =
+    initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
+  const [documentAppRouteProcessed, setDocumentAppRouteProcessed] = useState(
+    !(initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile))
+  );
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
@@ -173,60 +231,98 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
   );
-  const focusFinderWindow = useCallback(() => {
-    const windowState = getWindow("finder");
-    if (windowState?.isOpen) {
-      if (windowState.isMinimized) {
-        restoreWindow("finder");
-      } else {
-        focusWindow("finder");
-      }
-      return;
-    }
-    openWindow("finder");
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
-
-  const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
-    focusFinderWindow();
-    setUrl("/finder");
-    markProcessed();
-  }, [focusFinderWindow]);
-
-  // Get TextEdit and Preview windows from window manager
+  // Get multi-window app state from the window manager
+  const finderWindows = getWindowsByApp("finder");
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
+  const documentAppWindows = useMemo(
+    () => ({
+      textedit: textEditWindows,
+      preview: previewWindows,
+    }),
+    [textEditWindows, previewWindows]
+  );
+  const openFinderWindow = useCallback((
+    initialPath = "recents",
+    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+  ) => {
+    openMultiWindow("finder", createWindowInstanceId("finder"), {
+      currentPath: initialPath,
+    }, options?.size, options?.position);
+  }, [openMultiWindow]);
+  const openDedicatedFinderWindow = useCallback((
+    initialPath: string,
+    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+  ) => {
+    openFinderWindow(initialPath, options);
+  }, [openFinderWindow]);
+  const focusFinderApp = useCallback(() => {
+    if (finderWindows.some((windowState) => windowState.isOpen)) {
+      bringAppToFront("finder");
+      return;
+    }
+    openDedicatedFinderWindow("recents", getDefaultFinderWindowPlacement());
+  }, [finderWindows, bringAppToFront, openDedicatedFinderWindow]);
+  const focusOrOpenTrashFinderWindow = useCallback(() => {
+    const existingTrashWindow = [...finderWindows]
+      .filter((windowState) => windowState.isOpen && String(windowState.metadata?.currentPath ?? "").startsWith("trash"))
+      .sort((a, b) => b.zIndex - a.zIndex)[0];
+
+    if (existingTrashWindow) {
+      focusMultiWindow(existingTrashWindow.id);
+      return;
+    }
+
+    openDedicatedFinderWindow("trash", getTrashFinderWindowPlacement());
+  }, [finderWindows, focusMultiWindow, openDedicatedFinderWindow]);
+  const handleInvalidFileRoute = useCallback((markProcessed: () => void) => {
+    focusFinderApp();
+    setUrl("/finder");
+    markProcessed();
+  }, [focusFinderApp]);
+
+  const visibleFinderWindows = useMemo(
+    () =>
+      finderWindows
+        .filter((w) => w.isOpen)
+        .sort((a, b) => a.zIndex - b.zIndex),
+    [finderWindows]
+  );
 
   // Memoize filtered/sorted windows to avoid recomputing on every render
   const visibleTextEditWindows = useMemo(
     () =>
       textEditWindows
         .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .slice(0, isMobile ? 1 : undefined),
-    [textEditWindows, isMobile]
+        .sort((a, b) => b.zIndex - a.zIndex),
+    [textEditWindows]
   );
 
   const visiblePreviewWindows = useMemo(
-    () => {
-      const openPreviewWindows = previewWindows.filter(
-        (w) => w.isOpen && !w.isMinimized && w.metadata?.filePath
-      );
-
-      if (isMobile) {
-        return openPreviewWindows.sort((a, b) => b.zIndex - a.zIndex).slice(0, 1);
-      }
-
-      // Keep DOM order stable on desktop. Reordering iframe-backed windows on focus can trigger PDF reloads.
-      return openPreviewWindows.sort((a, b) =>
-        a.id.localeCompare(b.id, undefined, { numeric: true })
-      );
-    },
-    [previewWindows, isMobile]
+    () =>
+      previewWindows
+        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+        // Keep DOM order stable. Reordering iframe-backed windows on focus can trigger PDF reloads.
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
+    [previewWindows]
   );
 
   // Track whether we've processed the URL file parameters
   const [urlFileProcessed, setUrlFileProcessed] = useState(!initialTextEditFile);
   const [urlPreviewProcessed, setUrlPreviewProcessed] = useState(!initialPreviewFile);
+
+  useEffect(() => {
+    if (finderRouteProcessed || initialAppId !== "finder") return;
+
+    if (finderWindows.some((w) => w.isOpen)) {
+      focusFinderApp();
+      setFinderRouteProcessed(true);
+      return;
+    }
+
+    openDedicatedFinderWindow("recents", getDefaultFinderWindowPlacement());
+    setFinderRouteProcessed(true);
+  }, [finderRouteProcessed, initialAppId, finderWindows, focusFinderApp, openDedicatedFinderWindow]);
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
@@ -400,54 +496,56 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
 
   // Handler for Finder dock icon click - focuses existing window or opens new one at Recents
   const handleFinderDockClick = useCallback(() => {
-    const windowState = getWindow("finder");
-    if (windowState?.isOpen) {
-      if (windowState.isMinimized) {
-        restoreWindow("finder");
-      } else {
-        focusWindow("finder");
-      }
-    } else {
-      // No window open - open fresh at Recents
-      setFinderTab("recents");
-      openWindow("finder");
-    }
+    focusFinderApp();
     const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+  }, [focusFinderApp]);
 
   // Handler for Trash dock icon click
   const handleTrashClick = useCallback(() => {
-    setFinderTab("trash");
-    const windowState = getWindow("finder");
-    if (windowState?.isOpen) {
-      if (windowState.isMinimized) {
-        restoreWindow("finder");
-      } else {
-        focusWindow("finder");
-      }
-    } else {
-      openWindow("finder");
+    focusOrOpenTrashFinderWindow();
+  }, [focusOrOpenTrashFinderWindow]);
+
+  const focusTopDocumentWindow = useCallback((windows: typeof textEditWindows) => {
+    const topWindow = [...windows]
+      .filter((windowState) => windowState.isOpen && !!windowState.metadata?.filePath)
+      .sort((a, b) => b.zIndex - a.zIndex)[0];
+
+    if (!topWindow) {
+      return false;
     }
-    const nextUrl = getShellUrlForApp("finder", { context: "desktop" });
-    if (nextUrl) {
-      setUrl(nextUrl);
-    }
-  }, [getWindow, restoreWindow, focusWindow, openWindow]);
+
+    focusMultiWindow(topWindow.id);
+    return true;
+  }, [focusMultiWindow]);
+
+  const openDocumentAppPicker = useCallback((appId: DocumentAppId) => {
+    openDedicatedFinderWindow(
+      getDocumentAppFinderTarget(appId),
+      getDocumentPickerFinderWindowPlacement()
+    );
+  }, [openDedicatedFinderWindow]);
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
-    const windowState = getWindow(appId);
-    if (windowState?.isOpen) {
-      if (windowState.isMinimized) {
-        restoreWindow(appId);
-      } else {
-        focusWindow(appId);
+    if (appId === "textedit" || appId === "preview") {
+      const focusedExistingWindow = focusTopDocumentWindow(documentAppWindows[appId]);
+      if (!focusedExistingWindow) {
+        openDocumentAppPicker(appId);
       }
     } else {
-      openWindow(appId);
+      const windowState = getWindow(appId);
+      if (windowState?.isOpen) {
+        if (windowState.isMinimized) {
+          restoreWindow(appId);
+        } else {
+          focusWindow(appId);
+        }
+      } else {
+        openWindow(appId);
+      }
     }
     const nextUrl = getShellUrlForApp(appId, {
       context: "desktop",
@@ -457,7 +555,16 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
     if (nextUrl) {
       setUrl(nextUrl);
     }
-  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow, getNotesSlugForRouting, focusTopDocumentWindow, documentAppWindows, openDocumentAppPicker]);
+
+  useEffect(() => {
+    if (documentAppRouteProcessed) return;
+
+    if (initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile)) {
+      handleOpenApp(initialDocumentRouteAppId);
+      setDocumentAppRouteProcessed(true);
+    }
+  }, [documentAppRouteProcessed, initialDocumentRouteAppId, initialTextEditFile, initialPreviewFile, handleOpenApp]);
 
   // Menu bar handlers
   const handleOpenSettings = useCallback(() => {
@@ -651,10 +758,6 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
             <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
           </Window>
 
-          <Window appId="finder" keepMountedWhenMinimized={true}>
-            <FinderApp inShell={true} onOpenApp={handleOpenApp} onOpenTextFile={handleOpenTextFile} onOpenPreviewFile={handleOpenPreviewFile} initialTab={finderTab} />
-          </Window>
-
           <Window appId="photos">
             <PhotosApp inShell={true} />
           </Window>
@@ -670,6 +773,35 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
           <Window appId="music">
             <MusicApp />
           </Window>
+
+          {visibleFinderWindows.map((windowState) => {
+              const currentPath = windowState.metadata?.currentPath as string | undefined;
+              return (
+                <Window
+                  key={windowState.id}
+                  appId="finder"
+                  keepMountedWhenMinimized={true}
+                  windowStateOverride={windowState}
+                  controlledHandlers={{
+                    focusWindow: () => focusMultiWindow(windowState.id),
+                    closeWindow: () => closeMultiWindow(windowState.id),
+                    minimizeWindow: () => minimizeMultiWindow(windowState.id),
+                    toggleMaximize: () => toggleMaximizeMultiWindow(windowState.id),
+                    moveWindow: (position) => moveMultiWindow(windowState.id, position),
+                    resizeWindow: (size, position) => resizeMultiWindow(windowState.id, size, position),
+                  }}
+                >
+                  <FinderApp
+                    inShell={true}
+                    initialPath={currentPath}
+                    onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
+                    onOpenApp={handleOpenApp}
+                    onOpenTextFile={handleOpenTextFile}
+                    onOpenPreviewFile={handleOpenPreviewFile}
+                  />
+                </Window>
+              );
+            })}
 
           {/* TextEdit - multi-window support */}
           {/* On small screens, only show the topmost window */}
@@ -696,8 +828,10 @@ function DesktopContent({ initialNoteSlug, initialTextEditFile, initialPreviewFi
                   onContentChange={(newContent) => {
                     // Update metadata and save to localStorage
                     updateWindowMetadata(windowState.id, { content: newContent });
-                    saveTextEditContent(filePath, newContent);
-                    debouncedTouchRecent(filePath);
+                    if (filePath) {
+                      saveTextEditContent(filePath, newContent);
+                      debouncedTouchRecent(filePath);
+                    }
                   }}
                 />
               );
@@ -764,7 +898,12 @@ export function Desktop({ initialAppId, initialNoteSlug, initialTextEditFile, in
     <RecentsProvider>
       <FileMenuProvider>
         <WindowManagerProvider key={initialAppId || "default"} initialAppId={initialAppId}>
-          <DesktopContent initialNoteSlug={initialNoteSlug} initialTextEditFile={initialTextEditFile} initialPreviewFile={initialPreviewFile} />
+          <DesktopContent
+            initialAppId={initialAppId}
+            initialNoteSlug={initialNoteSlug}
+            initialTextEditFile={initialTextEditFile}
+            initialPreviewFile={initialPreviewFile}
+          />
         </WindowManagerProvider>
       </FileMenuProvider>
     </RecentsProvider>

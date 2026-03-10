@@ -7,6 +7,12 @@ import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
 import { FinderNav, FinderSidebarMobileNav } from "./nav";
 import { APPS } from "@/lib/app-config";
+import {
+  HOME_DIR,
+  LOCAL_FINDER_FILES,
+  getLocalTextFileContent,
+  PROJECTS_DIR,
+} from "@/lib/file-route-utils";
 import { getFinderVisibleApps } from "@/lib/app-availability";
 import { getFileModifiedDate } from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
@@ -23,9 +29,7 @@ import {
 import { useRouter } from "next/navigation";
 import { FinderSearchEngine, type EntryInput } from "./search-engine";
 
-const USERNAME = "alanagoyal";
-const HOME_DIR = `/Users/${USERNAME}`;
-const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
 interface FileItem {
   name: string;
@@ -34,25 +38,6 @@ interface FileItem {
   icon?: string;
   displayName?: string;
 }
-
-// Static file system structure
-const STATIC_FILES: Record<string, FileItem[]> = {
-  [HOME_DIR]: [
-    { name: "Desktop", type: "dir", path: `${HOME_DIR}/Desktop` },
-    { name: "Documents", type: "dir", path: `${HOME_DIR}/Documents` },
-    { name: "Downloads", type: "dir", path: `${HOME_DIR}/Downloads` },
-    { name: "Projects", type: "dir", path: `${HOME_DIR}/Projects` },
-  ],
-  [`${HOME_DIR}/Desktop`]: [
-    { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
-  ],
-  [`${HOME_DIR}/Documents`]: [
-    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital I - Form D.pdf` },
-    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital II - Form D.pdf` },
-    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital III - Form D.pdf` },
-  ],
-  [`${HOME_DIR}/Downloads`]: [],
-};
 
 // Sidebar items
 export type SidebarItem = "recents" | "applications" | "desktop" | "documents" | "downloads" | "projects" | "trash";
@@ -82,7 +67,8 @@ interface FinderAppProps {
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
-  initialTab?: SidebarItem;
+  initialPath?: string;
+  onPathChange?: (path: string) => void;
 }
 
 // Image extensions that should open in Preview
@@ -199,7 +185,15 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
   return icons[icon] || null;
 }
 
-export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpenTextFile, onOpenPreviewFile, initialTab }: FinderAppProps) {
+export function FinderApp({
+  isMobile = false,
+  inShell = false,
+  onOpenApp,
+  onOpenTextFile,
+  onOpenPreviewFile,
+  initialPath,
+  onPathChange,
+}: FinderAppProps) {
   const router = useRouter();
   const windowFocus = useWindowFocus();
   const { recents, addRecent, fileModifiedVersion } = useRecents();
@@ -231,11 +225,13 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     return "recents";
   };
 
-  // Get initial path - prefer persisted path, fall back to initialTab prop, then "recents"
+  // Get initial path - desktop shell windows are path-driven, mobile/standalone can still use persisted Finder state.
   const getInitialPath = (): string => {
-    if (initialTab) return getPathForSidebarItem(initialTab);
-    const persistedPath = loadFinderPath();
-    return persistedPath || "recents";
+    if (initialPath) return initialPath;
+    if (!inShell) {
+      return loadFinderPath() || "recents";
+    }
+    return "recents";
   };
 
   const [currentPath, setCurrentPathRaw] = useState(getInitialPath);
@@ -265,6 +261,7 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
   historyIndexRef.current = historyIndex;
   const currentPathRef = useRef(currentPath);
   currentPathRef.current = currentPath;
+  const lastReportedPathRef = useRef<string | null>(null);
 
   const setCurrentPath = useCallback((path: string) => {
     if (path === currentPathRef.current) return;
@@ -373,8 +370,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
       }
 
       // Static file system
-      if (STATIC_FILES[path]) {
-        setFiles(STATIC_FILES[path]);
+      if (LOCAL_FINDER_FILES[path]) {
+        setFiles(LOCAL_FINDER_FILES[path]);
       } else {
         setFiles([]);
       }
@@ -390,10 +387,16 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
 
-  // Persist current path (sidebar is derived from path on load)
+  // Desktop windows sync path back into window metadata; standalone/mobile Finder keeps the legacy session path.
   useEffect(() => {
-    saveFinderPath(currentPath);
-  }, [currentPath]);
+    if (lastReportedPathRef.current !== currentPath) {
+      onPathChange?.(currentPath);
+      lastReportedPathRef.current = currentPath;
+    }
+    if (!inShell) {
+      saveFinderPath(currentPath);
+    }
+  }, [currentPath, inShell, onPathChange]);
 
   // Fetch GitHub files when entering Recents (only fetches, doesn't sort)
   useEffect(() => {
@@ -496,19 +499,10 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
     }
   }, [currentPath, sortedRecentFiles]);
 
-  // Respond to initialTab changes from external navigation (e.g., dock clicks)
-  useEffect(() => {
-    if (initialTab) {
-      setSelectedSidebar(initialTab);
-      setCurrentPath(getPathForSidebarItem(initialTab));
-      setSelectedFile(null);
-    }
-  }, [initialTab, getPathForSidebarItem, setCurrentPath]);
-
   useEffect(() => {
     const entries: EntryInput[] = [];
 
-    for (const items of Object.values(STATIC_FILES)) {
+    for (const items of Object.values(LOCAL_FINDER_FILES)) {
       for (const item of items) {
         const section: SidebarItem = item.path.includes("/Desktop")
           ? "desktop"
@@ -683,8 +677,8 @@ export function FinderApp({ isMobile = false, inShell = false, onOpenApp, onOpen
         } catch {
           content = null;
         }
-      } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
-        content = "hello world!";
+      } else {
+        content = getLocalTextFileContent(file.path);
       }
 
       // Handle file not found (shouldn't happen after tree verification, but just in case)

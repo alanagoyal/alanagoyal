@@ -166,7 +166,6 @@ export function TextEditApp({
           value={currentContent}
           onChange={(e) => handleContentChange(e.target.value)}
           className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto"
-          placeholder="Start typing..."
           spellCheck={false}
         />
       </div>
