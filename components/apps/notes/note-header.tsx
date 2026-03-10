@@ -174,7 +174,7 @@ export default function NoteHeader({
         )
       )}
       <div className="px-2 mb-4 relative">
-        <div className="relative flex justify-center items-center">
+        <div className="relative flex min-h-6 items-center justify-center">
           {!note.public && isMobileView && (
             <div className="absolute left-1/2 bottom-full -translate-x-1/2 mb-1">
               <Badge className={PRIVATE_BADGE_CLASS}>
@@ -188,9 +188,12 @@ export default function NoteHeader({
               {hasMounted ? formattedDate : TIMESTAMP_PLACEHOLDER}
             </span>
           </p>
-          {!note.public && !isMobileView && (
-            <div className="ml-2 h-6 flex items-center">
-              <Badge className={PRIVATE_BADGE_CLASS}>
+          {!isMobileView && (
+            <div className="ml-2 flex h-6 items-center">
+              <Badge
+                className={`${PRIVATE_BADGE_CLASS} ${note.public ? "invisible" : "visible"}`}
+                aria-hidden={note.public}
+              >
                 <Lock className="w-3 h-3 mr-1" />
                 Private
               </Badge>
