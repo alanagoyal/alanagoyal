@@ -1,0 +1,29 @@
+components/desktop/desktop.tsx
+  a9b89a35df39beb8 19,34,127-142,211-212,216,492,498
+docs/document-apps.md
+  a9b89a35df39beb8 11,18,30
+types/window.ts
+  a9b89a35df39beb8 43
+lib/window-context.tsx
+  a9b89a35df39beb8 489,531,830,1069-1070
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "4fd01ccfb22dc4370a0216fd777f35fafe015dea",
+  "prompts": {
+    "a9b89a35df39beb8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ccf16-02d5-7012-83e3-972cf9c3d6ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 15,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    }
+  }
+}
