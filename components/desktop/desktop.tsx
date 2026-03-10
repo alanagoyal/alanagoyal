@@ -16,7 +16,6 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 import { HOME_DIR, PROJECTS_DIR, isSupportedTextEditPath } from "@/lib/file-route-utils";
-import { useMobileDetect } from "@/components/apps/notes/mobile-detector";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -34,7 +33,7 @@ import type { MessagesConversationSelectRequest } from "@/types/messages/selecti
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
-const FinderWindow = dynamic(() => import("@/components/apps/finder/finder-window").then(m => ({ default: m.FinderWindow })));
+const FinderApp = dynamic(() => import("@/components/apps/finder/finder-app").then(m => ({ default: m.FinderApp })));
 const PhotosApp = dynamic(() => import("@/components/apps/photos/photos-app").then(m => ({ default: m.PhotosApp })));
 const CalendarApp = dynamic(() => import("@/components/apps/calendar/calendar-app").then(m => ({ default: m.CalendarApp })));
 const WeatherApp = dynamic(() => import("@/components/apps/weather/weather-app").then(m => ({ default: m.WeatherApp })));
@@ -155,7 +154,6 @@ function DesktopContent({
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
   const { touchRecent } = useRecents();
-  const isMobile = useMobileDetect();
 
   // Debounce touchRecent to avoid excessive re-renders
   const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -225,9 +223,8 @@ function DesktopContent({
     () =>
       finderWindows
         .filter((w) => w.isOpen)
-        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
-        .slice(0, isMobile ? 1 : undefined),
-    [finderWindows, isMobile]
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
+    [finderWindows]
   );
 
   // Memoize filtered/sorted windows to avoid recomputing on every render
@@ -235,27 +232,17 @@ function DesktopContent({
     () =>
       textEditWindows
         .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .slice(0, isMobile ? 1 : undefined),
-    [textEditWindows, isMobile]
+        .sort((a, b) => b.zIndex - a.zIndex),
+    [textEditWindows]
   );
 
   const visiblePreviewWindows = useMemo(
-    () => {
-      const openPreviewWindows = previewWindows.filter(
-        (w) => w.isOpen && !w.isMinimized && w.metadata?.filePath
-      );
-
-      if (isMobile) {
-        return openPreviewWindows.sort((a, b) => b.zIndex - a.zIndex).slice(0, 1);
-      }
-
-      // Keep DOM order stable on desktop. Reordering iframe-backed windows on focus can trigger PDF reloads.
-      return openPreviewWindows.sort((a, b) =>
-        a.id.localeCompare(b.id, undefined, { numeric: true })
-      );
-    },
-    [previewWindows, isMobile]
+    () =>
+      previewWindows
+        .filter((w) => w.isOpen && !w.isMinimized && w.metadata?.filePath)
+        // Keep DOM order stable. Reordering iframe-backed windows on focus can trigger PDF reloads.
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
+    [previewWindows]
   );
 
   // Track whether we've processed the URL file parameters
@@ -723,27 +710,29 @@ function DesktopContent({
           {visibleFinderWindows.map((windowState) => {
               const currentPath = windowState.metadata?.currentPath as string | undefined;
               return (
-                <FinderWindow
+                <Window
                   key={windowState.id}
-                  windowId={windowState.id}
-                  initialPath={currentPath}
-                  position={windowState.position}
-                  size={windowState.size}
-                  zIndex={windowState.zIndex}
-                  isFocused={state.focusedWindowId === windowState.id}
-                  isMinimized={windowState.isMinimized}
-                  isMaximized={windowState.isMaximized}
-                  onFocus={() => focusMultiWindow(windowState.id)}
-                  onClose={() => closeMultiWindow(windowState.id)}
-                  onMinimize={() => minimizeMultiWindow(windowState.id)}
-                  onToggleMaximize={() => toggleMaximizeMultiWindow(windowState.id)}
-                  onMove={(pos) => moveMultiWindow(windowState.id, pos)}
-                  onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
-                  onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
-                  onOpenApp={handleOpenApp}
-                  onOpenTextFile={handleOpenTextFile}
-                  onOpenPreviewFile={handleOpenPreviewFile}
-                />
+                  appId="finder"
+                  keepMountedWhenMinimized={true}
+                  windowStateOverride={windowState}
+                  controlledHandlers={{
+                    focusWindow: () => focusMultiWindow(windowState.id),
+                    closeWindow: () => closeMultiWindow(windowState.id),
+                    minimizeWindow: () => minimizeMultiWindow(windowState.id),
+                    toggleMaximize: () => toggleMaximizeMultiWindow(windowState.id),
+                    moveWindow: (position) => moveMultiWindow(windowState.id, position),
+                    resizeWindow: (size, position) => resizeMultiWindow(windowState.id, size, position),
+                  }}
+                >
+                  <FinderApp
+                    inShell={true}
+                    initialPath={currentPath}
+                    onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
+                    onOpenApp={handleOpenApp}
+                    onOpenTextFile={handleOpenTextFile}
+                    onOpenPreviewFile={handleOpenPreviewFile}
+                  />
+                </Window>
               );
             })}
 

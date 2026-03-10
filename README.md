@@ -38,12 +38,12 @@ a macos sierra 10.12 themed desktop with:
 **textedit** - plain text editor
 - opens existing text files in their own windows
 - direct opens without a file fall back to Finder
-- launching from Finder opens a new Finder window rooted at Projects
+- launching from Finder focuses an open TextEdit document window first, otherwise opens Finder at Projects
 
 **preview** - image and pdf viewer
 - opens images and pdfs in their own windows
 - direct opens without a file fall back to Finder
-- launching from Finder opens a new Finder window rooted at Documents
+- launching from Finder focuses an open Preview document window first, otherwise opens Finder at Documents
 - document-app launch behavior is documented in `docs/document-apps.md`
 
 **finder** - file browser
