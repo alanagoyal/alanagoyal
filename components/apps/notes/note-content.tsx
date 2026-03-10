@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/notes/types";
+import { Icons } from "./icons";
 import {
   getImageFromClipboard,
   getImagesFromDataTransfer,
@@ -69,6 +70,7 @@ export default function NoteContent({
   const [isDragActive, setIsDragActive] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploadFeedbackDismissed, setIsUploadFeedbackDismissed] = useState(false);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -161,6 +163,7 @@ export default function NoteContent({
       if (!canEdit || files.length === 0) return;
 
       setUploadError(null);
+      setIsUploadFeedbackDismissed(false);
       setIsUploadingImages(true);
 
       if (options?.insertAtEnd || !isEditing) {
@@ -438,17 +441,44 @@ export default function NoteContent({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {(isUploadingImages || uploadError) && (
+      {(isUploadingImages || uploadError) && !isUploadFeedbackDismissed && (
         <div
           className={cn(
-            "mb-2 rounded-md px-3 py-2 text-xs",
+            "mb-2 flex items-center justify-between gap-2 rounded-md px-3 py-2 text-xs",
             uploadError
               ? "bg-red-500/10 text-red-700 dark:text-red-300"
               : "bg-[#0A7CFF]/10 text-[#0A7CFF]"
           )}
         >
-          {uploadError ??
-            `Uploading ${isUploadingImages ? "image" : "images"}...`}
+          <span>
+            {uploadError ??
+              `Uploading ${isUploadingImages ? "image" : "images"}...`}
+          </span>
+          {uploadError && (
+            <button
+              type="button"
+              onClick={() => {
+                setUploadError(null);
+                setIsUploadFeedbackDismissed(true);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="shrink-0 text-red-700/70 transition-colors hover:text-red-700 dark:text-red-300/70 dark:hover:text-red-300"
+              aria-label="Dismiss upload error"
+            >
+              <Icons.close className="h-4 w-4 text-current" />
+            </button>
+          )}
+          {!uploadError && isUploadingImages && (
+            <button
+              type="button"
+              onClick={() => setIsUploadFeedbackDismissed(true)}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="shrink-0 text-[#0A7CFF]/70 transition-colors hover:text-[#0A7CFF]"
+              aria-label="Dismiss upload status"
+            >
+              <Icons.close className="h-4 w-4 text-current" />
+            </button>
+          )}
         </div>
       )}
       {isDragActive && canEdit && (
