@@ -27,8 +27,8 @@ export function getPreviewMetadataFromPath(
     return { fileUrl, fileType };
   }
 
-  if (filePath.startsWith(`${HOME_DIR}/Documents/`)) {
-    const fileName = filePath.slice(`${HOME_DIR}/Documents/`.length);
+  if (filePath.startsWith(`${HOME_DIR}/Desktop/`)) {
+    const fileName = filePath.slice(`${HOME_DIR}/Desktop/`.length);
     const fileUrl = `/documents/${encodeURIComponent(fileName)}`;
     return { fileUrl, fileType };
   }

@@ -70,7 +70,7 @@ async function fetchFileContent(filePath: string): Promise<string | null> {
     const repoFilePath = parts.slice(1).join("/");
     return fetchFileContentFromGitHub(repo, repoFilePath);
   }
-  if (filePath === `${HOME_DIR}/Desktop/hello.md`) {
+  if (filePath === `${HOME_DIR}/Documents/hello.md`) {
     return "hello world!";
   }
   return null;
@@ -489,13 +489,13 @@ function DesktopContent({
     if (appId === "textedit") {
       const focusedExistingWindow = focusTopDocumentWindow(textEditWindows);
       if (!focusedExistingWindow) {
-        openFinderWindow(PROJECTS_DIR, getDocumentPickerFinderWindowPlacement());
+        openFinderWindow(`${HOME_DIR}/Documents`, getDocumentPickerFinderWindowPlacement());
         setUrl("/finder");
       }
     } else if (appId === "preview") {
       const focusedExistingWindow = focusTopDocumentWindow(previewWindows);
       if (!focusedExistingWindow) {
-        openFinderWindow(`${HOME_DIR}/Documents`, getDocumentPickerFinderWindowPlacement());
+        openFinderWindow(`${HOME_DIR}/Desktop`, getDocumentPickerFinderWindowPlacement());
         setUrl("/finder");
       }
     } else {

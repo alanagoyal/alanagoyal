@@ -44,12 +44,12 @@ const STATIC_FILES: Record<string, FileItem[]> = {
     { name: "Projects", type: "dir", path: `${HOME_DIR}/Projects` },
   ],
   [`${HOME_DIR}/Desktop`]: [
-    { name: "hello.md", type: "file", path: `${HOME_DIR}/Desktop/hello.md` },
+    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital I - Form D.pdf` },
+    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital II - Form D.pdf` },
+    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Desktop/Base Case Capital III - Form D.pdf` },
   ],
   [`${HOME_DIR}/Documents`]: [
-    { name: "Base Case Capital I - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital I - Form D.pdf` },
-    { name: "Base Case Capital II - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital II - Form D.pdf` },
-    { name: "Base Case Capital III - Form D.pdf", type: "file", path: `${HOME_DIR}/Documents/Base Case Capital III - Form D.pdf` },
+    { name: "hello.md", type: "file", path: `${HOME_DIR}/Documents/hello.md` },
   ],
   [`${HOME_DIR}/Downloads`]: [],
 };
@@ -692,7 +692,7 @@ export function FinderApp({
         } catch {
           content = null;
         }
-      } else if (file.path === `${HOME_DIR}/Desktop/hello.md`) {
+      } else if (file.path === `${HOME_DIR}/Documents/hello.md`) {
         content = "hello world!";
       }
 
