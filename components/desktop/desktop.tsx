@@ -16,6 +16,7 @@ import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { PreviewFileType } from "@/components/apps/preview";
 import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/preview-utils";
 import { HOME_DIR, PROJECTS_DIR, isSupportedTextEditPath } from "@/lib/file-route-utils";
+import { DOCK_HEIGHT, MENU_BAR_HEIGHT } from "@/lib/use-window-behavior";
 import { LockScreen } from "./lock-screen";
 import { SleepOverlay } from "./sleep-overlay";
 import { ShutdownOverlay } from "./shutdown-overlay";
@@ -30,6 +31,7 @@ import { getShellUrlForApp } from "@/lib/shell-routing";
 import { fetchGitHubFileContent } from "@/lib/github-client";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
+import { getAppById } from "@/lib/app-config";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -122,6 +124,22 @@ function createWindowInstanceId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function getDocumentPickerFinderWindowPlacement() {
+  const finderApp = getAppById("finder");
+  const defaultSize = finderApp?.defaultSize ?? { width: 900, height: 600 };
+  const size = {
+    width: Math.max(720, defaultSize.width - 120),
+    height: Math.max(440, defaultSize.height - 120),
+  };
+  const availableHeight = window.innerHeight - MENU_BAR_HEIGHT - DOCK_HEIGHT;
+  const position = {
+    x: Math.max(24, Math.round((window.innerWidth - size.width) / 2)),
+    y: Math.max(24, Math.round(MENU_BAR_HEIGHT + (availableHeight - size.height) / 2)),
+  };
+
+  return { size, position };
+}
+
 function DesktopContent({
   initialAppId,
   initialNoteSlug,
@@ -189,10 +207,13 @@ function DesktopContent({
   const finderWindows = getWindowsByApp("finder");
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
-  const openFinderWindow = useCallback((initialPath = "recents") => {
+  const openFinderWindow = useCallback((
+    initialPath = "recents",
+    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+  ) => {
     openMultiWindow("finder", createWindowInstanceId("finder"), {
       currentPath: initialPath,
-    });
+    }, options?.size, options?.position);
   }, [openMultiWindow]);
   const focusFinderApp = useCallback(() => {
     if (finderWindows.some((windowState) => windowState.isOpen)) {
@@ -468,13 +489,13 @@ function DesktopContent({
     if (appId === "textedit") {
       const focusedExistingWindow = focusTopDocumentWindow(textEditWindows);
       if (!focusedExistingWindow) {
-        openFinderWindow(PROJECTS_DIR);
+        openFinderWindow(PROJECTS_DIR, getDocumentPickerFinderWindowPlacement());
         setUrl("/finder");
       }
     } else if (appId === "preview") {
       const focusedExistingWindow = focusTopDocumentWindow(previewWindows);
       if (!focusedExistingWindow) {
-        openFinderWindow(`${HOME_DIR}/Documents`);
+        openFinderWindow(`${HOME_DIR}/Documents`, getDocumentPickerFinderWindowPlacement());
         setUrl("/finder");
       }
     } else {

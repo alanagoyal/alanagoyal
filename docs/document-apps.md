@@ -8,14 +8,14 @@ This note captures how file-backed document apps launch through Finder in the de
 
 - `TextEdit` only opens when a text file path is available.
 - Navigating to `/textedit` without a valid `file` query redirects to Finder.
-- Choosing `TextEdit` from Finder's Applications view focuses the topmost open TextEdit document window if one exists; otherwise it opens a new Finder window rooted at `Projects`.
+- Choosing `TextEdit` from Finder's Applications view focuses the topmost open TextEdit document window if one exists; otherwise it opens a centered, slightly shorter Finder window rooted at `Projects`.
 - Finder opens text files in `TextEdit` windows, and those windows persist edited file contents by file path.
 
 ### Preview
 
 - `Preview` only opens when an image or PDF path is available.
 - Navigating to `/preview` without a valid `file` query redirects to Finder.
-- Choosing `Preview` from Finder's Applications view focuses the topmost open Preview document window if one exists; otherwise it opens a new Finder window rooted at `Documents`.
+- Choosing `Preview` from Finder's Applications view focuses the topmost open Preview document window if one exists; otherwise it opens a centered, slightly shorter Finder window rooted at `Documents`.
 - Finder opens images and PDFs in `Preview` windows, each backed by a real file path.
 
 ## Why This Split Exists
@@ -27,7 +27,7 @@ This note captures how file-backed document apps launch through Finder in the de
 
 - `app/(desktop)/textedit/page.tsx` and `app/(desktop)/preview/page.tsx` enforce the file requirement for direct routes.
 - `lib/app-config.ts` marks Finder as a multi-window app.
-- `components/desktop/desktop.tsx` focuses an existing TextEdit/Preview document window first, and only falls back to opening a new Finder window at `Projects` or `Documents` when that app has no open documents.
+- `components/desktop/desktop.tsx` focuses an existing TextEdit/Preview document window first, and only falls back to opening a centered, slightly shorter Finder window at `Projects` or `Documents` when that app has no open documents.
 - `components/desktop/window.tsx` provides the shared desktop window shell, while `components/apps/finder/finder-app.tsx` owns per-window Finder browsing state.
 - `lib/shell-routing.ts` only generates desktop URLs for these apps when a `filePath` is present.
 
