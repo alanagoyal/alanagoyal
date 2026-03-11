@@ -49,7 +49,7 @@
   text-decoration: underline;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (any-hover: hover) and (any-pointer: fine) {
   .markdown-body a:hover {
     text-decoration: underline;
   }
@@ -191,7 +191,7 @@
   text-decoration: underline;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (any-hover: hover) and (any-pointer: fine) {
   .markdown-body table a:hover {
     text-decoration: underline;
   }
