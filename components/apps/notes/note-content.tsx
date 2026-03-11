@@ -441,46 +441,6 @@ export default function NoteContent({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {(isUploadingImages || uploadError) && !isUploadFeedbackDismissed && (
-        <div
-          className={cn(
-            "mb-2 flex items-center justify-between gap-2 rounded-md px-3 py-2 text-xs",
-            uploadError
-              ? "bg-red-500/10 text-red-700 dark:text-red-300"
-              : "bg-[#0A7CFF]/10 text-[#0A7CFF]"
-          )}
-        >
-          <span>
-            {uploadError ??
-              `Uploading ${isUploadingImages ? "image" : "images"}...`}
-          </span>
-          {uploadError && (
-            <button
-              type="button"
-              onClick={() => {
-                setUploadError(null);
-                setIsUploadFeedbackDismissed(true);
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="shrink-0 text-red-700/70 transition-colors hover:text-red-700 dark:text-red-300/70 dark:hover:text-red-300"
-              aria-label="Dismiss upload error"
-            >
-              <Icons.close className="h-4 w-4 text-current" />
-            </button>
-          )}
-          {!uploadError && isUploadingImages && (
-            <button
-              type="button"
-              onClick={() => setIsUploadFeedbackDismissed(true)}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="shrink-0 text-[#0A7CFF]/70 transition-colors hover:text-[#0A7CFF]"
-              aria-label="Dismiss upload status"
-            >
-              <Icons.close className="h-4 w-4 text-current" />
-            </button>
-          )}
-        </div>
-      )}
       {isDragActive && canEdit && (
         <div className="pointer-events-none absolute inset-0 z-20 rounded-lg border-2 border-dashed border-[#0A7CFF]/60 bg-[#0A7CFF]/6" />
       )}
