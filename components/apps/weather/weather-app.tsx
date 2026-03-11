@@ -36,10 +36,6 @@ import {
   type WeatherDataCache,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
-import {
-  FALLBACK_WEATHER_DEFAULT_CITIES,
-  useWeatherDefaultCities,
-} from "@/lib/app-content/weather";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 
@@ -167,6 +163,15 @@ function serializeWeatherDataForCache(weatherByCity: Record<string, CityWeather>
 
   return cache;
 }
+
+const DEFAULT_CITIES: CityConfig[] = [
+  { id: "san-francisco", name: "San Francisco", latitude: 37.78, longitude: -122.42 },
+  { id: "seattle", name: "Seattle", latitude: 47.61, longitude: -122.33 },
+  { id: "los-angeles", name: "Los Angeles", latitude: 34.05, longitude: -118.24 },
+  { id: "new-york", name: "New York", latitude: 40.71, longitude: -74.01 },
+  { id: "london", name: "London", latitude: 51.51, longitude: -0.13 },
+  { id: "paris", name: "Paris", latitude: 48.86, longitude: 2.35 },
+];
 
 const OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_FETCH_MAX_RETRIES = 2;
@@ -589,7 +594,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const inDesktopShell = !!(inShell && windowFocus && !isMobileView);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const defaultCities = useWeatherDefaultCities();
 
   const [customCities, setCustomCities] = useState<CityConfig[]>(() =>
     loadWeatherCustomCities()
@@ -598,10 +602,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     () => restoreWeatherDataFromCache(loadWeatherDataCache())
   );
   const [selectedCityId, setSelectedCityId] = useState(
-    () =>
-      loadWeatherSelectedCity() ??
-      FALLBACK_WEATHER_DEFAULT_CITIES[0]?.id ??
-      "san-francisco"
+    () => loadWeatherSelectedCity() ?? DEFAULT_CITIES[0]?.id ?? "san-francisco"
   );
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
@@ -620,14 +621,14 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   const allCities = useMemo(() => {
     const merged: CityConfig[] = [];
     const seenCoordinates = new Set<string>();
-    for (const city of [...defaultCities, ...customCities]) {
+    for (const city of [...DEFAULT_CITIES, ...customCities]) {
       const key = getCityCoordinateKey(city);
       if (seenCoordinates.has(key)) continue;
       seenCoordinates.add(key);
       merged.push(city);
     }
     return merged;
-  }, [customCities, defaultCities]);
+  }, [customCities]);
 
   useEffect(() => {
     saveWeatherCustomCities(customCities);
@@ -826,10 +827,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
       if (!existingCityId) {
         setCustomCities((previousCities) => {
-          const existing = findMatchingCity(
-            [...defaultCities, ...previousCities],
-            result
-          );
+          const existing = findMatchingCity([...DEFAULT_CITIES, ...previousCities], result);
           if (existing) return previousCities;
           return [...previousCities, result];
         });
@@ -840,7 +838,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
       setSearchActive(false);
       searchInputRef.current?.blur();
     },
-    [defaultCities]
+    []
   );
 
   const dailyRange = useMemo(() => {

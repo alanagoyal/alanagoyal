@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Nav } from "./nav";
 import { Conversation, Message, Reaction, REACTION_TEXT } from "@/types/messages";
 import { v4 as uuidv4 } from "uuid";
-import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
 import { extractMessageContent } from "@/lib/messages/content";
@@ -14,6 +13,7 @@ import { useFileMenu } from "@/lib/file-menu-context";
 import { loadMessagesConversation, saveMessagesConversation } from "@/lib/sidebar-persistence";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
+import { useMessagesSeedConversations } from "@/lib/messages/use-seed-content";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -59,6 +59,7 @@ export default function App({
   externalSelectConversationRequest,
   onExternalSelectRequestHandled,
 }: AppProps) {
+  const seedConversations = useMessagesSeedConversations();
   // Helper to conditionally update URL (skip in desktop mode or shell mode)
   const updateUrl = useCallback(
     (url: string) => {
@@ -230,7 +231,7 @@ export default function App({
     }
 
     // Start with initial conversations, excluding deleted ones
-    let allConversations = initialConversations.filter(
+    let allConversations = seedConversations.filter(
       (conv) => !deletedInitialIds.has(conv.id)
     );
 
@@ -246,7 +247,7 @@ export default function App({
         }
 
         // Create a map of initial conversation IDs for faster lookup
-        const initialIds = new Set(initialConversations.map((conv) => conv.id));
+        const initialIds = new Set(seedConversations.map((conv) => conv.id));
 
         // Separate user-created and modified initial conversations
         const userConversations = [];
@@ -309,7 +310,7 @@ export default function App({
     if (defaultConversationId) {
       setActiveConversation(defaultConversationId);
     }
-  }, [isMobileView, updateUrl]);
+  }, [isMobileView, seedConversations, updateUrl]);
 
   // Reset unread count and persist active conversation whenever it changes
   useEffect(() => {
@@ -777,7 +778,7 @@ export default function App({
   // Method to handle conversation deletion
   const handleDeleteConversation = (id: string) => {
     // Check if this is an initial conversation and track its deletion
-    const initialIds = new Set(initialConversations.map((conv) => conv.id));
+    const initialIds = new Set(seedConversations.map((conv) => conv.id));
     if (initialIds.has(id)) {
       const deletedInitialRaw = localStorage.getItem(DELETED_INITIAL_KEY);
       let deletedInitialIds: string[] = [];

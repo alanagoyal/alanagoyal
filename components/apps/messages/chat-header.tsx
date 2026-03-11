@@ -2,11 +2,12 @@ import { Icons } from "./icons";
 import { Conversation } from "@/types/messages";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { initialContacts } from "@/data/messages/initial-contacts";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUserContacts, addUserContact } from "@/lib/messages/contacts";
 import { ContactDrawer } from "./contact-drawer";
+import type { MessagesSeedContact } from "@/lib/messages/seed-content";
+import { useMessagesSeedContacts } from "@/lib/messages/use-seed-content";
 
 // Helper to check if we can add more recipients
 const hasReachedMaxRecipients = (recipients: string) => {
@@ -46,12 +47,13 @@ interface RecipientPillProps {
 }
 
 interface RecipientSearchProps {
+  seedContacts: MessagesSeedContact[];
   searchValue: string;
   setSearchValue: (value: string) => void;
   showResults: boolean;
   selectedIndex: number;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  handlePersonSelect: (person: (typeof initialContacts)[0]) => void;
+  handlePersonSelect: (person: MessagesSeedContact) => void;
   handleAddContact: () => Promise<void>;
   setSelectedIndex: (index: number) => void;
   setShowResults: (show: boolean) => void;
@@ -98,6 +100,7 @@ function RecipientPill({
 }
 
 function RecipientSearch({
+  seedContacts,
   searchValue,
   setSearchValue,
   showResults,
@@ -140,7 +143,7 @@ function RecipientSearch({
       .map((r) => r.trim())
       .filter(Boolean);
 
-    const combined = [...initialContacts];
+    const combined = [...seedContacts];
     const userContacts = getUserContacts();
 
     // Add user contacts, avoiding duplicates
@@ -164,7 +167,7 @@ function RecipientSearch({
     });
 
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchValue, recipientInput]);
+  }, [searchValue, recipientInput, seedContacts]);
 
   return (
     <div
@@ -326,6 +329,7 @@ export function ChatHeader({
   showCompactNewChat = false,
   setShowCompactNewChat = () => {},
 }: ChatHeaderProps) {
+  const seedContacts = useMessagesSeedContacts();
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -408,7 +412,7 @@ export function ChatHeader({
       .map((r) => r.trim())
       .filter(Boolean);
 
-    const combined = [...initialContacts];
+    const combined = [...seedContacts];
     const userContacts = getUserContacts();
 
     // Add user contacts, avoiding duplicates
@@ -432,7 +436,7 @@ export function ChatHeader({
     });
 
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchValue, recipientInput]);
+  }, [searchValue, recipientInput, seedContacts]);
 
   // Handlers
   const updateRecipients = useCallback(() => {
@@ -500,7 +504,7 @@ export function ChatHeader({
     // Mobile: clicking header in compact mode does nothing (handled by ContactDrawer)
   };
 
-  const handlePersonSelect = (person: (typeof initialContacts)[0]) => {
+  const handlePersonSelect = (person: MessagesSeedContact) => {
     const currentRecipients = recipientInput
       .split(",")
       .map((r) => r.trim())
@@ -711,6 +715,7 @@ export function ChatHeader({
                     {recipientInput.split(",").filter((r) => r.trim()).length <
                       4 && (
                       <RecipientSearch
+                        seedContacts={seedContacts}
                         searchValue={searchValue}
                         setSearchValue={setSearchValue}
                         showResults={showResults}
@@ -754,7 +759,7 @@ export function ChatHeader({
                         recipientCount={activeConversation.recipients.length}
                         recipients={
                           activeConversation?.recipients.map((recipient) => {
-                            const contact = initialContacts.find(
+                            const contact = seedContacts.find(
                               (p) => p.name === recipient.name
                             );
                             return {
@@ -798,6 +803,7 @@ export function ChatHeader({
                 {recipientInput.split(",").filter((r) => r.trim()).length <
                   4 && (
                   <RecipientSearch
+                    seedContacts={seedContacts}
                     searchValue={searchValue}
                     setSearchValue={setSearchValue}
                     showResults={showResults}

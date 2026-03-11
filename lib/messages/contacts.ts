@@ -1,8 +1,8 @@
-import { InitialContact } from "@/data/messages/initial-contacts";
+import type { MessagesSeedContact } from "@/lib/messages/seed-content";
 
 const CONTACTS_KEY = "user_contacts";
 
-export function getUserContacts(): InitialContact[] {
+export function getUserContacts(): MessagesSeedContact[] {
   if (typeof window === "undefined") return [];
   const contacts = localStorage.getItem(CONTACTS_KEY);
   if (!contacts) return [];
@@ -20,9 +20,9 @@ export function getUserContacts(): InitialContact[] {
   }
 }
 
-export function addUserContact(name: string): InitialContact[] {
+export function addUserContact(name: string): MessagesSeedContact[] {
   const contacts = getUserContacts();
-  const newContact: InitialContact = {
+  const newContact: MessagesSeedContact = {
     name,
     title: "Custom Contact"
   };

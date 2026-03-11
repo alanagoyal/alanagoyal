@@ -3,7 +3,6 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
 import { NextRequest, NextResponse } from "next/server";
 import { Recipient, Message } from "@/types/messages";
-import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
 import {
@@ -19,6 +18,10 @@ import {
   parseJsonBodyWithLimit,
   pickMostConstrainedRateLimit,
 } from "@/lib/server/request-security";
+import {
+  type MessagesSeedContact,
+} from "@/lib/messages/seed-content";
+import { getMessagesSeedContacts } from "@/lib/messages/seed-content-server";
 
 // Keep route execution under strict serverless limits (for example 15s).
 export const maxDuration = 14;
@@ -246,6 +249,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isOneOnOne = isOneOnOneRaw === true && recipients.length === 1;
+    const seedContacts = await getMessagesSeedContacts();
 
     // Get conversation state
     const state = getConversationState(messages);
@@ -255,14 +259,14 @@ export async function POST(req: NextRequest) {
     // Build participant descriptions
     const participantDescriptions = recipients
       .map((r) => {
-        const contact = initialContacts.find((p) => p.name === r.name);
+        const contact = seedContacts.find((p) => p.name === r.name);
         return `- ${r.name}: ${contact?.prompt || "Just be yourself."}`;
       })
       .join("\n");
 
     // Build the prompt
     const prompt = isOneOnOne
-      ? buildOneOnOnePrompt(recipients[0], conversation, state)
+      ? buildOneOnOnePrompt(recipients[0], conversation, state, seedContacts)
       : buildGroupPrompt(
           recipients,
           participantDescriptions,
@@ -357,9 +361,10 @@ export async function POST(req: NextRequest) {
 function buildOneOnOnePrompt(
   recipient: Recipient,
   conversation: string,
-  state: { lastHumanMessage: string | null; lastHumanTime: string | null }
+  state: { lastHumanMessage: string | null; lastHumanTime: string | null },
+  contacts: MessagesSeedContact[]
 ): string {
-  const contact = initialContacts.find((p) => p.name === recipient.name);
+  const contact = contacts.find((p) => p.name === recipient.name);
   const persona = contact?.prompt || "Just be yourself and keep it casual.";
 
   return `You are ${recipient.name} in a 1-on-1 text conversation with a human ("me").
