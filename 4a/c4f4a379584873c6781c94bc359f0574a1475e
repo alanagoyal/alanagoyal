@@ -1,0 +1,27 @@
+components/apps/weather/weather-app.tsx
+  a68c04a79323d901 167-175,605,624,631,830,841
+docs/app-content.md
+  a68c04a79323d901 1-63
+AGENTS.md
+  a68c04a79323d901 30,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "4ac4f4a379584873c6781c94bc359f0574a1475e",
+  "prompts": {
+    "a68c04a79323d901": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cd9c5-0fc0-7670-bf82-be2f379470c9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 85,
+      "total_deletions": 214,
+      "accepted_lines": 79,
+      "overriden_lines": 0
+    }
+  }
+}
