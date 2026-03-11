@@ -37,6 +37,7 @@ read before building, update when you ship:
 - **state persistence**: sessionStorage for view state, localStorage only for user-created content. window close clears view state via `clearAppState()` automatically
 - **window management**: `useWindowManager()` for operations, `useWindowFocus()` for focus state
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
+- **hover states**: gate hover-only styles with Tailwind's `can-hover:` variant so touch devices never get sticky hover treatments
 - **menu system**: menus are mutually exclusive via `openMenu` state in `menu-bar.tsx`. panel-style menus follow the `status-menus.tsx` pattern. use `useClickOutside()` for dismissal
 - **app discoverability + availability**: define Dock, Finder, and mobile support policy in `lib/app-config.ts` (`showOnDockByDefault`, `showInFinderApplications`, and `mobile.*`). avoid hardcoded app-id allow/deny lists in app components
 - **finder + document apps**: Finder is multi-window on desktop. keep per-window Finder browsing state inside the Finder window/app pair, and keep TextEdit/Preview launch roots aligned with `components/desktop/desktop.tsx`, route files, and `docs/document-apps.md`

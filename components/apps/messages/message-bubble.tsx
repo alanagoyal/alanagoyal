@@ -454,7 +454,7 @@ export const MessageBubble = memo(function MessageBubble({
                           handleReaction(type as ReactionType);
                         }}
                         className={cn(
-                          "inline-flex items-center justify-center rounded-full w-8 h-8 aspect-square p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 hover:scale-125 flex-shrink-0",
+                          "inline-flex items-center justify-center rounded-full w-8 h-8 aspect-square p-0 cursor-pointer text-base transition-all duration-200 ease-out text-gray-500 can-hover:hover:scale-125 flex-shrink-0",
                           isReactionActive(type as ReactionType)
                             ? "bg-[#0A7CFF] text-white scale-110"
                             : ""

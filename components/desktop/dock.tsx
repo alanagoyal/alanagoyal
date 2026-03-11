@@ -489,7 +489,7 @@ export function Dock({
                 "group relative flex flex-col items-center outline-none transition-all duration-300 flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
-                animState === "stable" && "hover:scale-110 active:scale-95"
+                animState === "stable" && "can-hover:hover:scale-110 active:scale-95"
               )}
             >
               {hoveredApp === app.id && animState === "stable" && !isResizingDock && (

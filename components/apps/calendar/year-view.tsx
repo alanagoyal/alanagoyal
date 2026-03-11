@@ -197,8 +197,8 @@ function MiniMonth({ monthDate, onMonthClick, onDateClick }: MiniMonthProps) {
                   className={cn(
                     "text-[10px] desktop:text-xs aspect-square flex items-center justify-center rounded-full transition-colors",
                     !isCurrentMonth && "text-muted-foreground/50",
-                    isCurrentMonth && "hover:bg-muted",
-                    dayIsToday && "bg-red-500 text-white hover:bg-red-600"
+                    isCurrentMonth && "can-hover:hover:bg-muted",
+                    dayIsToday && "bg-red-500 text-white can-hover:hover:bg-red-600"
                   )}
                   onClick={() => onDateClick?.(day)}
                   disabled={!isCurrentMonth}

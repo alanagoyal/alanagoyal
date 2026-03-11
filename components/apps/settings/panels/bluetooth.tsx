@@ -211,7 +211,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Connect to accessories you can use for activities such as streaming music, typing, and gaming.{" "}
-            <span className="text-blue-500 cursor-pointer hover:underline">Learn more...</span>
+            <span className="text-blue-500 cursor-pointer can-hover:hover:underline">Learn more...</span>
           </p>
         </div>
       </div>
@@ -230,7 +230,7 @@ export function BluetoothPanel({ isMobile = false }: BluetoothPanelProps) {
               {myDevicesDesktop.map((device) => (
                 <div
                   key={device.name}
-                  className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2 px-2 rounded-lg can-hover:hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <DeviceIcon type={device.type} className="text-muted-foreground" />

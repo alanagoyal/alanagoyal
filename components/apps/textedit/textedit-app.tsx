@@ -138,7 +138,7 @@ export function TextEditApp({
                   "group flex items-center gap-1 px-3 py-1.5 text-sm cursor-pointer border-r border-zinc-200 dark:border-zinc-700 min-w-0",
                   isActive
                     ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
-                    : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    : "text-zinc-500 dark:text-zinc-400 can-hover:hover:bg-zinc-50 dark:can-hover:hover:bg-zinc-800"
                 )}
                 onClick={() => onFileSelect?.(index)}
               >
@@ -149,8 +149,8 @@ export function TextEditApp({
                     onFileClose?.(index);
                   }}
                   className={cn(
-                    "p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700",
-                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    "p-0.5 rounded can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700",
+                    isActive ? "opacity-100" : "opacity-0 can-hover:group-hover:opacity-100"
                   )}
                 >
                   <X size={12} />

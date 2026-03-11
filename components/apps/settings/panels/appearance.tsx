@@ -216,7 +216,7 @@ function OSVersionCard({
       onClick={onClick}
       className={cn(
         "relative flex flex-col items-center p-3 rounded-xl transition-all",
-        "hover:bg-muted/50",
+        "can-hover:hover:bg-muted/50",
         isSelected && "ring-2 ring-blue-500 bg-blue-500/10"
       )}
     >

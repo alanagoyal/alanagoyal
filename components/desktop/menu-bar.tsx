@@ -114,7 +114,7 @@ export function MenuBar({
           onClick={() => toggleMenu("apple")}
           className={cn(
             "flex items-center justify-center w-6 h-5 -ml-1 rounded transition-colors",
-            openMenu === "apple" ? "bg-blue-500" : "hover:bg-white/10"
+            openMenu === "apple" ? "bg-blue-500" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon
@@ -131,7 +131,7 @@ export function MenuBar({
             "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
             openMenu === "appMenu"
               ? "bg-blue-500 text-white"
-              : "text-black dark:text-white hover:bg-white/10"
+              : "text-black dark:text-white can-hover:hover:bg-white/10"
           )}
         >
           {focusedApp?.menuBarTitle || "Finder"}
@@ -143,7 +143,7 @@ export function MenuBar({
               "text-sm px-2 py-0.5 rounded transition-colors",
               openMenu === "fileMenu"
                 ? "bg-blue-500 text-white"
-                : "text-black dark:text-white hover:bg-white/10"
+                : "text-black dark:text-white can-hover:hover:bg-white/10"
             )}
           >
             File
@@ -157,7 +157,7 @@ export function MenuBar({
           onClick={() => toggleMenu("battery")}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "battery" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "battery" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon icon={faBatteryFull} className="w-5 h-3.5 text-black dark:text-white" />
@@ -168,7 +168,7 @@ export function MenuBar({
           onClick={() => toggleMenu("wifi")}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "wifi" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "wifi" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon icon={faWifi} className="w-4 h-4 text-black dark:text-white" />
@@ -179,7 +179,7 @@ export function MenuBar({
           onClick={() => toggleMenu("controlCenter")}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon icon={faSliders} className="w-4 h-4 text-black dark:text-white" />
@@ -192,7 +192,7 @@ export function MenuBar({
             "text-sm px-2 py-0.5 rounded transition-colors ml-1",
             openMenu === "notificationCenter"
               ? "bg-white/30 dark:bg-white/20"
-              : "hover:bg-white/10",
+              : "can-hover:hover:bg-white/10",
             "text-black dark:text-white"
           )}
         >

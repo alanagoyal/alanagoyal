@@ -15,7 +15,7 @@ import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 
 const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
 const PRIVATE_BADGE_CLASS =
-  "text-xs justify-center items-center bg-muted-foreground/70 hover:bg-muted-foreground/70 text-white/90";
+  "text-xs justify-center items-center bg-muted-foreground/70 can-hover:hover:bg-muted-foreground/70 text-white/90";
 
 export default function NoteHeader({
   note,

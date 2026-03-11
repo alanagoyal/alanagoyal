@@ -171,7 +171,7 @@ export function Sidebar({
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-3",
                           index < connectivityItems.length - 1 && "border-b border-border/50",
-                          isNav && "hover:bg-muted/50"
+                          isNav && "can-hover:hover:bg-muted/50"
                         )}
                       >
                         <span
@@ -218,7 +218,7 @@ export function Sidebar({
                       key={category.id}
                       onClick={() => onCategorySelect(category.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-3 text-base transition-colors hover:bg-muted/50",
+                        "w-full flex items-center gap-3 px-3 py-3 text-base transition-colors can-hover:hover:bg-muted/50",
                         index < filteredCategories.length - 1 && "border-b border-border/50"
                       )}
                     >
@@ -298,7 +298,7 @@ export function Sidebar({
                       "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
                       selectedPanel === "personal-info"
                         ? "bg-zinc-300 dark:bg-zinc-600"
-                        : "hover:bg-background/50"
+                        : "can-hover:hover:bg-background/50"
                     )}
                   >
                     <Image
@@ -329,7 +329,7 @@ export function Sidebar({
                           "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-colors",
                           isSelected
                             ? "bg-zinc-300 dark:bg-zinc-600 text-foreground"
-                            : "hover:bg-background/50 text-foreground"
+                            : "can-hover:hover:bg-background/50 text-foreground"
                         )}
                       >
                         <span

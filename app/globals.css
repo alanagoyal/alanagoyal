@@ -184,8 +184,10 @@ html, body {
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.reaction-icon:hover {
-  transform: scale(1.2);
+@media (any-hover: hover) and (any-pointer: fine) {
+  .reaction-icon:hover {
+    transform: scale(1.2);
+  }
 }
 
 @keyframes reactionPop {

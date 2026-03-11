@@ -49,7 +49,7 @@ export function HomeView({
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "relative block rounded-xl overflow-hidden bg-gradient-to-b from-[#fc3c44] to-[#e82934] hover:opacity-95 transition-opacity",
+              "relative block rounded-xl overflow-hidden bg-gradient-to-b from-[#fc3c44] to-[#e82934] can-hover:hover:opacity-95 transition-opacity",
               isMobileView ? "py-6 px-4" : "py-8 px-6"
             )}
           >
@@ -107,13 +107,13 @@ export function HomeView({
                       <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-800" />
                     )}
                     <div
-                      className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center"
+                      className="absolute inset-0 bg-black/0 can-hover:group-hover:bg-black/40 transition-colors flex items-center justify-center"
                       onClick={(e) => handlePlayPlaylist(playlist, e)}
                     >
                       {isPlaying ? (
-                        <Pause className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Pause className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
                       ) : (
-                        <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Play className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
                       )}
                     </div>
                   </div>
@@ -154,11 +154,11 @@ export function HomeView({
                       unoptimized
                     />
                     {song.previewUrl && (
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/0 can-hover:group-hover:bg-black/40 transition-colors flex items-center justify-center">
                         {isPlaying ? (
-                          <Pause className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <Pause className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
                         ) : (
-                          <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <Play className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
                         )}
                       </div>
                     )}

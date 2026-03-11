@@ -160,12 +160,12 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <span className="text-xs font-semibold text-muted-foreground">Personal Hotspot</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group">
+          <div className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500">
               <Smartphone className="w-3 h-3 text-white" />
             </div>
             <span className="text-xs flex-1">alana&apos;s iphone</span>
-            <div className="flex items-center gap-1 text-muted-foreground group-hover:text-white/70">
+            <div className="flex items-center gap-1 text-muted-foreground can-hover:group-hover:text-white/70">
               <div className="flex items-end gap-px h-2.5">
                 <div className="w-0.5 h-1 bg-current rounded-full" />
                 <div className="w-0.5 h-1.5 bg-current rounded-full" />
@@ -183,12 +183,12 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <span className="text-xs font-semibold text-muted-foreground">Known Network</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group">
+          <div className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500">
               <Wifi className="w-3 h-3 text-white" />
             </div>
             <span className="text-xs flex-1">basecase</span>
-            <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+            <Lock className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
           </div>
 
           <MenuDivider />
@@ -200,7 +200,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           >
             <span>Other Networks</span>
             <ChevronRight className={cn(
-              "w-3 h-3 text-muted-foreground group-hover:text-white/70 transition-transform",
+              "w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70 transition-transform",
               showOtherNetworks && "rotate-90"
             )} />
           </button>
@@ -210,11 +210,11 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
               {otherNetworks.map((network) => (
                 <div
                   key={network.name}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group"
+                  className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group"
                 >
-                  <Wifi className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+                  <Wifi className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
                   <span className="text-xs flex-1 truncate">{network.name}</span>
-                  <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+                  <Lock className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
                 </div>
               ))}
             </div>
@@ -373,7 +373,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                 className={cn(
                   "p-0.5 rounded transition-colors",
                   canGoPrevious
-                    ? "text-muted-foreground hover:text-foreground"
+                    ? "text-muted-foreground can-hover:hover:text-foreground"
                     : "text-muted-foreground/30 cursor-not-allowed"
                 )}
               >
@@ -404,7 +404,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                 className={cn(
                   "p-0.5 rounded transition-colors",
                   canGoNext
-                    ? "text-muted-foreground hover:text-foreground"
+                    ? "text-muted-foreground can-hover:hover:text-foreground"
                     : "text-muted-foreground/30 cursor-not-allowed"
                 )}
               >
