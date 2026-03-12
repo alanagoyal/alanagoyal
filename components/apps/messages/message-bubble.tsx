@@ -201,12 +201,15 @@ export const MessageBubble = memo(function MessageBubble({
 
   const getReactionVerb = (type: ReactionType) => REACTION_TEXT[type] ?? "reacted to";
 
-  // Helper function to format reactions into a sentence
-  const formatReactions = (reactions: Reaction[]) => {
-    const sortedReactions = [...reactions].sort(
+  const sortReactionsChronologically = (reactions: Reaction[]) =>
+    [...reactions].sort(
       (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
+
+  // Helper function to format reactions into a sentence
+  const formatReactions = (reactions: Reaction[]) => {
+    const sortedReactions = sortReactionsChronologically(reactions);
 
     return sortedReactions
       .map((reaction, index) => {
@@ -493,26 +496,21 @@ export const MessageBubble = memo(function MessageBubble({
                     isMe ? "flex-row" : "flex-row-reverse"
                   )}
                 >
-                  {[...message.reactions]
-                    .sort(
-                      (a, b) =>
-                        new Date(a.timestamp).getTime() -
-                        new Date(b.timestamp).getTime()
-                    )
-                    .map((reaction, index, array) => (
+                  {sortReactionsChronologically(message.reactions).map((reaction, index, array) => (
                       <Popover key={`${reaction.type}-${reaction.sender}-${reaction.timestamp}`}>
                         <PopoverTrigger>
                           <div
                             key={`${reaction.type}-${reaction.sender}-${reaction.timestamp}`}
                             className={cn(
                               "w-8 h-8 flex items-center justify-center text-sm relative cursor-pointer",
-                              index !== array.length - 1 &&
-                                (isMe ? "-mr-7" : "-ml-7"),
-                              `z-[${array.length - index}]`,
+                              index !== array.length - 1 && (isMe ? "-mr-7" : "-ml-7"),
                               // Add animation class when reaction is new
                               // new Date().getTime() - new Date(reaction.timestamp).getTime() < 1000 && "reaction-pop"
                             )}
-                            style={getReactionStyle(reaction, isMe, isMobileView)}
+                            style={{
+                              ...getReactionStyle(reaction, isMe, isMobileView),
+                              zIndex: index + 1,
+                            }}
                           >
                             {reaction.sender === "me" && !isMobileView && (
                               <img
