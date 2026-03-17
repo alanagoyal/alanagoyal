@@ -1,12 +1,19 @@
 export interface Message {
   id: string;
   content: string;
-  htmlContent?: string;  
+  htmlContent?: string;
   sender: "me" | "system" | string;
   timestamp: string;
   type?: "silenced";
-  mentions?: { id: string; name: string; }[];
+  mentions?: MessageMention[];
   reactions?: Reaction[];
+}
+
+export interface MessageMention {
+  id: string;
+  name: string;
+  start: number;
+  end: number;
 }
 
 export interface Conversation {

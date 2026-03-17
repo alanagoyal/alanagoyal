@@ -39,6 +39,66 @@ export type MessageInputHandle = {
   focus: () => void;
 };
 
+function normalizeMentionQuery(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getRecipientMentionLabel(recipient: Recipient) {
+  const parts = recipient.name.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return recipient.name;
+
+  const leadingInitials = parts
+    .slice(0, -1)
+    .filter((part) => /^[A-Za-z]\.?$/.test(part));
+
+  if (leadingInitials.length > 1 && leadingInitials.length === parts.length - 1) {
+    return leadingInitials.join(" ");
+  }
+
+  return parts[0];
+}
+
+function getRecipientMentionAliases(recipient: Recipient) {
+  const parts = recipient.name.split(/\s+/).filter(Boolean);
+  const aliases = new Set<string>();
+
+  aliases.add(normalizeMentionQuery(recipient.name));
+
+  const firstPart = parts[0];
+  const lastPart = parts.at(-1);
+
+  if (firstPart) {
+    aliases.add(normalizeMentionQuery(firstPart));
+  }
+
+  if (lastPart) {
+    aliases.add(normalizeMentionQuery(lastPart));
+  }
+
+  const initials = parts
+    .slice(0, -1)
+    .filter((part) => /^[A-Za-z]\.?$/.test(part))
+    .map((part) => normalizeMentionQuery(part))
+    .join("");
+
+  if (initials.length > 1) {
+    aliases.add(initials);
+  }
+
+  return aliases;
+}
+
+function findUniqueRecipientMatch(query: string, recipients: Recipient[]) {
+  const normalizedQuery = normalizeMentionQuery(query);
+  if (!normalizedQuery) return null;
+
+  const matches = recipients.filter((recipient) =>
+    getRecipientMentionAliases(recipient).has(normalizedQuery)
+  );
+
+  return matches.length === 1 ? matches[0] : null;
+}
+
 // Forward ref component to expose focus method to parent
 export const MessageInput = forwardRef<
   MessageInputHandle,
@@ -99,23 +159,24 @@ export const MessageInput = forwardRef<
           onanimationend: 'this.classList.add("shimmer-done")',
         },
         renderText: ({ node }) => {
-          // Try to find the recipient by ID to get their name
           const recipient = recipients.find((r) => r.id === node.attrs.id);
           return (
-            recipient?.name.split(" ")[0] ?? node.attrs.label ?? node.attrs.id
+            node.attrs.label ??
+            (recipient ? getRecipientMentionLabel(recipient) : node.attrs.id)
           );
         },
         renderHTML: ({ node }) => {
-          // Try to find the recipient by ID to get their name
           const recipient = recipients.find((r) => r.id === node.attrs.id);
           const label =
-            recipient?.name.split(" ")[0] ?? node.attrs.label ?? node.attrs.id;
+            node.attrs.label ??
+            (recipient ? getRecipientMentionLabel(recipient) : node.attrs.id);
           return [
             "span",
             {
               "data-type": "mention",
               "data-id": node.attrs.id,
               "data-label": label,
+              "data-name": recipient?.name ?? node.attrs.name ?? label,
               class: "mention-node",
               style: "color: #0A7CFF !important; font-weight: 500 !important;",
             },
@@ -124,27 +185,24 @@ export const MessageInput = forwardRef<
         },
         suggestion: {
           items: ({ query }: { query: string }) => {
-            if (!query) return [];
+            const match = findUniqueRecipientMatch(query, recipients);
+            if (!match) return [];
 
-            const searchText = query.toLowerCase().replace(/^@/, "");
-            return recipients
-              .filter((recipient) => {
-                const [firstName] = recipient.name.split(" ");
-                return firstName.toLowerCase().startsWith(searchText);
-              })
-              .slice(0, 5)
-              .map((match) => ({
+            return [
+              {
                 id: match.id,
-                label: match.name.split(" ")[0],
-              }));
+                label: getRecipientMentionLabel(match),
+                name: match.name,
+              },
+            ];
           },
           render: () => {
             let component: {
               element: HTMLElement;
               update: (props: {
-                items: Array<{ id: string; label: string }>;
+                items: Array<{ id: string; label: string; name: string }>;
                 query: string;
-                command: (attrs: { id: string; label: string }) => void;
+                command: (attrs: { id: string; label: string; name: string }) => void;
               }) => void;
             };
             return {
@@ -153,15 +211,8 @@ export const MessageInput = forwardRef<
                 component = {
                   element: document.createElement("div"),
                   update: (props) => {
-                    if (!props.query) return;
-
-                    const match = props.items.find(
-                      (item) =>
-                        item.label.toLowerCase() ===
-                        props.query.toLowerCase().replace(/^@/, "")
-                    );
-
-                    if (match) {
+                    if (props.items.length === 1) {
+                      const [match] = props.items;
                       const { tr } = editor.state;
                       const start = tr.selection.from - props.query.length - 1;
                       const end = tr.selection.from;
@@ -172,7 +223,7 @@ export const MessageInput = forwardRef<
                         .insertContent([
                           {
                             type: "mention",
-                            attrs: { id: match.id, label: match.label },
+                            attrs: { id: match.id, label: match.label, name: match.name },
                           },
                         ])
                         .run();

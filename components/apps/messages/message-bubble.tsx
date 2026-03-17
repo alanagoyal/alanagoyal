@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction, REACTION_TEXT } from "@/types/messages";
 import { Conversation } from "@/types/messages";
-import { memo, useCallback, useState, useRef } from "react";
+import { memo, useCallback, useState, useRef, type ReactNode } from "react";
 import {
   Popover,
   PopoverContent,
@@ -128,75 +128,45 @@ export const MessageBubble = memo(function MessageBubble({
     );
   };
 
-  // Helper function to prepare message content by highlighting recipient names
-  const prepareContent = (
-    content: string,
-    recipients: Conversation["recipients"],
-    sender: string
-  ) => {
-    if (!recipients) return content;
+  const prepareContent = (content: string, sender: string, mentions = message.mentions) => {
+    if (!mentions?.length) return content;
 
-    let highlightedContent = content;
-    recipients.forEach((recipient) => {
-      // Special case for I. M. Pei - only highlight when seeing full initials or last name
-      if (recipient.name === "I. M. Pei") {
-        const imPeiRegex = new RegExp(
-          `\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`,
-          "gu"
+    const colorClass =
+      sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+
+    mentions
+      .slice()
+      .sort((a, b) => a.start - b.start)
+      .forEach((mention, index) => {
+        if (
+          mention.start < cursor ||
+          mention.start < 0 ||
+          mention.end > content.length ||
+          mention.end <= mention.start
+        ) {
+          return;
+        }
+
+        if (mention.start > cursor) {
+          nodes.push(content.slice(cursor, mention.start));
+        }
+
+        nodes.push(
+          <span key={`mention-${mention.id}-${index}`} className={cn("font-medium", colorClass)}>
+            {content.slice(mention.start, mention.end)}
+          </span>
         );
-        highlightedContent = highlightedContent.replace(imPeiRegex, (match) => {
-          return `<span class="font-medium ${
-            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
-          }">${match}</span>`;
-        });
-        return; // Skip regular name highlighting for I. M. Pei
-      }
 
-      // Special case for Trader Joe's - don't highlight Joe when it's part of "Trader Joe's"
-      if (recipient.name === "Joe") {
-        const joeRegex = new RegExp(
-          `(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`,
-          "gu"
-        );
-        highlightedContent = highlightedContent.replace(joeRegex, (match) => {
-          return `<span class="font-medium ${
-            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
-          }">${match}</span>`;
-        });
-        return; // Skip regular name highlighting for Joe
-      }
+        cursor = mention.end;
+      });
 
-      // Regular case for all other names
-      const fullNameRegex = new RegExp(
-        `@?\\b${recipient.name}(?=\\s|$|\\p{P})`,
-        "giu"
-      );
-      const firstName = recipient.name.split(" ")[0];
-      const firstNameRegex = new RegExp(
-        `@?\\b${firstName}(?=\\s|$|\\p{P})`,
-        "giu"
-      );
+    if (cursor < content.length) {
+      nodes.push(content.slice(cursor));
+    }
 
-      const colorClass =
-        sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
-
-      // Replace names with highlighted spans
-      highlightedContent = highlightedContent
-        .replace(fullNameRegex, (match) => {
-          const name = match.startsWith("@") ? match.slice(1) : match;
-          return `<span class="font-medium ${colorClass}">${
-            name.charAt(0).toUpperCase() + name.slice(1)
-          }</span>`;
-        })
-        .replace(firstNameRegex, (match) => {
-          const name = match.startsWith("@") ? match.slice(1) : match;
-          return `<span class="font-medium ${colorClass}">${
-            name.charAt(0).toUpperCase() + name.slice(1)
-          }</span>`;
-        });
-    });
-
-    return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
+    return <span>{nodes}</span>;
   };
 
   const getReactionVerb = (type: ReactionType) => REACTION_TEXT[type] ?? "reacted to";
@@ -431,12 +401,8 @@ export const MessageBubble = memo(function MessageBubble({
                           )}
                         />
                       )}
-                      <div className="text-[14px] flex items-center">
-                        {prepareContent(
-                          message.content,
-                          conversation?.recipients || [],
-                          message.sender
-                        )}
+                        <div className="text-[14px] flex items-center">
+                        {prepareContent(message.content, message.sender)}
                       </div>
                     </div>
                   </PopoverTrigger>
