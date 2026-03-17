@@ -1,0 +1,23 @@
+components/apps/messages/message-bubble.tsx
+  56e37284ac30d480 131-132,139-142,144-147,149,152-153,156-160,162-163,165-166,405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "478b164ba614d785eb5edf5f078a7f806a6638ab",
+  "prompts": {
+    "56e37284ac30d480": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019cfcb4-d003-73f0-bca1-d0662231cb56",
+        "model": "gpt-5.4"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 100,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
