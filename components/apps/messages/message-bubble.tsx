@@ -35,10 +35,6 @@ const typingAnimation = `
 }
 `;
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export const MessageBubble = memo(function MessageBubble({
   message,
   isLastUserMessage,
@@ -132,107 +128,42 @@ export const MessageBubble = memo(function MessageBubble({
     );
   };
 
-  // Render highlighted names as React nodes so user text never becomes HTML.
-  const prepareContent = (
-    content: string,
-    recipients: Conversation["recipients"],
-    sender: string
-  ) => {
-    if (!recipients?.length) return content;
+  const prepareContent = (content: string, sender: string, mentions = message.mentions) => {
+    if (!mentions?.length) return content;
 
     const colorClass =
       sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
-
-    const patterns = recipients.flatMap((recipient) => {
-      if (recipient.name === "I. M. Pei") {
-        return [
-          {
-            regex: /\b(I\. M\.|I\. M\. Pei|Pei)(?=\s|$|\p{P})/gu,
-            getLabel: (match: string) => match,
-          },
-        ];
-      }
-
-      if (recipient.name === "Joe") {
-        return [
-          {
-            regex: /(?<!Trader\s)\bJoe\b(?=\s|$|\p{P})/gu,
-            getLabel: (match: string) => match,
-          },
-        ];
-      }
-
-      const firstName = recipient.name.split(" ")[0];
-      return [
-        {
-          regex: new RegExp(
-            `@?\\b${escapeRegExp(recipient.name)}(?=\\s|$|\\p{P})`,
-            "giu"
-          ),
-          getLabel: (match: string) => {
-            const label = match.startsWith("@") ? match.slice(1) : match;
-            return label.charAt(0).toUpperCase() + label.slice(1);
-          },
-        },
-        {
-          regex: new RegExp(
-            `@?\\b${escapeRegExp(firstName)}(?=\\s|$|\\p{P})`,
-            "giu"
-          ),
-          getLabel: (match: string) => {
-            const label = match.startsWith("@") ? match.slice(1) : match;
-            return label.charAt(0).toUpperCase() + label.slice(1);
-          },
-        },
-      ];
-    });
-
     const nodes: ReactNode[] = [];
     let cursor = 0;
-    let key = 0;
 
-    while (cursor < content.length) {
-      let nextMatch:
-        | { index: number; text: string; label: string }
-        | null = null;
-
-      for (const pattern of patterns) {
-        pattern.regex.lastIndex = cursor;
-        const match = pattern.regex.exec(content);
-        if (!match || match.index < cursor) continue;
-
-        const candidate = {
-          index: match.index,
-          text: match[0],
-          label: pattern.getLabel(match[0]),
-        };
-
+    mentions
+      .slice()
+      .sort((a, b) => a.start - b.start)
+      .forEach((mention, index) => {
         if (
-          !nextMatch ||
-          candidate.index < nextMatch.index ||
-          (candidate.index === nextMatch.index &&
-            candidate.text.length > nextMatch.text.length)
+          mention.start < cursor ||
+          mention.start < 0 ||
+          mention.end > content.length ||
+          mention.end <= mention.start
         ) {
-          nextMatch = candidate;
+          return;
         }
-      }
 
-      if (!nextMatch) {
-        nodes.push(content.slice(cursor));
-        break;
-      }
+        if (mention.start > cursor) {
+          nodes.push(content.slice(cursor, mention.start));
+        }
 
-      if (nextMatch.index > cursor) {
-        nodes.push(content.slice(cursor, nextMatch.index));
-      }
+        nodes.push(
+          <span key={`mention-${mention.id}-${index}`} className={cn("font-medium", colorClass)}>
+            {content.slice(mention.start, mention.end)}
+          </span>
+        );
 
-      nodes.push(
-        <span key={`mention-${key++}`} className={cn("font-medium", colorClass)}>
-          {nextMatch.label}
-        </span>
-      );
+        cursor = mention.end;
+      });
 
-      cursor = nextMatch.index + nextMatch.text.length;
+    if (cursor < content.length) {
+      nodes.push(content.slice(cursor));
     }
 
     return <span>{nodes}</span>;
@@ -470,12 +401,8 @@ export const MessageBubble = memo(function MessageBubble({
                           )}
                         />
                       )}
-                      <div className="text-[14px] flex items-center">
-                        {prepareContent(
-                          message.content,
-                          conversation?.recipients || [],
-                          message.sender
-                        )}
+                        <div className="text-[14px] flex items-center">
+                        {prepareContent(message.content, message.sender)}
                       </div>
                     </div>
                   </PopoverTrigger>
