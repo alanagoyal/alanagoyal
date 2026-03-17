@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message, ReactionType, Reaction, REACTION_TEXT } from "@/types/messages";
 import { Conversation } from "@/types/messages";
-import { memo, useCallback, useState, useRef } from "react";
+import { memo, useCallback, useState, useRef, type ReactNode } from "react";
 import {
   Popover,
   PopoverContent,
@@ -34,6 +34,10 @@ const typingAnimation = `
   100% { opacity: 0.3; }
 }
 `;
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 export const MessageBubble = memo(function MessageBubble({
   message,
@@ -128,75 +132,110 @@ export const MessageBubble = memo(function MessageBubble({
     );
   };
 
-  // Helper function to prepare message content by highlighting recipient names
+  // Render highlighted names as React nodes so user text never becomes HTML.
   const prepareContent = (
     content: string,
     recipients: Conversation["recipients"],
     sender: string
   ) => {
-    if (!recipients) return content;
+    if (!recipients?.length) return content;
 
-    let highlightedContent = content;
-    recipients.forEach((recipient) => {
-      // Special case for I. M. Pei - only highlight when seeing full initials or last name
+    const colorClass =
+      sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
+
+    const patterns = recipients.flatMap((recipient) => {
       if (recipient.name === "I. M. Pei") {
-        const imPeiRegex = new RegExp(
-          `\\b(I\\. M\\.|I\\. M\\. Pei|Pei)(?=\\s|$|\\p{P})`,
-          "gu"
-        );
-        highlightedContent = highlightedContent.replace(imPeiRegex, (match) => {
-          return `<span class="font-medium ${
-            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
-          }">${match}</span>`;
-        });
-        return; // Skip regular name highlighting for I. M. Pei
+        return [
+          {
+            regex: /\b(I\. M\.|I\. M\. Pei|Pei)(?=\s|$|\p{P})/gu,
+            getLabel: (match: string) => match,
+          },
+        ];
       }
 
-      // Special case for Trader Joe's - don't highlight Joe when it's part of "Trader Joe's"
       if (recipient.name === "Joe") {
-        const joeRegex = new RegExp(
-          `(?<!Trader\\s)\\bJoe\\b(?=\\s|$|\\p{P})`,
-          "gu"
-        );
-        highlightedContent = highlightedContent.replace(joeRegex, (match) => {
-          return `<span class="font-medium ${
-            sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]"
-          }">${match}</span>`;
-        });
-        return; // Skip regular name highlighting for Joe
+        return [
+          {
+            regex: /(?<!Trader\s)\bJoe\b(?=\s|$|\p{P})/gu,
+            getLabel: (match: string) => match,
+          },
+        ];
       }
 
-      // Regular case for all other names
-      const fullNameRegex = new RegExp(
-        `@?\\b${recipient.name}(?=\\s|$|\\p{P})`,
-        "giu"
-      );
       const firstName = recipient.name.split(" ")[0];
-      const firstNameRegex = new RegExp(
-        `@?\\b${firstName}(?=\\s|$|\\p{P})`,
-        "giu"
-      );
-
-      const colorClass =
-        sender === "me" ? "" : "text-[#0A7CFF] dark:text-[#0A7CFF]";
-
-      // Replace names with highlighted spans
-      highlightedContent = highlightedContent
-        .replace(fullNameRegex, (match) => {
-          const name = match.startsWith("@") ? match.slice(1) : match;
-          return `<span class="font-medium ${colorClass}">${
-            name.charAt(0).toUpperCase() + name.slice(1)
-          }</span>`;
-        })
-        .replace(firstNameRegex, (match) => {
-          const name = match.startsWith("@") ? match.slice(1) : match;
-          return `<span class="font-medium ${colorClass}">${
-            name.charAt(0).toUpperCase() + name.slice(1)
-          }</span>`;
-        });
+      return [
+        {
+          regex: new RegExp(
+            `@?\\b${escapeRegExp(recipient.name)}(?=\\s|$|\\p{P})`,
+            "giu"
+          ),
+          getLabel: (match: string) => {
+            const label = match.startsWith("@") ? match.slice(1) : match;
+            return label.charAt(0).toUpperCase() + label.slice(1);
+          },
+        },
+        {
+          regex: new RegExp(
+            `@?\\b${escapeRegExp(firstName)}(?=\\s|$|\\p{P})`,
+            "giu"
+          ),
+          getLabel: (match: string) => {
+            const label = match.startsWith("@") ? match.slice(1) : match;
+            return label.charAt(0).toUpperCase() + label.slice(1);
+          },
+        },
+      ];
     });
 
-    return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+    let key = 0;
+
+    while (cursor < content.length) {
+      let nextMatch:
+        | { index: number; text: string; label: string }
+        | null = null;
+
+      for (const pattern of patterns) {
+        pattern.regex.lastIndex = cursor;
+        const match = pattern.regex.exec(content);
+        if (!match || match.index < cursor) continue;
+
+        const candidate = {
+          index: match.index,
+          text: match[0],
+          label: pattern.getLabel(match[0]),
+        };
+
+        if (
+          !nextMatch ||
+          candidate.index < nextMatch.index ||
+          (candidate.index === nextMatch.index &&
+            candidate.text.length > nextMatch.text.length)
+        ) {
+          nextMatch = candidate;
+        }
+      }
+
+      if (!nextMatch) {
+        nodes.push(content.slice(cursor));
+        break;
+      }
+
+      if (nextMatch.index > cursor) {
+        nodes.push(content.slice(cursor, nextMatch.index));
+      }
+
+      nodes.push(
+        <span key={`mention-${key++}`} className={cn("font-medium", colorClass)}>
+          {nextMatch.label}
+        </span>
+      );
+
+      cursor = nextMatch.index + nextMatch.text.length;
+    }
+
+    return <span>{nodes}</span>;
   };
 
   const getReactionVerb = (type: ReactionType) => REACTION_TEXT[type] ?? "reacted to";
