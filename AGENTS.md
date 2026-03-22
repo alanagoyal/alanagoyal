@@ -34,7 +34,7 @@ read before building, update when you ship:
 
 ## conventions
 
-- **state persistence**: sessionStorage for view state, localStorage only for user-created content. window close clears view state via `clearAppState()` automatically
+- **state persistence**: sessionStorage for per-tab view state, localStorage for durable content/preferences and desktop window layout. window close clears view state via `clearAppState()` automatically
 - **window management**: `useWindowManager()` for operations, `useWindowFocus()` for focus state
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
 - **hover states**: gate hover-only styles with Tailwind's `can-hover:` variant so touch devices never get sticky hover treatments
