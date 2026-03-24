@@ -1,4 +1,4 @@
-import { Message } from "@/types/messages";
+import { Message } from "../../types/messages";
 
 /**
  * Format a timestamp as a relative time string
