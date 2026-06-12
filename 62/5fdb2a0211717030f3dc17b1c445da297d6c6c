@@ -1,0 +1,29 @@
+docs/design-system.md
+  s_ef81a31ac9f568::t_de7fd8a154b11e 438-445
+components/desktop/messages-notification-banner.tsx
+  s_ef81a31ac9f568::t_c456fa56d46eac 75-81,86,88,94-96,98
+  s_ef81a31ac9f568::t_1e7d071170241f 45-48
+  s_ef81a31ac9f568::t_fadd05f0900d83 3,5-6,9-32,36,41,44,49-53,68,87,105-106,108-117,133-137,139,149,153-168,170-174,176,180-181,183,185-186,188-198,202-209
+  s_ef81a31ac9f568::t_e3b1ffd4c725f3 83,89-93,124-126,130,199-201,212
+components/desktop/desktop.tsx
+  s_ef81a31ac9f568::t_aba2b3b02b934e 247
+  s_ef81a31ac9f568::t_ada6c907342389 662-667,670-691,694,701,717-729,746
+  s_ef81a31ac9f568::t_dd0833ae143da7 937
+  s_ef81a31ac9f568::t_7a49d3561cf4b5 13-18,59-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "625fdb2a0211717030f3dc17b1c445da297d6c6c",
+  "prompts": {},
+  "sessions": {
+    "s_ef81a31ac9f568": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb829-006a-7f12-916b-8ae816058eea",
+        "model": "gpt-5.5"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>"
+    }
+  }
+}
