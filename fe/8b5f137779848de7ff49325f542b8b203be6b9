@@ -1,0 +1,23 @@
+components/desktop/x-podcast-notification.tsx
+  s_5858f65e8523be::t_bd4a7c220aa84b 4,25-38,44-51
+types/desktop-notification.ts
+  s_5858f65e8523be::t_92e7da24f2daf9 11-13
+lib/podcast-notification.ts
+  s_5858f65e8523be::t_e85fcdceba30a0 74-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "fe8b5f137779848de7ff49325f542b8b203be6b9",
+  "prompts": {},
+  "sessions": {
+    "s_5858f65e8523be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec21b-f91c-74e2-953e-5c70d562be7f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>"
+    }
+  }
+}
