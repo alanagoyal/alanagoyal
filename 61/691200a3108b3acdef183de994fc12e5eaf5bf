@@ -1,0 +1,47 @@
+components/desktop/x-podcast-notification.tsx
+  s_5858f65e8523be::t_71878ef4a535e3 1-2,4-6,8-32,34-44,46-48,51,61,72,74,77-78,93-97
+  s_5858f65e8523be::t_bf58d55135671b 3,7,62-67,69-71,79-91
+  s_5858f65e8523be::t_b16c3b6d07c0e2 33,45,49-50,73,92
+  s_5858f65e8523be::t_38bbe6314f2bdc 52-60
+  s_5858f65e8523be::t_d68b02dc6aa058 68,75-76
+lib/podcast-notification.ts
+  s_5858f65e8523be::t_7ef2b0efdc9704 76-77
+  s_5858f65e8523be::t_d4a3c35681abe5 1-7,9,16-71,73,78-91
+  s_5858f65e8523be::t_e8af64ddb295d4 8,10-15,72,74-75
+components/desktop/menu-bar.tsx
+  s_5858f65e8523be::t_365e37b128cf31 18,32,45,266
+types/desktop-notification.ts
+  s_5858f65e8523be::t_19ac58d5d64b0d 11-12
+  s_5858f65e8523be::t_d7bbca2218fb1a 13-14
+  s_5858f65e8523be::t_e2db0257652f8e 1-10,15-21
+components/desktop/notification-center.tsx
+  s_5858f65e8523be::t_81a6bf45ad2518 25,64,74-78
+  s_5858f65e8523be::t_16d811f7293cfc 59
+  s_5858f65e8523be::t_84ee8578c52f1d 32,52-53,55-56,58,60-63,65,71-73,79-82
+  s_5858f65e8523be::t_865c916ab57f07 36,43,54,57,66-70,471,546-549
+components/desktop/messages-notification-banner.tsx
+  s_5858f65e8523be::t_3804502e769631 6-9,12-14,19-77,82-85,90,112-116,134,160-164
+  s_5858f65e8523be::t_9bc3c747711dcf 135-136,146
+  s_5858f65e8523be::t_eacaccb553b2cb 5,78-81
+docs/design-system.md
+  s_5858f65e8523be::t_e44020178fb675 342-345
+components/desktop/desktop.tsx
+  s_5858f65e8523be::t_2745244eeb31be 43-46,694-700,703,724,770
+  s_5858f65e8523be::t_7fa5593d4b5571 13,38-42,234,649-653,655-661,665-667,670,678,701-702,704-705,916
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "61691200a3108b3acdef183de994fc12e5eaf5bf",
+  "prompts": {},
+  "sessions": {
+    "s_5858f65e8523be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec21b-f91c-74e2-953e-5c70d562be7f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>"
+    }
+  }
+}
