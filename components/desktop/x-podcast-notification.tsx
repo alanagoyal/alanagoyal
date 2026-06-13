@@ -1,34 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXTwitter } from "@fortawesome/free-brands-svg-icons";
-import type { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Play } from "lucide-react";
+import { Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
-
-export function XAppIcon({
-  className,
-  iconClassName,
-}: {
-  className?: string;
-  iconClassName?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "grid place-items-center rounded-[10px] bg-zinc-950 text-white shadow-sm",
-        className
-      )}
-    >
-      <FontAwesomeIcon
-        icon={faXTwitter as IconProp}
-        className={cn("h-5 w-5", iconClassName)}
-      />
-    </div>
-  );
-}
 
 export function PodcastTweetCard({
   notification,
@@ -47,12 +22,33 @@ export function PodcastTweetCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <XAppIcon className={cn("shrink-0 rounded-full", compact ? "h-8 w-8" : "h-9 w-9")} />
+        <div
+          className={cn(
+            "relative shrink-0 overflow-hidden rounded-full bg-zinc-950 shadow-sm",
+            compact ? "h-8 w-8" : "h-9 w-9"
+          )}
+        >
+          <Image
+            src={notification.authorAvatarSrc}
+            alt={notification.authorAvatarAlt}
+            fill
+            sizes={compact ? "32px" : "36px"}
+            className="object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-[13px] font-semibold text-zinc-950 dark:text-white">
               {notification.authorName}
             </span>
+            {notification.authorVerified && (
+              <span
+                aria-label="Verified"
+                className="grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full bg-[#1d9bf0] text-white"
+              >
+                <Check className="h-2.5 w-2.5 stroke-[3]" />
+              </span>
+            )}
             <span className="truncate text-[12px] text-zinc-500 dark:text-zinc-400">
               {notification.authorHandle}
             </span>
