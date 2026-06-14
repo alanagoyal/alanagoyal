@@ -22,21 +22,25 @@ import { getThumbnailUrl } from "@/lib/photos/image-utils";
 import { getEventsForDay, formatEventTime } from "@/components/apps/calendar/utils";
 import { loadCalendars } from "@/components/apps/calendar/data";
 import { WeatherSceneEffects } from "@/components/apps/weather/weather-scene-effects";
+import { PodcastTweetCard } from "@/components/desktop/x-podcast-notification";
 import {
   buildOpenMeteoForecastUrl,
   getWeatherDescription,
   getWeatherIconName,
   getWeatherScene,
 } from "@/lib/weather";
+import { getPodcastNotificationPayload } from "@/lib/podcast-notification";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
+import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { Photo } from "@/types/photos";
 
 interface NotificationCenterProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenMessagesConversation?: (conversationId: string) => void;
+  onOpenPodcastNotification?: (notification: PodcastNotificationPayload) => void;
 }
 
 const cardClass = "bg-muted rounded-md p-3 mb-1.5";
@@ -44,6 +48,37 @@ const clickableCardClass =
   "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
 const weatherCardClass = "h-[134px] rounded-md p-3 mb-1.5";
 const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
+
+function PodcastNotificationWidget({
+  onActivate,
+  onOpen,
+}: {
+  onActivate: () => void;
+  onOpen?: (notification: PodcastNotificationPayload) => void;
+}) {
+  const notification = getPodcastNotificationPayload();
+
+  return (
+    <button
+      type="button"
+      className="mb-1.5 w-full cursor-pointer text-left"
+      onClick={() => {
+        if (onOpen) {
+          onOpen(notification);
+        } else {
+          window.open(notification.tweetUrl, "_blank", "noopener,noreferrer");
+        }
+        onActivate();
+      }}
+    >
+      <PodcastTweetCard
+        notification={notification}
+        compact
+        className="rounded-md bg-muted transition-colors dark:bg-muted"
+      />
+    </button>
+  );
+}
 
 // WMO weather code → icon + description
 function getWeatherInfo(code: number): {
@@ -433,6 +468,7 @@ export function NotificationCenter({
   isOpen,
   onClose,
   onOpenMessagesConversation,
+  onOpenPodcastNotification,
 }: NotificationCenterProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   useClickOutside(menuRef, onClose, isOpen);
@@ -507,6 +543,10 @@ export function NotificationCenter({
           <p className="text-2xl font-bold">{monthDay}</p>
         </div>
         <CalendarWidget onActivate={onClose} refreshKey={openRefreshKey} />
+        <PodcastNotificationWidget
+          onActivate={onClose}
+          onOpen={onOpenPodcastNotification}
+        />
         <MessagesWidget
           onActivate={onClose}
           refreshKey={openRefreshKey}
