@@ -1,0 +1,19 @@
+lib/podcast-notification.ts
+  s_5858f65e8523be::t_e2ba30834359ca 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "21b3c30c7e42ecd95aaaee3af5e9586835fe1d75",
+  "prompts": {},
+  "sessions": {
+    "s_5858f65e8523be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec21b-f91c-74e2-953e-5c70d562be7f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "alanagoyal <alanaan@gmail.com>"
+    }
+  }
+}
