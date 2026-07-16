@@ -97,6 +97,14 @@ export const OS_VERSIONS: OSVersion[] = [
     wallpaperFile: "tahoe-wallpaper.jpg",
     releaseYear: 2025,
   },
+  {
+    id: "sonoma-from-above",
+    name: "Sonoma From Above",
+    version: "14.0",
+    darwinVersion: "23.0.0",
+    wallpaperFile: "sonoma-from-above-wallpaper.jpg",
+    releaseYear: 2023,
+  },
 ];
 
 export const DEFAULT_OS_VERSION_ID = "sierra";
