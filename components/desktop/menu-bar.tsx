@@ -19,6 +19,8 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
 
+const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
+
 interface MenuBarProps {
   onOpenSettings?: () => void;
   onOpenWifiSettings?: () => void;
@@ -49,6 +51,18 @@ export function MenuBar({
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
+  const [lowPowerMode, setLowPowerMode] = useState(false);
+  const [hasLoadedLowPowerMode, setHasLoadedLowPowerMode] = useState(false);
+
+  useEffect(() => {
+    setLowPowerMode(window.localStorage.getItem(LOW_POWER_MODE_STORAGE_KEY) === "true");
+    setHasLoadedLowPowerMode(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedLowPowerMode) return;
+    window.localStorage.setItem(LOW_POWER_MODE_STORAGE_KEY, String(lowPowerMode));
+  }, [hasLoadedLowPowerMode, lowPowerMode]);
 
   // Sync menu open state to window context (used to prevent window focus when menu is open)
   useEffect(() => {
@@ -158,12 +172,19 @@ export function MenuBar({
         {/* Battery */}
         <button
           onClick={() => toggleMenu("battery")}
+          aria-label={`Battery, 97%${lowPowerMode ? ", Low Power Mode on" : ""}`}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
             openMenu === "battery" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
-          <FontAwesomeIcon icon={faBatteryFull} className="w-5 h-3.5 text-black dark:text-white" />
+          <FontAwesomeIcon
+            icon={faBatteryFull}
+            className={cn(
+              "h-3.5 w-5 transition-colors",
+              lowPowerMode ? "text-yellow-500" : "text-black dark:text-white"
+            )}
+          />
         </button>
 
         {/* Wi-Fi */}
@@ -220,6 +241,8 @@ export function MenuBar({
         isOpen={openMenu === "battery"}
         onClose={closeMenu}
         onOpenSettings={onOpenSettings}
+        lowPowerMode={lowPowerMode}
+        onLowPowerModeChange={setLowPowerMode}
       />
 
       <WifiMenu
