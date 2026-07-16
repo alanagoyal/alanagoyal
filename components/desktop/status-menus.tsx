@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   Wifi,
@@ -18,6 +18,7 @@ import {
   Pause,
   SkipBack,
   SkipForward,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSystemSettings, FocusMode } from "@/lib/system-settings-context";
@@ -63,6 +64,13 @@ function MenuDivider() {
   return <div className="my-1 border-t border-black/10 dark:border-white/10" />;
 }
 
+const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
+
+function getInitialLowPowerMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(LOW_POWER_MODE_STORAGE_KEY) === "true";
+}
+
 // Battery Menu
 interface BatteryMenuProps {
   isOpen: boolean;
@@ -72,9 +80,13 @@ interface BatteryMenuProps {
 
 export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [lowPowerMode, setLowPowerMode] = useState(false);
+  const [lowPowerMode, setLowPowerMode] = useState(getInitialLowPowerMode);
 
   useClickOutside(menuRef, onClose, isOpen);
+
+  useEffect(() => {
+    window.localStorage.setItem(LOW_POWER_MODE_STORAGE_KEY, String(lowPowerMode));
+  }, [lowPowerMode]);
 
   if (!isOpen) return null;
 
@@ -86,8 +98,11 @@ export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
         <span className="text-xs">97%</span>
       </div>
 
-      <div className="px-3 py-1">
+      <div className="flex flex-col gap-0.5 px-3 py-1">
         <span className="text-xs text-muted-foreground">Power Source: Battery</span>
+        <span className="text-xs text-muted-foreground">
+          Energy Mode: {lowPowerMode ? "Low Power" : "Automatic"}
+        </span>
       </div>
 
       <MenuDivider />
@@ -99,15 +114,19 @@ export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
 
       <button
         onClick={() => setLowPowerMode(!lowPowerMode)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors group"
+        aria-pressed={lowPowerMode}
+        className="group flex w-full items-center justify-between px-3 py-1.5 transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
       >
-        <div className={cn(
-          "flex items-center justify-center w-6 h-6 rounded",
-          lowPowerMode ? "bg-yellow-500" : "bg-gray-200 dark:bg-gray-700"
-        )}>
-          <Battery className={cn("w-4 h-4", lowPowerMode ? "text-white" : "text-gray-600 dark:text-gray-300")} />
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "flex items-center justify-center w-6 h-6 rounded",
+            lowPowerMode ? "bg-yellow-500" : "bg-gray-200 dark:bg-gray-700"
+          )}>
+            <Battery className={cn("w-4 h-4", lowPowerMode ? "text-white" : "text-gray-600 dark:text-gray-300")} />
+          </div>
+          <span className="text-xs">Low Power</span>
         </div>
-        <span className="text-xs">Low Power</span>
+        {lowPowerMode && <Check className="h-3.5 w-3.5" aria-hidden />}
       </button>
 
       <MenuDivider />
