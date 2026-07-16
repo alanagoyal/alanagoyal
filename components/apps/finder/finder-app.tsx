@@ -708,6 +708,24 @@ export function FinderApp({
     }
   }, [handleFileDoubleClick, setCurrentPath]);
 
+  const moveFileSelection = useCallback((direction: -1 | 1) => {
+    if (files.length === 0) return;
+
+    const currentIndex = files.findIndex((file) => file.path === selectedFile);
+    const nextIndex = currentIndex === -1
+      ? direction === 1 ? 0 : files.length - 1
+      : Math.max(0, Math.min(currentIndex + direction, files.length - 1));
+
+    setSelectedFile(files[nextIndex].path);
+  }, [files, selectedFile]);
+
+  const openSelectedFile = useCallback(() => {
+    const file = files.find((item) => item.path === selectedFile);
+    if (file) {
+      void handleFileDoubleClick(file);
+    }
+  }, [files, handleFileDoubleClick, selectedFile]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (windowFocus && !windowFocus.isFocused) return;
@@ -734,6 +752,29 @@ export function FinderApp({
         setSearchActive(true);
         setTimeout(() => searchInputRef.current?.focus(), 0);
         return;
+      }
+
+      if (!searchActive && !isTypingTarget) {
+        if (e.metaKey && (e.key.toLowerCase() === "o" || e.key === "ArrowDown") && selectedFile) {
+          e.preventDefault();
+          openSelectedFile();
+          return;
+        }
+
+        const movesBackward = e.key === "ArrowUp" || (viewMode === "icons" && e.key === "ArrowLeft");
+        const movesForward = e.key === "ArrowDown" || (viewMode === "icons" && e.key === "ArrowRight");
+
+        if (!e.metaKey && !e.ctrlKey && !e.altKey && (movesBackward || movesForward)) {
+          e.preventDefault();
+          moveFileSelection(movesBackward ? -1 : 1);
+          return;
+        }
+
+        if (e.key === "Escape" && selectedFile) {
+          e.preventDefault();
+          setSelectedFile(null);
+          return;
+        }
       }
 
       if (!searchActive) return;
@@ -766,7 +807,27 @@ export function FinderApp({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [windowFocus, isMobile, searchActive, searchQuery, computedSearchResults, searchHighlightIndex, openSearchResult]);
+  }, [
+    windowFocus,
+    isMobile,
+    searchActive,
+    searchQuery,
+    selectedFile,
+    viewMode,
+    computedSearchResults,
+    searchHighlightIndex,
+    moveFileSelection,
+    openSelectedFile,
+    openSearchResult,
+  ]);
+
+  useEffect(() => {
+    if (!selectedFile || isMobile || searchActive) return;
+    const selectedItem = containerRef.current?.querySelector<HTMLElement>(
+      '[data-finder-selected="true"]'
+    );
+    selectedItem?.scrollIntoView({ block: "nearest" });
+  }, [isMobile, searchActive, selectedFile]);
 
   useEffect(() => {
     if (!searchActive || computedSearchResults.length === 0 || searchHighlightIndex < 0) return;
@@ -1094,6 +1155,8 @@ export function FinderApp({
           key={file.path}
           onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
           onDoubleClick={() => handleFileDoubleClick(file)}
+          data-finder-selected={selectedFile === file.path}
+          aria-pressed={selectedFile === file.path}
           className={cn(
             "flex flex-col items-center gap-1 p-2 rounded-lg text-center",
             selectedFile === file.path && "bg-zinc-200/70 dark:bg-zinc-700/70"
@@ -1134,6 +1197,8 @@ export function FinderApp({
             key={file.path}
             onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
             onDoubleClick={() => handleFileDoubleClick(file)}
+            data-finder-selected={selectedFile === file.path}
+            aria-pressed={selectedFile === file.path}
             className={cn(
               "w-full flex items-center px-4 py-1 text-left text-sm text-zinc-900 dark:text-zinc-100",
               selectedFile === file.path && "bg-blue-500 text-white"
