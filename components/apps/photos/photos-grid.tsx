@@ -25,6 +25,7 @@ interface PhotosGridProps {
   onTimeFilterChange: (filter: TimeFilter) => void;
   isMobileView: boolean;
   onBack: () => void;
+  onShowLibrary: () => void;
   activeView: PhotosView;
   collections: Collection[];
   isDesktop?: boolean;
@@ -42,6 +43,7 @@ export function PhotosGrid({
   onTimeFilterChange,
   isMobileView,
   onBack,
+  onShowLibrary,
   activeView,
   collections,
   isDesktop = false,
@@ -174,9 +176,31 @@ export function PhotosGrid({
               Failed to load photos
             </div>
           ) : !loading && photos.length === 0 ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              No photos
-            </div>
+            activeView === "favorites" ? (
+              <div className="flex h-64 flex-col items-center justify-center px-6 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Heart className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h2 className="text-base font-semibold text-foreground">
+                  No Favorites
+                </h2>
+                <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                  {isMobileView ? "Tap" : "Click"} the heart on a photo to keep
+                  your favorites together.
+                </p>
+                <button
+                  type="button"
+                  onClick={onShowLibrary}
+                  className="mt-4 rounded-md px-3 py-1.5 text-sm font-medium text-[#0A7CFF] can-hover:hover:bg-[#0A7CFF]/10"
+                >
+                  View All Photos
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-muted-foreground">
+                No photos
+              </div>
+            )
           ) : (
             Object.entries(groupedPhotos).map(([group, groupPhotos]) => (
               <div key={group} className="mb-6">

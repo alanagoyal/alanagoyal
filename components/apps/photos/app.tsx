@@ -175,6 +175,7 @@ export default function App({ isDesktop = false }: AppProps) {
               onTimeFilterChange={setTimeFilter}
               isMobileView={isMobileView}
               onBack={handleBack}
+              onShowLibrary={() => handleViewSelect("library")}
               activeView={activeView}
               collections={collections}
               isDesktop={isDesktop}
