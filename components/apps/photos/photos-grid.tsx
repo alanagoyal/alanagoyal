@@ -174,9 +174,21 @@ export function PhotosGrid({
               Failed to load photos
             </div>
           ) : !loading && photos.length === 0 ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              No photos
-            </div>
+            activeView === "favorites" ? (
+              <div className="flex h-64 flex-col items-center justify-center text-center text-muted-foreground">
+                <div className="relative mb-3 h-[94px] w-[116px]" aria-hidden="true">
+                  <div className="absolute left-0 top-0 h-[76px] w-[100px] border-[4px] border-current" />
+                  <div className="absolute bottom-0 right-0 h-[76px] w-[100px] border-[4px] border-current bg-background" />
+                </div>
+                <p className="text-sm">
+                  No photos available in album
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-muted-foreground">
+                No photos
+              </div>
+            )
           ) : (
             Object.entries(groupedPhotos).map(([group, groupPhotos]) => (
               <div key={group} className="mb-6">
