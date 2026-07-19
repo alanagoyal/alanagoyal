@@ -23,14 +23,35 @@ function DockTooltip({
 }) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/30 bg-white/70 px-3 py-1.5 text-xs font-medium text-zinc-800 shadow-lg backdrop-blur-2xl transition-[top] duration-100 ease-out dark:border-white/15 dark:bg-zinc-800/75 dark:text-white"
-      style={{ top: `${-42 - lift}px` }}
+      className="pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 transition-[top] duration-100 ease-out"
+      style={{ top: `${-40 - lift}px` }}
     >
-      {label}
-      <span
-        aria-hidden
-        className="absolute -bottom-[5px] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-white/30 bg-white/70 dark:border-white/15 dark:bg-zinc-800/75"
-      />
+      <svg
+        viewBox="0 0 100 44"
+        className="h-9 min-w-16"
+        style={{ width: `${Math.max(64, label.length * 9 + 24)}px` }}
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M 12 0
+             H 88
+             Q 100 0 100 12
+             V 20
+             Q 100 32 88 32
+             H 56
+             L 50 38
+             L 44 32
+             H 12
+             Q 0 32 0 20
+             V 12
+             Q 0 0 12 0
+             Z"
+          className="fill-white/70 dark:fill-zinc-800/70"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap px-3 pb-2 text-xs font-medium text-zinc-800 dark:text-white">
+        {label}
+      </span>
     </div>
   );
 }
@@ -737,7 +758,7 @@ export function Dock({
             >
               <span
                 aria-hidden
-                className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-black/10 bg-white/95 dark:border-white/10 dark:bg-zinc-800/95"
+                className="absolute left-1/2 top-full h-2 w-3 -translate-x-1/2 bg-white/95 [clip-path:polygon(0_0,100%_0,50%_100%)] dark:bg-zinc-800/95"
               />
               <button
                 type="button"
