@@ -733,7 +733,7 @@ export function Dock({
           {isDockMenuOpen && (
             <div
               role="menu"
-              className="absolute bottom-[calc(100%+8px)] left-1/2 z-[90] w-56 -translate-x-1/2 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+              className="absolute bottom-[calc(100%+8px)] left-1/2 z-[90] w-max -translate-x-1/2 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
             >
               <span
                 aria-hidden
@@ -747,7 +747,7 @@ export function Dock({
                   setMagnificationEnabled((enabled) => !enabled);
                   closeDockMenu();
                 }}
-                className="relative z-[1] flex w-full items-center justify-between px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+                className="relative z-[1] flex w-full items-center justify-between whitespace-nowrap px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
               >
                 {magnificationEnabled
                   ? "Turn Magnification Off"
