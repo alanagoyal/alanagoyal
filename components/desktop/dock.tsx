@@ -14,35 +14,23 @@ interface DockProps {
   appBadges?: Record<string, number>;
 }
 
-function DockTooltip({ label }: { label: string }) {
+function DockTooltip({
+  label,
+  lift,
+}: {
+  label: string;
+  lift: number;
+}) {
   return (
-    <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none">
-      <svg
-        viewBox="0 0 100 44"
-        className="h-9 min-w-16"
-        style={{ width: `${Math.max(64, label.length * 9 + 24)}px` }}
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M 12 0
-             H 88
-             Q 100 0 100 12
-             V 20
-             Q 100 32 88 32
-             H 56
-             L 50 38
-             L 44 32
-             H 12
-             Q 0 32 0 20
-             V 12
-             Q 0 0 12 0
-             Z"
-          className="fill-white/70 dark:fill-zinc-800/70"
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-zinc-800 dark:text-white text-xs font-medium pb-2 whitespace-nowrap px-3">
-        {label}
-      </span>
+    <div
+      className="pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/30 bg-white/70 px-3 py-1.5 text-xs font-medium text-zinc-800 shadow-lg backdrop-blur-2xl transition-[top] duration-100 ease-out dark:border-white/15 dark:bg-zinc-800/75 dark:text-white"
+      style={{ top: `${-42 - lift}px` }}
+    >
+      {label}
+      <span
+        aria-hidden
+        className="absolute -bottom-[5px] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-white/30 bg-white/70 dark:border-white/15 dark:bg-zinc-800/75"
+      />
     </div>
   );
 }
@@ -68,7 +56,7 @@ const DOCK_DEFAULT_SCALE = 1;
 const DOCK_SCALE_STEP = 0.05;
 const DOCK_DRAG_PIXELS_PER_SCALE = 220;
 const DOCK_MAGNIFICATION_SCALE = 1.4;
-const DOCK_NEIGHBOR_MAGNIFICATION_SCALE = 1.18;
+const DOCK_MAGNIFICATION_RADIUS = 0.88;
 
 const BASE_ICON_SIZE = 48;
 const BASE_GAP = 4;
@@ -107,18 +95,6 @@ function getInitialDockMagnification(): boolean {
   return window.localStorage.getItem(DOCK_MAGNIFICATION_STORAGE_KEY) !== "false";
 }
 
-function getMagnificationScale(
-  itemIndex: number,
-  hoveredIndex: number,
-  enabled: boolean
-): number {
-  if (!enabled || hoveredIndex < 0) return 1;
-  const distance = Math.abs(itemIndex - hoveredIndex);
-  if (distance === 0) return DOCK_MAGNIFICATION_SCALE;
-  if (distance === 1) return DOCK_NEIGHBOR_MAGNIFICATION_SCALE;
-  return 1;
-}
-
 export function Dock({
   onTrashClick,
   onFinderClick,
@@ -139,10 +115,17 @@ export function Dock({
   );
   const [isDockMenuOpen, setIsDockMenuOpen] = useState(false);
   const [isResizingDock, setIsResizingDock] = useState(false);
+  const [magnificationScales, setMagnificationScales] = useState<
+    Record<string, number>
+  >({});
   const dragStateRef = useRef<{ pointerId: number; startY: number; startScale: number } | null>(null);
   const previousUserSelectRef = useRef<string | null>(null);
   const previousCursorRef = useRef<string | null>(null);
+  const suppressDockMenuClickRef = useRef(false);
   const dockMenuRef = useRef<HTMLDivElement>(null);
+  const dockItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const magnificationFrameRef = useRef<number | null>(null);
+  const pendingPointerXRef = useRef<number | null>(null);
   const closeDockMenu = useCallback(() => setIsDockMenuOpen(false), []);
 
   useClickOutside(dockMenuRef, closeDockMenu, isDockMenuOpen);
@@ -341,9 +324,6 @@ export function Dock({
   const appsToRender = APPS.filter(
     (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
   );
-  const hoveredItemIndex = hoveredApp === "trash"
-    ? appsToRender.length
-    : appsToRender.findIndex((app) => app.id === hoveredApp);
 
   const effectiveScale = useMemo(
     () => roundScale(clamp(desiredScale, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE)),
@@ -370,6 +350,62 @@ export function Dock({
     };
   }, [effectiveScale]);
 
+  const resetDockMagnification = useCallback(() => {
+    pendingPointerXRef.current = null;
+    if (magnificationFrameRef.current !== null) {
+      window.cancelAnimationFrame(magnificationFrameRef.current);
+      magnificationFrameRef.current = null;
+    }
+    setMagnificationScales((current) =>
+      Object.keys(current).length === 0 ? current : {}
+    );
+  }, []);
+
+  const handleDockPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (
+        event.pointerType !== "mouse" ||
+        !magnificationEnabled ||
+        isResizingDock ||
+        (event.target as Element).closest('[data-dock-static="true"]')
+      ) {
+        resetDockMagnification();
+        return;
+      }
+
+      pendingPointerXRef.current = event.clientX;
+      if (magnificationFrameRef.current !== null) return;
+
+      magnificationFrameRef.current = window.requestAnimationFrame(() => {
+        magnificationFrameRef.current = null;
+        const pointerX = pendingPointerXRef.current;
+        if (pointerX === null) return;
+
+        const radius = metrics.icon * DOCK_MAGNIFICATION_RADIUS;
+        const nextScales: Record<string, number> = {};
+
+        Object.entries(dockItemRefs.current).forEach(([itemId, item]) => {
+          if (!item) return;
+          const rect = item.getBoundingClientRect();
+          const distance = Math.abs(pointerX - (rect.left + rect.width / 2));
+          const influence = Math.exp(
+            -(distance * distance) / (2 * radius * radius)
+          );
+          nextScales[itemId] =
+            1 + (DOCK_MAGNIFICATION_SCALE - 1) * influence;
+        });
+
+        setMagnificationScales(nextScales);
+      });
+    },
+    [
+      isResizingDock,
+      magnificationEnabled,
+      metrics.icon,
+      resetDockMagnification,
+    ]
+  );
+
   const endDockResize = useCallback(() => {
     dragStateRef.current = null;
     setIsResizingDock(false);
@@ -394,7 +430,23 @@ export function Dock({
 
   const handleResizePointerDown = useCallback(
     (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (event.button === 2) {
+        event.preventDefault();
+        event.stopPropagation();
+        setHoveredApp(null);
+        resetDockMagnification();
+        setIsDockMenuOpen(true);
+        return;
+      }
       if (event.button !== 0) return;
+      if (event.ctrlKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        setHoveredApp(null);
+        resetDockMagnification();
+        setIsDockMenuOpen(true);
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -403,19 +455,23 @@ export function Dock({
         startY: event.clientY,
         startScale: desiredScale,
       };
+      suppressDockMenuClickRef.current = false;
       previousUserSelectRef.current = document.body.style.userSelect;
       previousCursorRef.current = document.body.style.cursor;
       document.body.style.userSelect = "none";
       document.body.style.cursor = "ns-resize";
       setIsResizingDock(true);
     },
-    [desiredScale]
+    [desiredScale, resetDockMagnification]
   );
 
   const handleResizePointerMove = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
     const drag = dragStateRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
+    if (Math.abs(event.clientY - drag.startY) >= 2) {
+      suppressDockMenuClickRef.current = true;
+    }
     const viewportHeight = window.innerHeight;
     if (event.clientY >= viewportHeight - 1) {
       updateDesiredScale(DOCK_MIN_DESIRED_SCALE);
@@ -483,6 +539,12 @@ export function Dock({
   }, [magnificationEnabled]);
 
   useEffect(() => {
+    if (!magnificationEnabled || isResizingDock) {
+      resetDockMagnification();
+    }
+  }, [isResizingDock, magnificationEnabled, resetDockMagnification]);
+
+  useEffect(() => {
     if (!isResizingDock || typeof window === "undefined") return;
     const forceEndResize = () => {
       endDockResize();
@@ -500,12 +562,18 @@ export function Dock({
   useEffect(() => {
     return () => {
       endDockResize();
+      resetDockMagnification();
     };
-  }, [endDockResize]);
+  }, [endDockResize, resetDockMagnification]);
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
       <div
+        onPointerMove={handleDockPointerMove}
+        onPointerLeave={() => {
+          setHoveredApp(null);
+          resetDockMagnification();
+        }}
         className={cn(
           "flex items-end bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg w-max",
           isResizingDock ? "transition-none" : "transition-all duration-300"
@@ -515,24 +583,30 @@ export function Dock({
           padding: `${metrics.padY}px ${metrics.padX}px`,
         }}
       >
-        {appsToRender.map((app, index) => {
+        {appsToRender.map((app) => {
           const isOpen = hasOpenWindows(app.id);
           const animState = animationStates[app.id] || "stable";
           const badgeCount = appBadges[app.id] ?? 0;
-          const magnificationScale = getMagnificationScale(
-            index,
-            hoveredItemIndex,
-            magnificationEnabled && animState === "stable" && !isResizingDock
-          );
+          const magnificationScale =
+            magnificationEnabled &&
+            animState === "stable" &&
+            !isResizingDock
+              ? magnificationScales[app.id] ?? 1
+              : 1;
+          const tooltipLift =
+            (magnificationScale - 1) * metrics.icon;
 
           return (
             <button
               key={app.id}
+              ref={(item) => {
+                dockItemRefs.current[app.id] = item;
+              }}
               onClick={() => handleAppClick(app.id)}
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
               className={cn(
-                "group relative flex flex-col items-center outline-none transition-[width,transform] duration-200 ease-out flex-shrink-0",
+                "group relative flex flex-col items-center outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
                 animState === "stable" && "active:scale-95"
@@ -540,10 +614,10 @@ export function Dock({
               style={{ width: `${metrics.icon * magnificationScale}px` }}
             >
               {hoveredApp === app.id && animState === "stable" && !isResizingDock && (
-                <DockTooltip label={app.name} />
+                <DockTooltip label={app.name} lift={tooltipLift} />
               )}
               <div
-                className="relative flex items-center justify-center transition-transform duration-200 ease-out"
+                className="relative flex items-center justify-center transition-transform duration-100 ease-out"
                 style={{
                   width: `${metrics.icon}px`,
                   height: `${metrics.icon}px`,
@@ -593,13 +667,30 @@ export function Dock({
           );
         })}
         {/* Resize handle before Trash */}
-        <div ref={dockMenuRef} className="relative self-center">
+        <div
+          ref={dockMenuRef}
+          data-dock-static="true"
+          className="relative self-center"
+        >
           <button
             type="button"
             aria-label="Resize Dock"
             aria-haspopup="menu"
             aria-expanded={isDockMenuOpen}
             title="Resize Dock"
+            onClick={() => {
+              if (!suppressDockMenuClickRef.current) {
+                setIsDockMenuOpen(true);
+              }
+            }}
+            onMouseDown={(event) => {
+              if (event.button !== 2 && !event.ctrlKey) return;
+              event.preventDefault();
+              event.stopPropagation();
+              setHoveredApp(null);
+              resetDockMagnification();
+              setIsDockMenuOpen(true);
+            }}
             onPointerDown={handleResizePointerDown}
             onPointerMove={handleResizePointerMove}
             onPointerUp={handleResizePointerUp}
@@ -609,9 +700,13 @@ export function Dock({
             onContextMenu={(event) => {
               event.preventDefault();
               setHoveredApp(null);
+              resetDockMagnification();
               setIsDockMenuOpen(true);
             }}
-            onMouseEnter={() => setHoveredApp(null)}
+            onMouseEnter={() => {
+              setHoveredApp(null);
+              resetDockMagnification();
+            }}
             className="relative rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
             style={{
               width: `${metrics.handleHitboxWidth}px`,
@@ -638,8 +733,12 @@ export function Dock({
           {isDockMenuOpen && (
             <div
               role="menu"
-              className="absolute bottom-[calc(100%+8px)] left-1/2 z-[90] w-52 -translate-x-1/2 overflow-hidden rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+              className="absolute bottom-[calc(100%+12px)] left-1/2 z-[90] w-60 -translate-x-1/2 rounded-2xl border border-white/30 bg-white/70 p-1.5 shadow-2xl backdrop-blur-2xl dark:border-white/15 dark:bg-zinc-800/75"
             >
+              <span
+                aria-hidden
+                className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b border-r border-white/30 bg-white/70 dark:border-white/15 dark:bg-zinc-800/75"
+              />
               <button
                 type="button"
                 role="menuitemcheckbox"
@@ -648,7 +747,7 @@ export function Dock({
                   setMagnificationEnabled((enabled) => !enabled);
                   closeDockMenu();
                 }}
-                className="w-full px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+                className="relative z-[1] w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
               >
                 {magnificationEnabled
                   ? "Turn Magnification Off"
@@ -660,32 +759,44 @@ export function Dock({
 
         {/* Trash icon */}
         <button
+          ref={(item) => {
+            dockItemRefs.current.trash = item;
+          }}
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}
-          className="group relative flex flex-col items-center transition-[width,transform] duration-200 ease-out active:scale-95 outline-none flex-shrink-0"
+          className="group relative flex flex-col items-center transition-[width,transform] duration-100 ease-out active:scale-95 outline-none flex-shrink-0"
           style={{
             width: `${
               metrics.icon *
-              getMagnificationScale(
-                appsToRender.length,
-                hoveredItemIndex,
-                magnificationEnabled && !isResizingDock
-              )
+              (magnificationEnabled && !isResizingDock
+                ? magnificationScales.trash ?? 1
+                : 1)
             }px`,
           }}
         >
-          {hoveredApp === "trash" && !isResizingDock && <DockTooltip label="Trash" />}
+          {hoveredApp === "trash" && !isResizingDock && (
+            <DockTooltip
+              label="Trash"
+              lift={
+                ((magnificationEnabled
+                  ? magnificationScales.trash ?? 1
+                  : 1) -
+                  1) *
+                metrics.icon
+              }
+            />
+          )}
           <div
-            className="relative flex items-center justify-center transition-transform duration-200 ease-out"
+            className="relative flex items-center justify-center transition-transform duration-100 ease-out"
             style={{
               width: `${metrics.icon}px`,
               height: `${metrics.icon}px`,
-              transform: `scale(${getMagnificationScale(
-                appsToRender.length,
-                hoveredItemIndex,
+              transform: `scale(${
                 magnificationEnabled && !isResizingDock
-              )})`,
+                  ? magnificationScales.trash ?? 1
+                  : 1
+              })`,
               transformOrigin: "bottom center",
             }}
           >
