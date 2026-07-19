@@ -142,7 +142,6 @@ export function Dock({
   const dragStateRef = useRef<{ pointerId: number; startY: number; startScale: number } | null>(null);
   const previousUserSelectRef = useRef<string | null>(null);
   const previousCursorRef = useRef<string | null>(null);
-  const suppressDockMenuClickRef = useRef(false);
   const dockMenuRef = useRef<HTMLDivElement>(null);
   const dockItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const magnificationFrameRef = useRef<number | null>(null);
@@ -476,7 +475,6 @@ export function Dock({
         startY: event.clientY,
         startScale: desiredScale,
       };
-      suppressDockMenuClickRef.current = false;
       previousUserSelectRef.current = document.body.style.userSelect;
       previousCursorRef.current = document.body.style.cursor;
       document.body.style.userSelect = "none";
@@ -490,9 +488,6 @@ export function Dock({
     const drag = dragStateRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
-    if (Math.abs(event.clientY - drag.startY) >= 2) {
-      suppressDockMenuClickRef.current = true;
-    }
     const viewportHeight = window.innerHeight;
     if (event.clientY >= viewportHeight - 1) {
       updateDesiredScale(DOCK_MIN_DESIRED_SCALE);
@@ -699,11 +694,6 @@ export function Dock({
             aria-haspopup="menu"
             aria-expanded={isDockMenuOpen}
             title="Resize Dock"
-            onClick={() => {
-              if (!suppressDockMenuClickRef.current) {
-                setIsDockMenuOpen(true);
-              }
-            }}
             onMouseDown={(event) => {
               if (event.button !== 2 && !event.ctrlKey) return;
               event.preventDefault();
