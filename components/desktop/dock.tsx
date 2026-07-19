@@ -24,7 +24,7 @@ function DockTooltip({
   return (
     <div
       className="pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 transition-[top] duration-100 ease-out"
-      style={{ top: `${-40 - lift}px` }}
+      style={{ top: `${-46 - lift}px` }}
     >
       <svg
         viewBox="0 0 100 44"
