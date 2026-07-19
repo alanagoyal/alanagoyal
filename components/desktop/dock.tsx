@@ -92,7 +92,7 @@ function getInitialDockScale(): number {
 
 function getInitialDockMagnification(): boolean {
   if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(DOCK_MAGNIFICATION_STORAGE_KEY) !== "false";
+  return window.sessionStorage.getItem(DOCK_MAGNIFICATION_STORAGE_KEY) !== "false";
 }
 
 export function Dock({
@@ -532,7 +532,7 @@ export function Dock({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(
+    window.sessionStorage.setItem(
       DOCK_MAGNIFICATION_STORAGE_KEY,
       String(magnificationEnabled)
     );
