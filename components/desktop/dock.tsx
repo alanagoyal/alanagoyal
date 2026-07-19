@@ -733,11 +733,11 @@ export function Dock({
           {isDockMenuOpen && (
             <div
               role="menu"
-              className="absolute bottom-[calc(100%+12px)] left-1/2 z-[90] w-60 -translate-x-1/2 rounded-2xl border border-white/30 bg-white/70 p-1.5 shadow-2xl backdrop-blur-2xl dark:border-white/15 dark:bg-zinc-800/75"
+              className="absolute bottom-[calc(100%+8px)] left-1/2 z-[90] w-56 -translate-x-1/2 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
             >
               <span
                 aria-hidden
-                className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b border-r border-white/30 bg-white/70 dark:border-white/15 dark:bg-zinc-800/75"
+                className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-black/10 bg-white/95 dark:border-white/10 dark:bg-zinc-800/95"
               />
               <button
                 type="button"
@@ -747,7 +747,7 @@ export function Dock({
                   setMagnificationEnabled((enabled) => !enabled);
                   closeDockMenu();
                 }}
-                className="relative z-[1] w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+                className="relative z-[1] flex w-full items-center justify-between px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
               >
                 {magnificationEnabled
                   ? "Turn Magnification Off"
