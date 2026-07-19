@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build"
+    "check": "npm run lint && npm run test && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.4",
