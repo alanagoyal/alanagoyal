@@ -1,9 +1,12 @@
 "use client";
 
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useAudio } from "@/lib/music/audio-context";
 import {
+  ListMusic,
   Play,
   Pause,
   SkipBack,
@@ -32,10 +35,16 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
     setVolume,
     toggleShuffle,
     toggleRepeat,
+    play,
   } = useAudio();
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const queuePanelRef = useRef<HTMLDivElement>(null);
+  const closeQueue = useCallback(() => setIsQueueOpen(false), []);
 
   const { currentTrack, isPlaying, progress, volume, isShuffle, repeatMode, duration, queue, queueIndex } =
     playbackState;
+
+  useClickOutside(queuePanelRef, closeQueue, isQueueOpen);
 
   // Don't render if nothing is playing
   if (!currentTrack) return null;
@@ -44,6 +53,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
   const canNavigate = queue.length > 1;
   const canGoPrevious = canNavigate && queueIndex > 0;
   const canGoNext = canNavigate && (queueIndex < queue.length - 1 || repeatMode === "all");
+  const upcomingTracks = queue.slice(queueIndex + 1);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -66,7 +76,7 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
   return (
     <div
       className={cn(
-        "flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-sm",
+        "relative flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-sm",
         isMobileView ? "h-16 px-3" : "h-20 px-4"
       )}
     >
@@ -190,12 +200,13 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
           )}
         </div>
 
-        {/* Volume Control */}
+        {/* Volume and Queue Controls */}
         {!isMobileView && (
-          <div className="flex items-center gap-2 w-[150px]">
+          <div className="flex items-center gap-1 w-[190px]">
             <button
               onClick={handleVolumeToggle}
-              className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 rounded-full text-muted-foreground transition-colors can-hover:hover:text-foreground"
+              aria-label={volume === 0 ? "Unmute" : "Mute"}
             >
               {volume === 0 ? (
                 <VolumeX className="w-4 h-4" />
@@ -210,9 +221,127 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
               onValueChange={([value]) => setVolume(value / 100)}
               className="flex-1"
             />
+            <div ref={queuePanelRef} className="relative">
+              <button
+                onClick={() => setIsQueueOpen((open) => !open)}
+                className={cn(
+                  "p-2 rounded-full transition-colors can-hover:hover:text-foreground",
+                  isQueueOpen ? "text-red-500" : "text-muted-foreground"
+                )}
+                aria-label="Playing Next"
+                aria-expanded={isQueueOpen}
+                aria-controls="music-playing-next"
+                title="Playing Next"
+              >
+                <ListMusic className="w-4 h-4" />
+              </button>
+
+              {isQueueOpen && (
+                <div
+                  id="music-playing-next"
+                  role="region"
+                  aria-label="Playing Next"
+                  className="absolute bottom-[calc(100%+24px)] right-0 z-10 w-[320px] overflow-hidden rounded-xl border border-black/10 bg-white/95 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-800/95"
+                >
+                  <div className="border-b border-border/60 px-4 py-3">
+                    <h2 className="text-sm font-semibold">Playing Next</h2>
+                  </div>
+
+                  <div className="max-h-[340px] overflow-y-auto p-2">
+                    <p className="px-2 pb-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Now Playing
+                    </p>
+                    <QueueTrack
+                      track={currentTrack}
+                      isCurrent
+                    />
+
+                    <p className="px-2 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Next
+                    </p>
+                    {upcomingTracks.length > 0 ? (
+                      upcomingTracks.map((track) => (
+                        <QueueTrack
+                          key={track.id}
+                          track={track}
+                          onPlay={() => play(track, queue)}
+                        />
+                      ))
+                    ) : (
+                      <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                        No songs queued
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function QueueTrack({
+  track,
+  isCurrent = false,
+  onPlay,
+}: {
+  track: {
+    name: string;
+    artist: string;
+    albumArt: string;
+  };
+  isCurrent?: boolean;
+  onPlay?: () => void;
+}) {
+  const content = (
+    <>
+      <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-muted">
+        <Image
+          src={track.albumArt}
+          alt=""
+          fill
+          className="object-cover"
+          unoptimized
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={cn("truncate text-sm", isCurrent && "text-red-500")}>
+          {track.name}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">{track.artist}</p>
+      </div>
+      {isCurrent && (
+        <span className="flex h-4 items-end gap-0.5" aria-label="Now playing">
+          {[10, 16, 12].map((height, index) => (
+            <span
+              key={index}
+              className="w-0.5 rounded-full bg-red-500"
+              style={{ height }}
+            />
+          ))}
+        </span>
+      )}
+    </>
+  );
+
+  if (!onPlay) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg px-2 py-1.5">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onPlay}
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors can-hover:hover:bg-muted"
+      aria-label={`Play ${track.name} by ${track.artist}`}
+    >
+      {content}
+    </button>
   );
 }
