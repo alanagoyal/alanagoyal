@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
@@ -19,10 +25,13 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { formatDuration } from "@/lib/music/utils";
+import type { PlaylistTrack } from "./types";
 
 interface NowPlayingBarProps {
   isMobileView: boolean;
 }
+
+type DropPosition = "before" | "after";
 
 export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
   const {
@@ -33,18 +42,42 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
     previous,
     seek,
     setVolume,
+    reorderQueue,
     toggleShuffle,
     toggleRepeat,
     play,
   } = useAudio();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [draggedTrackId, setDraggedTrackId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    trackId: string;
+    position: DropPosition;
+  } | null>(null);
   const queuePanelRef = useRef<HTMLDivElement>(null);
+  const mouseDragTrackIdRef = useRef<string | null>(null);
+  const suppressNextPlayRef = useRef(false);
   const closeQueue = useCallback(() => setIsQueueOpen(false), []);
 
   const { currentTrack, isPlaying, progress, volume, isShuffle, repeatMode, duration, queue, queueIndex } =
     playbackState;
 
   useClickOutside(queuePanelRef, closeQueue, isQueueOpen);
+
+  useEffect(() => {
+    const handleWindowMouseUp = () => {
+      if (!mouseDragTrackIdRef.current) return;
+
+      mouseDragTrackIdRef.current = null;
+      setDraggedTrackId(null);
+      setDropTarget(null);
+      requestAnimationFrame(() => {
+        suppressNextPlayRef.current = false;
+      });
+    };
+
+    window.addEventListener("mouseup", handleWindowMouseUp);
+    return () => window.removeEventListener("mouseup", handleWindowMouseUp);
+  }, []);
 
   // Don't render if nothing is playing
   if (!currentTrack) return null;
@@ -72,6 +105,82 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
   };
 
   const currentTime = Math.floor(progress * duration);
+
+  const handleDragStart = (trackId: string) => {
+    suppressNextPlayRef.current = true;
+    mouseDragTrackIdRef.current = trackId;
+    setDraggedTrackId(trackId);
+  };
+
+  const handleDragOver = (
+    trackId: string,
+    position: DropPosition
+  ) => {
+    if (trackId === draggedTrackId) {
+      setDropTarget(null);
+      return;
+    }
+
+    setDropTarget({ trackId, position });
+  };
+
+  const moveTrack = (
+    sourceTrackId: string,
+    trackId: string,
+    position: DropPosition
+  ) => {
+    if (sourceTrackId === trackId) return;
+
+    const fromIndex = queue.findIndex((track) => track.id === sourceTrackId);
+    const targetIndex = queue.findIndex((track) => track.id === trackId);
+    if (fromIndex < 0 || targetIndex < 0) return;
+
+    let toIndex = targetIndex + (position === "after" ? 1 : 0);
+    if (fromIndex < toIndex) {
+      toIndex -= 1;
+    }
+
+    reorderQueue(fromIndex, toIndex);
+    setDropTarget(null);
+  };
+
+  const handleDrop = (trackId: string, position: DropPosition) => {
+    if (!draggedTrackId) return;
+    moveTrack(draggedTrackId, trackId, position);
+    mouseDragTrackIdRef.current = null;
+  };
+
+  const handleMouseDrag = (
+    trackId: string,
+    position: DropPosition
+  ) => {
+    const sourceTrackId = mouseDragTrackIdRef.current;
+    if (!sourceTrackId || sourceTrackId === trackId) return;
+
+    suppressNextPlayRef.current = true;
+    setDraggedTrackId(sourceTrackId);
+    setDropTarget({ trackId, position });
+  };
+
+  const handleMouseDrop = (
+    trackId: string,
+    position: DropPosition
+  ) => {
+    const sourceTrackId = mouseDragTrackIdRef.current;
+    if (sourceTrackId) {
+      moveTrack(sourceTrackId, trackId, position);
+    }
+    handleDragEnd();
+  };
+
+  const handleDragEnd = () => {
+    mouseDragTrackIdRef.current = null;
+    setDraggedTrackId(null);
+    setDropTarget(null);
+    requestAnimationFrame(() => {
+      suppressNextPlayRef.current = false;
+    });
+  };
 
   return (
     <div
@@ -264,7 +373,34 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
                         <QueueTrack
                           key={track.id}
                           track={track}
-                          onPlay={() => play(track, queue)}
+                          isDragging={draggedTrackId === track.id}
+                          dropPosition={
+                            dropTarget?.trackId === track.id
+                              ? dropTarget.position
+                              : null
+                          }
+                          onPlay={() => {
+                            if (!suppressNextPlayRef.current) {
+                              play(track, queue);
+                            }
+                          }}
+                          onDragStart={() => handleDragStart(track.id)}
+                          onDragOver={(position) =>
+                            handleDragOver(track.id, position)
+                          }
+                          onDrop={(position) =>
+                            handleDrop(track.id, position)
+                          }
+                          onDragEnd={handleDragEnd}
+                          onMouseDown={() => {
+                            mouseDragTrackIdRef.current = track.id;
+                          }}
+                          onMouseDrag={(position) =>
+                            handleMouseDrag(track.id, position)
+                          }
+                          onMouseDrop={(position) =>
+                            handleMouseDrop(track.id, position)
+                          }
                         />
                       ))
                     ) : (
@@ -286,16 +422,37 @@ export function NowPlayingBar({ isMobileView }: NowPlayingBarProps) {
 function QueueTrack({
   track,
   isCurrent = false,
+  isDragging = false,
+  dropPosition = null,
   onPlay,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onMouseDown,
+  onMouseDrag,
+  onMouseDrop,
 }: {
-  track: {
-    name: string;
-    artist: string;
-    albumArt: string;
-  };
+  track: PlaylistTrack;
   isCurrent?: boolean;
+  isDragging?: boolean;
+  dropPosition?: DropPosition | null;
   onPlay?: () => void;
+  onDragStart?: () => void;
+  onDragOver?: (position: DropPosition) => void;
+  onDrop?: (position: DropPosition) => void;
+  onDragEnd?: () => void;
+  onMouseDown?: () => void;
+  onMouseDrag?: (position: DropPosition) => void;
+  onMouseDrop?: (position: DropPosition) => void;
 }) {
+  const getDropPosition = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return event.clientY < bounds.top + bounds.height / 2
+      ? "before"
+      : "after";
+  };
+
   const content = (
     <>
       <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-muted">
@@ -338,9 +495,51 @@ function QueueTrack({
   return (
     <button
       onClick={onPlay}
-      className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors can-hover:hover:bg-muted"
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", track.id);
+        onDragStart?.();
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const position =
+          event.clientY < bounds.top + bounds.height / 2 ? "before" : "after";
+        onDragOver?.(position);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const position =
+          event.clientY < bounds.top + bounds.height / 2 ? "before" : "after";
+        onDrop?.(position);
+      }}
+      onDragEnd={onDragEnd}
+      onMouseDown={onMouseDown}
+      onMouseMove={(event) => {
+        if (event.buttons === 1) {
+          onMouseDrag?.(getDropPosition(event));
+        }
+      }}
+      onMouseUp={(event) => onMouseDrop?.(getDropPosition(event))}
+      className={cn(
+        "relative flex w-full select-none items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-[background-color,opacity] can-hover:cursor-grab can-hover:hover:bg-muted can-hover:active:cursor-grabbing",
+        isDragging && "opacity-35"
+      )}
       aria-label={`Play ${track.name} by ${track.artist}`}
+      title="Drag to reorder"
     >
+      {dropPosition && (
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute left-2 right-2 h-0.5 rounded-full bg-red-500",
+            dropPosition === "before" ? "-top-px" : "-bottom-px"
+          )}
+        />
+      )}
       {content}
     </button>
   );
