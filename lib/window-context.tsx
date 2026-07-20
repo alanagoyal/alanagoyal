@@ -16,8 +16,11 @@ import {
 } from "@/types/window";
 import { APPS, getAppById } from "./app-config";
 import { clearAppState, clearAllAppState } from "./sidebar-persistence";
+import {
+  loadWindowState,
+  saveWindowStatePayload,
+} from "./window-state-storage";
 
-const STORAGE_KEY = "desktop-window-state";
 const WINDOW_STATE_PERSIST_DEBOUNCE_MS = 1000;
 
 // =============================================================================
@@ -189,40 +192,43 @@ function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string)
   };
 }
 
+function deserializeWindowState(serializedState: string): WindowManagerState | null {
+  try {
+    const parsed = JSON.parse(serializedState);
+    if (!parsed.windows || typeof parsed.nextZIndex !== "number") return null;
+
+    // Merge with current APPS config to pick up any new single-window apps.
+    const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
+    APPS.forEach((app) => {
+      if (!app.multiWindow && !mergedWindows[app.id]) {
+        mergedWindows[app.id] = getDefaultWindowState(app.id);
+      }
+    });
+
+    return {
+      ...parsed,
+      windows: mergedWindows,
+      // Ensure nextInstanceNumber exists (migration from old state).
+      nextInstanceNumber: parsed.nextInstanceNumber || {},
+    };
+  } catch {
+    return null;
+  }
+}
+
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Validate structure
-      if (parsed.windows && typeof parsed.nextZIndex === "number") {
-        // Merge with current APPS config to pick up any new single-window apps
-        const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
-        APPS.forEach((app) => {
-          // Only add default windows for single-window apps
-          if (!app.multiWindow && !mergedWindows[app.id]) {
-            mergedWindows[app.id] = getDefaultWindowState(app.id);
-          }
-        });
-        return {
-          ...parsed,
-          windows: mergedWindows,
-          // Ensure nextInstanceNumber exists (migration from old state)
-          nextInstanceNumber: parsed.nextInstanceNumber || {},
-        };
-      }
-    }
-  } catch (e) {
-    console.error("Failed to load window state:", e);
-  }
-  return null;
+  return loadWindowState(
+    sessionStorage,
+    localStorage,
+    deserializeWindowState
+  );
 }
 
 function saveSerializedStateToStorage(serializedState: string): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, serializedState);
+    saveWindowStatePayload(sessionStorage, serializedState);
   } catch (e) {
     console.error("Failed to save window state:", e);
   }
@@ -231,7 +237,7 @@ function saveSerializedStateToStorage(serializedState: string): void {
 /**
  * Get the topmost (highest z-index) open window for a specific app
  * Used by MobileShell to display the correct window when switching from desktop
- * Reads directly from localStorage to work outside WindowManagerProvider
+ * Reads directly from tab-scoped storage to work outside WindowManagerProvider.
  */
 export function getTopmostWindowForApp(appId: string): WindowState | null {
   const savedState = loadStateFromStorage();
@@ -872,7 +878,7 @@ export function WindowManagerProvider({
   const lastPersistedStateRef = React.useRef<string | null>(null);
   /**
    * Compute initial state based on:
-   * 1. Whether user has saved state (localStorage)
+   * 1. Whether this tab has saved window state (sessionStorage)
    * 2. Which app they're navigating to (initialAppId)
    *
    * Logic:
@@ -885,7 +891,7 @@ export function WindowManagerProvider({
     const savedState = loadStateFromStorage();
 
     if (savedState) {
-      // Returning visitor: preserve their session state as-is unless a deep link requests focus
+      // Returning tab: preserve its window state unless a deep link requests focus.
       if (initialAppId) {
         const focusedAppId = savedState.focusedWindowId
           ? getAppIdFromWindowId(savedState.focusedWindowId)

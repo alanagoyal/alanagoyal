@@ -863,7 +863,7 @@ function DesktopContent({
                   onMove={(pos) => moveMultiWindow(windowState.id, pos)}
                   onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
                   onContentChange={(newContent) => {
-                    // Update metadata and save to localStorage
+                    // Update metadata; window state persists for this tab.
                     updateWindowMetadata(windowState.id, { content: newContent });
                     if (filePath) {
                       saveTextEditContent(filePath, newContent);
