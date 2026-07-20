@@ -17,7 +17,7 @@ import {
 import { APPS, getAppById } from "./app-config";
 import { clearAppState, clearAllAppState } from "./sidebar-persistence";
 import {
-  loadWindowStatePayload,
+  loadWindowState,
   saveWindowStatePayload,
 } from "./window-state-storage";
 
@@ -192,34 +192,37 @@ function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string)
   };
 }
 
+function deserializeWindowState(serializedState: string): WindowManagerState | null {
+  try {
+    const parsed = JSON.parse(serializedState);
+    if (!parsed.windows || typeof parsed.nextZIndex !== "number") return null;
+
+    // Merge with current APPS config to pick up any new single-window apps.
+    const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
+    APPS.forEach((app) => {
+      if (!app.multiWindow && !mergedWindows[app.id]) {
+        mergedWindows[app.id] = getDefaultWindowState(app.id);
+      }
+    });
+
+    return {
+      ...parsed,
+      windows: mergedWindows,
+      // Ensure nextInstanceNumber exists (migration from old state).
+      nextInstanceNumber: parsed.nextInstanceNumber || {},
+    };
+  } catch {
+    return null;
+  }
+}
+
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
-  try {
-    const saved = loadWindowStatePayload(sessionStorage, localStorage);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Validate structure
-      if (parsed.windows && typeof parsed.nextZIndex === "number") {
-        // Merge with current APPS config to pick up any new single-window apps
-        const mergedWindows: Record<string, WindowState> = { ...parsed.windows };
-        APPS.forEach((app) => {
-          // Only add default windows for single-window apps
-          if (!app.multiWindow && !mergedWindows[app.id]) {
-            mergedWindows[app.id] = getDefaultWindowState(app.id);
-          }
-        });
-        return {
-          ...parsed,
-          windows: mergedWindows,
-          // Ensure nextInstanceNumber exists (migration from old state)
-          nextInstanceNumber: parsed.nextInstanceNumber || {},
-        };
-      }
-    }
-  } catch (e) {
-    console.error("Failed to load window state:", e);
-  }
-  return null;
+  return loadWindowState(
+    sessionStorage,
+    localStorage,
+    deserializeWindowState
+  );
 }
 
 function saveSerializedStateToStorage(serializedState: string): void {

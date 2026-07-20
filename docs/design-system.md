@@ -472,8 +472,9 @@ machine.
 - Durable app content and preferences remain available when a fresh desktop starts.
 - A one-time compatibility migration copies the legacy `localStorage`
   `desktop-window-state` value into the current tab's `sessionStorage`, then
-  removes the durable copy. If tab storage is unavailable, the legacy value is
-  retained so the user's existing layout is not discarded.
+  removes the durable copy only after the selected payload passes window-state
+  validation. If tab storage is unavailable, the legacy value is retained so
+  the user's existing layout is not discarded.
 
 ### Standard Behavior for List + Detail Apps
 

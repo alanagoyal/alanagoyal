@@ -7,7 +7,7 @@ this file captures the patterns and conventions that matter most when working in
 ## how to work in this repo
 
 1. read `docs/design-system.md` before touching any UI — it defines colors, tokens, sidebar patterns, and has a checklist for new apps
-2. run `npm run build` after making changes — no test framework, the build is the only gate
+2. run `npm run check` after making changes — it runs lint, Node tests, typecheck, and the production build
 
 ## key files
 

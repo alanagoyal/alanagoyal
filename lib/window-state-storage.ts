@@ -11,20 +11,41 @@ export const WINDOW_STATE_STORAGE_KEY = "desktop-window-state";
 
 type StorageArea = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-export function loadWindowStatePayload(
+function parsePayload<T>(
+  serializedState: string,
+  deserialize: (serializedState: string) => T | null
+): T | null {
+  try {
+    return deserialize(serializedState);
+  } catch {
+    return null;
+  }
+}
+
+export function loadWindowState<T>(
   tabStorage: StorageArea,
-  durableStorage: StorageArea
-): string | null {
+  durableStorage: StorageArea,
+  deserialize: (serializedState: string) => T | null
+): T | null {
   try {
     const tabValue = tabStorage.getItem(WINDOW_STATE_STORAGE_KEY);
     if (tabValue !== null) {
-      // Best-effort cleanup for users who already have the tab-scoped value.
-      try {
-        durableStorage.removeItem(WINDOW_STATE_STORAGE_KEY);
-      } catch {
-        // Storage can be unavailable in restricted browser contexts.
+      const parsedTabValue = parsePayload(tabValue, deserialize);
+      if (parsedTabValue !== null) {
+        // Only remove the legacy copy after the preferred value is valid.
+        try {
+          durableStorage.removeItem(WINDOW_STATE_STORAGE_KEY);
+        } catch {
+          // Storage can be unavailable in restricted browser contexts.
+        }
+        return parsedTabValue;
       }
-      return tabValue;
+
+      try {
+        tabStorage.removeItem(WINDOW_STATE_STORAGE_KEY);
+      } catch {
+        // Continue to the valid legacy fallback when cleanup is unavailable.
+      }
     }
   } catch {
     // Fall back to the legacy durable value below.
@@ -39,11 +60,14 @@ export function loadWindowStatePayload(
 
   if (legacyValue === null) return null;
 
+  const parsedLegacyValue = parsePayload(legacyValue, deserialize);
+  if (parsedLegacyValue === null) return null;
+
   try {
     tabStorage.setItem(WINDOW_STATE_STORAGE_KEY, legacyValue);
   } catch {
     // Keep the legacy value when migration cannot be completed.
-    return legacyValue;
+    return parsedLegacyValue;
   }
 
   try {
@@ -52,7 +76,7 @@ export function loadWindowStatePayload(
     // The successful tab write is enough; cleanup can be retried next load.
   }
 
-  return legacyValue;
+  return parsedLegacyValue;
 }
 
 export function saveWindowStatePayload(
