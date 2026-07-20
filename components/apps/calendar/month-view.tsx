@@ -236,7 +236,7 @@ export function MonthView({
                   <div
                     key={dayIdx}
                     className={cn(
-                      "border-b border-r border-border p-1 cursor-pointer hover:bg-muted/30 transition-colors overflow-hidden"
+                      "border-b border-r border-border p-1 cursor-pointer can-hover:hover:bg-muted/30 transition-colors overflow-hidden"
                     )}
                     style={{ height: WEEK_HEIGHT }}
                     onDoubleClick={() => handleDoubleClick(day)}

@@ -192,7 +192,7 @@ function focusTopmostWindowForApp(savedState: WindowManagerState, appId: string)
 function loadStateFromStorage(): WindowManagerState | null {
   if (typeof window === "undefined") return null;
   try {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       // Validate structure
@@ -222,7 +222,7 @@ function loadStateFromStorage(): WindowManagerState | null {
 function saveSerializedStateToStorage(serializedState: string): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(STORAGE_KEY, serializedState);
+    localStorage.setItem(STORAGE_KEY, serializedState);
   } catch (e) {
     console.error("Failed to save window state:", e);
   }
@@ -231,7 +231,7 @@ function saveSerializedStateToStorage(serializedState: string): void {
 /**
  * Get the topmost (highest z-index) open window for a specific app
  * Used by MobileShell to display the correct window when switching from desktop
- * Reads directly from sessionStorage to work outside WindowManagerProvider
+ * Reads directly from localStorage to work outside WindowManagerProvider
  */
 export function getTopmostWindowForApp(appId: string): WindowState | null {
   const savedState = loadStateFromStorage();
@@ -486,7 +486,7 @@ function windowReducer(
     // ==========================================================================
 
     case "OPEN_MULTI_WINDOW": {
-      const { appId, instanceId, metadata, size: customSize } = action;
+      const { appId, instanceId, metadata, size: customSize, position: customPosition } = action;
       const app = getAppById(appId);
       if (!app?.multiWindow) return state;
 
@@ -528,7 +528,7 @@ function windowReducer(
             isOpen: true,
             isMinimized: false,
             isMaximized: false,
-            position: newPosition,
+            position: customPosition ?? newPosition,
             size: customSize ?? app.defaultSize,
             zIndex: state.nextZIndex,
             metadata,
@@ -787,6 +787,11 @@ function windowReducer(
       const { windowId, metadata } = action;
       const window = state.windows[windowId];
       if (!window) return state;
+      const currentMetadata = window.metadata ?? {};
+      const hasActualChange = Object.entries(metadata).some(
+        ([key, value]) => !Object.is(currentMetadata[key], value)
+      );
+      if (!hasActualChange) return state;
 
       return {
         ...state,
@@ -794,7 +799,7 @@ function windowReducer(
           ...state.windows,
           [windowId]: {
             ...window,
-            metadata: { ...window.metadata, ...metadata },
+            metadata: { ...currentMetadata, ...metadata },
           },
         },
       };
@@ -822,7 +827,7 @@ interface WindowManagerContextValue {
   getWindow: (appId: string) => WindowState | undefined;
   isWindowOpen: (appId: string) => boolean;
   // Multi-window app methods
-  openMultiWindow: (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size) => void;
+  openMultiWindow: (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size, position?: Position) => void;
   closeMultiWindow: (windowId: string) => void;
   focusMultiWindow: (windowId: string) => void;
   moveMultiWindow: (windowId: string, position: Position) => void;
@@ -867,7 +872,7 @@ export function WindowManagerProvider({
   const lastPersistedStateRef = React.useRef<string | null>(null);
   /**
    * Compute initial state based on:
-   * 1. Whether user has saved state (sessionStorage)
+   * 1. Whether user has saved state (localStorage)
    * 2. Which app they're navigating to (initialAppId)
    *
    * Logic:
@@ -932,7 +937,7 @@ export function WindowManagerProvider({
     latestStateRef.current = state;
   }, [state]);
 
-  // Debounce session persistence to avoid excessive writes during drag/resize
+  // Debounce local persistence to avoid excessive writes during drag/resize
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -1061,8 +1066,8 @@ export function WindowManagerProvider({
   // ==========================================================================
 
   const openMultiWindow = useCallback(
-    (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size) => {
-      dispatch({ type: "OPEN_MULTI_WINDOW", appId, instanceId, metadata, size });
+    (appId: string, instanceId: string, metadata?: Record<string, unknown>, size?: Size, position?: Position) => {
+      dispatch({ type: "OPEN_MULTI_WINDOW", appId, instanceId, metadata, size, position });
     },
     []
   );

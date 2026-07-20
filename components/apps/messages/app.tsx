@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { initialConversations } from "@/data/messages/initial-conversations";
 import { MessageQueue } from "@/lib/messages/message-queue";
 import { soundEffects, shouldMuteIncomingSound } from "@/lib/messages/sound-effects";
-import { extractMessageContent } from "@/lib/messages/content";
+import { extractMessageData } from "@/lib/messages/content";
 import { pushUrl } from "@/lib/set-url";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useFileMenu } from "@/lib/file-menu-context";
@@ -668,7 +668,7 @@ export default function App({
     messageHtml: string,
     conversationId?: string
   ) => {
-    const messageText = extractMessageContent(messageHtml);
+    const { text: messageText, mentions } = extractMessageData(messageHtml);
     if (!messageText.trim()) return;
 
     // Create a new conversation if no conversation ID is provided or in new conversation mode
@@ -700,6 +700,7 @@ export default function App({
         id: uuidv4(),
         content: messageText,
         htmlContent: messageHtml,
+        mentions,
         sender: "me",
         timestamp: new Date().toISOString(),
       };
@@ -744,6 +745,7 @@ export default function App({
       id: uuidv4(),
       content: messageText,
       htmlContent: messageHtml,
+      mentions,
       sender: "me",
       timestamp: new Date().toISOString(),
     };

@@ -98,7 +98,11 @@ function getInitialDockScale(): number {
   return clamp(parsed, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE);
 }
 
-export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps) {
+export function Dock({
+  onTrashClick,
+  onFinderClick,
+  appBadges = {},
+}: DockProps) {
   const {
     openWindow,
     focusWindow,
@@ -278,7 +282,6 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
       if (hasOpenWindows(appId)) {
         bringAppToFront(appId);
       }
-      // If no windows open, do nothing (can't open TextEdit without a file)
       return;
     }
 
@@ -486,7 +489,7 @@ export function Dock({ onTrashClick, onFinderClick, appBadges = {} }: DockProps)
                 "group relative flex flex-col items-center outline-none transition-all duration-300 flex-shrink-0",
                 animState === "entering" && "animate-dock-enter",
                 animState === "exiting" && "animate-dock-exit",
-                animState === "stable" && "hover:scale-110 active:scale-95"
+                animState === "stable" && "can-hover:hover:scale-110 active:scale-95"
               )}
             >
               {hoveredApp === app.id && animState === "stable" && !isResizingDock && (

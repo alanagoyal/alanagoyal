@@ -1,19 +1,34 @@
 "use client";
 
-import React, { useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/notes/types";
+import { Icons } from "./icons";
 import {
   getImageFromClipboard,
+  getImagesFromDataTransfer,
   uploadNoteImage,
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
+import { cn } from "@/lib/utils";
 
 const SPACE_TAB = "  ";
 const NBSP_TAB = "\u00a0\u00a0";
+
+function hasFilePayload(dataTransfer: DataTransfer | null): boolean {
+  if (!dataTransfer) return false;
+  return Array.from(dataTransfer.types || []).includes("Files");
+}
+
+function hasImagePayload(dataTransfer: DataTransfer | null): boolean {
+  if (!dataTransfer) return false;
+
+  const itemTypes = Array.from(dataTransfer.items || []).map((item) => item.type);
+  return itemTypes.some((type) => type.startsWith("image/"));
+}
 
 function getTaskText(node: React.ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -51,6 +66,11 @@ export default function NoteContent({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const clickRelativeYRef = useRef<number | null>(null);
+  const dragDepthRef = useRef(0);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploadFeedbackDismissed, setIsUploadFeedbackDismissed] = useState(false);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -114,6 +134,80 @@ export default function NoteContent({
     saveNote({ content: e.target.value });
   }, [saveNote]);
 
+  const ensureTextareaReady = useCallback(async () => {
+    if (textareaRef.current) return textareaRef.current;
+
+    return await new Promise<HTMLTextAreaElement | null>((resolve) => {
+      const startedAt = performance.now();
+
+      const poll = () => {
+        if (textareaRef.current) {
+          resolve(textareaRef.current);
+          return;
+        }
+
+        if (performance.now() - startedAt > 1500) {
+          resolve(null);
+          return;
+        }
+
+        requestAnimationFrame(poll);
+      };
+
+      poll();
+    });
+  }, []);
+
+  const uploadAndInsertImages = useCallback(
+    async (files: File[], options?: { insertAtEnd?: boolean }) => {
+      if (!canEdit || files.length === 0) return;
+
+      setUploadError(null);
+      setIsUploadFeedbackDismissed(false);
+      setIsUploadingImages(true);
+
+      if (options?.insertAtEnd || !isEditing) {
+        setIsEditing(true);
+      }
+
+      try {
+        const textarea = await ensureTextareaReady();
+        if (!textarea) {
+          setUploadError("Could not open the editor to insert the image.");
+          return;
+        }
+
+        if (options?.insertAtEnd) {
+          const end = textarea.value.length;
+          textarea.setSelectionRange(end, end);
+          textarea.focus();
+        }
+
+        for (const file of files) {
+          const result = await uploadNoteImage(file, note.id);
+
+          if (!result.success || !result.url) {
+            setUploadError(result.error ?? "Image upload failed.");
+            continue;
+          }
+
+          const altText =
+            file.name.replace(/\.[^.]+$/, "").trim() || "image";
+          insertImageMarkdown(textarea, result.url, altText);
+        }
+
+        const newContent = textarea.value;
+        setTimeout(() => saveNote({ content: newContent }), 0);
+      } catch (error) {
+        console.error("Unexpected error during image upload:", error);
+        setUploadError("An unexpected error occurred during image upload.");
+      } finally {
+        setIsUploadingImages(false);
+      }
+    },
+    [canEdit, ensureTextareaReady, isEditing, note.id, saveNote, setIsEditing]
+  );
+
   const handlePaste = useCallback(
     async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       if (!canEdit) return;
@@ -125,24 +219,71 @@ export default function NoteContent({
 
       // Prevent default paste behavior for images
       e.preventDefault();
+      await uploadAndInsertImages([imageFile]);
+    },
+    [canEdit, uploadAndInsertImages]
+  );
 
-      try {
-        const result = await uploadNoteImage(imageFile, note.id);
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!canEdit) return;
 
-        if (result.success && result.url && textareaRef.current) {
-          insertImageMarkdown(textareaRef.current, result.url);
-          // Save the updated content since the synthetic event doesn't trigger React's onChange
-          // Use setTimeout to defer the state update and avoid "Cannot update a component while rendering" warning
-          const newContent = textareaRef.current.value;
-          setTimeout(() => saveNote({ content: newContent }), 0);
-        } else if (result.error) {
-          console.error("Image upload failed:", result.error);
+      if (!hasFilePayload(e.dataTransfer)) return;
+
+      e.preventDefault();
+      dragDepthRef.current += 1;
+      setUploadError(null);
+      setIsDragActive(hasImagePayload(e.dataTransfer));
+    },
+    [canEdit]
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!canEdit) return;
+
+      if (!hasFilePayload(e.dataTransfer)) return;
+
+      e.preventDefault();
+      if (hasImagePayload(e.dataTransfer)) {
+        e.dataTransfer.dropEffect = "copy";
+        if (!isDragActive) {
+          setIsDragActive(true);
         }
-      } catch (error) {
-        console.error("Unexpected error during image upload:", error);
+      } else {
+        e.dataTransfer.dropEffect = "none";
       }
     },
-    [canEdit, note.id, saveNote]
+    [canEdit, isDragActive]
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!canEdit) return;
+
+    e.preventDefault();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) {
+      setIsDragActive(false);
+    }
+  }, [canEdit]);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      if (!canEdit) return;
+
+      if (!hasFilePayload(e.dataTransfer)) return;
+
+      e.preventDefault();
+      const imageFiles = getImagesFromDataTransfer(e.dataTransfer);
+      dragDepthRef.current = 0;
+      setIsDragActive(false);
+      if (imageFiles.length === 0) {
+        setUploadError("Only image files can be dropped into notes.");
+        return;
+      }
+      await uploadAndInsertImages(imageFiles, { insertAtEnd: !isEditing });
+    },
+    [canEdit, isEditing, uploadAndInsertImages]
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -292,7 +433,17 @@ export default function NoteContent({
   }, []);
 
   return (
-    <div className="px-2" onClick={isEditing ? stopPropagation : undefined}>
+    <div
+      className="px-2 relative"
+      onClick={isEditing ? stopPropagation : undefined}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragActive && canEdit && (
+        <div className="pointer-events-none absolute inset-0 z-20 rounded-lg border-2 border-dashed border-[#0A7CFF]/60 bg-[#0A7CFF]/6" />
+      )}
       {(isEditing && canEdit) || (!note.content && canEdit) ? (
         <Textarea
           ref={textareaRef}

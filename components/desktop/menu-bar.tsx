@@ -15,8 +15,11 @@ import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
+import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
+
+const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -28,6 +31,7 @@ interface MenuBarProps {
   onLockScreen?: () => void;
   onLogout?: () => void;
   onOpenMessagesConversation?: (conversationId: string) => void;
+  onOpenPodcastNotification?: (notification: PodcastNotificationPayload) => void;
 }
 
 export function MenuBar({
@@ -40,12 +44,25 @@ export function MenuBar({
   onLockScreen,
   onLogout,
   onOpenMessagesConversation,
+  onOpenPodcastNotification,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
+  const [lowPowerMode, setLowPowerMode] = useState(false);
+  const [hasLoadedLowPowerMode, setHasLoadedLowPowerMode] = useState(false);
+
+  useEffect(() => {
+    setLowPowerMode(window.localStorage.getItem(LOW_POWER_MODE_STORAGE_KEY) === "true");
+    setHasLoadedLowPowerMode(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedLowPowerMode) return;
+    window.localStorage.setItem(LOW_POWER_MODE_STORAGE_KEY, String(lowPowerMode));
+  }, [hasLoadedLowPowerMode, lowPowerMode]);
 
   // Sync menu open state to window context (used to prevent window focus when menu is open)
   useEffect(() => {
@@ -114,7 +131,7 @@ export function MenuBar({
           onClick={() => toggleMenu("apple")}
           className={cn(
             "flex items-center justify-center w-6 h-5 -ml-1 rounded transition-colors",
-            openMenu === "apple" ? "bg-blue-500" : "hover:bg-white/10"
+            openMenu === "apple" ? "bg-blue-500" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon
@@ -131,7 +148,7 @@ export function MenuBar({
             "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
             openMenu === "appMenu"
               ? "bg-blue-500 text-white"
-              : "text-black dark:text-white hover:bg-white/10"
+              : "text-black dark:text-white can-hover:hover:bg-white/10"
           )}
         >
           {focusedApp?.menuBarTitle || "Finder"}
@@ -143,7 +160,7 @@ export function MenuBar({
               "text-sm px-2 py-0.5 rounded transition-colors",
               openMenu === "fileMenu"
                 ? "bg-blue-500 text-white"
-                : "text-black dark:text-white hover:bg-white/10"
+                : "text-black dark:text-white can-hover:hover:bg-white/10"
             )}
           >
             File
@@ -155,12 +172,19 @@ export function MenuBar({
         {/* Battery */}
         <button
           onClick={() => toggleMenu("battery")}
+          aria-label={`Battery, 97%${lowPowerMode ? ", Low Power Mode on" : ""}`}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "battery" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "battery" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
-          <FontAwesomeIcon icon={faBatteryFull} className="w-5 h-3.5 text-black dark:text-white" />
+          <FontAwesomeIcon
+            icon={faBatteryFull}
+            className={cn(
+              "h-3.5 w-5 transition-colors",
+              lowPowerMode ? "text-yellow-500" : "text-black dark:text-white"
+            )}
+          />
         </button>
 
         {/* Wi-Fi */}
@@ -168,7 +192,7 @@ export function MenuBar({
           onClick={() => toggleMenu("wifi")}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "wifi" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "wifi" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon icon={faWifi} className="w-4 h-4 text-black dark:text-white" />
@@ -179,7 +203,7 @@ export function MenuBar({
           onClick={() => toggleMenu("controlCenter")}
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
-            openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "hover:bg-white/10"
+            openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
           )}
         >
           <FontAwesomeIcon icon={faSliders} className="w-4 h-4 text-black dark:text-white" />
@@ -192,7 +216,7 @@ export function MenuBar({
             "text-sm px-2 py-0.5 rounded transition-colors ml-1",
             openMenu === "notificationCenter"
               ? "bg-white/30 dark:bg-white/20"
-              : "hover:bg-white/10",
+              : "can-hover:hover:bg-white/10",
             "text-black dark:text-white"
           )}
         >
@@ -217,6 +241,8 @@ export function MenuBar({
         isOpen={openMenu === "battery"}
         onClose={closeMenu}
         onOpenSettings={onOpenSettings}
+        lowPowerMode={lowPowerMode}
+        onLowPowerModeChange={setLowPowerMode}
       />
 
       <WifiMenu
@@ -260,6 +286,7 @@ export function MenuBar({
         isOpen={openMenu === "notificationCenter"}
         onClose={closeMenu}
         onOpenMessagesConversation={onOpenMessagesConversation}
+        onOpenPodcastNotification={onOpenPodcastNotification}
       />
 
       <AboutDialog

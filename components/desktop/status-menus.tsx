@@ -18,6 +18,7 @@ import {
   Pause,
   SkipBack,
   SkipForward,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSystemSettings, FocusMode } from "@/lib/system-settings-context";
@@ -68,54 +69,77 @@ interface BatteryMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenSettings?: () => void;
+  lowPowerMode: boolean;
+  onLowPowerModeChange: (enabled: boolean) => void;
 }
 
-export function BatteryMenu({ isOpen, onClose }: BatteryMenuProps) {
+export function BatteryMenu({
+  isOpen,
+  onClose,
+  onOpenSettings,
+  lowPowerMode,
+  onLowPowerModeChange,
+}: BatteryMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [lowPowerMode, setLowPowerMode] = useState(false);
 
   useClickOutside(menuRef, onClose, isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <div ref={menuRef} className={cn(menuContainerClass, "w-56")} style={{ right: "130px" }}>
+    <div ref={menuRef} className={cn(menuContainerClass, "w-[248px]")} style={{ right: "130px" }}>
       {/* Battery header */}
-      <div className="flex items-center justify-between px-3 py-1.5">
-        <span className="text-xs font-semibold">Battery</span>
-        <span className="text-xs">97%</span>
+      <div className="flex items-center justify-between px-3.5 pb-0.5 pt-1.5">
+        <span className="text-[13px] font-semibold leading-5">Battery</span>
+        <span className="text-[13px] leading-5">97%</span>
       </div>
 
-      <div className="px-3 py-1">
-        <span className="text-xs text-muted-foreground">Power Source: Battery</span>
+      <div className="px-3.5 pb-1 pt-0.5">
+        <span className="text-[11px] leading-4 text-muted-foreground">Power Source: Battery</span>
       </div>
 
       <MenuDivider />
 
       {/* Energy Mode */}
-      <div className="px-3 py-1">
-        <span className="text-xs font-medium text-muted-foreground">Energy Mode</span>
+      <div className="px-3.5 pb-0.5 pt-1">
+        <span className="text-[11px] font-medium leading-4 text-muted-foreground">Energy Mode</span>
       </div>
 
       <button
-        onClick={() => setLowPowerMode(!lowPowerMode)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors group"
+        onClick={() => onLowPowerModeChange(!lowPowerMode)}
+        aria-pressed={lowPowerMode}
+        className="group mx-1.5 flex w-[calc(100%_-_0.75rem)] items-center justify-between rounded-[5px] px-2 py-1 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
       >
-        <div className={cn(
-          "flex items-center justify-center w-6 h-6 rounded",
-          lowPowerMode ? "bg-yellow-500" : "bg-gray-200 dark:bg-gray-700"
-        )}>
-          <Battery className={cn("w-4 h-4", lowPowerMode ? "text-white" : "text-gray-600 dark:text-gray-300")} />
+        <div className="flex items-center gap-2.5">
+          <Battery
+            className={cn(
+              "h-4 w-4 text-muted-foreground can-hover:group-hover:text-white",
+              lowPowerMode && "fill-yellow-400/35 text-yellow-500"
+            )}
+            strokeWidth={1.75}
+          />
+          <span className="text-[13px] leading-5">Low Power</span>
         </div>
-        <span className="text-xs">Low Power</span>
+        {lowPowerMode && <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />}
       </button>
 
       <MenuDivider />
 
-      <div className="px-3 py-1.5">
-        <span className="text-xs text-muted-foreground">No Apps Using Significant Energy</span>
+      <div className="px-3.5 py-1">
+        <span className="text-[11px] leading-4 text-muted-foreground">No Apps Using Significant Energy</span>
       </div>
 
+      <MenuDivider />
+
+      <button
+        onClick={() => {
+          onClose();
+          onOpenSettings?.();
+        }}
+        className="mx-1.5 w-[calc(100%_-_0.75rem)] rounded-[5px] px-2 py-1 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
+      >
+        Battery Settings&hellip;
+      </button>
     </div>
   );
 }
@@ -160,12 +184,12 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <span className="text-xs font-semibold text-muted-foreground">Personal Hotspot</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group">
+          <div className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500">
               <Smartphone className="w-3 h-3 text-white" />
             </div>
             <span className="text-xs flex-1">alana&apos;s iphone</span>
-            <div className="flex items-center gap-1 text-muted-foreground group-hover:text-white/70">
+            <div className="flex items-center gap-1 text-muted-foreground can-hover:group-hover:text-white/70">
               <div className="flex items-end gap-px h-2.5">
                 <div className="w-0.5 h-1 bg-current rounded-full" />
                 <div className="w-0.5 h-1.5 bg-current rounded-full" />
@@ -183,12 +207,12 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
             <span className="text-xs font-semibold text-muted-foreground">Known Network</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group">
+          <div className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500">
               <Wifi className="w-3 h-3 text-white" />
             </div>
             <span className="text-xs flex-1">basecase</span>
-            <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+            <Lock className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
           </div>
 
           <MenuDivider />
@@ -200,7 +224,7 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
           >
             <span>Other Networks</span>
             <ChevronRight className={cn(
-              "w-3 h-3 text-muted-foreground group-hover:text-white/70 transition-transform",
+              "w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70 transition-transform",
               showOtherNetworks && "rotate-90"
             )} />
           </button>
@@ -210,11 +234,11 @@ export function WifiMenu({ isOpen, onClose, onOpenWifiSettings }: WifiMenuProps)
               {otherNetworks.map((network) => (
                 <div
                   key={network.name}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-500 hover:text-white transition-colors cursor-pointer group"
+                  className="flex items-center gap-2 px-3 py-1.5 can-hover:hover:bg-blue-500 can-hover:hover:text-white transition-colors cursor-pointer group"
                 >
-                  <Wifi className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+                  <Wifi className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
                   <span className="text-xs flex-1 truncate">{network.name}</span>
-                  <Lock className="w-3 h-3 text-muted-foreground group-hover:text-white/70" />
+                  <Lock className="w-3 h-3 text-muted-foreground can-hover:group-hover:text-white/70" />
                 </div>
               ))}
             </div>
@@ -373,7 +397,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                 className={cn(
                   "p-0.5 rounded transition-colors",
                   canGoPrevious
-                    ? "text-muted-foreground hover:text-foreground"
+                    ? "text-muted-foreground can-hover:hover:text-foreground"
                     : "text-muted-foreground/30 cursor-not-allowed"
                 )}
               >
@@ -404,7 +428,7 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                 className={cn(
                   "p-0.5 rounded transition-colors",
                   canGoNext
-                    ? "text-muted-foreground hover:text-foreground"
+                    ? "text-muted-foreground can-hover:hover:text-foreground"
                     : "text-muted-foreground/30 cursor-not-allowed"
                 )}
               >

@@ -60,7 +60,7 @@ export function WifiPanel({}: WifiPanelProps) {
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Set up Wi-Fi to wirelessly connect your Mac to the internet. Turn on Wi-Fi, then choose a network to join.{" "}
-            <span className="text-blue-500 cursor-pointer hover:underline">Learn More...</span>
+            <span className="text-blue-500 cursor-pointer can-hover:hover:underline">Learn More...</span>
           </p>
         </div>
       </div>
@@ -94,7 +94,7 @@ export function WifiPanel({}: WifiPanelProps) {
               {personalHotspots.map((hotspot) => (
                 <div
                   key={hotspot.name}
-                  className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2 px-2 rounded-lg can-hover:hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   <span className="text-xs">{hotspot.name}</span>
                   <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function WifiPanel({}: WifiPanelProps) {
               {knownNetworks.map((network) => (
                 <div
                   key={network.name}
-                  className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2 px-2 rounded-lg can-hover:hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     {network.connected && <Check className="w-4 h-4 text-foreground" />}
@@ -138,7 +138,7 @@ export function WifiPanel({}: WifiPanelProps) {
               {otherNetworks.map((network) => (
                 <div
                   key={network.name}
-                  className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2 px-2 rounded-lg can-hover:hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   <span className="text-xs">{network.name}</span>
                   <div className="flex items-center gap-2">

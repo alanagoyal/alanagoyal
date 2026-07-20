@@ -32,7 +32,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
             disabled={!canGoBack}
             className={cn(
               "flex items-center gap-1 rounded-lg px-1 py-1 transition-colors text-[#0A7CFF]",
-              canGoBack ? "hover:bg-muted-foreground/10" : "opacity-0 pointer-events-none"
+              canGoBack ? "can-hover:hover:bg-muted-foreground/10" : "opacity-0 pointer-events-none"
             )}
             aria-label="Go back"
           >
@@ -62,7 +62,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
         className={cn(
           "p-1 rounded-md transition-colors",
           canGoBack
-            ? "hover:bg-muted-foreground/10 text-foreground"
+            ? "can-hover:hover:bg-muted-foreground/10 text-foreground"
             : "text-muted-foreground/40 cursor-not-allowed"
         )}
         aria-label="Go back"
@@ -76,7 +76,7 @@ export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDe
         className={cn(
           "p-1 rounded-md transition-colors",
           canGoForward
-            ? "hover:bg-muted-foreground/10 text-foreground"
+            ? "can-hover:hover:bg-muted-foreground/10 text-foreground"
             : "text-muted-foreground/40 cursor-not-allowed"
         )}
         aria-label="Go forward"

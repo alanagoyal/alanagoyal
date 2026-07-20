@@ -56,11 +56,11 @@ const ScrollBar = React.forwardRef<
     orientation={orientation}
     className={cn(
       "flex touch-none select-none transition-all duration-300",
-      "opacity-80 hover:opacity-100 z-40",
-      "bg-transparent hover:border-l hover:border-gray-200 dark:hover:border-gray-700",
+      "opacity-80 can-hover:hover:opacity-100 z-40",
+      "bg-transparent can-hover:hover:border-l can-hover:hover:border-gray-200 dark:can-hover:hover:border-gray-700",
       orientation === "vertical" &&
         cn(
-          isMobile ? "w-[8px]" : "w-[10px] hover:w-[14px]",
+          isMobile ? "w-[8px]" : "w-[10px] can-hover:hover:w-[14px]",
           withVerticalMargins && mobileHeaderHeight
             ? "mt-24"
             : withVerticalMargins

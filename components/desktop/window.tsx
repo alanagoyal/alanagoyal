@@ -3,9 +3,19 @@
 import { useRef, useCallback } from "react";
 import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
+import type { Position, Size, WindowState } from "@/types/window";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
 import { useWindowBehavior, CORNER_SIZE, EDGE_SIZE } from "@/lib/use-window-behavior";
+
+interface ControlledWindowHandlers {
+  closeWindow: () => void;
+  focusWindow: () => void;
+  moveWindow: (position: Position) => void;
+  resizeWindow: (size: Size, position?: Position) => void;
+  minimizeWindow: () => void;
+  toggleMaximize: () => void;
+}
 
 interface WindowProps {
   appId: string;
@@ -13,6 +23,8 @@ interface WindowProps {
   onFocus?: () => void;
   zIndexOverride?: number;
   keepMountedWhenMinimized?: boolean;
+  windowStateOverride?: WindowState;
+  controlledHandlers?: ControlledWindowHandlers;
 }
 
 export function Window({
@@ -21,6 +33,8 @@ export function Window({
   onFocus,
   zIndexOverride,
   keepMountedWhenMinimized = false,
+  windowStateOverride,
+  controlledHandlers,
 }: WindowProps) {
   const {
     getWindow,
@@ -34,12 +48,12 @@ export function Window({
     isMenuOpenRef,
   } = useWindowManager();
 
-  const windowState = getWindow(appId);
+  const windowState = windowStateOverride ?? getWindow(appId);
   const app = getAppById(appId);
   const windowRef = useRef<HTMLDivElement>(null);
   const innerWrapperRef = useRef<HTMLDivElement>(null);
 
-  const isFocused = state.focusedWindowId === appId;
+  const isFocused = state.focusedWindowId === windowState?.id;
   const usesTransformPositioning = appId !== "messages";
   const isBorderlessWindow = appId === "weather";
 
@@ -51,19 +65,34 @@ export function Window({
 
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
-    (position: { x: number; y: number }) => moveWindow(appId, position),
-    [appId, moveWindow]
+    (position: Position) => {
+      if (controlledHandlers) {
+        controlledHandlers.moveWindow(position);
+        return;
+      }
+      moveWindow(appId, position);
+    },
+    [appId, moveWindow, controlledHandlers]
   );
 
   const handleResize = useCallback(
-    (size: { width: number; height: number }, position?: { x: number; y: number }) =>
-      resizeWindow(appId, size, position),
-    [appId, resizeWindow]
+    (size: Size, position?: Position) => {
+      if (controlledHandlers) {
+        controlledHandlers.resizeWindow(size, position);
+        return;
+      }
+      resizeWindow(appId, size, position);
+    },
+    [appId, resizeWindow, controlledHandlers]
   );
 
   const handleFocus = useCallback(() => {
+    if (controlledHandlers) {
+      controlledHandlers.focusWindow();
+      return;
+    }
     focusWindow(appId);
-  }, [appId, focusWindow]);
+  }, [appId, focusWindow, controlledHandlers]);
 
   const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position: windowState?.position ?? { x: 0, y: 0 },
@@ -143,7 +172,7 @@ export function Window({
         wasFocusedBeforeMouseDown.current = wasAlreadyFocused;
 
         // Always focus the window
-        focusWindow(appId);
+        handleFocus();
         onFocus?.();
 
         // If window wasn't focused, don't let the event reach children
@@ -205,9 +234,9 @@ export function Window({
           <WindowFocusProvider
             isFocused={isHiddenMinimized ? false : isFocused}
             appId={appId}
-            closeWindow={() => closeWindow(appId)}
-            minimizeWindow={() => minimizeWindow(appId)}
-            toggleMaximize={() => toggleMaximize(appId)}
+            closeWindow={controlledHandlers ? controlledHandlers.closeWindow : () => closeWindow(appId)}
+            minimizeWindow={controlledHandlers ? controlledHandlers.minimizeWindow : () => minimizeWindow(appId)}
+            toggleMaximize={controlledHandlers ? controlledHandlers.toggleMaximize : () => toggleMaximize(appId)}
             isMaximized={isMaximized}
             onDragStart={handleDragStart}
             dialogContainerRef={innerWrapperRef}

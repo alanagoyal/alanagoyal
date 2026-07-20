@@ -87,7 +87,7 @@ export function PersonalInfoPanel() {
             href="https://x.com/alanaagoyal"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+            className="flex items-center justify-between px-4 py-3 can-hover:hover:bg-muted/50 transition-colors cursor-pointer"
           >
             <span className="text-xs">Name</span>
             <div className="flex items-center gap-1 text-muted-foreground">
