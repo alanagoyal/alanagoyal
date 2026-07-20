@@ -445,9 +445,9 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 
 | Tier | Storage | Lifetime | Use Case |
 |------|---------|----------|----------|
-| **View/runtime state** | `sessionStorage` | Per-tab, clears on tab close | Sidebar selection, scroll position, dock scale, recents, terminal history |
+| **View/runtime state** | `sessionStorage` | Per-tab, clears on tab close | Desktop window layout, sidebar selection, scroll position, dock scale, recents, terminal history |
 | **Session cache/runtime buffers** | `sessionStorage` | Per-tab, clears on tab close | API/UI caches and in-progress runtime state (e.g., GitHub cache, music playback queue/progress, Notes pinned ordering) |
-| **Durable data + preferences** | `localStorage` | Persistent, shared across tabs | User-created content, user preferences, and desktop window layout that should survive restarts (notes/messages data, settings, sound prefs, window positions/order) |
+| **Durable data + preferences** | `localStorage` | Persistent, shared across tabs | User-created content, user preferences, and anonymous identity (notes/messages data, settings, sound prefs, Notes `session_id`) |
 
 Rule of thumb: if losing it on browser restart is acceptable, use `sessionStorage`. If users expect it to persist (content or preferences), use `localStorage`.
 
@@ -455,9 +455,26 @@ Rule of thumb: if losing it on browser restart is acceptable, use `sessionStorag
 
 1. **Close = clear**: When a window is closed (red button or Cmd+Q), its view state is cleared via `clearAppState(appId)`.
 2. **Minimize = preserve**: Minimized windows keep their state in memory. Unminimizing restores exactly where the user left off.
-3. **Window layout is shared across tabs**: Desktop window state lives in `localStorage`, so multiple tabs can overwrite each other's saved layout.
+3. **Window layout is tab-scoped**: The complete desktop window graph lives in `sessionStorage`, including open/minimized/maximized state, geometry, z-order, focus, multi-window instances, and window metadata. Refresh restores it; a new tab or browser session starts independently.
 4. **Mixed persistence for list apps**: Persist user-managed collections in `localStorage`, but keep active selection/sort/filter/navigation in `sessionStorage`.
 5. **Ephemeral caches belong in session storage**: Network caches and runtime buffers should use `sessionStorage` unless there's a product requirement for cross-session persistence.
+6. **Use one policy, not one physical store**: Keep storage decisions behind focused persistence helpers. Do not move durable content into `sessionStorage` or emulate per-tab state inside `localStorage`.
+
+### Desktop Window State
+
+`lib/window-state-storage.ts` owns the browser-storage boundary for the desktop
+window graph. `lib/window-context.tsx` owns validation and the window state
+machine.
+
+- Same-tab refresh restores the complete desktop.
+- Separate tabs have independent desktops and cannot overwrite one another.
+- Closing the tab ends its desktop session.
+- Durable app content and preferences remain available when a fresh desktop starts.
+- A one-time compatibility migration copies the legacy `localStorage`
+  `desktop-window-state` value into the current tab's `sessionStorage`, then
+  removes the durable copy only after the selected payload passes window-state
+  validation. If tab storage is unavailable, the legacy value is retained so
+  the user's existing layout is not discarded.
 
 ### Standard Behavior for List + Detail Apps
 
@@ -492,7 +509,7 @@ When creating a new app, ensure:
 - [ ] Responsive patterns use `isMobileView` prop
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
-- [ ] View/runtime/cache state uses `sessionStorage` (not `localStorage`) unless it is intentionally durable desktop layout state
+- [ ] View/runtime/cache state and desktop window layout use `sessionStorage`
 - [ ] Durable user content/preferences use `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`

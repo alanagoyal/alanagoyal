@@ -7,7 +7,7 @@ this file captures the patterns and conventions that matter most when working in
 ## how to work in this repo
 
 1. read `docs/design-system.md` before touching any UI — it defines colors, tokens, sidebar patterns, and has a checklist for new apps
-2. run `npm run build` after making changes — no test framework, the build is the only gate
+2. run `npm run check` after making changes — it runs lint, Node tests, typecheck, and the production build
 
 ## key files
 
@@ -34,7 +34,7 @@ read before building, update when you ship:
 
 ## conventions
 
-- **state persistence**: sessionStorage for per-tab view state, localStorage for durable content/preferences and desktop window layout. window close clears view state via `clearAppState()` automatically
+- **state persistence**: sessionStorage for per-tab view/runtime state and the complete desktop window layout; localStorage for durable user content, preferences, and anonymous identity. window close clears app view state via `clearAppState()` automatically
 - **window management**: `useWindowManager()` for operations, `useWindowFocus()` for focus state
 - **desktop vs mobile**: use `isMobileView` / `isDesktop` prop, never raw viewport queries
 - **hover states**: gate hover-only styles with Tailwind's `can-hover:` variant so touch devices never get sticky hover treatments
