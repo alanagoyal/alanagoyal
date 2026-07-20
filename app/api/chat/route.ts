@@ -12,6 +12,7 @@ import {
   getConversationState,
 } from "@/lib/messages/temporal-context";
 import {
+  GROUP_CHAT_MODEL,
   buildGroupPrompt,
   buildGroupTools,
 } from "@/lib/messages/group-chat-model";
@@ -286,7 +287,7 @@ export async function POST(req: NextRequest) {
 
     const response = await createChatCompletionWithTimeout(
       {
-        model: "gpt-5.2",
+        model: GROUP_CHAT_MODEL,
         messages: chatMessages,
         tool_choice: "required",
         tools,

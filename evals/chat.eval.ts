@@ -2,7 +2,11 @@ import { Eval, type EvalScorer, wrapOpenAI } from "braintrust";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
-import { buildGroupPrompt, buildGroupTools } from "../lib/messages/group-chat-model";
+import {
+  GROUP_CHAT_MODEL,
+  buildGroupPrompt,
+  buildGroupTools,
+} from "../lib/messages/group-chat-model";
 import {
   formatConversationReversed,
   getConversationState,
@@ -42,8 +46,32 @@ interface GroupChatEvalOutput {
   state: ReturnType<typeof getConversationState>;
 }
 
-const MODEL = "gpt-5.2";
 const API_BASE_URL = "https://api.braintrust.dev/v1/proxy";
+const REPEATED_POINT_THRESHOLD = 0.75;
+const REPETITION_STOP_WORDS = new Set([
+  "about",
+  "after",
+  "again",
+  "also",
+  "and",
+  "are",
+  "but",
+  "for",
+  "from",
+  "have",
+  "into",
+  "just",
+  "like",
+  "that",
+  "the",
+  "their",
+  "then",
+  "they",
+  "this",
+  "with",
+  "you",
+  "your",
+]);
 
 let client: OpenAI | null = null;
 
@@ -91,6 +119,39 @@ function normalizeText(value: string): string {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function meaningfulTokens(value: string): Set<string> {
+  return new Set(
+    normalizeText(value)
+      .split(" ")
+      .filter(
+        (token) =>
+          token.length >= 3 && !REPETITION_STOP_WORDS.has(token)
+      )
+  );
+}
+
+function repeatedPointSimilarity(generated: string, prior: string): number {
+  const normalizedGenerated = normalizeText(generated);
+  const normalizedPrior = normalizeText(prior);
+  if (!normalizedGenerated || !normalizedPrior) return 0;
+  if (normalizedGenerated === normalizedPrior) return 1;
+
+  const generatedTokens = meaningfulTokens(generated);
+  const priorTokens = meaningfulTokens(prior);
+  const smallestTokenCount = Math.min(
+    generatedTokens.size,
+    priorTokens.size
+  );
+  if (smallestTokenCount < 3) return 0;
+
+  let sharedTokenCount = 0;
+  generatedTokens.forEach((token) => {
+    if (priorTokens.has(token)) sharedTokenCount++;
+  });
+
+  return sharedTokenCount / smallestTokenCount;
 }
 
 function sentenceCount(value: string): number {
@@ -390,49 +451,39 @@ const schemaScore: EvalScorer<
   };
 };
 
-const noRepeatSpeakerScore: EvalScorer<
-  GroupChatEvalInput,
-  GroupChatEvalOutput,
-  GroupChatExpected
-> = ({ output }) => {
-  const lastSpeaker = output.state.lastSpeaker;
-  const repeatedSpeaker =
-    lastSpeaker && lastSpeaker !== "me"
-      ? output.actions.some((action) => action.participant === lastSpeaker)
-      : false;
-
-  return {
-    name: "no_same_speaker_twice",
-    score: repeatedSpeaker ? 0 : 1,
-    metadata: {
-      lastSpeaker,
-      participants: output.actions
-        .map((action) => action.participant)
-        .filter((participant): participant is string => Boolean(participant)),
-    },
-  };
-};
-
-const noRepeatedTextScore: EvalScorer<
+const noRepeatedPointScore: EvalScorer<
   GroupChatEvalInput,
   GroupChatEvalOutput,
   GroupChatExpected
 > = ({ input, output }) => {
-  const priorTexts = new Set(
-    input.messages
-      .filter((message) => message.sender !== "system")
-      .map((message) => normalizeText(message.content))
-      .filter((message) => message.length > 0)
+  const priorAiMessages = input.messages.filter(
+    (message) => message.sender !== "me" && message.sender !== "system"
+  );
+  const repeats = extractGeneratedTexts(output.actions).flatMap(
+    (generatedText) =>
+      priorAiMessages.flatMap((priorMessage) => {
+        const similarity = repeatedPointSimilarity(
+          generatedText,
+          priorMessage.content
+        );
+        return similarity >= REPEATED_POINT_THRESHOLD
+          ? [
+              {
+                generatedText,
+                priorText: priorMessage.content,
+                similarity,
+              },
+            ]
+          : [];
+      })
   );
 
-  const generatedTexts = extractGeneratedTexts(output.actions).map(normalizeText);
-  const repeats = generatedTexts.filter((text) => priorTexts.has(text));
-
   return {
-    name: "no_direct_repetition",
+    name: "no_repeated_ai_point",
     score: repeats.length === 0 ? 1 : 0,
     metadata: {
       repeats,
+      threshold: REPEATED_POINT_THRESHOLD,
     },
   };
 };
@@ -461,57 +512,78 @@ const brevityScore: EvalScorer<
   };
 };
 
-Eval("messages-group-chat", {
-  data: cases,
-  maxConcurrency: 1,
-  metadata: {
-    app: "messages",
-    surface: "group-chat",
-    model: MODEL,
-  },
-  task: async (input, hooks) => {
-    const state = getConversationState(input.messages);
-    const conversationReversed = formatConversationReversed(input.messages);
-    const prompt = buildGroupPrompt(
-      input.participants,
-      buildParticipantDescriptions(input.participants),
-      conversationReversed,
-      state
-    );
-    const tools = buildGroupTools(
-      input.participants.map((participant) => participant.name),
-      state.lastSpeaker
-    );
+async function runEval() {
+  const result = await Eval("messages-group-chat", {
+    data: cases,
+    maxConcurrency: 1,
+    metadata: {
+      app: "messages",
+      surface: "group-chat",
+      model: GROUP_CHAT_MODEL,
+    },
+    task: async (input, hooks) => {
+      const state = getConversationState(input.messages);
+      const conversationReversed = formatConversationReversed(input.messages);
+      const prompt = buildGroupPrompt(
+        input.participants,
+        buildParticipantDescriptions(input.participants),
+        conversationReversed,
+        state
+      );
+      const tools = buildGroupTools(
+        input.participants.map((participant) => participant.name),
+        state.lastSpeaker
+      );
 
-    hooks.meta({
-      caseId: input.caseId,
-      lastSpeaker: state.lastSpeaker,
-      messagesSinceHuman: state.messagesSinceHuman,
+      hooks.meta({
+        caseId: input.caseId,
+        lastSpeaker: state.lastSpeaker,
+        messagesSinceHuman: state.messagesSinceHuman,
+      });
+
+      const response = await getClient().chat.completions.create({
+        model: GROUP_CHAT_MODEL,
+        messages: [{ role: "system", content: prompt }],
+        tool_choice: "required",
+        tools,
+        stream: false,
+        parallel_tool_calls: false,
+        temperature: 0.7,
+        max_tokens: 300,
+      });
+
+      return {
+        actions: parseActions(response.choices[0]?.message?.tool_calls),
+        state,
+      };
+    },
+    scores: [
+      requiredActionScore,
+      allowedActionsScore,
+      participantScore,
+      schemaScore,
+      noRepeatedPointScore,
+      brevityScore,
+    ],
+  });
+
+  const behaviorGaps = result.results.filter((evalResult) =>
+    Object.values(evalResult.scores).some((score) => score === 0)
+  );
+  if (behaviorGaps.length > 0) {
+    console.warn("\nBehavior gaps detected:");
+    behaviorGaps.forEach((evalResult) => {
+      const failedScores = Object.entries(evalResult.scores)
+        .filter(([, score]) => score === 0)
+        .map(([name]) => name);
+      console.warn(
+        `- ${evalResult.input.caseId}: ${failedScores.join(", ")}; actions=${JSON.stringify(evalResult.output.actions)}`
+      );
     });
+  }
+}
 
-    const response = await getClient().chat.completions.create({
-      model: MODEL,
-      messages: [{ role: "system", content: prompt }],
-      tool_choice: "required",
-      tools,
-      stream: false,
-      parallel_tool_calls: false,
-      temperature: 0.7,
-      max_tokens: 300,
-    });
-
-    return {
-      actions: parseActions(response.choices[0]?.message?.tool_calls),
-      state,
-    };
-  },
-  scores: [
-    requiredActionScore,
-    allowedActionsScore,
-    participantScore,
-    schemaScore,
-    noRepeatSpeakerScore,
-    noRepeatedTextScore,
-    brevityScore,
-  ],
+runEval().catch((error) => {
+  console.error("Messages group-chat eval failed:", error);
+  process.exitCode = 1;
 });

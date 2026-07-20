@@ -235,6 +235,14 @@ run the application in the command line and it will be available at http://local
 
 `npm run dev`
 
+## run the messages eval
+
+with `BRAINTRUST_API_KEY` configured in `.env.local`, run the Messages group-chat behavior eval:
+
+`npm run eval:chat`
+
+the eval exercises response routing, waiting for the human, conversation wrap-up, schema validity, repetition, and texting brevity against the same prompt, tools, and model used by the production chat route.
+
 ## deploy
 
 deploy using [vercel](https://vercel.com)
