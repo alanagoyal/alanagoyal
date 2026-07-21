@@ -1436,7 +1436,7 @@ export function FinderApp({
       data-app="finder"
     >
       {renderNav()}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative flex flex-1 min-h-0">
         {renderSidebar()}
         <div className="flex-1 flex flex-col min-w-0">
           {searchActive && searchQuery && !isMobile && renderScopeBar()}
@@ -1469,11 +1469,15 @@ export function FinderApp({
           )}
           </div>
           <div
-            role="status"
-            className="flex h-6 shrink-0 items-center justify-center border-t border-zinc-200 bg-zinc-50/90 px-3 text-[11px] text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-800/90 dark:text-zinc-400"
-          >
-            {statusLabel}
-          </div>
+            aria-hidden="true"
+            className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+          />
+        </div>
+        <div
+          role="status"
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
+        >
+          {statusLabel}
         </div>
       </div>
     </div>
