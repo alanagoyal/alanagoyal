@@ -5,6 +5,12 @@ import { WindowControls } from "@/components/window-controls";
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { cn } from "@/lib/utils";
+import {
+  FINDER_VIEW_MODES,
+  FINDER_VIEW_MODE_LABELS,
+  FinderViewModeIcon,
+  type FinderViewMode,
+} from "./view-mode";
 
 interface FinderNavProps {
   isDesktopShell: boolean;
@@ -16,11 +22,11 @@ interface FinderNavProps {
   searchActive: boolean;
   searchQuery: string;
   showViewDropdown: boolean;
-  viewMode: "icons" | "list";
+  viewMode: FinderViewMode;
   searchInputRef: RefObject<HTMLInputElement>;
   onToggleViewDropdown: () => void;
   onCloseViewDropdown: () => void;
-  onSetViewMode: (mode: "icons" | "list") => void;
+  onSetViewMode: (mode: FinderViewMode) => void;
   onSearchQueryChange: (query: string) => void;
   onSearchActivate: () => void;
   onSearchBlur: () => void;
@@ -141,20 +147,14 @@ export function FinderNav({
           <div className="relative">
             <button
               onClick={onToggleViewDropdown}
+              aria-label="Show items as icons, in a list, in columns, or in a gallery"
+              title="Show items as icons, in a list, in columns, or in a gallery"
               onMouseDown={(event) => {
                 if (searchActive) event.preventDefault();
               }}
-              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+              className="flex items-center gap-1 rounded px-2 py-1 text-zinc-600 can-hover:hover:bg-zinc-200 dark:text-zinc-400 dark:can-hover:hover:bg-zinc-700"
             >
-              {viewMode === "icons" ? (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z" />
-                </svg>
-              )}
+              <FinderViewModeIcon mode={viewMode} className="h-4 w-4" />
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6 9l6 6 6-6" />
               </svg>
@@ -163,37 +163,28 @@ export function FinderNav({
               <>
                 <div className="fixed inset-0 z-10" onClick={onCloseViewDropdown} />
                 <div
-                  className="absolute right-0 top-full mt-1 z-20 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl rounded-md shadow-lg border border-black/10 dark:border-white/10 py-1 min-w-32"
+                  className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-md border border-black/10 bg-white/95 py-1 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
                   onMouseDown={(event) => {
                     if (searchActive) event.preventDefault();
                   }}
                 >
-                  <button
-                    onClick={() => onSetViewMode("icons")}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
-                  >
-                    {viewMode === "icons" ? (
-                      <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7" />
-                      </svg>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span>as Icons</span>
-                  </button>
-                  <button
-                    onClick={() => onSetViewMode("list")}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-zinc-900 dark:text-zinc-100 hover:bg-blue-500 hover:text-white transition-colors"
-                  >
-                    {viewMode === "list" ? (
-                      <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7" />
-                      </svg>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span>as List</span>
-                  </button>
+                  {FINDER_VIEW_MODES.map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => onSetViewMode(mode)}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-zinc-900 transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white dark:text-zinc-100"
+                    >
+                      {viewMode === mode ? (
+                        <svg className="h-4 w-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M5 12l5 5L20 7" />
+                        </svg>
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <FinderViewModeIcon mode={mode} className="h-4 w-4" />
+                      <span>{FINDER_VIEW_MODE_LABELS[mode]}</span>
+                    </button>
+                  ))}
                 </div>
               </>
             )}

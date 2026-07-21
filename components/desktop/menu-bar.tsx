@@ -17,6 +17,7 @@ import { FinderViewMenu } from "./finder-view-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
+import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
 
@@ -33,6 +34,8 @@ interface MenuBarProps {
   onLogout?: () => void;
   onOpenMessagesConversation?: (conversationId: string) => void;
   onOpenPodcastNotification?: (notification: PodcastNotificationPayload) => void;
+  finderViewMode?: FinderViewMode;
+  onFinderViewModeChange?: (mode: FinderViewMode) => void;
   finderStatusBarVisible?: boolean;
   onFinderStatusBarVisibleChange?: (visible: boolean) => void;
 }
@@ -48,6 +51,8 @@ export function MenuBar({
   onLogout,
   onOpenMessagesConversation,
   onOpenPodcastNotification,
+  finderViewMode = "list",
+  onFinderViewModeChange,
   finderStatusBarVisible = false,
   onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
@@ -303,6 +308,8 @@ export function MenuBar({
       <FinderViewMenu
         isOpen={openMenu === "finderViewMenu"}
         onClose={closeMenu}
+        viewMode={finderViewMode}
+        onViewModeChange={(mode) => onFinderViewModeChange?.(mode)}
         statusBarVisible={finderStatusBarVisible}
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
       />
