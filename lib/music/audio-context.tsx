@@ -22,6 +22,7 @@ interface AudioContextValue {
   previous: () => void;
   seek: (progress: number) => void;
   setVolume: (volume: number) => void;
+  reorderQueue: (fromIndex: number, toIndex: number) => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
 }
@@ -233,25 +234,29 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const prevVolumeRef = useRef(playbackState.volume);
   const prevShuffleRef = useRef(playbackState.isShuffle);
   const prevRepeatRef = useRef(playbackState.repeatMode);
+  const prevQueueRef = useRef(playbackState.queue);
 
   useEffect(() => {
     const trackChanged = prevTrackRef.current !== playbackState.currentTrack?.id;
     const volumeChanged = prevVolumeRef.current !== playbackState.volume;
     const shuffleChanged = prevShuffleRef.current !== playbackState.isShuffle;
     const repeatChanged = prevRepeatRef.current !== playbackState.repeatMode;
+    const queueChanged = prevQueueRef.current !== playbackState.queue;
 
-    if (trackChanged || volumeChanged || shuffleChanged || repeatChanged) {
+    if (trackChanged || volumeChanged || shuffleChanged || repeatChanged || queueChanged) {
       immediateSave(stateRef.current);
       prevTrackRef.current = playbackState.currentTrack?.id;
       prevVolumeRef.current = playbackState.volume;
       prevShuffleRef.current = playbackState.isShuffle;
       prevRepeatRef.current = playbackState.repeatMode;
+      prevQueueRef.current = playbackState.queue;
     }
   }, [
     playbackState.currentTrack?.id,
     playbackState.volume,
     playbackState.isShuffle,
     playbackState.repeatMode,
+    playbackState.queue,
     immediateSave,
   ]);
 
@@ -480,6 +485,28 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setPlaybackState((prev) => ({ ...prev, volume: clampedVolume }));
   }, [systemVolume]);
 
+  const reorderQueue = useCallback((fromIndex: number, toIndex: number) => {
+    setPlaybackState((prev) => {
+      const lastIndex = prev.queue.length - 1;
+      const isFutureTrack = (index: number) =>
+        index > prev.queueIndex && index <= lastIndex;
+
+      if (
+        fromIndex === toIndex ||
+        !isFutureTrack(fromIndex) ||
+        !isFutureTrack(toIndex)
+      ) {
+        return prev;
+      }
+
+      const queue = [...prev.queue];
+      const [track] = queue.splice(fromIndex, 1);
+      queue.splice(toIndex, 0, track);
+
+      return { ...prev, queue };
+    });
+  }, []);
+
   // Toggle shuffle mode
   const toggleShuffle = useCallback(() => {
     setPlaybackState((prev) => {
@@ -536,6 +563,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         previous,
         seek,
         setVolume,
+        reorderQueue,
         toggleShuffle,
         toggleRepeat,
       }}
