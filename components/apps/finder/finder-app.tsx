@@ -1329,6 +1329,17 @@ export function FinderApp({
   };
 
   const currentSectionLabel = SIDEBAR_ITEMS.find(item => item.id === selectedSidebar)?.label || "";
+  const statusItemCount = searchActive && searchQuery
+    ? computedSearchResults.length
+    : files.length;
+  const hasStatusSelection = searchActive && searchQuery
+    ? searchHighlightIndex >= 0
+    : selectedFile !== null;
+  const statusLabel = loading
+    ? "Loading…"
+    : hasStatusSelection
+      ? `1 of ${statusItemCount} selected`
+      : `${statusItemCount} ${statusItemCount === 1 ? "item" : "items"}`;
 
   const renderScopeBar = () => (
     <div className="flex items-center gap-1.5 px-4 py-1 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none">
@@ -1456,6 +1467,12 @@ export function FinderApp({
           ) : (
             renderFileGrid()
           )}
+          </div>
+          <div
+            role="status"
+            className="flex h-6 shrink-0 items-center justify-center border-t border-zinc-200 bg-zinc-50/90 px-3 text-[11px] text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-800/90 dark:text-zinc-400"
+          >
+            {statusLabel}
           </div>
         </div>
       </div>
