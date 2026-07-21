@@ -64,6 +64,7 @@ const TRASH_FILES: FileItem[] = [
 interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
+  showStatusBar?: boolean;
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
@@ -188,6 +189,7 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 export function FinderApp({
   isMobile = false,
   inShell = false,
+  showStatusBar = false,
   onOpenApp,
   onOpenTextFile,
   onOpenPreviewFile,
@@ -1468,17 +1470,21 @@ export function FinderApp({
             renderFileGrid()
           )}
           </div>
+          {showStatusBar && (
+            <div
+              aria-hidden="true"
+              className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          )}
+        </div>
+        {showStatusBar && (
           <div
-            aria-hidden="true"
-            className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </div>
-        <div
-          role="status"
-          className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
-        >
-          {statusLabel}
-        </div>
+            role="status"
+            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
+          >
+            {statusLabel}
+          </div>
+        )}
       </div>
     </div>
   );

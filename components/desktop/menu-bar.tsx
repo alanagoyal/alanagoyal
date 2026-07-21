@@ -13,11 +13,12 @@ import { BatteryMenu, WifiMenu, ControlCenterMenu } from "./status-menus";
 import { NotificationCenter } from "./notification-center";
 import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
+import { FinderViewMenu } from "./finder-view-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -32,6 +33,8 @@ interface MenuBarProps {
   onLogout?: () => void;
   onOpenMessagesConversation?: (conversationId: string) => void;
   onOpenPodcastNotification?: (notification: PodcastNotificationPayload) => void;
+  finderStatusBarVisible?: boolean;
+  onFinderStatusBarVisibleChange?: (visible: boolean) => void;
 }
 
 export function MenuBar({
@@ -45,6 +48,8 @@ export function MenuBar({
   onLogout,
   onOpenMessagesConversation,
   onOpenPodcastNotification,
+  finderStatusBarVisible = false,
+  onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
@@ -166,6 +171,19 @@ export function MenuBar({
             File
           </button>
         )}
+        {focusedAppId === "finder" && (
+          <button
+            onClick={() => toggleMenu("finderViewMenu")}
+            className={cn(
+              "text-sm px-2 py-0.5 rounded transition-colors",
+              openMenu === "finderViewMenu"
+                ? "bg-blue-500 text-white"
+                : "text-black dark:text-white can-hover:hover:bg-white/10"
+            )}
+          >
+            View
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
@@ -280,6 +298,13 @@ export function MenuBar({
         onDeleteChat={fileMenuActions.onDeleteChat}
         chatIsPinned={fileMenuActions.chatIsPinned}
         hideAlertsActive={fileMenuActions.hideAlertsActive}
+      />
+
+      <FinderViewMenu
+        isOpen={openMenu === "finderViewMenu"}
+        onClose={closeMenu}
+        statusBarVisible={finderStatusBarVisible}
+        onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
       />
 
       <NotificationCenter

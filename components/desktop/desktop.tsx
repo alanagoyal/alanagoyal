@@ -60,6 +60,8 @@ const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m =
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
+const FINDER_STATUS_BAR_STORAGE_KEY = "finder-show-status-bar";
+
 interface DesktopProps {
   initialAppId?: string;
   initialNoteSlug?: string;
@@ -224,6 +226,8 @@ function DesktopContent({
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
+  const [finderStatusBarVisible, setFinderStatusBarVisible] = useState(false);
+  const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -236,6 +240,16 @@ function DesktopContent({
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
   const nextMessagesSelectRequestIdRef = useRef(1);
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setFinderStatusBarVisible(window.localStorage.getItem(FINDER_STATUS_BAR_STORAGE_KEY) === "true");
+    setHasLoadedFinderStatusBarPreference(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedFinderStatusBarPreference) return;
+    window.localStorage.setItem(FINDER_STATUS_BAR_STORAGE_KEY, String(finderStatusBarVisible));
+  }, [finderStatusBarVisible, hasLoadedFinderStatusBarPreference]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
@@ -768,6 +782,8 @@ function DesktopContent({
         onLogout={handleLogout}
         onOpenMessagesConversation={handleOpenMessagesConversation}
         onOpenPodcastNotification={handlePodcastNotificationOpen}
+        finderStatusBarVisible={finderStatusBarVisible}
+        onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
       />
 
       {isActive && (
@@ -830,6 +846,7 @@ function DesktopContent({
                 >
                   <FinderApp
                     inShell={true}
+                    showStatusBar={finderStatusBarVisible}
                     initialPath={currentPath}
                     onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
                     onOpenApp={handleOpenApp}
