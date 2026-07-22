@@ -20,8 +20,32 @@ import {
   loadWindowState,
   saveWindowStatePayload,
 } from "./window-state-storage";
+import { DOCK_HEIGHT, MENU_BAR_HEIGHT } from "./use-window-behavior";
 
 const WINDOW_STATE_PERSIST_DEBOUNCE_MS = 1000;
+const DEFAULT_WINDOW_DOCK_GAP = 12;
+
+function fitWindowPresetToDesktop(
+  position: Position,
+  size: Size
+): { position: Position; size: Size } {
+  if (typeof window === "undefined") {
+    return { position, size };
+  }
+
+  const availableBottom = window.innerHeight - DOCK_HEIGHT - DEFAULT_WINDOW_DOCK_GAP;
+  const availableHeight = Math.max(1, availableBottom - MENU_BAR_HEIGHT);
+  const height = Math.min(size.height, availableHeight);
+  const y = Math.min(
+    Math.max(position.y, MENU_BAR_HEIGHT),
+    availableBottom - height
+  );
+
+  return {
+    position: { ...position, y },
+    size: { ...size, height },
+  };
+}
 
 // =============================================================================
 // Multi-Window Helpers
@@ -58,14 +82,15 @@ function getDefaultWindowState(appId: string): WindowState {
   if (!app) {
     throw new Error(`Unknown app: ${appId}`);
   }
+  const preset = fitWindowPresetToDesktop(app.defaultPosition, app.defaultSize);
   return {
     id: appId,
     appId,
     isOpen: false,
     isMinimized: false,
     isMaximized: false,
-    position: app.defaultPosition,
-    size: app.defaultSize,
+    position: preset.position,
+    size: preset.size,
     zIndex: 0,
   };
 }
@@ -120,13 +145,17 @@ function getDesktopDefaultState(): WindowManagerState {
   const { windows, focusedAppId } = DESKTOP_DEFAULT_CONFIG;
 
   windows.forEach((config, index) => {
-    state.windows[config.appId].isOpen = true;
-    state.windows[config.appId].isMaximized = false;
-    state.windows[config.appId].zIndex = index + 1;
-    state.windows[config.appId].position = config.position;
-    if ('size' in config && config.size) {
-      state.windows[config.appId].size = config.size;
-    }
+    const currentWindow = state.windows[config.appId];
+    const preset = fitWindowPresetToDesktop(
+      config.position,
+      "size" in config && config.size ? config.size : currentWindow.size
+    );
+
+    currentWindow.isOpen = true;
+    currentWindow.isMaximized = false;
+    currentWindow.zIndex = index + 1;
+    currentWindow.position = preset.position;
+    currentWindow.size = preset.size;
   });
 
   state.focusedWindowId = focusedAppId;
@@ -518,6 +547,10 @@ function windowReducer(
         x: basePosition.x + existingAppWindows.length * cascadeOffset,
         y: basePosition.y + existingAppWindows.length * cascadeOffset,
       };
+      const preset = fitWindowPresetToDesktop(
+        customPosition ?? newPosition,
+        customSize ?? app.defaultSize
+      );
 
       // Get next instance number for this app
       const instanceNumber = state.nextInstanceNumber[appId] ?? 0;
@@ -534,8 +567,8 @@ function windowReducer(
             isOpen: true,
             isMinimized: false,
             isMaximized: false,
-            position: customPosition ?? newPosition,
-            size: customSize ?? app.defaultSize,
+            position: preset.position,
+            size: preset.size,
             zIndex: state.nextZIndex,
             metadata,
           },
