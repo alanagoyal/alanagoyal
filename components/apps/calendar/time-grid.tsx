@@ -130,6 +130,33 @@ interface TimeGridProps {
   onEditEvent?: (eventId: string) => void;
 }
 
+function useCurrentTime(): Date {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const update = () => setNow(new Date());
+    const millisecondsUntilNextMinute = 60_000 - (Date.now() % 60_000);
+    const timeoutId = setTimeout(() => {
+      update();
+      intervalId = setInterval(update, 60_000);
+    }, millisecondsUntilNextMinute);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) update();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  return now;
+}
+
 export function TimeGrid({
   dates,
   events,
@@ -144,6 +171,7 @@ export function TimeGrid({
   onEditEvent,
 }: TimeGridProps) {
   const hours = getDayHours();
+  const now = useCurrentTime();
   const gridRef = useRef<HTMLDivElement>(null);
   const hasRestoredScroll = useRef(false);
   const [dragState, setDragState] = useState<{
@@ -283,9 +311,10 @@ export function TimeGrid({
     [dates, onCreateEvent, hourHeight, clampY]
   );
 
-  // Calculate current time indicator position
-  const now = new Date();
+  // Calculate current time indicator position and visible span through today.
   const currentTimeTop = (now.getHours() * 60 + now.getMinutes()) * (hourHeight / 60);
+  const todayIndex = dates.findIndex((date) => isToday(date));
+  const futureDayCount = dates.length - todayIndex - 1;
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -318,6 +347,33 @@ export function TimeGrid({
       {/* Scrollable time grid */}
       <div ref={gridRef} className="flex-1 overflow-y-auto relative" onScroll={handleScroll}>
         <div className="flex relative" style={{ minHeight: hourHeight * 24 + gridPaddingTop * 2 }}>
+          {todayIndex !== -1 && (
+            <div
+              role="timer"
+              aria-label={`Current time ${format(now, "h:mm a")}`}
+              className="absolute inset-x-0 z-20 pointer-events-none"
+              style={{ top: currentTimeTop + gridPaddingTop }}
+            >
+              <time className="absolute left-2 w-12 -translate-y-1/2 rounded-md bg-red-500 py-px text-center text-[10px] font-medium leading-[14px] text-white">
+                {format(now, "h:mm")}
+              </time>
+              <div className="absolute left-14 right-0 h-px bg-red-500/20" />
+              <div
+                className="absolute h-px bg-red-500"
+                style={{
+                  left: `calc(4rem + (100% - 4rem) * ${todayIndex} / ${dates.length})`,
+                  right: `calc((100% - 4rem) * ${futureDayCount} / ${dates.length})`,
+                }}
+              />
+              <div
+                className="absolute -top-1 h-2 w-2 rounded-full bg-red-500"
+                style={{
+                  left: `calc(4rem + (100% - 4rem) * ${todayIndex} / ${dates.length} - 4px)`,
+                }}
+              />
+            </div>
+          )}
+
           {/* Time labels */}
           <div className="w-16 shrink-0 relative">
             {hours.map((hour) => (
@@ -360,19 +416,6 @@ export function TimeGrid({
                     style={{ top: hour * hourHeight + gridPaddingTop }}
                   />
                 ))}
-
-                {/* Current time indicator */}
-                {isToday(date) && (
-                  <div
-                    className="absolute left-0 right-0 z-20 pointer-events-none"
-                    style={{ top: currentTimeTop + gridPaddingTop }}
-                  >
-                    <div className="relative">
-                      <div className="absolute -left-1 w-2 h-2 rounded-full bg-red-500 -top-[3px]" />
-                      <div className="h-[2px] bg-red-500" />
-                    </div>
-                  </div>
-                )}
 
                 {/* Events */}
                 {eventLayouts.map(({ event, column, totalColumns }) => {
