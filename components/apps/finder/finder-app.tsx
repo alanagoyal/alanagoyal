@@ -28,6 +28,7 @@ import {
 } from "@/lib/github-client";
 import { useRouter } from "next/navigation";
 import { FinderSearchEngine, type EntryInput } from "./search-engine";
+import type { FinderViewMode } from "./view-mode";
 
 const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
@@ -64,6 +65,9 @@ const TRASH_FILES: FileItem[] = [
 interface FinderAppProps {
   isMobile?: boolean;
   inShell?: boolean;
+  viewMode?: FinderViewMode;
+  onViewModeChange?: (mode: FinderViewMode) => void;
+  showStatusBar?: boolean;
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
@@ -188,6 +192,9 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 export function FinderApp({
   isMobile = false,
   inShell = false,
+  viewMode: controlledViewMode,
+  onViewModeChange,
+  showStatusBar = false,
   onOpenApp,
   onOpenTextFile,
   onOpenPreviewFile,
@@ -243,7 +250,15 @@ export function FinderApp({
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true); // For mobile
-  const [viewMode, setViewMode] = useState<"icons" | "list">("list");
+  const [standaloneViewMode, setStandaloneViewMode] = useState<FinderViewMode>("list");
+  const viewMode = controlledViewMode ?? standaloneViewMode;
+  const setViewMode = useCallback((mode: FinderViewMode) => {
+    if (onViewModeChange) {
+      onViewModeChange(mode);
+      return;
+    }
+    setStandaloneViewMode(mode);
+  }, [onViewModeChange]);
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [githubRecentFiles, setGithubRecentFiles] = useState<GitHubRecentFile[]>([]);
 
@@ -772,6 +787,7 @@ export function FinderApp({
     if (!searchActive || computedSearchResults.length === 0 || searchHighlightIndex < 0) return;
     const container = searchResultsRef.current;
     if (!container) return;
+    if (viewMode !== "list" && viewMode !== "icons") return;
     const row = viewMode === "list"
       ? (container.children[1]?.children[searchHighlightIndex] as HTMLElement)
       : (container.children[searchHighlightIndex] as HTMLElement);
@@ -1171,6 +1187,130 @@ export function FinderApp({
     </div>
   );
 
+  const renderColumnsView = (
+    items: FileItem[],
+    selectedPath: string | null,
+    onSelect: (file: FileItem, index: number) => void,
+    onOpen: (file: FileItem) => void,
+  ) => {
+    const selectedItem = items.find((file) => file.path === selectedPath) ?? null;
+
+    return (
+      <div className="flex h-full min-h-0">
+        <div className="w-64 shrink-0 overflow-y-auto border-r border-zinc-200 py-1 dark:border-zinc-700">
+          {items.map((file, index) => (
+            <button
+              key={file.path}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelect(file, index);
+              }}
+              onDoubleClick={() => onOpen(file)}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-1 text-left text-sm",
+                selectedPath === file.path
+                  ? "bg-blue-500 text-white"
+                  : "text-zinc-900 dark:text-zinc-100"
+              )}
+            >
+              <FileIcon
+                type={file.type}
+                name={file.name}
+                icon={file.icon}
+                className={cn("h-4 w-4 shrink-0", selectedPath === file.path && file.type !== "app" && "brightness-0 invert")}
+              />
+              <span className="min-w-0 flex-1 truncate">{file.displayName || file.name}</span>
+              {file.type === "dir" && <span className="text-xs opacity-60">›</span>}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex min-w-0 flex-1 items-center justify-center p-6">
+          {selectedItem ? (
+            <div className="flex max-w-sm flex-col items-center text-center">
+              <FileIcon
+                type={selectedItem.type}
+                name={selectedItem.name}
+                icon={selectedItem.icon}
+                className="h-20 w-20"
+              />
+              <p className="mt-3 max-w-full truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {selectedItem.displayName || selectedItem.name}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                {getFileKind(selectedItem)} · {getFileDate(selectedItem)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-400 dark:text-zinc-500">Select an item</p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderGalleryView = (
+    items: FileItem[],
+    selectedPath: string | null,
+    onSelect: (file: FileItem, index: number) => void,
+    onOpen: (file: FileItem) => void,
+  ) => {
+    const selectedItem = items.find((file) => file.path === selectedPath) ?? null;
+
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+          {selectedItem ? (
+            <button
+              onClick={(event) => event.stopPropagation()}
+              onDoubleClick={() => onOpen(selectedItem)}
+              className="flex max-w-md flex-col items-center rounded-xl p-3 text-center"
+            >
+              <FileIcon
+                type={selectedItem.type}
+                name={selectedItem.name}
+                icon={selectedItem.icon}
+                className="h-24 w-24"
+              />
+              <p className="mt-4 max-w-full truncate text-base font-medium text-zinc-900 dark:text-zinc-100">
+                {selectedItem.displayName || selectedItem.name}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                {getFileKind(selectedItem)} · {getFileDate(selectedItem)}
+              </p>
+            </button>
+          ) : (
+            <p className="text-xs text-zinc-400 dark:text-zinc-500">Select an item below</p>
+          )}
+        </div>
+
+        <div className="flex h-28 shrink-0 items-center gap-2 overflow-x-auto border-t border-zinc-200 px-3 dark:border-zinc-700">
+          {items.map((file, index) => (
+            <button
+              key={file.path}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelect(file, index);
+              }}
+              onDoubleClick={() => onOpen(file)}
+              className={cn(
+                "flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border-2 p-1",
+                selectedPath === file.path
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-transparent can-hover:hover:bg-zinc-100 dark:can-hover:hover:bg-zinc-800"
+              )}
+            >
+              <FileIcon type={file.type} name={file.name} icon={file.icon} className="h-10 w-10" />
+              <span className="w-full truncate text-[10px] text-zinc-700 dark:text-zinc-300">
+                {file.displayName || file.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // Render file list (mobile)
   const renderFileList = () => (
     <div className="px-4 pt-2 pb-8">
@@ -1239,6 +1379,34 @@ export function FinderApp({
         <div className="h-full flex items-center justify-center text-muted-foreground">
           <p className="text-sm">No results</p>
         </div>
+      );
+    }
+
+    const searchFiles = computedSearchResults.map(({ entry }) => ({
+      name: entry.name,
+      type: entry.type,
+      path: entry.path,
+      icon: entry.icon,
+    }));
+    const selectedSearchPath = searchHighlightIndex >= 0
+      ? searchFiles[searchHighlightIndex]?.path ?? null
+      : null;
+
+    if (viewMode === "columns") {
+      return renderColumnsView(
+        searchFiles,
+        selectedSearchPath,
+        (_file, index) => setSearchHighlightIndex(index),
+        openSearchResult,
+      );
+    }
+
+    if (viewMode === "gallery") {
+      return renderGalleryView(
+        searchFiles,
+        selectedSearchPath,
+        (_file, index) => setSearchHighlightIndex(index),
+        openSearchResult,
       );
     }
 
@@ -1329,6 +1497,17 @@ export function FinderApp({
   };
 
   const currentSectionLabel = SIDEBAR_ITEMS.find(item => item.id === selectedSidebar)?.label || "";
+  const statusItemCount = searchActive && searchQuery
+    ? computedSearchResults.length
+    : files.length;
+  const hasStatusSelection = searchActive && searchQuery
+    ? searchHighlightIndex >= 0
+    : selectedFile !== null;
+  const statusLabel = loading
+    ? "Loading…"
+    : hasStatusSelection
+      ? `1 of ${statusItemCount} selected`
+      : `${statusItemCount} ${statusItemCount === 1 ? "item" : "items"}`;
 
   const renderScopeBar = () => (
     <div className="flex items-center gap-1.5 px-4 py-1 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none">
@@ -1425,15 +1604,23 @@ export function FinderApp({
       data-app="finder"
     >
       {renderNav()}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative flex flex-1 min-h-0">
         {renderSidebar()}
         <div className="flex-1 flex flex-col min-w-0">
           {searchActive && searchQuery && !isMobile && renderScopeBar()}
-          <div className="flex-1 overflow-y-auto" onClick={() => setSelectedFile(null)}>
+          <div
+            className={cn(
+              "flex-1",
+              viewMode === "columns" || viewMode === "gallery"
+                ? "min-h-0 overflow-hidden"
+                : "overflow-y-auto"
+            )}
+            onClick={() => setSelectedFile(null)}
+          >
           {searchActive && searchQuery ? (
             renderSearchResults()
           ) : loading ? (
-            viewMode === "list" ? renderDesktopListSkeleton() : renderIconsGridSkeleton()
+            viewMode === "list" || viewMode === "columns" ? renderDesktopListSkeleton() : renderIconsGridSkeleton()
           ) : previewContent !== null ? (
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
@@ -1453,11 +1640,29 @@ export function FinderApp({
             </div>
           ) : viewMode === "list" ? (
             renderDesktopListView()
+          ) : viewMode === "columns" ? (
+            renderColumnsView(files, selectedFile, (file) => handleFileClick(file), (file) => { void handleFileDoubleClick(file); })
+          ) : viewMode === "gallery" ? (
+            renderGalleryView(files, selectedFile, (file) => handleFileClick(file), (file) => { void handleFileDoubleClick(file); })
           ) : (
             renderFileGrid()
           )}
           </div>
+          {showStatusBar && (
+            <div
+              aria-hidden="true"
+              className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          )}
         </div>
+        {showStatusBar && (
+          <div
+            role="status"
+            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
+          >
+            {statusLabel}
+          </div>
+        )}
       </div>
     </div>
   );

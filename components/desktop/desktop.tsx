@@ -47,6 +47,10 @@ import type {
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
+import {
+  isFinderViewMode,
+  type FinderViewMode,
+} from "@/components/apps/finder/view-mode";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -59,6 +63,8 @@ const TextEditWindow = dynamic(() => import("@/components/apps/textedit").then(m
 const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m => ({ default: m.PreviewWindow })));
 
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
+
+const FINDER_STATUS_BAR_STORAGE_KEY = "finder-show-status-bar";
 
 interface DesktopProps {
   initialAppId?: string;
@@ -224,6 +230,8 @@ function DesktopContent({
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
+  const [finderStatusBarVisible, setFinderStatusBarVisible] = useState(false);
+  const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -236,12 +244,30 @@ function DesktopContent({
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
   const nextMessagesSelectRequestIdRef = useRef(1);
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setFinderStatusBarVisible(window.localStorage.getItem(FINDER_STATUS_BAR_STORAGE_KEY) === "true");
+    setHasLoadedFinderStatusBarPreference(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedFinderStatusBarPreference) return;
+    window.localStorage.setItem(FINDER_STATUS_BAR_STORAGE_KEY, String(finderStatusBarVisible));
+  }, [finderStatusBarVisible, hasLoadedFinderStatusBarPreference]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
   );
   // Get multi-window app state from the window manager
   const finderWindows = getWindowsByApp("finder");
+  const focusedFinderWindow = finderWindows.find((windowState) => windowState.id === state.focusedWindowId);
+  const focusedFinderViewMode = isFinderViewMode(focusedFinderWindow?.metadata?.viewMode)
+    ? focusedFinderWindow.metadata.viewMode
+    : "list";
+  const handleFinderViewModeChange = useCallback((viewMode: FinderViewMode) => {
+    if (!focusedFinderWindow) return;
+    updateWindowMetadata(focusedFinderWindow.id, { viewMode });
+  }, [focusedFinderWindow, updateWindowMetadata]);
   const textEditWindows = getWindowsByApp("textedit");
   const previewWindows = getWindowsByApp("preview");
   const documentAppWindows = useMemo(
@@ -768,6 +794,10 @@ function DesktopContent({
         onLogout={handleLogout}
         onOpenMessagesConversation={handleOpenMessagesConversation}
         onOpenPodcastNotification={handlePodcastNotificationOpen}
+        finderViewMode={focusedFinderViewMode}
+        onFinderViewModeChange={handleFinderViewModeChange}
+        finderStatusBarVisible={finderStatusBarVisible}
+        onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
       />
 
       {isActive && (
@@ -813,6 +843,9 @@ function DesktopContent({
 
           {visibleFinderWindows.map((windowState) => {
               const currentPath = windowState.metadata?.currentPath as string | undefined;
+              const viewMode = isFinderViewMode(windowState.metadata?.viewMode)
+                ? windowState.metadata.viewMode
+                : "list";
               return (
                 <Window
                   key={windowState.id}
@@ -830,6 +863,9 @@ function DesktopContent({
                 >
                   <FinderApp
                     inShell={true}
+                    viewMode={viewMode}
+                    onViewModeChange={(mode) => updateWindowMetadata(windowState.id, { viewMode: mode })}
+                    showStatusBar={finderStatusBarVisible}
                     initialPath={currentPath}
                     onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
                     onOpenApp={handleOpenApp}
