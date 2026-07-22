@@ -357,9 +357,11 @@ export function TimeGrid({
               <time className="absolute left-2 w-12 -translate-y-1/2 rounded-md bg-red-500 py-px text-center text-[10px] font-medium leading-[14px] text-white">
                 {format(now, "h:mm")}
               </time>
+              <div className="absolute left-14 right-0 h-px bg-red-500/20" />
               <div
-                className="absolute left-14 h-px bg-red-500"
+                className="absolute h-px bg-red-500"
                 style={{
+                  left: `calc(4rem + (100% - 4rem) * ${todayIndex} / ${dates.length})`,
                   right: `calc((100% - 4rem) * ${futureDayCount} / ${dates.length})`,
                 }}
               />
