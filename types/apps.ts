@@ -12,6 +12,10 @@ export interface AppConfig {
   name: string;
   icon: string;
   description: string;
+  provenance: {
+    agent: string;
+    circa: string;
+  };
   accentColor: string;
   defaultPosition: Position;
   defaultSize: Size;
