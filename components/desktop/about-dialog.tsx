@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { getAppById } from "@/lib/app-config";
 import { WindowControls } from "@/components/window-controls";
+import packageJson from "@/package.json";
 
 interface AboutDialogProps {
   isOpen: boolean;
@@ -171,13 +172,15 @@ export function AboutDialog({
 
           <div className="flex flex-col items-center gap-0.5">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{appName}</h2>
-            <p className="text-xs text-zinc-500 dark:text-white/70">Version 4.13 (3146.41.14)</p>
+            <p className="text-xs text-zinc-500 dark:text-white/70">
+              Version {packageJson.version}
+            </p>
           </div>
 
           <p className="text-xs text-zinc-400 dark:text-white/50">
-            Copyright © 2011–2025 Apple Inc.
+            Part of alanagoyal.com
             <br />
-            All rights reserved.
+            Designed and built by Alana Goyal.
           </p>
         </div>
       </div>
