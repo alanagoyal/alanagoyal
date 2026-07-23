@@ -43,10 +43,11 @@ interface NotificationCenterProps {
   onOpenPodcastNotification?: (notification: PodcastNotificationPayload) => void;
 }
 
-const cardClass = "bg-muted rounded-md p-3 mb-1.5";
+const notificationCardClass = "mb-1.5 rounded-md p-3";
+const cardClass = `${notificationCardClass} bg-muted`;
 const clickableCardClass =
-  "bg-muted rounded-md p-3 mb-1.5 transition-colors cursor-pointer";
-const weatherCardClass = "h-[134px] rounded-md p-3 mb-1.5";
+  `${cardClass} cursor-pointer text-left transition-colors`;
+const weatherCardClass = `${notificationCardClass} h-[134px]`;
 const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
 function PodcastNotificationWidget({
@@ -61,7 +62,7 @@ function PodcastNotificationWidget({
   return (
     <button
       type="button"
-      className="mb-1.5 w-full cursor-pointer text-left"
+      className={`${clickableCardClass} w-full`}
       onClick={() => {
         if (onOpen) {
           onOpen(notification);
@@ -74,7 +75,7 @@ function PodcastNotificationWidget({
       <PodcastTweetCard
         notification={notification}
         compact
-        className="rounded-md bg-muted transition-colors dark:bg-muted"
+        className="rounded-none border-0 bg-transparent p-0 shadow-none dark:bg-transparent"
       />
     </button>
   );

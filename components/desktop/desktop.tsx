@@ -35,15 +35,7 @@ import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
 import { fetchGitHubFileContent } from "@/lib/github-client";
-import {
-  getPodcastNotificationPayload,
-  loadPodcastNotificationDismissed,
-  savePodcastNotificationDismissed,
-} from "@/lib/podcast-notification";
-import type {
-  DesktopNotificationPayload,
-  PodcastNotificationPayload,
-} from "@/types/desktop-notification";
+import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
@@ -239,7 +231,7 @@ function DesktopContent({
     !(initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile))
   );
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
-  const [activeNotification, setActiveNotification] = useState<DesktopNotificationPayload | null>(null);
+  const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
   const nextMessagesSelectRequestIdRef = useRef(1);
@@ -672,28 +664,15 @@ function DesktopContent({
     });
   }, []);
 
-  useEffect(() => {
-    if (loadPodcastNotificationDismissed()) return;
-    setActiveNotification((current) => current ?? getPodcastNotificationPayload());
-  }, []);
-
   const handleMessagesNotification = useCallback((notification: MessagesNotificationPayload) => {
-    setActiveNotification((current) => {
-      if (current?.type === "podcast") {
-        savePodcastNotificationDismissed();
-      }
-      return notification;
-    });
+    setActiveNotification(notification);
     setIsNotificationHovered(false);
   }, []);
 
   const handleNotificationDismiss = useCallback(() => {
-    if (activeNotification?.type === "podcast") {
-      savePodcastNotificationDismissed();
-    }
     setActiveNotification(null);
     setIsNotificationHovered(false);
-  }, [activeNotification]);
+  }, []);
 
   useEffect(() => {
     if (notificationTimeoutRef.current) {
@@ -701,7 +680,6 @@ function DesktopContent({
       notificationTimeoutRef.current = null;
     }
     if (!activeNotification) return;
-    if (activeNotification.type === "podcast") return;
     if (isNotificationHovered) return;
     notificationTimeoutRef.current = setTimeout(() => {
       setActiveNotification(null);
@@ -718,18 +696,10 @@ function DesktopContent({
   }, []);
 
   const handlePodcastNotificationOpen = useCallback((notification: PodcastNotificationPayload) => {
-    savePodcastNotificationDismissed();
     window.open(notification.tweetUrl, "_blank", "noopener,noreferrer");
-    setActiveNotification(null);
-    setIsNotificationHovered(false);
   }, []);
 
-  const handleNotificationClick = useCallback((notification: DesktopNotificationPayload) => {
-    if (notification.type === "podcast") {
-      handlePodcastNotificationOpen(notification);
-      return;
-    }
-
+  const handleNotificationClick = useCallback((notification: MessagesNotificationPayload) => {
     const { conversationId } = notification;
     saveMessagesConversation(conversationId);
     const requestId = nextMessagesSelectRequestIdRef.current++;
@@ -747,7 +717,7 @@ function DesktopContent({
       return;
     }
     openWindow("messages");
-  }, [getWindow, restoreWindow, focusWindow, openWindow, handlePodcastNotificationOpen]);
+  }, [getWindow, restoreWindow, focusWindow, openWindow]);
 
   const handleOpenMessagesConversation = useCallback((conversationId: string) => {
     saveMessagesConversation(conversationId);
