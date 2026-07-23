@@ -14,7 +14,7 @@ export interface AppConfig {
   description: string;
   provenance: {
     agent: string;
-    shipped: string;
+    circa: string;
   };
   accentColor: string;
   defaultPosition: Position;
