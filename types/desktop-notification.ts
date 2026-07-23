@@ -1,5 +1,3 @@
-import type { MessagesNotificationPayload } from "@/types/messages/notification";
-
 export interface PodcastNotificationPayload {
   id: string;
   type: "podcast";
@@ -14,7 +12,3 @@ export interface PodcastNotificationPayload {
   mediaThumbnailSrc: string;
   mediaAlt: string;
 }
-
-export type DesktopNotificationPayload =
-  | MessagesNotificationPayload
-  | PodcastNotificationPayload;

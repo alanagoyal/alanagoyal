@@ -350,7 +350,7 @@ For app-level mobile views, keep base surfaces consistent with semantic tokens:
 
 ### Desktop Notifications
 
-Top-right banners use `DesktopNotificationBanner` and should share the same placement as Messages notifications. Long-lived promo notifications may persist until dismissed, but incoming Messages notifications take priority and can replace them immediately. If a dismissed promo still needs to be discoverable, keep it available in Notification Center rather than re-showing the banner.
+Top-right banners use `DesktopNotificationBanner` for incoming Messages notifications. Keep promotional or long-lived content in Notification Center instead of showing it as a desktop banner.
 
 ### Empty State
 

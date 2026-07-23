@@ -2,24 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import { PodcastTweetCard } from "./x-podcast-notification";
-import type {
-  DesktopNotificationPayload,
-  PodcastNotificationPayload,
-} from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 
 interface DesktopNotificationBannerProps {
-  notification: DesktopNotificationPayload | null;
-  onClick: (notification: DesktopNotificationPayload) => void;
+  notification: MessagesNotificationPayload | null;
+  onClick: (notification: MessagesNotificationPayload) => void;
   onDismiss: () => void;
   onHoverChange?: (hovered: boolean) => void;
-}
-
-function isPodcastNotification(
-  notification: DesktopNotificationPayload
-): notification is PodcastNotificationPayload {
-  return notification.type === "podcast";
 }
 
 function getAvatarInitials(notification: MessagesNotificationPayload) {
@@ -69,19 +58,6 @@ function MessagesNotificationContent({
   );
 }
 
-function PodcastNotificationContent({
-  notification,
-}: {
-  notification: PodcastNotificationPayload;
-}) {
-  return (
-    <PodcastTweetCard
-      notification={notification}
-      className="border-0 bg-transparent p-0 shadow-none dark:bg-transparent"
-    />
-  );
-}
-
 export function DesktopNotificationBanner({
   notification,
   onClick,
@@ -109,10 +85,6 @@ export function DesktopNotificationBanner({
       event.preventDefault();
       event.stopPropagation();
       if (!notification) return;
-      if (isPodcastNotification(notification)) {
-        onClick(notification);
-        return;
-      }
 
       // Defer activation so window-focus click-capture state from this click
       // cannot interfere with the newly focused Messages window.
@@ -131,9 +103,6 @@ export function DesktopNotificationBanner({
   );
 
   if (!notification) return null;
-  const isPodcast = isPodcastNotification(notification);
-  const widthClassName = isPodcast ? "w-[430px]" : "w-[390px]";
-  const paddingClassName = isPodcast ? "px-4 py-3" : "px-4 py-2.5";
 
   return (
     <div className="fixed top-10 right-4 z-[120] pointer-events-none">
@@ -143,7 +112,7 @@ export function DesktopNotificationBanner({
         onClick={handleBannerClick}
         onMouseEnter={() => onHoverChange?.(true)}
         onMouseLeave={() => onHoverChange?.(false)}
-        className={`group relative pointer-events-auto ${widthClassName} max-w-[calc(100vw-24px)] rounded-2xl border border-black/10 dark:border-white/20 bg-[#f3f3f5]/96 dark:bg-zinc-800/96 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.26)] text-left ${paddingClassName} transition-all duration-300 ${
+        className={`group relative pointer-events-auto w-[390px] max-w-[calc(100vw-24px)] rounded-2xl border border-black/10 dark:border-white/20 bg-[#f3f3f5]/96 dark:bg-zinc-800/96 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.26)] px-4 py-2.5 text-left transition-all duration-300 ${
           isVisible ? "translate-x-0 opacity-100" : "translate-x-[120%] opacity-0"
         }`}
       >
@@ -157,11 +126,7 @@ export function DesktopNotificationBanner({
         >
           ✕
         </span>
-        {isPodcast ? (
-          <PodcastNotificationContent notification={notification} />
-        ) : (
-          <MessagesNotificationContent notification={notification} />
-        )}
+        <MessagesNotificationContent notification={notification} />
       </button>
     </div>
   );

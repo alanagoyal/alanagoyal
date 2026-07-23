@@ -12,9 +12,6 @@ const PODCAST_TWEET_TEXT = `5 things @alanaagoyal does differently
 > built her personal website using a dozen of her own portco's products
 > automated her investor updates...`;
 
-export const PODCAST_NOTIFICATION_DISMISSED_KEY =
-  `podcast-x-notification-dismissed-${PODCAST_TWEET_ID}`;
-
 export function getPodcastNotificationPayload(): PodcastNotificationPayload {
   return {
     id: `podcast-x-${PODCAST_TWEET_ID}`,
@@ -30,14 +27,4 @@ export function getPodcastNotificationPayload(): PodcastNotificationPayload {
     mediaThumbnailSrc: "/podcast/show-me-your-stack-thumb.jpg",
     mediaAlt: "Still from the Show Me Your Stack episode with Alana Goyal",
   };
-}
-
-export function loadPodcastNotificationDismissed(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(PODCAST_NOTIFICATION_DISMISSED_KEY) === "true";
-}
-
-export function savePodcastNotificationDismissed(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(PODCAST_NOTIFICATION_DISMISSED_KEY, "true");
 }
