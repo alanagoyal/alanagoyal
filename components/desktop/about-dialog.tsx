@@ -177,11 +177,13 @@ export function AboutDialog({
             </p>
           </div>
 
-          <p className="text-xs text-zinc-400 dark:text-white/50">
-            Part of alanagoyal.com
-            <br />
-            Designed and built by Alana Goyal.
-          </p>
+          {app && (
+            <p className="text-xs leading-[1.35] text-zinc-400 dark:text-white/50">
+              <span className="block">Built by Alana Goyal</span>
+              <span className="block">Using {app.provenance.agent}</span>
+              <span className="block">Shipped {app.provenance.shipped}</span>
+            </p>
+          )}
         </div>
       </div>
     </div>
