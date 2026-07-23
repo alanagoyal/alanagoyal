@@ -352,6 +352,8 @@ For app-level mobile views, keep base surfaces consistent with semantic tokens:
 
 Top-right banners use `DesktopNotificationBanner` for incoming Messages notifications. Keep promotional or long-lived content in Notification Center instead of showing it as a desktop banner.
 
+Notification Center cards share the same outer `mb-1.5 rounded-md p-3` geometry. Apply content-specific borders, radii, and backgrounds only inside that shared container; scene-based cards such as Weather may replace the standard `bg-muted` surface.
+
 ### Empty State
 
 ```tsx
