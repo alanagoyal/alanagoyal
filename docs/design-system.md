@@ -306,6 +306,15 @@ For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
 
 ## Layout Structure
 
+### Default Window Placement
+
+App window presets are normalized in `lib/window-context.tsx` when a window is
+created. Preserve each app's configured position and size when they fit; if the
+window would reach the Dock, move it upward first and reduce only the excess
+height. Keep a small visual gap above the Dock. Do not apply this normalization
+to restored layouts, because users expect their saved window arrangement to be
+preserved.
+
 ### Split View (Desktop)
 
 ```
