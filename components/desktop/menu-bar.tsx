@@ -15,32 +15,15 @@ import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { AboutDialog } from "./about-dialog";
+import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
-import { useSystemSettings, type FocusMode } from "@/lib/system-settings-context";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
-import {
-  BedDouble,
-  Moon,
-  SlidersHorizontal,
-  type LucideIcon,
-} from "lucide-react";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
-
-const FOCUS_STATUS_CONFIG: Record<
-  Exclude<FocusMode, "off">,
-  { name: string; icon: LucideIcon }
-> = {
-  doNotDisturb: { name: "Do Not Disturb", icon: Moon },
-  sleep: { name: "Sleep", icon: BedDouble },
-  reduceInterruptions: {
-    name: "Reduce Interruptions",
-    icon: SlidersHorizontal,
-  },
-};
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -246,12 +229,12 @@ export function MenuBar({
         {/* Active Focus status */}
         {activeFocus && (
           <button
-            onClick={() => toggleMenu("controlCenter")}
+            onClick={() => toggleMenu("focusMenu")}
             aria-label={`${activeFocus.name} Focus, on`}
             title={`${activeFocus.name} Focus`}
             className={cn(
               "flex h-5 w-7 items-center justify-center rounded transition-colors",
-              openMenu === "controlCenter"
+              openMenu === "focusMenu"
                 ? "bg-white/30 dark:bg-white/20"
                 : "can-hover:hover:bg-white/10"
             )}
@@ -314,6 +297,12 @@ export function MenuBar({
         isOpen={openMenu === "wifi"}
         onClose={closeMenu}
         onOpenWifiSettings={onOpenWifiSettings}
+      />
+
+      <FocusMenu
+        isOpen={openMenu === "focusMenu"}
+        onClose={closeMenu}
+        onOpenSettings={onOpenSettings}
       />
 
       <ControlCenterMenu

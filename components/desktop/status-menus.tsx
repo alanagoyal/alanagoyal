@@ -13,7 +13,7 @@ import {
   Smartphone,
   Moon,
   BedDouble,
-  SlidersHorizontal,
+  Atom,
   Play,
   Pause,
   SkipBack,
@@ -272,7 +272,7 @@ interface ControlCenterMenuProps {
 const focusModeConfig: Record<Exclude<FocusMode, "off">, { name: string; icon: React.ReactNode }> = {
   doNotDisturb: { name: "Do Not Disturb", icon: <Moon className="w-4 h-4" /> },
   sleep: { name: "Sleep", icon: <BedDouble className="w-4 h-4" /> },
-  reduceInterruptions: { name: "Reduce Interruptions", icon: <SlidersHorizontal className="w-4 h-4" /> },
+  reduceInterruptions: { name: "Reduce Interruptions", icon: <Atom className="w-4 h-4" /> },
 };
 
 export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {

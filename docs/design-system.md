@@ -354,6 +354,10 @@ Top-right banners use `DesktopNotificationBanner` for incoming Messages notifica
 
 Notification Center cards share the same outer `mb-1.5 rounded-md p-3` geometry. Apply content-specific borders, radii, and backgrounds only inside that shared container; scene-based cards such as Weather may replace the standard `bg-muted` surface.
 
+### Status Menu Popovers
+
+Status icons that expose a dedicated native menu should use their own popover instead of opening the full Control Center. The active Focus icon follows this pattern through `FocusMenu`, including direct mode changes and durable timed choices.
+
 ### Empty State
 
 ```tsx
