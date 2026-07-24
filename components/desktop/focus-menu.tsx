@@ -127,16 +127,16 @@ export function FocusMenu({
       ref={menuRef}
       role="menu"
       aria-label="Focus"
-      className="absolute right-[70px] top-7 z-[70] w-[308px] overflow-hidden rounded-2xl border border-black/20 bg-white/92 text-foreground shadow-2xl backdrop-blur-2xl dark:border-white/25 dark:bg-zinc-800/92"
+      className="absolute right-[70px] top-7 z-[70] w-[308px] overflow-hidden rounded-lg border border-black/10 bg-white/95 py-1 text-foreground shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
     >
-      <div className="px-3 py-1.5">
-        <p className="text-[13px] font-semibold leading-[15px]">Focus</p>
-        <p className="text-xs leading-[15px] text-muted-foreground">On</p>
+      <div className="px-3 pb-0.5 pt-1">
+        <p className="text-[13px] font-semibold leading-5">Focus</p>
+        <p className="text-[11px] leading-4 text-muted-foreground">On</p>
       </div>
 
-      <div className="mx-3 border-t border-black/10 dark:border-white/10" />
+      <div className="my-1 border-t border-black/10 dark:border-white/10" />
 
-      <div className="px-2 py-1">
+      <div>
         {FOCUS_MODES.map(([mode, config]) => {
           const isActive = focusMode === mode;
           const Icon = config.icon;
@@ -155,14 +155,14 @@ export function FocusMenu({
                   setFocusMode(mode);
                 }
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-0.5 text-left transition-colors can-hover:hover:bg-black/5 dark:can-hover:hover:bg-white/10"
+              className="group mx-1.5 flex w-[calc(100%_-_0.75rem)] items-center gap-2.5 rounded-[5px] px-2 py-1 text-left transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
             >
               <span
                 className={cn(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
                   isActive
-                    ? "bg-black/10 text-fuchsia-500 shadow-[0_0_16px_rgba(217,70,239,0.35)] dark:bg-white/15"
-                    : "bg-black/10 text-muted-foreground dark:bg-white/10"
+                    ? "bg-black/10 text-fuchsia-500 shadow-[0_0_16px_rgba(217,70,239,0.35)] can-hover:group-hover:bg-white/20 can-hover:group-hover:text-white dark:bg-white/15"
+                    : "bg-black/10 text-muted-foreground can-hover:group-hover:bg-white/20 can-hover:group-hover:text-white dark:bg-white/10"
                 )}
               >
                 <Icon
@@ -173,41 +173,43 @@ export function FocusMenu({
                   )}
                 />
               </span>
-              <span className="text-sm font-medium">{config.name}</span>
+              <span className="text-[13px] leading-5">{config.name}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="bg-black/[0.07] px-[54px] py-1 dark:bg-white/10">
+      <div className="my-1 border-t border-black/10 dark:border-white/10" />
+
+      <div>
         <button
           role="menuitem"
           onClick={() => scheduleFocusEnd(Date.now() + 60 * 60 * 1000)}
-          className="block w-full rounded px-2 py-0.5 text-left text-sm font-medium transition-colors can-hover:hover:bg-black/5 dark:can-hover:hover:bg-white/10"
+          className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
         >
           For 1 hour
         </button>
         <button
           role="menuitem"
           onClick={() => scheduleFocusEnd(getEveningEndTime())}
-          className="block w-full rounded px-2 py-0.5 text-left text-sm font-medium transition-colors can-hover:hover:bg-black/5 dark:can-hover:hover:bg-white/10"
+          className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
         >
           Until this evening
         </button>
       </div>
 
-      <div className="border-t border-black/10 px-2 py-1.5 dark:border-white/10">
-        <button
-          role="menuitem"
-          onClick={() => {
-            onOpenSettings?.();
-            onClose();
-          }}
-          className="w-full rounded-lg px-2 py-0.5 text-left text-sm font-medium transition-colors can-hover:hover:bg-black/5 dark:can-hover:hover:bg-white/10"
-        >
-          Focus Settings&hellip;
-        </button>
-      </div>
+      <div className="my-1 border-t border-black/10 dark:border-white/10" />
+
+      <button
+        role="menuitem"
+        onClick={() => {
+          onOpenSettings?.();
+          onClose();
+        }}
+        className="mx-1.5 w-[calc(100%_-_0.75rem)] rounded-[5px] px-2 py-1 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
+      >
+        Focus Settings&hellip;
+      </button>
     </div>
   );
 }
