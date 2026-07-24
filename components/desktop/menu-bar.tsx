@@ -16,12 +16,31 @@ import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { AboutDialog } from "./about-dialog";
 import { useFileMenuActions } from "@/lib/file-menu-context";
+import { useSystemSettings, type FocusMode } from "@/lib/system-settings-context";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
+import {
+  BedDouble,
+  Moon,
+  SlidersHorizontal,
+  type LucideIcon,
+} from "lucide-react";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
+
+const FOCUS_STATUS_CONFIG: Record<
+  Exclude<FocusMode, "off">,
+  { name: string; icon: LucideIcon }
+> = {
+  doNotDisturb: { name: "Do Not Disturb", icon: Moon },
+  sleep: { name: "Sleep", icon: BedDouble },
+  reduceInterruptions: {
+    name: "Reduce Interruptions",
+    icon: SlidersHorizontal,
+  },
+};
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -57,6 +76,7 @@ export function MenuBar({
   onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
+  const { focusMode } = useSystemSettings();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
@@ -82,6 +102,8 @@ export function MenuBar({
   const focusedAppId = getFocusedAppId(); // This returns the base app ID (e.g., "textedit")
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
   const focusedWindowId = state.focusedWindowId; // This is the actual window ID (e.g., "textedit-0")
+  const activeFocus =
+    focusMode === "off" ? null : FOCUS_STATUS_CONFIG[focusMode];
 
   useEffect(() => {
     const updateTime = () => {
@@ -220,6 +242,26 @@ export function MenuBar({
         >
           <FontAwesomeIcon icon={faWifi} className="w-4 h-4 text-black dark:text-white" />
         </button>
+
+        {/* Active Focus status */}
+        {activeFocus && (
+          <button
+            onClick={() => toggleMenu("controlCenter")}
+            aria-label={`${activeFocus.name} Focus, on`}
+            title={`${activeFocus.name} Focus`}
+            className={cn(
+              "flex h-5 w-7 items-center justify-center rounded transition-colors",
+              openMenu === "controlCenter"
+                ? "bg-white/30 dark:bg-white/20"
+                : "can-hover:hover:bg-white/10"
+            )}
+          >
+            <activeFocus.icon
+              aria-hidden="true"
+              className="h-4 w-4 text-black dark:text-white"
+            />
+          </button>
+        )}
 
         {/* Control Center */}
         <button
