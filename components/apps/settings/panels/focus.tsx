@@ -44,9 +44,7 @@ const focusRows: Array<{
   },
 ];
 
-function formatFocusStatus(focusEndsAt: number | null): string {
-  if (focusEndsAt === null) return "On";
-
+function formatFocusStatus(focusEndsAt: number): string {
   return `Until ${new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
@@ -115,7 +113,7 @@ export function FocusPanel({ isMobile = false }: FocusPanelProps) {
                 {row.name}
               </span>
 
-              {isActive && (
+              {isActive && focusEndsAt !== null && (
                 <span
                   className={cn(
                     "shrink-0 text-muted-foreground",
