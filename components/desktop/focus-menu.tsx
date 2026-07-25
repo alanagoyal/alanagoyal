@@ -16,13 +16,29 @@ import { cn } from "@/lib/utils";
 
 export const FOCUS_STATUS_CONFIG: Record<
   Exclude<FocusMode, "off">,
-  { name: string; icon: LucideIcon }
+  {
+    name: string;
+    icon: LucideIcon;
+    activeIconClassName: string;
+  }
 > = {
-  doNotDisturb: { name: "Do Not Disturb", icon: Moon },
-  sleep: { name: "Sleep", icon: BedDouble },
+  doNotDisturb: {
+    name: "Do Not Disturb",
+    icon: Moon,
+    activeIconClassName:
+      "text-violet-500 shadow-[0_0_16px_rgba(139,92,246,0.35)]",
+  },
+  sleep: {
+    name: "Sleep",
+    icon: BedDouble,
+    activeIconClassName:
+      "text-teal-500 shadow-[0_0_16px_rgba(20,184,166,0.35)]",
+  },
   reduceInterruptions: {
     name: "Reduce Interruptions",
     icon: Atom,
+    activeIconClassName:
+      "text-fuchsia-500 shadow-[0_0_16px_rgba(217,70,239,0.35)]",
   },
 };
 
@@ -101,7 +117,10 @@ export function FocusMenu({
                 className={cn(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
                   isActive
-                    ? "bg-black/10 text-fuchsia-500 shadow-[0_0_16px_rgba(217,70,239,0.35)] can-hover:group-hover:bg-white/20 can-hover:group-hover:text-white dark:bg-white/15"
+                    ? cn(
+                        "bg-black/10 can-hover:group-hover:bg-white/20 can-hover:group-hover:text-white dark:bg-white/15",
+                        config.activeIconClassName
+                      )
                     : "bg-black/10 text-muted-foreground can-hover:group-hover:bg-white/20 can-hover:group-hover:text-white dark:bg-white/10"
                 )}
               >
