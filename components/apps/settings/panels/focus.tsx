@@ -3,7 +3,6 @@
 import {
   Atom,
   BedDouble,
-  ChevronRight,
   Moon,
   type LucideIcon,
 } from "lucide-react";
@@ -71,7 +70,11 @@ export function FocusPanel({ isMobile = false }: FocusPanelProps) {
     >
       {isMobile && <h1 className="text-xl font-bold">Focus</h1>}
 
-      <div className="overflow-hidden rounded-xl bg-muted/60">
+      <div
+        role="radiogroup"
+        aria-label="Focus modes"
+        className="overflow-hidden rounded-xl bg-muted/60"
+      >
         {focusRows.map((row, index) => {
           const isActive = focusMode === row.id;
           const Icon = row.icon;
@@ -80,7 +83,8 @@ export function FocusPanel({ isMobile = false }: FocusPanelProps) {
             <button
               key={row.id}
               type="button"
-              aria-pressed={isActive}
+              role="radio"
+              aria-checked={isActive}
               onClick={() =>
                 setFocusMode(isActive ? "off" : row.id)
               }
@@ -121,10 +125,19 @@ export function FocusPanel({ isMobile = false }: FocusPanelProps) {
                   {formatFocusStatus(focusEndsAt)}
                 </span>
               )}
-              <ChevronRight
+              <span
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-muted-foreground"
-              />
+                className={cn(
+                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                  isActive
+                    ? "border-[#0A7CFF] bg-[#0A7CFF]"
+                    : "border-muted-foreground/50 bg-background/40"
+                )}
+              >
+                {isActive && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                )}
+              </span>
             </button>
           );
         })}
