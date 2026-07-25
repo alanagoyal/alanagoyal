@@ -358,7 +358,7 @@ Notification Center cards share the same outer `mb-1.5 rounded-md p-3` geometry.
 
 Status icons that expose a dedicated native menu should use their own popover instead of opening the full Control Center. The active Focus icon follows this pattern through `FocusMenu`, including direct mode changes and durable timed choices.
 
-Focus state and scheduled expiration live in `SystemSettingsContext`, not the popover, so duration choices survive menu dismissal, Settings navigation, reloads, and background tabs. `Focus Settings…` should deep-link to the Focus category in System Settings, where the three modes form a single radio group backed by the same shared state. Selecting the active radio again clears Focus so all modes can be off; an active timed mode shows its scheduled end time.
+Focus state and scheduled expiration live in `SystemSettingsContext`, not the popover, so duration choices survive menu dismissal, Settings navigation, reloads, and background tabs. `Focus Settings…` should deep-link to the Focus category in System Settings, where the three modes use mutually exclusive switches backed by the same shared state. Turning on one switch turns the other two off; turning off the active switch leaves all modes off. An active timed mode shows its scheduled end time.
 
 ### Empty State
 
