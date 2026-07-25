@@ -28,6 +28,7 @@ const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 interface MenuBarProps {
   onOpenSettings?: () => void;
   onOpenWifiSettings?: () => void;
+  onOpenFocusSettings?: () => void;
   onOpenAbout?: () => void;
   onSleep?: () => void;
   onRestart?: () => void;
@@ -45,6 +46,7 @@ interface MenuBarProps {
 export function MenuBar({
   onOpenSettings,
   onOpenWifiSettings,
+  onOpenFocusSettings,
   onOpenAbout,
   onSleep,
   onRestart,
@@ -302,7 +304,7 @@ export function MenuBar({
       <FocusMenu
         isOpen={openMenu === "focusMenu"}
         onClose={closeMenu}
-        onOpenSettings={onOpenSettings}
+        onOpenSettings={onOpenFocusSettings}
       />
 
       <ControlCenterMenu

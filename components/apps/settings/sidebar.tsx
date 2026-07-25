@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery } from "lucide-react";
+import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { SidebarNav } from "./sidebar-nav";
@@ -47,6 +47,13 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     icon: <Paintbrush className="w-5 h-5 text-white" />,
     iconBg: "bg-blue-500",
     keywords: ["light", "dark", "auto", "theme", "mode"],
+  },
+  {
+    id: "focus",
+    name: "Focus",
+    icon: <Moon className="w-5 h-5 fill-current text-white" />,
+    iconBg: "bg-gradient-to-b from-violet-400 to-indigo-600",
+    keywords: ["focus", "do not disturb", "sleep", "reduce interruptions", "notifications"],
   },
 ];
 

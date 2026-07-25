@@ -6,7 +6,7 @@ import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 import { loadSettingsState, saveSettingsState } from "@/lib/sidebar-persistence";
 
-export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth";
+export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth" | "focus";
 export type SettingsPanel = "about" | "personal-info" | "storage" | null;
 
 interface HistoryEntry {
@@ -19,9 +19,10 @@ interface SettingsAppProps {
   inShell?: boolean;
   initialPanel?: SettingsPanel; // Allow opening directly to a panel
   initialCategory?: SettingsCategory; // Allow opening directly to a category
+  navigationRequestId?: number;
 }
 
-export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory }: SettingsAppProps) {
+export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory, navigationRequestId }: SettingsAppProps) {
   // Load persisted state (props take precedence if provided)
   const getInitialState = (): HistoryEntry => {
     if (initialCategory || initialPanel) {
@@ -41,7 +42,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
       setHistory([{ category: initialCategory || "general", panel: initialPanel || null }]);
       setHistoryIndex(0);
     }
-  }, [initialPanel, initialCategory]);
+  }, [initialPanel, initialCategory, navigationRequestId]);
   const [showSidebar, setShowSidebar] = useState(true);
 
   // Persist settings state
@@ -126,12 +127,13 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     if (selectedPanel === "about") return "About";
     if (selectedPanel === "personal-info") return "Personal Information";
     if (selectedPanel === "storage") return "Storage";
-    // Don't show title for General/Appearance/Bluetooth on mobile (it's in the content card)
+    // Don't show title for primary categories on mobile (it's in the content card)
     if (!isMobile) {
       if (selectedCategory === "general") return "General";
       if (selectedCategory === "appearance") return "Appearance";
       if (selectedCategory === "wifi") return "Wi-Fi";
       if (selectedCategory === "bluetooth") return "Bluetooth";
+      if (selectedCategory === "focus") return "Focus";
     }
     return undefined;
   };

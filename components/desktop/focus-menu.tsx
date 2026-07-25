@@ -6,15 +6,13 @@ import {
   Moon,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import {
   useSystemSettings,
   type FocusMode,
 } from "@/lib/system-settings-context";
 import { cn } from "@/lib/utils";
-
-const FOCUS_ENDS_AT_STORAGE_KEY = "desktop-focus-ends-at";
 
 export const FOCUS_STATUS_CONFIG: Record<
   Exclude<FocusMode, "off">,
@@ -34,18 +32,6 @@ const FOCUS_MODES = Object.entries(FOCUS_STATUS_CONFIG) as Array<
     (typeof FOCUS_STATUS_CONFIG)[Exclude<FocusMode, "off">],
   ]
 >;
-
-function loadFocusEndsAt(): number | null {
-  if (typeof window === "undefined") return null;
-
-  const storedValue = window.localStorage.getItem(
-    FOCUS_ENDS_AT_STORAGE_KEY
-  );
-  if (!storedValue) return null;
-
-  const timestamp = Number(storedValue);
-  return Number.isFinite(timestamp) ? timestamp : null;
-}
 
 function getEveningEndTime(now = new Date()): number {
   const evening = new Date(now);
@@ -70,55 +56,10 @@ export function FocusMenu({
   onOpenSettings,
 }: FocusMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const { focusMode, setFocusMode } = useSystemSettings();
-  const [focusEndsAt, setFocusEndsAt] = useState<number | null>(
-    loadFocusEndsAt
-  );
+  const { focusMode, setFocusMode, scheduleFocusEnd } =
+    useSystemSettings();
 
   useClickOutside(menuRef, onClose, isOpen);
-
-  const clearFocusEnd = useCallback(() => {
-    setFocusEndsAt(null);
-    window.localStorage.removeItem(FOCUS_ENDS_AT_STORAGE_KEY);
-  }, []);
-
-  const scheduleFocusEnd = useCallback(
-    (timestamp: number) => {
-      setFocusEndsAt(timestamp);
-      window.localStorage.setItem(
-        FOCUS_ENDS_AT_STORAGE_KEY,
-        String(timestamp)
-      );
-      onClose();
-    },
-    [onClose]
-  );
-
-  useEffect(() => {
-    if (focusMode === "off" && focusEndsAt !== null) {
-      clearFocusEnd();
-    }
-  }, [clearFocusEnd, focusEndsAt, focusMode]);
-
-  useEffect(() => {
-    if (focusEndsAt === null) return;
-
-    const remaining = focusEndsAt - Date.now();
-    if (remaining <= 0) {
-      setFocusMode("off");
-      clearFocusEnd();
-      onClose();
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setFocusMode("off");
-      clearFocusEnd();
-      onClose();
-    }, remaining);
-
-    return () => window.clearTimeout(timeout);
-  }, [clearFocusEnd, focusEndsAt, onClose, setFocusMode]);
 
   if (!isOpen || focusMode === "off") return null;
 
@@ -147,7 +88,6 @@ export function FocusMenu({
               role="menuitemradio"
               aria-checked={isActive}
               onClick={() => {
-                clearFocusEnd();
                 if (isActive) {
                   setFocusMode("off");
                   onClose();
@@ -184,14 +124,20 @@ export function FocusMenu({
       <div>
         <button
           role="menuitem"
-          onClick={() => scheduleFocusEnd(Date.now() + 60 * 60 * 1000)}
+          onClick={() => {
+            scheduleFocusEnd(Date.now() + 60 * 60 * 1000);
+            onClose();
+          }}
           className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
         >
           For 1 hour
         </button>
         <button
           role="menuitem"
-          onClick={() => scheduleFocusEnd(getEveningEndTime())}
+          onClick={() => {
+            scheduleFocusEnd(getEveningEndTime());
+            onClose();
+          }}
           className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
         >
           Until this evening

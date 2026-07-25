@@ -221,6 +221,7 @@ function DesktopContent({
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
+  const [settingsNavigationRequestId, setSettingsNavigationRequestId] = useState(0);
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderStatusBarVisible, setFinderStatusBarVisible] = useState(false);
   const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
@@ -597,6 +598,7 @@ function DesktopContent({
   const handleOpenSettings = useCallback(() => {
     setSettingsCategory("general");
     setSettingsPanel(null);
+    setSettingsNavigationRequestId((requestId) => requestId + 1);
     openWindow("settings");
     const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
     if (nextUrl) {
@@ -607,6 +609,18 @@ function DesktopContent({
   const handleOpenWifiSettings = useCallback(() => {
     setSettingsCategory("wifi");
     setSettingsPanel(null);
+    setSettingsNavigationRequestId((requestId) => requestId + 1);
+    openWindow("settings");
+    const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
+  }, [openWindow]);
+
+  const handleOpenFocusSettings = useCallback(() => {
+    setSettingsCategory("focus");
+    setSettingsPanel(null);
+    setSettingsNavigationRequestId((requestId) => requestId + 1);
     openWindow("settings");
     const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
     if (nextUrl) {
@@ -617,6 +631,7 @@ function DesktopContent({
   const handleOpenAbout = useCallback(() => {
     setSettingsCategory("general");
     setSettingsPanel("about");
+    setSettingsNavigationRequestId((requestId) => requestId + 1);
     openWindow("settings");
     const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
     if (nextUrl) {
@@ -756,6 +771,7 @@ function DesktopContent({
       <MenuBar
         onOpenSettings={handleOpenSettings}
         onOpenWifiSettings={handleOpenWifiSettings}
+        onOpenFocusSettings={handleOpenFocusSettings}
         onOpenAbout={handleOpenAbout}
         onSleep={handleSleep}
         onRestart={handleRestart}
@@ -788,7 +804,12 @@ function DesktopContent({
           </Window>
 
           <Window appId="settings">
-            <SettingsApp inShell={true} initialPanel={settingsPanel} initialCategory={settingsCategory} />
+            <SettingsApp
+              inShell={true}
+              initialPanel={settingsPanel}
+              initialCategory={settingsCategory}
+              navigationRequestId={settingsNavigationRequestId}
+            />
           </Window>
 
           <Window appId="iterm">

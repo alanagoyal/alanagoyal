@@ -222,7 +222,7 @@ export function clearPhotosState(): void {
 
 // Note: SettingsCategory and SettingsPanel types are defined in settings-app.tsx.
 // These arrays must match those types.
-const SETTINGS_CATEGORIES = ["general", "appearance", "wifi", "bluetooth"] as const;
+const SETTINGS_CATEGORIES = ["general", "appearance", "wifi", "bluetooth", "focus"] as const;
 const SETTINGS_PANELS = ["about", "personal-info", "storage"] as const;
 
 type SettingsCategory = (typeof SETTINGS_CATEGORIES)[number];

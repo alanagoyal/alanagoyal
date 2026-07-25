@@ -20,6 +20,8 @@ interface SystemSettingsContextValue {
   setAirdropMode: (mode: AirdropMode) => void;
   focusMode: FocusMode;
   setFocusMode: (mode: FocusMode) => void;
+  focusEndsAt: number | null;
+  scheduleFocusEnd: (timestamp: number) => void;
   osVersionId: string;
   setOSVersionId: (id: string) => void;
   currentOS: OSVersion;
@@ -32,6 +34,7 @@ const WIFI_KEY = "settings-wifi-enabled";
 const BLUETOOTH_KEY = "settings-bluetooth-enabled";
 const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
+const FOCUS_ENDS_AT_KEY = "desktop-focus-ends-at";
 const OS_VERSION_KEY = "system-os-version";
 
 // Helper to load settings from localStorage synchronously
@@ -43,6 +46,7 @@ function getInitialSettings() {
       bluetoothEnabled: true,
       airdropMode: "contacts" as AirdropMode,
       focusMode: "off" as FocusMode,
+      focusEndsAt: null,
       osVersionId: DEFAULT_OS_VERSION_ID,
     };
   }
@@ -52,7 +56,11 @@ function getInitialSettings() {
   const storedBluetooth = localStorage.getItem(BLUETOOTH_KEY);
   const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
   const storedFocus = localStorage.getItem(FOCUS_KEY);
+  const storedFocusEndsAt = localStorage.getItem(FOCUS_ENDS_AT_KEY);
   const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
+  const parsedFocusEndsAt = storedFocusEndsAt
+    ? Number(storedFocusEndsAt)
+    : null;
 
   return {
     brightness: storedBrightness ? parseFloat(storedBrightness) : 100,
@@ -60,6 +68,10 @@ function getInitialSettings() {
     bluetoothEnabled: storedBluetooth === null ? true : storedBluetooth === "true",
     airdropMode: (storedAirdrop === "contacts" || storedAirdrop === "everyone" ? storedAirdrop : "contacts") as AirdropMode,
     focusMode: (storedFocus === "off" || storedFocus === "doNotDisturb" || storedFocus === "sleep" || storedFocus === "reduceInterruptions" ? storedFocus : "off") as FocusMode,
+    focusEndsAt:
+      parsedFocusEndsAt !== null && Number.isFinite(parsedFocusEndsAt)
+        ? parsedFocusEndsAt
+        : null,
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
   };
 }
@@ -79,6 +91,9 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const [bluetoothEnabled, setBluetoothEnabledState] = useState(initial.bluetoothEnabled);
   const [airdropMode, setAirdropModeState] = useState<AirdropMode>(initial.airdropMode);
   const [focusMode, setFocusModeState] = useState<FocusMode>(initial.focusMode);
+  const [focusEndsAt, setFocusEndsAtState] = useState<number | null>(
+    initial.focusEndsAt
+  );
   const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
 
   // Load volume from soundEffects on mount (can't be done synchronously)
@@ -123,10 +138,61 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
 
   const setFocusMode = useCallback((mode: FocusMode) => {
     setFocusModeState(mode);
+    setFocusEndsAtState(null);
     if (typeof window !== "undefined") {
       localStorage.setItem(FOCUS_KEY, mode);
+      localStorage.removeItem(FOCUS_ENDS_AT_KEY);
     }
   }, []);
+
+  const scheduleFocusEnd = useCallback((timestamp: number) => {
+    if (!Number.isFinite(timestamp) || timestamp <= Date.now()) {
+      setFocusModeState("off");
+      setFocusEndsAtState(null);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(FOCUS_KEY, "off");
+        localStorage.removeItem(FOCUS_ENDS_AT_KEY);
+      }
+      return;
+    }
+
+    setFocusEndsAtState(timestamp);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(FOCUS_ENDS_AT_KEY, String(timestamp));
+    }
+  }, []);
+
+  const expireFocus = useCallback(() => {
+    setFocusModeState("off");
+    setFocusEndsAtState(null);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(FOCUS_KEY, "off");
+      localStorage.removeItem(FOCUS_ENDS_AT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (focusEndsAt === null) return;
+
+    const remaining = focusEndsAt - Date.now();
+    if (remaining <= 0) {
+      expireFocus();
+      return;
+    }
+
+    const timeout = window.setTimeout(expireFocus, remaining);
+    const handleVisibilityChange = () => {
+      if (!document.hidden && Date.now() >= focusEndsAt) {
+        expireFocus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [expireFocus, focusEndsAt]);
 
   const setOSVersionId = useCallback((id: string) => {
     setOSVersionIdState(id);
@@ -138,7 +204,7 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
@@ -173,6 +239,8 @@ const defaultSettings: SystemSettingsContextValue = {
   setAirdropMode: () => {},
   focusMode: "off",
   setFocusMode: () => {},
+  focusEndsAt: null,
+  scheduleFocusEnd: () => {},
   osVersionId: DEFAULT_OS_VERSION_ID,
   setOSVersionId: () => {},
   currentOS: getOSVersion(DEFAULT_OS_VERSION_ID),
