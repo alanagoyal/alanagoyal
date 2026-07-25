@@ -28,6 +28,7 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { createNote } from "@/lib/notes/create-note";
+import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 
 const labels = {
   pinned: (
@@ -35,6 +36,7 @@ const labels = {
       <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
     </>
   ),
+  notes: "Notes",
   today: "Today",
   yesterday: "Yesterday",
   "7": "Previous 7 Days",
@@ -43,6 +45,8 @@ const labels = {
 };
 
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
+const ungroupedCategoryOrder = ["pinned", "notes"];
+const NOTES_GROUP_BY_DATE_KEY = "notes-group-by-date";
 
 export default function Sidebar({
   notes: publicNotes,
@@ -78,6 +82,8 @@ export default function Sidebar({
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [groupNotesByDate, setGroupNotesByDate] = useState(true);
+  const [groupingPreferenceLoaded, setGroupingPreferenceLoaded] = useState(false);
 
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
@@ -118,6 +124,31 @@ export default function Sidebar({
     () => [...publicNotes, ...sessionNotes],
     [publicNotes, sessionNotes]
   );
+
+  useEffect(() => {
+    try {
+      setGroupNotesByDate(
+        localStorage.getItem(NOTES_GROUP_BY_DATE_KEY) !== "false"
+      );
+    } catch {
+      // Keep date grouping enabled when storage is unavailable.
+    } finally {
+      setGroupingPreferenceLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!groupingPreferenceLoaded) return;
+
+    try {
+      localStorage.setItem(
+        NOTES_GROUP_BY_DATE_KEY,
+        String(groupNotesByDate)
+      );
+    } catch {
+      // Ignore storage errors; the in-memory preference still works.
+    }
+  }, [groupNotesByDate, groupingPreferenceLoaded]);
 
   const selectNoteInApp = useCallback((note: Note) => {
     onNoteSelect(note);
@@ -169,10 +200,27 @@ export default function Sidebar({
     const userSpecificNotes = notes.filter(
       (note) => note.public || note.session_id === sessionId
     );
-    const grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
-    sortGroupedNotes(grouped);
+    let grouped: GroupedNotes;
+
+    if (groupNotesByDate) {
+      grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
+      sortGroupedNotes(grouped);
+    } else {
+      const newestVisibleFirst = (a: Note, b: Note) =>
+        getDisplayCreatedAt(b).localeCompare(getDisplayCreatedAt(a));
+
+      grouped = {
+        pinned: userSpecificNotes
+          .filter((note) => pinnedNotes.has(note.slug))
+          .sort(newestVisibleFirst),
+        notes: userSpecificNotes
+          .filter((note) => !pinnedNotes.has(note.slug))
+          .sort(newestVisibleFirst),
+      };
+    }
+
     setGroupedNotes(grouped);
-  }, [notes, sessionId, pinnedNotes]);
+  }, [notes, sessionId, pinnedNotes, groupNotesByDate]);
 
   useEffect(() => {
     if (localSearchResults && localSearchResults.length > 0) {
@@ -495,6 +543,8 @@ export default function Sidebar({
       <Nav
         addNewPinnedNote={handlePinToggle}
         clearSearch={clearSearch}
+        groupNotesByDate={groupNotesByDate}
+        onGroupNotesByDateChange={setGroupNotesByDate}
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
         isScrolled={isScrolled}
@@ -538,7 +588,9 @@ export default function Sidebar({
               pinnedNotes={pinnedNotes}
               localSearchResults={localSearchResults}
               highlightedIndex={highlightedIndex}
-              categoryOrder={categoryOrder}
+              categoryOrder={
+                groupNotesByDate ? categoryOrder : ungroupedCategoryOrder
+              }
               labels={labels}
               handleNoteDelete={handleNoteDelete}
               openSwipeItemSlug={openSwipeItemSlug}
