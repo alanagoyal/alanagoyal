@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
+import { RotateCcwSquare } from "lucide-react";
 import {
   useWindowBehavior,
   Position,
@@ -481,37 +482,11 @@ export function PreviewWindow({
                 aria-label="Rotate left"
                 title="Rotate Left"
               >
-                <svg
+                <RotateCcwSquare
                   aria-hidden="true"
                   className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M7.5 4H3v4.5M3.5 8A8.5 8.5 0 0 1 16.75 3.75"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.8"
-                  />
-                  <rect
-                    height="13"
-                    rx="1.5"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    width="11"
-                    x="8"
-                    y="7"
-                  />
-                  <circle cx="11" cy="10.25" fill="currentColor" r="1" />
-                  <path
-                    d="m9.5 17 3-3 2.25 2.25 1.5-1.5L19 17.5"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                  />
-                </svg>
+                  strokeWidth={2}
+                />
               </button>
               <button
                 onClick={zoomOut}
