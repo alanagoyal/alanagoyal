@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef } from "react";
-import { Note as NoteType } from "@/lib/notes/types";
+import { useEffect, useRef, useState } from "react";
+import { Note as NoteType, NotesViewMode } from "@/lib/notes/types";
 import { SessionNotesProvider } from "@/app/(desktop)/notes/session-notes";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useNotesData } from "./hooks/use-notes-data";
 import { useNotesSelection } from "./hooks/use-notes-selection";
 import { NotesMobilePresenter } from "./presenters/notes-mobile-presenter";
 import { NotesDesktopPresenter } from "./presenters/notes-desktop-presenter";
+
+const NOTES_VIEW_MODE_KEY = "notes-view-mode";
 
 interface NotesAppProps {
   isMobile?: boolean;
@@ -23,6 +25,8 @@ export function NotesApp({
   initialNote,
 }: NotesAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<NotesViewMode>("list");
+  const [viewModeLoaded, setViewModeLoaded] = useState(false);
   const windowFocus = useWindowFocus();
   const {
     loading,
@@ -50,6 +54,29 @@ export function NotesApp({
 
   const showSidebar = isMobile && !initialSlug;
 
+  useEffect(() => {
+    try {
+      const storedViewMode = localStorage.getItem(NOTES_VIEW_MODE_KEY);
+      if (storedViewMode === "gallery" || storedViewMode === "list") {
+        setViewMode(storedViewMode);
+      }
+    } catch {
+      // Keep list view when storage is unavailable.
+    } finally {
+      setViewModeLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!viewModeLoaded) return;
+
+    try {
+      localStorage.setItem(NOTES_VIEW_MODE_KEY, viewMode);
+    } catch {
+      // Ignore storage errors; the in-memory preference still works.
+    }
+  }, [viewMode, viewModeLoaded]);
+
   if (isMobile) {
     return (
       <SessionNotesProvider
@@ -66,6 +93,8 @@ export function NotesApp({
           selectedNote={selectedNote}
           selectedSlugForSidebar={selectedSlugForSidebar}
           showSidebar={showSidebar}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       </SessionNotesProvider>
     );
@@ -89,6 +118,8 @@ export function NotesApp({
         selectedNote={selectedNote}
         selectedSlugForSidebar={selectedSlugForSidebar}
         windowFocus={windowFocus}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
     </SessionNotesProvider>
   );
