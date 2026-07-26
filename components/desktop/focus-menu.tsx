@@ -6,7 +6,8 @@ import {
   Moon,
   type LucideIcon,
 } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { getEveningFocusEndTime } from "@/lib/focus";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import {
   useSystemSettings,
@@ -49,17 +50,6 @@ const FOCUS_MODES = Object.entries(FOCUS_STATUS_CONFIG) as Array<
   ]
 >;
 
-function getEveningEndTime(now = new Date()): number {
-  const evening = new Date(now);
-  evening.setHours(19, 0, 0, 0);
-
-  if (evening.getTime() <= now.getTime()) {
-    evening.setDate(evening.getDate() + 1);
-  }
-
-  return evening.getTime();
-}
-
 interface FocusMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -74,8 +64,15 @@ export function FocusMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const { focusMode, setFocusMode, scheduleFocusEnd } =
     useSystemSettings();
+  const eveningEndTime = getEveningFocusEndTime();
 
   useClickOutside(menuRef, onClose, isOpen);
+
+  useEffect(() => {
+    if (isOpen && focusMode === "off") {
+      onClose();
+    }
+  }, [focusMode, isOpen, onClose]);
 
   if (!isOpen || focusMode === "off") return null;
 
@@ -151,16 +148,21 @@ export function FocusMenu({
         >
           For 1 hour
         </button>
-        <button
-          role="menuitem"
-          onClick={() => {
-            scheduleFocusEnd(getEveningEndTime());
-            onClose();
-          }}
-          className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
-        >
-          Until this evening
-        </button>
+        {eveningEndTime !== null && (
+          <button
+            role="menuitem"
+            onClick={() => {
+              const endTime = getEveningFocusEndTime();
+              if (endTime !== null) {
+                scheduleFocusEnd(endTime);
+              }
+              onClose();
+            }}
+            className="mx-1.5 block w-[calc(100%_-_0.75rem)] rounded-[5px] py-1 pl-[46px] pr-2 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white"
+          >
+            Until this evening
+          </button>
+        )}
       </div>
 
       <div className="my-1 border-t border-black/10 dark:border-white/10" />
