@@ -251,6 +251,7 @@ export function MenuBar({
         {/* Control Center */}
         <button
           onClick={() => toggleMenu("controlCenter")}
+          aria-label="Control Center"
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
             openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"

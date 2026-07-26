@@ -360,6 +360,8 @@ Status icons that expose a dedicated native menu should use their own popover in
 
 Focus state and scheduled expiration live in `SystemSettingsContext`, not the popover, so duration choices survive menu dismissal, Settings navigation, reloads, and background tabs. `Focus Settings…` should deep-link to the Focus category in System Settings, where the three modes use mutually exclusive switches backed by the same shared state. Turning on one switch turns the other two off; turning off the active switch leaves all modes off. An active timed mode shows its scheduled end time.
 
+The Control Center Focus tile should stay generic only while Focus is off. When active, its title, icon, and accent identify the specific mode, while its second line reports `On` or the scheduled end time.
+
 ### Empty State
 
 ```tsx
