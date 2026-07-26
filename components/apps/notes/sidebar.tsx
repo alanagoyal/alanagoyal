@@ -676,6 +676,7 @@ export default function Sidebar({
             <div
               className={cn(
                 "w-full px-2",
+                isMobile && viewMode === "gallery" && "px-4",
                 !isMobile && viewMode === "list" && "w-[320px]",
                 !isMobile && viewMode === "gallery" && "px-5 pb-5",
               )}

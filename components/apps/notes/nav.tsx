@@ -207,7 +207,9 @@ export function Nav({
                   aria-label="Sort notes"
                   className={cn(
                     "absolute top-10 w-60 rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95",
-                    viewMode === "gallery"
+                    isMobile
+                      ? "right-0"
+                      : viewMode === "gallery"
                       ? "right-[calc(100%-2px)]"
                       : "left-[calc(100%-2px)]",
                   )}
@@ -257,7 +259,9 @@ export function Nav({
                   aria-label="Group notes by date"
                   className={cn(
                     "absolute top-[74px] w-48 rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95",
-                    viewMode === "gallery"
+                    isMobile
+                      ? "right-0"
+                      : viewMode === "gallery"
                       ? "right-[calc(100%-2px)]"
                       : "left-[calc(100%-2px)]",
                   )}

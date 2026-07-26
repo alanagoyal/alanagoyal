@@ -33,6 +33,7 @@ interface GalleryCardProps {
   isPinned: boolean;
   onNoteSelect: (note: Note) => void;
   onPinToggle: (slug: string) => void;
+  isMobile: boolean;
 }
 
 function GalleryCard({
@@ -40,6 +41,7 @@ function GalleryCard({
   isPinned,
   onNoteSelect,
   onPinToggle,
+  isMobile,
 }: GalleryCardProps) {
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -53,12 +55,31 @@ function GalleryCard({
         type="button"
         data-note-slug={note.slug}
         onClick={() => onNoteSelect(note)}
-        className="flex aspect-[4/3] w-full flex-col overflow-hidden rounded-xl border border-muted-foreground/25 bg-background px-4 py-3 text-left shadow-sm transition-[border-color,box-shadow,transform] can-hover:hover:-translate-y-0.5 can-hover:hover:border-muted-foreground/40 can-hover:hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]"
+        className={cn(
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm transition-[border-color,box-shadow,transform] can-hover:hover:-translate-y-0.5 can-hover:hover:border-muted-foreground/40 can-hover:hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          isMobile
+            ? "rounded-lg px-2 py-1.5"
+            : "rounded-xl px-4 py-3",
+        )}
       >
-        <h4 className="line-clamp-2 pr-7 text-sm font-semibold leading-5">
+        <h4
+          className={cn(
+            "line-clamp-2 font-semibold",
+            isMobile
+              ? "pr-5 text-[9px] leading-[11px]"
+              : "pr-7 text-sm leading-5",
+          )}
+        >
           {note.emoji} {note.title}
         </h4>
-        <p className="mt-2 line-clamp-[7] whitespace-pre-wrap text-xs leading-[1.35] text-muted-foreground">
+        <p
+          className={cn(
+            "whitespace-pre-wrap text-muted-foreground",
+            isMobile
+              ? "mt-1 line-clamp-[6] text-[7px] leading-[1.25]"
+              : "mt-2 line-clamp-[7] text-xs leading-[1.35]",
+          )}
+        >
           {getNotePreviewText(note.content)}
         </p>
       </button>
@@ -68,17 +89,38 @@ function GalleryCard({
           type="button"
           aria-label={`Unpin ${note.title}`}
           onClick={() => onPinToggle(note.slug)}
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]"
+          className={cn(
+            "absolute flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+            isMobile
+              ? "right-1.5 top-1.5 h-6 w-6 rounded-md"
+              : "right-3 top-3 h-7 w-7 rounded-lg",
+          )}
         >
-          <Pin className="h-4 w-4 fill-current" aria-hidden />
+          <Pin
+            className={cn(
+              "fill-current",
+              isMobile ? "h-3.5 w-3.5" : "h-4 w-4",
+            )}
+            aria-hidden
+          />
         </button>
       )}
 
-      <div className="mt-2 px-1 text-center">
-        <h4 className="truncate text-sm font-medium">{note.title}</h4>
+      <div className={cn("text-center", isMobile ? "mt-2" : "mt-2 px-1")}>
+        <h4
+          className={cn(
+            "font-medium",
+            isMobile
+              ? "line-clamp-2 text-[15px] leading-[18px]"
+              : "truncate text-sm",
+          )}
+        >
+          {note.title}
+        </h4>
         <p
           className={cn(
-            "mt-0.5 text-xs text-muted-foreground tabular-nums",
+            "mt-0.5 text-muted-foreground tabular-nums",
+            isMobile ? "text-[13px] leading-4" : "text-xs",
             !hasMounted && "invisible",
           )}
         >
@@ -107,10 +149,10 @@ function GalleryGrid({
   return (
     <div
       className={cn(
-        "grid gap-x-5 gap-y-6",
+        "grid",
         isMobile
-          ? "grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
-          : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]",
+          ? "grid-cols-3 gap-x-4 gap-y-7"
+          : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-5 gap-y-6",
       )}
     >
       {notes.map((note) => (
@@ -120,6 +162,7 @@ function GalleryGrid({
           isPinned={pinnedNotes.has(note.slug)}
           onNoteSelect={onNoteSelect}
           onPinToggle={onPinToggle}
+          isMobile={isMobile}
         />
       ))}
     </div>
@@ -184,13 +227,21 @@ export function SidebarContent({
 
   if (viewMode === "gallery") {
     return (
-      <div className="pb-6 pt-2">
+      <div className={cn("pt-2", isMobile ? "pb-24" : "pb-6")}>
         {localSearchResults === null ? (
-          <nav className="space-y-8" aria-label="Notes gallery">
+          <nav
+            className={cn(isMobile ? "space-y-10" : "space-y-8")}
+            aria-label="Notes gallery"
+          >
             {categoryOrder.map((categoryKey) =>
               groupedNotes[categoryKey]?.length > 0 ? (
                 <section key={categoryKey}>
-                  <h3 className="mb-3 text-base font-semibold text-foreground">
+                  <h3
+                    className={cn(
+                      "mb-3 font-semibold text-foreground",
+                      isMobile ? "text-xl" : "text-base",
+                    )}
+                  >
                     {labels[categoryKey as keyof typeof labels]}
                   </h3>
                   <GalleryGrid
