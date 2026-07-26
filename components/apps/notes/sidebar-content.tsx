@@ -103,7 +103,7 @@ function GalleryGrid({
   onPinToggle: (slug: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-5 gap-y-6">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-x-5 gap-y-6">
       {notes.map((note) => (
         <GalleryCard
           key={note.id}
