@@ -349,7 +349,10 @@ export default function Sidebar({
   );
 
   const handlePinToggle = useCallback(
-    (slug: string) => {
+    (
+      slug: string,
+      { selectNote = true }: { selectNote?: boolean } = {},
+    ) => {
       let isPinning = false;
       setPinnedNotes((prev) => {
         const newPinned = new Set(prev);
@@ -367,6 +370,8 @@ export default function Sidebar({
       });
 
       clearSearch();
+
+      if (!selectNote) return;
 
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${slug}`);
@@ -639,23 +644,14 @@ export default function Sidebar({
         onNoteCreated={onNoteCreated}
         onGalleryBack={isGalleryDetailOpen ? onGalleryBack : undefined}
       />
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {isGalleryDetailOpen && galleryDetailNote ? (
-          <ScrollArea
-            key={galleryDetailNote.id}
-            className="h-full"
-            isMobile={false}
-            bottomMargin="0px"
-          >
-            <div className="min-h-full w-full p-3">
-              <NoteDocument
-                key={galleryDetailNote.id}
-                note={galleryDetailNote}
-                isMobile={false}
-              />
-            </div>
-          </ScrollArea>
-        ) : (
+      <div className="relative flex-1 min-h-0 overflow-hidden">
+        <div
+          aria-hidden={isGalleryDetailOpen}
+          className={cn(
+            "h-full",
+            isGalleryDetailOpen && "invisible pointer-events-none",
+          )}
+        >
           <ScrollArea
             className="h-full"
             onScrollCapture={(event: React.UIEvent<HTMLDivElement>) => {
@@ -713,7 +709,25 @@ export default function Sidebar({
               </div>
             </div>
           </ScrollArea>
-        )}
+        </div>
+        {isGalleryDetailOpen && galleryDetailNote ? (
+          <div className="absolute inset-0 bg-background">
+            <ScrollArea
+              key={galleryDetailNote.id}
+              className="h-full"
+              isMobile={false}
+              bottomMargin="0px"
+            >
+              <div className="min-h-full w-full p-3">
+                <NoteDocument
+                  key={galleryDetailNote.id}
+                  note={galleryDetailNote}
+                  isMobile={false}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        ) : null}
       </div>
     </div>
   );

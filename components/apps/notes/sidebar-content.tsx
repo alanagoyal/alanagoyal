@@ -12,7 +12,10 @@ interface SidebarContentProps {
   selectedNoteSlug: string | null;
   onNoteSelect: (note: Note) => void;
   sessionId: string;
-  handlePinToggle: (slug: string) => void;
+  handlePinToggle: (
+    slug: string,
+    options?: { selectNote?: boolean },
+  ) => void;
   pinnedNotes: Set<string>;
   localSearchResults: Note[] | null;
   highlightedIndex: number;
@@ -203,6 +206,13 @@ export function SidebarContent({
     [clearSearch, handlePinToggle],
   );
 
+  const handleGalleryPinToggle = useCallback(
+    (slug: string) => {
+      handlePinToggle(slug, { selectNote: false });
+    },
+    [handlePinToggle],
+  );
+
   const handleEdit = useCallback(
     (slug: string) => {
       clearSearch();
@@ -248,7 +258,7 @@ export function SidebarContent({
                     notes={groupedNotes[categoryKey]}
                     pinnedNotes={pinnedNotes}
                     onNoteSelect={onNoteSelect}
-                    onPinToggle={handlePinToggle}
+                    onPinToggle={handleGalleryPinToggle}
                     isMobile={isMobile}
                   />
                 </section>
@@ -264,7 +274,7 @@ export function SidebarContent({
               notes={localSearchResults}
               pinnedNotes={pinnedNotes}
               onNoteSelect={onNoteSelect}
-              onPinToggle={handlePinToggleWithClear}
+              onPinToggle={handleGalleryPinToggle}
               isMobile={isMobile}
             />
           </section>
