@@ -116,6 +116,7 @@ export function NotesApp({
         containerRef={containerRef}
         handleNoteCreated={handleNoteCreated}
         handleNoteSelect={handleNoteSelect}
+        initialSlug={initialSlug}
         inShell={inShell}
         notes={notes}
         selectedNote={selectedNote}

@@ -14,6 +14,7 @@ interface NotesDesktopPresenterProps {
   containerRef: RefObject<HTMLDivElement>;
   handleNoteCreated: (note: NoteType) => void;
   handleNoteSelect: (note: NoteType) => Promise<void>;
+  initialSlug?: string;
   inShell: boolean;
   notes: NoteType[];
   selectedNote: NoteType | null;
@@ -27,6 +28,7 @@ export function NotesDesktopPresenter({
   containerRef,
   handleNoteCreated,
   handleNoteSelect,
+  initialSlug,
   inShell,
   notes,
   selectedNote,
@@ -35,7 +37,9 @@ export function NotesDesktopPresenter({
   viewMode,
   onViewModeChange,
 }: NotesDesktopPresenterProps) {
-  const [isGalleryDetailOpen, setIsGalleryDetailOpen] = useState(false);
+  const [isGalleryDetailOpen, setIsGalleryDetailOpen] = useState(
+    () => viewMode === "gallery" && Boolean(initialSlug),
+  );
 
   useEffect(() => {
     if (viewMode !== "gallery") {
@@ -130,7 +134,12 @@ export function NotesDesktopPresenter({
               }}
             />
           )}
-          <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
+          <ScrollArea
+            key={selectedNote?.id ?? "empty-note"}
+            className="h-full"
+            isMobile={false}
+            bottomMargin="0px"
+          >
             {selectedNote ? (
               <div className="w-full min-h-full p-3">
                 <Note

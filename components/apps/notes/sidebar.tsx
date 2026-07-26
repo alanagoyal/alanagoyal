@@ -641,7 +641,12 @@ export default function Sidebar({
       />
       <div className="flex-1 min-h-0 overflow-hidden">
         {isGalleryDetailOpen && galleryDetailNote ? (
-          <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
+          <ScrollArea
+            key={galleryDetailNote.id}
+            className="h-full"
+            isMobile={false}
+            bottomMargin="0px"
+          >
             <div className="min-h-full w-full p-3">
               <NoteDocument
                 key={galleryDetailNote.id}
