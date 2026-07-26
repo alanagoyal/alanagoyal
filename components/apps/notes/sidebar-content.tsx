@@ -48,7 +48,7 @@ function GalleryCard({
   }, []);
 
   return (
-    <article className="group relative min-w-0 w-full max-w-[320px] justify-self-center">
+    <article className="group relative min-w-0">
       <button
         type="button"
         data-note-slug={note.slug}
@@ -109,8 +109,8 @@ function GalleryGrid({
       className={cn(
         "grid gap-x-5 gap-y-6",
         isMobile
-          ? "grid-cols-[repeat(auto-fit,minmax(150px,1fr))]"
-          : "grid-cols-[repeat(auto-fit,minmax(280px,1fr))]",
+          ? "grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
+          : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]",
       )}
     >
       {notes.map((note) => (
