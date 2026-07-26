@@ -121,7 +121,7 @@ export function Nav({
               aria-label="Back to notes gallery"
               onClick={onGalleryBack}
               onMouseDown={(event) => event.stopPropagation()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#E2A727] can-hover:hover:bg-muted-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors can-hover:hover:bg-muted-foreground/10 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
             >
               <ChevronLeft className="h-6 w-6" strokeWidth={2.25} aria-hidden />
             </button>
