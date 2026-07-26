@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Paintbrush, Bluetooth, Wifi } from "lucide-react";
+import { Settings, Paintbrush, Bluetooth, Wifi, Moon } from "lucide-react";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { GeneralPanel } from "./panels/general";
 import { AboutPanel } from "./panels/about";
@@ -9,6 +9,7 @@ import { PersonalInfoPanel } from "./panels/personal-info";
 import { BluetoothPanel } from "./panels/bluetooth";
 import { WifiPanel } from "./panels/wifi";
 import { StoragePanel } from "./panels/storage";
+import { FocusPanel } from "./panels/focus";
 import { cn } from "@/lib/utils";
 
 interface ContentProps {
@@ -50,6 +51,12 @@ const categoryInfo: Record<
     description: "Connect to accessories you can use for activities such as streaming music, making phone calls, and gaming.",
     iconBg: "bg-blue-500",
   },
+  focus: {
+    icon: <Moon className="w-8 h-8 fill-current" />,
+    title: "Focus",
+    description: "Choose when notifications and interruptions are allowed.",
+    iconBg: "bg-violet-500",
+  },
 };
 
 export function Content({
@@ -84,6 +91,19 @@ export function Content({
     return (
       <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
         <StoragePanel isMobile={isMobile} />
+      </div>
+    );
+  }
+
+  if (selectedCategory === "focus") {
+    return (
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto",
+          isMobile ? "bg-muted/30" : "bg-background"
+        )}
+      >
+        <FocusPanel isMobile={isMobile} />
       </div>
     );
   }

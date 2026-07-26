@@ -13,7 +13,7 @@ import {
   Smartphone,
   Moon,
   BedDouble,
-  SlidersHorizontal,
+  Atom,
   Play,
   Pause,
   SkipBack,
@@ -269,16 +269,40 @@ interface ControlCenterMenuProps {
 }
 
 // Focus mode display names and icons
-const focusModeConfig: Record<Exclude<FocusMode, "off">, { name: string; icon: React.ReactNode }> = {
-  doNotDisturb: { name: "Do Not Disturb", icon: <Moon className="w-4 h-4" /> },
-  sleep: { name: "Sleep", icon: <BedDouble className="w-4 h-4" /> },
-  reduceInterruptions: { name: "Reduce Interruptions", icon: <SlidersHorizontal className="w-4 h-4" /> },
+const focusModeConfig: Record<
+  Exclude<FocusMode, "off">,
+  { name: string; icon: React.ReactNode; activeClassName: string }
+> = {
+  doNotDisturb: {
+    name: "Do Not Disturb",
+    icon: <Moon className="w-4 h-4" />,
+    activeClassName: "bg-violet-500",
+  },
+  sleep: {
+    name: "Sleep",
+    icon: <BedDouble className="w-4 h-4" />,
+    activeClassName: "bg-teal-500",
+  },
+  reduceInterruptions: {
+    name: "Reduce Interruptions",
+    icon: <Atom className="w-4 h-4" />,
+    activeClassName: "bg-fuchsia-500",
+  },
 };
+
+function formatFocusTileStatus(focusEndsAt: number | null): string {
+  if (focusEndsAt === null) return "On";
+
+  return `Until ${new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(focusEndsAt)}`;
+}
 
 export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [showFocusMenu, setShowFocusMenu] = useState(false);
-  const { brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode } = useSystemSettings();
+  const { brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt } = useSystemSettings();
   const { playbackState, pause, resume, play, next, previous } = useAudio();
 
   // Use current track or default track
@@ -445,14 +469,28 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
             >
               <div className={cn(
                 "flex items-center justify-center w-6 h-6 rounded-full",
-                focusMode !== "off" ? "bg-purple-500" : "bg-black/10 dark:bg-white/10"
+                focusMode !== "off"
+                  ? focusModeConfig[focusMode].activeClassName
+                  : "bg-black/10 dark:bg-white/10"
               )}>
-                <Moon className={cn("w-3.5 h-3.5", focusMode !== "off" ? "text-white" : "")} />
+                {focusMode === "off" ? (
+                  <Moon className="w-3.5 h-3.5" />
+                ) : (
+                  <span className="text-white">
+                    {focusModeConfig[focusMode].icon}
+                  </span>
+                )}
               </div>
               <div className="text-left min-w-0">
-                <div className="text-xs font-medium truncate">Focus</div>
+                <div className="text-xs font-medium truncate">
+                  {focusMode === "off"
+                    ? "Focus"
+                    : focusModeConfig[focusMode].name}
+                </div>
                 <div className="text-[10px] truncate text-muted-foreground">
-                  {focusMode === "off" ? "Off" : focusModeConfig[focusMode].name}
+                  {focusMode === "off"
+                    ? "Off"
+                    : formatFocusTileStatus(focusEndsAt)}
                 </div>
               </div>
             </button>
@@ -469,7 +507,9 @@ export function ControlCenterMenu({ isOpen, onClose }: ControlCenterMenuProps) {
                   >
                     <div className={cn(
                       "flex items-center justify-center w-5 h-5 rounded-full",
-                      focusMode === mode ? "bg-purple-500 text-white" : "bg-black/10 dark:bg-white/10"
+                      focusMode === mode
+                        ? `${focusModeConfig[mode].activeClassName} text-white`
+                        : "bg-black/10 dark:bg-white/10"
                     )}>
                       {focusModeConfig[mode].icon}
                     </div>

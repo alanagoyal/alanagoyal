@@ -15,17 +15,20 @@ import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { AboutDialog } from "./about-dialog";
+import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
   onOpenWifiSettings?: () => void;
+  onOpenFocusSettings?: () => void;
   onOpenAbout?: () => void;
   onSleep?: () => void;
   onRestart?: () => void;
@@ -43,6 +46,7 @@ interface MenuBarProps {
 export function MenuBar({
   onOpenSettings,
   onOpenWifiSettings,
+  onOpenFocusSettings,
   onOpenAbout,
   onSleep,
   onRestart,
@@ -57,6 +61,7 @@ export function MenuBar({
   onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
+  const { focusMode } = useSystemSettings();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
@@ -82,6 +87,8 @@ export function MenuBar({
   const focusedAppId = getFocusedAppId(); // This returns the base app ID (e.g., "textedit")
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
   const focusedWindowId = state.focusedWindowId; // This is the actual window ID (e.g., "textedit-0")
+  const activeFocus =
+    focusMode === "off" ? null : FOCUS_STATUS_CONFIG[focusMode];
 
   useEffect(() => {
     const updateTime = () => {
@@ -221,9 +228,30 @@ export function MenuBar({
           <FontAwesomeIcon icon={faWifi} className="w-4 h-4 text-black dark:text-white" />
         </button>
 
+        {/* Active Focus status */}
+        {activeFocus && (
+          <button
+            onClick={() => toggleMenu("focusMenu")}
+            aria-label={`${activeFocus.name} Focus, on`}
+            title={`${activeFocus.name} Focus`}
+            className={cn(
+              "flex h-5 w-7 items-center justify-center rounded transition-colors",
+              openMenu === "focusMenu"
+                ? "bg-white/30 dark:bg-white/20"
+                : "can-hover:hover:bg-white/10"
+            )}
+          >
+            <activeFocus.icon
+              aria-hidden="true"
+              className="h-4 w-4 text-black dark:text-white"
+            />
+          </button>
+        )}
+
         {/* Control Center */}
         <button
           onClick={() => toggleMenu("controlCenter")}
+          aria-label="Control Center"
           className={cn(
             "flex items-center justify-center w-7 h-5 rounded transition-colors",
             openMenu === "controlCenter" ? "bg-white/30 dark:bg-white/20" : "can-hover:hover:bg-white/10"
@@ -272,6 +300,12 @@ export function MenuBar({
         isOpen={openMenu === "wifi"}
         onClose={closeMenu}
         onOpenWifiSettings={onOpenWifiSettings}
+      />
+
+      <FocusMenu
+        isOpen={openMenu === "focusMenu"}
+        onClose={closeMenu}
+        onOpenSettings={onOpenFocusSettings}
       />
 
       <ControlCenterMenu

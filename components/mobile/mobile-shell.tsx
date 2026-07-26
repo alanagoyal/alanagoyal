@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { RecentsProvider } from "@/lib/recents-context";
 import { APP_SHELL_URL_CHANGE_EVENT, pushUrl, setUrl } from "@/lib/set-url";
 import type { Note as NoteType } from "@/lib/notes/types";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import {
   getShellAppIdForContext,
   getShellUrlForApp,
@@ -52,6 +53,7 @@ interface MobileShellProps {
 }
 
 export function MobileShell({ initialApp, initialNoteSlug, initialNote }: MobileShellProps) {
+  const { focusMode } = useSystemSettings();
   const [activeAppId, setActiveAppId] = useState<string>(
     getShellAppIdForContext(initialApp || SHELL_DEFAULT_APP_ID, "mobile")
   );
@@ -106,7 +108,13 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
             initialNote={activeNoteSlug === initialNoteSlug ? initialNote : undefined}
           />
         )}
-        {activeAppId === "messages" && <MessagesApp isMobile={true} inShell={false} />}
+        {activeAppId === "messages" && (
+          <MessagesApp
+            isMobile={true}
+            inShell={false}
+            focusModeActive={focusMode !== "off"}
+          />
+        )}
         {activeAppId === "settings" && <SettingsApp isMobile={true} inShell={false} />}
         {activeAppId === "iterm" && <ITermApp isMobile={true} inShell={false} />}
         {activeAppId === "finder" && (
