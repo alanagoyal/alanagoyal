@@ -35,6 +35,10 @@ import { cn } from "@/lib/utils";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { createNote } from "@/lib/notes/create-note";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
+import {
+  loadNotesDisplayPreferences,
+  saveNotesSortPreferences,
+} from "@/lib/notes/display-preferences";
 import NoteDocument from "./note";
 
 const labels = {
@@ -53,10 +57,6 @@ const labels = {
 
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
 const ungroupedCategoryOrder = ["pinned", "notes"];
-const NOTES_GROUP_BY_DATE_KEY = "notes-group-by-date";
-const NOTES_GROUP_MODE_KEY = "notes-group-mode";
-const NOTES_SORT_FIELD_KEY = "notes-sort-field";
-const NOTES_SORT_DIRECTION_KEY = "notes-sort-direction";
 
 export default function Sidebar({
   notes: publicNotes,
@@ -149,38 +149,14 @@ export default function Sidebar({
 
   useEffect(() => {
     try {
-      const storedGroupMode = localStorage.getItem(NOTES_GROUP_MODE_KEY);
-      const legacyGrouping = localStorage.getItem(NOTES_GROUP_BY_DATE_KEY);
-      const storedSortField = localStorage.getItem(NOTES_SORT_FIELD_KEY);
-      const storedSortDirection = localStorage.getItem(
-        NOTES_SORT_DIRECTION_KEY,
+      const preferences = loadNotesDisplayPreferences(
+        sessionStorage,
+        localStorage,
       );
 
-      if (
-        storedGroupMode === "edited" ||
-        storedGroupMode === "created" ||
-        storedGroupMode === "off"
-      ) {
-        setGroupMode(storedGroupMode);
-      } else if (legacyGrouping === "false") {
-        setGroupMode("off");
-      }
-
-      if (
-        storedSortField === "default" ||
-        storedSortField === "edited" ||
-        storedSortField === "created" ||
-        storedSortField === "title"
-      ) {
-        setSortField(storedSortField);
-      }
-
-      if (
-        storedSortDirection === "newest" ||
-        storedSortDirection === "oldest"
-      ) {
-        setSortDirection(storedSortDirection);
-      }
+      setGroupMode(preferences.groupMode);
+      setSortField(preferences.sortField);
+      setSortDirection(preferences.sortDirection);
     } catch {
       // Keep the native defaults when storage is unavailable.
     } finally {
@@ -191,13 +167,11 @@ export default function Sidebar({
   useEffect(() => {
     if (!displayPreferencesLoaded) return;
 
-    try {
-      localStorage.setItem(NOTES_GROUP_MODE_KEY, groupMode);
-      localStorage.setItem(NOTES_SORT_FIELD_KEY, sortField);
-      localStorage.setItem(NOTES_SORT_DIRECTION_KEY, sortDirection);
-    } catch {
-      // Ignore storage errors; the in-memory preferences still work.
-    }
+    saveNotesSortPreferences(sessionStorage, {
+      groupMode,
+      sortField,
+      sortDirection,
+    });
   }, [displayPreferencesLoaded, groupMode, sortDirection, sortField]);
 
   const effectiveGroupMode = sortField === "title" ? "off" : groupMode;

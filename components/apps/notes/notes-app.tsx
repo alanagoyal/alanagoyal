@@ -8,8 +8,10 @@ import { useNotesData } from "./hooks/use-notes-data";
 import { useNotesSelection } from "./hooks/use-notes-selection";
 import { NotesMobilePresenter } from "./presenters/notes-mobile-presenter";
 import { NotesDesktopPresenter } from "./presenters/notes-desktop-presenter";
-
-const NOTES_VIEW_MODE_KEY = "notes-view-mode";
+import {
+  loadNotesDisplayPreferences,
+  saveNotesViewMode,
+} from "@/lib/notes/display-preferences";
 
 interface NotesAppProps {
   isMobile?: boolean;
@@ -56,10 +58,11 @@ export function NotesApp({
 
   useEffect(() => {
     try {
-      const storedViewMode = localStorage.getItem(NOTES_VIEW_MODE_KEY);
-      if (storedViewMode === "gallery" || storedViewMode === "list") {
-        setViewMode(storedViewMode);
-      }
+      const preferences = loadNotesDisplayPreferences(
+        sessionStorage,
+        localStorage,
+      );
+      setViewMode(preferences.viewMode);
     } catch {
       // Keep list view when storage is unavailable.
     } finally {
@@ -70,12 +73,12 @@ export function NotesApp({
   useEffect(() => {
     if (!viewModeLoaded) return;
 
-    try {
-      localStorage.setItem(NOTES_VIEW_MODE_KEY, viewMode);
-    } catch {
-      // Ignore storage errors; the in-memory preference still works.
-    }
+    saveNotesViewMode(sessionStorage, viewMode);
   }, [viewMode, viewModeLoaded]);
+
+  if (!viewModeLoaded) {
+    return <div className="h-full bg-background" />;
+  }
 
   if (isMobile) {
     return (
