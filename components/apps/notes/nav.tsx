@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUpDown,
   CalendarDays,
@@ -52,6 +52,7 @@ type Submenu = "sort" | "group" | null;
 
 const menuItemClass =
   "flex w-full items-center gap-2 rounded-[5px] px-2 py-1.5 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white";
+const MENU_CLOSE_FALLBACK_MS = 200;
 
 function MenuCheck({ checked }: { checked: boolean }) {
   return (
@@ -83,6 +84,10 @@ export function Nav({
 }: NavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<Submenu>(null);
+  const pendingViewModeRef = useRef<NotesViewMode | null>(null);
+  const viewModeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const nav = useWindowNavBehavior({
     isDesktop: useCallbackNavigation,
     isMobile,
@@ -94,9 +99,36 @@ export function Nav({
       ? (["Ascending", "Descending"] as const)
       : (["Newest First", "Oldest First"] as const);
 
+  const applyPendingViewMode = useCallback(() => {
+    const pendingViewMode = pendingViewModeRef.current;
+    if (!pendingViewMode) return;
+
+    pendingViewModeRef.current = null;
+    if (viewModeFallbackRef.current) {
+      clearTimeout(viewModeFallbackRef.current);
+      viewModeFallbackRef.current = null;
+    }
+    onViewModeChange(pendingViewMode);
+  }, [onViewModeChange]);
+
+  useEffect(
+    () => () => {
+      if (viewModeFallbackRef.current) {
+        clearTimeout(viewModeFallbackRef.current);
+      }
+    },
+    [],
+  );
+
   const changeViewMode = () => {
-    onViewModeChange(viewMode === "gallery" ? "list" : "gallery");
+    pendingViewModeRef.current =
+      viewMode === "gallery" ? "list" : "gallery";
+    setOpenSubmenu(null);
     setIsOpen(false);
+    viewModeFallbackRef.current = setTimeout(
+      applyPendingViewMode,
+      MENU_CLOSE_FALLBACK_MS,
+    );
   };
 
   return (
@@ -152,6 +184,14 @@ export function Nav({
             <PopoverContent
               align="end"
               sideOffset={4}
+              onAnimationEnd={(event) => {
+                if (
+                  event.currentTarget === event.target &&
+                  event.currentTarget.dataset.state === "closed"
+                ) {
+                  applyPendingViewMode();
+                }
+              }}
               className="relative w-56 overflow-visible rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95"
             >
               <div role="menu" aria-label="Notes display options">
