@@ -56,7 +56,7 @@ function GalleryCard({
         data-note-slug={note.slug}
         onClick={() => onNoteSelect(note)}
         className={cn(
-          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm transition-[border-color,box-shadow,transform] can-hover:hover:-translate-y-0.5 can-hover:hover:border-muted-foreground/40 can-hover:hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
           isMobile
             ? "rounded-lg px-2 py-1.5"
             : "rounded-xl px-4 py-3",

@@ -1,11 +1,12 @@
 "use client";
 
-import { RefObject } from "react";
+import { RefObject, useCallback, useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { Note as NoteType, NotesViewMode } from "@/lib/notes/types";
 import Sidebar from "../sidebar";
 import Note from "../note";
+import { setUrl } from "@/lib/set-url";
 
 type WindowFocusValue = ReturnType<typeof useWindowFocus>;
 
@@ -34,6 +35,39 @@ export function NotesDesktopPresenter({
   viewMode,
   onViewModeChange,
 }: NotesDesktopPresenterProps) {
+  const [isGalleryDetailOpen, setIsGalleryDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (viewMode !== "gallery") {
+      setIsGalleryDetailOpen(false);
+    }
+  }, [viewMode]);
+
+  const handleSidebarNoteSelect = useCallback(
+    async (note: NoteType) => {
+      if (viewMode === "gallery") {
+        setIsGalleryDetailOpen(true);
+      }
+      await handleNoteSelect(note);
+    },
+    [handleNoteSelect, viewMode],
+  );
+
+  const handleSidebarNoteCreated = useCallback(
+    (note: NoteType) => {
+      if (viewMode === "gallery") {
+        setIsGalleryDetailOpen(true);
+      }
+      handleNoteCreated(note);
+    },
+    [handleNoteCreated, viewMode],
+  );
+
+  const handleBackToGallery = useCallback(() => {
+    setIsGalleryDetailOpen(false);
+    setUrl("/notes");
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -44,13 +78,15 @@ export function NotesDesktopPresenter({
     >
       <Sidebar
         notes={notes}
-        onNoteSelect={handleNoteSelect}
+        onNoteSelect={handleSidebarNoteSelect}
         isMobile={false}
         selectedSlug={selectedSlugForSidebar}
         useCallbackNavigation
-        onNoteCreated={handleNoteCreated}
+        onNoteCreated={handleSidebarNoteCreated}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
+        galleryDetailNote={isGalleryDetailOpen ? selectedNote : null}
+        onGalleryBack={handleBackToGallery}
       />
       {viewMode === "list" && (
         <div className="flex-grow h-full overflow-hidden relative">

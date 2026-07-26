@@ -5,6 +5,7 @@ import {
   ArrowUpDown,
   CalendarDays,
   Check,
+  ChevronLeft,
   ChevronRight,
   Ellipsis,
   LayoutGrid,
@@ -44,6 +45,7 @@ interface NavProps {
   isScrolled: boolean;
   useCallbackNavigation?: boolean;
   onNoteCreated?: (note: Note) => void;
+  onGalleryBack?: () => void;
 }
 
 type Submenu = "sort" | "group" | null;
@@ -77,6 +79,7 @@ export function Nav({
   isScrolled,
   useCallbackNavigation = false,
   onNoteCreated,
+  onGalleryBack,
 }: NavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<Submenu>(null);
@@ -102,15 +105,28 @@ export function Nav({
       isScrolled={isScrolled}
       onMouseDown={nav.onDragStart}
       left={
-        <WindowControls
-          inShell={nav.inShell}
-          className="p-2"
-          onClose={nav.onClose}
-          onMinimize={nav.onMinimize}
-          onToggleMaximize={nav.onToggleMaximize}
-          isMaximized={nav.isMaximized}
-          closeLabel={nav.closeLabel}
-        />
+        <div className="flex items-center gap-1">
+          <WindowControls
+            inShell={nav.inShell}
+            className="p-2"
+            onClose={nav.onClose}
+            onMinimize={nav.onMinimize}
+            onToggleMaximize={nav.onToggleMaximize}
+            isMaximized={nav.isMaximized}
+            closeLabel={nav.closeLabel}
+          />
+          {onGalleryBack && (
+            <button
+              type="button"
+              aria-label="Back to notes gallery"
+              onClick={onGalleryBack}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#E2A727] can-hover:hover:bg-muted-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]"
+            >
+              <ChevronLeft className="h-6 w-6" strokeWidth={2.25} aria-hidden />
+            </button>
+          )}
+        </div>
       }
       right={
         <div

@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { createNote } from "@/lib/notes/create-note";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
+import NoteDocument from "./note";
 
 const labels = {
   pinned: (
@@ -66,6 +67,8 @@ export default function Sidebar({
   onNoteCreated,
   viewMode,
   onViewModeChange,
+  galleryDetailNote,
+  onGalleryBack,
 }: {
   notes: Note[];
   onNoteSelect: (note: Note) => void;
@@ -75,6 +78,8 @@ export default function Sidebar({
   onNoteCreated?: (note: Note) => void;
   viewMode: NotesViewMode;
   onViewModeChange: (viewMode: NotesViewMode) => void;
+  galleryDetailNote?: Note | null;
+  onGalleryBack?: () => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -608,9 +613,6 @@ export default function Sidebar({
 
   const handleNoteSelect = useCallback(
     (note: Note) => {
-      if (viewMode === "gallery") {
-        onViewModeChange("list");
-      }
       selectNoteInApp(note);
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${note.slug}`);
@@ -621,12 +623,15 @@ export default function Sidebar({
       clearSearch,
       selectNoteInApp,
       isMobile,
-      onViewModeChange,
       router,
       useCallbackNavigation,
-      viewMode,
     ],
   );
+
+  const isGalleryDetailOpen =
+    !isMobile &&
+    viewMode === "gallery" &&
+    Boolean(galleryDetailNote && onGalleryBack);
 
   return (
     <div
@@ -635,7 +640,10 @@ export default function Sidebar({
         isMobile
           ? "w-full max-w-full bg-background"
           : viewMode === "gallery"
-            ? "min-w-0 flex-1 bg-muted"
+            ? cn(
+                "min-w-0 flex-1",
+                isGalleryDetailOpen ? "bg-background" : "bg-muted",
+              )
             : "w-[320px] border-r border-muted-foreground/20 bg-muted",
       )}
     >
@@ -655,65 +663,78 @@ export default function Sidebar({
         isScrolled={isScrolled}
         useCallbackNavigation={useCallbackNavigation}
         onNoteCreated={onNoteCreated}
+        onGalleryBack={isGalleryDetailOpen ? onGalleryBack : undefined}
       />
       <div className="flex-1 min-h-0 overflow-hidden">
-        <ScrollArea
-          className="h-full"
-          onScrollCapture={(event: React.UIEvent<HTMLDivElement>) => {
-            const viewport = event.currentTarget.querySelector(
-              '[data-radix-scroll-area-viewport]',
-            );
-            if (viewport) {
-              const scrolled = viewport.scrollTop > 0;
-              setIsScrolled(scrolled);
-            }
-          }}
-          isMobile={isMobile}
-          bottomMargin="0px"
-        >
-          <div ref={scrollViewportRef} className="flex w-full flex-col">
-            <SessionId setSessionId={setSessionId} />
-            <div
-              className={cn(
-                "w-full px-2",
-                isMobile && viewMode === "gallery" && "px-4",
-                !isMobile && viewMode === "list" && "w-[320px]",
-                !isMobile && viewMode === "gallery" && "px-5 pb-5",
-              )}
-            >
-              <SearchBar
-                notes={notes}
-                onSearchResults={setLocalSearchResults}
-                sessionId={sessionId}
-                inputRef={searchInputRef}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                setHighlightedIndex={setHighlightedIndex}
-                clearSearch={clearSearch}
-              />
-              <SidebarContent
-                groupedNotes={groupedNotes}
-                selectedNoteSlug={selectedNoteSlug}
-                onNoteSelect={handleNoteSelect}
-                sessionId={sessionId}
-                handlePinToggle={handlePinToggle}
-                pinnedNotes={pinnedNotes}
-                localSearchResults={orderedSearchResults}
-                highlightedIndex={highlightedIndex}
-                categoryOrder={activeCategoryOrder}
-                labels={labels}
-                handleNoteDelete={handleNoteDelete}
-                openSwipeItemSlug={openSwipeItemSlug}
-                setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-                clearSearch={clearSearch}
-                setSelectedNoteSlug={setSelectedNoteSlug}
-                useCallbackNavigation={useCallbackNavigation}
-                isMobile={isMobile}
-                viewMode={viewMode}
+        {isGalleryDetailOpen && galleryDetailNote ? (
+          <ScrollArea className="h-full" isMobile={false} bottomMargin="0px">
+            <div className="min-h-full w-full p-3">
+              <NoteDocument
+                key={galleryDetailNote.id}
+                note={galleryDetailNote}
+                isMobile={false}
               />
             </div>
-          </div>
-        </ScrollArea>
+          </ScrollArea>
+        ) : (
+          <ScrollArea
+            className="h-full"
+            onScrollCapture={(event: React.UIEvent<HTMLDivElement>) => {
+              const viewport = event.currentTarget.querySelector(
+                '[data-radix-scroll-area-viewport]',
+              );
+              if (viewport) {
+                const scrolled = viewport.scrollTop > 0;
+                setIsScrolled(scrolled);
+              }
+            }}
+            isMobile={isMobile}
+            bottomMargin="0px"
+          >
+            <div ref={scrollViewportRef} className="flex w-full flex-col">
+              <SessionId setSessionId={setSessionId} />
+              <div
+                className={cn(
+                  "w-full px-2",
+                  isMobile && viewMode === "gallery" && "px-4",
+                  !isMobile && viewMode === "list" && "w-[320px]",
+                  !isMobile && viewMode === "gallery" && "px-5 pb-5",
+                )}
+              >
+                <SearchBar
+                  notes={notes}
+                  onSearchResults={setLocalSearchResults}
+                  sessionId={sessionId}
+                  inputRef={searchInputRef}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  setHighlightedIndex={setHighlightedIndex}
+                  clearSearch={clearSearch}
+                />
+                <SidebarContent
+                  groupedNotes={groupedNotes}
+                  selectedNoteSlug={selectedNoteSlug}
+                  onNoteSelect={handleNoteSelect}
+                  sessionId={sessionId}
+                  handlePinToggle={handlePinToggle}
+                  pinnedNotes={pinnedNotes}
+                  localSearchResults={orderedSearchResults}
+                  highlightedIndex={highlightedIndex}
+                  categoryOrder={activeCategoryOrder}
+                  labels={labels}
+                  handleNoteDelete={handleNoteDelete}
+                  openSwipeItemSlug={openSwipeItemSlug}
+                  setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+                  clearSearch={clearSearch}
+                  setSelectedNoteSlug={setSelectedNoteSlug}
+                  useCallbackNavigation={useCallbackNavigation}
+                  isMobile={isMobile}
+                  viewMode={viewMode}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );
