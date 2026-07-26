@@ -96,14 +96,21 @@ function GalleryGrid({
   pinnedNotes,
   onNoteSelect,
   onPinToggle,
+  isMobile,
 }: {
   notes: Note[];
   pinnedNotes: Set<string>;
   onNoteSelect: (note: Note) => void;
   onPinToggle: (slug: string) => void;
+  isMobile: boolean;
 }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-x-5 gap-y-6">
+    <div
+      className={cn(
+        "grid gap-x-5 gap-y-6",
+        isMobile ? "grid-cols-2" : "grid-cols-3",
+      )}
+    >
       {notes.map((note) => (
         <GalleryCard
           key={note.id}
@@ -189,6 +196,7 @@ export function SidebarContent({
                     pinnedNotes={pinnedNotes}
                     onNoteSelect={onNoteSelect}
                     onPinToggle={handlePinToggle}
+                    isMobile={isMobile}
                   />
                 </section>
               ) : null,
@@ -204,6 +212,7 @@ export function SidebarContent({
               pinnedNotes={pinnedNotes}
               onNoteSelect={onNoteSelect}
               onPinToggle={handlePinToggleWithClear}
+              isMobile={isMobile}
             />
           </section>
         ) : (
