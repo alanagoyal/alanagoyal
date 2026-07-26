@@ -5,11 +5,13 @@ import {
   ArrowUpDown,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Ellipsis,
   LayoutGrid,
   List,
+  type LucideIcon,
 } from "lucide-react";
 import NewNote from "./new-note";
 import {
@@ -64,6 +66,40 @@ function MenuCheck({ checked }: { checked: boolean }) {
   );
 }
 
+function MobileSubmenuHeader({
+  icon: Icon,
+  label,
+  value,
+  onClose,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        role="menuitem"
+        aria-label={`Close ${label} menu`}
+        onClick={onClose}
+        className="flex w-full items-center gap-2 rounded-[7px] px-2 py-1.5 text-left"
+      >
+        <Icon className="h-4 w-4 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13px] leading-4">{label}</span>
+          <span className="block truncate text-[11px] leading-4 text-muted-foreground">
+            {value}
+          </span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0" aria-hidden />
+      </button>
+      <div className="my-1 border-t border-muted-foreground/20" />
+    </>
+  );
+}
+
 export function Nav({
   addNewPinnedNote,
   clearSearch,
@@ -98,6 +134,17 @@ export function Nav({
     sortField === "title"
       ? (["Ascending", "Descending"] as const)
       : (["Newest First", "Oldest First"] as const);
+  const sortFieldLabel = {
+    default: "Default (Date Edited)",
+    edited: "Date Edited",
+    created: "Date Created",
+    title: "Title",
+  }[sortField];
+  const groupModeLabel = {
+    edited: "Date Edited",
+    created: "Date Created",
+    off: "Off",
+  }[groupMode];
 
   const applyPendingViewMode = useCallback(() => {
     const pendingViewMode = pendingViewModeRef.current;
@@ -224,7 +271,9 @@ export function Nav({
                   onClick={() =>
                     setOpenSubmenu(openSubmenu === "sort" ? null : "sort")
                   }
-                  onMouseEnter={() => setOpenSubmenu("sort")}
+                  onMouseEnter={() => {
+                    if (!isMobile) setOpenSubmenu("sort");
+                  }}
                   className={menuItemClass}
                 >
                   <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden />
@@ -243,7 +292,9 @@ export function Nav({
                     setOpenSubmenu(openSubmenu === "group" ? null : "group")
                   }
                   onMouseEnter={() => {
-                    if (!groupByDateDisabled) setOpenSubmenu("group");
+                    if (!isMobile && !groupByDateDisabled) {
+                      setOpenSubmenu("group");
+                    }
                   }}
                   className={cn(
                     menuItemClass,
@@ -270,6 +321,14 @@ export function Nav({
                       : "left-[calc(100%-2px)]",
                   )}
                 >
+                  {isMobile && (
+                    <MobileSubmenuHeader
+                      icon={ArrowUpDown}
+                      label="Sort By"
+                      value={sortFieldLabel}
+                      onClose={() => setOpenSubmenu(null)}
+                    />
+                  )}
                   {(
                     [
                       ["default", "Default (Date Edited)"],
@@ -314,14 +373,22 @@ export function Nav({
                   role="menu"
                   aria-label="Group notes by date"
                   className={cn(
-                    "absolute top-[74px] w-48 rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95",
+                    "absolute top-[74px] rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95",
                     isMobile
-                      ? "right-0"
+                      ? "right-0 w-60"
                       : viewMode === "gallery"
-                      ? "right-[calc(100%-2px)]"
-                      : "left-[calc(100%-2px)]",
+                      ? "right-[calc(100%-2px)] w-48"
+                      : "left-[calc(100%-2px)] w-48",
                   )}
                 >
+                  {isMobile && (
+                    <MobileSubmenuHeader
+                      icon={CalendarDays}
+                      label="Group By Date"
+                      value={groupModeLabel}
+                      onClose={() => setOpenSubmenu(null)}
+                    />
+                  )}
                   {(
                     [
                       ["edited", "Date Edited"],
