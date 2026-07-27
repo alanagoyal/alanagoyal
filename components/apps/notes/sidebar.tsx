@@ -10,7 +10,6 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
@@ -42,11 +41,7 @@ import {
 import NoteDocument from "./note";
 
 const labels = {
-  pinned: (
-    <>
-      <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
-    </>
-  ),
+  pinned: "Pinned",
   notes: "Notes",
   today: "Today",
   yesterday: "Yesterday",
