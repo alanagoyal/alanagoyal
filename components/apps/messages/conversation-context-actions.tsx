@@ -175,7 +175,7 @@ function MobileConversationPreview({
             type="button"
             aria-label={`Open conversation with ${displayName}`}
             onClick={() => runAction(onOpenConversation)}
-            className="flex h-[min(50dvh,30rem)] min-h-64 w-full flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background text-left shadow-2xl outline-none will-change-transform focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
+            className="flex h-[min(50dvh,30rem)] min-h-64 w-full flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background text-left shadow-2xl outline-none will-change-transform"
           >
             <header className="w-full shrink-0 px-5 pb-4 pt-4 text-center">
               <h2 className="truncate text-[18px] font-semibold leading-6">
