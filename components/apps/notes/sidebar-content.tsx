@@ -197,7 +197,7 @@ function MobileGalleryNoteActions({
             type="button"
             aria-label={`Open ${note.title}`}
             onClick={handleOpenNote}
-            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform focus-visible:ring-2 focus-visible:ring-[#E2A727]"
+            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform"
           >
             <h2 className="text-2xl font-bold leading-tight">
               {note.emoji} {note.title}
