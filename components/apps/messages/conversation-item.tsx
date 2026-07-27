@@ -3,12 +3,7 @@ import Image from "next/image";
 import { useSwipeable } from "react-swipeable";
 import { Conversation, REACTION_TEXT } from "@/types/messages";
 import { SwipeActions } from "./swipe-actions";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { ConversationContextActions } from "./conversation-context-actions";
 import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 
@@ -275,91 +270,39 @@ export const ConversationItem = memo(function ConversationItem({
     </button>
   );
 
-  if (isMobileView) {
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div {...handlers} className="relative overflow-hidden">
-            <div
-              className={`transition-transform duration-300 ease-out w-full ${
-                isSwipeOpen ? "transform -translate-x-24" : ""
-              }`}
-            >
-              {ConversationContent}
-            </div>
-            <SwipeActions
-              isOpen={isSwipeOpen}
-              onPin={handleSwipePin}
-              onDelete={handleSwipeDelete}
-              onHideAlerts={handleSwipeHideAlerts}
-              isPinned={conversation.pinned}
-              hideAlerts={conversation.hideAlerts}
-              aria-hidden={!isSwipeOpen}
-            />
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white ${
-              isMobileView ? "flex items-center justify-between" : ""
-            }`}
-            onClick={handleContextMenuPin}
-          >
-            <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
-            {isMobileView && <Icons.pin className="h-4 w-4 ml-2" />}
-          </ContextMenuItem>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white ${
-              isMobileView ? "flex items-center justify-between" : ""
-            }`}
-            onClick={handleContextMenuHideAlerts}
-          >
-            <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
-            {isMobileView && (
-              conversation.hideAlerts ? 
-                <Icons.bell className="h-4 w-4 ml-2" /> :
-                <Icons.bellOff className="h-4 w-4 ml-2" />
-            )}
-          </ContextMenuItem>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white ${
-              isMobileView ? "flex items-center justify-between" : ""
-            } text-red-600`}
-            onClick={handleContextMenuDelete}
-          >
-            <span>Delete</span>
-            {isMobileView && <Icons.trash className="h-4 w-4 ml-2" />}
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    );
-  } else {
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger className="w-full">
-          {ConversationContent}
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
-            onClick={handleContextMenuPin}
-          >
-            <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
-          </ContextMenuItem>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md`}
-            onClick={handleContextMenuHideAlerts}
-          >
-            <span>{conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}</span>
-          </ContextMenuItem>
-          <ContextMenuItem
-            className={`focus:bg-[#0A7CFF] focus:text-white focus:rounded-md text-red-600`}
-            onClick={handleContextMenuDelete}
-          >
-            <span>Delete</span>
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    );
-  }
+  const trigger = isMobileView ? (
+    <div {...handlers} className="relative overflow-hidden">
+      <div
+        className={`w-full transition-transform duration-300 ease-out ${
+          isSwipeOpen ? "transform -translate-x-24" : ""
+        }`}
+      >
+        {ConversationContent}
+      </div>
+      <SwipeActions
+        isOpen={isSwipeOpen}
+        onPin={handleSwipePin}
+        onDelete={handleSwipeDelete}
+        onHideAlerts={handleSwipeHideAlerts}
+        isPinned={conversation.pinned}
+        hideAlerts={conversation.hideAlerts}
+        aria-hidden={!isSwipeOpen}
+      />
+    </div>
+  ) : (
+    ConversationContent
+  );
+
+  return (
+    <ConversationContextActions
+      conversation={conversation}
+      isMobileView={Boolean(isMobileView)}
+      onPinToggle={handleContextMenuPin}
+      onToggleAlerts={handleContextMenuHideAlerts}
+      onDelete={handleContextMenuDelete}
+      onPreviewOpen={() => setOpenSwipedConvo(null)}
+    >
+      {trigger}
+    </ConversationContextActions>
+  );
 });
