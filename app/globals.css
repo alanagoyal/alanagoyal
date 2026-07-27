@@ -241,6 +241,14 @@ html, body {
   user-select: none !important;
 }
 
+/* Let gallery-card long presses open Notes actions instead of selecting text. */
+.notes-gallery-context-trigger,
+.notes-gallery-context-trigger * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 /* Green caret for iTerm app */
 .iterm-app * {
   caret-color: #22c55e;
