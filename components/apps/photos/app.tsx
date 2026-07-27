@@ -129,6 +129,11 @@ export default function App({ isDesktop = false }: AppProps) {
   const selectedPhotoIndex = selectedPhoto
     ? filteredPhotos.findIndex((p) => p.id === selectedPhotoId)
     : -1;
+  const selectedPhotoCollectionNames = selectedPhoto
+    ? collections
+        .filter((collection) => selectedPhoto.collections.includes(collection.id))
+        .map((collection) => collection.name)
+    : [];
 
   const handlePreviousPhoto = useCallback(() => {
     if (selectedPhotoIndex > 0) {
@@ -223,6 +228,7 @@ export default function App({ isDesktop = false }: AppProps) {
                 onToggleFavorite={toggleFavorite}
                 rotation={photoRotations[selectedPhoto.id] ?? 0}
                 onRotate={() => handleRotatePhoto(selectedPhoto.id)}
+                collectionNames={selectedPhotoCollectionNames}
                 isMobileView={isMobileView}
                 isDesktop={isDesktop}
               />

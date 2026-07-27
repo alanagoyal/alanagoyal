@@ -106,6 +106,7 @@ the app uses next.js app router with a route group for the desktop environment. 
 **photos** use supabase storage:
 - images stored in supabase storage bucket
 - metadata (filename, timestamp, collections) in database
+- embedded camera and exposure metadata is read from each image on demand in the desktop Info panel and mobile swipe-up details; GPS remains unused
 - favorites are per-browser (stored in localstorage)
 - upload via api with ai auto-categorization (openai gpt-4o-mini)
 
