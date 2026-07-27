@@ -300,6 +300,7 @@ export const ConversationItem = memo(function ConversationItem({
       onPinToggle={handleContextMenuPin}
       onToggleAlerts={handleContextMenuHideAlerts}
       onDelete={handleContextMenuDelete}
+      onOpenConversation={() => onSelectConversation(conversation.id)}
       onPreviewOpen={() => setOpenSwipedConvo(null)}
     >
       {trigger}

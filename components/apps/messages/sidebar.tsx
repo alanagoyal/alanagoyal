@@ -395,6 +395,9 @@ export function Sidebar({
                                 onDelete={() =>
                                   onDeleteConversation(conversation.id)
                                 }
+                                onOpenConversation={() =>
+                                  onSelectConversation(conversation.id)
+                                }
                               >
                                 <button
                                   onClick={() =>

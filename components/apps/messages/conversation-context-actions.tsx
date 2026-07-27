@@ -5,7 +5,6 @@ import { Slot } from "@radix-ui/react-slot";
 import {
   Bell,
   BellOff,
-  LockKeyhole,
   Pin,
   PinOff,
   Trash2,
@@ -54,6 +53,7 @@ interface ConversationContextActionsProps {
   onPinToggle: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
+  onOpenConversation: () => void;
   onPreviewOpen?: () => void;
 }
 
@@ -63,6 +63,7 @@ function MobileConversationPreview({
   sourceBounds,
   onOpenChange,
   onRestoreFocus,
+  onOpenConversation,
   onPinToggle,
   onToggleAlerts,
   onDelete,
@@ -72,11 +73,12 @@ function MobileConversationPreview({
   sourceBounds: TriggerBounds | null;
   onOpenChange: (open: boolean) => void;
   onRestoreFocus: () => void;
+  onOpenConversation: () => void;
   onPinToggle: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
 }) {
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLButtonElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const displayName = getConversationDisplayName(conversation);
   const previewMessages = getConversationPreviewMessages(conversation);
@@ -164,23 +166,23 @@ function MobileConversationPreview({
             Conversation actions for {displayName}
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Preview the conversation, then pin, change alerts, or delete it.
+            Preview or open the conversation, then pin, change alerts, or
+            delete it.
           </DialogPrimitive.Description>
 
-          <div
+          <button
             ref={previewRef}
-            className="flex h-[min(50dvh,30rem)] min-h-64 flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background text-left shadow-2xl will-change-transform"
+            type="button"
+            aria-label={`Open conversation with ${displayName}`}
+            onClick={() => runAction(onOpenConversation)}
+            className="flex h-[min(50dvh,30rem)] min-h-64 w-full flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background text-left shadow-2xl outline-none will-change-transform focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
           >
-            <header className="shrink-0 px-5 pb-3 pt-4 text-center">
+            <header className="w-full shrink-0 px-5 pb-4 pt-4 text-center">
               <h2 className="truncate text-[18px] font-semibold leading-6">
                 {displayName}
               </h2>
               <p className="text-[13px] leading-5 text-muted-foreground">
                 iMessage
-              </p>
-              <p className="flex items-center justify-center gap-1 text-[12px] leading-4 text-muted-foreground">
-                <LockKeyhole className="h-3 w-3" aria-hidden />
-                <span>Encrypted</span>
               </p>
             </header>
 
@@ -221,7 +223,7 @@ function MobileConversationPreview({
                 </div>
               )}
             </div>
-          </div>
+          </button>
 
           <div
             ref={actionsRef}
@@ -277,6 +279,7 @@ export function ConversationContextActions({
   onPinToggle,
   onToggleAlerts,
   onDelete,
+  onOpenConversation,
   onPreviewOpen,
 }: ConversationContextActionsProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -452,6 +455,7 @@ export function ConversationContextActions({
         sourceBounds={sourceBounds}
         onOpenChange={handlePreviewOpenChange}
         onRestoreFocus={restoreFocus}
+        onOpenConversation={onOpenConversation}
         onPinToggle={onPinToggle}
         onToggleAlerts={onToggleAlerts}
         onDelete={onDelete}
