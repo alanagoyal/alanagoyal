@@ -253,6 +253,7 @@ export function PhotoViewer({
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
   const [isSwiping, setIsSwiping] = useState(false);
+  const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
   const [naturalSize, setNaturalSize] = useState<{
     photoId: string;
     width: number;
@@ -270,6 +271,10 @@ export function PhotoViewer({
   const infoContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
+  const rotateLeft = useCallback(() => {
+    setShouldAnimateRotation(true);
+    onRotate();
+  }, [onRotate]);
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
 
@@ -314,6 +319,7 @@ export function PhotoViewer({
 
   useEffect(() => {
     mobileScrollRef.current?.scrollTo({ top: 0 });
+    setShouldAnimateRotation(false);
   }, [photo.id]);
 
   // Prevent default touch move when swiping to avoid scroll interference
@@ -387,6 +393,7 @@ export function PhotoViewer({
 
   let displayedImageSize: { width: number; height: number } | null = null;
   if (
+    rotation !== 0 &&
     currentNaturalSize &&
     containerSize &&
     containerSize.width > 0 &&
@@ -570,7 +577,7 @@ export function PhotoViewer({
             />
           </button>
           <button
-            onClick={onRotate}
+            onClick={rotateLeft}
             className="p-1 rounded text-foreground transition-colors can-hover:hover:bg-muted"
             aria-label="Rotate left"
             title="Rotate Left"
@@ -615,8 +622,9 @@ export function PhotoViewer({
                   width: displayedImageSize.width,
                   height: displayedImageSize.height,
                   transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                  transition:
-                    "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out",
+                  transition: shouldAnimateRotation
+                    ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
+                    : undefined,
                 }}
                 onLoad={(event) => handleImageLoad(event.currentTarget)}
                 priority
