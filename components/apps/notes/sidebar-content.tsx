@@ -10,9 +10,9 @@ import { useRouter } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Pin, PinOff, Trash2 } from "lucide-react";
 import { NoteItem } from "./note-item";
+import { NoteMarkdownPreview } from "./note-markdown-preview";
 import { Note, NotesViewMode } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
-import { getNotePreviewText } from "@/lib/notes/note-utils";
 import {
   canStartMobileNoteLongPress,
   didMobileNoteLongPressMove,
@@ -197,14 +197,16 @@ function MobileGalleryNoteActions({
             type="button"
             aria-label={`Open ${note.title}`}
             onClick={handleOpenNote}
-            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform"
+            className="flex h-[min(52dvh,32rem)] w-full flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform"
           >
-            <h2 className="text-2xl font-bold leading-tight">
+            <h2 className="shrink-0 text-2xl font-bold leading-tight">
               {note.emoji} {note.title}
             </h2>
-            <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
-              {getNotePreviewText(note.content)}
-            </p>
+            <NoteMarkdownPreview
+              content={note.content}
+              expanded
+              className="mt-8 min-h-0 w-full flex-1 overflow-hidden text-[17px] leading-6 text-foreground"
+            />
           </button>
 
           <div
@@ -409,16 +411,15 @@ function GalleryCard({
         >
           {note.emoji} {note.title}
         </h4>
-        <p
+        <NoteMarkdownPreview
+          content={note.content}
           className={cn(
-            "whitespace-pre-wrap text-muted-foreground",
+            "min-h-0 w-full flex-1 overflow-hidden text-muted-foreground",
             isMobile
-              ? "mt-1 line-clamp-[6] text-[7px] leading-[1.25]"
-              : "mt-2 line-clamp-[7] text-xs leading-[1.35]",
+              ? "mt-1 text-[7px] leading-[1.25]"
+              : "mt-2 text-xs leading-[1.35]",
           )}
-        >
-          {getNotePreviewText(note.content)}
-        </p>
+        />
       </button>
 
       {isPinned && (
