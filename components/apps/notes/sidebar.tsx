@@ -606,20 +606,12 @@ export default function Sidebar({
     !isMobile &&
     viewMode === "gallery" &&
     Boolean(galleryDetailNote && onGalleryBack);
-  const isGalleryOverview =
-    viewMode === "gallery" && !isGalleryDetailOpen;
-
   return (
     <div
       className={cn(
         "flex h-full flex-col",
         isMobile
-          ? cn(
-              "w-full max-w-full",
-              isGalleryOverview
-                ? "bg-[#F2F2F7] dark:bg-black"
-                : "bg-background",
-            )
+          ? "w-full max-w-full bg-[#F2F2F7] dark:bg-black"
           : viewMode === "gallery"
             ? cn(
                 "min-w-0 flex-1",
@@ -627,7 +619,7 @@ export default function Sidebar({
                   ? "bg-background"
                   : "bg-[#F2F2F7] dark:bg-black",
               )
-            : "w-[320px] border-r border-muted-foreground/20 bg-muted",
+            : "w-[320px] border-r border-muted-foreground/20 bg-[#F2F2F7] dark:bg-black",
       )}
     >
       <Nav

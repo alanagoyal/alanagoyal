@@ -145,7 +145,7 @@ export function Nav({
     created: "Date Created",
     off: "Off",
   }[groupMode];
-  const isGalleryOverview = viewMode === "gallery" && !onGalleryBack;
+  const usesGroupedBackground = !onGalleryBack;
 
   const applyPendingViewMode = useCallback(() => {
     const pendingViewMode = pendingViewModeRef.current;
@@ -184,7 +184,7 @@ export function Nav({
       isMobile={isMobile}
       isScrolled={isScrolled}
       className={cn(
-        isGalleryOverview && "bg-[#F2F2F7] dark:bg-black",
+        usesGroupedBackground && "bg-[#F2F2F7] dark:bg-black",
       )}
       onMouseDown={nav.onDragStart}
       left={
