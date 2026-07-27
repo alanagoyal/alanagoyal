@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
-import { Camera, ChevronLeft, Heart, Info } from "lucide-react";
+import {
+  Camera,
+  ChevronLeft,
+  Heart,
+  Info,
+  RotateCcwSquare,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useWindowFocus } from "@/lib/window-focus-context";
@@ -40,6 +46,8 @@ interface PhotoViewerProps {
   onPrevious: () => void;
   onNext: () => void;
   onToggleFavorite?: (photoId: string) => void;
+  rotation: number;
+  onRotate: () => void;
   collectionNames: string[];
   isMobileView: boolean;
   isDesktop?: boolean;
@@ -236,6 +244,8 @@ export function PhotoViewer({
   onPrevious,
   onNext,
   onToggleFavorite,
+  rotation,
+  onRotate,
   collectionNames,
   isMobileView,
   isDesktop = false,
@@ -243,6 +253,17 @@ export function PhotoViewer({
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
   const [isSwiping, setIsSwiping] = useState(false);
+  const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
+  const [naturalSize, setNaturalSize] = useState<{
+    photoId: string;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
@@ -250,8 +271,27 @@ export function PhotoViewer({
   const infoContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
+  const rotateLeft = useCallback(() => {
+    setShouldAnimateRotation(true);
+    onRotate();
+  }, [onRotate]);
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
+
+  useEffect(() => {
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      setContainerSize({ width: rect.width, height: rect.height });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isInfoOpen && !isMobileView) return;
@@ -279,6 +319,7 @@ export function PhotoViewer({
 
   useEffect(() => {
     mobileScrollRef.current?.scrollTo({ top: 0 });
+    setShouldAnimateRotation(false);
   }, [photo.id]);
 
   // Prevent default touch move when swiping to avoid scroll interference
@@ -346,6 +387,43 @@ export function PhotoViewer({
 
   const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
   const formattedDate = format(pstDate, "MMMM d, yyyy 'at' h:mm:ss a");
+  const currentNaturalSize =
+    naturalSize?.photoId === photo.id ? naturalSize : null;
+  const isQuarterTurn = rotation % 180 !== 0;
+
+  let displayedImageSize: { width: number; height: number } | null = null;
+  if (
+    rotation !== 0 &&
+    currentNaturalSize &&
+    containerSize &&
+    containerSize.width > 0 &&
+    containerSize.height > 0
+  ) {
+    const rotatedWidth = isQuarterTurn
+      ? currentNaturalSize.height
+      : currentNaturalSize.width;
+    const rotatedHeight = isQuarterTurn
+      ? currentNaturalSize.width
+      : currentNaturalSize.height;
+    const scale = Math.min(
+      containerSize.width / rotatedWidth,
+      containerSize.height / rotatedHeight,
+    );
+    const fittedWidth = rotatedWidth * scale;
+    const fittedHeight = rotatedHeight * scale;
+
+    displayedImageSize = isQuarterTurn
+      ? { width: fittedHeight, height: fittedWidth }
+      : { width: fittedWidth, height: fittedHeight };
+  }
+
+  const handleImageLoad = (image: HTMLImageElement) => {
+    setNaturalSize({
+      photoId: photo.id,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    });
+  };
   const mobileFormattedDate = format(
     pstDate,
     "EEEE · MMMM d, yyyy · h:mm a"
@@ -378,7 +456,11 @@ export function PhotoViewer({
           </p>
         </div>
 
-        <div className="flex items-center gap-1 -mr-1">
+        {/* Photo actions */}
+        <div
+          className="flex items-center gap-1 -mr-1"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {!isMobileView && (
             <div
               ref={infoContainerRef}
@@ -481,13 +563,29 @@ export function PhotoViewer({
           <button
             onClick={() => onToggleFavorite?.(photo.id)}
             onMouseDown={(e) => e.stopPropagation()}
-            className="p-1"
+            className="p-1 rounded can-hover:hover:bg-muted"
+            aria-label={
+              photo.isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            title={photo.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
           >
             <Heart
               className={cn(
                 "w-5 h-5 transition-colors text-foreground",
                 photo.isFavorite && "fill-foreground"
               )}
+            />
+          </button>
+          <button
+            onClick={rotateLeft}
+            className="p-1 rounded text-foreground transition-colors can-hover:hover:bg-muted"
+            aria-label="Rotate left"
+            title="Rotate Left"
+          >
+            <RotateCcwSquare
+              aria-hidden="true"
+              className="h-5 w-5"
+              strokeWidth={2}
             />
           </button>
         </div>
@@ -508,17 +606,43 @@ export function PhotoViewer({
             isMobileView && "touch-pan-y"
           )}
         >
-          <div className="relative h-full w-full">
-            <Image
-              key={photo.id}
-              src={getViewerUrl(photo.url)}
-              alt=""
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, 80vw"
-              priority
-              unoptimized
-            />
+          <div
+            ref={imageContainerRef}
+            className="relative flex h-full w-full items-center justify-center overflow-hidden"
+          >
+            {displayedImageSize ? (
+              <Image
+                key={photo.id}
+                src={getViewerUrl(photo.url)}
+                alt=""
+                width={Math.max(1, Math.round(displayedImageSize.width))}
+                height={Math.max(1, Math.round(displayedImageSize.height))}
+                draggable={false}
+                style={{
+                  width: displayedImageSize.width,
+                  height: displayedImageSize.height,
+                  transform: rotation ? `rotate(${rotation}deg)` : undefined,
+                  transition: shouldAnimateRotation
+                    ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
+                    : undefined,
+                }}
+                onLoad={(event) => handleImageLoad(event.currentTarget)}
+                priority
+                unoptimized
+              />
+            ) : (
+              <Image
+                key={photo.id}
+                src={getViewerUrl(photo.url)}
+                alt=""
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 80vw"
+                onLoad={(event) => handleImageLoad(event.currentTarget)}
+                priority
+                unoptimized
+              />
+            )}
           </div>
         </div>
 

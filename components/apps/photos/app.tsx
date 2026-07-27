@@ -7,7 +7,15 @@ import { PhotoViewer } from "./photo-viewer";
 import { Nav } from "./nav";
 import { Photo, PhotosView, TimeFilter } from "@/types/photos";
 import { usePhotos } from "@/lib/photos/use-photos";
-import { loadPhotosView, savePhotosView, loadPhotosSelectedId, savePhotosSelectedId } from "@/lib/sidebar-persistence";
+import {
+  loadPhotosRotations,
+  loadPhotosSelectedId,
+  loadPhotosView,
+  savePhotosRotations,
+  savePhotosSelectedId,
+  savePhotosView,
+} from "@/lib/sidebar-persistence";
+import type { PhotoRotations } from "@/lib/sidebar-persistence";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -29,6 +37,9 @@ export default function App({ isDesktop = false }: AppProps) {
   const [showGrid, setShowGrid] = useState(() => loadPhotosSelectedId() !== null);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(() => loadPhotosSelectedId());
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
+  const [photoRotations, setPhotoRotations] = useState<PhotoRotations>(() =>
+    loadPhotosRotations(),
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +67,12 @@ export default function App({ isDesktop = false }: AppProps) {
       savePhotosSelectedId(selectedPhotoId);
     }
   }, [selectedPhotoId, isViewLoaded]);
+
+  useEffect(() => {
+    if (isViewLoaded) {
+      savePhotosRotations(photoRotations);
+    }
+  }, [photoRotations, isViewLoaded]);
 
   // Filter and sort photos based on active view (oldest first, newest at bottom)
   const filteredPhotos = useMemo(() => {
@@ -96,6 +113,13 @@ export default function App({ isDesktop = false }: AppProps) {
 
   const handleCloseViewer = useCallback(() => {
     setSelectedPhotoId(null);
+  }, []);
+
+  const handleRotatePhoto = useCallback((photoId: string) => {
+    setPhotoRotations((currentRotations) => ({
+      ...currentRotations,
+      [photoId]: (currentRotations[photoId] ?? 0) - 90,
+    }));
   }, []);
 
   // Get the selected photo and its index in the filtered list
@@ -202,6 +226,8 @@ export default function App({ isDesktop = false }: AppProps) {
                 onPrevious={handlePreviousPhoto}
                 onNext={handleNextPhoto}
                 onToggleFavorite={toggleFavorite}
+                rotation={photoRotations[selectedPhoto.id] ?? 0}
+                onRotate={() => handleRotatePhoto(selectedPhoto.id)}
                 collectionNames={selectedPhotoCollectionNames}
                 isMobileView={isMobileView}
                 isDesktop={isDesktop}
