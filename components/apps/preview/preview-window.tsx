@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
+import { RotateCcwSquare } from "lucide-react";
 import {
   useWindowBehavior,
   Position,
@@ -66,6 +67,7 @@ export function PreviewWindow({
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
+  const [rotation, setRotation] = useState(0);
   const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
@@ -112,8 +114,11 @@ export function PreviewWindow({
   // Calculate "fit" size - what the image would be at zoom=1 (contained within container)
   const getFitSize = useCallback(() => {
     if (!naturalSize || !containerSize) return null;
+    const isQuarterTurn = rotation % 180 !== 0;
+    const imageWidth = isQuarterTurn ? naturalSize.height : naturalSize.width;
+    const imageHeight = isQuarterTurn ? naturalSize.width : naturalSize.height;
     const containerAspect = containerSize.width / containerSize.height;
-    const imageAspect = naturalSize.width / naturalSize.height;
+    const imageAspect = imageWidth / imageHeight;
 
     if (imageAspect > containerAspect) {
       // Image is wider than container - fit to width
@@ -122,7 +127,7 @@ export function PreviewWindow({
       // Image is taller than container - fit to height
       return { width: containerSize.height * imageAspect, height: containerSize.height };
     }
-  }, [naturalSize, containerSize]);
+  }, [naturalSize, containerSize, rotation]);
 
   // Store callbacks in refs to avoid stale closures
   const onZoomChangeRef = useRef(onZoomChange);
@@ -188,6 +193,17 @@ export function PreviewWindow({
     setZoom(1);
     setTimeout(() => {
       onZoomChangeRef.current?.(1);
+      onScrollChangeRef.current?.(0, 0);
+    }, 0);
+  }, []);
+
+  const rotateLeft = useCallback(() => {
+    setRotation((currentRotation) => currentRotation - 90);
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollLeft = 0;
+        containerRef.current.scrollTop = 0;
+      }
       onScrollChangeRef.current?.(0, 0);
     }, 0);
   }, []);
@@ -265,6 +281,7 @@ export function PreviewWindow({
   useEffect(() => {
     setImageError(null);
     setNaturalSize(null);
+    setRotation(0);
   }, [filePath, fileUrl, fileType]);
 
   const windowStyle: React.CSSProperties = isMaximized
@@ -324,9 +341,9 @@ export function PreviewWindow({
     // At other zoom levels, calculate explicit dimensions for scrollable area
     const fitSize = getFitSize();
 
-    // For non-1 zoom, we need fitSize to calculate dimensions
+    // Zoomed and rotated images need fitSize to calculate dimensions
     // Render image invisibly to load it and get naturalSize, then show once fitSize is ready
-    const needsFitSize = zoom !== 1;
+    const needsFitSize = zoom !== 1 || rotation !== 0;
     if (needsFitSize && !fitSize) {
       return (
         <div ref={containerRef} className="w-full h-full relative">
@@ -347,14 +364,17 @@ export function PreviewWindow({
       );
     }
 
-    const isZoomed = zoom !== 1 && fitSize !== null;
-    const canPan = isZoomed && zoom > 1;
+    const hasExplicitSize = needsFitSize && fitSize !== null;
+    const canPan = hasExplicitSize && zoom > 1;
+    const isQuarterTurn = rotation % 180 !== 0;
 
-    // Calculate explicit dimensions only when zoomed and fitSize is available
-    const displayWidth = isZoomed ? fitSize!.width * zoom : undefined;
-    const displayHeight = isZoomed ? fitSize!.height * zoom : undefined;
-    const renderedWidth = Math.max(1, Math.round(displayWidth ?? naturalSize?.width ?? 1));
-    const renderedHeight = Math.max(1, Math.round(displayHeight ?? naturalSize?.height ?? 1));
+    // Calculate explicit dimensions when transformed and fitSize is available
+    const displayWidth = hasExplicitSize ? fitSize!.width * zoom : undefined;
+    const displayHeight = hasExplicitSize ? fitSize!.height * zoom : undefined;
+    const imageWidth = isQuarterTurn ? displayHeight : displayWidth;
+    const imageHeight = isQuarterTurn ? displayWidth : displayHeight;
+    const renderedWidth = Math.max(1, Math.round(imageWidth ?? naturalSize?.width ?? 1));
+    const renderedHeight = Math.max(1, Math.round(imageHeight ?? naturalSize?.height ?? 1));
 
     return (
       <div
@@ -385,13 +405,16 @@ export function PreviewWindow({
             width={renderedWidth}
             height={renderedHeight}
             draggable={false}
-            className={isZoomed ? "" : "w-full h-full object-contain"}
+            className={hasExplicitSize ? "" : "w-full h-full object-contain"}
             style={{
-              width: displayWidth,
-              height: displayHeight,
-              flexShrink: isZoomed ? 0 : undefined,
+              width: imageWidth,
+              height: imageHeight,
+              flexShrink: hasExplicitSize ? 0 : undefined,
               pointerEvents: "none",
-              transition: isZoomed ? "width 0.15s ease-out, height 0.15s ease-out" : undefined,
+              transform: rotation ? `rotate(${rotation}deg)` : undefined,
+              transition: hasExplicitSize
+                ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
+                : undefined,
             }}
             onError={handleImageError}
             onLoad={(e) => {
@@ -450,9 +473,21 @@ export function PreviewWindow({
           <div className="flex-1 min-w-0 px-2 text-center">
             <span className="block truncate text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
-          {/* Zoom controls for images - stopPropagation prevents window drag */}
+          {/* Image controls - stopPropagation prevents window drag */}
           {fileType === "image" && (
             <div className="flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
+              <button
+                onClick={rotateLeft}
+                className="p-1 rounded text-zinc-600 dark:text-zinc-400 transition-colors can-hover:hover:bg-zinc-300 can-hover:dark:hover:bg-zinc-700 can-hover:hover:text-zinc-800 can-hover:dark:hover:text-zinc-200"
+                aria-label="Rotate left"
+                title="Rotate Left"
+              >
+                <RotateCcwSquare
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                  strokeWidth={2}
+                />
+              </button>
               <button
                 onClick={zoomOut}
                 className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
