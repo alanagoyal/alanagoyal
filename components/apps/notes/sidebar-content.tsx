@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Pin, PinOff, Trash2 } from "lucide-react";
 import { NoteItem } from "./note-item";
 import { Note, NotesViewMode } from "@/lib/notes/types";
@@ -47,6 +48,96 @@ interface GalleryCardProps {
   isMobile: boolean;
 }
 
+const MOBILE_CONTEXT_MENU_DELAY_MS = 550;
+const MOBILE_CONTEXT_MENU_MOVE_TOLERANCE = 10;
+
+function MobileGalleryNoteActions({
+  note,
+  isPinned,
+  canDelete,
+  open,
+  onOpenChange,
+  onPinToggle,
+  onDelete,
+}: {
+  note: Note;
+  isPinned: boolean;
+  canDelete: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onPinToggle: (slug: string) => void;
+  onDelete: (note: Note) => Promise<void>;
+}) {
+  useEffect(() => {
+    if (open) {
+      window.getSelection()?.removeAllRanges();
+    }
+  }, [open]);
+
+  const handlePinToggle = () => {
+    onOpenChange(false);
+    onPinToggle(note.slug);
+  };
+
+  const handleDelete = () => {
+    onOpenChange(false);
+    void onDelete(note);
+  };
+
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-[91] w-full max-w-[560px] -translate-x-1/2 -translate-y-1/2 px-4 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          <DialogPrimitive.Title className="sr-only">
+            Note actions for {note.title}
+          </DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">
+            Preview the note, then pin, unpin, or delete it.
+          </DialogPrimitive.Description>
+
+          <div className="h-[min(52dvh,32rem)] overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl">
+            <h2 className="text-2xl font-bold leading-tight">
+              {note.emoji} {note.title}
+            </h2>
+            <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
+              {getNotePreviewText(note.content)}
+            </p>
+          </div>
+
+          <div className="mx-auto mt-3 w-[calc(100%-3rem)] max-w-sm overflow-hidden rounded-[22px] border border-muted-foreground/15 bg-background/95 shadow-2xl backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={handlePinToggle}
+              className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+            >
+              {isPinned ? (
+                <PinOff className="h-5 w-5 shrink-0" aria-hidden />
+              ) : (
+                <Pin className="h-5 w-5 shrink-0" aria-hidden />
+              )}
+              <span>{isPinned ? "Unpin Note" : "Pin Note"}</span>
+            </button>
+            {canDelete && (
+              <>
+                <div className="mx-5 border-t border-muted-foreground/20" />
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] text-red-600 outline-none active:bg-muted focus-visible:bg-muted"
+                >
+                  <Trash2 className="h-5 w-5 shrink-0" aria-hidden />
+                  <span>Delete</span>
+                </button>
+              </>
+            )}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
 function GalleryCard({
   note,
   isPinned,
@@ -57,122 +148,214 @@ function GalleryCard({
   isMobile,
 }: GalleryCardProps) {
   const [hasMounted, setHasMounted] = useState(false);
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
   const canDelete = note.session_id === sessionId;
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressOriginRef.current = null;
+  }, []);
+
+  useEffect(() => clearLongPressTimer, [clearLongPressTimer]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (!isMobile || !["touch", "pen"].includes(event.pointerType)) return;
+
+    clearLongPressTimer();
+    suppressNextClickRef.current = false;
+    longPressOriginRef.current = { x: event.clientX, y: event.clientY };
+    longPressTimerRef.current = window.setTimeout(() => {
+      window.getSelection()?.removeAllRanges();
+      suppressNextClickRef.current = true;
+      setIsContextMenuOpen(true);
+      clearLongPressTimer();
+    }, MOBILE_CONTEXT_MENU_DELAY_MS);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const origin = longPressOriginRef.current;
+    if (!origin) return;
+
+    if (
+      Math.abs(event.clientX - origin.x) >
+        MOBILE_CONTEXT_MENU_MOVE_TOLERANCE ||
+      Math.abs(event.clientY - origin.y) >
+        MOBILE_CONTEXT_MENU_MOVE_TOLERANCE
+    ) {
+      clearLongPressTimer();
+    }
+  };
+
+  const handlePointerEnd = () => {
+    clearLongPressTimer();
+  };
+
+  const suppressClickAfterLongPress = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (!suppressNextClickRef.current) return false;
+
+    event.preventDefault();
+    event.stopPropagation();
+    suppressNextClickRef.current = false;
+    return true;
+  };
+
+  const handleCardClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!suppressClickAfterLongPress(event)) {
+      onNoteSelect(note);
+    }
+  };
+
+  const handleQuickPinClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!suppressClickAfterLongPress(event)) {
+      onPinToggle(note.slug);
+    }
+  };
+
+  const handleMobileActionsOpenChange = (open: boolean) => {
+    setIsContextMenuOpen(open);
+    if (!open) suppressNextClickRef.current = false;
+  };
+
+  const cardContent = (
+    <article
+      className={cn(
+        "group relative min-w-0",
+        isMobile && "notes-gallery-context-trigger select-none",
+      )}
+      onContextMenu={
+        isMobile ? (event) => event.preventDefault() : undefined
+      }
+      onPointerDown={isMobile ? handlePointerDown : undefined}
+      onPointerMove={isMobile ? handlePointerMove : undefined}
+      onPointerUp={isMobile ? handlePointerEnd : undefined}
+      onPointerCancel={isMobile ? handlePointerEnd : undefined}
+    >
+      <button
+        type="button"
+        data-note-slug={note.slug}
+        onClick={handleCardClick}
+        className={cn(
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          isMobile
+            ? "rounded-lg px-2 py-1.5"
+            : "rounded-xl px-4 py-3",
+        )}
+      >
+        <h4
+          className={cn(
+            "line-clamp-2 font-semibold",
+            isMobile
+              ? "pr-5 text-[9px] leading-[11px]"
+              : "pr-7 text-sm leading-5",
+          )}
+        >
+          {note.emoji} {note.title}
+        </h4>
+        <p
+          className={cn(
+            "whitespace-pre-wrap text-muted-foreground",
+            isMobile
+              ? "mt-1 line-clamp-[6] text-[7px] leading-[1.25]"
+              : "mt-2 line-clamp-[7] text-xs leading-[1.35]",
+          )}
+        >
+          {getNotePreviewText(note.content)}
+        </p>
+      </button>
+
+      {isPinned && (
+        <button
+          type="button"
+          aria-label={`Unpin ${note.title}`}
+          onClick={handleQuickPinClick}
+          className={cn(
+            "absolute flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+            isMobile
+              ? "right-1.5 top-1.5 h-6 w-6 rounded-md"
+              : "right-3 top-3 h-7 w-7 rounded-lg",
+          )}
+        >
+          <Pin
+            className={cn(
+              "fill-current",
+              isMobile ? "h-3.5 w-3.5" : "h-4 w-4",
+            )}
+            aria-hidden
+          />
+        </button>
+      )}
+
+      <div className={cn("text-center", isMobile ? "mt-2" : "mt-2 px-1")}>
+        <h4
+          className={cn(
+            "font-medium",
+            isMobile
+              ? "line-clamp-2 text-[15px] leading-[18px]"
+              : "truncate text-sm",
+          )}
+        >
+          {note.title}
+        </h4>
+        <p
+          className={cn(
+            "mt-0.5 text-muted-foreground tabular-nums",
+            isMobile ? "text-[13px] leading-4" : "text-xs",
+            !hasMounted && "invisible",
+          )}
+        >
+          {hasMounted
+            ? new Date(getDisplayCreatedAt(note)).toLocaleDateString("en-US")
+            : "00/00/0000"}
+        </p>
+      </div>
+    </article>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {cardContent}
+        <MobileGalleryNoteActions
+          note={note}
+          isPinned={isPinned}
+          canDelete={canDelete}
+          open={isContextMenuOpen}
+          onOpenChange={handleMobileActionsOpenChange}
+          onPinToggle={onPinToggle}
+          onDelete={onDelete}
+        />
+      </>
+    );
+  }
+
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <article className="group relative min-w-0 select-none">
-          <button
-            type="button"
-            data-note-slug={note.slug}
-            onClick={() => onNoteSelect(note)}
-            className={cn(
-              "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
-              isMobile
-                ? "rounded-lg px-2 py-1.5"
-                : "rounded-xl px-4 py-3",
-            )}
-          >
-            <h4
-              className={cn(
-                "line-clamp-2 font-semibold",
-                isMobile
-                  ? "pr-5 text-[9px] leading-[11px]"
-                  : "pr-7 text-sm leading-5",
-              )}
-            >
-              {note.emoji} {note.title}
-            </h4>
-            <p
-              className={cn(
-                "whitespace-pre-wrap text-muted-foreground",
-                isMobile
-                  ? "mt-1 line-clamp-[6] text-[7px] leading-[1.25]"
-                  : "mt-2 line-clamp-[7] text-xs leading-[1.35]",
-              )}
-            >
-              {getNotePreviewText(note.content)}
-            </p>
-          </button>
-
-          {isPinned && (
-            <button
-              type="button"
-              aria-label={`Unpin ${note.title}`}
-              onClick={() => onPinToggle(note.slug)}
-              className={cn(
-                "absolute flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
-                isMobile
-                  ? "right-1.5 top-1.5 h-6 w-6 rounded-md"
-                  : "right-3 top-3 h-7 w-7 rounded-lg",
-              )}
-            >
-              <Pin
-                className={cn(
-                  "fill-current",
-                  isMobile ? "h-3.5 w-3.5" : "h-4 w-4",
-                )}
-                aria-hidden
-              />
-            </button>
-          )}
-
-          <div className={cn("text-center", isMobile ? "mt-2" : "mt-2 px-1")}>
-            <h4
-              className={cn(
-                "font-medium",
-                isMobile
-                  ? "line-clamp-2 text-[15px] leading-[18px]"
-                  : "truncate text-sm",
-              )}
-            >
-              {note.title}
-            </h4>
-            <p
-              className={cn(
-                "mt-0.5 text-muted-foreground tabular-nums",
-                isMobile ? "text-[13px] leading-4" : "text-xs",
-                !hasMounted && "invisible",
-              )}
-            >
-              {hasMounted
-                ? new Date(getDisplayCreatedAt(note)).toLocaleDateString("en-US")
-                : "00/00/0000"}
-            </p>
-          </div>
-        </article>
-      </ContextMenuTrigger>
+      <ContextMenuTrigger asChild>{cardContent}</ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
           onClick={() => onPinToggle(note.slug)}
-          className={cn(
-            "focus:bg-[#0A7CFF] focus:text-white",
-            isMobile && "flex items-center justify-between",
-          )}
+          className="focus:bg-[#0A7CFF] focus:text-white"
         >
-          <span>{isPinned ? "Unpin" : "Pin"}</span>
-          {isMobile &&
-            (isPinned ? (
-              <PinOff className="ml-2 h-4 w-4" aria-hidden />
-            ) : (
-              <Pin className="ml-2 h-4 w-4" aria-hidden />
-            ))}
+          {isPinned ? "Unpin" : "Pin"}
         </ContextMenuItem>
         {canDelete && (
           <ContextMenuItem
             onClick={() => void onDelete(note)}
-            className={cn(
-              "text-red-600 focus:bg-[#0A7CFF] focus:text-white",
-              isMobile && "flex items-center justify-between",
-            )}
+            className="text-red-600 focus:bg-[#0A7CFF] focus:text-white"
           >
-            <span>Delete</span>
-            {isMobile && <Trash2 className="ml-2 h-4 w-4" aria-hidden />}
+            Delete
           </ContextMenuItem>
         )}
       </ContextMenuContent>
