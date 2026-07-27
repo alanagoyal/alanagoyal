@@ -408,17 +408,17 @@ export function PhotoViewer({
                   className="absolute right-0 top-[calc(100%+12px)] z-20 w-[min(320px,calc(100vw-24px))] overflow-hidden rounded-xl border border-black/10 bg-muted/95 text-foreground shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-2xl dark:border-white/15"
                 >
                   <div className="relative flex h-8 items-center justify-center border-b border-black/10 px-3 dark:border-white/10">
-                    <div className="absolute left-3 flex gap-1.5">
+                    <div className="group absolute left-3 flex gap-1.5">
                       <button
                         type="button"
                         aria-label="Close photo information"
                         onClick={closeInfo}
-                        className="group relative flex h-2.5 w-2.5 items-center justify-center rounded-full bg-muted-foreground/30 transition-colors can-hover:hover:bg-[#FF5F57] focus-visible:bg-[#FF5F57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
+                        className="relative flex h-2.5 w-2.5 items-center justify-center rounded-full bg-muted-foreground/30 transition-colors can-hover:group-hover:bg-[#FF5F57] focus-visible:bg-[#FF5F57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
                       >
                         <svg
                           aria-hidden="true"
                           viewBox="0 0 10 10"
-                          className="h-2 w-2 text-black/55 opacity-0 transition-opacity can-hover:group-hover:opacity-100 group-focus-visible:opacity-100"
+                          className="h-2 w-2 text-black/55 opacity-0 transition-opacity can-hover:group-hover:opacity-100 group-focus-within:opacity-100"
                           fill="currentColor"
                         >
                           <path d="M2.2 1.4 5 4.2l2.8-2.8.8.8L5.8 5l2.8 2.8-.8.8L5 5.8 2.2 8.6l-.8-.8L4.2 5 1.4 2.2z" />
@@ -428,7 +428,10 @@ export function PhotoViewer({
                         aria-hidden="true"
                         className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30"
                       />
-                      <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                      <span
+                        aria-hidden="true"
+                        className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30"
+                      />
                     </div>
                     <p className="text-xs font-medium text-muted-foreground">Info</p>
                   </div>
