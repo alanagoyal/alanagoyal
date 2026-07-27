@@ -66,7 +66,7 @@ function GalleryCard({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <article className="group relative min-w-0">
+        <article className="group relative min-w-0 select-none">
           <button
             type="button"
             data-note-slug={note.slug}
