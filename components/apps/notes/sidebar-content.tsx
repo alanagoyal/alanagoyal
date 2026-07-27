@@ -417,7 +417,7 @@ function GalleryCard({
           className={cn(
             "min-h-0 w-full flex-1 overflow-hidden text-muted-foreground",
             isMobile
-              ? "text-[5.5px] leading-[7px]"
+              ? "mt-0.5 text-[5.5px] leading-[7px]"
               : "mt-2 text-xs leading-[1.35]",
           )}
         />

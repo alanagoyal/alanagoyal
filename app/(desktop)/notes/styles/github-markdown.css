@@ -429,6 +429,10 @@
   margin: 0;
 }
 
+.note-markdown-preview-compact > :not(:first-child) {
+  margin-top: 0.4em;
+}
+
 .note-markdown-preview-compact
   ul:not(.contains-task-list)
   > li {
