@@ -1,11 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
-import { Pin } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Pin, PinOff, Trash2 } from "lucide-react";
 import { NoteItem } from "./note-item";
 import { Note, NotesViewMode } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { getNotePreviewText } from "@/lib/notes/note-utils";
+import {
+  canStartMobileNoteLongPress,
+  didMobileNoteLongPressMove,
+  isContextMenuKeyboardShortcut,
+  MOBILE_NOTE_LONG_PRESS_DELAY_MS,
+} from "@/lib/notes/mobile-gallery-interactions";
 import { cn } from "@/lib/utils";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface SidebarContentProps {
   groupedNotes: Record<string, Note[]>;
@@ -36,7 +56,191 @@ interface GalleryCardProps {
   isPinned: boolean;
   onNoteSelect: (note: Note) => void;
   onPinToggle: (slug: string) => void;
+  onDelete: (note: Note) => Promise<void>;
+  sessionId: string;
   isMobile: boolean;
+}
+
+const MOBILE_NOTE_EXPAND_DURATION_MS = 320;
+
+interface GalleryCardBounds {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+function MobileGalleryNoteActions({
+  note,
+  isPinned,
+  canDelete,
+  open,
+  sourceBounds,
+  onOpenChange,
+  onRestoreFocus,
+  onOpenNote,
+  onPinToggle,
+  onDelete,
+}: {
+  note: Note;
+  isPinned: boolean;
+  canDelete: boolean;
+  open: boolean;
+  sourceBounds: GalleryCardBounds | null;
+  onOpenChange: (open: boolean) => void;
+  onRestoreFocus: () => void;
+  onOpenNote: (note: Note) => void;
+  onPinToggle: (slug: string) => void;
+  onDelete: (note: Note) => Promise<void>;
+}) {
+  const previewRef = useRef<HTMLButtonElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      window.getSelection()?.removeAllRanges();
+    }
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const preview = previewRef.current;
+    const actions = actionsRef.current;
+    if (!open || !sourceBounds || !preview || !actions) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const targetBounds = preview.getBoundingClientRect();
+    const translateX =
+      sourceBounds.left +
+      sourceBounds.width / 2 -
+      (targetBounds.left + targetBounds.width / 2);
+    const translateY =
+      sourceBounds.top +
+      sourceBounds.height / 2 -
+      (targetBounds.top + targetBounds.height / 2);
+    const scaleX = sourceBounds.width / targetBounds.width;
+    const scaleY = sourceBounds.height / targetBounds.height;
+
+    const previewAnimation = preview.animate(
+      [
+        {
+          transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`,
+          borderRadius: "8px",
+        },
+        {
+          transform: "translate3d(0, 0, 0) scale(1, 1)",
+          borderRadius: "28px",
+        },
+      ],
+      {
+        duration: MOBILE_NOTE_EXPAND_DURATION_MS,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        fill: "both",
+      },
+    );
+    const actionsAnimation = actions.animate(
+      [
+        { opacity: 0, transform: "translateY(-10px) scale(0.97)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      {
+        duration: 170,
+        delay: MOBILE_NOTE_EXPAND_DURATION_MS - 110,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        fill: "both",
+      },
+    );
+
+    return () => {
+      previewAnimation.cancel();
+      actionsAnimation.cancel();
+    };
+  }, [open, sourceBounds]);
+
+  const handlePinToggle = () => {
+    onOpenChange(false);
+    onPinToggle(note.slug);
+  };
+
+  const handleOpenNote = () => {
+    onOpenChange(false);
+    onOpenNote(note);
+  };
+
+  const handleDelete = () => {
+    onOpenChange(false);
+    void onDelete(note);
+  };
+
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content
+          onClick={(event) => {
+            if (event.target === event.currentTarget) onOpenChange(false);
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            onRestoreFocus();
+          }}
+          className="fixed left-1/2 top-1/2 z-[91] w-full max-w-[560px] -translate-x-1/2 -translate-y-1/2 px-4 outline-none"
+        >
+          <DialogPrimitive.Title className="sr-only">
+            Note actions for {note.title}
+          </DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">
+            Preview the note, then pin, unpin, or delete it.
+          </DialogPrimitive.Description>
+
+          <button
+            ref={previewRef}
+            type="button"
+            aria-label={`Open ${note.title}`}
+            onClick={handleOpenNote}
+            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform"
+          >
+            <h2 className="text-2xl font-bold leading-tight">
+              {note.emoji} {note.title}
+            </h2>
+            <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
+              {getNotePreviewText(note.content)}
+            </p>
+          </button>
+
+          <div
+            ref={actionsRef}
+            className="mx-auto mt-3 w-[calc(100%-3rem)] max-w-sm overflow-hidden rounded-[22px] border border-muted-foreground/15 bg-background/95 shadow-2xl backdrop-blur-xl will-change-transform"
+          >
+            <button
+              type="button"
+              onClick={handlePinToggle}
+              className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+            >
+              {isPinned ? (
+                <PinOff className="h-5 w-5 shrink-0" aria-hidden />
+              ) : (
+                <Pin className="h-5 w-5 shrink-0" aria-hidden />
+              )}
+              <span>{isPinned ? "Unpin Note" : "Pin Note"}</span>
+            </button>
+            {canDelete && (
+              <>
+                <div className="mx-5 border-t border-muted-foreground/20" />
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] text-red-600 outline-none active:bg-muted focus-visible:bg-muted"
+                >
+                  <Trash2 className="h-5 w-5 shrink-0" aria-hidden />
+                  <span>Delete</span>
+                </button>
+              </>
+            )}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
 }
 
 function GalleryCard({
@@ -44,20 +248,150 @@ function GalleryCard({
   isPinned,
   onNoteSelect,
   onPinToggle,
+  onDelete,
+  sessionId,
   isMobile,
 }: GalleryCardProps) {
   const [hasMounted, setHasMounted] = useState(false);
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [contextMenuSourceBounds, setContextMenuSourceBounds] =
+    useState<GalleryCardBounds | null>(null);
+  const cardButtonRef = useRef<HTMLButtonElement>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
+  const shouldRestoreCardFocusRef = useRef(false);
+  const canDelete = note.session_id === sessionId;
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  return (
-    <article className="group relative min-w-0">
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressOriginRef.current = null;
+  }, []);
+
+  useEffect(() => clearLongPressTimer, [clearLongPressTimer]);
+
+  const openMobileActions = useCallback((restoreFocus = false) => {
+    const cardBounds = cardButtonRef.current?.getBoundingClientRect();
+    if (cardBounds) {
+      setContextMenuSourceBounds({
+        top: cardBounds.top,
+        left: cardBounds.left,
+        width: cardBounds.width,
+        height: cardBounds.height,
+      });
+    }
+    window.getSelection()?.removeAllRanges();
+    suppressNextClickRef.current = true;
+    shouldRestoreCardFocusRef.current = restoreFocus;
+    setIsContextMenuOpen(true);
+    clearLongPressTimer();
+  }, [clearLongPressTimer]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (!isMobile || !canStartMobileNoteLongPress(event.pointerType)) return;
+
+    clearLongPressTimer();
+    suppressNextClickRef.current = false;
+    longPressOriginRef.current = { x: event.clientX, y: event.clientY };
+    longPressTimerRef.current = window.setTimeout(() => {
+      openMobileActions();
+    }, MOBILE_NOTE_LONG_PRESS_DELAY_MS);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const origin = longPressOriginRef.current;
+    if (!origin) return;
+
+    if (
+      didMobileNoteLongPressMove(origin, {
+        x: event.clientX,
+        y: event.clientY,
+      })
+    ) {
+      clearLongPressTimer();
+    }
+  };
+
+  const handlePointerEnd = () => {
+    clearLongPressTimer();
+  };
+
+  const suppressClickAfterLongPress = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (!suppressNextClickRef.current) return false;
+
+    event.preventDefault();
+    event.stopPropagation();
+    suppressNextClickRef.current = false;
+    return true;
+  };
+
+  const handleCardClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!suppressClickAfterLongPress(event)) {
+      onNoteSelect(note);
+    }
+  };
+
+  const handleQuickPinClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!suppressClickAfterLongPress(event)) {
+      onPinToggle(note.slug);
+    }
+  };
+
+  const handleMobileActionsOpenChange = (open: boolean) => {
+    setIsContextMenuOpen(open);
+    if (!open) suppressNextClickRef.current = false;
+  };
+
+  const restoreCardFocus = useCallback(() => {
+    if (shouldRestoreCardFocusRef.current) {
+      cardButtonRef.current?.focus();
+      shouldRestoreCardFocusRef.current = false;
+    }
+  }, []);
+
+  const handleMobileContextMenu = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    openMobileActions();
+  };
+
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!isMobile || !isContextMenuKeyboardShortcut(event.key, event.shiftKey)) {
+      return;
+    }
+
+    event.preventDefault();
+    openMobileActions(true);
+  };
+
+  const cardContent = (
+    <article
+      className={cn(
+        "group relative min-w-0",
+        isMobile && "notes-gallery-context-trigger select-none",
+      )}
+      onContextMenu={isMobile ? handleMobileContextMenu : undefined}
+      onPointerDown={isMobile ? handlePointerDown : undefined}
+      onPointerMove={isMobile ? handlePointerMove : undefined}
+      onPointerUp={isMobile ? handlePointerEnd : undefined}
+      onPointerCancel={isMobile ? handlePointerEnd : undefined}
+    >
       <button
+        ref={cardButtonRef}
         type="button"
         data-note-slug={note.slug}
-        onClick={() => onNoteSelect(note)}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        aria-haspopup={isMobile ? "dialog" : undefined}
+        aria-expanded={isMobile ? isContextMenuOpen : undefined}
         className={cn(
           "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
           isMobile
@@ -91,7 +425,7 @@ function GalleryCard({
         <button
           type="button"
           aria-label={`Unpin ${note.title}`}
-          onClick={() => onPinToggle(note.slug)}
+          onClick={handleQuickPinClick}
           className={cn(
             "absolute flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
             isMobile
@@ -134,6 +468,48 @@ function GalleryCard({
       </div>
     </article>
   );
+
+  if (isMobile) {
+    return (
+      <>
+        {cardContent}
+        <MobileGalleryNoteActions
+          note={note}
+          isPinned={isPinned}
+          canDelete={canDelete}
+          open={isContextMenuOpen}
+          sourceBounds={contextMenuSourceBounds}
+          onOpenChange={handleMobileActionsOpenChange}
+          onRestoreFocus={restoreCardFocus}
+          onOpenNote={onNoteSelect}
+          onPinToggle={onPinToggle}
+          onDelete={onDelete}
+        />
+      </>
+    );
+  }
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{cardContent}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem
+          onClick={() => onPinToggle(note.slug)}
+          className="focus:bg-[#0A7CFF] focus:text-white"
+        >
+          {isPinned ? "Unpin" : "Pin"}
+        </ContextMenuItem>
+        {canDelete && (
+          <ContextMenuItem
+            onClick={() => void onDelete(note)}
+            className="text-red-600 focus:bg-[#0A7CFF] focus:text-white"
+          >
+            Delete
+          </ContextMenuItem>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
+  );
 }
 
 function GalleryGrid({
@@ -141,12 +517,16 @@ function GalleryGrid({
   pinnedNotes,
   onNoteSelect,
   onPinToggle,
+  onDelete,
+  sessionId,
   isMobile,
 }: {
   notes: Note[];
   pinnedNotes: Set<string>;
   onNoteSelect: (note: Note) => void;
   onPinToggle: (slug: string) => void;
+  onDelete: (note: Note) => Promise<void>;
+  sessionId: string;
   isMobile: boolean;
 }) {
   return (
@@ -165,6 +545,8 @@ function GalleryGrid({
           isPinned={pinnedNotes.has(note.slug)}
           onNoteSelect={onNoteSelect}
           onPinToggle={onPinToggle}
+          onDelete={onDelete}
+          sessionId={sessionId}
           isMobile={isMobile}
         />
       ))}
@@ -259,6 +641,8 @@ export function SidebarContent({
                     pinnedNotes={pinnedNotes}
                     onNoteSelect={onNoteSelect}
                     onPinToggle={handleGalleryPinToggle}
+                    onDelete={handleDelete}
+                    sessionId={sessionId}
                     isMobile={isMobile}
                   />
                 </section>
@@ -275,6 +659,8 @@ export function SidebarContent({
               pinnedNotes={pinnedNotes}
               onNoteSelect={onNoteSelect}
               onPinToggle={handleGalleryPinToggle}
+              onDelete={handleDelete}
+              sessionId={sessionId}
               isMobile={isMobile}
             />
           </section>
