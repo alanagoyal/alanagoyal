@@ -398,6 +398,61 @@
   width: 100%;
 }
 
+/*
+ * The native mobile gallery treats each note as one continuous miniature
+ * document. Remove block whitespace at thumbnail scale, preserve readable
+ * leading, and draw list markers explicitly so they remain visible.
+ */
+.note-markdown-preview-compact h1,
+.note-markdown-preview-compact h2,
+.note-markdown-preview-compact h3,
+.note-markdown-preview-compact h4,
+.note-markdown-preview-compact h5,
+.note-markdown-preview-compact h6,
+.note-markdown-preview-compact p,
+.note-markdown-preview-compact ul,
+.note-markdown-preview-compact ol,
+.note-markdown-preview-compact blockquote,
+.note-markdown-preview-compact pre,
+.note-markdown-preview-compact table,
+.note-markdown-preview-compact .note-markdown-preview-image {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.note-markdown-preview-compact ul,
+.note-markdown-preview-compact ol {
+  padding-left: 1.25em;
+}
+
+.note-markdown-preview-compact li {
+  margin: 0;
+}
+
+.note-markdown-preview-compact
+  ul:not(.contains-task-list)
+  > li {
+  list-style: none;
+  position: relative;
+}
+
+.note-markdown-preview-compact
+  ul:not(.contains-task-list)
+  > li::before {
+  color: hsl(var(--foreground));
+  content: "•";
+  font-size: 1.2em;
+  left: -1em;
+  line-height: 1;
+  position: absolute;
+  top: 0.08em;
+}
+
+.note-markdown-preview-compact ol > li::marker {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
 .note-markdown-preview-expanded {
   line-height: 1.5;
 }

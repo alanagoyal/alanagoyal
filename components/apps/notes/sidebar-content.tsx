@@ -397,7 +397,7 @@ function GalleryCard({
         className={cn(
           "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-white text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727] dark:bg-[#1C1C1E]",
           isMobile
-            ? "rounded-lg px-1.5 py-1.5"
+            ? "rounded-lg px-1.5 pt-1.5"
             : "rounded-xl px-4 py-3",
         )}
       >
@@ -413,10 +413,11 @@ function GalleryCard({
         </h4>
         <NoteMarkdownPreview
           content={note.content}
+          compact={isMobile}
           className={cn(
             "min-h-0 w-full flex-1 overflow-hidden text-muted-foreground",
             isMobile
-              ? "mt-0.5 text-[5px] leading-[5.5px]"
+              ? "text-[5.5px] leading-[7px]"
               : "mt-2 text-xs leading-[1.35]",
           )}
         />

@@ -8,18 +8,21 @@ import { cn } from "@/lib/utils";
 interface NoteMarkdownPreviewProps {
   content: string;
   className?: string;
+  compact?: boolean;
   expanded?: boolean;
 }
 
 export function NoteMarkdownPreview({
   content,
   className,
+  compact = false,
   expanded = false,
 }: NoteMarkdownPreviewProps) {
   return (
     <ReactMarkdown
       className={cn(
         "note-markdown-preview",
+        compact && "note-markdown-preview-compact",
         expanded && "note-markdown-preview-expanded",
         className,
       )}
