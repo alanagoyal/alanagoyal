@@ -680,16 +680,22 @@ export default function Sidebar({
                   !isMobile && viewMode === "gallery" && "px-5 pb-5",
                 )}
               >
-                <SearchBar
-                  notes={notes}
-                  onSearchResults={setLocalSearchResults}
-                  sessionId={sessionId}
-                  inputRef={searchInputRef}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  setHighlightedIndex={setHighlightedIndex}
-                  clearSearch={clearSearch}
-                />
+                <div
+                  className={cn(
+                    isMobile && viewMode === "gallery" && "-mx-2",
+                  )}
+                >
+                  <SearchBar
+                    notes={notes}
+                    onSearchResults={setLocalSearchResults}
+                    sessionId={sessionId}
+                    inputRef={searchInputRef}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    setHighlightedIndex={setHighlightedIndex}
+                    clearSearch={clearSearch}
+                  />
+                </div>
                 <SidebarContent
                   groupedNotes={groupedNotes}
                   selectedNoteSlug={selectedNoteSlug}
