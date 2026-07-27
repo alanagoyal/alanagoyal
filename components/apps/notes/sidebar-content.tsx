@@ -78,6 +78,7 @@ function MobileGalleryNoteActions({
   sourceBounds,
   onOpenChange,
   onRestoreFocus,
+  onOpenNote,
   onPinToggle,
   onDelete,
 }: {
@@ -88,10 +89,11 @@ function MobileGalleryNoteActions({
   sourceBounds: GalleryCardBounds | null;
   onOpenChange: (open: boolean) => void;
   onRestoreFocus: () => void;
+  onOpenNote: (note: Note) => void;
   onPinToggle: (slug: string) => void;
   onDelete: (note: Note) => Promise<void>;
 }) {
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLButtonElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,6 +161,11 @@ function MobileGalleryNoteActions({
     onPinToggle(note.slug);
   };
 
+  const handleOpenNote = () => {
+    onOpenChange(false);
+    onOpenNote(note);
+  };
+
   const handleDelete = () => {
     onOpenChange(false);
     void onDelete(note);
@@ -185,9 +192,12 @@ function MobileGalleryNoteActions({
             Preview the note, then pin, unpin, or delete it.
           </DialogPrimitive.Description>
 
-          <div
+          <button
             ref={previewRef}
-            className="h-[min(52dvh,32rem)] overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl will-change-transform"
+            type="button"
+            aria-label={`Open ${note.title}`}
+            onClick={handleOpenNote}
+            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform focus-visible:ring-2 focus-visible:ring-[#E2A727]"
           >
             <h2 className="text-2xl font-bold leading-tight">
               {note.emoji} {note.title}
@@ -195,7 +205,7 @@ function MobileGalleryNoteActions({
             <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
               {getNotePreviewText(note.content)}
             </p>
-          </div>
+          </button>
 
           <div
             ref={actionsRef}
@@ -471,6 +481,7 @@ function GalleryCard({
           sourceBounds={contextMenuSourceBounds}
           onOpenChange={handleMobileActionsOpenChange}
           onRestoreFocus={restoreCardFocus}
+          onOpenNote={onNoteSelect}
           onPinToggle={onPinToggle}
           onDelete={onDelete}
         />
