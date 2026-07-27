@@ -233,6 +233,14 @@ html, body {
   caret-color: #e2a727;
 }
 
+/* Let Messages long presses open actions instead of selecting row text. */
+.messages-context-menu-trigger,
+.messages-context-menu-trigger * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 /* Let gallery-card long presses open Notes actions instead of selecting text. */
 .notes-gallery-context-trigger,
 .notes-gallery-context-trigger * {

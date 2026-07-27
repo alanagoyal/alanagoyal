@@ -2,14 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Conversation } from "@/types/messages";
 import { SearchBar } from "./search-bar";
 import { format, isToday, isYesterday, isThisWeek, parseISO } from "date-fns";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { ConversationContextActions } from "./conversation-context-actions";
 import { ConversationItem } from "./conversation-item";
-import { Icons } from "./icons";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -368,18 +362,54 @@ export function Sidebar({
                               data-conversation-id={conversation.id}
                               className="flex justify-center"
                             >
-                              <ContextMenu>
-                                <ContextMenuTrigger>
-                                  <button
-                                    onClick={() =>
-                                      onSelectConversation(conversation.id)
-                                    }
-                                    className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 relative ${
-                                      activeConversation === conversation.id && !isMobileView
-                                        ? "bg-[#0A7CFF] text-white"
-                                        : ""
-                                    }`}
-                                  >
+                              <ConversationContextActions
+                                conversation={conversation}
+                                isMobileView={isMobileView}
+                                onPinToggle={() => {
+                                  const updatedConversations =
+                                    conversations.map((conv) =>
+                                      conv.id === conversation.id
+                                        ? { ...conv, pinned: false }
+                                        : conv,
+                                    );
+                                  onUpdateConversation(
+                                    updatedConversations,
+                                    "pin",
+                                  );
+                                }}
+                                onToggleAlerts={() => {
+                                  const updatedConversations =
+                                    conversations.map((conv) =>
+                                      conv.id === conversation.id
+                                        ? {
+                                            ...conv,
+                                            hideAlerts: !conv.hideAlerts,
+                                          }
+                                        : conv,
+                                    );
+                                  onUpdateConversation(
+                                    updatedConversations,
+                                    "mute",
+                                  );
+                                }}
+                                onDelete={() =>
+                                  onDeleteConversation(conversation.id)
+                                }
+                                onOpenConversation={() =>
+                                  onSelectConversation(conversation.id)
+                                }
+                              >
+                                <button
+                                  onClick={() =>
+                                    onSelectConversation(conversation.id)
+                                  }
+                                  className={`w-20 aspect-square rounded-lg flex flex-col items-center justify-center p-2 relative ${
+                                    activeConversation === conversation.id &&
+                                    !isMobileView
+                                      ? "bg-[#0A7CFF] text-white"
+                                      : ""
+                                  }`}
+                                >
                                     <div className="relative">
                                       {typingStatus?.conversationId ===
                                         conversation.id &&
@@ -541,84 +571,8 @@ export function Sidebar({
                                         </span>
                                       </div>
                                     </div>
-                                  </button>
-                                </ContextMenuTrigger>
-                                <ContextMenuContent>
-                                  <ContextMenuItem
-                                    className={`focus:bg-[#0A7CFF] focus:text-white ${
-                                      isMobileView
-                                        ? "flex items-center justify-between"
-                                        : ""
-                                    }`}
-                                    onClick={() => {
-                                      const updatedConversations =
-                                        conversations.map((conv) =>
-                                          conv.id === conversation.id
-                                            ? { ...conv, pinned: false }
-                                            : conv
-                                        );
-                                      onUpdateConversation(
-                                        updatedConversations,
-                                        "pin"
-                                      );
-                                    }}
-                                  >
-                                    <span>Unpin</span>
-                                    {isMobileView && (
-                                      <Icons.pinOff className="h-4 w-4 ml-2" />
-                                    )}
-                                  </ContextMenuItem>
-                                  <ContextMenuItem
-                                    className={`focus:bg-[#0A7CFF] focus:text-white ${
-                                      isMobileView
-                                        ? "flex items-center justify-between"
-                                        : ""
-                                    }`}
-                                    onClick={() => {
-                                      const updatedConversations =
-                                        conversations.map((conv) =>
-                                          conv.id === conversation.id
-                                            ? {
-                                                ...conv,
-                                                hideAlerts: !conv.hideAlerts,
-                                              }
-                                            : conv
-                                        );
-                                      onUpdateConversation(
-                                        updatedConversations,
-                                        "mute"
-                                      );
-                                    }}
-                                  >
-                                    <span>
-                                      {conversation.hideAlerts
-                                        ? "Show Alerts"
-                                        : "Hide Alerts"}
-                                    </span>
-                                    {isMobileView &&
-                                      (conversation.hideAlerts ? (
-                                        <Icons.bell className="h-4 w-4 ml-2" />
-                                      ) : (
-                                        <Icons.bellOff className="h-4 w-4 ml-2" />
-                                      ))}
-                                  </ContextMenuItem>
-                                  <ContextMenuItem
-                                    className={`focus:bg-[#0A7CFF] focus:text-white ${
-                                      isMobileView
-                                        ? "flex items-center justify-between"
-                                        : ""
-                                    } text-red-600`}
-                                    onClick={() =>
-                                      onDeleteConversation(conversation.id)
-                                    }
-                                  >
-                                    <span>Delete</span>
-                                    {isMobileView && (
-                                      <Icons.trash className="h-4 w-4 ml-2" />
-                                    )}
-                                  </ContextMenuItem>
-                                </ContextMenuContent>
-                              </ContextMenu>
+                                </button>
+                              </ConversationContextActions>
                             </div>
                           ))}
                       </div>
