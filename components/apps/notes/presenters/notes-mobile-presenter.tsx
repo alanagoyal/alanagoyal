@@ -1,7 +1,7 @@
 "use client";
 
 import { RefObject } from "react";
-import { Note as NoteType } from "@/lib/notes/types";
+import { Note as NoteType, NotesViewMode } from "@/lib/notes/types";
 import Sidebar from "../sidebar";
 import Note from "../note";
 import { Icons } from "../icons";
@@ -16,6 +16,8 @@ interface NotesMobilePresenterProps {
   selectedNote: NoteType | null;
   selectedSlugForSidebar: string | null;
   showSidebar: boolean;
+  viewMode: NotesViewMode;
+  onViewModeChange: (viewMode: NotesViewMode) => void;
 }
 
 export function NotesMobilePresenter({
@@ -28,6 +30,8 @@ export function NotesMobilePresenter({
   selectedNote,
   selectedSlugForSidebar,
   showSidebar,
+  viewMode,
+  onViewModeChange,
 }: NotesMobilePresenterProps) {
   return (
     <div
@@ -48,18 +52,28 @@ export function NotesMobilePresenter({
             selectedSlug={selectedSlugForSidebar}
             useCallbackNavigation
             onNoteCreated={handleNoteCreated}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
           />
         )
       ) : (
         <div className="h-full">
           {selectedNote && (
             <div className="h-full p-3">
-              <Note key={selectedNote.id} note={selectedNote} isMobile={true} onBack={handleBackToSidebar} />
+              <Note
+                key={selectedNote.id}
+                note={selectedNote}
+                isMobile={true}
+                onBack={handleBackToSidebar}
+              />
             </div>
           )}
           {!selectedNote && (
             <div className="h-full p-3">
-              <button onClick={handleBackToSidebar} className="pt-2 flex items-center">
+              <button
+                onClick={handleBackToSidebar}
+                className="pt-2 flex items-center"
+              >
                 <Icons.back />
                 <span className="text-[#e2a727] text-base ml-1">Notes</span>
               </button>

@@ -12,19 +12,9 @@ import {
 import { Note } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { Dispatch, SetStateAction } from "react";
+import { getNotePreviewText } from "@/lib/notes/note-utils";
 
 const SIDEBAR_DATE_PLACEHOLDER = "00/00/0000";
-
-function previewContent(content: string): string {
-  return content
-    .replace(/!\[[^\]]*\]\([^\)]+\)/g, "")
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
-    .replace(/\[[ x]\]/g, "")
-    .replace(/[#*_~`>+\-]/g, "")
-    .replace(/\n+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 interface NoteItemProps {
   item: Note;
@@ -132,7 +122,7 @@ export const NoteItem = React.memo(function NoteItem({
           </span>
         </span>
         <span className="block w-0 min-w-0 flex-1 truncate">
-          {previewContent(item.content)}
+          {getNotePreviewText(item.content)}
         </span>
       </p>
     </>

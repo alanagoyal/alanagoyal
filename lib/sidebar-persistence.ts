@@ -308,6 +308,7 @@ export function clearCalendarState(): void {
 
 import type { MusicView } from "@/components/apps/music/types";
 import { clearItermStorage } from "@/components/apps/iterm/terminal";
+import { clearNotesDisplayPreferences } from "@/lib/notes/display-preferences";
 import { clearNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 
 // Valid views for validation - must match MusicView type
@@ -403,6 +404,7 @@ export function clearNotesState(): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(STORAGE_KEYS.NOTES_SELECTED);
+    clearNotesDisplayPreferences(sessionStorage);
   } catch {
     // Ignore storage errors
   }

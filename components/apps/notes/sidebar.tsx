@@ -15,12 +15,18 @@ import { useRouter } from "next/navigation";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
 import {
-  groupNotesByCategory,
-  sortGroupedNotes,
+  groupNotesByTimestamp,
+  sortNotes,
   type GroupedNotes,
 } from "@/lib/notes/note-utils";
 import { createClient } from "@/utils/supabase/client";
-import { Note } from "@/lib/notes/types";
+import {
+  Note,
+  NotesGroupMode,
+  NotesSortDirection,
+  NotesSortField,
+  NotesViewMode,
+} from "@/lib/notes/types";
 import { SessionNotesContext } from "@/app/(desktop)/notes/session-notes";
 import { Nav } from "./nav";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +34,12 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 import { useFileMenu } from "@/lib/file-menu-context";
 import { createNote } from "@/lib/notes/create-note";
+import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
+import {
+  loadNotesDisplayPreferences,
+  saveNotesSortPreferences,
+} from "@/lib/notes/display-preferences";
+import NoteDocument from "./note";
 
 const labels = {
   pinned: (
@@ -35,6 +47,7 @@ const labels = {
       <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
     </>
   ),
+  notes: "Notes",
   today: "Today",
   yesterday: "Yesterday",
   "7": "Previous 7 Days",
@@ -43,6 +56,7 @@ const labels = {
 };
 
 const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
+const ungroupedCategoryOrder = ["pinned", "notes"];
 
 export default function Sidebar({
   notes: publicNotes,
@@ -51,6 +65,10 @@ export default function Sidebar({
   selectedSlug: externalSelectedSlug,
   useCallbackNavigation = false,
   onNoteCreated,
+  viewMode,
+  onViewModeChange,
+  galleryDetailNote,
+  onGalleryBack,
 }: {
   notes: Note[];
   onNoteSelect: (note: Note) => void;
@@ -58,6 +76,10 @@ export default function Sidebar({
   selectedSlug?: string | null;
   useCallbackNavigation?: boolean;
   onNoteCreated?: (note: Note) => void;
+  viewMode: NotesViewMode;
+  onViewModeChange: (viewMode: NotesViewMode) => void;
+  galleryDetailNote?: Note | null;
+  onGalleryBack?: () => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -78,6 +100,12 @@ export default function Sidebar({
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [groupMode, setGroupMode] = useState<NotesGroupMode>("edited");
+  const [sortField, setSortField] = useState<NotesSortField>("default");
+  const [sortDirection, setSortDirection] =
+    useState<NotesSortDirection>("newest");
+  const [displayPreferencesLoaded, setDisplayPreferencesLoaded] =
+    useState(false);
 
   const windowFocus = useWindowFocus();
   const fileMenu = useFileMenu();
@@ -118,6 +146,37 @@ export default function Sidebar({
     () => [...publicNotes, ...sessionNotes],
     [publicNotes, sessionNotes]
   );
+
+  useEffect(() => {
+    try {
+      const preferences = loadNotesDisplayPreferences(
+        sessionStorage,
+        localStorage,
+      );
+
+      setGroupMode(preferences.groupMode);
+      setSortField(preferences.sortField);
+      setSortDirection(preferences.sortDirection);
+    } catch {
+      // Keep the native defaults when storage is unavailable.
+    } finally {
+      setDisplayPreferencesLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!displayPreferencesLoaded) return;
+
+    saveNotesSortPreferences(sessionStorage, {
+      groupMode,
+      sortField,
+      sortDirection,
+    });
+  }, [displayPreferencesLoaded, groupMode, sortDirection, sortField]);
+
+  const effectiveGroupMode = sortField === "title" ? "off" : groupMode;
+  const activeCategoryOrder =
+    effectiveGroupMode === "off" ? ungroupedCategoryOrder : categoryOrder;
 
   const selectNoteInApp = useCallback((note: Note) => {
     onNoteSelect(note);
@@ -169,18 +228,60 @@ export default function Sidebar({
     const userSpecificNotes = notes.filter(
       (note) => note.public || note.session_id === sessionId
     );
-    const grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
-    sortGroupedNotes(grouped);
+    let grouped: GroupedNotes;
+
+    if (effectiveGroupMode !== "off") {
+      const selectTimestamp =
+        effectiveGroupMode === "created"
+          ? (note: Note) => note.created_at
+          : (note: Note) => getDisplayCreatedAt(note);
+      grouped = groupNotesByTimestamp(
+        userSpecificNotes,
+        pinnedNotes,
+        selectTimestamp,
+      );
+    } else {
+      grouped = {
+        pinned: userSpecificNotes
+          .filter((note) => pinnedNotes.has(note.slug)),
+        notes: userSpecificNotes
+          .filter((note) => !pinnedNotes.has(note.slug)),
+      };
+    }
+
+    Object.keys(grouped).forEach((category) => {
+      grouped[category] = sortNotes(
+        grouped[category],
+        sortField,
+        sortDirection,
+      );
+    });
+
     setGroupedNotes(grouped);
-  }, [notes, sessionId, pinnedNotes]);
+  }, [
+    effectiveGroupMode,
+    notes,
+    pinnedNotes,
+    sessionId,
+    sortDirection,
+    sortField,
+  ]);
+
+  const orderedSearchResults = useMemo(
+    () =>
+      localSearchResults === null
+        ? null
+        : sortNotes(localSearchResults, sortField, sortDirection),
+    [localSearchResults, sortDirection, sortField],
+  );
 
   useEffect(() => {
-    if (localSearchResults && localSearchResults.length > 0) {
-      setHighlightedNote(localSearchResults[highlightedIndex]);
+    if (orderedSearchResults && orderedSearchResults.length > 0) {
+      setHighlightedNote(orderedSearchResults[highlightedIndex]);
     } else {
       setHighlightedNote(selectedNote);
     }
-  }, [localSearchResults, highlightedIndex, selectedNote]);
+  }, [orderedSearchResults, highlightedIndex, selectedNote]);
 
   const clearSearch = useCallback(() => {
     setLocalSearchResults(null);
@@ -192,19 +293,19 @@ export default function Sidebar({
   }, [setLocalSearchResults, setHighlightedIndex]);
 
   const flattenedNotes = useCallback(() => {
-    return categoryOrder.flatMap((category) =>
+    return activeCategoryOrder.flatMap((category) =>
       groupedNotes[category] ? groupedNotes[category] : []
     );
-  }, [groupedNotes]);
+  }, [activeCategoryOrder, groupedNotes]);
 
   const navigateNotes = useCallback(
     (direction: "up" | "down") => {
-      if (!localSearchResults) {
+      if (!orderedSearchResults) {
         const flattened = flattenedNotes();
         const currentIndex = flattened.findIndex(
-          (note) => note.slug === selectedNoteSlug
+          (note) => note.slug === selectedNoteSlug,
         );
-        
+
         let nextIndex;
         if (direction === "up") {
           nextIndex =
@@ -224,19 +325,34 @@ export default function Sidebar({
           }
           // Wait for navigation and React re-render
           setTimeout(() => {
-            const selectedElement = document.querySelector(`[data-note-slug="${nextNote.slug}"]`);
+            const selectedElement = document.querySelector(
+              `[data-note-slug="${nextNote.slug}"]`,
+            );
             if (selectedElement) {
-              selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              selectedElement.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+              });
             }
           }, 100);
         }
       }
     },
-    [flattenedNotes, selectedNoteSlug, router, localSearchResults, useCallbackNavigation, selectNoteInApp]
+    [
+      flattenedNotes,
+      selectedNoteSlug,
+      router,
+      orderedSearchResults,
+      useCallbackNavigation,
+      selectNoteInApp,
+    ],
   );
 
   const handlePinToggle = useCallback(
-    (slug: string) => {
+    (
+      slug: string,
+      { selectNote = true }: { selectNote?: boolean } = {},
+    ) => {
       let isPinning = false;
       setPinnedNotes((prev) => {
         const newPinned = new Set(prev);
@@ -254,6 +370,8 @@ export default function Sidebar({
       });
 
       clearSearch();
+
+      if (!selectNote) return;
 
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${slug}`);
@@ -334,8 +452,8 @@ export default function Sidebar({
   );
 
   const goToHighlightedNote = useCallback(() => {
-    if (localSearchResults && localSearchResults[highlightedIndex]) {
-      const selectedNote = localSearchResults[highlightedIndex];
+    if (orderedSearchResults && orderedSearchResults[highlightedIndex]) {
+      const selectedNote = orderedSearchResults[highlightedIndex];
       if (useCallbackNavigation) {
         selectNoteInApp(selectedNote);
       } else {
@@ -347,7 +465,7 @@ export default function Sidebar({
       }, 0);
       clearSearch();
     }
-  }, [localSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, selectNoteInApp]);
+  }, [orderedSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, selectNoteInApp]);
 
   // Register file menu actions for desktop menubar
   useEffect(() => {
@@ -422,8 +540,8 @@ export default function Sidebar({
           shortcuts["Escape"]();
         } else if (
           event.key === "Enter" &&
-          localSearchResults &&
-          localSearchResults.length > 0
+          orderedSearchResults &&
+          orderedSearchResults.length > 0
         ) {
           event.preventDefault();
           goToHighlightedNote();
@@ -437,22 +555,22 @@ export default function Sidebar({
         (document.activeElement as HTMLElement)?.blur();
 
         if (
-          localSearchResults &&
+          orderedSearchResults &&
           ["j", "ArrowDown", "k", "ArrowUp"].includes(key)
         ) {
           const direction = ["j", "ArrowDown"].includes(key) ? 1 : -1;
           setHighlightedIndex(
             (prevIndex) =>
-              (prevIndex + direction + localSearchResults.length) %
-              localSearchResults.length
+              (prevIndex + direction + orderedSearchResults.length) %
+              orderedSearchResults.length
           );
         } else {
           shortcuts[key]();
         }
       } else if (
         event.key === "Enter" &&
-        localSearchResults &&
-        localSearchResults.length > 0
+        orderedSearchResults &&
+        orderedSearchResults.length > 0
       ) {
         event.preventDefault();
         goToHighlightedNote();
@@ -465,7 +583,7 @@ export default function Sidebar({
     navigateNotes,
     highlightedNote,
     handlePinToggle,
-    localSearchResults,
+    orderedSearchResults,
     setHighlightedIndex,
     handleNoteDelete,
     goToHighlightedNote,
@@ -480,77 +598,136 @@ export default function Sidebar({
       }
       clearSearch();
     },
-    [clearSearch, selectNoteInApp, isMobile, useCallbackNavigation, router]
+    [
+      clearSearch,
+      selectNoteInApp,
+      isMobile,
+      router,
+      useCallbackNavigation,
+    ],
   );
+
+  const isGalleryDetailOpen =
+    !isMobile &&
+    viewMode === "gallery" &&
+    Boolean(galleryDetailNote && onGalleryBack);
 
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        "flex h-full flex-col",
         isMobile
           ? "w-full max-w-full bg-background"
-          : "w-[320px] border-r border-muted-foreground/20 bg-muted"
+          : viewMode === "gallery"
+            ? cn(
+                "min-w-0 flex-1",
+                isGalleryDetailOpen ? "bg-background" : "bg-muted",
+              )
+            : "w-[320px] border-r border-muted-foreground/20 bg-muted",
       )}
     >
       <Nav
         addNewPinnedNote={handlePinToggle}
         clearSearch={clearSearch}
+        groupMode={groupMode}
+        onGroupModeChange={setGroupMode}
+        sortField={sortField}
+        onSortFieldChange={setSortField}
+        sortDirection={sortDirection}
+        onSortDirectionChange={setSortDirection}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
         setSelectedNoteSlug={setSelectedNoteSlug}
         isMobile={isMobile}
         isScrolled={isScrolled}
         useCallbackNavigation={useCallbackNavigation}
         onNoteCreated={onNoteCreated}
+        onGalleryBack={isGalleryDetailOpen ? onGalleryBack : undefined}
       />
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <ScrollArea
-          className="h-full"
-        onScrollCapture={(e: React.UIEvent<HTMLDivElement>) => {
-          const viewport = e.currentTarget.querySelector(
-            '[data-radix-scroll-area-viewport]'
-          );
-          if (viewport) {
-            const scrolled = viewport.scrollTop > 0;
-            setIsScrolled(scrolled);
-          }
-        }}
-        isMobile={isMobile}
-        bottomMargin="0px"
-      >
-        <div ref={scrollViewportRef} className="flex flex-col w-full">
-          <SessionId setSessionId={setSessionId} />
-          <div className={`${isMobile ? "w-full" : "w-[320px]"} px-2`}>
-            <SearchBar
-              notes={notes}
-              onSearchResults={setLocalSearchResults}
-              sessionId={sessionId}
-              inputRef={searchInputRef}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              setHighlightedIndex={setHighlightedIndex}
-              clearSearch={clearSearch}
-            />
-            <SidebarContent
-              groupedNotes={groupedNotes}
-              selectedNoteSlug={selectedNoteSlug}
-              onNoteSelect={handleNoteSelect}
-              sessionId={sessionId}
-              handlePinToggle={handlePinToggle}
-              pinnedNotes={pinnedNotes}
-              localSearchResults={localSearchResults}
-              highlightedIndex={highlightedIndex}
-              categoryOrder={categoryOrder}
-              labels={labels}
-              handleNoteDelete={handleNoteDelete}
-              openSwipeItemSlug={openSwipeItemSlug}
-              setOpenSwipeItemSlug={setOpenSwipeItemSlug}
-              clearSearch={clearSearch}
-              setSelectedNoteSlug={setSelectedNoteSlug}
-              useCallbackNavigation={useCallbackNavigation}
-              isMobile={isMobile}
-            />
-          </div>
+      <div className="relative flex-1 min-h-0 overflow-hidden">
+        <div
+          aria-hidden={isGalleryDetailOpen}
+          className={cn(
+            "h-full",
+            isGalleryDetailOpen && "invisible pointer-events-none",
+          )}
+        >
+          <ScrollArea
+            className="h-full"
+            onScrollCapture={(event: React.UIEvent<HTMLDivElement>) => {
+              const viewport = event.currentTarget.querySelector(
+                '[data-radix-scroll-area-viewport]',
+              );
+              if (viewport) {
+                const scrolled = viewport.scrollTop > 0;
+                setIsScrolled(scrolled);
+              }
+            }}
+            isMobile={isMobile}
+            bottomMargin="0px"
+          >
+            <div ref={scrollViewportRef} className="flex w-full flex-col">
+              <SessionId setSessionId={setSessionId} />
+              <div
+                className={cn(
+                  "w-full px-2",
+                  isMobile && viewMode === "gallery" && "px-4",
+                  !isMobile && viewMode === "list" && "w-[320px]",
+                  !isMobile && viewMode === "gallery" && "px-5 pb-5",
+                )}
+              >
+                <SearchBar
+                  notes={notes}
+                  onSearchResults={setLocalSearchResults}
+                  sessionId={sessionId}
+                  inputRef={searchInputRef}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  setHighlightedIndex={setHighlightedIndex}
+                  clearSearch={clearSearch}
+                />
+                <SidebarContent
+                  groupedNotes={groupedNotes}
+                  selectedNoteSlug={selectedNoteSlug}
+                  onNoteSelect={handleNoteSelect}
+                  sessionId={sessionId}
+                  handlePinToggle={handlePinToggle}
+                  pinnedNotes={pinnedNotes}
+                  localSearchResults={orderedSearchResults}
+                  highlightedIndex={highlightedIndex}
+                  categoryOrder={activeCategoryOrder}
+                  labels={labels}
+                  handleNoteDelete={handleNoteDelete}
+                  openSwipeItemSlug={openSwipeItemSlug}
+                  setOpenSwipeItemSlug={setOpenSwipeItemSlug}
+                  clearSearch={clearSearch}
+                  setSelectedNoteSlug={setSelectedNoteSlug}
+                  useCallbackNavigation={useCallbackNavigation}
+                  isMobile={isMobile}
+                  viewMode={viewMode}
+                />
+              </div>
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
+        {isGalleryDetailOpen && galleryDetailNote ? (
+          <div className="absolute inset-0 bg-background">
+            <ScrollArea
+              key={galleryDetailNote.id}
+              className="h-full"
+              isMobile={false}
+              bottomMargin="0px"
+            >
+              <div className="min-h-full w-full p-3">
+                <NoteDocument
+                  key={galleryDetailNote.id}
+                  note={galleryDetailNote}
+                  isMobile={false}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        ) : null}
       </div>
     </div>
   );
