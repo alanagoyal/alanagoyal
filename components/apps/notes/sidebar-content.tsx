@@ -162,8 +162,8 @@ function MobileGalleryNoteActions({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="pointer-events-none fixed inset-0 z-[91] flex items-center justify-center px-4 outline-none">
-          <div className="pointer-events-auto w-full max-w-[560px]">
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-[91] w-full max-w-[560px] -translate-x-1/2 -translate-y-1/2 px-4 outline-none">
+          <div>
             <DialogPrimitive.Title className="sr-only">
               Note actions for {note.title}
             </DialogPrimitive.Title>
