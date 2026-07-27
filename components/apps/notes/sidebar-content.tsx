@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Pin, PinOff, Trash2 } from "lucide-react";
@@ -50,12 +57,21 @@ interface GalleryCardProps {
 
 const MOBILE_CONTEXT_MENU_DELAY_MS = 550;
 const MOBILE_CONTEXT_MENU_MOVE_TOLERANCE = 10;
+const MOBILE_NOTE_EXPAND_DURATION_MS = 320;
+
+interface GalleryCardBounds {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 function MobileGalleryNoteActions({
   note,
   isPinned,
   canDelete,
   open,
+  sourceBounds,
   onOpenChange,
   onPinToggle,
   onDelete,
@@ -64,15 +80,73 @@ function MobileGalleryNoteActions({
   isPinned: boolean;
   canDelete: boolean;
   open: boolean;
+  sourceBounds: GalleryCardBounds | null;
   onOpenChange: (open: boolean) => void;
   onPinToggle: (slug: string) => void;
   onDelete: (note: Note) => Promise<void>;
 }) {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (open) {
       window.getSelection()?.removeAllRanges();
     }
   }, [open]);
+
+  useLayoutEffect(() => {
+    const preview = previewRef.current;
+    const actions = actionsRef.current;
+    if (!open || !sourceBounds || !preview || !actions) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const targetBounds = preview.getBoundingClientRect();
+    const translateX =
+      sourceBounds.left +
+      sourceBounds.width / 2 -
+      (targetBounds.left + targetBounds.width / 2);
+    const translateY =
+      sourceBounds.top +
+      sourceBounds.height / 2 -
+      (targetBounds.top + targetBounds.height / 2);
+    const scaleX = sourceBounds.width / targetBounds.width;
+    const scaleY = sourceBounds.height / targetBounds.height;
+
+    const previewAnimation = preview.animate(
+      [
+        {
+          transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`,
+          borderRadius: "8px",
+        },
+        {
+          transform: "translate3d(0, 0, 0) scale(1, 1)",
+          borderRadius: "28px",
+        },
+      ],
+      {
+        duration: MOBILE_NOTE_EXPAND_DURATION_MS,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        fill: "both",
+      },
+    );
+    const actionsAnimation = actions.animate(
+      [
+        { opacity: 0, transform: "translateY(-10px) scale(0.97)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      {
+        duration: 170,
+        delay: MOBILE_NOTE_EXPAND_DURATION_MS - 110,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        fill: "both",
+      },
+    );
+
+    return () => {
+      previewAnimation.cancel();
+      actionsAnimation.cancel();
+    };
+  }, [open, sourceBounds]);
 
   const handlePinToggle = () => {
     onOpenChange(false);
@@ -88,49 +162,57 @@ function MobileGalleryNoteActions({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-[91] w-full max-w-[560px] -translate-x-1/2 -translate-y-1/2 px-4 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-          <DialogPrimitive.Title className="sr-only">
-            Note actions for {note.title}
-          </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">
-            Preview the note, then pin, unpin, or delete it.
-          </DialogPrimitive.Description>
+        <DialogPrimitive.Content className="pointer-events-none fixed inset-0 z-[91] flex items-center justify-center px-4 outline-none">
+          <div className="pointer-events-auto w-full max-w-[560px]">
+            <DialogPrimitive.Title className="sr-only">
+              Note actions for {note.title}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Description className="sr-only">
+              Preview the note, then pin, unpin, or delete it.
+            </DialogPrimitive.Description>
 
-          <div className="h-[min(52dvh,32rem)] overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl">
-            <h2 className="text-2xl font-bold leading-tight">
-              {note.emoji} {note.title}
-            </h2>
-            <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
-              {getNotePreviewText(note.content)}
-            </p>
-          </div>
-
-          <div className="mx-auto mt-3 w-[calc(100%-3rem)] max-w-sm overflow-hidden rounded-[22px] border border-muted-foreground/15 bg-background/95 shadow-2xl backdrop-blur-xl">
-            <button
-              type="button"
-              onClick={handlePinToggle}
-              className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+            <div
+              ref={previewRef}
+              className="h-[min(52dvh,32rem)] overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl will-change-transform"
             >
-              {isPinned ? (
-                <PinOff className="h-5 w-5 shrink-0" aria-hidden />
-              ) : (
-                <Pin className="h-5 w-5 shrink-0" aria-hidden />
+              <h2 className="text-2xl font-bold leading-tight">
+                {note.emoji} {note.title}
+              </h2>
+              <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
+                {getNotePreviewText(note.content)}
+              </p>
+            </div>
+
+            <div
+              ref={actionsRef}
+              className="mx-auto mt-3 w-[calc(100%-3rem)] max-w-sm overflow-hidden rounded-[22px] border border-muted-foreground/15 bg-background/95 shadow-2xl backdrop-blur-xl will-change-transform"
+            >
+              <button
+                type="button"
+                onClick={handlePinToggle}
+                className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+              >
+                {isPinned ? (
+                  <PinOff className="h-5 w-5 shrink-0" aria-hidden />
+                ) : (
+                  <Pin className="h-5 w-5 shrink-0" aria-hidden />
+                )}
+                <span>{isPinned ? "Unpin Note" : "Pin Note"}</span>
+              </button>
+              {canDelete && (
+                <>
+                  <div className="mx-5 border-t border-muted-foreground/20" />
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] text-red-600 outline-none active:bg-muted focus-visible:bg-muted"
+                  >
+                    <Trash2 className="h-5 w-5 shrink-0" aria-hidden />
+                    <span>Delete</span>
+                  </button>
+                </>
               )}
-              <span>{isPinned ? "Unpin Note" : "Pin Note"}</span>
-            </button>
-            {canDelete && (
-              <>
-                <div className="mx-5 border-t border-muted-foreground/20" />
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] text-red-600 outline-none active:bg-muted focus-visible:bg-muted"
-                >
-                  <Trash2 className="h-5 w-5 shrink-0" aria-hidden />
-                  <span>Delete</span>
-                </button>
-              </>
-            )}
+            </div>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
@@ -149,6 +231,9 @@ function GalleryCard({
 }: GalleryCardProps) {
   const [hasMounted, setHasMounted] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [contextMenuSourceBounds, setContextMenuSourceBounds] =
+    useState<GalleryCardBounds | null>(null);
+  const cardButtonRef = useRef<HTMLButtonElement>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressOriginRef = useRef<{ x: number; y: number } | null>(null);
   const suppressNextClickRef = useRef(false);
@@ -175,6 +260,15 @@ function GalleryCard({
     suppressNextClickRef.current = false;
     longPressOriginRef.current = { x: event.clientX, y: event.clientY };
     longPressTimerRef.current = window.setTimeout(() => {
+      const cardBounds = cardButtonRef.current?.getBoundingClientRect();
+      if (cardBounds) {
+        setContextMenuSourceBounds({
+          top: cardBounds.top,
+          left: cardBounds.left,
+          width: cardBounds.width,
+          height: cardBounds.height,
+        });
+      }
       window.getSelection()?.removeAllRanges();
       suppressNextClickRef.current = true;
       setIsContextMenuOpen(true);
@@ -243,6 +337,7 @@ function GalleryCard({
       onPointerCancel={isMobile ? handlePointerEnd : undefined}
     >
       <button
+        ref={cardButtonRef}
         type="button"
         data-note-slug={note.slug}
         onClick={handleCardClick}
@@ -332,6 +427,7 @@ function GalleryCard({
           isPinned={isPinned}
           canDelete={canDelete}
           open={isContextMenuOpen}
+          sourceBounds={contextMenuSourceBounds}
           onOpenChange={handleMobileActionsOpenChange}
           onPinToggle={onPinToggle}
           onDelete={onDelete}
