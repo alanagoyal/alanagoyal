@@ -35,6 +35,7 @@ const STORAGE_KEYS = {
   FINDER_PATH: "finder-path",
   PHOTOS_VIEW: "photos-view",
   PHOTOS_SELECTED: "photos-selected-id",
+  PHOTOS_ROTATIONS: "photos-rotations",
   SETTINGS_STATE: "settings-state",
   CALENDAR_VIEW: "calendar-view",
   CALENDAR_DATE: "calendar-date",
@@ -47,6 +48,8 @@ const STORAGE_KEYS = {
   // Local storage (durable user content)
   WEATHER_CUSTOM_CITIES: "weather-custom-cities",
 } as const;
+
+type StorageArea = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 // ============================================================================
 // Generic Factory (for simple enum-like sidebar values)
@@ -206,11 +209,68 @@ export function savePhotosSelectedId(photoId: string | null): void {
   }
 }
 
-export function clearPhotosState(): void {
-  if (typeof window === "undefined") return;
+export type PhotoRotations = Record<string, number>;
+
+function getPhotosSessionStorage(storage?: StorageArea): StorageArea | null {
+  if (storage) return storage;
+  if (typeof window === "undefined") return null;
+
   try {
-    sessionStorage.removeItem(STORAGE_KEYS.PHOTOS_VIEW);
-    sessionStorage.removeItem(STORAGE_KEYS.PHOTOS_SELECTED);
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function loadPhotosRotations(storage?: StorageArea): PhotoRotations {
+  const target = getPhotosSessionStorage(storage);
+  if (!target) return {};
+
+  try {
+    const saved = target.getItem(STORAGE_KEYS.PHOTOS_ROTATIONS);
+    if (!saved) return {};
+
+    const parsed: unknown = JSON.parse(saved);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([photoId, rotation]) =>
+          photoId.length > 0 &&
+          typeof rotation === "number" &&
+          Number.isFinite(rotation) &&
+          rotation % 90 === 0,
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+export function savePhotosRotations(
+  rotations: PhotoRotations,
+  storage?: StorageArea,
+): void {
+  const target = getPhotosSessionStorage(storage);
+  if (!target) return;
+
+  try {
+    target.setItem(STORAGE_KEYS.PHOTOS_ROTATIONS, JSON.stringify(rotations));
+  } catch {
+    // Ignore storage errors (e.g., quota exceeded, private browsing)
+  }
+}
+
+export function clearPhotosState(storage?: StorageArea): void {
+  const target = getPhotosSessionStorage(storage);
+  if (!target) return;
+
+  try {
+    target.removeItem(STORAGE_KEYS.PHOTOS_VIEW);
+    target.removeItem(STORAGE_KEYS.PHOTOS_SELECTED);
+    target.removeItem(STORAGE_KEYS.PHOTOS_ROTATIONS);
   } catch {
     // Ignore storage errors
   }
