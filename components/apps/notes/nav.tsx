@@ -145,6 +145,7 @@ export function Nav({
     created: "Date Created",
     off: "Off",
   }[groupMode];
+  const isGalleryOverview = viewMode === "gallery" && !onGalleryBack;
 
   const applyPendingViewMode = useCallback(() => {
     const pendingViewMode = pendingViewModeRef.current;
@@ -182,6 +183,9 @@ export function Nav({
     <WindowNavShell
       isMobile={isMobile}
       isScrolled={isScrolled}
+      className={cn(
+        isGalleryOverview && "bg-[#F2F2F7] dark:bg-black",
+      )}
       onMouseDown={nav.onDragStart}
       left={
         <div className="flex items-center gap-1">

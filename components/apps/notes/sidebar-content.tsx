@@ -395,9 +395,9 @@ function GalleryCard({
         aria-haspopup={isMobile ? "dialog" : undefined}
         aria-expanded={isMobile ? isContextMenuOpen : undefined}
         className={cn(
-          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-white text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727] dark:bg-[#1C1C1E]",
           isMobile
-            ? "rounded-lg px-2 py-1.5"
+            ? "rounded-lg px-1.5 py-1.5"
             : "rounded-xl px-4 py-3",
         )}
       >
@@ -405,7 +405,7 @@ function GalleryCard({
           className={cn(
             "line-clamp-2 font-semibold",
             isMobile
-              ? "pr-5 text-[9px] leading-[11px]"
+              ? "pr-5 text-[7px] leading-2"
               : "pr-7 text-sm leading-5",
           )}
         >
@@ -416,7 +416,7 @@ function GalleryCard({
           className={cn(
             "min-h-0 w-full flex-1 overflow-hidden text-muted-foreground",
             isMobile
-              ? "mt-1 text-[7px] leading-[1.25]"
+              ? "mt-0.5 text-[5px] leading-[5.5px]"
               : "mt-2 text-xs leading-[1.35]",
           )}
         />
