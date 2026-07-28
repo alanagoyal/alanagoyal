@@ -7,9 +7,10 @@ import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 interface NavProps {
   isMobile: boolean;
   isDesktop?: boolean;
+  sessionTitle: string;
 }
 
-export function Nav({ isMobile, isDesktop = false }: NavProps) {
+export function Nav({ isMobile, isDesktop = false, sessionTitle }: NavProps) {
   const nav = useWindowNavBehavior({ isDesktop, isMobile });
 
   return (
@@ -29,6 +30,16 @@ export function Nav({ isMobile, isDesktop = false }: NavProps) {
           closeLabel={nav.closeLabel}
         />
       }
+      center={
+        <span
+          className="block truncate text-center text-xs font-medium text-muted-foreground"
+          aria-label={`Terminal session, ${sessionTitle}`}
+          title={sessionTitle}
+        >
+          {sessionTitle}
+        </span>
+      }
+      centerClassName="px-3"
       right={<WindowNavSpacer isMobile={isMobile} />}
     />
   );

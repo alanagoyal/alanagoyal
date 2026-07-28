@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Nav } from "./nav";
 import { Terminal } from "./terminal";
 import { cn } from "@/lib/utils";
+
+const HOME_DIR = "/Users/alanagoyal";
 
 interface ITermAppProps {
   isMobile?: boolean;
@@ -11,8 +13,18 @@ interface ITermAppProps {
   onOpenTextFile?: (filePath: string, content: string) => void;
 }
 
+function formatWorkingDirectory(directory: string): string {
+  if (directory === HOME_DIR) return "~";
+  if (directory.startsWith(`${HOME_DIR}/`)) {
+    return `~${directory.slice(HOME_DIR.length)}`;
+  }
+  return directory;
+}
+
 export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currentDirectory, setCurrentDirectory] = useState(HOME_DIR);
+  const sessionTitle = `alanagoyal — ${formatWorkingDirectory(currentDirectory)}`;
 
   return (
     <div
@@ -25,9 +37,17 @@ export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: 
         isMobile ? "h-dvh w-full" : "h-full"
       )}
     >
-      <Nav isMobile={isMobile} isDesktop={inShell} />
+      <Nav
+        isMobile={isMobile}
+        isDesktop={inShell}
+        sessionTitle={sessionTitle}
+      />
       <div className="flex-1 min-h-0 overflow-hidden bg-background">
-        <Terminal isMobile={isMobile} onOpenTextFile={onOpenTextFile} />
+        <Terminal
+          isMobile={isMobile}
+          onOpenTextFile={onOpenTextFile}
+          onCurrentDirectoryChange={setCurrentDirectory}
+        />
       </div>
     </div>
   );

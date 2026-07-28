@@ -155,9 +155,14 @@ function isTextFile(filename: string): boolean {
 interface TerminalProps {
   isMobile?: boolean;
   onOpenTextFile?: (filePath: string, content: string) => void;
+  onCurrentDirectoryChange?: (directory: string) => void;
 }
 
-export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
+export function Terminal({
+  isMobile = false,
+  onOpenTextFile,
+  onCurrentDirectoryChange,
+}: TerminalProps) {
   const { currentOS } = useSystemSettings();
   const { addRecent } = useRecents();
 
@@ -207,6 +212,10 @@ export function Terminal({ isMobile = false, onOpenTextFile }: TerminalProps) {
   useEffect(() => {
     saveItermStorage({ history, commandHistory, currentDir });
   }, [history, commandHistory, currentDir]);
+
+  useEffect(() => {
+    onCurrentDirectoryChange?.(currentDir);
+  }, [currentDir, onCurrentDirectoryChange]);
 
   // Save current open time so the next terminal open can display it as "Last login".
   useEffect(() => {
