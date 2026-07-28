@@ -1,0 +1,4 @@
+interface:
+  display_name: "Daily macOS Delight"
+  short_description: "Ship a desktop-and-mobile macOS delight"
+  default_prompt: "Use $daily-macos-delight to choose and ship one well-scoped macOS-inspired improvement, verify it on desktop and mobile, provide grounded macOS evidence, and close every app, window, and tab opened for the run before reporting."
