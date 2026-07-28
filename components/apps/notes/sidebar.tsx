@@ -10,7 +10,6 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import SessionId from "./session-id";
-import { Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarContent } from "./sidebar-content";
 import { SearchBar } from "./search";
@@ -42,11 +41,7 @@ import {
 import NoteDocument from "./note";
 
 const labels = {
-  pinned: (
-    <>
-      <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
-    </>
-  ),
+  pinned: "Pinned",
   notes: "Notes",
   today: "Today",
   yesterday: "Yesterday",
@@ -611,13 +606,12 @@ export default function Sidebar({
     !isMobile &&
     viewMode === "gallery" &&
     Boolean(galleryDetailNote && onGalleryBack);
-
   return (
     <div
       className={cn(
         "flex h-full flex-col",
         isMobile
-          ? "w-full max-w-full bg-background"
+          ? "w-full max-w-full bg-[#F2F2F7] dark:bg-black"
           : viewMode === "gallery"
             ? cn(
                 "min-w-0 flex-1",
@@ -676,16 +670,22 @@ export default function Sidebar({
                   !isMobile && viewMode === "gallery" && "px-5 pb-5",
                 )}
               >
-                <SearchBar
-                  notes={notes}
-                  onSearchResults={setLocalSearchResults}
-                  sessionId={sessionId}
-                  inputRef={searchInputRef}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  setHighlightedIndex={setHighlightedIndex}
-                  clearSearch={clearSearch}
-                />
+                <div
+                  className={cn(
+                    isMobile && viewMode === "gallery" && "-mx-2",
+                  )}
+                >
+                  <SearchBar
+                    notes={notes}
+                    onSearchResults={setLocalSearchResults}
+                    sessionId={sessionId}
+                    inputRef={searchInputRef}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    setHighlightedIndex={setHighlightedIndex}
+                    clearSearch={clearSearch}
+                  />
+                </div>
                 <SidebarContent
                   groupedNotes={groupedNotes}
                   selectedNoteSlug={selectedNoteSlug}

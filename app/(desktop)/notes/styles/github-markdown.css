@@ -214,3 +214,264 @@
   margin: 16px 0;
   border-radius: 4px;
 }
+
+/*
+ * Gallery previews preserve the note's Markdown hierarchy at card scale.
+ * Links and task controls are rendered as non-interactive spans so the
+ * containing card remains the single click target.
+ */
+.note-markdown-preview {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.note-markdown-preview > :first-child {
+  margin-top: 0;
+}
+
+.note-markdown-preview > :last-child {
+  margin-bottom: 0;
+}
+
+.note-markdown-preview h1,
+.note-markdown-preview h2,
+.note-markdown-preview h3,
+.note-markdown-preview h4,
+.note-markdown-preview h5,
+.note-markdown-preview h6 {
+  color: hsl(var(--foreground));
+  font-weight: 650;
+  line-height: 1.2;
+  margin: 0.65em 0 0.3em;
+}
+
+.note-markdown-preview h1 {
+  font-size: 1.45em;
+}
+
+.note-markdown-preview h2 {
+  font-size: 1.3em;
+}
+
+.note-markdown-preview h3 {
+  font-size: 1.15em;
+}
+
+.note-markdown-preview p {
+  margin: 0 0 0.55em;
+}
+
+.note-markdown-preview strong {
+  color: hsl(var(--foreground));
+  font-weight: 650;
+}
+
+.note-markdown-preview em {
+  font-style: italic;
+}
+
+.note-markdown-preview ul,
+.note-markdown-preview ol {
+  margin: 0 0 0.55em;
+  padding-left: 1.45em;
+}
+
+.note-markdown-preview ul {
+  list-style-type: disc;
+}
+
+.note-markdown-preview ul ul {
+  list-style-type: circle;
+}
+
+.note-markdown-preview ol {
+  list-style-type: decimal;
+}
+
+.note-markdown-preview li {
+  margin: 0.12em 0;
+}
+
+.note-markdown-preview ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 0.1em;
+}
+
+.note-markdown-preview .task-list-item {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.45em;
+}
+
+.note-markdown-preview-checkbox {
+  border: 1px solid hsl(var(--muted-foreground));
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 1.05em;
+  justify-content: center;
+  line-height: 1;
+  margin-top: 0.14em;
+  width: 1.05em;
+}
+
+.note-markdown-preview-checkbox-checked {
+  align-items: center;
+  background: #e2a727;
+  border-color: #e2a727;
+  color: white;
+  font-size: 0.92em;
+}
+
+.dark .note-markdown-preview-checkbox-checked {
+  color: hsl(var(--background));
+}
+
+.note-markdown-preview-link {
+  color: #e2a727;
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 0.08em;
+}
+
+.note-markdown-preview blockquote {
+  border-left: 0.2em solid hsl(var(--muted-foreground) / 0.35);
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 0.55em;
+  padding-left: 0.65em;
+}
+
+.note-markdown-preview code {
+  background: hsl(var(--muted));
+  border-radius: 0.22em;
+  color: hsl(var(--foreground));
+  font-size: 0.88em;
+  padding: 0.08em 0.25em;
+}
+
+.note-markdown-preview pre {
+  background: hsl(var(--muted));
+  border-radius: 0.35em;
+  margin: 0 0 0.55em;
+  overflow: hidden;
+  padding: 0.55em;
+  white-space: pre-wrap;
+}
+
+.note-markdown-preview pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.note-markdown-preview table {
+  border-collapse: collapse;
+  font-size: 0.88em;
+  margin: 0 0 0.55em;
+  width: 100%;
+}
+
+.note-markdown-preview th,
+.note-markdown-preview td {
+  border: 1px solid hsl(var(--muted-foreground) / 0.25);
+  padding: 0.2em 0.35em;
+  text-align: left;
+}
+
+.note-markdown-preview th {
+  color: hsl(var(--foreground));
+  font-weight: 650;
+}
+
+.note-markdown-preview hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--muted-foreground) / 0.25);
+  margin: 0.65em 0;
+}
+
+.note-markdown-preview-image {
+  border-radius: 0.35em;
+  display: block;
+  height: auto;
+  margin: 0 0 0.55em;
+  max-height: 7em;
+  object-fit: cover;
+  width: 100%;
+}
+
+/*
+ * The native mobile gallery treats each note as one continuous miniature
+ * document. Remove block whitespace at thumbnail scale, preserve readable
+ * leading, and draw list markers explicitly so they remain visible.
+ */
+.note-markdown-preview-compact h1,
+.note-markdown-preview-compact h2,
+.note-markdown-preview-compact h3,
+.note-markdown-preview-compact h4,
+.note-markdown-preview-compact h5,
+.note-markdown-preview-compact h6,
+.note-markdown-preview-compact p,
+.note-markdown-preview-compact ul,
+.note-markdown-preview-compact ol,
+.note-markdown-preview-compact blockquote,
+.note-markdown-preview-compact pre,
+.note-markdown-preview-compact table,
+.note-markdown-preview-compact .note-markdown-preview-image {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.note-markdown-preview-compact ul,
+.note-markdown-preview-compact ol {
+  padding-left: 1.25em;
+}
+
+.note-markdown-preview-compact li {
+  margin: 0;
+}
+
+.note-markdown-preview-compact > :not(:first-child) {
+  margin-top: 0.4em;
+}
+
+.note-markdown-preview-compact
+  ul:not(.contains-task-list)
+  > li {
+  list-style: none;
+  position: relative;
+}
+
+.note-markdown-preview-compact
+  ul:not(.contains-task-list)
+  > li::before {
+  color: hsl(var(--foreground));
+  content: "•";
+  font-size: 1.2em;
+  left: -1em;
+  line-height: 1;
+  position: absolute;
+  top: 0.08em;
+}
+
+.note-markdown-preview-compact ol > li::marker {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.note-markdown-preview-expanded {
+  line-height: 1.5;
+}
+
+.note-markdown-preview-expanded p,
+.note-markdown-preview-expanded ul,
+.note-markdown-preview-expanded ol,
+.note-markdown-preview-expanded blockquote,
+.note-markdown-preview-expanded pre,
+.note-markdown-preview-expanded table,
+.note-markdown-preview-expanded .note-markdown-preview-image {
+  margin-bottom: 0.8em;
+}
+
+.note-markdown-preview-expanded .note-markdown-preview-image {
+  max-height: none;
+  object-fit: contain;
+}

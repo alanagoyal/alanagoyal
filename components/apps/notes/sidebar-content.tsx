@@ -10,9 +10,10 @@ import { useRouter } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Pin, PinOff, Trash2 } from "lucide-react";
 import { NoteItem } from "./note-item";
+import { NoteMarkdownPreview } from "./note-markdown-preview";
 import { Note, NotesViewMode } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
-import { getNotePreviewText } from "@/lib/notes/note-utils";
+import { NOTE_MARKDOWN_PREVIEW_MAX_CHARACTERS } from "@/lib/notes/markdown-preview";
 import {
   canStartMobileNoteLongPress,
   didMobileNoteLongPressMove,
@@ -93,7 +94,7 @@ function MobileGalleryNoteActions({
   onPinToggle: (slug: string) => void;
   onDelete: (note: Note) => Promise<void>;
 }) {
-  const previewRef = useRef<HTMLButtonElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -166,6 +167,14 @@ function MobileGalleryNoteActions({
     onOpenNote(note);
   };
 
+  const handlePreviewKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (event.repeat || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    handleOpenNote();
+  };
+
   const handleDelete = () => {
     onOpenChange(false);
     void onDelete(note);
@@ -192,20 +201,26 @@ function MobileGalleryNoteActions({
             Preview the note, then pin, unpin, or delete it.
           </DialogPrimitive.Description>
 
-          <button
+          <div
             ref={previewRef}
-            type="button"
-            aria-label={`Open ${note.title}`}
-            onClick={handleOpenNote}
-            className="block h-[min(52dvh,32rem)] w-full overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl outline-none will-change-transform"
+            className="relative flex h-[min(52dvh,32rem)] w-full flex-col overflow-hidden rounded-[28px] border border-muted-foreground/15 bg-background p-6 text-left shadow-2xl will-change-transform"
           >
-            <h2 className="text-2xl font-bold leading-tight">
+            <button
+              type="button"
+              aria-label={`Open ${note.title}`}
+              onClick={handleOpenNote}
+              onKeyDown={handlePreviewKeyDown}
+              className="absolute inset-0 z-10 cursor-default rounded-[28px] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E2A727]"
+            />
+            <h2 className="shrink-0 text-2xl font-bold leading-tight">
               {note.emoji} {note.title}
             </h2>
-            <p className="mt-8 whitespace-pre-wrap text-[17px] leading-6 text-foreground">
-              {getNotePreviewText(note.content)}
-            </p>
-          </button>
+            <NoteMarkdownPreview
+              content={note.content}
+              expanded
+              className="mt-8 min-h-0 w-full flex-1 overflow-hidden text-[17px] leading-6 text-foreground"
+            />
+          </div>
 
           <div
             ref={actionsRef}
@@ -364,6 +379,12 @@ function GalleryCard({
   };
 
   const handleCardKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!event.repeat && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      onNoteSelect(note);
+      return;
+    }
+
     if (!isMobile || !isContextMenuKeyboardShortcut(event.key, event.shiftKey)) {
       return;
     }
@@ -384,18 +405,12 @@ function GalleryCard({
       onPointerUp={isMobile ? handlePointerEnd : undefined}
       onPointerCancel={isMobile ? handlePointerEnd : undefined}
     >
-      <button
-        ref={cardButtonRef}
-        type="button"
-        data-note-slug={note.slug}
-        onClick={handleCardClick}
-        onKeyDown={handleCardKeyDown}
-        aria-haspopup={isMobile ? "dialog" : undefined}
-        aria-expanded={isMobile ? isContextMenuOpen : undefined}
+      <div
         className={cn(
-          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-background text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 text-left shadow-sm",
+          isMobile ? "bg-white dark:bg-[#1C1C1E]" : "bg-background",
           isMobile
-            ? "rounded-lg px-2 py-1.5"
+            ? "rounded-lg px-1.5 pt-1.5"
             : "rounded-xl px-4 py-3",
         )}
       >
@@ -403,23 +418,40 @@ function GalleryCard({
           className={cn(
             "line-clamp-2 font-semibold",
             isMobile
-              ? "pr-5 text-[9px] leading-[11px]"
+              ? "pr-5 text-[7px] leading-2"
               : "pr-7 text-sm leading-5",
           )}
         >
           {note.emoji} {note.title}
         </h4>
-        <p
+        <NoteMarkdownPreview
+          content={note.content}
+          compact={isMobile}
+          deferUntilVisible
+          maxCharacters={NOTE_MARKDOWN_PREVIEW_MAX_CHARACTERS}
           className={cn(
-            "whitespace-pre-wrap text-muted-foreground",
+            "min-h-0 w-full flex-1 overflow-hidden text-muted-foreground",
             isMobile
-              ? "mt-1 line-clamp-[6] text-[7px] leading-[1.25]"
-              : "mt-2 line-clamp-[7] text-xs leading-[1.35]",
+              ? "mt-0.5 text-[5.5px] leading-[7px]"
+              : "mt-2 text-xs leading-[1.35]",
           )}
-        >
-          {getNotePreviewText(note.content)}
-        </p>
-      </button>
+        />
+      </div>
+
+      <button
+        ref={cardButtonRef}
+        type="button"
+        data-note-slug={note.slug}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        aria-label={`Open ${note.title}`}
+        aria-haspopup={isMobile ? "dialog" : undefined}
+        aria-expanded={isMobile ? isContextMenuOpen : undefined}
+        className={cn(
+          "absolute inset-x-0 top-0 z-10 aspect-[4/3] w-full cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+          isMobile ? "rounded-lg" : "rounded-xl",
+        )}
+      />
 
       {isPinned && (
         <button
@@ -427,7 +459,7 @@ function GalleryCard({
           aria-label={`Unpin ${note.title}`}
           onClick={handleQuickPinClick}
           className={cn(
-            "absolute flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
+            "absolute z-20 flex items-center justify-center bg-muted text-muted-foreground shadow-sm transition-colors can-hover:hover:bg-muted-foreground/15 can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E2A727]",
             isMobile
               ? "right-1.5 top-1.5 h-6 w-6 rounded-md"
               : "right-3 top-3 h-7 w-7 rounded-lg",
