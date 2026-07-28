@@ -32,11 +32,17 @@ export function Nav({ isMobile, isDesktop = false, sessionTitle }: NavProps) {
       }
       center={
         <span
-          className="block truncate text-center text-xs font-medium text-muted-foreground"
+          className="flex min-w-0 items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground"
           aria-label={`Terminal session, ${sessionTitle}`}
           title={sessionTitle}
         >
-          {sessionTitle}
+          <span
+            aria-hidden="true"
+            className="flex size-3.5 shrink-0 items-center justify-center rounded-[1px] bg-foreground font-mono text-[8px] font-bold leading-none text-background"
+          >
+            &gt;_
+          </span>
+          <span className="truncate">{sessionTitle}</span>
         </span>
       }
       centerClassName="px-3"

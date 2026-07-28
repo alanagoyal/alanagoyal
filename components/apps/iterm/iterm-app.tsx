@@ -24,7 +24,7 @@ function formatWorkingDirectory(directory: string): string {
 export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentDirectory, setCurrentDirectory] = useState(HOME_DIR);
-  const sessionTitle = `alanagoyal — ${formatWorkingDirectory(currentDirectory)}`;
+  const sessionTitle = formatWorkingDirectory(currentDirectory);
 
   return (
     <div
