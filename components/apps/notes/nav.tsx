@@ -145,7 +145,7 @@ export function Nav({
     created: "Date Created",
     off: "Off",
   }[groupMode];
-  const usesGroupedBackground = !onGalleryBack;
+  const usesGroupedBackground = isMobile && !onGalleryBack;
 
   const applyPendingViewMode = useCallback(() => {
     const pendingViewMode = pendingViewModeRef.current;

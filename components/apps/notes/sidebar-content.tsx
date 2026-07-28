@@ -407,7 +407,8 @@ function GalleryCard({
     >
       <div
         className={cn(
-          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 bg-white text-left shadow-sm dark:bg-[#1C1C1E]",
+          "flex aspect-[4/3] w-full flex-col overflow-hidden border border-muted-foreground/25 text-left shadow-sm",
+          isMobile ? "bg-white dark:bg-[#1C1C1E]" : "bg-background",
           isMobile
             ? "rounded-lg px-1.5 pt-1.5"
             : "rounded-xl px-4 py-3",

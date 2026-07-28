@@ -615,11 +615,9 @@ export default function Sidebar({
           : viewMode === "gallery"
             ? cn(
                 "min-w-0 flex-1",
-                isGalleryDetailOpen
-                  ? "bg-background"
-                  : "bg-[#F2F2F7] dark:bg-black",
+                isGalleryDetailOpen ? "bg-background" : "bg-muted",
               )
-            : "w-[320px] border-r border-muted-foreground/20 bg-[#F2F2F7] dark:bg-black",
+            : "w-[320px] border-r border-muted-foreground/20 bg-muted",
       )}
     >
       <Nav
