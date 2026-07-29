@@ -133,7 +133,9 @@ export function PhotosGrid({
           )}
           <div>
             <h1 className="text-lg font-semibold">{getViewTitle()}</h1>
-            <p className="min-h-4 text-xs text-muted-foreground">{dateRange}</p>
+            {dateRange && (
+              <p className="text-xs text-muted-foreground">{dateRange}</p>
+            )}
           </div>
         </div>
 
