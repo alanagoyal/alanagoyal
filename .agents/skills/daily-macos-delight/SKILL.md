@@ -50,6 +50,8 @@ Read [references/idea-catalog.md](references/idea-catalog.md) when generating ca
 3. Inspect `lib/app-config.ts`, recent Git history, and open pull requests if GitHub access is available.
 4. Note the last several user-visible additions so today's work varies the surface and size.
 5. Check for existing uncommitted work and avoid touching unrelated changes.
+6. Exercise the unmodified candidate surface before editing. Record a compact baseline ledger for desktop and mobile: the visible affordance, each relevant click/tap target, and its result (navigation, playback, selection, dismissal, persistence, and so on). Do not infer interactive behavior from appearance or code alone.
+7. Name the existing interaction contracts that must survive the change. Treat a card's primary action and any nested control's secondary action as separate contracts.
 
 ### 2. Generate and select
 
@@ -61,33 +63,43 @@ Generate 4-6 candidates across at least three categories:
 - accessibility, touch, or responsive polish that does not introduce keyboard commands;
 - a small bridge between two existing surfaces.
 
+Apply this baseline-and-delta gate before scoring any candidate:
+
+- **Already there:** state exactly what users can already see and do on current `main`.
+- **Net-new outcome:** state one concrete user-visible capability or correction that does not exist in the baseline. Refactoring, semantic markup, a larger hit target, or making an existing control look different is not enough by itself unless it fixes a demonstrated accessibility or usability failure.
+- **Preserved contracts:** list every adjacent baseline action that must remain unchanged.
+- **Reviewer test:** describe how a reviewer can distinguish the result from the baseline without reading the diff.
+
+Reject the candidate before scoring if the net-new outcome is vague, the reviewer test would look materially identical, or any unrelated interaction contract changes. Do not rescue a weak candidate by bundling additional behavior.
+
 Score each candidate from 1-5 on:
 
 - macOS authenticity;
-- visible delight or personal value;
-- novelty relative to recent history and open PRs;
+- net-new visible delight or personal value relative to the current baseline;
+- novelty relative to the current baseline, recent history, and open PRs;
 - quality and intentionality across desktop and mobile;
 - finishability in one unattended run;
 - regression risk, where 5 means low risk.
 
 Select the highest-value candidate that satisfies the scope budget. Break ties in favor of the smaller change. Before editing, state a one-sentence acceptance criterion for desktop and mobile internally and keep the implementation within it.
 
-Reject ideas that are only decorative, duplicate a native detail without making it functional, require invented personal data, create a dead-end control, add keyboard commands, or cannot be safely exercised on both desktop and mobile during the run.
+Reject ideas that are only decorative, repackage an existing affordance, duplicate a native detail without making it functional, require invented personal data, create a dead-end control, add keyboard commands, change an established primary action as a side effect, or cannot be safely exercised on both desktop and mobile during the run.
 
 ### 3. Implement narrowly
 
-1. Reuse existing components, state systems, tokens, and persistence conventions.
-2. Use `isMobileView` / `isDesktop`; never add raw viewport checks.
-3. Keep shared behavior shared. Add a mobile-specific presentation or interaction only when the form factor requires it, and do not let desktop-only hover, context-menu, or window assumptions leak into touch behavior.
-4. Gate hover-only behavior with `can-hover:`.
-5. Keep app availability in `lib/app-config.ts`, window operations in the window manager, and persisted state in the repository's established storage layers.
-6. Update the relevant living documentation only when the shipped behavior changes what that document describes.
-7. Add no speculative abstractions for a single small feature.
+1. Preserve every baseline interaction contract unless changing that exact contract is the chosen, evidenced delight. A secondary control must not replace or silently alter its container's primary navigation, selection, or open action.
+2. Reuse existing components, state systems, tokens, and persistence conventions.
+3. Use `isMobileView` / `isDesktop`; never add raw viewport checks.
+4. Keep shared behavior shared. Add a mobile-specific presentation or interaction only when the form factor requires it, and do not let desktop-only hover, context-menu, or window assumptions leak into touch behavior.
+5. Gate hover-only behavior with `can-hover:`.
+6. Keep app availability in `lib/app-config.ts`, window operations in the window manager, and persisted state in the repository's established storage layers.
+7. Update the relevant living documentation only when the shipped behavior changes what that document describes.
+8. Add no speculative abstractions for a single small feature.
 
 ### 4. Verify the experience
 
 1. Run the site and exercise the changed flow in a representative desktop viewport and a representative iPhone viewport with touch/coarse-pointer emulation. A narrow desktop viewport alone does not count as mobile verification.
-2. Test the primary interaction on both surfaces. If the delight is intentionally desktop-only, verify the corresponding mobile app or shell flow remains usable and unchanged. Include the most relevant empty, accessibility, dark-mode, and persistence states.
+2. Test the new outcome and replay every baseline interaction-contract row on both surfaces. If the delight is intentionally desktop-only, verify the corresponding mobile app or shell flow remains usable and unchanged. Include the most relevant empty, accessibility, dark-mode, and persistence states.
 3. Capture at least two clear screenshots of the built result: one desktop and one mobile. Use states that make each surface's behavior easy to review, and keep framing and content representative of the real product. Save review captures outside the worktree, such as under `/private/tmp` or the active Codex artifact directory. Do not publish unless both surfaces have been visually verified.
 4. Capture or document the macOS inspiration:
    - Prefer a screenshot from the installed macOS app or system surface when direct observation is available.
@@ -95,7 +107,8 @@ Reject ideas that are only decorative, duplicate a native detail without making 
    - Clearly label reconstructions, extracted assets, or secondary references; never present them as live native screenshots.
    - A generic claim that something “feels Mac-like” is not evidence.
 5. Run focused tests for the changed behavior when available, then run `npm run check`. Fix failures caused by the change. Do not hide or weaken checks.
-6. Review the diff for accidental scope growth, hardcoded app lists, ungated hover states, desktop-only assumptions, fabricated personal content, and unrelated formatting.
+6. Review the diff for accidental scope growth, hardcoded app lists, ungated hover states, desktop-only assumptions, fabricated personal content, unrelated formatting, and changed event propagation or navigation semantics.
+7. Before committing, answer four adversarial questions: What could a user do before? What can they do now that they could not do before? Which prior workflows changed? Would the owner recognize the improvement without reading the diff? If the second answer is weak or the third includes an unrelated change, revert the candidate and ship nothing.
 
 Synthetic keypresses in browser automation do not demonstrate that a shortcut is safe on a real computer. If an implementation happens to touch existing keyboard behavior, do not expand it and call out the need for owner testing rather than treating browser automation as proof of OS-level compatibility.
 
@@ -116,6 +129,12 @@ Use this pull request structure:
 ## Today's delight
 
 <What changed and where.>
+
+## Baseline and delta
+
+- Before: <exact visible and interactive baseline>
+- Now: <one concrete net-new outcome>
+- Preserved: <primary and adjacent interaction contracts replayed after the change>
 
 ## Built result — desktop
 
