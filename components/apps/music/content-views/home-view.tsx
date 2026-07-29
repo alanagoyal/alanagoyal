@@ -13,6 +13,47 @@ interface HomeViewProps {
   isMobileView: boolean;
 }
 
+function ArtworkPlayButton({
+  isPlaying,
+  isMobileView,
+  label,
+  onClick,
+}: {
+  isPlaying: boolean;
+  isMobileView: boolean;
+  label: string;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${label}`}
+      onClick={onClick}
+      className={cn(
+        "absolute inset-0 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500",
+        isMobileView
+          ? "bg-transparent"
+          : "bg-black/0 can-hover:group-hover:bg-black/40 group-focus-within:bg-black/40"
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur-sm transition-[background-color,opacity]",
+          isMobileView
+            ? "opacity-100"
+            : "opacity-0 can-hover:group-hover:opacity-100 can-hover:hover:bg-black/75 group-focus-within:opacity-100"
+        )}
+      >
+        {isPlaying ? (
+          <Pause className="h-5 w-5" />
+        ) : (
+          <Play className="ml-0.5 h-5 w-5" />
+        )}
+      </span>
+    </button>
+  );
+}
+
 export function HomeView({
   playlists,
   songs,
@@ -31,7 +72,6 @@ export function HomeView({
     if (isPlayingThisPlaylist) {
       pause();
     } else {
-      onPlaylistSelect(playlist.id);
       const firstPlayable = playlist.tracks.find((t) => t.previewUrl);
       if (firstPlayable) {
         play(firstPlayable, playlist.tracks);
@@ -106,16 +146,12 @@ export function HomeView({
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-800" />
                     )}
-                    <div
-                      className="absolute inset-0 bg-black/0 can-hover:group-hover:bg-black/40 transition-colors flex items-center justify-center"
+                    <ArtworkPlayButton
+                      isPlaying={!!isPlaying}
+                      isMobileView={isMobileView}
+                      label={playlist.name}
                       onClick={(e) => handlePlayPlaylist(playlist, e)}
-                    >
-                      {isPlaying ? (
-                        <Pause className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
-                      ) : (
-                        <Play className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </div>
+                    />
                   </div>
                   <p className="text-sm font-medium truncate">{playlist.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -154,13 +190,19 @@ export function HomeView({
                       unoptimized
                     />
                     {song.previewUrl && (
-                      <div className="absolute inset-0 bg-black/0 can-hover:group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                        {isPlaying ? (
-                          <Pause className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
-                        ) : (
-                          <Play className="w-10 h-10 text-white opacity-0 can-hover:group-hover:opacity-100 transition-opacity" />
-                        )}
-                      </div>
+                      <ArtworkPlayButton
+                        isPlaying={isPlaying}
+                        isMobileView={isMobileView}
+                        label={`${song.name} by ${song.artist}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (isPlaying) {
+                            pause();
+                          } else {
+                            play(song, songs);
+                          }
+                        }}
+                      />
                     )}
                   </div>
                   <p className="text-sm font-medium truncate">{song.name}</p>
