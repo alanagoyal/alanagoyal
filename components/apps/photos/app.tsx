@@ -142,16 +142,26 @@ export default function App({ isDesktop = false }: AppProps) {
     selectedPhotoId !== null && loading && !selectedPhoto;
 
   const handlePreviousPhoto = useCallback(() => {
-    if (selectedPhotoIndex > 0) {
-      setSelectedPhotoId(filteredPhotos[selectedPhotoIndex - 1].id);
-    }
-  }, [selectedPhotoIndex, filteredPhotos]);
+    setSelectedPhotoId((currentPhotoId) => {
+      const currentIndex = filteredPhotos.findIndex(
+        (currentPhoto) => currentPhoto.id === currentPhotoId,
+      );
+      if (currentIndex <= 0) return currentPhotoId;
+      return filteredPhotos[currentIndex - 1].id;
+    });
+  }, [filteredPhotos]);
 
   const handleNextPhoto = useCallback(() => {
-    if (selectedPhotoIndex < filteredPhotos.length - 1) {
-      setSelectedPhotoId(filteredPhotos[selectedPhotoIndex + 1].id);
-    }
-  }, [selectedPhotoIndex, filteredPhotos]);
+    setSelectedPhotoId((currentPhotoId) => {
+      const currentIndex = filteredPhotos.findIndex(
+        (currentPhoto) => currentPhoto.id === currentPhotoId,
+      );
+      if (currentIndex < 0 || currentIndex >= filteredPhotos.length - 1) {
+        return currentPhotoId;
+      }
+      return filteredPhotos[currentIndex + 1].id;
+    });
+  }, [filteredPhotos]);
 
   // Mobile: show either sidebar or grid
   // Desktop: show both side by side
@@ -238,7 +248,7 @@ export default function App({ isDesktop = false }: AppProps) {
                 onPrevious={handlePreviousPhoto}
                 onNext={handleNextPhoto}
                 onToggleFavorite={toggleFavorite}
-                rotation={photoRotations[selectedPhoto.id] ?? 0}
+                photoRotations={photoRotations}
                 onRotate={() => handleRotatePhoto(selectedPhoto.id)}
                 collectionNames={selectedPhotoCollectionNames}
                 isMobileView={isMobileView}

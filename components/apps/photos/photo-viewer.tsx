@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
 import {
@@ -29,6 +35,23 @@ import {
   loadPhotoMetadata,
 } from "@/lib/photos/photo-metadata";
 import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
+import {
+  createPhotoWheelGestureState,
+  handlePhotoWheelGesture,
+  PHOTO_WHEEL_GESTURE_IDLE_MS,
+} from "@/lib/photos/wheel-navigation";
+import {
+  getPhotoGestureOffset,
+  getPhotoSlideTransform,
+  PHOTO_SLIDE_DURATION_MS,
+  PHOTO_SLIDE_EASING,
+  shouldCommitTouchPhotoSwipe,
+} from "@/lib/photos/photo-transition";
+import type {
+  PhotoGestureSource,
+  PhotoNavigationDirection,
+  PhotoNavigationSource,
+} from "@/lib/photos/photo-transition";
 
 // Preload an image for faster navigation
 function preloadImage(url: string) {
@@ -46,11 +69,105 @@ interface PhotoViewerProps {
   onPrevious: () => void;
   onNext: () => void;
   onToggleFavorite?: (photoId: string) => void;
-  rotation: number;
+  photoRotations: Record<string, number>;
   onRotate: () => void;
   collectionNames: string[];
   isMobileView: boolean;
   isDesktop?: boolean;
+}
+
+interface PhotoSlideProps {
+  photo: Photo;
+  rotation: number;
+  containerSize: { width: number; height: number } | null;
+  isCurrent: boolean;
+  shouldAnimateRotation: boolean;
+}
+
+function PhotoSlide({
+  photo,
+  rotation,
+  containerSize,
+  isCurrent,
+  shouldAnimateRotation,
+}: PhotoSlideProps) {
+  const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  let displayedSize: { width: number; height: number } | null = null;
+  if (
+    rotation !== 0 &&
+    naturalSize &&
+    containerSize &&
+    containerSize.width > 0 &&
+    containerSize.height > 0
+  ) {
+    const isQuarterTurn = rotation % 180 !== 0;
+    const rotatedWidth = isQuarterTurn
+      ? naturalSize.height
+      : naturalSize.width;
+    const rotatedHeight = isQuarterTurn
+      ? naturalSize.width
+      : naturalSize.height;
+    const scale = Math.min(
+      containerSize.width / rotatedWidth,
+      containerSize.height / rotatedHeight,
+    );
+    const fittedWidth = rotatedWidth * scale;
+    const fittedHeight = rotatedHeight * scale;
+
+    displayedSize = isQuarterTurn
+      ? { width: fittedHeight, height: fittedWidth }
+      : { width: fittedWidth, height: fittedHeight };
+  }
+
+  return (
+    <div
+      className={cn("relative", !displayedSize && "h-full w-full")}
+      style={
+        displayedSize
+          ? { width: displayedSize.width, height: displayedSize.height }
+          : undefined
+      }
+    >
+      <Image
+        src={getViewerUrl(photo.url)}
+        alt=""
+        fill
+        draggable={false}
+        className={cn(
+          "object-contain",
+          isCurrent &&
+            shouldAnimateRotation &&
+            "transition-transform duration-200 ease-out motion-reduce:transition-none",
+        )}
+        style={{
+          transform: rotation ? `rotate(${rotation}deg)` : undefined,
+        }}
+        sizes="(max-width: 768px) 100vw, 80vw"
+        onLoad={(event) => {
+          const image = event.currentTarget;
+          setNaturalSize((currentSize) => {
+            if (
+              currentSize?.width === image.naturalWidth &&
+              currentSize.height === image.naturalHeight
+            ) {
+              return currentSize;
+            }
+
+            return {
+              width: image.naturalWidth,
+              height: image.naturalHeight,
+            };
+          });
+        }}
+        priority
+        unoptimized
+      />
+    </div>
+  );
 }
 
 interface CameraDetailsProps {
@@ -244,7 +361,7 @@ export function PhotoViewer({
   onPrevious,
   onNext,
   onToggleFavorite,
-  rotation,
+  photoRotations,
   onRotate,
   collectionNames,
   isMobileView,
@@ -252,24 +369,36 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
-  const [isSwiping, setIsSwiping] = useState(false);
   const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
-  const [naturalSize, setNaturalSize] = useState<{
-    photoId: string;
-    width: number;
-    height: number;
-  } | null>(null);
   const [containerSize, setContainerSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const photoStageRef = useRef<HTMLDivElement>(null);
+  const wheelIdleTimerRef = useRef<number | null>(null);
+  const reducedMotionRef = useRef(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
   const [metadataError, setMetadataError] = useState(false);
   const infoContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const wheelGestureStateRef = useRef(createPhotoWheelGestureState());
+  // Keep the wheel listener stable while the selected photo changes so the
+  // momentum tail cannot be mistaken for a fresh gesture after every render.
+  const navigationContextRef = useRef({
+    currentIndex,
+    photoCount: photos.length,
+    onPrevious,
+    onNext,
+  });
+  navigationContextRef.current = {
+    currentIndex,
+    photoCount: photos.length,
+    onPrevious,
+    onNext,
+  };
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
   const rotateLeft = useCallback(() => {
     setShouldAnimateRotation(true);
@@ -277,6 +406,94 @@ export function PhotoViewer({
   }, [onRotate]);
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => {
+      reducedMotionRef.current = media.matches;
+    };
+
+    updatePreference();
+    media.addEventListener("change", updatePreference);
+    return () => media.removeEventListener("change", updatePreference);
+  }, []);
+
+  const clearWheelIdleTimer = useCallback(() => {
+    if (wheelIdleTimerRef.current === null) return;
+    window.clearTimeout(wheelIdleTimerRef.current);
+    wheelIdleTimerRef.current = null;
+  }, []);
+
+  const settleGestureOffset = useCallback((animate = true) => {
+    const stage = photoStageRef.current;
+    if (!stage) return;
+
+    const shouldAnimate = animate && !reducedMotionRef.current;
+    stage.dataset.tracking = shouldAnimate ? "false" : "true";
+    stage.style.setProperty("--photo-drag-x", "0px");
+
+    if (!shouldAnimate) {
+      window.setTimeout(() => {
+        if (stage.isConnected) stage.dataset.tracking = "false";
+      }, 0);
+    }
+  }, []);
+
+  const updateGestureFromDelta = useCallback(
+    (deltaX: number, source: PhotoGestureSource) => {
+      const stage = photoStageRef.current;
+      if (!stage || reducedMotionRef.current) return;
+
+      const viewportWidth = imageContainerRef.current?.clientWidth ?? 0;
+      const { currentIndex: activeIndex, photoCount } =
+        navigationContextRef.current;
+      const offset = getPhotoGestureOffset({
+        deltaX,
+        viewportWidth,
+        canGoPrevious: activeIndex > 0,
+        canGoNext: activeIndex < photoCount - 1,
+        source,
+      });
+
+      stage.dataset.tracking = "true";
+      stage.style.setProperty("--photo-drag-x", `${offset}px`);
+    },
+    [],
+  );
+
+  const navigatePhoto = useCallback(
+    (
+      direction: PhotoNavigationDirection,
+      source: PhotoNavigationSource,
+    ) => {
+      const {
+        currentIndex: activeIndex,
+        photoCount,
+        onPrevious: navigatePrevious,
+        onNext: navigateNext,
+      } = navigationContextRef.current;
+      const canNavigate =
+        direction === "previous"
+          ? activeIndex > 0
+          : activeIndex < photoCount - 1;
+      const animate = source !== "keyboard";
+
+      if (!canNavigate) {
+        settleGestureOffset(animate);
+        return;
+      }
+
+      settleGestureOffset(animate);
+
+      if (direction === "previous") {
+        navigatePrevious();
+      } else {
+        navigateNext();
+      }
+
+    },
+    [settleGestureOffset],
+  );
 
   useEffect(() => {
     const container = imageContainerRef.current;
@@ -292,6 +509,53 @@ export function PhotoViewer({
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    // Mobile keeps native vertical wheel scrolling for the information panel;
+    // touch swipes already handle photo navigation there.
+    if (isMobileView) return;
+
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const result = handlePhotoWheelGesture(
+        wheelGestureStateRef.current,
+        event,
+      );
+      wheelGestureStateRef.current = result.state;
+
+      if (!result.captured) return;
+
+      if (event.cancelable) event.preventDefault();
+      event.stopPropagation();
+      clearWheelIdleTimer();
+      wheelIdleTimerRef.current = window.setTimeout(() => {
+        wheelIdleTimerRef.current = null;
+        settleGestureOffset();
+      }, PHOTO_WHEEL_GESTURE_IDLE_MS);
+
+      if (result.navigation) {
+        navigatePhoto(result.navigation, "wheel");
+      } else if (result.gestureDeltaX !== 0) {
+        updateGestureFromDelta(-result.gestureDeltaX, "wheel");
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      clearWheelIdleTimer();
+      wheelGestureStateRef.current = createPhotoWheelGestureState();
+    };
+  }, [
+    clearWheelIdleTimer,
+    isMobileView,
+    navigatePhoto,
+    settleGestureOffset,
+    updateGestureFromDelta,
+  ]);
 
   useEffect(() => {
     if (!isInfoOpen && !isMobileView) return;
@@ -322,43 +586,37 @@ export function PhotoViewer({
     setShouldAnimateRotation(false);
   }, [photo.id]);
 
-  // Prevent default touch move when swiping to avoid scroll interference
-  useEffect(() => {
-    const preventDefault = (e: TouchEvent) => {
-      if (isSwiping && e.cancelable) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("touchmove", preventDefault, { passive: false });
-
-    return () => {
-      document.removeEventListener("touchmove", preventDefault);
-    };
-  }, [isSwiping]);
-
-  // Swipe handlers for mobile navigation
+  // Swipe handlers for mobile navigation and direct gesture tracking
   const swipeHandlers = useSwipeable({
-    onSwipeStart: ({ dir }) => {
-      setIsSwiping(dir === "Left" || dir === "Right");
+    onSwiping: ({ deltaX, dir }) => {
+      if (dir !== "Left" && dir !== "Right") return;
+      updateGestureFromDelta(deltaX, "touch");
     },
-    onSwiped: () => setIsSwiping(false),
-    onSwipedLeft: () => onNext(),
-    onSwipedRight: () => onPrevious(),
+    onSwiped: ({ absX, dir, velocity }) => {
+      if (
+        (dir !== "Left" && dir !== "Right") ||
+        !shouldCommitTouchPhotoSwipe({
+          distance: absX,
+          velocity,
+          viewportWidth: imageContainerRef.current?.clientWidth ?? 0,
+        })
+      ) {
+        settleGestureOffset();
+        return;
+      }
+
+      navigatePhoto(dir === "Left" ? "next" : "previous", "touch");
+    },
     trackMouse: false,
-    delta: 50,
-    preventScrollOnSwipe: !isMobileView,
+    delta: 10,
+    preventScrollOnSwipe: false,
   });
 
-  // Preload adjacent photos (3 in each direction) when current photo changes
+  // The carousel renders ±1; preload one additional photo for rapid browsing.
   useEffect(() => {
-    const preloadRange = 3;
-    for (let i = 1; i <= preloadRange; i++) {
-      if (currentIndex - i >= 0) {
-        preloadImage(photos[currentIndex - i].url);
-      }
-      if (currentIndex + i < photos.length) {
-        preloadImage(photos[currentIndex + i].url);
+    for (const index of [currentIndex - 2, currentIndex + 2]) {
+      if (index >= 0 && index < photos.length) {
+        preloadImage(photos[index].url);
       }
     }
   }, [currentIndex, photos]);
@@ -373,9 +631,9 @@ export function PhotoViewer({
       }
 
       if (e.key === "ArrowLeft") {
-        onPrevious();
+        navigatePhoto("previous", "keyboard");
       } else if (e.key === "ArrowRight") {
-        onNext();
+        navigatePhoto("next", "keyboard");
       } else if (e.key === "Escape") {
         onBack();
       }
@@ -383,47 +641,13 @@ export function PhotoViewer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onPrevious, onNext, onBack]);
+  }, [navigatePhoto, onBack]);
 
   const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
   const formattedDate = format(pstDate, "MMMM d, yyyy 'at' h:mm:ss a");
-  const currentNaturalSize =
-    naturalSize?.photoId === photo.id ? naturalSize : null;
-  const isQuarterTurn = rotation % 180 !== 0;
-
-  let displayedImageSize: { width: number; height: number } | null = null;
-  if (
-    rotation !== 0 &&
-    currentNaturalSize &&
-    containerSize &&
-    containerSize.width > 0 &&
-    containerSize.height > 0
-  ) {
-    const rotatedWidth = isQuarterTurn
-      ? currentNaturalSize.height
-      : currentNaturalSize.width;
-    const rotatedHeight = isQuarterTurn
-      ? currentNaturalSize.width
-      : currentNaturalSize.height;
-    const scale = Math.min(
-      containerSize.width / rotatedWidth,
-      containerSize.height / rotatedHeight,
-    );
-    const fittedWidth = rotatedWidth * scale;
-    const fittedHeight = rotatedHeight * scale;
-
-    displayedImageSize = isQuarterTurn
-      ? { width: fittedHeight, height: fittedWidth }
-      : { width: fittedWidth, height: fittedHeight };
-  }
-
-  const handleImageLoad = (image: HTMLImageElement) => {
-    setNaturalSize({
-      photoId: photo.id,
-      width: image.naturalWidth,
-      height: image.naturalHeight,
-    });
-  };
+  const slideIndexes = [currentIndex - 1, currentIndex, currentIndex + 1].filter(
+    (index) => index >= 0 && index < photos.length,
+  );
   const mobileFormattedDate = format(
     pstDate,
     "EEEE · MMMM d, yyyy · h:mm a"
@@ -458,7 +682,7 @@ export function PhotoViewer({
         {/* Date and counter */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
           <p className="truncate text-sm font-medium">{formattedDate}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs tabular-nums text-muted-foreground">
             {currentIndex + 1} of {totalPhotos}
           </p>
         </div>
@@ -608,48 +832,48 @@ export function PhotoViewer({
         {/* Photo with horizontal swipe navigation and native vertical reveal on mobile */}
         <div
           {...swipeHandlers}
-          className={cn(
-            "flex h-full items-center justify-center bg-muted/30",
-            isMobileView && "touch-pan-y"
-          )}
+          onTouchCancel={() => settleGestureOffset()}
+          className="flex h-full touch-pan-y items-center justify-center bg-muted/30"
         >
           <div
             ref={imageContainerRef}
-            className="relative flex h-full w-full items-center justify-center overflow-hidden"
+            className="relative h-full w-full overflow-hidden overscroll-x-none"
           >
-            {displayedImageSize ? (
-              <Image
-                key={photo.id}
-                src={getViewerUrl(photo.url)}
-                alt=""
-                width={Math.max(1, Math.round(displayedImageSize.width))}
-                height={Math.max(1, Math.round(displayedImageSize.height))}
-                draggable={false}
-                style={{
-                  width: displayedImageSize.width,
-                  height: displayedImageSize.height,
-                  transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                  transition: shouldAnimateRotation
-                    ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
-                    : undefined,
-                }}
-                onLoad={(event) => handleImageLoad(event.currentTarget)}
-                priority
-                unoptimized
-              />
-            ) : (
-              <Image
-                key={photo.id}
-                src={getViewerUrl(photo.url)}
-                alt=""
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 80vw"
-                onLoad={(event) => handleImageLoad(event.currentTarget)}
-                priority
-                unoptimized
-              />
-            )}
+            <div
+              ref={photoStageRef}
+              data-tracking="false"
+              className="group absolute inset-0"
+              style={{ "--photo-drag-x": "0px" } as CSSProperties}
+            >
+              {slideIndexes.map((slideIndex) => {
+                const slidePhoto = photos[slideIndex];
+                const slideRotation = photoRotations[slidePhoto.id] ?? 0;
+                const isCurrentSlide = slideIndex === currentIndex;
+
+                return (
+                  <div
+                    key={slidePhoto.id}
+                    aria-hidden={!isCurrentSlide}
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center will-change-transform transition-transform group-data-[tracking=true]:transition-none motion-reduce:transition-none"
+                    style={{
+                      transform: getPhotoSlideTransform(
+                        slideIndex - currentIndex,
+                      ),
+                      transitionDuration: `${PHOTO_SLIDE_DURATION_MS}ms`,
+                      transitionTimingFunction: PHOTO_SLIDE_EASING,
+                    }}
+                  >
+                    <PhotoSlide
+                      photo={slidePhoto}
+                      rotation={slideRotation}
+                      containerSize={containerSize}
+                      isCurrent={isCurrentSlide}
+                      shouldAnimateRotation={shouldAnimateRotation}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
