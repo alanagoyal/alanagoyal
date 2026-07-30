@@ -222,7 +222,6 @@ function RecipientSearch({
             }}
             className="w-full rounded-md border border-input bg-background"
             isMobile={isMobileView}
-            bottomMargin="0"
           >
             <div>
               {displayPeople.map((person, index) => (

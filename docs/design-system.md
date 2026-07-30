@@ -266,9 +266,7 @@ Use the custom ScrollArea component with consistent styling:
 
 ```tsx
 <ScrollArea className="flex-1">
-  <div style={{ marginBottom: '64px' }}> {/* Space for fixed bottom elements */}
-    {content}
-  </div>
+  {content}
 </ScrollArea>
 ```
 
@@ -276,6 +274,11 @@ Scrollbar styling is handled globally:
 - Width: 10px (14px on hover)
 - Thumb: `bg-gray-500 dark:bg-gray-400`
 - Opacity animation on hover
+- Bottom margin: `0` by default
+
+Only pass `bottomMargin` when the scrollbar track must clear a fixed bottom
+overlay. The Messages conversation view does this with its dynamic composer
+height; ordinary app content should use the zero default.
 
 ## Responsive Patterns
 

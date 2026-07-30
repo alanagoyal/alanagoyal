@@ -240,14 +240,14 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
 
   if (loading) {
     return (
-      <ScrollArea className="h-full" bottomMargin="0">
+      <ScrollArea className="h-full">
         <BrowseSkeleton isMobileView={isMobileView} />
       </ScrollArea>
     );
   }
 
   return (
-    <ScrollArea className="h-full" bottomMargin="0">
+    <ScrollArea className="h-full">
       <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         {/* Featured Carousel */}
         {topAlbums.length > 0 && (

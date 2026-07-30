@@ -6,11 +6,8 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 import { cn } from "@/lib/utils"
 
 /**
- * Custom ScrollArea component for the chat interface
- * Customized with:
- * - 64px padding on top and bottom of the scrollbar so its not hidden bethind chat header and message input
- * - Custom scrollbar styling to match the scrollbar design in globals.css
- * - 14px total width with 4px transparent border for a clean look
+ * Custom scroll area with the shared scrollbar styling from globals.css.
+ * Consumers with fixed overlays can opt into top or bottom scrollbar insets.
  */
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
@@ -71,7 +68,7 @@ const ScrollBar = React.forwardRef<
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
       className
     )}
-    style={bottomMargin ? { marginBottom: bottomMargin } : { marginBottom: '64px' }}
+    style={{ marginBottom: bottomMargin ?? "0px" }}
     {...props}
   >
     <ScrollAreaPrimitive.ScrollAreaThumb 

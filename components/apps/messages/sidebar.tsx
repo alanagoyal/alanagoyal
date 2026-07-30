@@ -319,7 +319,6 @@ export function Sidebar({
           }}
           isMobile={isMobileView}
           withVerticalMargins={false}
-          bottomMargin="0px"
         >
           <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
             <SearchBar value={searchTerm} onChange={onSearchChange} />

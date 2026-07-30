@@ -658,7 +658,6 @@ export default function Sidebar({
               }
             }}
             isMobile={isMobile}
-            bottomMargin="0px"
           >
             <div ref={scrollViewportRef} className="flex w-full flex-col">
               <SessionId setSessionId={setSessionId} />
@@ -716,7 +715,6 @@ export default function Sidebar({
               key={galleryDetailNote.id}
               className="h-full"
               isMobile={false}
-              bottomMargin="0px"
             >
               <div className="min-h-full w-full p-3">
                 <NoteDocument
