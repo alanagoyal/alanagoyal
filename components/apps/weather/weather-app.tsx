@@ -11,6 +11,8 @@ import {
   Droplets,
   Search,
   Sun,
+  Sunrise,
+  Sunset,
   Wind,
   X,
 } from "lucide-react";
@@ -59,6 +61,8 @@ interface OpenMeteoResponse {
     temperature_2m_max: number[];
     temperature_2m_min: number[];
     precipitation_probability_max: number[];
+    sunrise?: string[];
+    sunset?: string[];
   };
   hourly: {
     time: string[];
@@ -106,6 +110,8 @@ interface CityWeather {
   feelsLike: number;
   humidity: number;
   windMph: number;
+  sunrise: string;
+  sunset: string;
   hourly: HourForecast[];
   daily: DailyForecast[];
   updatedAt: Date;
@@ -131,6 +137,8 @@ function restoreWeatherDataFromCache(cache: WeatherDataCache): Record<string, Ci
       feelsLike: weather.feelsLike,
       humidity: weather.humidity,
       windMph: weather.windMph,
+      sunrise: weather.sunrise ?? "",
+      sunset: weather.sunset ?? "",
       hourly: weather.hourly,
       daily: weather.daily,
       updatedAt,
@@ -155,6 +163,8 @@ function serializeWeatherDataForCache(weatherByCity: Record<string, CityWeather>
       feelsLike: weather.feelsLike,
       humidity: weather.humidity,
       windMph: weather.windMph,
+      sunrise: weather.sunrise,
+      sunset: weather.sunset,
       hourly: weather.hourly,
       daily: weather.daily,
       updatedAt: weather.updatedAt.toISOString(),
@@ -307,6 +317,18 @@ function formatCityClock(iso: string): string {
   return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+function formatLocalSolarTime(iso: string): string {
+  const time = iso.split("T")[1];
+  if (!time) return "--";
+  const [hoursString, minutesString] = time.split(":");
+  const hours = Number(hoursString);
+  const minutes = Number(minutesString);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return "--";
+  const displayHour = hours % 12 || 12;
+  const period = hours >= 12 ? "PM" : "AM";
+  return `${displayHour}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
 function formatUpdatedTime(value: Date): string {
   return value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
@@ -367,6 +389,8 @@ async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
       "temperature_2m_max",
       "temperature_2m_min",
       "precipitation_probability_max",
+      "sunrise",
+      "sunset",
     ],
     hourlyFields: ["temperature_2m", "weather_code", "precipitation_probability"],
     forecastDays: 10,
@@ -438,6 +462,8 @@ async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
     feelsLike: data.current.apparent_temperature,
     humidity: data.current.relative_humidity_2m,
     windMph: data.current.wind_speed_10m,
+    sunrise: data.daily.sunrise?.[0] ?? "",
+    sunset: data.daily.sunset?.[0] ?? "",
     hourly,
     daily,
     updatedAt: new Date(),
@@ -1323,6 +1349,24 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                           {selectedWeather
                             ? `${Math.round(selectedWeather.daily[0]?.precipitationChance ?? 0)}%`
                             : "--"}
+                        </p>
+                      </div>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
+                        <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
+                          <Sunrise size={14} />
+                          <span className="text-xs">Sunrise</span>
+                        </div>
+                        <p className="mt-1 text-2xl font-semibold">
+                          {selectedWeather ? formatLocalSolarTime(selectedWeather.sunrise) : "--"}
+                        </p>
+                      </div>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
+                        <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
+                          <Sunset size={14} />
+                          <span className="text-xs">Sunset</span>
+                        </div>
+                        <p className="mt-1 text-2xl font-semibold">
+                          {selectedWeather ? formatLocalSolarTime(selectedWeather.sunset) : "--"}
                         </p>
                       </div>
                     </div>
