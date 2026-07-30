@@ -59,7 +59,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
   const totalDuration = playlist.tracks.reduce((sum, t) => sum + t.duration, 0);
 
   return (
-    <ScrollArea className="h-full" bottomMargin="0">
+    <ScrollArea className="h-full">
       <div className={cn("p-6", isMobileView && "p-4 pb-20")}>
         {/* Playlist Header */}
         <div

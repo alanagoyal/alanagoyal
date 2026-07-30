@@ -96,7 +96,7 @@ export function ContactDrawer({
             </DrawerClose>
           </DrawerHeader>
 
-          <ScrollArea className="h-[calc(90vh-96px)]" bottomMargin="0" isMobile={true}>
+          <ScrollArea className="h-[calc(90vh-96px)]" isMobile={true}>
             <DrawerDescription className="sr-only">
               Contact information and details for {recipientNames}
             </DrawerDescription>

@@ -1020,7 +1020,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   </div>
                 </div>
               </div>
-              <ScrollArea className="flex-1" bottomMargin="0" viewportClassName="px-1">
+              <ScrollArea className="flex-1" viewportClassName="px-1">
                 {trimmedSearchQuery ? (
                   <div className="px-2 pt-1 pb-3">
                     {searchLoading && (
@@ -1088,7 +1088,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                 onMouseDown={windowFocus?.onDragStart}
               />
             )}
-            <ScrollArea className="h-full" bottomMargin="0">
+            <ScrollArea className="h-full">
               <div className="p-4 space-y-4">
                 {isMobileView && (
                   <div className="flex gap-4 overflow-x-auto pb-1">

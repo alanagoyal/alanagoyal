@@ -138,7 +138,6 @@ export function NotesDesktopPresenter({
             key={selectedNote?.id ?? "empty-note"}
             className="h-full"
             isMobile={false}
-            bottomMargin="0px"
           >
             {selectedNote ? (
               <div className="w-full min-h-full p-3">

@@ -43,7 +43,7 @@ export default function SidebarLayout({ children, notes }: SidebarLayoutProps) {
         )}
         {(!isMobile || !showSidebar) && viewMode === "list" && (
           <div className="flex-grow h-dvh">
-            <ScrollArea className="h-full" isMobile={isMobile} bottomMargin="0px">
+            <ScrollArea className="h-full" isMobile={isMobile}>
               {children}
             </ScrollArea>
           </div>

@@ -116,7 +116,6 @@ export function Sidebar({
               }
             }}
             isMobile={isMobile}
-            bottomMargin="0px"
           >
             <div className="px-4 pt-2 pb-8 min-h-full">
               {/* Search bar */}
@@ -269,7 +268,6 @@ export function Sidebar({
             }
           }}
           isMobile={isMobile}
-          bottomMargin="0px"
         >
           <div className="flex flex-col w-full">
             <div className="w-[320px] px-2">
