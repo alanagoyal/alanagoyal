@@ -29,6 +29,11 @@ import {
   loadPhotoMetadata,
 } from "@/lib/photos/photo-metadata";
 import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
+import {
+  createPhotoWheelGestureState,
+  handlePhotoWheelGesture,
+  PHOTO_WHEEL_GESTURE_IDLE_MS,
+} from "@/lib/photos/wheel-navigation";
 
 // Preload an image for faster navigation
 function preloadImage(url: string) {
@@ -270,6 +275,9 @@ export function PhotoViewer({
   const [metadataError, setMetadataError] = useState(false);
   const infoContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const wheelGestureStateRef = useRef(createPhotoWheelGestureState());
+  const wheelGestureIdleTimerRef = useRef<number | null>(null);
+  const wheelNavigationCallbacksRef = useRef({ onPrevious, onNext });
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
   const rotateLeft = useCallback(() => {
     setShouldAnimateRotation(true);
@@ -277,6 +285,10 @@ export function PhotoViewer({
   }, [onRotate]);
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
+
+  useEffect(() => {
+    wheelNavigationCallbacksRef.current = { onPrevious, onNext };
+  }, [onPrevious, onNext]);
 
   useEffect(() => {
     const container = imageContainerRef.current;
@@ -292,6 +304,48 @@ export function PhotoViewer({
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    // Mobile keeps native vertical wheel scrolling for the information panel;
+    // touch swipes already handle photo navigation there.
+    if (isMobileView) return;
+
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const result = handlePhotoWheelGesture(
+        wheelGestureStateRef.current,
+        event,
+        wheelNavigationCallbacksRef.current,
+      );
+
+      if (!result.captured) return;
+
+      event.stopPropagation();
+      wheelGestureStateRef.current = result.state;
+
+      if (wheelGestureIdleTimerRef.current !== null) {
+        window.clearTimeout(wheelGestureIdleTimerRef.current);
+      }
+
+      wheelGestureIdleTimerRef.current = window.setTimeout(() => {
+        wheelGestureStateRef.current = createPhotoWheelGestureState();
+        wheelGestureIdleTimerRef.current = null;
+      }, PHOTO_WHEEL_GESTURE_IDLE_MS);
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      if (wheelGestureIdleTimerRef.current !== null) {
+        window.clearTimeout(wheelGestureIdleTimerRef.current);
+        wheelGestureIdleTimerRef.current = null;
+      }
+      wheelGestureStateRef.current = createPhotoWheelGestureState();
+    };
+  }, [isMobileView]);
 
   useEffect(() => {
     if (!isInfoOpen && !isMobileView) return;
@@ -615,7 +669,7 @@ export function PhotoViewer({
         >
           <div
             ref={imageContainerRef}
-            className="relative flex h-full w-full items-center justify-center overflow-hidden"
+            className="relative flex h-full w-full items-center justify-center overflow-hidden overscroll-x-none"
           >
             {displayedImageSize ? (
               <Image
