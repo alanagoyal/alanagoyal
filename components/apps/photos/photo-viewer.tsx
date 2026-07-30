@@ -434,7 +434,7 @@ export function PhotoViewer({
       {/* Header - matches PhotosGrid header style */}
       <div
         className={cn(
-          "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
+          "relative px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
           isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
         )}
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
@@ -456,8 +456,8 @@ export function PhotoViewer({
         </button>
 
         {/* Date and counter */}
-        <div className="text-center">
-          <p className="text-sm font-medium">{formattedDate}</p>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="truncate text-sm font-medium">{formattedDate}</p>
           <p className="text-xs text-muted-foreground">
             {currentIndex + 1} of {totalPhotos}
           </p>
