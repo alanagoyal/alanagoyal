@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useSwipeable } from "react-swipeable";
 import { Photo } from "@/types/photos";
 import {
@@ -32,16 +38,13 @@ import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
 import {
   createPhotoWheelGestureState,
   handlePhotoWheelGesture,
+  PHOTO_WHEEL_GESTURE_IDLE_MS,
 } from "@/lib/photos/wheel-navigation";
 import {
   getPhotoGestureOffset,
-  getPhotoSlideIndexes,
   getPhotoSlideTransform,
   PHOTO_SLIDE_DURATION_MS,
   PHOTO_SLIDE_EASING,
-  PHOTO_SWIPE_CANCEL_DURATION_MS,
-  PHOTO_SWIPE_SETTLE_IDLE_MS,
-  shouldAnimatePhotoNavigation,
   shouldCommitTouchPhotoSwipe,
 } from "@/lib/photos/photo-transition";
 import type {
@@ -71,6 +74,100 @@ interface PhotoViewerProps {
   collectionNames: string[];
   isMobileView: boolean;
   isDesktop?: boolean;
+}
+
+interface PhotoSlideProps {
+  photo: Photo;
+  rotation: number;
+  containerSize: { width: number; height: number } | null;
+  isCurrent: boolean;
+  shouldAnimateRotation: boolean;
+}
+
+function PhotoSlide({
+  photo,
+  rotation,
+  containerSize,
+  isCurrent,
+  shouldAnimateRotation,
+}: PhotoSlideProps) {
+  const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  let displayedSize: { width: number; height: number } | null = null;
+  if (
+    rotation !== 0 &&
+    naturalSize &&
+    containerSize &&
+    containerSize.width > 0 &&
+    containerSize.height > 0
+  ) {
+    const isQuarterTurn = rotation % 180 !== 0;
+    const rotatedWidth = isQuarterTurn
+      ? naturalSize.height
+      : naturalSize.width;
+    const rotatedHeight = isQuarterTurn
+      ? naturalSize.width
+      : naturalSize.height;
+    const scale = Math.min(
+      containerSize.width / rotatedWidth,
+      containerSize.height / rotatedHeight,
+    );
+    const fittedWidth = rotatedWidth * scale;
+    const fittedHeight = rotatedHeight * scale;
+
+    displayedSize = isQuarterTurn
+      ? { width: fittedHeight, height: fittedWidth }
+      : { width: fittedWidth, height: fittedHeight };
+  }
+
+  return (
+    <div
+      className={cn("relative", !displayedSize && "h-full w-full")}
+      style={
+        displayedSize
+          ? { width: displayedSize.width, height: displayedSize.height }
+          : undefined
+      }
+    >
+      <Image
+        src={getViewerUrl(photo.url)}
+        alt=""
+        fill
+        draggable={false}
+        className={cn(
+          "object-contain",
+          isCurrent &&
+            shouldAnimateRotation &&
+            "transition-transform duration-200 ease-out motion-reduce:transition-none",
+        )}
+        style={{
+          transform: rotation ? `rotate(${rotation}deg)` : undefined,
+        }}
+        sizes="(max-width: 768px) 100vw, 80vw"
+        onLoad={(event) => {
+          const image = event.currentTarget;
+          setNaturalSize((currentSize) => {
+            if (
+              currentSize?.width === image.naturalWidth &&
+              currentSize.height === image.naturalHeight
+            ) {
+              return currentSize;
+            }
+
+            return {
+              width: image.naturalWidth,
+              height: image.naturalHeight,
+            };
+          });
+        }}
+        priority
+        unoptimized
+      />
+    </div>
+  );
 }
 
 interface CameraDetailsProps {
@@ -272,21 +369,15 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
   const inShell = isDesktop && windowFocus;
-  const [isSwiping, setIsSwiping] = useState(false);
   const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
-  const [naturalSizes, setNaturalSizes] = useState<
-    Record<string, { width: number; height: number }>
-  >({});
   const [containerSize, setContainerSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  const gestureTrackRef = useRef<HTMLDivElement>(null);
-  const gestureFrameRef = useRef<number | null>(null);
-  const gestureSettleTimerRef = useRef<number | null>(null);
-  const gestureAnimationRef = useRef<Animation | null>(null);
-  const pendingGestureOffsetRef = useRef(0);
+  const photoStageRef = useRef<HTMLDivElement>(null);
+  const wheelIdleTimerRef = useRef<number | null>(null);
+  const reducedMotionRef = useRef(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
@@ -308,7 +399,6 @@ export function PhotoViewer({
     onPrevious,
     onNext,
   };
-  const [shouldAnimateSlides, setShouldAnimateSlides] = useState(false);
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
   const rotateLeft = useCallback(() => {
     setShouldAnimateRotation(true);
@@ -317,144 +407,65 @@ export function PhotoViewer({
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
 
-  const clearGestureSettleTimer = useCallback(() => {
-    if (gestureSettleTimerRef.current === null) return;
-    window.clearTimeout(gestureSettleTimerRef.current);
-    gestureSettleTimerRef.current = null;
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => {
+      reducedMotionRef.current = media.matches;
+    };
+
+    updatePreference();
+    media.addEventListener("change", updatePreference);
+    return () => media.removeEventListener("change", updatePreference);
   }, []);
 
-  const cancelGestureAnimation = useCallback(() => {
-    const animation = gestureAnimationRef.current;
-    if (!animation) return;
+  const clearWheelIdleTimer = useCallback(() => {
+    if (wheelIdleTimerRef.current === null) return;
+    window.clearTimeout(wheelIdleTimerRef.current);
+    wheelIdleTimerRef.current = null;
+  }, []);
 
-    const track = gestureTrackRef.current;
-    const currentTransform = track
-      ? window.getComputedStyle(track).transform
-      : null;
+  const settleGestureOffset = useCallback((animate = true) => {
+    const stage = photoStageRef.current;
+    if (!stage) return;
 
-    animation.onfinish = null;
-    animation.cancel();
-    gestureAnimationRef.current = null;
+    const shouldAnimate = animate && !reducedMotionRef.current;
+    stage.dataset.tracking = shouldAnimate ? "false" : "true";
+    stage.style.setProperty("--photo-drag-x", "0px");
 
-    if (track && currentTransform && currentTransform !== "none") {
-      track.style.transform = currentTransform;
+    if (!shouldAnimate) {
+      window.setTimeout(() => {
+        if (stage.isConnected) stage.dataset.tracking = "false";
+      }, 0);
     }
   }, []);
 
-  const settleGestureOffset = useCallback(
-    (duration: number) => {
-      clearGestureSettleTimer();
-
-      const track = gestureTrackRef.current;
-      if (!track) return;
-
-      if (gestureFrameRef.current !== null) {
-        window.cancelAnimationFrame(gestureFrameRef.current);
-        gestureFrameRef.current = null;
-        track.style.transform = `translate3d(${pendingGestureOffsetRef.current}px, 0, 0)`;
-      }
-
-      const prefersReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-
-      if (prefersReducedMotion || duration === 0) {
-        cancelGestureAnimation();
-        pendingGestureOffsetRef.current = 0;
-        track.style.transform = "translate3d(0, 0, 0)";
-        return;
-      }
-
-      cancelGestureAnimation();
-      const fromTransform = window.getComputedStyle(track).transform;
-      const animation = track.animate(
-        [
-          { transform: fromTransform },
-          { transform: "translate3d(0, 0, 0)" },
-        ],
-        {
-          duration,
-          easing: PHOTO_SLIDE_EASING,
-          fill: "both",
-        },
-      );
-
-      gestureAnimationRef.current = animation;
-      animation.onfinish = () => {
-        if (gestureAnimationRef.current !== animation) return;
-        animation.onfinish = null;
-        pendingGestureOffsetRef.current = 0;
-        track.style.transform = "translate3d(0, 0, 0)";
-        animation.cancel();
-        gestureAnimationRef.current = null;
-      };
-    },
-    [cancelGestureAnimation, clearGestureSettleTimer],
-  );
-
-  const updateGestureOffset = useCallback(
-    (offset: number) => {
-      clearGestureSettleTimer();
-
-      const track = gestureTrackRef.current;
-      if (!track) return;
-
-      if (
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ) {
-        settleGestureOffset(0);
-        return;
-      }
-
-      cancelGestureAnimation();
-      pendingGestureOffsetRef.current = offset;
-
-      if (gestureFrameRef.current !== null) return;
-      gestureFrameRef.current = window.requestAnimationFrame(() => {
-        gestureFrameRef.current = null;
-        const currentTrack = gestureTrackRef.current;
-        if (!currentTrack) return;
-        currentTrack.style.transform = `translate3d(${pendingGestureOffsetRef.current}px, 0, 0)`;
-      });
-    },
-    [
-      cancelGestureAnimation,
-      clearGestureSettleTimer,
-      settleGestureOffset,
-    ],
-  );
-
-  const queueGestureSettle = useCallback(() => {
-    clearGestureSettleTimer();
-    gestureSettleTimerRef.current = window.setTimeout(() => {
-      gestureSettleTimerRef.current = null;
-      settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
-    }, PHOTO_SWIPE_SETTLE_IDLE_MS);
-  }, [clearGestureSettleTimer, settleGestureOffset]);
-
   const updateGestureFromDelta = useCallback(
     (deltaX: number, source: PhotoGestureSource) => {
+      const stage = photoStageRef.current;
+      if (!stage || reducedMotionRef.current) return;
+
       const viewportWidth = imageContainerRef.current?.clientWidth ?? 0;
       const { currentIndex: activeIndex, photoCount } =
         navigationContextRef.current;
-      updateGestureOffset(
-        getPhotoGestureOffset({
-          deltaX,
-          viewportWidth,
-          canGoPrevious: activeIndex > 0,
-          canGoNext: activeIndex < photoCount - 1,
-          source,
-        }),
-      );
+      const offset = getPhotoGestureOffset({
+        deltaX,
+        viewportWidth,
+        canGoPrevious: activeIndex > 0,
+        canGoNext: activeIndex < photoCount - 1,
+        source,
+      });
+
+      stage.dataset.tracking = "true";
+      stage.style.setProperty("--photo-drag-x", `${offset}px`);
     },
-    [updateGestureOffset],
+    [],
   );
 
   const navigatePhoto = useCallback(
     (
       direction: PhotoNavigationDirection,
       source: PhotoNavigationSource,
-    ): boolean => {
+    ) => {
       const {
         currentIndex: activeIndex,
         photoCount,
@@ -465,17 +476,14 @@ export function PhotoViewer({
         direction === "previous"
           ? activeIndex > 0
           : activeIndex < photoCount - 1;
+      const animate = source !== "keyboard";
 
       if (!canNavigate) {
-        settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
-        return false;
+        settleGestureOffset(animate);
+        return;
       }
 
-      const animate = shouldAnimatePhotoNavigation(
-        source,
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-      );
-      setShouldAnimateSlides(animate);
+      settleGestureOffset(animate);
 
       if (direction === "previous") {
         navigatePrevious();
@@ -483,37 +491,9 @@ export function PhotoViewer({
         navigateNext();
       }
 
-      settleGestureOffset(animate ? PHOTO_SLIDE_DURATION_MS : 0);
-      return true;
     },
     [settleGestureOffset],
   );
-
-  useEffect(() => {
-    if (!shouldAnimateSlides) return;
-
-    const timer = window.setTimeout(() => {
-      setShouldAnimateSlides(false);
-    }, PHOTO_SLIDE_DURATION_MS + 40);
-
-    return () => window.clearTimeout(timer);
-  }, [currentIndex, shouldAnimateSlides]);
-
-  useEffect(() => {
-    return () => {
-      clearGestureSettleTimer();
-      if (gestureFrameRef.current !== null) {
-        window.cancelAnimationFrame(gestureFrameRef.current);
-        gestureFrameRef.current = null;
-      }
-      const animation = gestureAnimationRef.current;
-      if (animation) {
-        animation.onfinish = null;
-        animation.cancel();
-        gestureAnimationRef.current = null;
-      }
-    };
-  }, [clearGestureSettleTimer]);
 
   useEffect(() => {
     const container = imageContainerRef.current;
@@ -539,53 +519,41 @@ export function PhotoViewer({
     if (!container) return;
 
     const handleWheel = (event: WheelEvent) => {
-      let navigationAttempted = false;
       const result = handlePhotoWheelGesture(
         wheelGestureStateRef.current,
         event,
-        {
-          onPrevious: () => {
-            navigationAttempted = true;
-            navigatePhoto("previous", "wheel");
-          },
-          onNext: () => {
-            navigationAttempted = true;
-            navigatePhoto("next", "wheel");
-          },
-        },
       );
+      wheelGestureStateRef.current = result.state;
 
       if (!result.captured) return;
 
+      if (event.cancelable) event.preventDefault();
       event.stopPropagation();
-      wheelGestureStateRef.current = result.state;
+      clearWheelIdleTimer();
+      wheelIdleTimerRef.current = window.setTimeout(() => {
+        wheelIdleTimerRef.current = null;
+        settleGestureOffset();
+      }, PHOTO_WHEEL_GESTURE_IDLE_MS);
 
-      if (
-        navigationAttempted ||
-        (result.state.phase === "locked" &&
-          result.state.restartDeltaX === 0)
-      ) {
-        return;
+      if (result.navigation) {
+        navigatePhoto(result.navigation, "wheel");
+      } else if (result.gestureDeltaX !== 0) {
+        updateGestureFromDelta(-result.gestureDeltaX, "wheel");
       }
-
-      const gestureDeltaX =
-        result.state.phase === "tracking"
-          ? result.state.accumulatedDeltaX
-          : result.state.restartDeltaX;
-      updateGestureFromDelta(-gestureDeltaX, "wheel");
-      queueGestureSettle();
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
       container.removeEventListener("wheel", handleWheel);
+      clearWheelIdleTimer();
       wheelGestureStateRef.current = createPhotoWheelGestureState();
     };
   }, [
+    clearWheelIdleTimer,
     isMobileView,
     navigatePhoto,
-    queueGestureSettle,
+    settleGestureOffset,
     updateGestureFromDelta,
   ]);
 
@@ -618,33 +586,13 @@ export function PhotoViewer({
     setShouldAnimateRotation(false);
   }, [photo.id]);
 
-  // Prevent default touch move when swiping to avoid scroll interference
-  useEffect(() => {
-    const preventDefault = (e: TouchEvent) => {
-      if (isSwiping && e.cancelable) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("touchmove", preventDefault, { passive: false });
-
-    return () => {
-      document.removeEventListener("touchmove", preventDefault);
-    };
-  }, [isSwiping]);
-
   // Swipe handlers for mobile navigation and direct gesture tracking
   const swipeHandlers = useSwipeable({
-    onSwipeStart: ({ dir }) => {
-      setIsSwiping(dir === "Left" || dir === "Right");
-    },
     onSwiping: ({ deltaX, dir }) => {
       if (dir !== "Left" && dir !== "Right") return;
       updateGestureFromDelta(deltaX, "touch");
     },
     onSwiped: ({ absX, dir, velocity }) => {
-      setIsSwiping(false);
-
       if (
         (dir !== "Left" && dir !== "Right") ||
         !shouldCommitTouchPhotoSwipe({
@@ -653,7 +601,7 @@ export function PhotoViewer({
           viewportWidth: imageContainerRef.current?.clientWidth ?? 0,
         })
       ) {
-        settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
+        settleGestureOffset();
         return;
       }
 
@@ -661,18 +609,14 @@ export function PhotoViewer({
     },
     trackMouse: false,
     delta: 10,
-    preventScrollOnSwipe: !isMobileView,
+    preventScrollOnSwipe: false,
   });
 
-  // Preload adjacent photos (3 in each direction) when current photo changes
+  // The carousel renders ±1; preload one additional photo for rapid browsing.
   useEffect(() => {
-    const preloadRange = 3;
-    for (let i = 1; i <= preloadRange; i++) {
-      if (currentIndex - i >= 0) {
-        preloadImage(photos[currentIndex - i].url);
-      }
-      if (currentIndex + i < photos.length) {
-        preloadImage(photos[currentIndex + i].url);
+    for (const index of [currentIndex - 2, currentIndex + 2]) {
+      if (index >= 0 && index < photos.length) {
+        preloadImage(photos[index].url);
       }
     }
   }, [currentIndex, photos]);
@@ -701,61 +645,9 @@ export function PhotoViewer({
 
   const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
   const formattedDate = format(pstDate, "MMMM d, yyyy 'at' h:mm:ss a");
-  const slideIndexes = getPhotoSlideIndexes(currentIndex, photos.length);
-
-  const getDisplayedImageSize = (
-    photoId: string,
-    photoRotation: number,
-  ): { width: number; height: number } | null => {
-    const naturalSize = naturalSizes[photoId];
-    if (
-      photoRotation === 0 ||
-      !naturalSize ||
-      !containerSize ||
-      containerSize.width <= 0 ||
-      containerSize.height <= 0
-    ) {
-      return null;
-    }
-
-    const isQuarterTurn = photoRotation % 180 !== 0;
-    const rotatedWidth = isQuarterTurn
-      ? naturalSize.height
-      : naturalSize.width;
-    const rotatedHeight = isQuarterTurn
-      ? naturalSize.width
-      : naturalSize.height;
-    const scale = Math.min(
-      containerSize.width / rotatedWidth,
-      containerSize.height / rotatedHeight,
-    );
-    const fittedWidth = rotatedWidth * scale;
-    const fittedHeight = rotatedHeight * scale;
-
-    return isQuarterTurn
-      ? { width: fittedHeight, height: fittedWidth }
-      : { width: fittedWidth, height: fittedHeight };
-  };
-
-  const handleImageLoad = (photoId: string, image: HTMLImageElement) => {
-    setNaturalSizes((currentSizes) => {
-      const currentSize = currentSizes[photoId];
-      if (
-        currentSize?.width === image.naturalWidth &&
-        currentSize.height === image.naturalHeight
-      ) {
-        return currentSizes;
-      }
-
-      return {
-        ...currentSizes,
-        [photoId]: {
-          width: image.naturalWidth,
-          height: image.naturalHeight,
-        },
-      };
-    });
-  };
+  const slideIndexes = [currentIndex - 1, currentIndex, currentIndex + 1].filter(
+    (index) => index >= 0 && index < photos.length,
+  );
   const mobileFormattedDate = format(
     pstDate,
     "EEEE · MMMM d, yyyy · h:mm a"
@@ -940,107 +832,44 @@ export function PhotoViewer({
         {/* Photo with horizontal swipe navigation and native vertical reveal on mobile */}
         <div
           {...swipeHandlers}
-          className={cn(
-            "flex h-full items-center justify-center bg-muted/30",
-            isMobileView && "touch-pan-y"
-          )}
+          onTouchCancel={() => settleGestureOffset()}
+          className="flex h-full touch-pan-y items-center justify-center bg-muted/30"
         >
           <div
             ref={imageContainerRef}
             className="relative h-full w-full overflow-hidden overscroll-x-none"
           >
-            <div ref={gestureTrackRef} className="absolute inset-0">
+            <div
+              ref={photoStageRef}
+              data-tracking="false"
+              className="group absolute inset-0"
+              style={{ "--photo-drag-x": "0px" } as CSSProperties}
+            >
               {slideIndexes.map((slideIndex) => {
                 const slidePhoto = photos[slideIndex];
                 const slideRotation = photoRotations[slidePhoto.id] ?? 0;
-                const displayedSize = getDisplayedImageSize(
-                  slidePhoto.id,
-                  slideRotation,
-                );
                 const isCurrentSlide = slideIndex === currentIndex;
 
                 return (
                   <div
                     key={slidePhoto.id}
                     aria-hidden={!isCurrentSlide}
-                    className={cn(
-                      "pointer-events-none absolute inset-0 flex items-center justify-center",
-                      shouldAnimateSlides &&
-                        "will-change-transform transition-transform motion-reduce:transition-none",
-                    )}
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center will-change-transform transition-transform group-data-[tracking=true]:transition-none motion-reduce:transition-none"
                     style={{
                       transform: getPhotoSlideTransform(
-                        slideIndex,
-                        currentIndex,
+                        slideIndex - currentIndex,
                       ),
-                      transitionDuration: shouldAnimateSlides
-                        ? `${PHOTO_SLIDE_DURATION_MS}ms`
-                        : undefined,
-                      transitionTimingFunction: shouldAnimateSlides
-                        ? PHOTO_SLIDE_EASING
-                        : undefined,
+                      transitionDuration: `${PHOTO_SLIDE_DURATION_MS}ms`,
+                      transitionTimingFunction: PHOTO_SLIDE_EASING,
                     }}
                   >
-                    {displayedSize ? (
-                      <Image
-                        src={getViewerUrl(slidePhoto.url)}
-                        alt=""
-                        width={Math.max(
-                          1,
-                          Math.round(displayedSize.width),
-                        )}
-                        height={Math.max(
-                          1,
-                          Math.round(displayedSize.height),
-                        )}
-                        draggable={false}
-                        style={{
-                          width: displayedSize.width,
-                          height: displayedSize.height,
-                          transform: slideRotation
-                            ? `rotate(${slideRotation}deg)`
-                            : undefined,
-                          transition:
-                            isCurrentSlide && shouldAnimateRotation
-                              ? "transform 0.2s ease-out"
-                              : undefined,
-                        }}
-                        onLoad={(event) =>
-                          handleImageLoad(
-                            slidePhoto.id,
-                            event.currentTarget,
-                          )
-                        }
-                        priority={Math.abs(slideIndex - currentIndex) <= 1}
-                        unoptimized
-                      />
-                    ) : (
-                      <Image
-                        src={getViewerUrl(slidePhoto.url)}
-                        alt=""
-                        fill
-                        draggable={false}
-                        className="object-contain"
-                        style={{
-                          transform: slideRotation
-                            ? `rotate(${slideRotation}deg)`
-                            : undefined,
-                          transition:
-                            isCurrentSlide && shouldAnimateRotation
-                              ? "transform 0.2s ease-out"
-                              : undefined,
-                        }}
-                        sizes="(max-width: 768px) 100vw, 80vw"
-                        onLoad={(event) =>
-                          handleImageLoad(
-                            slidePhoto.id,
-                            event.currentTarget,
-                          )
-                        }
-                        priority={Math.abs(slideIndex - currentIndex) <= 1}
-                        unoptimized
-                      />
-                    )}
+                    <PhotoSlide
+                      photo={slidePhoto}
+                      rotation={slideRotation}
+                      containerSize={containerSize}
+                      isCurrent={isCurrentSlide}
+                      shouldAnimateRotation={shouldAnimateRotation}
+                    />
                   </div>
                 );
               })}

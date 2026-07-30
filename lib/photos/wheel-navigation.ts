@@ -4,26 +4,20 @@ export const PHOTO_WHEEL_GESTURE_IDLE_MS = 180;
 const WHEEL_DELTA_LINE = 1;
 const WHEEL_DELTA_PAGE = 2;
 const WHEEL_LINE_HEIGHT_PX = 16;
-const PHOTO_WHEEL_START_MIN_DELTA = 2;
-const PHOTO_WHEEL_RESTART_MIN_DELTA = 8;
-const PHOTO_WHEEL_RESTART_ACCELERATION_RATIO = 1.75;
-const PHOTO_WHEEL_RESTART_MIN_INCREASE = 4;
-const PHOTO_WHEEL_RESTART_LOW_WATER_MAX_DELTA = 4;
-const PHOTO_WHEEL_RESTART_DELAY_MS = 220;
+const START_MIN_DELTA = 2;
+const RESTART_MIN_DELTA = 8;
+const QUIET_TAIL_MAX_DELTA = 4;
+const RESTART_DELAY_MS = 220;
 
-type PhotoWheelGesturePhase = "idle" | "tracking" | "locked";
-type PhotoWheelDirection = -1 | 0 | 1;
+type Direction = -1 | 0 | 1;
+export type PhotoWheelNavigation = "previous" | "next";
 
 export interface PhotoWheelGestureState {
-  phase: PhotoWheelGesturePhase;
   accumulatedDeltaX: number;
-  navigationDirection: PhotoWheelDirection;
+  navigationDirection: Direction;
   navigationTime: number | null;
   lastEventTime: number | null;
-  lastDeltaMagnitude: number;
-  minimumDeltaMagnitude: number;
-  hasDecelerated: boolean;
-  restartDeltaX: number;
+  sawQuietTail: boolean;
 }
 
 export interface PhotoWheelEventLike {
@@ -31,277 +25,151 @@ export interface PhotoWheelEventLike {
   deltaY: number;
   deltaMode?: number;
   ctrlKey?: boolean;
-  cancelable: boolean;
-  timeStamp: number;
-  preventDefault: () => void;
-}
-
-interface PhotoWheelNavigationCallbacks {
-  onPrevious: () => void;
-  onNext: () => void;
+  timeStamp?: number;
 }
 
 export interface PhotoWheelGestureResult {
   state: PhotoWheelGestureState;
   captured: boolean;
+  navigation: PhotoWheelNavigation | null;
+  gestureDeltaX: number;
 }
 
 export function createPhotoWheelGestureState(): PhotoWheelGestureState {
   return {
-    phase: "idle",
     accumulatedDeltaX: 0,
     navigationDirection: 0,
     navigationTime: null,
     lastEventTime: null,
-    lastDeltaMagnitude: 0,
-    minimumDeltaMagnitude: 0,
-    hasDecelerated: false,
-    restartDeltaX: 0,
+    sawQuietTail: false,
   };
 }
 
-function normalizeWheelDelta(delta: number, deltaMode = 0): number {
-  if (deltaMode === WHEEL_DELTA_LINE) {
-    return delta * WHEEL_LINE_HEIGHT_PX;
-  }
-
-  if (deltaMode === WHEEL_DELTA_PAGE) {
+function normalizeDelta(delta: number, mode = 0): number {
+  if (mode === WHEEL_DELTA_LINE) return delta * WHEEL_LINE_HEIGHT_PX;
+  if (mode === WHEEL_DELTA_PAGE) {
     return delta * PHOTO_WHEEL_NAVIGATION_THRESHOLD;
   }
-
   return delta;
 }
 
-function getDirection(delta: number): PhotoWheelDirection {
-  if (delta > 0) return 1;
-  if (delta < 0) return -1;
-  return 0;
+function directionOf(deltaX: number): Direction {
+  return deltaX === 0 ? 0 : deltaX > 0 ? 1 : -1;
 }
 
-function getUpdatedLowWaterMagnitude(
+function result(
   state: PhotoWheelGestureState,
-  deltaMagnitude: number,
-): number {
-  if (!state.hasDecelerated) {
-    return deltaMagnitude;
-  }
-
-  return Math.min(state.minimumDeltaMagnitude, deltaMagnitude);
+  captured: boolean,
+  navigation: PhotoWheelNavigation | null = null,
+): PhotoWheelGestureResult {
+  return {
+    state,
+    captured,
+    navigation,
+    gestureDeltaX: state.accumulatedDeltaX,
+  };
 }
 
-function navigate(
-  deltaX: number,
-  eventTime: number,
-  eventMagnitude: number,
-  callbacks: PhotoWheelNavigationCallbacks,
-): PhotoWheelGestureState {
-  if (deltaX > 0) {
-    callbacks.onNext();
-  } else {
-    callbacks.onPrevious();
-  }
-
-  return {
-    phase: "locked",
-    accumulatedDeltaX: 0,
-    navigationDirection: getDirection(deltaX),
-    navigationTime: eventTime,
-    lastEventTime: eventTime,
-    lastDeltaMagnitude: eventMagnitude,
-    minimumDeltaMagnitude: eventMagnitude,
-    hasDecelerated: false,
-    restartDeltaX: 0,
-  };
+function lock(deltaX: number, time: number): PhotoWheelGestureResult {
+  return result(
+    {
+      accumulatedDeltaX: 0,
+      navigationDirection: directionOf(deltaX),
+      navigationTime: time,
+      lastEventTime: time,
+      sawQuietTail: false,
+    },
+    true,
+    deltaX > 0 ? "next" : "previous",
+  );
 }
 
 export function handlePhotoWheelGesture(
   state: PhotoWheelGestureState,
   event: PhotoWheelEventLike,
-  callbacks: PhotoWheelNavigationCallbacks,
 ): PhotoWheelGestureResult {
-  if (event.ctrlKey) {
-    return { state, captured: false };
-  }
+  if (event.ctrlKey) return result(state, false);
 
-  const deltaX = normalizeWheelDelta(event.deltaX, event.deltaMode);
-  const deltaY = normalizeWheelDelta(event.deltaY, event.deltaMode);
-  const eventTime = event.timeStamp;
-  const isDiscreteWheelEvent =
+  const deltaX = normalizeDelta(event.deltaX, event.deltaMode);
+  const deltaY = normalizeDelta(event.deltaY, event.deltaMode);
+  const time = event.timeStamp ?? state.lastEventTime ?? 0;
+  const isDiscrete =
     event.deltaMode === WHEEL_DELTA_LINE ||
     event.deltaMode === WHEEL_DELTA_PAGE;
-  const idleGap =
+  const isIdle =
     state.lastEventTime !== null &&
-    eventTime - state.lastEventTime >= PHOTO_WHEEL_GESTURE_IDLE_MS;
-  const currentState =
-    idleGap || (isDiscreteWheelEvent && state.phase === "locked")
-    ? createPhotoWheelGestureState()
-    : state;
-  const isHorizontalGesture =
-    Math.abs(deltaX) >= PHOTO_WHEEL_START_MIN_DELTA &&
-    Math.abs(deltaX) > Math.abs(deltaY);
+    time - state.lastEventTime >= PHOTO_WHEEL_GESTURE_IDLE_MS;
+  const current =
+    isIdle || (isDiscrete && state.navigationDirection !== 0)
+      ? createPhotoWheelGestureState()
+      : state;
+  const magnitude = Math.abs(deltaX);
+  const isHorizontal =
+    magnitude >= START_MIN_DELTA && magnitude > Math.abs(deltaY);
 
-  if (currentState.phase === "idle" && !isHorizontalGesture) {
-    return { state: currentState, captured: false };
+  if (current.lastEventTime === null && !isHorizontal) {
+    return result(current, false);
   }
 
-  if (event.cancelable) {
-    event.preventDefault();
-  }
+  if (current.navigationDirection === 0) {
+    if (!isHorizontal) {
+      return result({ ...current, lastEventTime: time }, true);
+    }
 
-  const deltaMagnitude = Math.abs(deltaX);
-
-  if (currentState.phase === "locked" && !isHorizontalGesture) {
-    return {
-      state: {
-        ...currentState,
-        lastEventTime: eventTime,
-        lastDeltaMagnitude: deltaMagnitude,
-        minimumDeltaMagnitude: getUpdatedLowWaterMagnitude(
-          currentState,
-          deltaMagnitude,
-        ),
-        hasDecelerated:
-          currentState.hasDecelerated ||
-          deltaMagnitude < currentState.lastDeltaMagnitude,
-        restartDeltaX: 0,
-      },
-      captured: true,
-    };
-  }
-
-  if (deltaX === 0) {
-    return {
-      state: {
-        ...currentState,
-        phase:
-          currentState.phase === "idle" ? "tracking" : currentState.phase,
-        lastEventTime: eventTime,
-        lastDeltaMagnitude: 0,
-        minimumDeltaMagnitude: 0,
-        hasDecelerated:
-          currentState.phase === "locked" ||
-          currentState.hasDecelerated,
-        restartDeltaX: 0,
-      },
-      captured: true,
-    };
-  }
-
-  if (currentState.phase !== "locked") {
     const changedDirection =
-      currentState.accumulatedDeltaX !== 0 &&
-      Math.sign(currentState.accumulatedDeltaX) !== Math.sign(deltaX);
+      current.accumulatedDeltaX !== 0 &&
+      directionOf(current.accumulatedDeltaX) !== directionOf(deltaX);
     const accumulatedDeltaX = changedDirection
       ? deltaX
-      : currentState.accumulatedDeltaX + deltaX;
+      : current.accumulatedDeltaX + deltaX;
 
     if (Math.abs(accumulatedDeltaX) >= PHOTO_WHEEL_NAVIGATION_THRESHOLD) {
-      return {
-        state: navigate(
-          accumulatedDeltaX,
-          eventTime,
-          deltaMagnitude,
-          callbacks,
-        ),
-        captured: true,
-      };
+      return lock(accumulatedDeltaX, time);
     }
 
-    return {
-      state: {
-        ...currentState,
-        phase: "tracking",
-        accumulatedDeltaX,
-        lastEventTime: eventTime,
-        lastDeltaMagnitude: deltaMagnitude,
-      },
-      captured: true,
-    };
+    return result(
+      { ...current, accumulatedDeltaX, lastEventTime: time },
+      true,
+    );
   }
 
-  const direction = getDirection(deltaX);
-  const restartDirection = getDirection(currentState.restartDeltaX);
-  const isContinuingRestart =
-    restartDirection !== 0 && restartDirection === direction;
+  const sawQuietTail =
+    current.sawQuietTail || magnitude <= QUIET_TAIL_MAX_DELTA;
+  const direction = directionOf(deltaX);
+  const candidateDirection = directionOf(current.accumulatedDeltaX);
+  const continuesCandidate =
+    candidateDirection !== 0 && candidateDirection === direction;
+  const canRestartSameDirection =
+    sawQuietTail &&
+    current.navigationTime !== null &&
+    time - current.navigationTime >= RESTART_DELAY_MS;
+  const canStartCandidate =
+    isHorizontal &&
+    magnitude >= RESTART_MIN_DELTA &&
+    (direction !== current.navigationDirection || canRestartSameDirection);
 
-  if (isContinuingRestart) {
-    const restartDeltaX = currentState.restartDeltaX + deltaX;
-
-    if (Math.abs(restartDeltaX) >= PHOTO_WHEEL_NAVIGATION_THRESHOLD) {
-      return {
-        state: navigate(
-          restartDeltaX,
-          eventTime,
-          deltaMagnitude,
-          callbacks,
-        ),
-        captured: true,
-      };
-    }
-
-    return {
-      state: {
-        ...currentState,
-        lastEventTime: eventTime,
-        lastDeltaMagnitude: deltaMagnitude,
-        restartDeltaX,
-      },
-      captured: true,
-    };
+  if (!isHorizontal || (!continuesCandidate && !canStartCandidate)) {
+    return result(
+      { ...current, lastEventTime: time, sawQuietTail },
+      true,
+    );
   }
 
-  const isOppositeDirection =
-    direction !== currentState.navigationDirection;
-  const isRenewedSameDirectionImpulse =
-    currentState.hasDecelerated &&
-    currentState.navigationTime !== null &&
-    eventTime - currentState.navigationTime >=
-      PHOTO_WHEEL_RESTART_DELAY_MS &&
-    currentState.minimumDeltaMagnitude <=
-      PHOTO_WHEEL_RESTART_LOW_WATER_MAX_DELTA &&
-    deltaMagnitude >= PHOTO_WHEEL_RESTART_MIN_DELTA &&
-    deltaMagnitude >=
-      currentState.minimumDeltaMagnitude *
-        PHOTO_WHEEL_RESTART_ACCELERATION_RATIO &&
-    deltaMagnitude - currentState.minimumDeltaMagnitude >=
-      PHOTO_WHEEL_RESTART_MIN_INCREASE;
-  const canStartRestart =
-    deltaMagnitude >= PHOTO_WHEEL_RESTART_MIN_DELTA &&
-    (isOppositeDirection || isRenewedSameDirectionImpulse);
+  const accumulatedDeltaX = continuesCandidate
+    ? current.accumulatedDeltaX + deltaX
+    : deltaX;
 
-  if (canStartRestart) {
-    if (deltaMagnitude >= PHOTO_WHEEL_NAVIGATION_THRESHOLD) {
-      return {
-        state: navigate(deltaX, eventTime, deltaMagnitude, callbacks),
-        captured: true,
-      };
-    }
-
-    return {
-      state: {
-        ...currentState,
-        lastEventTime: eventTime,
-        lastDeltaMagnitude: deltaMagnitude,
-        restartDeltaX: deltaX,
-      },
-      captured: true,
-    };
+  if (Math.abs(accumulatedDeltaX) >= PHOTO_WHEEL_NAVIGATION_THRESHOLD) {
+    return lock(accumulatedDeltaX, time);
   }
 
-  return {
-    state: {
-      ...currentState,
-      lastEventTime: eventTime,
-      lastDeltaMagnitude: deltaMagnitude,
-      minimumDeltaMagnitude: getUpdatedLowWaterMagnitude(
-        currentState,
-        deltaMagnitude,
-      ),
-      hasDecelerated:
-        currentState.hasDecelerated ||
-        deltaMagnitude < currentState.lastDeltaMagnitude,
-      restartDeltaX: 0,
+  return result(
+    {
+      ...current,
+      accumulatedDeltaX,
+      lastEventTime: time,
+      sawQuietTail,
     },
-    captured: true,
-  };
+    true,
+  );
 }
