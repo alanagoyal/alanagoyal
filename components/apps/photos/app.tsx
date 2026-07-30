@@ -25,13 +25,12 @@ interface AppProps {
 export default function App({ isDesktop = false }: AppProps) {
   // Fetch photos from Supabase
   const { photos, collections, loading, error, toggleFavorite } = usePhotos();
+  const isMobileView = !isDesktop;
 
   // Load persisted view state (runs after hydration since page waits for isHydrated)
   const [activeView, setActiveView] = useState<PhotosView>(() => loadPhotosView() as PhotosView);
   const [isViewLoaded, setIsViewLoaded] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   // Mobile opens directly into Photos content (Library by default). A persisted
   // selected photo still restores the viewer instead of the sidebar.
@@ -45,12 +44,6 @@ export default function App({ isDesktop = false }: AppProps) {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Mobile layout is determined by shell context, not viewport width
-  useEffect(() => {
-    setIsMobileView(!isDesktop);
-    setIsLayoutInitialized(true);
-  }, [isDesktop]);
 
   // Mark view as loaded after first render
   useEffect(() => {
@@ -149,10 +142,6 @@ export default function App({ isDesktop = false }: AppProps) {
       setSelectedPhotoId(filteredPhotos[selectedPhotoIndex + 1].id);
     }
   }, [selectedPhotoIndex, filteredPhotos]);
-
-  if (!isLayoutInitialized) {
-    return <div className="h-full bg-background" />;
-  }
 
   // Mobile: show either sidebar or grid
   // Desktop: show both side by side
