@@ -10,9 +10,11 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import {
   loadPhotosRotations,
   loadPhotosSelectedId,
+  loadPhotosShowGrid,
   loadPhotosView,
   savePhotosRotations,
   savePhotosSelectedId,
+  savePhotosShowGrid,
   savePhotosView,
 } from "@/lib/sidebar-persistence";
 import type { PhotoRotations } from "@/lib/sidebar-persistence";
@@ -32,10 +34,10 @@ export default function App({ isDesktop = false }: AppProps) {
   const [isViewLoaded, setIsViewLoaded] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [isScrolled, setIsScrolled] = useState(false);
-  // Mobile opens directly into Photos content (Library by default). A persisted
-  // selected photo still restores the viewer instead of the sidebar.
+  // First-time mobile visitors open directly into Library. After that, preserve
+  // whether the current tab was showing the sidebar or Photos content.
   const [showGrid, setShowGrid] = useState(
-    () => !isDesktop || loadPhotosSelectedId() !== null,
+    () => loadPhotosSelectedId() !== null || loadPhotosShowGrid(),
   );
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(() => loadPhotosSelectedId());
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
@@ -63,6 +65,12 @@ export default function App({ isDesktop = false }: AppProps) {
       savePhotosSelectedId(selectedPhotoId);
     }
   }, [selectedPhotoId, isViewLoaded]);
+
+  useEffect(() => {
+    if (isViewLoaded) {
+      savePhotosShowGrid(showGrid);
+    }
+  }, [showGrid, isViewLoaded]);
 
   useEffect(() => {
     if (isViewLoaded) {

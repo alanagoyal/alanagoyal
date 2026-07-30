@@ -34,6 +34,7 @@ const STORAGE_KEYS = {
   FINDER_SIDEBAR: "finder-sidebar",
   FINDER_PATH: "finder-path",
   PHOTOS_VIEW: "photos-view",
+  PHOTOS_SHOW_GRID: "photos-show-grid",
   PHOTOS_SELECTED: "photos-selected-id",
   PHOTOS_ROTATIONS: "photos-rotations",
   SETTINGS_STATE: "settings-state",
@@ -187,6 +188,31 @@ export function savePhotosView(view: string): void {
   }
 }
 
+export function loadPhotosShowGrid(storage?: StorageArea): boolean {
+  const target = getPhotosSessionStorage(storage);
+  if (!target) return true;
+
+  try {
+    return target.getItem(STORAGE_KEYS.PHOTOS_SHOW_GRID) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function savePhotosShowGrid(
+  showGrid: boolean,
+  storage?: StorageArea,
+): void {
+  const target = getPhotosSessionStorage(storage);
+  if (!target) return;
+
+  try {
+    target.setItem(STORAGE_KEYS.PHOTOS_SHOW_GRID, String(showGrid));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function loadPhotosSelectedId(): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -269,6 +295,7 @@ export function clearPhotosState(storage?: StorageArea): void {
 
   try {
     target.removeItem(STORAGE_KEYS.PHOTOS_VIEW);
+    target.removeItem(STORAGE_KEYS.PHOTOS_SHOW_GRID);
     target.removeItem(STORAGE_KEYS.PHOTOS_SELECTED);
     target.removeItem(STORAGE_KEYS.PHOTOS_ROTATIONS);
   } catch {
