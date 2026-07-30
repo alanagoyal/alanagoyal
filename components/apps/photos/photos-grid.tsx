@@ -136,7 +136,13 @@ export function PhotosGrid({
           <div>
             <h1 className="text-lg font-semibold">{getViewTitle()}</h1>
             {isMobileView ? (
-              <p className="min-h-4 text-xs text-muted-foreground">
+              <p
+                className={cn(
+                  "min-h-4 text-xs text-muted-foreground",
+                  (loading || error) && "invisible",
+                )}
+                aria-live="polite"
+              >
                 {photos.length} {photos.length === 1 ? "item" : "items"}
               </p>
             ) : (
