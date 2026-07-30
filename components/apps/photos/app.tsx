@@ -130,6 +130,8 @@ export default function App({ isDesktop = false }: AppProps) {
         .filter((collection) => selectedPhoto.collections.includes(collection.id))
         .map((collection) => collection.name)
     : [];
+  const isRestoringSelectedPhoto =
+    selectedPhotoId !== null && loading && !selectedPhoto;
 
   const handlePreviousPhoto = useCallback(() => {
     if (selectedPhotoIndex > 0) {
@@ -185,7 +187,9 @@ export default function App({ isDesktop = false }: AppProps) {
           {/* Photos Grid - always mounted to preserve scroll */}
           <div
             className={`flex-1 min-h-0 overflow-hidden ${
-              showPhotosGrid && !selectedPhoto ? "block" : "hidden"
+              showPhotosGrid && !selectedPhoto && !isRestoringSelectedPhoto
+                ? "block"
+                : "hidden"
             }`}
           >
             <PhotosGrid
@@ -205,6 +209,14 @@ export default function App({ isDesktop = false }: AppProps) {
               onGridSelect={handleGridSelect}
             />
           </div>
+
+          {showPhotosGrid && isRestoringSelectedPhoto && (
+            <div
+              role="status"
+              aria-label="Loading selected photo"
+              className="flex-1 min-h-0 bg-background"
+            />
+          )}
 
           {/* Photo Viewer */}
           {selectedPhoto && showPhotosGrid && (
