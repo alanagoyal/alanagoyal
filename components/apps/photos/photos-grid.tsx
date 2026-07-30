@@ -118,7 +118,7 @@ export function PhotosGrid({
       <div
         className={cn(
           "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
-          isMobileView ? "bg-background" : "bg-muted/50"
+          isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
         )}
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
       >
@@ -126,15 +126,29 @@ export function PhotosGrid({
           {isMobileView && (
             <button
               onClick={onBack}
-              className="flex items-center text-[#0A84FF] hover:text-[#0A84FF]/80 -ml-2"
+              onMouseDown={(e) => e.stopPropagation()}
+              aria-label="Back to Photos albums"
+              className="-ml-2 flex items-center text-muted-foreground"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-7 w-7" />
             </button>
           )}
           <div>
             <h1 className="text-lg font-semibold">{getViewTitle()}</h1>
-            {dateRange && (
-              <p className="text-xs text-muted-foreground">{dateRange}</p>
+            {isMobileView ? (
+              <p
+                className={cn(
+                  "min-h-4 text-xs text-muted-foreground",
+                  (loading || error) && "invisible",
+                )}
+                aria-live="polite"
+              >
+                {photos.length} {photos.length === 1 ? "item" : "items"}
+              </p>
+            ) : (
+              dateRange && (
+                <p className="text-xs text-muted-foreground">{dateRange}</p>
+              )
             )}
           </div>
         </div>

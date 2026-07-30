@@ -10,9 +10,11 @@ import { usePhotos } from "@/lib/photos/use-photos";
 import {
   loadPhotosRotations,
   loadPhotosSelectedId,
+  loadPhotosShowGrid,
   loadPhotosView,
   savePhotosRotations,
   savePhotosSelectedId,
+  savePhotosShowGrid,
   savePhotosView,
 } from "@/lib/sidebar-persistence";
 import type { PhotoRotations } from "@/lib/sidebar-persistence";
@@ -25,16 +27,18 @@ interface AppProps {
 export default function App({ isDesktop = false }: AppProps) {
   // Fetch photos from Supabase
   const { photos, collections, loading, error, toggleFavorite } = usePhotos();
+  const isMobileView = !isDesktop;
 
   // Load persisted view state (runs after hydration since page waits for isHydrated)
   const [activeView, setActiveView] = useState<PhotosView>(() => loadPhotosView() as PhotosView);
   const [isViewLoaded, setIsViewLoaded] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // If there's a selected photo, show the grid (needed for mobile to display viewer)
-  const [showGrid, setShowGrid] = useState(() => loadPhotosSelectedId() !== null);
+  // First-time mobile visitors open directly into Library. After that, preserve
+  // whether the current tab was showing the sidebar or Photos content.
+  const [showGrid, setShowGrid] = useState(
+    () => loadPhotosSelectedId() !== null || loadPhotosShowGrid(),
+  );
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(() => loadPhotosSelectedId());
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
   const [photoRotations, setPhotoRotations] = useState<PhotoRotations>(() =>
@@ -42,12 +46,6 @@ export default function App({ isDesktop = false }: AppProps) {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Mobile layout is determined by shell context, not viewport width
-  useEffect(() => {
-    setIsMobileView(!isDesktop);
-    setIsLayoutInitialized(true);
-  }, [isDesktop]);
 
   // Mark view as loaded after first render
   useEffect(() => {
@@ -67,6 +65,12 @@ export default function App({ isDesktop = false }: AppProps) {
       savePhotosSelectedId(selectedPhotoId);
     }
   }, [selectedPhotoId, isViewLoaded]);
+
+  useEffect(() => {
+    if (isViewLoaded) {
+      savePhotosShowGrid(showGrid);
+    }
+  }, [showGrid, isViewLoaded]);
 
   useEffect(() => {
     if (isViewLoaded) {
@@ -134,6 +138,8 @@ export default function App({ isDesktop = false }: AppProps) {
         .filter((collection) => selectedPhoto.collections.includes(collection.id))
         .map((collection) => collection.name)
     : [];
+  const isRestoringSelectedPhoto =
+    selectedPhotoId !== null && loading && !selectedPhoto;
 
   const handlePreviousPhoto = useCallback(() => {
     if (selectedPhotoIndex > 0) {
@@ -146,10 +152,6 @@ export default function App({ isDesktop = false }: AppProps) {
       setSelectedPhotoId(filteredPhotos[selectedPhotoIndex + 1].id);
     }
   }, [selectedPhotoIndex, filteredPhotos]);
-
-  if (!isLayoutInitialized) {
-    return <div className="h-full bg-background" />;
-  }
 
   // Mobile: show either sidebar or grid
   // Desktop: show both side by side
@@ -193,7 +195,9 @@ export default function App({ isDesktop = false }: AppProps) {
           {/* Photos Grid - always mounted to preserve scroll */}
           <div
             className={`flex-1 min-h-0 overflow-hidden ${
-              showPhotosGrid && !selectedPhoto ? "block" : "hidden"
+              showPhotosGrid && !selectedPhoto && !isRestoringSelectedPhoto
+                ? "block"
+                : "hidden"
             }`}
           >
             <PhotosGrid
@@ -213,6 +217,14 @@ export default function App({ isDesktop = false }: AppProps) {
               onGridSelect={handleGridSelect}
             />
           </div>
+
+          {showPhotosGrid && isRestoringSelectedPhoto && (
+            <div
+              role="status"
+              aria-label="Loading selected photo"
+              className="flex-1 min-h-0 bg-background"
+            />
+          )}
 
           {/* Photo Viewer */}
           {selectedPhoto && showPhotosGrid && (

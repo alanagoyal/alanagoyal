@@ -434,8 +434,8 @@ export function PhotoViewer({
       {/* Header - matches PhotosGrid header style */}
       <div
         className={cn(
-          "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
-          isMobileView ? "bg-background" : "bg-muted/50"
+          "relative px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
+          isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
         )}
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
       >
@@ -443,14 +443,21 @@ export function PhotoViewer({
         <button
           onClick={onBack}
           onMouseDown={(e) => e.stopPropagation()}
+          aria-label="Back to photo grid"
           className="flex items-center -ml-2"
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft
+            className={cn(
+              isMobileView
+                ? "h-7 w-7 text-muted-foreground"
+                : "h-5 w-5 text-foreground",
+            )}
+          />
         </button>
 
         {/* Date and counter */}
-        <div className="text-center">
-          <p className="text-sm font-medium">{formattedDate}</p>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="truncate text-sm font-medium">{formattedDate}</p>
           <p className="text-xs text-muted-foreground">
             {currentIndex + 1} of {totalPhotos}
           </p>

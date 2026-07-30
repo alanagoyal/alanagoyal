@@ -4,7 +4,9 @@ import test from "node:test";
 import {
   clearPhotosState,
   loadPhotosRotations,
+  loadPhotosShowGrid,
   savePhotosRotations,
+  savePhotosShowGrid,
 } from "../lib/sidebar-persistence";
 
 class MemoryStorage {
@@ -58,11 +60,23 @@ test("ignores malformed photo rotation entries", () => {
   });
 });
 
+test("opens Photos content by default and restores the mobile menu on refresh", () => {
+  const tabStorage = new MemoryStorage();
+
+  assert.equal(loadPhotosShowGrid(tabStorage), true);
+
+  savePhotosShowGrid(false, tabStorage);
+
+  assert.equal(loadPhotosShowGrid(tabStorage), false);
+});
+
 test("clears photo rotations with the rest of Photos view state", () => {
   const tabStorage = new MemoryStorage();
   savePhotosRotations({ "photo-one": -90 }, tabStorage);
+  savePhotosShowGrid(false, tabStorage);
 
   clearPhotosState(tabStorage);
 
   assert.deepEqual(loadPhotosRotations(tabStorage), {});
+  assert.equal(loadPhotosShowGrid(tabStorage), true);
 });
