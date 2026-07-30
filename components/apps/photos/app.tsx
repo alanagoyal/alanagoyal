@@ -33,8 +33,11 @@ export default function App({ isDesktop = false }: AppProps) {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // If there's a selected photo, show the grid (needed for mobile to display viewer)
-  const [showGrid, setShowGrid] = useState(() => loadPhotosSelectedId() !== null);
+  // Mobile opens directly into Photos content (Library by default). A persisted
+  // selected photo still restores the viewer instead of the sidebar.
+  const [showGrid, setShowGrid] = useState(
+    () => !isDesktop || loadPhotosSelectedId() !== null,
+  );
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(() => loadPhotosSelectedId());
   const [selectedInGridId, setSelectedInGridId] = useState<string | null>(null);
   const [photoRotations, setPhotoRotations] = useState<PhotoRotations>(() =>
