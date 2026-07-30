@@ -32,8 +32,23 @@ import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
 import {
   createPhotoWheelGestureState,
   handlePhotoWheelGesture,
-  PHOTO_WHEEL_GESTURE_IDLE_MS,
 } from "@/lib/photos/wheel-navigation";
+import {
+  getPhotoGestureOffset,
+  getPhotoSlideIndexes,
+  getPhotoSlideTransform,
+  PHOTO_SLIDE_DURATION_MS,
+  PHOTO_SLIDE_EASING,
+  PHOTO_SWIPE_CANCEL_DURATION_MS,
+  PHOTO_SWIPE_SETTLE_IDLE_MS,
+  shouldAnimatePhotoNavigation,
+  shouldCommitTouchPhotoSwipe,
+} from "@/lib/photos/photo-transition";
+import type {
+  PhotoGestureSource,
+  PhotoNavigationDirection,
+  PhotoNavigationSource,
+} from "@/lib/photos/photo-transition";
 
 // Preload an image for faster navigation
 function preloadImage(url: string) {
@@ -51,7 +66,7 @@ interface PhotoViewerProps {
   onPrevious: () => void;
   onNext: () => void;
   onToggleFavorite?: (photoId: string) => void;
-  rotation: number;
+  photoRotations: Record<string, number>;
   onRotate: () => void;
   collectionNames: string[];
   isMobileView: boolean;
@@ -249,7 +264,7 @@ export function PhotoViewer({
   onPrevious,
   onNext,
   onToggleFavorite,
-  rotation,
+  photoRotations,
   onRotate,
   collectionNames,
   isMobileView,
@@ -259,16 +274,19 @@ export function PhotoViewer({
   const inShell = isDesktop && windowFocus;
   const [isSwiping, setIsSwiping] = useState(false);
   const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
-  const [naturalSize, setNaturalSize] = useState<{
-    photoId: string;
-    width: number;
-    height: number;
-  } | null>(null);
+  const [naturalSizes, setNaturalSizes] = useState<
+    Record<string, { width: number; height: number }>
+  >({});
   const [containerSize, setContainerSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const gestureTrackRef = useRef<HTMLDivElement>(null);
+  const gestureFrameRef = useRef<number | null>(null);
+  const gestureSettleTimerRef = useRef<number | null>(null);
+  const gestureAnimationRef = useRef<Animation | null>(null);
+  const pendingGestureOffsetRef = useRef(0);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
@@ -276,8 +294,21 @@ export function PhotoViewer({
   const infoContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const wheelGestureStateRef = useRef(createPhotoWheelGestureState());
-  const wheelGestureIdleTimerRef = useRef<number | null>(null);
-  const wheelNavigationCallbacksRef = useRef({ onPrevious, onNext });
+  // Keep the wheel listener stable while the selected photo changes so the
+  // momentum tail cannot be mistaken for a fresh gesture after every render.
+  const navigationContextRef = useRef({
+    currentIndex,
+    photoCount: photos.length,
+    onPrevious,
+    onNext,
+  });
+  navigationContextRef.current = {
+    currentIndex,
+    photoCount: photos.length,
+    onPrevious,
+    onNext,
+  };
+  const [shouldAnimateSlides, setShouldAnimateSlides] = useState(false);
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
   const rotateLeft = useCallback(() => {
     setShouldAnimateRotation(true);
@@ -286,9 +317,203 @@ export function PhotoViewer({
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
 
+  const clearGestureSettleTimer = useCallback(() => {
+    if (gestureSettleTimerRef.current === null) return;
+    window.clearTimeout(gestureSettleTimerRef.current);
+    gestureSettleTimerRef.current = null;
+  }, []);
+
+  const cancelGestureAnimation = useCallback(() => {
+    const animation = gestureAnimationRef.current;
+    if (!animation) return;
+
+    const track = gestureTrackRef.current;
+    const currentTransform = track
+      ? window.getComputedStyle(track).transform
+      : null;
+
+    animation.onfinish = null;
+    animation.cancel();
+    gestureAnimationRef.current = null;
+
+    if (track && currentTransform && currentTransform !== "none") {
+      track.style.transform = currentTransform;
+    }
+  }, []);
+
+  const settleGestureOffset = useCallback(
+    (duration: number) => {
+      clearGestureSettleTimer();
+
+      const track = gestureTrackRef.current;
+      if (!track) return;
+
+      if (gestureFrameRef.current !== null) {
+        window.cancelAnimationFrame(gestureFrameRef.current);
+        gestureFrameRef.current = null;
+        track.style.transform = `translate3d(${pendingGestureOffsetRef.current}px, 0, 0)`;
+      }
+
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      if (prefersReducedMotion || duration === 0) {
+        cancelGestureAnimation();
+        pendingGestureOffsetRef.current = 0;
+        track.style.transform = "translate3d(0, 0, 0)";
+        return;
+      }
+
+      cancelGestureAnimation();
+      const fromTransform = window.getComputedStyle(track).transform;
+      const animation = track.animate(
+        [
+          { transform: fromTransform },
+          { transform: "translate3d(0, 0, 0)" },
+        ],
+        {
+          duration,
+          easing: PHOTO_SLIDE_EASING,
+          fill: "both",
+        },
+      );
+
+      gestureAnimationRef.current = animation;
+      animation.onfinish = () => {
+        if (gestureAnimationRef.current !== animation) return;
+        animation.onfinish = null;
+        pendingGestureOffsetRef.current = 0;
+        track.style.transform = "translate3d(0, 0, 0)";
+        animation.cancel();
+        gestureAnimationRef.current = null;
+      };
+    },
+    [cancelGestureAnimation, clearGestureSettleTimer],
+  );
+
+  const updateGestureOffset = useCallback(
+    (offset: number) => {
+      clearGestureSettleTimer();
+
+      const track = gestureTrackRef.current;
+      if (!track) return;
+
+      if (
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        settleGestureOffset(0);
+        return;
+      }
+
+      cancelGestureAnimation();
+      pendingGestureOffsetRef.current = offset;
+
+      if (gestureFrameRef.current !== null) return;
+      gestureFrameRef.current = window.requestAnimationFrame(() => {
+        gestureFrameRef.current = null;
+        const currentTrack = gestureTrackRef.current;
+        if (!currentTrack) return;
+        currentTrack.style.transform = `translate3d(${pendingGestureOffsetRef.current}px, 0, 0)`;
+      });
+    },
+    [
+      cancelGestureAnimation,
+      clearGestureSettleTimer,
+      settleGestureOffset,
+    ],
+  );
+
+  const queueGestureSettle = useCallback(() => {
+    clearGestureSettleTimer();
+    gestureSettleTimerRef.current = window.setTimeout(() => {
+      gestureSettleTimerRef.current = null;
+      settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
+    }, PHOTO_SWIPE_SETTLE_IDLE_MS);
+  }, [clearGestureSettleTimer, settleGestureOffset]);
+
+  const updateGestureFromDelta = useCallback(
+    (deltaX: number, source: PhotoGestureSource) => {
+      const viewportWidth = imageContainerRef.current?.clientWidth ?? 0;
+      const { currentIndex: activeIndex, photoCount } =
+        navigationContextRef.current;
+      updateGestureOffset(
+        getPhotoGestureOffset({
+          deltaX,
+          viewportWidth,
+          canGoPrevious: activeIndex > 0,
+          canGoNext: activeIndex < photoCount - 1,
+          source,
+        }),
+      );
+    },
+    [updateGestureOffset],
+  );
+
+  const navigatePhoto = useCallback(
+    (
+      direction: PhotoNavigationDirection,
+      source: PhotoNavigationSource,
+    ): boolean => {
+      const {
+        currentIndex: activeIndex,
+        photoCount,
+        onPrevious: navigatePrevious,
+        onNext: navigateNext,
+      } = navigationContextRef.current;
+      const canNavigate =
+        direction === "previous"
+          ? activeIndex > 0
+          : activeIndex < photoCount - 1;
+
+      if (!canNavigate) {
+        settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
+        return false;
+      }
+
+      const animate = shouldAnimatePhotoNavigation(
+        source,
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      );
+      setShouldAnimateSlides(animate);
+
+      if (direction === "previous") {
+        navigatePrevious();
+      } else {
+        navigateNext();
+      }
+
+      settleGestureOffset(animate ? PHOTO_SLIDE_DURATION_MS : 0);
+      return true;
+    },
+    [settleGestureOffset],
+  );
+
   useEffect(() => {
-    wheelNavigationCallbacksRef.current = { onPrevious, onNext };
-  }, [onPrevious, onNext]);
+    if (!shouldAnimateSlides) return;
+
+    const timer = window.setTimeout(() => {
+      setShouldAnimateSlides(false);
+    }, PHOTO_SLIDE_DURATION_MS + 40);
+
+    return () => window.clearTimeout(timer);
+  }, [currentIndex, shouldAnimateSlides]);
+
+  useEffect(() => {
+    return () => {
+      clearGestureSettleTimer();
+      if (gestureFrameRef.current !== null) {
+        window.cancelAnimationFrame(gestureFrameRef.current);
+        gestureFrameRef.current = null;
+      }
+      const animation = gestureAnimationRef.current;
+      if (animation) {
+        animation.onfinish = null;
+        animation.cancel();
+        gestureAnimationRef.current = null;
+      }
+    };
+  }, [clearGestureSettleTimer]);
 
   useEffect(() => {
     const container = imageContainerRef.current;
@@ -314,10 +539,20 @@ export function PhotoViewer({
     if (!container) return;
 
     const handleWheel = (event: WheelEvent) => {
+      let navigationAttempted = false;
       const result = handlePhotoWheelGesture(
         wheelGestureStateRef.current,
         event,
-        wheelNavigationCallbacksRef.current,
+        {
+          onPrevious: () => {
+            navigationAttempted = true;
+            navigatePhoto("previous", "wheel");
+          },
+          onNext: () => {
+            navigationAttempted = true;
+            navigatePhoto("next", "wheel");
+          },
+        },
       );
 
       if (!result.captured) return;
@@ -325,27 +560,34 @@ export function PhotoViewer({
       event.stopPropagation();
       wheelGestureStateRef.current = result.state;
 
-      if (wheelGestureIdleTimerRef.current !== null) {
-        window.clearTimeout(wheelGestureIdleTimerRef.current);
+      if (
+        navigationAttempted ||
+        (result.state.phase === "locked" &&
+          result.state.restartDeltaX === 0)
+      ) {
+        return;
       }
 
-      wheelGestureIdleTimerRef.current = window.setTimeout(() => {
-        wheelGestureStateRef.current = createPhotoWheelGestureState();
-        wheelGestureIdleTimerRef.current = null;
-      }, PHOTO_WHEEL_GESTURE_IDLE_MS);
+      const gestureDeltaX =
+        result.state.phase === "tracking"
+          ? result.state.accumulatedDeltaX
+          : result.state.restartDeltaX;
+      updateGestureFromDelta(-gestureDeltaX, "wheel");
+      queueGestureSettle();
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
       container.removeEventListener("wheel", handleWheel);
-      if (wheelGestureIdleTimerRef.current !== null) {
-        window.clearTimeout(wheelGestureIdleTimerRef.current);
-        wheelGestureIdleTimerRef.current = null;
-      }
       wheelGestureStateRef.current = createPhotoWheelGestureState();
     };
-  }, [isMobileView]);
+  }, [
+    isMobileView,
+    navigatePhoto,
+    queueGestureSettle,
+    updateGestureFromDelta,
+  ]);
 
   useEffect(() => {
     if (!isInfoOpen && !isMobileView) return;
@@ -391,16 +633,34 @@ export function PhotoViewer({
     };
   }, [isSwiping]);
 
-  // Swipe handlers for mobile navigation
+  // Swipe handlers for mobile navigation and direct gesture tracking
   const swipeHandlers = useSwipeable({
     onSwipeStart: ({ dir }) => {
       setIsSwiping(dir === "Left" || dir === "Right");
     },
-    onSwiped: () => setIsSwiping(false),
-    onSwipedLeft: () => onNext(),
-    onSwipedRight: () => onPrevious(),
+    onSwiping: ({ deltaX, dir }) => {
+      if (dir !== "Left" && dir !== "Right") return;
+      updateGestureFromDelta(deltaX, "touch");
+    },
+    onSwiped: ({ absX, dir, velocity }) => {
+      setIsSwiping(false);
+
+      if (
+        (dir !== "Left" && dir !== "Right") ||
+        !shouldCommitTouchPhotoSwipe({
+          distance: absX,
+          velocity,
+          viewportWidth: imageContainerRef.current?.clientWidth ?? 0,
+        })
+      ) {
+        settleGestureOffset(PHOTO_SWIPE_CANCEL_DURATION_MS);
+        return;
+      }
+
+      navigatePhoto(dir === "Left" ? "next" : "previous", "touch");
+    },
     trackMouse: false,
-    delta: 50,
+    delta: 10,
     preventScrollOnSwipe: !isMobileView,
   });
 
@@ -427,9 +687,9 @@ export function PhotoViewer({
       }
 
       if (e.key === "ArrowLeft") {
-        onPrevious();
+        navigatePhoto("previous", "keyboard");
       } else if (e.key === "ArrowRight") {
-        onNext();
+        navigatePhoto("next", "keyboard");
       } else if (e.key === "Escape") {
         onBack();
       }
@@ -437,28 +697,34 @@ export function PhotoViewer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onPrevious, onNext, onBack]);
+  }, [navigatePhoto, onBack]);
 
   const pstDate = toZonedTime(parseISO(photo.timestamp), "America/Los_Angeles");
   const formattedDate = format(pstDate, "MMMM d, yyyy 'at' h:mm:ss a");
-  const currentNaturalSize =
-    naturalSize?.photoId === photo.id ? naturalSize : null;
-  const isQuarterTurn = rotation % 180 !== 0;
+  const slideIndexes = getPhotoSlideIndexes(currentIndex, photos.length);
 
-  let displayedImageSize: { width: number; height: number } | null = null;
-  if (
-    rotation !== 0 &&
-    currentNaturalSize &&
-    containerSize &&
-    containerSize.width > 0 &&
-    containerSize.height > 0
-  ) {
+  const getDisplayedImageSize = (
+    photoId: string,
+    photoRotation: number,
+  ): { width: number; height: number } | null => {
+    const naturalSize = naturalSizes[photoId];
+    if (
+      photoRotation === 0 ||
+      !naturalSize ||
+      !containerSize ||
+      containerSize.width <= 0 ||
+      containerSize.height <= 0
+    ) {
+      return null;
+    }
+
+    const isQuarterTurn = photoRotation % 180 !== 0;
     const rotatedWidth = isQuarterTurn
-      ? currentNaturalSize.height
-      : currentNaturalSize.width;
+      ? naturalSize.height
+      : naturalSize.width;
     const rotatedHeight = isQuarterTurn
-      ? currentNaturalSize.width
-      : currentNaturalSize.height;
+      ? naturalSize.width
+      : naturalSize.height;
     const scale = Math.min(
       containerSize.width / rotatedWidth,
       containerSize.height / rotatedHeight,
@@ -466,16 +732,28 @@ export function PhotoViewer({
     const fittedWidth = rotatedWidth * scale;
     const fittedHeight = rotatedHeight * scale;
 
-    displayedImageSize = isQuarterTurn
+    return isQuarterTurn
       ? { width: fittedHeight, height: fittedWidth }
       : { width: fittedWidth, height: fittedHeight };
-  }
+  };
 
-  const handleImageLoad = (image: HTMLImageElement) => {
-    setNaturalSize({
-      photoId: photo.id,
-      width: image.naturalWidth,
-      height: image.naturalHeight,
+  const handleImageLoad = (photoId: string, image: HTMLImageElement) => {
+    setNaturalSizes((currentSizes) => {
+      const currentSize = currentSizes[photoId];
+      if (
+        currentSize?.width === image.naturalWidth &&
+        currentSize.height === image.naturalHeight
+      ) {
+        return currentSizes;
+      }
+
+      return {
+        ...currentSizes,
+        [photoId]: {
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        },
+      };
     });
   };
   const mobileFormattedDate = format(
@@ -512,7 +790,7 @@ export function PhotoViewer({
         {/* Date and counter */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
           <p className="truncate text-sm font-medium">{formattedDate}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs tabular-nums text-muted-foreground">
             {currentIndex + 1} of {totalPhotos}
           </p>
         </div>
@@ -669,41 +947,104 @@ export function PhotoViewer({
         >
           <div
             ref={imageContainerRef}
-            className="relative flex h-full w-full items-center justify-center overflow-hidden overscroll-x-none"
+            className="relative h-full w-full overflow-hidden overscroll-x-none"
           >
-            {displayedImageSize ? (
-              <Image
-                key={photo.id}
-                src={getViewerUrl(photo.url)}
-                alt=""
-                width={Math.max(1, Math.round(displayedImageSize.width))}
-                height={Math.max(1, Math.round(displayedImageSize.height))}
-                draggable={false}
-                style={{
-                  width: displayedImageSize.width,
-                  height: displayedImageSize.height,
-                  transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                  transition: shouldAnimateRotation
-                    ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
-                    : undefined,
-                }}
-                onLoad={(event) => handleImageLoad(event.currentTarget)}
-                priority
-                unoptimized
-              />
-            ) : (
-              <Image
-                key={photo.id}
-                src={getViewerUrl(photo.url)}
-                alt=""
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 80vw"
-                onLoad={(event) => handleImageLoad(event.currentTarget)}
-                priority
-                unoptimized
-              />
-            )}
+            <div ref={gestureTrackRef} className="absolute inset-0">
+              {slideIndexes.map((slideIndex) => {
+                const slidePhoto = photos[slideIndex];
+                const slideRotation = photoRotations[slidePhoto.id] ?? 0;
+                const displayedSize = getDisplayedImageSize(
+                  slidePhoto.id,
+                  slideRotation,
+                );
+                const isCurrentSlide = slideIndex === currentIndex;
+
+                return (
+                  <div
+                    key={slidePhoto.id}
+                    aria-hidden={!isCurrentSlide}
+                    className={cn(
+                      "pointer-events-none absolute inset-0 flex items-center justify-center",
+                      shouldAnimateSlides &&
+                        "will-change-transform transition-transform motion-reduce:transition-none",
+                    )}
+                    style={{
+                      transform: getPhotoSlideTransform(
+                        slideIndex,
+                        currentIndex,
+                      ),
+                      transitionDuration: shouldAnimateSlides
+                        ? `${PHOTO_SLIDE_DURATION_MS}ms`
+                        : undefined,
+                      transitionTimingFunction: shouldAnimateSlides
+                        ? PHOTO_SLIDE_EASING
+                        : undefined,
+                    }}
+                  >
+                    {displayedSize ? (
+                      <Image
+                        src={getViewerUrl(slidePhoto.url)}
+                        alt=""
+                        width={Math.max(
+                          1,
+                          Math.round(displayedSize.width),
+                        )}
+                        height={Math.max(
+                          1,
+                          Math.round(displayedSize.height),
+                        )}
+                        draggable={false}
+                        style={{
+                          width: displayedSize.width,
+                          height: displayedSize.height,
+                          transform: slideRotation
+                            ? `rotate(${slideRotation}deg)`
+                            : undefined,
+                          transition:
+                            isCurrentSlide && shouldAnimateRotation
+                              ? "transform 0.2s ease-out"
+                              : undefined,
+                        }}
+                        onLoad={(event) =>
+                          handleImageLoad(
+                            slidePhoto.id,
+                            event.currentTarget,
+                          )
+                        }
+                        priority={Math.abs(slideIndex - currentIndex) <= 1}
+                        unoptimized
+                      />
+                    ) : (
+                      <Image
+                        src={getViewerUrl(slidePhoto.url)}
+                        alt=""
+                        fill
+                        draggable={false}
+                        className="object-contain"
+                        style={{
+                          transform: slideRotation
+                            ? `rotate(${slideRotation}deg)`
+                            : undefined,
+                          transition:
+                            isCurrentSlide && shouldAnimateRotation
+                              ? "transform 0.2s ease-out"
+                              : undefined,
+                        }}
+                        sizes="(max-width: 768px) 100vw, 80vw"
+                        onLoad={(event) =>
+                          handleImageLoad(
+                            slidePhoto.id,
+                            event.currentTarget,
+                          )
+                        }
+                        priority={Math.abs(slideIndex - currentIndex) <= 1}
+                        unoptimized
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
