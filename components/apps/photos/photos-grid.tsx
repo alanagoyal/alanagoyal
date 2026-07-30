@@ -126,9 +126,11 @@ export function PhotosGrid({
           {isMobileView && (
             <button
               onClick={onBack}
-              className="flex items-center text-[#0A84FF] hover:text-[#0A84FF]/80 -ml-2"
+              onMouseDown={(e) => e.stopPropagation()}
+              aria-label="Back to Photos albums"
+              className="-ml-2 flex items-center text-muted-foreground"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-7 w-7" />
             </button>
           )}
           <div>

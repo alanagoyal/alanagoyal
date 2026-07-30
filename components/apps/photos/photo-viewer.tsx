@@ -443,9 +443,16 @@ export function PhotoViewer({
         <button
           onClick={onBack}
           onMouseDown={(e) => e.stopPropagation()}
+          aria-label="Back to photo grid"
           className="flex items-center -ml-2"
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft
+            className={cn(
+              isMobileView
+                ? "h-7 w-7 text-muted-foreground"
+                : "h-5 w-5 text-foreground",
+            )}
+          />
         </button>
 
         {/* Date and counter */}
