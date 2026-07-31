@@ -49,19 +49,19 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     keywords: ["light", "dark", "auto", "theme", "mode"],
   },
   {
-    id: "focus",
-    name: "Focus",
-    icon: <Moon className="w-5 h-5 fill-current text-white" />,
-    iconBg: "bg-gradient-to-b from-violet-400 to-indigo-600",
-    keywords: ["focus", "do not disturb", "sleep", "reduce interruptions", "notifications"],
-  },
-  {
     id: "menu-bar",
     name: "Menu Bar",
     icon: <PanelTop className="w-5 h-5 text-white" />,
     iconBg: "bg-gray-500",
     keywords: ["menu bar", "clock", "time", "date", "seconds"],
     desktopOnly: true,
+  },
+  {
+    id: "focus",
+    name: "Focus",
+    icon: <Moon className="w-5 h-5 fill-current text-white" />,
+    iconBg: "bg-gradient-to-b from-violet-400 to-indigo-600",
+    keywords: ["focus", "do not disturb", "sleep", "reduce interruptions", "notifications"],
   },
 ];
 
