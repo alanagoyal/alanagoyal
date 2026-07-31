@@ -72,7 +72,7 @@ a macos sierra 10.12 themed desktop with:
 **settings** - system preferences
 - wi-fi and bluetooth panels
 - appearance (light/dark/system theme)
-- menu bar clock seconds option
+- menu bar appearance and clock format options
 - airdrop and focus mode toggles
 - about this mac
 
