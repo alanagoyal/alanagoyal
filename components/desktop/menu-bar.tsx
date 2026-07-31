@@ -18,6 +18,10 @@ import { AboutDialog } from "./about-dialog";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
+import {
+  getDelayUntilNextClockRefresh,
+  getMenuBarClockRefreshMs,
+} from "@/lib/menu-bar-clock";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 
@@ -139,7 +143,11 @@ export function MenuBar({
         .join("")
         .trim();
 
-      if (clockFlashSeparators && Math.floor(now.getMilliseconds() / 500) % 2) {
+      if (
+        clockStyle === "digital" &&
+        clockFlashSeparators &&
+        Math.floor(now.getMilliseconds() / 500) % 2
+      ) {
         time = time.replaceAll(":", " ");
       }
 
@@ -150,17 +158,29 @@ export function MenuBar({
     };
 
     updateTime();
-    const interval = setInterval(
-      updateTime,
-      clockFlashSeparators ? 500 : clockShowSeconds ? 1000 : 30000
-    );
-    return () => clearInterval(interval);
+    const refreshMs = getMenuBarClockRefreshMs({
+      clockStyle,
+      flashSeparators: clockFlashSeparators,
+      showSeconds: clockShowSeconds,
+    });
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const scheduleNextUpdate = () => {
+      timeout = setTimeout(() => {
+        updateTime();
+        scheduleNextUpdate();
+      }, getDelayUntilNextClockRefresh(Date.now(), refreshMs));
+    };
+
+    scheduleNextUpdate();
+    return () => clearTimeout(timeout);
   }, [
     clockFlashSeparators,
     clockShowAmPm,
     clockShowDate,
     clockShowDayOfWeek,
     clockShowSeconds,
+    clockStyle,
   ]);
 
   // Helper to quit the focused app (quits all windows for multi-window apps)
@@ -199,10 +219,9 @@ export function MenuBar({
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 h-7 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[70] select-none",
-        menuBarBackground
-          ? "bg-white/55 dark:bg-black/55"
-          : "bg-white/20 dark:bg-black/20"
+        "fixed top-0 left-0 right-0 h-7 flex items-center justify-between px-4 z-[70] select-none",
+        menuBarBackground &&
+          "border-b border-white/10 bg-white/55 backdrop-blur-md dark:bg-black/55"
       )}
     >
       <div className="flex items-center gap-4">
