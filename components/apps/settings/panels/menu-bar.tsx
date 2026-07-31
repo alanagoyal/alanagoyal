@@ -3,10 +3,8 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Clock3, PanelTop } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { useSystemSettings } from "@/lib/system-settings-context";
-
-const blueSwitch = "data-[state=checked]:bg-[#0A7CFF]";
+import { SettingsSwitch } from "../settings-switch";
 
 function SwitchRow({
   label,
@@ -22,12 +20,11 @@ function SwitchRow({
   return (
     <div className="flex min-h-11 items-center justify-between gap-4 px-4 py-2.5">
       <span className={disabled ? "text-muted-foreground" : undefined}>{label}</span>
-      <Switch
+      <SettingsSwitch
         aria-label={label}
         checked={checked}
         disabled={disabled}
         onCheckedChange={onCheckedChange}
-        className={blueSwitch}
       />
     </div>
   );
@@ -174,11 +171,10 @@ export function MenuBarPanel() {
               </p>
             </div>
           </div>
-          <Switch
+          <SettingsSwitch
             aria-label="Show menu bar background"
             checked={menuBarBackground}
             onCheckedChange={setMenuBarBackground}
-            className={blueSwitch}
           />
         </div>
       </div>
