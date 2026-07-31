@@ -61,7 +61,7 @@ export function MenuBar({
   onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
-  const { focusMode } = useSystemSettings();
+  const { focusMode, clockShowSeconds } = useSystemSettings();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
@@ -99,14 +99,15 @@ export function MenuBar({
       const time = now.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        second: clockShowSeconds ? "2-digit" : undefined,
       });
       setCurrentTime(`${weekday} ${month} ${day} ${time}`);
     };
 
     updateTime();
-    const interval = setInterval(updateTime, 60000);
+    const interval = setInterval(updateTime, clockShowSeconds ? 1000 : 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [clockShowSeconds]);
 
   // Helper to quit the focused app (quits all windows for multi-window apps)
   // Storage is cleared automatically by closeApp → clearAppState

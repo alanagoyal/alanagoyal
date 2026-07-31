@@ -22,6 +22,8 @@ interface SystemSettingsContextValue {
   setFocusMode: (mode: FocusMode) => void;
   focusEndsAt: number | null;
   scheduleFocusEnd: (timestamp: number) => void;
+  clockShowSeconds: boolean;
+  setClockShowSeconds: (show: boolean) => void;
   osVersionId: string;
   setOSVersionId: (id: string) => void;
   currentOS: OSVersion;
@@ -35,6 +37,7 @@ const BLUETOOTH_KEY = "settings-bluetooth-enabled";
 const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
 const FOCUS_ENDS_AT_KEY = "desktop-focus-ends-at";
+const CLOCK_SHOW_SECONDS_KEY = "menu-bar-clock-show-seconds";
 const OS_VERSION_KEY = "system-os-version";
 
 // Helper to load settings from localStorage synchronously
@@ -47,6 +50,7 @@ function getInitialSettings() {
       airdropMode: "contacts" as AirdropMode,
       focusMode: "off" as FocusMode,
       focusEndsAt: null,
+      clockShowSeconds: false,
       osVersionId: DEFAULT_OS_VERSION_ID,
     };
   }
@@ -57,6 +61,7 @@ function getInitialSettings() {
   const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
   const storedFocus = localStorage.getItem(FOCUS_KEY);
   const storedFocusEndsAt = localStorage.getItem(FOCUS_ENDS_AT_KEY);
+  const storedClockShowSeconds = localStorage.getItem(CLOCK_SHOW_SECONDS_KEY);
   const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
   const parsedFocusEndsAt = storedFocusEndsAt
     ? Number(storedFocusEndsAt)
@@ -72,6 +77,7 @@ function getInitialSettings() {
       parsedFocusEndsAt !== null && Number.isFinite(parsedFocusEndsAt)
         ? parsedFocusEndsAt
         : null,
+    clockShowSeconds: storedClockShowSeconds === "true",
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
   };
 }
@@ -93,6 +99,9 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const [focusMode, setFocusModeState] = useState<FocusMode>(initial.focusMode);
   const [focusEndsAt, setFocusEndsAtState] = useState<number | null>(
     initial.focusEndsAt
+  );
+  const [clockShowSeconds, setClockShowSecondsState] = useState(
+    initial.clockShowSeconds
   );
   const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
 
@@ -201,10 +210,17 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
+  const setClockShowSeconds = useCallback((show: boolean) => {
+    setClockShowSecondsState(show);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(CLOCK_SHOW_SECONDS_KEY, String(show));
+    }
+  }, []);
+
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, clockShowSeconds, setClockShowSeconds, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
@@ -241,6 +257,8 @@ const defaultSettings: SystemSettingsContextValue = {
   setFocusMode: () => {},
   focusEndsAt: null,
   scheduleFocusEnd: () => {},
+  clockShowSeconds: false,
+  setClockShowSeconds: () => {},
   osVersionId: DEFAULT_OS_VERSION_ID,
   setOSVersionId: () => {},
   currentOS: getOSVersion(DEFAULT_OS_VERSION_ID),
