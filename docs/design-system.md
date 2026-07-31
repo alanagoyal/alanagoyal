@@ -351,6 +351,15 @@ For app-level mobile views, keep base surfaces consistent with semantic tokens:
 
 ## Common Patterns
 
+### Settings Switches
+
+Use `SettingsSwitch` (`components/apps/settings/settings-switch.tsx`) for
+standalone toggles in System Settings instead of hand-building the track and
+thumb. The desktop variant is the shared 40×24 blue macOS control; pass
+`isMobile` for the existing 48×28 green touch presentation. Controls where the
+entire row is itself the switch, such as Focus modes, may keep the switch visual
+non-interactive inside the row to avoid nesting buttons.
+
 ### Desktop Notifications
 
 Top-right banners use `DesktopNotificationBanner` for incoming Messages notifications. Keep promotional or long-lived content in Notification Center instead of showing it as a desktop banner.

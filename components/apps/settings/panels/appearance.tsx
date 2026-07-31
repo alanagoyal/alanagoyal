@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { SettingsSwitch } from "../settings-switch";
 import { Check } from "lucide-react";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { OS_VERSIONS, getThumbnailPath } from "@/lib/os-versions";
@@ -301,20 +302,14 @@ export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollC
         <div className="rounded-xl bg-background">
           <div className="flex items-center justify-between p-4">
             <span className="text-base">Automatic</span>
-            <button
-              onClick={() => handleThemeChange(isAutomatic ? "light" : "system")}
-              className={cn(
-                "w-12 h-7 rounded-full transition-colors relative",
-                isAutomatic ? "bg-green-500" : "bg-gray-300"
-              )}
-            >
-              <div
-                className={cn(
-                  "absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform",
-                  isAutomatic ? "translate-x-5" : "translate-x-0.5"
-                )}
-              />
-            </button>
+            <SettingsSwitch
+              aria-label="Automatic appearance"
+              checked={isAutomatic}
+              onCheckedChange={(checked) =>
+                handleThemeChange(checked ? "system" : "light")
+              }
+              isMobile
+            />
           </div>
         </div>
 

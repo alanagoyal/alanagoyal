@@ -6,6 +6,7 @@ import { OSVersion, getOSVersion, DEFAULT_OS_VERSION_ID } from "@/lib/os-version
 
 export type AirdropMode = "contacts" | "everyone";
 export type FocusMode = "off" | "doNotDisturb" | "sleep" | "reduceInterruptions";
+export type ClockStyle = "digital" | "analog";
 
 interface SystemSettingsContextValue {
   brightness: number;
@@ -22,6 +23,20 @@ interface SystemSettingsContextValue {
   setFocusMode: (mode: FocusMode) => void;
   focusEndsAt: number | null;
   scheduleFocusEnd: (timestamp: number) => void;
+  menuBarBackground: boolean;
+  setMenuBarBackground: (show: boolean) => void;
+  clockShowDate: boolean;
+  setClockShowDate: (show: boolean) => void;
+  clockShowDayOfWeek: boolean;
+  setClockShowDayOfWeek: (show: boolean) => void;
+  clockStyle: ClockStyle;
+  setClockStyle: (style: ClockStyle) => void;
+  clockShowAmPm: boolean;
+  setClockShowAmPm: (show: boolean) => void;
+  clockFlashSeparators: boolean;
+  setClockFlashSeparators: (flash: boolean) => void;
+  clockShowSeconds: boolean;
+  setClockShowSeconds: (show: boolean) => void;
   osVersionId: string;
   setOSVersionId: (id: string) => void;
   currentOS: OSVersion;
@@ -35,6 +50,13 @@ const BLUETOOTH_KEY = "settings-bluetooth-enabled";
 const AIRDROP_KEY = "system-airdrop";
 const FOCUS_KEY = "system-focus";
 const FOCUS_ENDS_AT_KEY = "desktop-focus-ends-at";
+const MENU_BAR_BACKGROUND_KEY = "menu-bar-show-background";
+const CLOCK_SHOW_DATE_KEY = "menu-bar-clock-show-date";
+const CLOCK_SHOW_DAY_KEY = "menu-bar-clock-show-day";
+const CLOCK_STYLE_KEY = "menu-bar-clock-style";
+const CLOCK_SHOW_AM_PM_KEY = "menu-bar-clock-show-am-pm";
+const CLOCK_FLASH_SEPARATORS_KEY = "menu-bar-clock-flash-separators";
+const CLOCK_SHOW_SECONDS_KEY = "menu-bar-clock-show-seconds";
 const OS_VERSION_KEY = "system-os-version";
 
 // Helper to load settings from localStorage synchronously
@@ -47,6 +69,13 @@ function getInitialSettings() {
       airdropMode: "contacts" as AirdropMode,
       focusMode: "off" as FocusMode,
       focusEndsAt: null,
+      menuBarBackground: false,
+      clockShowDate: true,
+      clockShowDayOfWeek: true,
+      clockStyle: "digital" as ClockStyle,
+      clockShowAmPm: true,
+      clockFlashSeparators: false,
+      clockShowSeconds: false,
       osVersionId: DEFAULT_OS_VERSION_ID,
     };
   }
@@ -57,6 +86,8 @@ function getInitialSettings() {
   const storedAirdrop = localStorage.getItem(AIRDROP_KEY);
   const storedFocus = localStorage.getItem(FOCUS_KEY);
   const storedFocusEndsAt = localStorage.getItem(FOCUS_ENDS_AT_KEY);
+  const storedClockStyle = localStorage.getItem(CLOCK_STYLE_KEY);
+  const storedClockShowSeconds = localStorage.getItem(CLOCK_SHOW_SECONDS_KEY);
   const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
   const parsedFocusEndsAt = storedFocusEndsAt
     ? Number(storedFocusEndsAt)
@@ -72,6 +103,13 @@ function getInitialSettings() {
       parsedFocusEndsAt !== null && Number.isFinite(parsedFocusEndsAt)
         ? parsedFocusEndsAt
         : null,
+    menuBarBackground: localStorage.getItem(MENU_BAR_BACKGROUND_KEY) === "true",
+    clockShowDate: localStorage.getItem(CLOCK_SHOW_DATE_KEY) !== "false",
+    clockShowDayOfWeek: localStorage.getItem(CLOCK_SHOW_DAY_KEY) !== "false",
+    clockStyle: (storedClockStyle === "analog" ? "analog" : "digital") as ClockStyle,
+    clockShowAmPm: localStorage.getItem(CLOCK_SHOW_AM_PM_KEY) !== "false",
+    clockFlashSeparators: localStorage.getItem(CLOCK_FLASH_SEPARATORS_KEY) === "true",
+    clockShowSeconds: storedClockShowSeconds === "true",
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
   };
 }
@@ -93,6 +131,23 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const [focusMode, setFocusModeState] = useState<FocusMode>(initial.focusMode);
   const [focusEndsAt, setFocusEndsAtState] = useState<number | null>(
     initial.focusEndsAt
+  );
+  const [menuBarBackground, setMenuBarBackgroundState] = useState(
+    initial.menuBarBackground
+  );
+  const [clockShowDate, setClockShowDateState] = useState(initial.clockShowDate);
+  const [clockShowDayOfWeek, setClockShowDayOfWeekState] = useState(
+    initial.clockShowDayOfWeek
+  );
+  const [clockStyle, setClockStyleState] = useState<ClockStyle>(initial.clockStyle);
+  const [clockShowAmPm, setClockShowAmPmState] = useState(
+    initial.clockShowAmPm
+  );
+  const [clockFlashSeparators, setClockFlashSeparatorsState] = useState(
+    initial.clockFlashSeparators
+  );
+  const [clockShowSeconds, setClockShowSecondsState] = useState(
+    initial.clockShowSeconds
   );
   const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
 
@@ -201,10 +256,47 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
+  const setClockShowSeconds = useCallback((show: boolean) => {
+    setClockShowSecondsState(show);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(CLOCK_SHOW_SECONDS_KEY, String(show));
+    }
+  }, []);
+
+  const setMenuBarBackground = useCallback((show: boolean) => {
+    setMenuBarBackgroundState(show);
+    localStorage.setItem(MENU_BAR_BACKGROUND_KEY, String(show));
+  }, []);
+
+  const setClockShowDate = useCallback((show: boolean) => {
+    setClockShowDateState(show);
+    localStorage.setItem(CLOCK_SHOW_DATE_KEY, String(show));
+  }, []);
+
+  const setClockShowDayOfWeek = useCallback((show: boolean) => {
+    setClockShowDayOfWeekState(show);
+    localStorage.setItem(CLOCK_SHOW_DAY_KEY, String(show));
+  }, []);
+
+  const setClockStyle = useCallback((style: ClockStyle) => {
+    setClockStyleState(style);
+    localStorage.setItem(CLOCK_STYLE_KEY, style);
+  }, []);
+
+  const setClockShowAmPm = useCallback((show: boolean) => {
+    setClockShowAmPmState(show);
+    localStorage.setItem(CLOCK_SHOW_AM_PM_KEY, String(show));
+  }, []);
+
+  const setClockFlashSeparators = useCallback((flash: boolean) => {
+    setClockFlashSeparatorsState(flash);
+    localStorage.setItem(CLOCK_FLASH_SEPARATORS_KEY, String(flash));
+  }, []);
+
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, menuBarBackground, setMenuBarBackground, clockShowDate, setClockShowDate, clockShowDayOfWeek, setClockShowDayOfWeek, clockStyle, setClockStyle, clockShowAmPm, setClockShowAmPm, clockFlashSeparators, setClockFlashSeparators, clockShowSeconds, setClockShowSeconds, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
@@ -241,6 +333,20 @@ const defaultSettings: SystemSettingsContextValue = {
   setFocusMode: () => {},
   focusEndsAt: null,
   scheduleFocusEnd: () => {},
+  menuBarBackground: false,
+  setMenuBarBackground: () => {},
+  clockShowDate: true,
+  setClockShowDate: () => {},
+  clockShowDayOfWeek: true,
+  setClockShowDayOfWeek: () => {},
+  clockStyle: "digital",
+  setClockStyle: () => {},
+  clockShowAmPm: true,
+  setClockShowAmPm: () => {},
+  clockFlashSeparators: false,
+  setClockFlashSeparators: () => {},
+  clockShowSeconds: false,
+  setClockShowSeconds: () => {},
   osVersionId: DEFAULT_OS_VERSION_ID,
   setOSVersionId: () => {},
   currentOS: getOSVersion(DEFAULT_OS_VERSION_ID),

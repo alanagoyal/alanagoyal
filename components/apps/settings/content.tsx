@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Paintbrush, Bluetooth, Wifi, Moon } from "lucide-react";
+import { Settings, Paintbrush, Bluetooth, Wifi, Moon, PanelTop } from "lucide-react";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { GeneralPanel } from "./panels/general";
 import { AboutPanel } from "./panels/about";
@@ -10,6 +10,7 @@ import { BluetoothPanel } from "./panels/bluetooth";
 import { WifiPanel } from "./panels/wifi";
 import { StoragePanel } from "./panels/storage";
 import { FocusPanel } from "./panels/focus";
+import { MenuBarPanel } from "./panels/menu-bar";
 import { cn } from "@/lib/utils";
 
 interface ContentProps {
@@ -56,6 +57,12 @@ const categoryInfo: Record<
     title: "Focus",
     description: "Choose when notifications and interruptions are allowed.",
     iconBg: "bg-violet-500",
+  },
+  "menu-bar": {
+    icon: <PanelTop className="w-8 h-8" />,
+    title: "Menu Bar",
+    description: "Choose how the clock appears in the menu bar.",
+    iconBg: "bg-gray-500",
   },
 };
 
@@ -104,6 +111,14 @@ export function Content({
         )}
       >
         <FocusPanel isMobile={isMobile} />
+      </div>
+    );
+  }
+
+  if (selectedCategory === "menu-bar") {
+    return (
+      <div className="flex-1 overflow-y-auto bg-background">
+        <MenuBarPanel />
       </div>
     );
   }

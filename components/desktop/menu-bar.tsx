@@ -18,12 +18,31 @@ import { AboutDialog } from "./about-dialog";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
+import {
+  getDelayUntilNextClockRefresh,
+  getMenuBarClockRefreshMs,
+} from "@/lib/menu-bar-clock";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 
 type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
+
+function AnalogClock({ date }: { date: Date }) {
+  const minuteAngle = date.getMinutes() * 6;
+  const hourAngle = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4">
+      <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 3.5v1M10 15.5v1M3.5 10h1M15.5 10h1" stroke="currentColor" strokeWidth="1" />
+      <path d="M10 10V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" transform={`rotate(${hourAngle} 10 10)`} />
+      <path d="M10 10V4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" transform={`rotate(${minuteAngle} 10 10)`} />
+      <circle cx="10" cy="10" r="1" fill="currentColor" />
+    </svg>
+  );
+}
 
 interface MenuBarProps {
   onOpenSettings?: () => void;
@@ -61,9 +80,20 @@ export function MenuBar({
   onFinderStatusBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
-  const { focusMode } = useSystemSettings();
+  const {
+    focusMode,
+    menuBarBackground,
+    clockShowDate,
+    clockShowDayOfWeek,
+    clockStyle,
+    clockShowAmPm,
+    clockFlashSeparators,
+    clockShowSeconds,
+  } = useSystemSettings();
   const { getFocusedAppId, closeApp, state, setMenuOpen } = useWindowManager();
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [datePrefix, setDatePrefix] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [lowPowerMode, setLowPowerMode] = useState(false);
@@ -93,20 +123,65 @@ export function MenuBar({
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const weekday = now.toLocaleDateString("en-US", { weekday: "short" });
-      const month = now.toLocaleDateString("en-US", { month: "short" });
-      const day = now.getDate();
-      const time = now.toLocaleTimeString("en-US", {
+      const dateParts = [
+        clockShowDayOfWeek
+          ? now.toLocaleDateString("en-US", { weekday: "short" })
+          : null,
+        clockShowDate
+          ? now.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          : null,
+      ].filter(Boolean);
+      const timeParts = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
         minute: "2-digit",
-      });
-      setCurrentTime(`${weekday} ${month} ${day} ${time}`);
+        second: clockShowSeconds ? "2-digit" : undefined,
+        hour12: true,
+      }).formatToParts(now);
+      let time = timeParts
+        .filter((part) => clockShowAmPm || part.type !== "dayPeriod")
+        .map((part) => part.value)
+        .join("")
+        .trim();
+
+      if (
+        clockStyle === "digital" &&
+        clockFlashSeparators &&
+        Math.floor(now.getMilliseconds() / 500) % 2
+      ) {
+        time = time.replaceAll(":", " ");
+      }
+
+      const prefix = dateParts.join(" ");
+      setCurrentDate(now);
+      setDatePrefix(prefix);
+      setCurrentTime(prefix ? `${prefix} ${time}` : time);
     };
 
     updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    const refreshMs = getMenuBarClockRefreshMs({
+      clockStyle,
+      flashSeparators: clockFlashSeparators,
+      showSeconds: clockShowSeconds,
+    });
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const scheduleNextUpdate = () => {
+      timeout = setTimeout(() => {
+        updateTime();
+        scheduleNextUpdate();
+      }, getDelayUntilNextClockRefresh(Date.now(), refreshMs));
+    };
+
+    scheduleNextUpdate();
+    return () => clearTimeout(timeout);
+  }, [
+    clockFlashSeparators,
+    clockShowAmPm,
+    clockShowDate,
+    clockShowDayOfWeek,
+    clockShowSeconds,
+    clockStyle,
+  ]);
 
   // Helper to quit the focused app (quits all windows for multi-window apps)
   // Storage is cleared automatically by closeApp → clearAppState
@@ -142,7 +217,13 @@ export function MenuBar({
   const closeMenu = useCallback(() => setOpenMenu(null), []);
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-7 bg-white/20 dark:bg-black/20 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-[70] select-none">
+    <div
+      className={cn(
+        "fixed top-0 left-0 right-0 h-7 flex items-center justify-between px-4 z-[70] select-none",
+        menuBarBackground &&
+          "border-b border-white/10 bg-white/55 backdrop-blur-md dark:bg-black/55"
+      )}
+    >
       <div className="flex items-center gap-4">
         <button
           onClick={() => toggleMenu("apple")}
@@ -263,15 +344,24 @@ export function MenuBar({
         {/* Date/Time */}
         <button
           onClick={() => toggleMenu("notificationCenter")}
+          aria-label={currentDate ? currentDate.toLocaleString("en-US") : "Date and time"}
+          data-testid="menu-bar-clock"
           className={cn(
-            "text-sm px-2 py-0.5 rounded transition-colors ml-1",
+            "flex items-center gap-1.5 text-sm px-2 py-0.5 rounded transition-colors ml-1",
             openMenu === "notificationCenter"
               ? "bg-white/30 dark:bg-white/20"
               : "can-hover:hover:bg-white/10",
             "text-black dark:text-white"
           )}
         >
-          {currentTime}
+          {clockStyle === "analog" && currentDate ? (
+            <>
+              {datePrefix && <span>{datePrefix}</span>}
+              <AnalogClock date={currentDate} />
+            </>
+          ) : (
+            currentTime
+          )}
         </button>
       </div>
 

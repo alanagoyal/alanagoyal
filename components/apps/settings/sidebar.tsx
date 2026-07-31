@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery, Moon } from "lucide-react";
+import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery, Moon, PanelTop } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SettingsSwitch } from "./settings-switch";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { SidebarNav } from "./sidebar-nav";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,6 +48,14 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     icon: <Paintbrush className="w-5 h-5 text-white" />,
     iconBg: "bg-blue-500",
     keywords: ["light", "dark", "auto", "theme", "mode"],
+  },
+  {
+    id: "menu-bar",
+    name: "Menu Bar",
+    icon: <PanelTop className="w-5 h-5 text-white" />,
+    iconBg: "bg-gray-500",
+    keywords: ["menu bar", "clock", "time", "date", "seconds"],
+    desktopOnly: true,
   },
   {
     id: "focus",
@@ -190,18 +199,12 @@ export function Sidebar({
                         </span>
                         <span className="flex-1 text-left text-base">{item.name}</span>
                         {item.type === "toggle" && (
-                          <button
-                            onClick={() => setAirplaneMode(!airplaneMode)}
-                            className={cn(
-                              "w-12 h-7 rounded-full relative transition-colors",
-                              airplaneMode ? "bg-green-500" : "bg-gray-300"
-                            )}
-                          >
-                            <div className={cn(
-                              "absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform",
-                              airplaneMode ? "translate-x-5" : "translate-x-0.5"
-                            )} />
-                          </button>
+                          <SettingsSwitch
+                            aria-label="Airplane Mode"
+                            checked={airplaneMode}
+                            onCheckedChange={setAirplaneMode}
+                            isMobile
+                          />
                         )}
                         {item.type === "value" && (
                           <span className="text-muted-foreground text-base">{item.value}</span>
