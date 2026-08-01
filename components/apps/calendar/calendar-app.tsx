@@ -269,7 +269,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setSelectedEventId(eventId);
   }, []);
 
-  // Event editing (double-click on user event)
+  // Event editing (double-click on desktop, tap on mobile)
   const handleEditEvent = useCallback((eventId: string) => {
     // Find the event in user events
     const event = events.find((e) => e.id === eventId);
@@ -419,7 +419,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             onScrollChange={handleTimeGridScroll}
             selectedEventId={isMobile ? null : selectedEventId}
             onSelectEvent={isMobile ? undefined : handleSelectEvent}
-            onEditEvent={isMobile ? undefined : handleEditEvent}
+            onEditEvent={handleEditEvent}
             isMobile={isMobile}
             onNavigate={handleNavigate}
             onToday={handleToday}

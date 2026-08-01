@@ -128,6 +128,7 @@ interface TimeGridProps {
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
   onEditEvent?: (eventId: string) => void;
+  editOnClick?: boolean;
 }
 
 function useCurrentTime(): Date {
@@ -169,6 +170,7 @@ export function TimeGrid({
   selectedEventId,
   onSelectEvent,
   onEditEvent,
+  editOnClick = false,
 }: TimeGridProps) {
   const hours = getDayHours();
   const now = useCurrentTime();
@@ -452,12 +454,16 @@ export function TimeGrid({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (isUserEvent) {
-                          onSelectEvent?.(isSelected ? null : event.id);
+                          if (editOnClick) {
+                            onEditEvent?.(event.id);
+                          } else {
+                            onSelectEvent?.(isSelected ? null : event.id);
+                          }
                         }
                       }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
-                        if (isUserEvent) {
+                        if (isUserEvent && !editOnClick) {
                           onEditEvent?.(event.id);
                         }
                       }}

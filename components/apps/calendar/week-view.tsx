@@ -128,6 +128,7 @@ export function WeekView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        editOnClick={isMobile}
       />
 
       {/* Time grid - scrollable, no day headers */}
@@ -142,6 +143,7 @@ export function WeekView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        editOnClick={isMobile}
       />
     </div>
   );
