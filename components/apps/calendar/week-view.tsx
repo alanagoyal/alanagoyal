@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getWeekDays, formatDateHeader, isToday, format } from "./utils";
 import { TimeGrid } from "./time-grid";
@@ -20,6 +20,7 @@ interface WeekViewProps {
   isMobile?: boolean;
   onNavigate?: (direction: "prev" | "next") => void;
   onToday?: () => void;
+  onNewEvent?: () => void;
 }
 
 export function WeekView({
@@ -35,6 +36,7 @@ export function WeekView({
   isMobile = false,
   onNavigate,
   onToday,
+  onNewEvent,
 }: WeekViewProps) {
   const weekDays = getWeekDays(currentDate);
 
@@ -53,6 +55,7 @@ export function WeekView({
               variant="ghost"
               size="icon"
               onClick={() => onNavigate("prev")}
+              aria-label="Previous Week"
               className="h-8 w-8"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -71,10 +74,23 @@ export function WeekView({
               variant="ghost"
               size="icon"
               onClick={() => onNavigate("next")}
+              aria-label="Next Week"
               className="h-8 w-8"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
+
+            {onNewEvent && (
+              <button
+                type="button"
+                onClick={onNewEvent}
+                aria-label="New Event"
+                title="New Event"
+                className="grid h-11 w-11 place-items-center rounded-lg text-[#FF3B30] active:bg-muted/60"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            )}
           </div>
         )}
       </div>

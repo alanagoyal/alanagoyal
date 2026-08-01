@@ -382,15 +382,17 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
       className="calendar-app h-full flex flex-col bg-background text-foreground relative outline-none overflow-hidden"
     >
       {/* Navigation bar */}
-      <Nav
-        view={view}
-        onViewChange={handleViewChange}
-        onNavigate={handleNavigate}
-        onToday={handleToday}
-        onNewEvent={handleNewEvent}
-        inShell={inShell}
-        isMobile={isMobile}
-      />
+      {!isMobile && (
+        <Nav
+          view={view}
+          onViewChange={handleViewChange}
+          onNavigate={handleNavigate}
+          onToday={handleToday}
+          onNewEvent={handleNewEvent}
+          inShell={inShell}
+          isMobile={false}
+        />
+      )}
 
       {/* Calendar view */}
       <div className="flex-1 overflow-hidden">
@@ -421,6 +423,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             isMobile={isMobile}
             onNavigate={handleNavigate}
             onToday={handleToday}
+            onNewEvent={handleNewEvent}
           />
         )}
         {view === "month" && (
