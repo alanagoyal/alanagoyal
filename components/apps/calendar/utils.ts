@@ -410,6 +410,22 @@ export function getEventsForDateRange(
   });
 }
 
+// Month cells have room for only a few rows. Keep user-created events visible
+// ahead of generated sample/holiday events while preserving both groups' order.
+export function prioritizeUserEvents(
+  dayEvents: CalendarEvent[],
+  userEventIds: ReadonlySet<string>
+): CalendarEvent[] {
+  const owned: CalendarEvent[] = [];
+  const publicEvents: CalendarEvent[] = [];
+
+  for (const event of dayEvents) {
+    (userEventIds.has(event.id) ? owned : publicEvents).push(event);
+  }
+
+  return [...owned, ...publicEvents];
+}
+
 // Calculate event position in time grid (for day/week views)
 export function getEventTimePosition(event: CalendarEvent): {
   top: number;

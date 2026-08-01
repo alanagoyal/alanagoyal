@@ -15,6 +15,7 @@ import {
   isToday,
   format,
   formatEventTime,
+  prioritizeUserEvents,
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
 
@@ -75,6 +76,10 @@ export function MonthView({
 
   // Base date for all week calculations
   const baseDate = useMemo(() => getBaseDate(), []);
+  const userEventIds = useMemo(
+    () => new Set(events.map((event) => event.id)),
+    [events]
+  );
 
   // Total scrollable height
   const totalHeight = TOTAL_WEEKS * WEEK_HEIGHT;
@@ -231,6 +236,7 @@ export function MonthView({
             >
               {days.map((day, dayIdx) => {
                 const dayEvents = getEventsForDay(events, day);
+                const orderedDayEvents = prioritizeUserEvents(dayEvents, userEventIds);
                 const dayIsToday = isToday(day);
                 const isFirstOfMonth = day.getDate() === 1;
                 const monthOfDay = getMonth(day);
@@ -286,7 +292,7 @@ export function MonthView({
 
                     {/* Events */}
                     <div className="space-y-0.5 overflow-hidden">
-                      {dayEvents.slice(0, 3).map((event) => {
+                      {orderedDayEvents.slice(0, 3).map((event) => {
                         const color = getCalendarColor(event.calendarId);
                         const dateStr = format(day, "yyyy-MM-dd");
                         const isStart = event.startDate === dateStr;
@@ -326,9 +332,9 @@ export function MonthView({
                           </div>
                         );
                       })}
-                      {dayEvents.length > 3 && (
+                      {orderedDayEvents.length > 3 && (
                         <div className="text-xs text-muted-foreground pl-1">
-                          +{dayEvents.length - 3} more
+                          +{orderedDayEvents.length - 3} more
                         </div>
                       )}
                     </div>
