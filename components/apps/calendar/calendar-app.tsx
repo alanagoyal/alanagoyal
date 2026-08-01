@@ -445,6 +445,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             calendars={calendars}
             onCreateEvent={handleCreateEvent}
             onDateClick={handleDateClick}
+            onEditEvent={handleEditEvent}
             onViewEvent={handleViewEvent}
           />
         )}

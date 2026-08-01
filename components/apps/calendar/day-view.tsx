@@ -52,6 +52,7 @@ export function DayView({
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
         onViewEvent={onViewEvent}
+        editOnClick
       />
 
       {/* Time grid */}
@@ -67,6 +68,7 @@ export function DayView({
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
         onViewEvent={onViewEvent}
+        editOnClick
       />
     </div>
   );

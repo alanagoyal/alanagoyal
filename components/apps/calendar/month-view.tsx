@@ -25,6 +25,7 @@ interface MonthViewProps {
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
   onDateClick?: (date: Date) => void;
   onMonthChange?: (date: Date) => void;
+  onEditEvent?: (eventId: string) => void;
   onViewEvent?: (event: CalendarEvent) => void;
 }
 
@@ -56,6 +57,7 @@ export function MonthView({
   onCreateEvent,
   onDateClick,
   onMonthChange,
+  onEditEvent,
   onViewEvent,
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -293,17 +295,16 @@ export function MonthView({
                         return (
                           <div
                             key={event.id}
-                            className={cn(
-                              "text-xs px-1.5 py-0.5 truncate flex items-center gap-1 rounded",
-                              isUserEvent ? "cursor-default" : "cursor-pointer"
-                            )}
+                            className="text-xs px-1.5 py-0.5 truncate flex items-center gap-1 rounded cursor-pointer"
                             style={{
                               backgroundColor: `${color}20`,
                               color: color,
                             }}
                             onClick={(clickEvent) => {
-                              if (!isUserEvent) {
-                                clickEvent.stopPropagation();
+                              clickEvent.stopPropagation();
+                              if (isUserEvent) {
+                                onEditEvent?.(event.id);
+                              } else {
                                 onViewEvent?.(event);
                               }
                             }}
