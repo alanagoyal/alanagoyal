@@ -15,6 +15,7 @@ import {
   isToday,
   format,
   formatEventTime,
+  getUpcomingEventDefaults,
   prioritizeUserEvents,
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
@@ -23,7 +24,12 @@ interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   calendars: Calendar[];
-  onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  onCreateEvent: (
+    date: Date,
+    startTime: string,
+    endTime: string,
+    endDate?: Date
+  ) => void;
   onDateClick?: (date: Date) => void;
   onMonthChange?: (date: Date) => void;
   onEditEvent?: (eventId: string) => void;
@@ -111,7 +117,13 @@ export function MonthView({
 
   // Handle double-click to create event
   const handleDoubleClick = useCallback((date: Date) => {
-    onCreateEvent(date, "09:00", "10:00");
+    const defaults = getUpcomingEventDefaults(date);
+    onCreateEvent(
+      defaults.startDate,
+      defaults.startTime,
+      defaults.endTime,
+      defaults.endDate
+    );
   }, [onCreateEvent]);
 
   // Initialize viewport height

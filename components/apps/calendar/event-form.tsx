@@ -48,6 +48,13 @@ const TIME_OPTIONS = generateTimeOptions();
 // End time options include 24:00 (midnight/end of day)
 const END_TIME_OPTIONS = [...TIME_OPTIONS, "24:00"];
 
+function dateTimeFor(date: string, time: string): Date {
+  if (time === "24:00") {
+    return addDays(parseISO(date), 1);
+  }
+  return parseISO(`${date}T${time}:00`);
+}
+
 // Format time for display (12-hour format)
 function formatTimeDisplay(time: string): string {
   const [hour, minute] = time.split(":").map(Number);
@@ -357,27 +364,18 @@ export function EventForm({
                   onChange={(e) => {
                     const newStartTime = e.target.value;
 
-                    // Calculate current duration in minutes
-                    const [oldStartH, oldStartM] = startTime.split(":").map(Number);
-                    const [oldEndH, oldEndM] = endTime.split(":").map(Number);
-                    const durationMinutes = (oldEndH * 60 + oldEndM) - (oldStartH * 60 + oldStartM);
-
-                    // Calculate new end time preserving duration
-                    const [newStartH, newStartM] = newStartTime.split(":").map(Number);
-                    const newEndMinutes = newStartH * 60 + newStartM + durationMinutes;
-                    let newEndH = Math.floor(newEndMinutes / 60);
-                    let newEndM = newEndMinutes % 60;
-
-                    // Clamp to end of day (24:00 max)
-                    if (newEndH > 24 || (newEndH === 24 && newEndM > 0)) {
-                      newEndH = 24;
-                      newEndM = 0;
-                    }
-
-                    const newEndTime = `${newEndH.toString().padStart(2, "0")}:${newEndM.toString().padStart(2, "0")}`;
+                    const oldStart = dateTimeFor(startDate, startTime);
+                    const oldEnd = dateTimeFor(endDate, endTime);
+                    const durationMs = Math.max(
+                      15 * 60 * 1000,
+                      oldEnd.getTime() - oldStart.getTime()
+                    );
+                    const newStart = dateTimeFor(startDate, newStartTime);
+                    const newEnd = new Date(newStart.getTime() + durationMs);
 
                     setStartTime(newStartTime);
-                    setEndTime(newEndTime);
+                    setEndDate(format(newEnd, "yyyy-MM-dd"));
+                    setEndTime(format(newEnd, "HH:mm"));
                   }}
                   className={cn(
                     "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
@@ -433,7 +431,10 @@ export function EventForm({
                       "focus:outline-none focus:ring-2 focus:ring-ring"
                     )}
                   >
-                    {END_TIME_OPTIONS.filter((time) => time > startTime).map(
+                    {(endDate > startDate
+                      ? TIME_OPTIONS
+                      : END_TIME_OPTIONS.filter((time) => time > startTime)
+                    ).map(
                       (time) => (
                         <option key={time} value={time}>
                           {formatTimeDisplay(time)}

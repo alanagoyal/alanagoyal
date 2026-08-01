@@ -9,7 +9,7 @@ import { MonthView } from "./month-view";
 import { YearView } from "./year-view";
 import { EventForm } from "./event-form";
 import { ViewType, CalendarEvent, Calendar } from "./types";
-import { navigateDate } from "./utils";
+import { getUpcomingEventDefaults, navigateDate } from "./utils";
 import { loadCalendars } from "./data";
 
 // Valid view types for type guard
@@ -228,19 +228,20 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // Event creation
   const handleNewEvent = useCallback(() => {
+    const defaults = getUpcomingEventDefaults(currentDate);
     setEventFormReadOnly(false);
-    setEventFormInitialDate(currentDate);
-    setEventFormInitialEndDate(currentDate);
-    setEventFormInitialStartTime("09:00");
-    setEventFormInitialEndTime("10:00");
+    setEventFormInitialDate(defaults.startDate);
+    setEventFormInitialEndDate(defaults.endDate);
+    setEventFormInitialStartTime(defaults.startTime);
+    setEventFormInitialEndTime(defaults.endTime);
     setEventFormOpen(true);
   }, [currentDate]);
 
   const handleCreateEvent = useCallback(
-    (date: Date, startTime: string, endTime: string) => {
+    (date: Date, startTime: string, endTime: string, endDate: Date = date) => {
       setEventFormReadOnly(false);
       setEventFormInitialDate(date);
-      setEventFormInitialEndDate(date);
+      setEventFormInitialEndDate(endDate);
       setEventFormInitialStartTime(startTime);
       setEventFormInitialEndTime(endTime);
       setEventFormOpen(true);

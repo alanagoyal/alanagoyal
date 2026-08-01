@@ -426,6 +426,35 @@ export function prioritizeUserEvents(
   return [...owned, ...publicEvents];
 }
 
+export interface UpcomingEventDefaults {
+  startDate: Date;
+  endDate: Date;
+  startTime: string;
+  endTime: string;
+}
+
+// Start new events at the next strictly future half-hour in the user's local
+// time, retaining the date currently being viewed and a one-hour duration.
+export function getUpcomingEventDefaults(
+  referenceDate: Date,
+  now: Date = new Date()
+): UpcomingEventDefaults {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const nextHalfHour = (Math.floor(currentMinutes / 30) + 1) * 30;
+  const startDate = new Date(referenceDate);
+  startDate.setHours(0, nextHalfHour, 0, 0);
+
+  const endDate = new Date(startDate);
+  endDate.setMinutes(endDate.getMinutes() + 60);
+
+  return {
+    startDate,
+    endDate,
+    startTime: format(startDate, "HH:mm"),
+    endTime: format(endDate, "HH:mm"),
+  };
+}
+
 // Calculate event position in time grid (for day/week views)
 export function getEventTimePosition(event: CalendarEvent): {
   top: number;
