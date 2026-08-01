@@ -19,6 +19,7 @@ interface EventFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (event: CalendarEvent) => void;
+  onDelete?: (eventId: string) => void;
   calendars: Calendar[];
   initialDate?: Date;
   initialEndDate?: Date;
@@ -60,6 +61,7 @@ export function EventForm({
   open,
   onOpenChange,
   onSave,
+  onDelete,
   calendars,
   initialDate,
   initialEndDate,
@@ -157,6 +159,12 @@ export function EventForm({
     };
 
     onSave(event);
+    onOpenChange(false);
+  };
+
+  const handleDelete = () => {
+    if (!eventToEdit || !onDelete) return;
+    onDelete(eventToEdit.id);
     onOpenChange(false);
   };
 
@@ -421,22 +429,44 @@ export function EventForm({
           </div>
         </div>
 
+        {isMobile && isEditing && onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="mt-8 h-14 w-full rounded-[24px] bg-background text-lg text-[#FF3B30] shadow-[0_1px_1px_rgba(0,0,0,0.03)] active:bg-background/70"
+          >
+            Delete Event
+          </button>
+        )}
+
         {/* Action buttons */}
-        {!isMobile && <div className="flex justify-end gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            className="bg-muted hover:bg-muted/80 text-foreground"
-          >
-            {isEditing ? "Save" : "Add"}
-          </Button>
+        {!isMobile && <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
+          {isEditing && onDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-[#FF3B30] can-hover:hover:bg-[#FF3B30]/10 can-hover:hover:text-[#FF3B30]"
+            >
+              Delete
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="bg-muted hover:bg-muted/80 text-foreground"
+            >
+              {isEditing ? "Save" : "Add"}
+            </Button>
+          </div>
         </div>}
         </div>
       </DialogContent>

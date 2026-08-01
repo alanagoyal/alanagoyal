@@ -452,6 +452,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
           if (!open) setEventToEdit(null);
         }}
         onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
         calendars={calendars}
         initialDate={eventFormInitialDate}
         initialEndDate={eventFormInitialEndDate}
