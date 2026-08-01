@@ -13,6 +13,7 @@ interface AllDayRowProps {
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
   onEditEvent?: (eventId: string) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
   editOnClick?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function AllDayRow({
   selectedEventId,
   onSelectEvent,
   onEditEvent,
+  onViewEvent,
   editOnClick = false,
 }: AllDayRowProps) {
   // Get calendar color by id
@@ -95,6 +97,8 @@ export function AllDayRow({
                       } else {
                         onSelectEvent?.(isSelected ? null : event.id);
                       }
+                    } else {
+                      onViewEvent?.(event);
                     }
                   }}
                   onDoubleClick={(e) => {

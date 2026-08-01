@@ -25,6 +25,7 @@ interface MonthViewProps {
   onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
   onDateClick?: (date: Date) => void;
   onMonthChange?: (date: Date) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -55,6 +56,7 @@ export function MonthView({
   onCreateEvent,
   onDateClick,
   onMonthChange,
+  onViewEvent,
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleMonth, setVisibleMonth] = useState(currentDate);
@@ -286,14 +288,24 @@ export function MonthView({
                         const color = getCalendarColor(event.calendarId);
                         const dateStr = format(day, "yyyy-MM-dd");
                         const isStart = event.startDate === dateStr;
+                        const isUserEvent = events.some((item) => item.id === event.id);
 
                         return (
                           <div
                             key={event.id}
-                            className="text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1 rounded"
+                            className={cn(
+                              "text-xs px-1.5 py-0.5 truncate flex items-center gap-1 rounded",
+                              isUserEvent ? "cursor-default" : "cursor-pointer"
+                            )}
                             style={{
                               backgroundColor: `${color}20`,
                               color: color,
+                            }}
+                            onClick={(clickEvent) => {
+                              if (!isUserEvent) {
+                                clickEvent.stopPropagation();
+                                onViewEvent?.(event);
+                              }
                             }}
                           >
                             <span

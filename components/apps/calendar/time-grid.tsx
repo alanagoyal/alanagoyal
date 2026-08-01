@@ -128,6 +128,7 @@ interface TimeGridProps {
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
   onEditEvent?: (eventId: string) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
   editOnClick?: boolean;
 }
 
@@ -170,6 +171,7 @@ export function TimeGrid({
   selectedEventId,
   onSelectEvent,
   onEditEvent,
+  onViewEvent,
   editOnClick = false,
 }: TimeGridProps) {
   const hours = getDayHours();
@@ -459,6 +461,8 @@ export function TimeGrid({
                           } else {
                             onSelectEvent?.(isSelected ? null : event.id);
                           }
+                        } else {
+                          onViewEvent?.(event);
                         }
                       }}
                       onDoubleClick={(e) => {

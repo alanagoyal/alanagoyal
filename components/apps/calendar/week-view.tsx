@@ -17,6 +17,7 @@ interface WeekViewProps {
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
   onEditEvent?: (eventId: string) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
   isMobile?: boolean;
   onNavigate?: (direction: "prev" | "next") => void;
   onToday?: () => void;
@@ -33,6 +34,7 @@ export function WeekView({
   selectedEventId,
   onSelectEvent,
   onEditEvent,
+  onViewEvent,
   isMobile = false,
   onNavigate,
   onToday,
@@ -128,6 +130,7 @@ export function WeekView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        onViewEvent={onViewEvent}
         editOnClick={isMobile}
       />
 
@@ -143,6 +146,7 @@ export function WeekView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        onViewEvent={onViewEvent}
         editOnClick={isMobile}
       />
     </div>

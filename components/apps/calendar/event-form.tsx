@@ -27,6 +27,7 @@ interface EventFormProps {
   initialEndTime?: string;
   container?: HTMLElement | null;
   eventToEdit?: CalendarEvent | null;
+  readOnly?: boolean;
   isMobile?: boolean;
 }
 
@@ -69,6 +70,7 @@ export function EventForm({
   initialEndTime,
   container,
   eventToEdit,
+  readOnly = false,
   isMobile = false,
 }: EventFormProps) {
   const isEditing = !!eventToEdit;
@@ -140,6 +142,7 @@ export function EventForm({
   }, [open, initialDate, initialEndDate, initialStartTime, initialEndTime, calendars, eventToEdit]);
 
   const handleSave = () => {
+    if (readOnly) return;
     const eventTitle = title.trim() || "New Event";
 
     // For timed events ending at 24:00, keep the time as 24:00 for correct rendering
@@ -186,7 +189,9 @@ export function EventForm({
         aria-describedby={undefined}
         data-calendar-event-form={isMobile ? "mobile-sheet" : "desktop-dialog"}
       >
-        <DialogTitle className="sr-only">{isEditing ? "Edit Event" : "Create New Event"}</DialogTitle>
+        <DialogTitle className="sr-only">
+          {readOnly ? "Event Details" : isEditing ? "Edit Event" : "Create New Event"}
+        </DialogTitle>
 
         {isMobile && (
           <div className="relative flex h-[76px] shrink-0 items-center justify-between px-4 pt-2">
@@ -199,16 +204,20 @@ export function EventForm({
               <X className="h-6 w-6" strokeWidth={2} />
             </button>
             <span className="absolute inset-x-16 text-center text-lg font-semibold">
-              {isEditing ? "Edit Event" : "New"}
+              {readOnly ? "Event Details" : isEditing ? "Edit Event" : "New"}
             </span>
-            <button
-              type="button"
-              onClick={handleSave}
-              aria-label={isEditing ? "Save Event" : "Add Event"}
-              className="grid h-11 w-11 place-items-center rounded-full bg-[#FF3B30] text-white shadow-sm active:scale-95 active:bg-[#D92D27]"
-            >
-              <Check className="h-6 w-6" strokeWidth={2.5} />
-            </button>
+            {readOnly ? (
+              <div className="h-11 w-11" aria-hidden="true" />
+            ) : (
+              <button
+                type="button"
+                onClick={handleSave}
+                aria-label={isEditing ? "Save Event" : "Add Event"}
+                className="grid h-11 w-11 place-items-center rounded-full bg-[#FF3B30] text-white shadow-sm active:scale-95 active:bg-[#D92D27]"
+              >
+                <Check className="h-6 w-6" strokeWidth={2.5} />
+              </button>
+            )}
           </div>
         )}
 
@@ -231,6 +240,7 @@ export function EventForm({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  readOnly={readOnly}
                   placeholder={isMobile ? "Title" : "New Event"}
                   className={cn(
                     "flex-1 bg-transparent border-none outline-none",
@@ -244,6 +254,7 @@ export function EventForm({
                 <div className="relative" ref={calendarDropdownRef}>
                   <button
                     type="button"
+                    disabled={readOnly}
                     onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
                     className="flex items-center gap-1 rounded p-1 transition-colors can-hover:hover:bg-muted/50"
                   >
@@ -262,6 +273,7 @@ export function EventForm({
                         <button
                           key={calendar.id}
                           type="button"
+                          disabled={readOnly}
                           onClick={() => {
                             setCalendarId(calendar.id);
                             setShowCalendarDropdown(false);
@@ -292,6 +304,7 @@ export function EventForm({
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
+                  readOnly={readOnly}
                   placeholder={isMobile ? "Location or Video Call" : "Add Location"}
                   className={cn(
                     "flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground",
@@ -313,6 +326,7 @@ export function EventForm({
             <Switch
               checked={isAllDay}
               onCheckedChange={setIsAllDay}
+              disabled={readOnly}
             />
           </div>
 
@@ -322,6 +336,7 @@ export function EventForm({
             <div className="flex min-w-0 gap-2">
               <input
                 type="date"
+                disabled={readOnly}
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
@@ -338,6 +353,7 @@ export function EventForm({
               {!isAllDay && (
                 <select
                   value={startTime}
+                  disabled={readOnly}
                   onChange={(e) => {
                     const newStartTime = e.target.value;
 
@@ -386,6 +402,7 @@ export function EventForm({
               {isAllDay ? (
                 <input
                   type="date"
+                  disabled={readOnly}
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
@@ -408,6 +425,7 @@ export function EventForm({
                   />
                   <select
                     value={endTime}
+                    disabled={readOnly}
                     onChange={(e) => setEndTime(e.target.value)}
                     className={cn(
                       "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
@@ -429,7 +447,7 @@ export function EventForm({
           </div>
         </div>
 
-        {isMobile && isEditing && onDelete && (
+        {isMobile && isEditing && !readOnly && onDelete && (
           <button
             type="button"
             onClick={handleDelete}
@@ -441,7 +459,7 @@ export function EventForm({
 
         {/* Action buttons */}
         {!isMobile && <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
-          {isEditing && onDelete ? (
+          {isEditing && !readOnly && onDelete ? (
             <Button
               variant="ghost"
               size="sm"
@@ -451,21 +469,23 @@ export function EventForm({
               Delete
             </Button>
           ) : <span />}
-          <div className="flex gap-2">
+          <div className="ml-auto flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {readOnly ? "Close" : "Cancel"}
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              className="bg-muted hover:bg-muted/80 text-foreground"
-            >
-              {isEditing ? "Save" : "Add"}
-            </Button>
+            {!readOnly && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                className="bg-muted hover:bg-muted/80 text-foreground"
+              >
+                {isEditing ? "Save" : "Add"}
+              </Button>
+            )}
           </div>
         </div>}
         </div>

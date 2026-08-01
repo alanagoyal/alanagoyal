@@ -15,6 +15,7 @@ interface DayViewProps {
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
   onEditEvent?: (eventId: string) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
 }
 
 export function DayView({
@@ -27,6 +28,7 @@ export function DayView({
   selectedEventId,
   onSelectEvent,
   onEditEvent,
+  onViewEvent,
 }: DayViewProps) {
   const dates = [currentDate];
 
@@ -49,6 +51,7 @@ export function DayView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        onViewEvent={onViewEvent}
       />
 
       {/* Time grid */}
@@ -63,6 +66,7 @@ export function DayView({
         selectedEventId={selectedEventId}
         onSelectEvent={onSelectEvent}
         onEditEvent={onEditEvent}
+        onViewEvent={onViewEvent}
       />
     </div>
   );
