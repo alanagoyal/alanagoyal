@@ -456,6 +456,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         initialEndTime={eventFormInitialEndTime}
         container={dialogContainer}
         eventToEdit={eventToEdit}
+        isMobile={isMobile}
       />
     </div>
   );

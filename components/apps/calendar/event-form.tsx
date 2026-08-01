@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MapPin, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, MapPin, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ interface EventFormProps {
   initialEndTime?: string;
   container?: HTMLElement | null;
   eventToEdit?: CalendarEvent | null;
+  isMobile?: boolean;
 }
 
 // Generate time options in 15-minute increments
@@ -66,6 +67,7 @@ export function EventForm({
   initialEndTime,
   container,
   eventToEdit,
+  isMobile = false,
 }: EventFormProps) {
   const isEditing = !!eventToEdit;
   const [title, setTitle] = useState("");
@@ -166,81 +168,140 @@ export function EventForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         container={container}
-        className="desktop:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
+        overlayClassName={isMobile ? "bg-black/20 backdrop-blur-[1px]" : undefined}
+        className={cn(
+          "p-0 gap-0 overflow-hidden [&>button]:hidden",
+          isMobile
+            ? "!left-0 !top-2 bottom-0 flex !h-[calc(100%-0.5rem)] !max-h-none !w-full !max-w-none !translate-x-0 !translate-y-0 flex-col rounded-t-[32px] border-x-0 border-b-0 border-white/70 bg-[#F2F2F7] shadow-2xl dark:border-white/10 dark:bg-[#1C1C1E] data-[state=open]:slide-in-from-bottom-8 data-[state=closed]:slide-out-to-bottom-8"
+            : "desktop:max-w-[320px]"
+        )}
         aria-describedby={undefined}
+        data-calendar-event-form={isMobile ? "mobile-sheet" : "desktop-dialog"}
       >
         <DialogTitle className="sr-only">{isEditing ? "Edit Event" : "Create New Event"}</DialogTitle>
-        {/* Title input - inline style */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="New Event"
-              className="flex-1 text-lg font-medium bg-transparent border-none outline-none placeholder:text-foreground"
-              autoFocus
-            />
-            {/* Calendar color dropdown */}
-            <div className="relative" ref={calendarDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
-                className="flex items-center gap-1 p-1 rounded hover:bg-muted/50 transition-colors"
-              >
-                <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: calendarColor }}
+
+        {isMobile && (
+          <div className="relative flex h-[76px] shrink-0 items-center justify-between px-4 pt-2">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Cancel"
+              className="grid h-11 w-11 place-items-center rounded-full bg-background/90 shadow-sm active:scale-95 active:bg-background"
+            >
+              <X className="h-6 w-6" strokeWidth={2} />
+            </button>
+            <span className="absolute inset-x-16 text-center text-lg font-semibold">
+              {isEditing ? "Edit Event" : "New"}
+            </span>
+            <button
+              type="button"
+              onClick={handleSave}
+              aria-label={isEditing ? "Save Event" : "Add Event"}
+              className="grid h-11 w-11 place-items-center rounded-full bg-[#FF3B30] text-white shadow-sm active:scale-95 active:bg-[#D92D27]"
+            >
+              <Check className="h-6 w-6" strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
+
+        <div
+          className={cn(
+            isMobile &&
+              "min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          )}
+        >
+          <div
+            className={cn(
+              isMobile &&
+                "mt-2 rounded-[24px] bg-background shadow-[0_1px_1px_rgba(0,0,0,0.03)]"
+            )}
+          >
+            {/* Title input - inline style */}
+            <div className={cn("px-4 pt-4 pb-2", isMobile && "pt-3 pb-3")}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={isMobile ? "Title" : "New Event"}
+                  className={cn(
+                    "flex-1 bg-transparent border-none outline-none",
+                    isMobile
+                      ? "min-w-0 text-xl font-normal placeholder:text-muted-foreground/55"
+                      : "text-lg font-medium placeholder:text-foreground"
+                  )}
+                  autoFocus
                 />
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              </button>
-              {showCalendarDropdown && (
-                <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
-                  {[...calendars.filter(c => c.id !== "holidays"), ...calendars.filter(c => c.id === "holidays")].map((calendar) => (
-                    <button
-                      key={calendar.id}
-                      type="button"
-                      onClick={() => {
-                        setCalendarId(calendar.id);
-                        setShowCalendarDropdown(false);
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors",
-                        calendarId === calendar.id && "bg-muted/30"
-                      )}
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: calendar.color }}
-                      />
-                      <span>{calendar.name}</span>
-                    </button>
-                  ))}
+                {/* Calendar color dropdown */}
+                <div className="relative" ref={calendarDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                    className="flex items-center gap-1 rounded p-1 transition-colors can-hover:hover:bg-muted/50"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: calendarColor }}
+                    />
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  {showCalendarDropdown && (
+                    <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                      {[
+                        ...calendars.filter((c) => c.id !== "holidays"),
+                        ...calendars.filter((c) => c.id === "holidays"),
+                      ].map((calendar) => (
+                        <button
+                          key={calendar.id}
+                          type="button"
+                          onClick={() => {
+                            setCalendarId(calendar.id);
+                            setShowCalendarDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors can-hover:hover:bg-muted/50",
+                            calendarId === calendar.id && "bg-muted/30"
+                          )}
+                        >
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{ backgroundColor: calendar.color }}
+                          />
+                          <span>{calendar.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className={cn("px-4 py-2 border-t border-border/50", isMobile && "py-3")}>
+              <div className="flex items-center gap-2">
+                {!isMobile && <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />}
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder={isMobile ? "Location or Video Call" : "Add Location"}
+                  className={cn(
+                    "flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground",
+                    isMobile ? "text-lg" : "text-sm"
+                  )}
+                />
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Location */}
-        <div className="px-4 py-2 border-t border-border/50">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Add Location"
-              className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
 
         {/* Date/Time section */}
-        <div className="px-4 py-3 border-t border-border/50 space-y-3">
+        <div className={cn(
+          "px-4 py-3 border-t border-border/50 space-y-3",
+          isMobile && "mt-5 space-y-0 rounded-[24px] border-0 bg-background py-0 shadow-[0_1px_1px_rgba(0,0,0,0.03)]"
+        )}>
           {/* All-day toggle */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm">All-day</span>
+          <div className={cn("flex items-center justify-between", isMobile && "min-h-14")}>
+            <span className={cn(isMobile ? "text-lg" : "text-sm")}>All-day</span>
             <Switch
               checked={isAllDay}
               onCheckedChange={setIsAllDay}
@@ -248,9 +309,9 @@ export function EventForm({
           </div>
 
           {/* Start */}
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Starts</div>
-            <div className="flex gap-2">
+          <div className={cn("space-y-1", isMobile && "flex min-h-14 items-center justify-between gap-3 space-y-0 border-t border-border/50")}>
+            <div className={cn(isMobile ? "shrink-0 text-lg text-foreground" : "text-xs text-muted-foreground")}>Starts</div>
+            <div className="flex min-w-0 gap-2">
               <input
                 type="date"
                 value={startDate}
@@ -262,6 +323,7 @@ export function EventForm({
                 }}
                 className={cn(
                   "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                  isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                   "focus:outline-none focus:ring-2 focus:ring-ring"
                 )}
               />
@@ -295,6 +357,7 @@ export function EventForm({
                   }}
                   className={cn(
                     "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                    isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                     "focus:outline-none focus:ring-2 focus:ring-ring"
                   )}
                 >
@@ -309,9 +372,9 @@ export function EventForm({
           </div>
 
           {/* End */}
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Ends</div>
-            <div className="flex gap-2">
+          <div className={cn("space-y-1", isMobile && "flex min-h-14 items-center justify-between gap-3 space-y-0 border-t border-border/50")}>
+            <div className={cn(isMobile ? "shrink-0 text-lg text-foreground" : "text-xs text-muted-foreground")}>Ends</div>
+            <div className="flex min-w-0 gap-2">
               {isAllDay ? (
                 <input
                   type="date"
@@ -320,6 +383,7 @@ export function EventForm({
                   min={startDate}
                   className={cn(
                     "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                    isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                     "focus:outline-none focus:ring-2 focus:ring-ring"
                   )}
                 />
@@ -330,7 +394,8 @@ export function EventForm({
                     value={endTime === "24:00" ? format(addDays(parseISO(startDate), 1), "yyyy-MM-dd") : endDate}
                     disabled
                     className={cn(
-                      "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/30 opacity-50"
+                      "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/30 opacity-50",
+                      isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base"
                     )}
                   />
                   <select
@@ -338,6 +403,7 @@ export function EventForm({
                     onChange={(e) => setEndTime(e.target.value)}
                     className={cn(
                       "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                      isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                       "focus:outline-none focus:ring-2 focus:ring-ring"
                     )}
                   >
@@ -356,7 +422,7 @@ export function EventForm({
         </div>
 
         {/* Action buttons */}
-        <div className="flex justify-end gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
+        {!isMobile && <div className="flex justify-end gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
           <Button
             variant="outline"
             size="sm"
@@ -371,6 +437,7 @@ export function EventForm({
           >
             {isEditing ? "Save" : "Add"}
           </Button>
+        </div>}
         </div>
       </DialogContent>
     </Dialog>
