@@ -15,6 +15,8 @@ import {
   isToday,
   format,
   formatEventTime,
+  getUpcomingEventDefaults,
+  prioritizeUserEvents,
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
 
@@ -22,9 +24,16 @@ interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   calendars: Calendar[];
-  onCreateEvent: (date: Date, startTime: string, endTime: string) => void;
+  onCreateEvent: (
+    date: Date,
+    startTime: string,
+    endTime: string,
+    endDate?: Date
+  ) => void;
   onDateClick?: (date: Date) => void;
   onMonthChange?: (date: Date) => void;
+  onEditEvent?: (eventId: string) => void;
+  onViewEvent?: (event: CalendarEvent) => void;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -55,6 +64,8 @@ export function MonthView({
   onCreateEvent,
   onDateClick,
   onMonthChange,
+  onEditEvent,
+  onViewEvent,
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleMonth, setVisibleMonth] = useState(currentDate);
@@ -71,6 +82,10 @@ export function MonthView({
 
   // Base date for all week calculations
   const baseDate = useMemo(() => getBaseDate(), []);
+  const userEventIds = useMemo(
+    () => new Set(events.map((event) => event.id)),
+    [events]
+  );
 
   // Total scrollable height
   const totalHeight = TOTAL_WEEKS * WEEK_HEIGHT;
@@ -102,7 +117,13 @@ export function MonthView({
 
   // Handle double-click to create event
   const handleDoubleClick = useCallback((date: Date) => {
-    onCreateEvent(date, "09:00", "10:00");
+    const defaults = getUpcomingEventDefaults(date);
+    onCreateEvent(
+      defaults.startDate,
+      defaults.startTime,
+      defaults.endTime,
+      defaults.endDate
+    );
   }, [onCreateEvent]);
 
   // Initialize viewport height
@@ -227,6 +248,7 @@ export function MonthView({
             >
               {days.map((day, dayIdx) => {
                 const dayEvents = getEventsForDay(events, day);
+                const orderedDayEvents = prioritizeUserEvents(dayEvents, userEventIds);
                 const dayIsToday = isToday(day);
                 const isFirstOfMonth = day.getDate() === 1;
                 const monthOfDay = getMonth(day);
@@ -282,18 +304,27 @@ export function MonthView({
 
                     {/* Events */}
                     <div className="space-y-0.5 overflow-hidden">
-                      {dayEvents.slice(0, 3).map((event) => {
+                      {orderedDayEvents.slice(0, 3).map((event) => {
                         const color = getCalendarColor(event.calendarId);
                         const dateStr = format(day, "yyyy-MM-dd");
                         const isStart = event.startDate === dateStr;
+                        const isUserEvent = events.some((item) => item.id === event.id);
 
                         return (
                           <div
                             key={event.id}
-                            className="text-xs px-1.5 py-0.5 truncate cursor-default flex items-center gap-1 rounded"
+                            className="text-xs px-1.5 py-0.5 truncate flex items-center gap-1 rounded cursor-pointer"
                             style={{
                               backgroundColor: `${color}20`,
                               color: color,
+                            }}
+                            onClick={(clickEvent) => {
+                              clickEvent.stopPropagation();
+                              if (isUserEvent) {
+                                onEditEvent?.(event.id);
+                              } else {
+                                onViewEvent?.(event);
+                              }
                             }}
                           >
                             <span
@@ -313,9 +344,9 @@ export function MonthView({
                           </div>
                         );
                       })}
-                      {dayEvents.length > 3 && (
+                      {orderedDayEvents.length > 3 && (
                         <div className="text-xs text-muted-foreground pl-1">
-                          +{dayEvents.length - 3} more
+                          +{orderedDayEvents.length - 3} more
                         </div>
                       )}
                     </div>

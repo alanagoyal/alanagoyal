@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MapPin, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, MapPin, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ interface EventFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (event: CalendarEvent) => void;
+  onDelete?: (eventId: string) => void;
   calendars: Calendar[];
   initialDate?: Date;
   initialEndDate?: Date;
@@ -26,6 +27,8 @@ interface EventFormProps {
   initialEndTime?: string;
   container?: HTMLElement | null;
   eventToEdit?: CalendarEvent | null;
+  readOnly?: boolean;
+  isMobile?: boolean;
 }
 
 // Generate time options in 15-minute increments
@@ -45,6 +48,13 @@ const TIME_OPTIONS = generateTimeOptions();
 // End time options include 24:00 (midnight/end of day)
 const END_TIME_OPTIONS = [...TIME_OPTIONS, "24:00"];
 
+function dateTimeFor(date: string, time: string): Date {
+  if (time === "24:00") {
+    return addDays(parseISO(date), 1);
+  }
+  return parseISO(`${date}T${time}:00`);
+}
+
 // Format time for display (12-hour format)
 function formatTimeDisplay(time: string): string {
   const [hour, minute] = time.split(":").map(Number);
@@ -59,6 +69,7 @@ export function EventForm({
   open,
   onOpenChange,
   onSave,
+  onDelete,
   calendars,
   initialDate,
   initialEndDate,
@@ -66,6 +77,8 @@ export function EventForm({
   initialEndTime,
   container,
   eventToEdit,
+  readOnly = false,
+  isMobile = false,
 }: EventFormProps) {
   const isEditing = !!eventToEdit;
   const [title, setTitle] = useState("");
@@ -136,6 +149,7 @@ export function EventForm({
   }, [open, initialDate, initialEndDate, initialStartTime, initialEndTime, calendars, eventToEdit]);
 
   const handleSave = () => {
+    if (readOnly) return;
     const eventTitle = title.trim() || "New Event";
 
     // For timed events ending at 24:00, keep the time as 24:00 for correct rendering
@@ -158,6 +172,12 @@ export function EventForm({
     onOpenChange(false);
   };
 
+  const handleDelete = () => {
+    if (!eventToEdit || !onDelete) return;
+    onDelete(eventToEdit.id);
+    onOpenChange(false);
+  };
+
   // Get calendar color
   const selectedCalendar = calendars.find((c) => c.id === calendarId);
   const calendarColor = selectedCalendar?.color || "#FF3B30";
@@ -166,93 +186,164 @@ export function EventForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         container={container}
-        className="desktop:max-w-[320px] p-0 gap-0 overflow-hidden [&>button]:hidden"
+        overlayClassName={isMobile ? "bg-black/20 backdrop-blur-[1px]" : undefined}
+        className={cn(
+          "p-0 gap-0 overflow-hidden [&>button]:hidden",
+          isMobile
+            ? "!left-0 !top-2 bottom-0 flex !h-[calc(100%-0.5rem)] !max-h-none !w-full !max-w-none !translate-x-0 !translate-y-0 flex-col rounded-t-[32px] border-x-0 border-b-0 border-white/70 bg-[#F2F2F7] shadow-2xl dark:border-white/10 dark:bg-[#1C1C1E] data-[state=open]:slide-in-from-bottom-8 data-[state=closed]:slide-out-to-bottom-8"
+            : "desktop:max-w-[320px]"
+        )}
         aria-describedby={undefined}
+        data-calendar-event-form={isMobile ? "mobile-sheet" : "desktop-dialog"}
       >
-        <DialogTitle className="sr-only">{isEditing ? "Edit Event" : "Create New Event"}</DialogTitle>
-        {/* Title input - inline style */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="New Event"
-              className="flex-1 text-lg font-medium bg-transparent border-none outline-none placeholder:text-foreground"
-              autoFocus
-            />
-            {/* Calendar color dropdown */}
-            <div className="relative" ref={calendarDropdownRef}>
+        <DialogTitle className="sr-only">
+          {readOnly ? "Event Details" : isEditing ? "Edit Event" : "Create New Event"}
+        </DialogTitle>
+
+        {isMobile && (
+          <div className="relative flex h-[76px] shrink-0 items-center justify-between px-4 pt-2">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Cancel"
+              className="grid h-11 w-11 place-items-center rounded-full bg-background/90 shadow-sm active:scale-95 active:bg-background"
+            >
+              <X className="h-6 w-6" strokeWidth={2} />
+            </button>
+            <span className="absolute inset-x-16 text-center text-lg font-semibold">
+              {readOnly ? "Event Details" : isEditing ? "Edit Event" : "New"}
+            </span>
+            {readOnly ? (
+              <div className="h-11 w-11" aria-hidden="true" />
+            ) : (
               <button
                 type="button"
-                onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
-                className="flex items-center gap-1 p-1 rounded hover:bg-muted/50 transition-colors"
+                onClick={handleSave}
+                aria-label={isEditing ? "Save Event" : "Add Event"}
+                className="grid h-11 w-11 place-items-center rounded-full bg-[#FF3B30] text-white shadow-sm active:scale-95 active:bg-[#D92D27]"
               >
-                <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: calendarColor }}
-                />
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <Check className="h-6 w-6" strokeWidth={2.5} />
               </button>
-              {showCalendarDropdown && (
-                <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
-                  {[...calendars.filter(c => c.id !== "holidays"), ...calendars.filter(c => c.id === "holidays")].map((calendar) => (
-                    <button
-                      key={calendar.id}
-                      type="button"
-                      onClick={() => {
-                        setCalendarId(calendar.id);
-                        setShowCalendarDropdown(false);
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors",
-                        calendarId === calendar.id && "bg-muted/30"
-                      )}
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: calendar.color }}
-                      />
-                      <span>{calendar.name}</span>
-                    </button>
-                  ))}
+            )}
+          </div>
+        )}
+
+        <div
+          className={cn(
+            isMobile &&
+              "min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          )}
+        >
+          <div
+            className={cn(
+              isMobile &&
+                "mt-2 rounded-[24px] bg-background shadow-[0_1px_1px_rgba(0,0,0,0.03)]"
+            )}
+          >
+            {/* Title input - inline style */}
+            <div className={cn("px-4 pt-4 pb-2", isMobile && "pt-3 pb-3")}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  readOnly={readOnly}
+                  placeholder={isMobile ? "Title" : "New Event"}
+                  className={cn(
+                    "flex-1 bg-transparent border-none outline-none",
+                    isMobile
+                      ? "min-w-0 text-xl font-normal placeholder:text-muted-foreground/55"
+                      : "text-lg font-medium placeholder:text-foreground"
+                  )}
+                  autoFocus
+                />
+                {/* Calendar color dropdown */}
+                <div className="relative" ref={calendarDropdownRef}>
+                  <button
+                    type="button"
+                    disabled={readOnly}
+                    onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                    className="flex items-center gap-1 rounded p-1 transition-colors can-hover:hover:bg-muted/50"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: calendarColor }}
+                    />
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  {showCalendarDropdown && (
+                    <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                      {[
+                        ...calendars.filter((c) => c.id !== "holidays"),
+                        ...calendars.filter((c) => c.id === "holidays"),
+                      ].map((calendar) => (
+                        <button
+                          key={calendar.id}
+                          type="button"
+                          disabled={readOnly}
+                          onClick={() => {
+                            setCalendarId(calendar.id);
+                            setShowCalendarDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors can-hover:hover:bg-muted/50",
+                            calendarId === calendar.id && "bg-muted/30"
+                          )}
+                        >
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{ backgroundColor: calendar.color }}
+                          />
+                          <span>{calendar.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className={cn("px-4 py-2 border-t border-border/50", isMobile && "py-3")}>
+              <div className="flex items-center gap-2">
+                {!isMobile && <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />}
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  readOnly={readOnly}
+                  placeholder={isMobile ? "Location or Video Call" : "Add Location"}
+                  className={cn(
+                    "flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground",
+                    isMobile ? "text-lg" : "text-sm"
+                  )}
+                />
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Location */}
-        <div className="px-4 py-2 border-t border-border/50">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Add Location"
-              className="flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
 
         {/* Date/Time section */}
-        <div className="px-4 py-3 border-t border-border/50 space-y-3">
+        <div className={cn(
+          "px-4 py-3 border-t border-border/50 space-y-3",
+          isMobile && "mt-5 space-y-0 rounded-[24px] border-0 bg-background py-0 shadow-[0_1px_1px_rgba(0,0,0,0.03)]"
+        )}>
           {/* All-day toggle */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm">All-day</span>
+          <div className={cn("flex items-center justify-between", isMobile && "min-h-14")}>
+            <span className={cn(isMobile ? "text-lg" : "text-sm")}>All-day</span>
             <Switch
               checked={isAllDay}
               onCheckedChange={setIsAllDay}
+              disabled={readOnly}
             />
           </div>
 
           {/* Start */}
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Starts</div>
-            <div className="flex gap-2">
+          <div className={cn("space-y-1", isMobile && "flex min-h-14 items-center justify-between gap-3 space-y-0 border-t border-border/50")}>
+            <div className={cn(isMobile ? "shrink-0 text-lg text-foreground" : "text-xs text-muted-foreground")}>Starts</div>
+            <div className="flex min-w-0 gap-2">
               <input
                 type="date"
+                disabled={readOnly}
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
@@ -262,39 +353,33 @@ export function EventForm({
                 }}
                 className={cn(
                   "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                  isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                   "focus:outline-none focus:ring-2 focus:ring-ring"
                 )}
               />
               {!isAllDay && (
                 <select
                   value={startTime}
+                  disabled={readOnly}
                   onChange={(e) => {
                     const newStartTime = e.target.value;
 
-                    // Calculate current duration in minutes
-                    const [oldStartH, oldStartM] = startTime.split(":").map(Number);
-                    const [oldEndH, oldEndM] = endTime.split(":").map(Number);
-                    const durationMinutes = (oldEndH * 60 + oldEndM) - (oldStartH * 60 + oldStartM);
-
-                    // Calculate new end time preserving duration
-                    const [newStartH, newStartM] = newStartTime.split(":").map(Number);
-                    const newEndMinutes = newStartH * 60 + newStartM + durationMinutes;
-                    let newEndH = Math.floor(newEndMinutes / 60);
-                    let newEndM = newEndMinutes % 60;
-
-                    // Clamp to end of day (24:00 max)
-                    if (newEndH > 24 || (newEndH === 24 && newEndM > 0)) {
-                      newEndH = 24;
-                      newEndM = 0;
-                    }
-
-                    const newEndTime = `${newEndH.toString().padStart(2, "0")}:${newEndM.toString().padStart(2, "0")}`;
+                    const oldStart = dateTimeFor(startDate, startTime);
+                    const oldEnd = dateTimeFor(endDate, endTime);
+                    const durationMs = Math.max(
+                      15 * 60 * 1000,
+                      oldEnd.getTime() - oldStart.getTime()
+                    );
+                    const newStart = dateTimeFor(startDate, newStartTime);
+                    const newEnd = new Date(newStart.getTime() + durationMs);
 
                     setStartTime(newStartTime);
-                    setEndTime(newEndTime);
+                    setEndDate(format(newEnd, "yyyy-MM-dd"));
+                    setEndTime(format(newEnd, "HH:mm"));
                   }}
                   className={cn(
                     "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                    isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                     "focus:outline-none focus:ring-2 focus:ring-ring"
                   )}
                 >
@@ -309,17 +394,19 @@ export function EventForm({
           </div>
 
           {/* End */}
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Ends</div>
-            <div className="flex gap-2">
+          <div className={cn("space-y-1", isMobile && "flex min-h-14 items-center justify-between gap-3 space-y-0 border-t border-border/50")}>
+            <div className={cn(isMobile ? "shrink-0 text-lg text-foreground" : "text-xs text-muted-foreground")}>Ends</div>
+            <div className="flex min-w-0 gap-2">
               {isAllDay ? (
                 <input
                   type="date"
+                  disabled={readOnly}
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
                   className={cn(
                     "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                    isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                     "focus:outline-none focus:ring-2 focus:ring-ring"
                   )}
                 />
@@ -330,18 +417,24 @@ export function EventForm({
                     value={endTime === "24:00" ? format(addDays(parseISO(startDate), 1), "yyyy-MM-dd") : endDate}
                     disabled
                     className={cn(
-                      "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/30 opacity-50"
+                      "flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted/30 opacity-50",
+                      isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base"
                     )}
                   />
                   <select
                     value={endTime}
+                    disabled={readOnly}
                     onChange={(e) => setEndTime(e.target.value)}
                     className={cn(
                       "px-3 py-2 text-sm rounded-lg border border-border bg-muted/50",
+                      isMobile && "min-w-0 rounded-xl border-0 bg-muted px-2 py-1.5 text-base",
                       "focus:outline-none focus:ring-2 focus:ring-ring"
                     )}
                   >
-                    {END_TIME_OPTIONS.filter((time) => time > startTime).map(
+                    {(endDate > startDate
+                      ? TIME_OPTIONS
+                      : END_TIME_OPTIONS.filter((time) => time > startTime)
+                    ).map(
                       (time) => (
                         <option key={time} value={time}>
                           {formatTimeDisplay(time)}
@@ -355,22 +448,47 @@ export function EventForm({
           </div>
         </div>
 
+        {isMobile && isEditing && !readOnly && onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="mt-8 h-14 w-full rounded-[24px] bg-background text-lg text-[#FF3B30] shadow-[0_1px_1px_rgba(0,0,0,0.03)] active:bg-background/70"
+          >
+            Delete Event
+          </button>
+        )}
+
         {/* Action buttons */}
-        <div className="flex justify-end gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            className="bg-muted hover:bg-muted/80 text-foreground"
-          >
-            {isEditing ? "Save" : "Add"}
-          </Button>
+        {!isMobile && <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border/50 bg-muted/30">
+          {isEditing && !readOnly && onDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-[#FF3B30] can-hover:hover:bg-[#FF3B30]/10 can-hover:hover:text-[#FF3B30]"
+            >
+              Delete
+            </Button>
+          ) : <span />}
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+            >
+              {readOnly ? "Close" : "Cancel"}
+            </Button>
+            {!readOnly && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                className="bg-muted hover:bg-muted/80 text-foreground"
+              >
+                {isEditing ? "Save" : "Add"}
+              </Button>
+            )}
+          </div>
+        </div>}
         </div>
       </DialogContent>
     </Dialog>

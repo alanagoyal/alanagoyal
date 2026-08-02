@@ -9,7 +9,7 @@ import { MonthView } from "./month-view";
 import { YearView } from "./year-view";
 import { EventForm } from "./event-form";
 import { ViewType, CalendarEvent, Calendar } from "./types";
-import { navigateDate } from "./utils";
+import { getUpcomingEventDefaults, navigateDate } from "./utils";
 import { loadCalendars } from "./data";
 
 // Valid view types for type guard
@@ -166,6 +166,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // Event form state
   const [eventFormOpen, setEventFormOpen] = useState(false);
+  const [eventFormReadOnly, setEventFormReadOnly] = useState(false);
   const [eventFormInitialDate, setEventFormInitialDate] = useState<Date | undefined>();
   const [eventFormInitialEndDate, setEventFormInitialEndDate] = useState<Date | undefined>();
   const [eventFormInitialStartTime, setEventFormInitialStartTime] = useState<
@@ -227,17 +228,20 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
 
   // Event creation
   const handleNewEvent = useCallback(() => {
-    setEventFormInitialDate(currentDate);
-    setEventFormInitialEndDate(currentDate);
-    setEventFormInitialStartTime("09:00");
-    setEventFormInitialEndTime("10:00");
+    const defaults = getUpcomingEventDefaults(currentDate);
+    setEventFormReadOnly(false);
+    setEventFormInitialDate(defaults.startDate);
+    setEventFormInitialEndDate(defaults.endDate);
+    setEventFormInitialStartTime(defaults.startTime);
+    setEventFormInitialEndTime(defaults.endTime);
     setEventFormOpen(true);
   }, [currentDate]);
 
   const handleCreateEvent = useCallback(
-    (date: Date, startTime: string, endTime: string) => {
+    (date: Date, startTime: string, endTime: string, endDate: Date = date) => {
+      setEventFormReadOnly(false);
       setEventFormInitialDate(date);
-      setEventFormInitialEndDate(date);
+      setEventFormInitialEndDate(endDate);
       setEventFormInitialStartTime(startTime);
       setEventFormInitialEndTime(endTime);
       setEventFormOpen(true);
@@ -269,15 +273,22 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
     setSelectedEventId(eventId);
   }, []);
 
-  // Event editing (double-click on user event)
+  // Event editing (double-click on desktop, tap on mobile)
   const handleEditEvent = useCallback((eventId: string) => {
     // Find the event in user events
     const event = events.find((e) => e.id === eventId);
     if (event) {
+      setEventFormReadOnly(false);
       setEventToEdit(event);
       setEventFormOpen(true);
     }
   }, [events]);
+
+  const handleViewEvent = useCallback((event: CalendarEvent) => {
+    setEventFormReadOnly(true);
+    setEventToEdit(event);
+    setEventFormOpen(true);
+  }, []);
 
   // Event deletion (only user events can be deleted)
   const handleDeleteEvent = useCallback((eventId: string) => {
@@ -382,15 +393,17 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
       className="calendar-app h-full flex flex-col bg-background text-foreground relative outline-none overflow-hidden"
     >
       {/* Navigation bar */}
-      <Nav
-        view={view}
-        onViewChange={handleViewChange}
-        onNavigate={handleNavigate}
-        onToday={handleToday}
-        onNewEvent={handleNewEvent}
-        inShell={inShell}
-        isMobile={isMobile}
-      />
+      {!isMobile && (
+        <Nav
+          view={view}
+          onViewChange={handleViewChange}
+          onNavigate={handleNavigate}
+          onToday={handleToday}
+          onNewEvent={handleNewEvent}
+          inShell={inShell}
+          isMobile={false}
+        />
+      )}
 
       {/* Calendar view */}
       <div className="flex-1 overflow-hidden">
@@ -405,6 +418,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             selectedEventId={selectedEventId}
             onSelectEvent={handleSelectEvent}
             onEditEvent={handleEditEvent}
+            onViewEvent={handleViewEvent}
           />
         )}
         {view === "week" && (
@@ -417,10 +431,12 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             onScrollChange={handleTimeGridScroll}
             selectedEventId={isMobile ? null : selectedEventId}
             onSelectEvent={isMobile ? undefined : handleSelectEvent}
-            onEditEvent={isMobile ? undefined : handleEditEvent}
+            onEditEvent={handleEditEvent}
+            onViewEvent={handleViewEvent}
             isMobile={isMobile}
             onNavigate={handleNavigate}
             onToday={handleToday}
+            onNewEvent={handleNewEvent}
           />
         )}
         {view === "month" && (
@@ -430,6 +446,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             calendars={calendars}
             onCreateEvent={handleCreateEvent}
             onDateClick={handleDateClick}
+            onEditEvent={handleEditEvent}
+            onViewEvent={handleViewEvent}
           />
         )}
         {view === "year" && (
@@ -446,9 +464,13 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         open={eventFormOpen}
         onOpenChange={(open) => {
           setEventFormOpen(open);
-          if (!open) setEventToEdit(null);
+          if (!open) {
+            setEventToEdit(null);
+            setEventFormReadOnly(false);
+          }
         }}
         onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
         calendars={calendars}
         initialDate={eventFormInitialDate}
         initialEndDate={eventFormInitialEndDate}
@@ -456,6 +478,8 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
         initialEndTime={eventFormInitialEndTime}
         container={dialogContainer}
         eventToEdit={eventToEdit}
+        readOnly={eventFormReadOnly}
+        isMobile={isMobile}
       />
     </div>
   );

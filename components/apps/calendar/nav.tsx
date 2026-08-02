@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { WindowControls } from "@/components/window-controls";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
+import { WindowNavShell } from "@/components/window-nav-shell";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { ViewType } from "./types";
 
@@ -52,7 +52,17 @@ export function Nav({
             closeLabel={nav.closeLabel}
           />
         }
-        right={<WindowNavSpacer isMobile={true} />}
+        right={
+          <button
+            type="button"
+            onClick={onNewEvent}
+            aria-label="New Event"
+            title="New Event"
+            className="-m-1.5 grid h-11 w-11 place-items-center rounded-lg text-[#FF3B30] active:bg-muted/60"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        }
       />
     );
   }
