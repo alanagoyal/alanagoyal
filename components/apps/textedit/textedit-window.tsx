@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
 import {
@@ -13,6 +14,12 @@ import {
   EDGE_SIZE,
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
+import {
+  findTextMatches,
+  replaceAllTextMatches,
+  replaceTextMatch,
+  TEXTEDIT_OPEN_FIND_EVENT,
+} from "@/lib/textedit-find";
 
 interface TextEditWindowProps {
   windowId: string; // Unique window identifier for multi-window support
@@ -49,11 +56,78 @@ export function TextEditWindow({
   onResize,
   onContentChange,
 }: TextEditWindowProps) {
-  // windowId is used for identification in multi-window scenarios
-  void windowId;
   const windowRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const findInputRef = useRef<HTMLInputElement>(null);
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState("");
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [replacement, setReplacement] = useState("");
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const matches = useMemo(() => findTextMatches(content, findQuery), [content, findQuery]);
+
+  useEffect(() => {
+    if (matches.length === 0) {
+      setCurrentMatchIndex(0);
+      return;
+    }
+
+    setCurrentMatchIndex((index) => Math.min(index, matches.length - 1));
+  }, [matches.length]);
+
+  useEffect(() => {
+    const handleOpenFind = (event: Event) => {
+      const { detail } = event as CustomEvent<{ windowId?: string }>;
+      if (detail.windowId !== windowId) return;
+
+      setFindOpen(true);
+      requestAnimationFrame(() => {
+        findInputRef.current?.focus();
+        findInputRef.current?.select();
+      });
+    };
+
+    window.addEventListener(TEXTEDIT_OPEN_FIND_EVENT, handleOpenFind);
+    return () => window.removeEventListener(TEXTEDIT_OPEN_FIND_EVENT, handleOpenFind);
+  }, [windowId]);
+
+  const selectMatch = useCallback((index: number) => {
+    const match = matches[index];
+    if (!match) return;
+
+    setCurrentMatchIndex(index);
+    textareaRef.current?.focus();
+    textareaRef.current?.setSelectionRange(match.start, match.end);
+  }, [matches]);
+
+  const moveMatch = (direction: -1 | 1) => {
+    if (matches.length === 0) return;
+    const nextIndex = (currentMatchIndex + direction + matches.length) % matches.length;
+    selectMatch(nextIndex);
+  };
+
+  const handleReplace = () => {
+    const match = matches[currentMatchIndex];
+    if (!match) return;
+
+    onContentChange(replaceTextMatch(content, match, replacement));
+    requestAnimationFrame(() => findInputRef.current?.focus());
+  };
+
+  const handleReplaceAll = () => {
+    if (matches.length === 0) return;
+
+    onContentChange(replaceAllTextMatches(content, matches, replacement));
+    requestAnimationFrame(() => findInputRef.current?.focus());
+  };
+
+  const closeFind = () => {
+    setFindOpen(false);
+    setReplaceOpen(false);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
 
   const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
@@ -153,9 +227,96 @@ export function TextEditWindow({
           <div className="w-[68px] shrink-0" />
         </div>
 
+        {findOpen && (
+          <div
+            data-testid="textedit-find-bar"
+            className="border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-zinc-400" />
+              <input
+                ref={findInputRef}
+                value={findQuery}
+                onChange={(event) => {
+                  setFindQuery(event.target.value);
+                  setCurrentMatchIndex(0);
+                }}
+                aria-label="Find text"
+                placeholder="Find"
+                className="h-7 min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-2 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+              <span aria-live="polite" className="w-[72px] shrink-0 text-right text-[11px] text-zinc-500 dark:text-zinc-400">
+                {!findQuery
+                  ? ""
+                  : matches.length === 0
+                    ? "No matches"
+                    : `${currentMatchIndex + 1} of ${matches.length}`}
+              </span>
+              <button
+                onClick={() => moveMatch(-1)}
+                disabled={matches.length === 0}
+                aria-label="Previous match"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md can-hover:hover:bg-zinc-200 disabled:opacity-35 dark:can-hover:hover:bg-zinc-700"
+              >
+                <ChevronUp aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => moveMatch(1)}
+                disabled={matches.length === 0}
+                aria-label="Next match"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md can-hover:hover:bg-zinc-200 disabled:opacity-35 dark:can-hover:hover:bg-zinc-700"
+              >
+                <ChevronDown aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <label className="flex shrink-0 items-center gap-1.5 text-xs">
+                <input
+                  type="checkbox"
+                  checked={replaceOpen}
+                  onChange={(event) => setReplaceOpen(event.target.checked)}
+                  className="h-3.5 w-3.5 accent-blue-500"
+                />
+                Replace
+              </label>
+              <button
+                onClick={closeFind}
+                className="h-7 shrink-0 rounded-md px-2 text-xs font-medium can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700"
+              >
+                Done
+              </button>
+            </div>
+
+            {replaceOpen && (
+              <div className="mt-2 flex min-w-0 items-center gap-2 pl-6">
+                <input
+                  value={replacement}
+                  onChange={(event) => setReplacement(event.target.value)}
+                  aria-label="Replacement text"
+                  placeholder="Replace with"
+                  className="h-7 min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-2 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-600 dark:bg-zinc-900"
+                />
+                <button
+                  onClick={handleReplace}
+                  disabled={matches.length === 0}
+                  className="h-7 shrink-0 rounded-md border border-zinc-300 bg-white px-2 text-xs can-hover:hover:bg-zinc-100 disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-900 dark:can-hover:hover:bg-zinc-700"
+                >
+                  Replace
+                </button>
+                <button
+                  onClick={handleReplaceAll}
+                  disabled={matches.length === 0}
+                  className="h-7 shrink-0 rounded-md border border-zinc-300 bg-white px-2 text-xs can-hover:hover:bg-zinc-100 disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-900 dark:can-hover:hover:bg-zinc-700"
+                >
+                  All
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Content */}
         <div className="flex-1 min-h-0">
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto text-zinc-900 dark:text-white"

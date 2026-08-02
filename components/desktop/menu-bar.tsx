@@ -14,6 +14,7 @@ import { NotificationCenter } from "./notification-center";
 import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
+import { TextEditEditMenu } from "./textedit-edit-menu";
 import { AboutDialog } from "./about-dialog";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
@@ -24,8 +25,9 @@ import {
 } from "@/lib/menu-bar-clock";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
+import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -277,6 +279,19 @@ export function MenuBar({
             View
           </button>
         )}
+        {focusedAppId === "textedit" && (
+          <button
+            onClick={() => toggleMenu("textEditEditMenu")}
+            className={cn(
+              "rounded px-2 py-0.5 text-sm transition-colors",
+              openMenu === "textEditEditMenu"
+                ? "bg-blue-500 text-white"
+                : "text-black can-hover:hover:bg-white/10 dark:text-white"
+            )}
+          >
+            Edit
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
@@ -436,6 +451,18 @@ export function MenuBar({
         onViewModeChange={(mode) => onFinderViewModeChange?.(mode)}
         statusBarVisible={finderStatusBarVisible}
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
+      />
+
+      <TextEditEditMenu
+        isOpen={openMenu === "textEditEditMenu"}
+        onClose={closeMenu}
+        onFind={() => {
+          window.dispatchEvent(
+            new CustomEvent(TEXTEDIT_OPEN_FIND_EVENT, {
+              detail: { windowId: focusedWindowId },
+            })
+          );
+        }}
       />
 
       <NotificationCenter
