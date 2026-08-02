@@ -1,5 +1,12 @@
+import {
+  getStoredTextEditDocumentPaths,
+  getTextEditContent,
+  isTextEditPathHidden,
+} from "@/lib/file-storage";
+
 export const HOME_DIR = "/Users/alanagoyal";
 export const PROJECTS_DIR = `${HOME_DIR}/Projects`;
+const TEXT_FILE_EXTENSIONS = new Set(["txt", "md", "markdown", "json", "js", "jsx", "ts", "tsx", "css", "html", "xml", "yaml", "yml"]);
 
 export type DocumentAppId = "textedit" | "preview";
 export type LocalSampleFileKind = "text" | "preview";
@@ -90,8 +97,44 @@ export function getDocumentAppFinderTarget(appId: DocumentAppId): string {
 }
 
 export function getLocalTextFileContent(filePath: string): string | null {
+  const storedContent = getTextEditContent(filePath);
+  if (storedContent !== undefined) return storedContent;
+  if (isTextEditPathHidden(filePath)) return null;
   const file = LOCAL_SAMPLE_FILE_MAP[filePath];
   return file?.kind === "text" ? (file.content ?? null) : null;
+}
+
+export function getLocalFinderFiles(directoryPath: string): LocalFinderItem[] {
+  const staticItems = (LOCAL_FINDER_FILES[directoryPath] ?? []).filter(
+    (item) => !isTextEditPathHidden(item.path)
+  );
+  const storedItems = getStoredTextEditDocumentPaths()
+    .filter((path) => path.split("/").slice(0, -1).join("/") === directoryPath)
+    .map((path) => ({
+      name: path.split("/").pop() ?? path,
+      type: "file" as const,
+      path,
+    }));
+
+  return [...staticItems, ...storedItems]
+    .filter((item, index, items) => items.findIndex((candidate) => candidate.path === item.path) === index)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+}
+
+export function getAllLocalFinderFiles(): Record<string, LocalFinderItem[]> {
+  return Object.fromEntries(
+    Object.keys(LOCAL_FINDER_FILES).map((directoryPath) => [
+      directoryPath,
+      getLocalFinderFiles(directoryPath),
+    ])
+  );
+}
+
+export function getKnownTextEditDocumentPaths(): string[] {
+  const staticTextPaths = LOCAL_SAMPLE_FILES
+    .filter((file) => file.kind === "text" && !isTextEditPathHidden(file.path))
+    .map((file) => file.path);
+  return [...staticTextPaths, ...getStoredTextEditDocumentPaths()];
 }
 
 export function getLocalPreviewAssetUrl(filePath: string): string | null {
@@ -102,6 +145,15 @@ export function getLocalPreviewAssetUrl(filePath: string): string | null {
 export function isSupportedDocumentAppPath(appId: DocumentAppId, filePath: string): boolean {
   if (!filePath) return false;
   if (appId === "textedit" && filePath.startsWith(`${PROJECTS_DIR}/`)) return true;
+
+  if (appId === "textedit") {
+    if (getStoredTextEditDocumentPaths().includes(filePath)) return true;
+    if (isTextEditPathHidden(filePath)) return false;
+    const extension = filePath.split(".").pop()?.toLowerCase() ?? "";
+    if (filePath.startsWith(`${HOME_DIR}/Documents/`) && TEXT_FILE_EXTENSIONS.has(extension)) {
+      return true;
+    }
+  }
 
   const file = LOCAL_SAMPLE_FILE_MAP[filePath];
   return file?.kind === DOCUMENT_APP_CONFIGS[appId].localFileKind;

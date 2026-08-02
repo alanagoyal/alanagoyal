@@ -19,7 +19,7 @@ export function TextEditEditMenu({ isOpen, onClose, onFind }: TextEditEditMenuPr
   return (
     <div
       ref={menuRef}
-      className="absolute top-7 left-[120px] w-56 overflow-hidden rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+      className="absolute left-[172px] top-7 w-56 overflow-hidden rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
     >
       <button
         onClick={() => {

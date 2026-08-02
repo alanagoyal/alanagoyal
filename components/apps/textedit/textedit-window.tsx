@@ -30,6 +30,7 @@ interface TextEditWindowProps {
   zIndex: number;
   isFocused: boolean;
   isMaximized: boolean;
+  isDirty: boolean;
   onFocus: () => void;
   onClose: () => void;
   onMinimize: () => void;
@@ -48,6 +49,7 @@ export function TextEditWindow({
   zIndex,
   isFocused,
   isMaximized,
+  isDirty,
   onFocus,
   onClose,
   onMinimize,
@@ -222,7 +224,12 @@ export function TextEditWindow({
             closeLabel="Close window"
           />
           <div className="flex-1 min-w-0 px-2 text-center">
-            <span className="block truncate text-zinc-500 dark:text-zinc-400 text-sm">{fileName}</span>
+            <span
+              data-testid="textedit-document-title"
+              className="block truncate text-sm text-zinc-500 dark:text-zinc-400"
+            >
+              {fileName}{isDirty ? " — Edited" : ""}
+            </span>
           </div>
           <div className="w-[68px] shrink-0" />
         </div>
@@ -317,6 +324,7 @@ export function TextEditWindow({
         <div className="flex-1 min-h-0">
           <textarea
             ref={textareaRef}
+            aria-label={`Document contents for ${fileName}`}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto text-zinc-900 dark:text-white"
