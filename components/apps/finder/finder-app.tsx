@@ -1525,7 +1525,7 @@ export function FinderApp({
   const renderPathBar = () => (
     <nav
       aria-label="Path Bar"
-      className="flex h-6 items-center justify-center overflow-x-auto border-t border-zinc-200 bg-zinc-100 px-3 text-[11px] text-zinc-600 select-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+      className="flex h-7 items-center justify-start overflow-x-auto border-t border-zinc-200 bg-zinc-100 px-3 text-[11px] text-zinc-600 select-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
     >
       <div className="flex min-w-max items-center">
         {pathSegments.map((segment, index) => {
@@ -1702,30 +1702,21 @@ export function FinderApp({
             renderFileGrid()
           )}
           </div>
+        </div>
+      </div>
+      {(showPathBar || showStatusBar) && (
+        <footer className="shrink-0">
+          {showPathBar && renderPathBar()}
           {showStatusBar && (
             <div
-              aria-hidden="true"
-              className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
-            />
+              role="status"
+              className="flex h-[22px] items-center justify-center border-t border-zinc-200 bg-white px-3 text-[10px] leading-none text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+            >
+              {statusLabel}
+            </div>
           )}
-          {showPathBar && (
-            <div aria-hidden="true" className="h-6 shrink-0" />
-          )}
-        </div>
-        {showPathBar && (
-          <div className={cn("absolute inset-x-0", showStatusBar ? "bottom-[18px]" : "bottom-0")}>
-            {renderPathBar()}
-          </div>
-        )}
-        {showStatusBar && (
-          <div
-            role="status"
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
-          >
-            {statusLabel}
-          </div>
-        )}
-      </div>
+        </footer>
+      )}
     </div>
   );
 }
