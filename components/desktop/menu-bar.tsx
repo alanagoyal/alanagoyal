@@ -260,69 +260,71 @@ export function MenuBar({
             )}
           />
         </button>
-        <button
-          onClick={() => toggleMenu("appMenu")}
-          className={cn(
-            "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
-            openMenu === "appMenu"
-              ? "bg-blue-500 text-white"
-              : "text-black dark:text-white can-hover:hover:bg-white/10"
+        <div data-testid="menu-bar-app-commands" className="flex items-center gap-1">
+          <button
+            onClick={() => toggleMenu("appMenu")}
+            className={cn(
+              "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
+              openMenu === "appMenu"
+                ? "bg-blue-500 text-white"
+                : "text-black dark:text-white can-hover:hover:bg-white/10"
+            )}
+          >
+            {focusedApp?.menuBarTitle || "Finder"}
+          </button>
+          {(focusedAppId === "notes" || focusedAppId === "messages") && (
+            <button
+              onClick={() => toggleMenu("fileMenu")}
+              className={cn(
+                "text-sm px-2 py-0.5 rounded transition-colors",
+                openMenu === "fileMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black dark:text-white can-hover:hover:bg-white/10"
+              )}
+            >
+              File
+            </button>
           )}
-        >
-          {focusedApp?.menuBarTitle || "Finder"}
-        </button>
-        {(focusedAppId === "notes" || focusedAppId === "messages") && (
-          <button
-            onClick={() => toggleMenu("fileMenu")}
-            className={cn(
-              "text-sm px-2 py-0.5 rounded transition-colors",
-              openMenu === "fileMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black dark:text-white can-hover:hover:bg-white/10"
-            )}
-          >
-            File
-          </button>
-        )}
-        {focusedAppId === "textedit" && (
-          <button
-            onClick={() => toggleMenu("textEditFileMenu")}
-            className={cn(
-              "rounded px-2 py-0.5 text-sm transition-colors",
-              openMenu === "textEditFileMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black can-hover:hover:bg-white/10 dark:text-white"
-            )}
-          >
-            File
-          </button>
-        )}
-        {focusedAppId === "finder" && (
-          <button
-            onClick={() => toggleMenu("finderViewMenu")}
-            className={cn(
-              "text-sm px-2 py-0.5 rounded transition-colors",
-              openMenu === "finderViewMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black dark:text-white can-hover:hover:bg-white/10"
-            )}
-          >
-            View
-          </button>
-        )}
-        {focusedAppId === "textedit" && (
-          <button
-            onClick={() => toggleMenu("textEditEditMenu")}
-            className={cn(
-              "rounded px-2 py-0.5 text-sm transition-colors",
-              openMenu === "textEditEditMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black can-hover:hover:bg-white/10 dark:text-white"
-            )}
-          >
-            Edit
-          </button>
-        )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditFileMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditFileMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              File
+            </button>
+          )}
+          {focusedAppId === "finder" && (
+            <button
+              onClick={() => toggleMenu("finderViewMenu")}
+              className={cn(
+                "text-sm px-2 py-0.5 rounded transition-colors",
+                openMenu === "finderViewMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black dark:text-white can-hover:hover:bg-white/10"
+              )}
+            >
+              View
+            </button>
+          )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditEditMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditEditMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              Edit
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1">

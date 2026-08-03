@@ -374,6 +374,10 @@ Focus state and scheduled expiration live in `SystemSettingsContext`, not the po
 
 The Control Center Focus tile should stay generic only while Focus is off. When active, its title, icon, and accent identify the specific mode, while its second line reports `On` or the scheduled end time.
 
+### Menu Bar Command Spacing
+
+Keep the Apple icon visually separated from the focused app, then group the app title and its commands with `gap-1`. Each command already has `px-2`, so this produces a consistent roughly 20px text-to-text rhythm between the app title, File, Edit, View, and any future command menus. Do not add per-app margins between menu labels.
+
 ### Empty State
 
 ```tsx
