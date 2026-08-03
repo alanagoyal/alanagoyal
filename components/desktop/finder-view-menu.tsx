@@ -16,6 +16,8 @@ interface FinderViewMenuProps {
   onViewModeChange: (mode: FinderViewMode) => void;
   statusBarVisible: boolean;
   onStatusBarVisibleChange: (visible: boolean) => void;
+  pathBarVisible: boolean;
+  onPathBarVisibleChange: (visible: boolean) => void;
 }
 
 export function FinderViewMenu({
@@ -25,6 +27,8 @@ export function FinderViewMenu({
   onViewModeChange,
   statusBarVisible,
   onStatusBarVisibleChange,
+  pathBarVisible,
+  onPathBarVisibleChange,
 }: FinderViewMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +63,16 @@ export function FinderViewMenu({
       ))}
 
       <div className="my-1 border-t border-black/10 dark:border-white/10" />
+
+      <button
+        onClick={() => {
+          onPathBarVisibleChange(!pathBarVisible);
+          onClose();
+        }}
+        className="w-full px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+      >
+        {pathBarVisible ? "Hide Path Bar" : "Show Path Bar"}
+      </button>
 
       <button
         onClick={() => {

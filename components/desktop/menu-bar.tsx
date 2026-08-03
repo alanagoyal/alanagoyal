@@ -63,6 +63,8 @@ interface MenuBarProps {
   onFinderViewModeChange?: (mode: FinderViewMode) => void;
   finderStatusBarVisible?: boolean;
   onFinderStatusBarVisibleChange?: (visible: boolean) => void;
+  finderPathBarVisible?: boolean;
+  onFinderPathBarVisibleChange?: (visible: boolean) => void;
   onTextEditNew?: () => void;
   onTextEditOpen?: () => void;
   onTextEditClose?: (windowId: string) => void;
@@ -87,6 +89,8 @@ export function MenuBar({
   onFinderViewModeChange,
   finderStatusBarVisible = false,
   onFinderStatusBarVisibleChange,
+  finderPathBarVisible = false,
+  onFinderPathBarVisibleChange,
   onTextEditNew,
   onTextEditOpen,
   onTextEditClose,
@@ -484,6 +488,8 @@ export function MenuBar({
         onViewModeChange={(mode) => onFinderViewModeChange?.(mode)}
         statusBarVisible={finderStatusBarVisible}
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
+        pathBarVisible={finderPathBarVisible}
+        onPathBarVisibleChange={(visible) => onFinderPathBarVisibleChange?.(visible)}
       />
 
       <TextEditEditMenu

@@ -34,6 +34,7 @@ import {
 import { useRouter } from "next/navigation";
 import { FinderSearchEngine, type EntryInput } from "./search-engine";
 import type { FinderViewMode } from "./view-mode";
+import { getFinderPathSegments } from "@/lib/finder-path";
 
 const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
@@ -73,6 +74,7 @@ interface FinderAppProps {
   viewMode?: FinderViewMode;
   onViewModeChange?: (mode: FinderViewMode) => void;
   showStatusBar?: boolean;
+  showPathBar?: boolean;
   onOpenApp?: (appId: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onOpenPreviewFile?: (filePath: string, fileUrl: string, fileType: "image" | "pdf") => void;
@@ -200,6 +202,7 @@ export function FinderApp({
   viewMode: controlledViewMode,
   onViewModeChange,
   showStatusBar = false,
+  showPathBar = false,
   onOpenApp,
   onOpenTextFile,
   onOpenPreviewFile,
@@ -1524,6 +1527,57 @@ export function FinderApp({
     : hasStatusSelection
       ? `1 of ${statusItemCount} selected`
       : `${statusItemCount} ${statusItemCount === 1 ? "item" : "items"}`;
+  const pathSegments = getFinderPathSegments(currentPath);
+
+  const handlePathSegmentClick = (path: string) => {
+    setSearchActive(false);
+    setSearchQuery("");
+    setPreviewContent(null);
+    setSelectedFile(null);
+    setSelectedSidebar(getSidebarForPath(path));
+    setCurrentPath(path);
+  };
+
+  const renderPathBar = () => (
+    <nav
+      aria-label="Path Bar"
+      className="flex h-7 items-center justify-start overflow-x-auto border-t border-zinc-200 bg-zinc-100 px-3 text-[11px] text-zinc-600 select-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+    >
+      <div className="flex min-w-max items-center">
+        {pathSegments.map((segment, index) => {
+          const isCurrent = index === pathSegments.length - 1;
+          return (
+            <div key={segment.path} className="flex items-center">
+              {index > 0 && (
+                <svg aria-hidden="true" className="mx-0.5 h-3 w-3 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              )}
+              <button
+                type="button"
+                disabled={isCurrent}
+                aria-current={isCurrent ? "location" : undefined}
+                aria-label={isCurrent ? `${segment.label}, current folder` : `Open ${segment.label}`}
+                title={segment.path}
+                onClick={() => handlePathSegmentClick(segment.path)}
+                className={cn(
+                  "flex items-center gap-1 rounded px-1.5 py-0.5",
+                  isCurrent
+                    ? "font-medium text-zinc-800 dark:text-zinc-100"
+                    : "can-hover:hover:bg-zinc-200 can-hover:hover:text-zinc-950 dark:can-hover:hover:bg-zinc-700 dark:can-hover:hover:text-white"
+                )}
+              >
+                <svg aria-hidden="true" className="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                </svg>
+                <span>{segment.label}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </nav>
+  );
 
   const renderScopeBar = () => (
     <div className="flex items-center gap-1.5 px-4 py-1 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 select-none">
@@ -1664,21 +1718,20 @@ export function FinderApp({
             renderFileGrid()
           )}
           </div>
-          {showStatusBar && (
-            <div
-              aria-hidden="true"
-              className="h-[18px] shrink-0 border-t border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
-            />
+          {(showPathBar || showStatusBar) && (
+            <footer className="shrink-0">
+              {showPathBar && renderPathBar()}
+              {showStatusBar && (
+                <div
+                  role="status"
+                  className="flex h-[22px] items-center justify-center border-t border-zinc-200 bg-white px-3 text-[10px] leading-none text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+                >
+                  {statusLabel}
+                </div>
+              )}
+            </footer>
           )}
         </div>
-        {showStatusBar && (
-          <div
-            role="status"
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[18px] items-center justify-center px-3 text-[10px] leading-none text-zinc-500 select-none dark:text-zinc-400"
-          >
-            {statusLabel}
-          </div>
-        )}
       </div>
     </div>
   );
