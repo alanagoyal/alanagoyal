@@ -1702,21 +1702,21 @@ export function FinderApp({
             renderFileGrid()
           )}
           </div>
+          {(showPathBar || showStatusBar) && (
+            <footer className="shrink-0">
+              {showPathBar && renderPathBar()}
+              {showStatusBar && (
+                <div
+                  role="status"
+                  className="flex h-[22px] items-center justify-center border-t border-zinc-200 bg-white px-3 text-[10px] leading-none text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+                >
+                  {statusLabel}
+                </div>
+              )}
+            </footer>
+          )}
         </div>
       </div>
-      {(showPathBar || showStatusBar) && (
-        <footer className="shrink-0">
-          {showPathBar && renderPathBar()}
-          {showStatusBar && (
-            <div
-              role="status"
-              className="flex h-[22px] items-center justify-center border-t border-zinc-200 bg-white px-3 text-[10px] leading-none text-zinc-500 select-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-            >
-              {statusLabel}
-            </div>
-          )}
-        </footer>
-      )}
     </div>
   );
 }
