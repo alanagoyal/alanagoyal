@@ -14,6 +14,8 @@ import { NotificationCenter } from "./notification-center";
 import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
+import { TextEditEditMenu } from "./textedit-edit-menu";
+import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
 import { AboutDialog } from "./about-dialog";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
@@ -24,8 +26,9 @@ import {
 } from "@/lib/menu-bar-clock";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
+import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "finderViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "finderViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -60,6 +63,12 @@ interface MenuBarProps {
   onFinderViewModeChange?: (mode: FinderViewMode) => void;
   finderStatusBarVisible?: boolean;
   onFinderStatusBarVisibleChange?: (visible: boolean) => void;
+  onTextEditNew?: () => void;
+  onTextEditOpen?: () => void;
+  onTextEditClose?: (windowId: string) => void;
+  onTextEditSave?: (windowId: string) => void;
+  onTextEditDuplicate?: (windowId: string) => void;
+  onTextEditRename?: (windowId: string, fileName: string) => string | null;
 }
 
 export function MenuBar({
@@ -78,6 +87,12 @@ export function MenuBar({
   onFinderViewModeChange,
   finderStatusBarVisible = false,
   onFinderStatusBarVisibleChange,
+  onTextEditNew,
+  onTextEditOpen,
+  onTextEditClose,
+  onTextEditSave,
+  onTextEditDuplicate,
+  onTextEditRename,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const {
@@ -96,6 +111,7 @@ export function MenuBar({
   const [datePrefix, setDatePrefix] = useState<string>("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
+  const [textEditRenameOpen, setTextEditRenameOpen] = useState(false);
   const [lowPowerMode, setLowPowerMode] = useState(false);
   const [hasLoadedLowPowerMode, setHasLoadedLowPowerMode] = useState(false);
 
@@ -117,6 +133,10 @@ export function MenuBar({
   const focusedAppId = getFocusedAppId(); // This returns the base app ID (e.g., "textedit")
   const focusedApp = focusedAppId ? getAppById(focusedAppId) : null;
   const focusedWindowId = state.focusedWindowId; // This is the actual window ID (e.g., "textedit-0")
+  const focusedTextEditFilePath = focusedAppId === "textedit" && focusedWindowId
+    ? String(state.windows[focusedWindowId]?.metadata?.filePath ?? "")
+    : "";
+  const focusedTextEditFileName = focusedTextEditFilePath.split("/").pop() || "Untitled.txt";
   const activeFocus =
     focusMode === "off" ? null : FOCUS_STATUS_CONFIG[focusMode];
 
@@ -240,43 +260,71 @@ export function MenuBar({
             )}
           />
         </button>
-        <button
-          onClick={() => toggleMenu("appMenu")}
-          className={cn(
-            "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
-            openMenu === "appMenu"
-              ? "bg-blue-500 text-white"
-              : "text-black dark:text-white can-hover:hover:bg-white/10"
+        <div data-testid="menu-bar-app-commands" className="flex items-center gap-1">
+          <button
+            onClick={() => toggleMenu("appMenu")}
+            className={cn(
+              "text-sm font-semibold px-2 py-0.5 rounded transition-colors",
+              openMenu === "appMenu"
+                ? "bg-blue-500 text-white"
+                : "text-black dark:text-white can-hover:hover:bg-white/10"
+            )}
+          >
+            {focusedApp?.menuBarTitle || "Finder"}
+          </button>
+          {(focusedAppId === "notes" || focusedAppId === "messages") && (
+            <button
+              onClick={() => toggleMenu("fileMenu")}
+              className={cn(
+                "text-sm px-2 py-0.5 rounded transition-colors",
+                openMenu === "fileMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black dark:text-white can-hover:hover:bg-white/10"
+              )}
+            >
+              File
+            </button>
           )}
-        >
-          {focusedApp?.menuBarTitle || "Finder"}
-        </button>
-        {(focusedAppId === "notes" || focusedAppId === "messages") && (
-          <button
-            onClick={() => toggleMenu("fileMenu")}
-            className={cn(
-              "text-sm px-2 py-0.5 rounded transition-colors",
-              openMenu === "fileMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black dark:text-white can-hover:hover:bg-white/10"
-            )}
-          >
-            File
-          </button>
-        )}
-        {focusedAppId === "finder" && (
-          <button
-            onClick={() => toggleMenu("finderViewMenu")}
-            className={cn(
-              "text-sm px-2 py-0.5 rounded transition-colors",
-              openMenu === "finderViewMenu"
-                ? "bg-blue-500 text-white"
-                : "text-black dark:text-white can-hover:hover:bg-white/10"
-            )}
-          >
-            View
-          </button>
-        )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditFileMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditFileMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              File
+            </button>
+          )}
+          {focusedAppId === "finder" && (
+            <button
+              onClick={() => toggleMenu("finderViewMenu")}
+              className={cn(
+                "text-sm px-2 py-0.5 rounded transition-colors",
+                openMenu === "finderViewMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black dark:text-white can-hover:hover:bg-white/10"
+              )}
+            >
+              View
+            </button>
+          )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditEditMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditEditMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              Edit
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1">
@@ -436,6 +484,40 @@ export function MenuBar({
         onViewModeChange={(mode) => onFinderViewModeChange?.(mode)}
         statusBarVisible={finderStatusBarVisible}
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
+      />
+
+      <TextEditEditMenu
+        isOpen={openMenu === "textEditEditMenu"}
+        onClose={closeMenu}
+        onFind={() => {
+          window.dispatchEvent(
+            new CustomEvent(TEXTEDIT_OPEN_FIND_EVENT, {
+              detail: { windowId: focusedWindowId },
+            })
+          );
+        }}
+      />
+
+      <TextEditFileMenu
+        isOpen={openMenu === "textEditFileMenu"}
+        onClose={closeMenu}
+        onNew={() => onTextEditNew?.()}
+        onOpen={() => onTextEditOpen?.()}
+        onCloseDocument={() => focusedWindowId && onTextEditClose?.(focusedWindowId)}
+        onSave={() => focusedWindowId && onTextEditSave?.(focusedWindowId)}
+        onDuplicate={() => focusedWindowId && onTextEditDuplicate?.(focusedWindowId)}
+        onRename={() => setTextEditRenameOpen(true)}
+        renameDisabled={focusedTextEditFilePath.startsWith("/Users/alanagoyal/Projects/")}
+      />
+
+      <TextEditRenameDialog
+        isOpen={textEditRenameOpen}
+        initialName={focusedTextEditFileName}
+        onClose={() => setTextEditRenameOpen(false)}
+        onRename={(fileName) => {
+          if (!focusedWindowId) return "No document is focused.";
+          return onTextEditRename?.(focusedWindowId, fileName) ?? null;
+        }}
       />
 
       <NotificationCenter

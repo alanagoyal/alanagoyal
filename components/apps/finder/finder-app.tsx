@@ -10,11 +10,16 @@ import { APPS } from "@/lib/app-config";
 import {
   HOME_DIR,
   LOCAL_FINDER_FILES,
+  getAllLocalFinderFiles,
+  getLocalFinderFiles,
   getLocalTextFileContent,
   PROJECTS_DIR,
 } from "@/lib/file-route-utils";
 import { getFinderVisibleApps } from "@/lib/app-availability";
-import { getFileModifiedDate } from "@/lib/file-storage";
+import {
+  getFileModifiedDate,
+  TEXTEDIT_DOCUMENTS_CHANGED_EVENT,
+} from "@/lib/file-storage";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 import {
@@ -261,6 +266,7 @@ export function FinderApp({
   }, [onViewModeChange]);
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [githubRecentFiles, setGithubRecentFiles] = useState<GitHubRecentFile[]>([]);
+  const [textEditDocumentsVersion, setTextEditDocumentsVersion] = useState(0);
 
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -386,7 +392,7 @@ export function FinderApp({
 
       // Static file system
       if (LOCAL_FINDER_FILES[path]) {
-        setFiles(LOCAL_FINDER_FILES[path]);
+        setFiles(getLocalFinderFiles(path));
       } else {
         setFiles([]);
       }
@@ -401,6 +407,16 @@ export function FinderApp({
   useEffect(() => {
     loadFiles(currentPath);
   }, [currentPath, loadFiles]);
+
+  useEffect(() => {
+    const handleTextEditDocumentsChanged = () => {
+      setTextEditDocumentsVersion((version) => version + 1);
+      void loadFiles(currentPathRef.current);
+    };
+
+    window.addEventListener(TEXTEDIT_DOCUMENTS_CHANGED_EVENT, handleTextEditDocumentsChanged);
+    return () => window.removeEventListener(TEXTEDIT_DOCUMENTS_CHANGED_EVENT, handleTextEditDocumentsChanged);
+  }, [loadFiles]);
 
   // Desktop windows sync path back into window metadata; standalone/mobile Finder keeps the legacy session path.
   useEffect(() => {
@@ -517,7 +533,7 @@ export function FinderApp({
   useEffect(() => {
     const entries: EntryInput[] = [];
 
-    for (const items of Object.values(LOCAL_FINDER_FILES)) {
+    for (const items of Object.values(getAllLocalFinderFiles())) {
       for (const item of items) {
         const section: SidebarItem = item.path.includes("/Desktop")
           ? "desktop"
@@ -561,7 +577,7 @@ export function FinderApp({
 
     searchEngine.buildIndex(entries);
     setSearchIndexSize(searchEngine.version);
-  }, [searchEngine, finderVisibleApps]);
+  }, [searchEngine, finderVisibleApps, textEditDocumentsVersion]);
 
   useEffect(() => {
     if (!searchActive || searchPrefetchStartedRef.current) return;
