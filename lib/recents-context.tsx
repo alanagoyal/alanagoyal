@@ -13,6 +13,7 @@ interface RecentsContextValue {
   recents: RecentFile[];
   addRecent: (file: Omit<RecentFile, "accessedAt">) => void;
   touchRecent: (path: string) => void;
+  renameRecent: (previousPath: string, nextPath: string) => void;
   clearRecents: () => void;
   fileModifiedVersion: number;
 }
@@ -87,12 +88,27 @@ export function RecentsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const renameRecent = useCallback((previousPath: string, nextPath: string) => {
+    setRecents((previous) => {
+      const existing = previous.find((recent) => recent.path === previousPath);
+      if (!existing) return previous;
+      const renamed: RecentFile = {
+        ...existing,
+        path: nextPath,
+        name: nextPath.split("/").pop() ?? existing.name,
+        accessedAt: Date.now(),
+      };
+      return [renamed, ...previous.filter((recent) => recent.path !== previousPath && recent.path !== nextPath)];
+    });
+    setFileModifiedVersion((version) => version + 1);
+  }, []);
+
   const clearRecents = useCallback(() => {
     setRecents([]);
   }, []);
 
   return (
-    <RecentsContext.Provider value={{ recents, addRecent, touchRecent, clearRecents, fileModifiedVersion }}>
+    <RecentsContext.Provider value={{ recents, addRecent, touchRecent, renameRecent, clearRecents, fileModifiedVersion }}>
       {children}
     </RecentsContext.Provider>
   );

@@ -20,6 +20,7 @@ import {
   getDocumentAppFinderTarget,
   PROJECTS_DIR,
   getLocalTextFileContent,
+  getKnownTextEditDocumentPaths,
   isSupportedTextEditPath,
 } from "@/lib/file-route-utils";
 import { DOCK_HEIGHT, MENU_BAR_HEIGHT } from "@/lib/use-window-behavior";
@@ -29,7 +30,18 @@ import { ShutdownOverlay } from "./shutdown-overlay";
 import { RestartOverlay } from "./restart-overlay";
 import { getWallpaperPath } from "@/lib/os-versions";
 import type { SettingsPanel, SettingsCategory } from "@/components/apps/settings/settings-app";
-import { getTextEditContent, saveTextEditContent, cacheTextEditContent } from "@/lib/file-storage";
+import {
+  cacheTextEditContent,
+  createTextEditDocument,
+  getTextEditContent,
+  renameTextEditDocument,
+  saveTextEditContent,
+} from "@/lib/file-storage";
+import {
+  getDuplicateTextEditPath,
+  getRenamedTextEditPath,
+  getUntitledTextEditPath,
+} from "@/lib/textedit-documents";
 import { loadNotesSelectedSlug, saveMessagesConversation } from "@/lib/sidebar-persistence";
 import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
@@ -202,23 +214,8 @@ function DesktopContent({
     getWindowsByApp,
   } = useWindowManager();
   const { focusMode, currentOS } = useSystemSettings();
-  const { touchRecent } = useRecents();
+  const { addRecent, renameRecent, touchRecent } = useRecents();
 
-  // Debounce touchRecent to avoid excessive re-renders
-  const touchTimers = useRef<Record<string, NodeJS.Timeout>>({});
-  const debouncedTouchRecent = useCallback((path: string) => {
-    if (touchTimers.current[path]) clearTimeout(touchTimers.current[path]);
-    touchTimers.current[path] = setTimeout(() => {
-      touchRecent(path);
-      delete touchTimers.current[path];
-    }, 500);
-  }, [touchRecent]);
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    const timers = touchTimers.current;
-    return () => Object.values(timers).forEach(clearTimeout);
-  }, []);
   const [mode, setMode] = useState<DesktopMode>("active");
   const [settingsPanel, setSettingsPanel] = useState<SettingsPanel | undefined>(undefined);
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategory | undefined>(undefined);
@@ -364,7 +361,7 @@ function DesktopContent({
 
   // Memoize the check for existing window to avoid effect re-runs
   const existingTextEditWindow = initialTextEditFile
-    ? textEditWindows.find((w) => w.instanceId === initialTextEditFile)
+    ? textEditWindows.find((w) => w.metadata?.filePath === initialTextEditFile)
     : null;
   const existingWindowId = existingTextEditWindow?.id;
 
@@ -501,6 +498,14 @@ function DesktopContent({
   // Handler for opening text files in TextEdit
   const handleOpenTextFile = useCallback(
     (filePath: string, content: string) => {
+      const existingWindow = textEditWindows.find(
+        (windowState) => windowState.metadata?.filePath === filePath
+      );
+      if (existingWindow) {
+        focusMultiWindow(existingWindow.id);
+        return;
+      }
+
       // Check for cached (edited) content first - preserve user edits
       const cachedContent = getTextEditContent(filePath);
       const contentToUse = cachedContent !== undefined ? cachedContent : content;
@@ -513,7 +518,7 @@ function DesktopContent({
       // Open multi-window (will focus existing if same file already open)
       openMultiWindow("textedit", filePath, { filePath, content: contentToUse });
     },
-    [openMultiWindow]
+    [focusMultiWindow, openMultiWindow, textEditWindows]
   );
 
   // Handler for opening preview files (images and PDFs) in Preview
@@ -565,6 +570,69 @@ function DesktopContent({
       getDocumentPickerFinderWindowPlacement()
     );
   }, [openDedicatedFinderWindow]);
+
+  const handleTextEditNew = useCallback(() => {
+    const filePath = getUntitledTextEditPath(getKnownTextEditDocumentPaths());
+    createTextEditDocument(filePath, "");
+    addRecent({ path: filePath, name: filePath.split("/").pop() ?? filePath, type: "file" });
+    openMultiWindow("textedit", filePath, { filePath, content: "", isDirty: false });
+  }, [addRecent, openMultiWindow]);
+
+  const handleTextEditOpen = useCallback(() => {
+    openDocumentAppPicker("textedit");
+  }, [openDocumentAppPicker]);
+
+  const handleTextEditClose = useCallback((windowId: string) => {
+    closeMultiWindow(windowId);
+  }, [closeMultiWindow]);
+
+  const handleTextEditSave = useCallback((windowId: string) => {
+    const windowState = state.windows[windowId];
+    const filePath = String(windowState?.metadata?.filePath ?? "");
+    if (!filePath) return;
+    const content = String(windowState?.metadata?.content ?? "");
+    saveTextEditContent(filePath, content);
+    updateWindowMetadata(windowId, { isDirty: false });
+    touchRecent(filePath);
+  }, [state.windows, touchRecent, updateWindowMetadata]);
+
+  const handleTextEditDuplicate = useCallback((windowId: string) => {
+    const windowState = state.windows[windowId];
+    const sourcePath = String(windowState?.metadata?.filePath ?? "");
+    if (!sourcePath) return;
+    const content = String(windowState?.metadata?.content ?? "");
+    const filePath = getDuplicateTextEditPath(sourcePath, getKnownTextEditDocumentPaths());
+    createTextEditDocument(filePath, content);
+    addRecent({ path: filePath, name: filePath.split("/").pop() ?? filePath, type: "file" });
+    openMultiWindow("textedit", filePath, { filePath, content, isDirty: false });
+  }, [addRecent, openMultiWindow, state.windows]);
+
+  const handleTextEditRename = useCallback((windowId: string, fileName: string): string | null => {
+    const windowState = state.windows[windowId];
+    const previousPath = String(windowState?.metadata?.filePath ?? "");
+    if (!previousPath) return "No document is focused.";
+    if (previousPath.startsWith(`${PROJECTS_DIR}/`)) {
+      return "GitHub project files can’t be renamed here.";
+    }
+
+    const result = getRenamedTextEditPath(
+      previousPath,
+      fileName,
+      getKnownTextEditDocumentPaths()
+    );
+    if (!result.ok) return result.error;
+    if (result.path === previousPath) return null;
+
+    const content = String(windowState?.metadata?.content ?? "");
+    renameTextEditDocument(previousPath, result.path, content);
+    updateWindowMetadata(windowId, {
+      filePath: result.path,
+      content,
+      isDirty: false,
+    });
+    renameRecent(previousPath, result.path);
+    return null;
+  }, [renameRecent, state.windows, updateWindowMetadata]);
 
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
@@ -796,6 +864,12 @@ function DesktopContent({
         onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
         finderPathBarVisible={finderPathBarVisible}
         onFinderPathBarVisibleChange={setFinderPathBarVisible}
+        onTextEditNew={handleTextEditNew}
+        onTextEditOpen={handleTextEditOpen}
+        onTextEditClose={handleTextEditClose}
+        onTextEditSave={handleTextEditSave}
+        onTextEditDuplicate={handleTextEditDuplicate}
+        onTextEditRename={handleTextEditRename}
       />
 
       {isActive && (
@@ -896,6 +970,7 @@ function DesktopContent({
                   zIndex={windowState.zIndex}
                   isFocused={state.focusedWindowId === windowState.id}
                   isMaximized={windowState.isMaximized}
+                  isDirty={windowState.metadata?.isDirty === true}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
                   onMinimize={() => minimizeMultiWindow(windowState.id)}
@@ -904,10 +979,9 @@ function DesktopContent({
                   onResize={(size, pos) => resizeMultiWindow(windowState.id, size, pos)}
                   onContentChange={(newContent) => {
                     // Update metadata; window state persists for this tab.
-                    updateWindowMetadata(windowState.id, { content: newContent });
+                    updateWindowMetadata(windowState.id, { content: newContent, isDirty: true });
                     if (filePath) {
-                      saveTextEditContent(filePath, newContent);
-                      debouncedTouchRecent(filePath);
+                      cacheTextEditContent(filePath, newContent);
                     }
                   }}
                 />
