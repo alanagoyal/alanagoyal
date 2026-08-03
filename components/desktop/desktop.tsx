@@ -57,6 +57,7 @@ const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m =
 type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarting";
 
 const FINDER_STATUS_BAR_STORAGE_KEY = "finder-show-status-bar";
+const FINDER_PATH_BAR_STORAGE_KEY = "finder-show-path-bar";
 
 interface DesktopProps {
   initialAppId?: string;
@@ -225,6 +226,8 @@ function DesktopContent({
   const [restoreDefaultOnUnlock, setRestoreDefaultOnUnlock] = useState(false);
   const [finderStatusBarVisible, setFinderStatusBarVisible] = useState(false);
   const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
+  const [finderPathBarVisible, setFinderPathBarVisible] = useState(false);
+  const [hasLoadedFinderPathBarPreference, setHasLoadedFinderPathBarPreference] = useState(false);
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -241,12 +244,19 @@ function DesktopContent({
   useEffect(() => {
     setFinderStatusBarVisible(window.localStorage.getItem(FINDER_STATUS_BAR_STORAGE_KEY) === "true");
     setHasLoadedFinderStatusBarPreference(true);
+    setFinderPathBarVisible(window.localStorage.getItem(FINDER_PATH_BAR_STORAGE_KEY) === "true");
+    setHasLoadedFinderPathBarPreference(true);
   }, []);
 
   useEffect(() => {
     if (!hasLoadedFinderStatusBarPreference) return;
     window.localStorage.setItem(FINDER_STATUS_BAR_STORAGE_KEY, String(finderStatusBarVisible));
   }, [finderStatusBarVisible, hasLoadedFinderStatusBarPreference]);
+
+  useEffect(() => {
+    if (!hasLoadedFinderPathBarPreference) return;
+    window.localStorage.setItem(FINDER_PATH_BAR_STORAGE_KEY, String(finderPathBarVisible));
+  }, [finderPathBarVisible, hasLoadedFinderPathBarPreference]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
@@ -784,6 +794,8 @@ function DesktopContent({
         onFinderViewModeChange={handleFinderViewModeChange}
         finderStatusBarVisible={finderStatusBarVisible}
         onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
+        finderPathBarVisible={finderPathBarVisible}
+        onFinderPathBarVisibleChange={setFinderPathBarVisible}
       />
 
       {isActive && (
@@ -857,6 +869,7 @@ function DesktopContent({
                     viewMode={viewMode}
                     onViewModeChange={(mode) => updateWindowMetadata(windowState.id, { viewMode: mode })}
                     showStatusBar={finderStatusBarVisible}
+                    showPathBar={finderPathBarVisible}
                     initialPath={currentPath}
                     onPathChange={(path) => updateWindowMetadata(windowState.id, { currentPath: path })}
                     onOpenApp={handleOpenApp}

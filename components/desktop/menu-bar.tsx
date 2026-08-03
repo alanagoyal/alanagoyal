@@ -60,6 +60,8 @@ interface MenuBarProps {
   onFinderViewModeChange?: (mode: FinderViewMode) => void;
   finderStatusBarVisible?: boolean;
   onFinderStatusBarVisibleChange?: (visible: boolean) => void;
+  finderPathBarVisible?: boolean;
+  onFinderPathBarVisibleChange?: (visible: boolean) => void;
 }
 
 export function MenuBar({
@@ -78,6 +80,8 @@ export function MenuBar({
   onFinderViewModeChange,
   finderStatusBarVisible = false,
   onFinderStatusBarVisibleChange,
+  finderPathBarVisible = false,
+  onFinderPathBarVisibleChange,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const {
@@ -436,6 +440,8 @@ export function MenuBar({
         onViewModeChange={(mode) => onFinderViewModeChange?.(mode)}
         statusBarVisible={finderStatusBarVisible}
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
+        pathBarVisible={finderPathBarVisible}
+        onPathBarVisibleChange={(visible) => onFinderPathBarVisibleChange?.(visible)}
       />
 
       <NotificationCenter
