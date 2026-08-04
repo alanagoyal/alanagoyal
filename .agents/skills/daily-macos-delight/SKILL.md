@@ -12,7 +12,7 @@ Ship one reviewable improvement that makes this personal macOS-on-the-web feel m
 - Work in the current repository and obey every applicable `AGENTS.md`.
 - Read `docs/design-system.md` before changing UI.
 - Start from the latest default branch when the environment permits it.
-- Inspect the current app registry, recent commits, and open pull requests before choosing an idea. Do not duplicate shipped or in-flight work.
+- Inspect daily-delight Git history, the persistent coverage ledger, the current app registry, recent non-delight commits, and open pull requests before choosing an idea. Do not duplicate shipped or in-flight work.
 - Compare the site with a current real macOS behavior. Prefer Apple documentation or direct observation over memory when a detail could have changed. Record the evidence before implementation: what macOS does, where it was observed, and why it belongs in this desktop.
 - Treat personal content as editorial: use only facts and assets already present in the repository or explicitly supplied by the owner. Never invent biographical claims or expose secrets/private data.
 - Deliver working code, not an idea memo. If no candidate is safe, useful, and finishable, make no code change and report why.
@@ -41,21 +41,53 @@ Apply these hard limits:
 
 Read [references/idea-catalog.md](references/idea-catalog.md) when generating candidates. It supplies directions, not a backlog; validate every idea against the current repository.
 
+## History and coverage memory
+
+Treat the default branch's Git history as the authority for merged daily delights. Before generating candidates, inspect at least the last 45 days of first-parent merge history for the `daily-delight-YYYY-MM-DD-<slug>` branch pattern. Do not rely only on ordinary feature-commit subjects, which may omit “daily delight.” Confirm each match's primary surface and user-visible outcome from the merge diff or PR metadata rather than guessing from a vague slug.
+
+Start the merged-history audit with:
+
+```bash
+git log --first-parent --merges --since="45 days ago" --regexp-ignore-case --grep="daily-delight-" --date=short --pretty=format:'%ad%x09%h%x09%s'
+```
+
+For scheduled runs, also use the `## Coverage ledger` at `~/.codex/automations/daily-macos-delight/memory.md` as a derived, compact cache. It makes rotation easy to scan and preserves open, not-yet-merged PRs that default-branch Git cannot contain. Read it before ideation, reconcile it to Git and current PR state, and update it before the final report. Git wins whenever the ledger disagrees. The detailed run diary is supporting evidence, not a substitute for either source.
+
+Maintain two views because they answer different questions:
+
+- **Last daily delight:** the most recent shipped daily-delight PR whose primary user-visible surface was that app or shell area. This is the main rotation signal. Secondary and shared touches stay visible in run history and the last-visible-touch date, but do not make a neglected app look recently featured.
+- **Last visible touch:** the most recent merged user-visible change from any source. This prevents overlap with work outside the automation.
+
+Use stable surface IDs: every current app ID from `lib/app-config.ts`, plus only the shell IDs that actually apply (`desktop`, `dock`, `menu-bar`, `notification-center`, `window-management`, and `shared-mobile`). A shared component change counts only for the surfaces whose visible behavior changed; do not reset every app merely because they share the component.
+
+Keep the ledger compact and auditable:
+
+- Maintain one snapshot row per registered app and active shell surface, including both dates, a short description, and the PR or commit.
+- Maintain one recent-run row per shipped daily delight with date, primary surface, optional secondary surfaces, scope, outcome, PR, and status. Update the same row for follow-ups or merges instead of adding duplicate touches.
+- Add an `open` row as soon as a draft PR exists so the next run treats it as in flight. Mark it `merged` or `closed` after reconciling GitHub state.
+- Retain at least the latest 30 days of run rows. Never count a rejected, closed-unmerged, no-op, or documentation-only run as a shipped touch.
+
+If the automation memory is missing or unwritable, reconstruct a run-local coverage snapshot from the app registry, default-branch history, and open PRs. Continue safely because merged history remains durable in Git, but report that the derived cache could not be updated.
+
 ## Workflow
 
 ### 1. Establish current context
 
 1. Before opening a GUI app for research or verification, record the frontmost app and which GUI apps are already running. Keep a run-local journal of every app, window, document, and browser tab opened for the task so cleanup does not rely on memory.
 2. Read `AGENTS.md`, `docs/design-system.md`, `README.md`, and the files for likely surfaces.
-3. Inspect `lib/app-config.ts`, recent Git history, and open pull requests if GitHub access is available.
-4. Note the last several user-visible additions so today's work varies the surface and size.
+3. Derive shipped daily-delight recency from the default branch's first-parent merge history, then read and reconcile the persistent coverage ledger against that history, `lib/app-config.ts`, recent non-delight changes, and open pull requests. Add newly registered apps, correct stale PR statuses, and refresh last-visible-touch dates before ideation.
+4. Build a recency matrix for every registered app and active shell surface. Treat an app as neglected when it has no shipped daily delight in the last 14 days or falls in the least-recent third of registered apps; an open or very recent non-daily change can still make a specific idea ineligible for overlap.
 5. Check for existing uncommitted work and avoid touching unrelated changes.
 6. Exercise the unmodified candidate surface before editing. Record a compact baseline ledger for desktop and mobile: the visible affordance, each relevant click/tap target, and its result (navigation, playback, selection, dismissal, persistence, and so on). Do not infer interactive behavior from appearance or code alone.
 7. Name the existing interaction contracts that must survive the change. Treat a card's primary action and any nested control's secondary action as separate contracts.
 
 ### 2. Generate and select
 
-Generate 4-6 candidates across at least three categories:
+Generate 4-6 candidates across at least three categories and four distinct primary surfaces. At least two candidates must come from different neglected registered apps. If fewer than two neglected-app ideas survive the baseline-and-delta gate, record the concrete rejection reasons and fill the remaining slots from the next least-recent surfaces.
+
+Do not select a primary surface used by either of the two most recent shipped daily delights unless every safe, finishable neglected-surface candidate fails the baseline-and-delta gate, or the owner explicitly requested that surface. Coverage improves candidate priority; it never rescues a weak or risky idea.
+
+Candidate categories include:
 
 - desktop shell fidelity;
 - an existing app detail;
@@ -77,11 +109,12 @@ Score each candidate from 1-5 on:
 - macOS authenticity;
 - net-new visible delight or personal value relative to the current baseline;
 - novelty relative to the current baseline, recent history, and open PRs;
+- coverage balance, where 5 means a neglected app with no recent overlapping work and 1 means one of the last two daily surfaces or an in-flight surface;
 - quality and intentionality across desktop and mobile;
 - finishability in one unattended run;
 - regression risk, where 5 means low risk.
 
-Select the highest-value candidate that satisfies the scope budget. Break ties in favor of the smaller change. Before editing, state a one-sentence acceptance criterion for desktop and mobile internally and keep the implementation within it.
+Show the primary surface, its last-daily-delight date, its last-visible-touch date, and the coverage score beside every candidate. Select the highest-value candidate that satisfies the scope budget and cooldown. Break ties in favor of the higher coverage score, then the smaller change. Before editing, state a one-sentence acceptance criterion for desktop and mobile internally and keep the implementation within it.
 
 Reject ideas that are only decorative, repackage an existing affordance, duplicate a native detail without making it functional, require invented personal data, create a dead-end control, add keyboard commands, change an established primary action as a side effect, or cannot be safely exercised on both desktop and mobile during the run.
 
@@ -122,6 +155,7 @@ When GitHub access and permissions are available:
 4. Push the branch to `origin`.
 5. Open a draft pull request against the default branch. Do not merge it.
 6. Upload the review captures from outside the worktree as GitHub pull request attachments and place the resulting GitHub-hosted URLs in the pull request body.
+7. Update the derived coverage ledger with the shipped surface and `open` status. On every later run, reconcile prior rows to `merged` or `closed`; a closed-unmerged row remains historical but does not update the snapshot's shipped dates.
 
 Use this pull request structure:
 
@@ -154,7 +188,7 @@ Use this pull request structure:
 
 ## Why this one
 
-<Why this behavior or personal value was the right bounded choice today.>
+<Why this behavior or personal value was the right bounded choice today, including the surface's last daily delight and last visible touch.>
 
 ## Verification
 
@@ -184,4 +218,4 @@ Run this epilogue before the completion report on every exit path: success, no-o
 
 ## Completion report
 
-Return the idea, scope class, desktop and mobile behavior, verification result, desktop and mobile built-result screenshots, macOS reference screenshot or sourced inspiration explanation, draft PR URL, and cleanup result. If nothing shipped, return the candidates considered, the concrete reason all were rejected, and the cleanup result.
+Return the idea, scope class, selected surface and recency, coverage-ledger update, desktop and mobile behavior, verification result, desktop and mobile built-result screenshots, macOS reference screenshot or sourced inspiration explanation, draft PR URL, and cleanup result. If nothing shipped, return the candidates considered with their surfaces and recency, the concrete reason all were rejected, whether persistent coverage was updated, and the cleanup result.
