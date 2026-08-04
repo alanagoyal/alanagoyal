@@ -5,15 +5,23 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Playlist, PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
-import { Play, Pause, Shuffle } from "lucide-react";
+import { Play, Pause, Shuffle, Star } from "lucide-react";
 import { formatDuration, formatTotalDuration } from "@/lib/music/utils";
+import { TrackFavoriteButton } from "../track-favorite-button";
 
 interface PlaylistViewProps {
   playlist: Playlist;
   isMobileView: boolean;
+  favoriteSongIds: Set<string>;
+  onToggleFavorite: (trackId: string) => void;
 }
 
-export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
+export function PlaylistView({
+  playlist,
+  isMobileView,
+  favoriteSongIds,
+  onToggleFavorite,
+}: PlaylistViewProps) {
   const { playbackState, play, pause, resume, toggleShuffle } = useAudio();
 
   const handleTrackPlay = (track: PlaylistTrack) => {
@@ -57,6 +65,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
   };
 
   const totalDuration = playlist.tracks.reduce((sum, t) => sum + t.duration, 0);
+  const hasPlayableTracks = playlist.tracks.some((track) => track.previewUrl);
 
   return (
     <ScrollArea className="h-full">
@@ -104,7 +113,8 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
             <div className="flex items-center gap-3 mt-4">
               <button
                 onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+                disabled={!hasPlayableTracks}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-sm font-medium transition-colors can-hover:hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isPlayingPlaylist ? (
                   <>
@@ -120,7 +130,8 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
               </button>
               <button
                 onClick={handleShufflePlay}
-                className="p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                disabled={!hasPlayableTracks}
+                className="p-2.5 rounded-full bg-muted transition-colors can-hover:hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-40"
                 title="Shuffle Play"
               >
                 <Shuffle className="w-4 h-4" />
@@ -138,10 +149,18 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
               <span className="w-10" />
               <span className="flex-1">Title</span>
               <span className="w-[150px]">Album</span>
+              <span className="w-16 text-center">Favorite</span>
               <span className="w-12 text-right">Time</span>
             </div>
           )}
 
+          {playlist.tracks.length === 0 ? (
+            <div className="flex flex-col items-center py-14 text-center text-muted-foreground">
+              <Star className="mb-3 h-8 w-8" />
+              <p className="text-sm font-medium text-foreground">No Favorite Songs</p>
+              <p className="mt-1 text-xs">Favorite a song to see it here.</p>
+            </div>
+          ) : (
           <div className="space-y-1 mt-1">
             {playlist.tracks.map((track, index) => {
               const isCurrentTrack = playbackState.currentTrack?.id === track.id;
@@ -198,6 +217,12 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
                       {track.album}
                     </span>
                   )}
+                  <TrackFavoriteButton
+                    track={track}
+                    isFavorite={favoriteSongIds.has(track.id)}
+                    isMobileView={isMobileView}
+                    onToggle={onToggleFavorite}
+                  />
                   <span className="text-xs text-muted-foreground w-12 text-right flex-shrink-0">
                     {formatDuration(track.duration)}
                   </span>
@@ -205,6 +230,7 @@ export function PlaylistView({ playlist, isMobileView }: PlaylistViewProps) {
               );
             })}
           </div>
+          )}
         </div>
       </div>
     </ScrollArea>

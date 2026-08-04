@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMusic } from "@/lib/music/use-music";
 import { useAudio } from "@/lib/music/audio-context";
@@ -11,6 +11,11 @@ import { Sidebar } from "./sidebar";
 import { Nav } from "./nav";
 import { NowPlayingBar } from "./now-playing-bar";
 import { ChevronLeft } from "lucide-react";
+import {
+  MUSIC_FAVORITES_STORAGE_KEY,
+  parseFavoriteSongIds,
+  serializeFavoriteSongIds,
+} from "@/lib/music/favorites";
 import {
   HomeView,
   BrowseView,
@@ -45,6 +50,8 @@ export default function App({ isDesktop = false }: AppProps) {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showContent, setShowContent] = useState(initialState.showContent);
+  const [favoriteSongIds, setFavoriteSongIds] = useState<Set<string>>(new Set());
+  const [favoritesHydrated, setFavoritesHydrated] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const windowFocus = useWindowFocus();
@@ -60,6 +67,52 @@ export default function App({ isDesktop = false }: AppProps) {
   useEffect(() => {
     saveMusicState(activeView, selectedPlaylistId);
   }, [activeView, selectedPlaylistId]);
+
+  useEffect(() => {
+    try {
+      setFavoriteSongIds(
+        new Set(parseFavoriteSongIds(localStorage.getItem(MUSIC_FAVORITES_STORAGE_KEY)))
+      );
+    } catch {
+      setFavoriteSongIds(new Set());
+    }
+    setFavoritesHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!favoritesHydrated) return;
+    try {
+      localStorage.setItem(
+        MUSIC_FAVORITES_STORAGE_KEY,
+        serializeFavoriteSongIds(favoriteSongIds)
+      );
+    } catch {
+      // Keep favorites usable for the current render when storage is unavailable.
+    }
+  }, [favoriteSongIds, favoritesHydrated]);
+
+  const toggleFavorite = useCallback((trackId: string) => {
+    setFavoriteSongIds((current) => {
+      const next = new Set(current);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
+      }
+      return next;
+    });
+  }, []);
+
+  const favoritePlaylist = useMemo(
+    () => ({
+      id: "favorite-songs",
+      name: "Favorite Songs",
+      description: "Songs you’ve marked as favorites",
+      coverArt: "",
+      tracks: songs.filter((song) => favoriteSongIds.has(song.id)),
+    }),
+    [favoriteSongIds, songs]
+  );
 
   // Handle view selection
   const handleViewSelect = useCallback((view: MusicView, playlistId?: string) => {
@@ -121,7 +174,9 @@ export default function App({ isDesktop = false }: AppProps) {
 
   // Get selected playlist
   const selectedPlaylist = selectedPlaylistId
-    ? playlists.find((p) => p.id === selectedPlaylistId)
+    ? selectedPlaylistId === favoritePlaylist.id
+      ? favoritePlaylist
+      : playlists.find((p) => p.id === selectedPlaylistId)
     : null;
 
   // Get title and subtitle for mobile header
@@ -176,11 +231,18 @@ export default function App({ isDesktop = false }: AppProps) {
           <SongsView
             songs={songs}
             isMobileView={isMobileView}
+            favoriteSongIds={favoriteSongIds}
+            onToggleFavorite={toggleFavorite}
           />
         );
       case "playlist":
         return selectedPlaylist ? (
-          <PlaylistView playlist={selectedPlaylist} isMobileView={isMobileView} />
+          <PlaylistView
+            playlist={selectedPlaylist}
+            isMobileView={isMobileView}
+            favoriteSongIds={favoriteSongIds}
+            onToggleFavorite={toggleFavorite}
+          />
         ) : (
           <HomeView
             playlists={playlists}
@@ -216,6 +278,7 @@ export default function App({ isDesktop = false }: AppProps) {
         >
           <Sidebar
             playlists={playlists}
+            favoritePlaylist={favoritePlaylist}
             activeView={activeView}
             selectedPlaylistId={selectedPlaylistId}
             onViewSelect={handleViewSelect}

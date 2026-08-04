@@ -7,13 +7,21 @@ import { PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { Play, Pause } from "lucide-react";
 import { formatDuration } from "@/lib/music/utils";
+import { TrackFavoriteButton } from "../track-favorite-button";
 
 interface SongsViewProps {
   songs: PlaylistTrack[];
   isMobileView: boolean;
+  favoriteSongIds: Set<string>;
+  onToggleFavorite: (trackId: string) => void;
 }
 
-export function SongsView({ songs, isMobileView }: SongsViewProps) {
+export function SongsView({
+  songs,
+  isMobileView,
+  favoriteSongIds,
+  onToggleFavorite,
+}: SongsViewProps) {
   const { playbackState, play, pause, resume } = useAudio();
 
   const handleTrackPlay = (track: PlaylistTrack) => {
@@ -42,6 +50,7 @@ export function SongsView({ songs, isMobileView }: SongsViewProps) {
               <span className="w-10" /> {/* Album art space */}
               <span className="flex-1">Title</span>
               <span className="w-[150px]">Album</span>
+              <span className="w-16 text-center">Favorite</span>
               <span className="w-12 text-right">Time</span>
             </div>
           )}
@@ -102,6 +111,12 @@ export function SongsView({ songs, isMobileView }: SongsViewProps) {
                       {track.album}
                     </span>
                   )}
+                  <TrackFavoriteButton
+                    track={track}
+                    isFavorite={favoriteSongIds.has(track.id)}
+                    isMobileView={isMobileView}
+                    onToggle={onToggleFavorite}
+                  />
                   <span className="text-xs text-muted-foreground w-12 text-right flex-shrink-0">
                     {formatDuration(track.duration)}
                   </span>
