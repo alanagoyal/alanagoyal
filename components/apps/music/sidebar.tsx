@@ -3,11 +3,12 @@
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MusicView, Playlist } from "./types";
-import { Home, Compass, User, Disc3, Music, ListMusic } from "lucide-react";
+import { Home, Compass, User, Disc3, Music, ListMusic, Star } from "lucide-react";
 
 interface SidebarProps {
   children: React.ReactNode;
   playlists: Playlist[];
+  favoritePlaylist: Playlist;
   activeView: MusicView;
   selectedPlaylistId: string | null;
   onViewSelect: (view: MusicView, playlistId?: string) => void;
@@ -18,6 +19,7 @@ interface SidebarProps {
 export function Sidebar({
   children,
   playlists,
+  favoritePlaylist,
   activeView,
   selectedPlaylistId,
   onViewSelect,
@@ -88,11 +90,20 @@ export function Sidebar({
             </div>
 
             {/* Playlists Section */}
-            {playlists.length > 0 && (
+            {(playlists.length > 0 || favoritePlaylist.tracks.length > 0 || selectedPlaylistId === favoritePlaylist.id) && (
               <div>
                 <p className="text-xs text-muted-foreground px-3 py-1 font-semibold uppercase tracking-wide">
                   Playlists
                 </p>
+                {(favoritePlaylist.tracks.length > 0 || selectedPlaylistId === favoritePlaylist.id) && (
+                  <SidebarItem
+                    icon={<Star className="w-4 h-4 fill-current" />}
+                    label={favoritePlaylist.name}
+                    isActive={activeView === "playlist" && selectedPlaylistId === favoritePlaylist.id}
+                    onClick={() => onViewSelect("playlist", favoritePlaylist.id)}
+                    isMobileView={isMobileView}
+                  />
+                )}
                 {playlists.map((playlist) => (
                   <SidebarItem
                     key={playlist.id}
