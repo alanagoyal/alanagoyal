@@ -30,9 +30,11 @@ export function TrackFavoriteButton({
         onToggle(track.id);
       }}
       className={cn(
-        "flex flex-shrink-0 items-center justify-center rounded-full transition-colors can-hover:hover:bg-muted",
+        "flex flex-shrink-0 items-center justify-center rounded-full text-red-500 transition-[color,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50",
         isMobileView ? "h-11 w-11" : "h-8 w-16",
-        isFavorite ? "text-red-500" : "text-muted-foreground"
+        !isMobileView &&
+          !isFavorite &&
+          "opacity-0 can-hover:group-hover:opacity-100 focus-visible:opacity-100"
       )}
     >
       <Star className={cn("h-4 w-4", isFavorite && "fill-current")} />

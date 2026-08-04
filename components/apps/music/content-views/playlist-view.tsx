@@ -149,7 +149,13 @@ export function PlaylistView({
               <span className="w-10" />
               <span className="flex-1">Title</span>
               <span className="w-[150px]">Album</span>
-              <span className="w-16 text-center">Favorite</span>
+              <span
+                aria-label="Favorite"
+                title="Favorite"
+                className="flex w-16 justify-center"
+              >
+                <Star className="h-4 w-4" />
+              </span>
               <span className="w-12 text-right">Time</span>
             </div>
           )}

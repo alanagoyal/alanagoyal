@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Star } from "lucide-react";
 import { formatDuration } from "@/lib/music/utils";
 import { TrackFavoriteButton } from "../track-favorite-button";
 
@@ -50,7 +50,13 @@ export function SongsView({
               <span className="w-10" /> {/* Album art space */}
               <span className="flex-1">Title</span>
               <span className="w-[150px]">Album</span>
-              <span className="w-16 text-center">Favorite</span>
+              <span
+                aria-label="Favorite"
+                title="Favorite"
+                className="flex w-16 justify-center"
+              >
+                <Star className="h-4 w-4" />
+              </span>
               <span className="w-12 text-right">Time</span>
             </div>
           )}
