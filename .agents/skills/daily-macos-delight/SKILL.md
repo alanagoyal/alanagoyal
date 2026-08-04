@@ -64,7 +64,7 @@ Keep the ledger compact and auditable:
 
 - Maintain one snapshot row per registered app and active shell surface, including both dates, a short description, and the PR or commit.
 - Maintain one recent-run row per shipped daily delight with date, primary surface, optional secondary surfaces, scope, outcome, PR, and status. Update the same row for follow-ups or merges instead of adding duplicate touches.
-- Add an `open` row as soon as a draft PR exists so the next run treats it as in flight. Mark it `merged` or `closed` after reconciling GitHub state.
+- Add an `open` run row as soon as a draft PR exists so the next run treats it as in flight, but do not advance either snapshot date until the PR merges. Mark the run row `merged` or `closed` after reconciling GitHub state, and update snapshot dates only for merged work.
 - Retain at least the latest 30 days of run rows. Never count a rejected, closed-unmerged, no-op, or documentation-only run as a shipped touch.
 
 If the automation memory is missing or unwritable, reconstruct a run-local coverage snapshot from the app registry, default-branch history, and open PRs. Continue safely because merged history remains durable in Git, but report that the derived cache could not be updated.
@@ -155,7 +155,7 @@ When GitHub access and permissions are available:
 4. Push the branch to `origin`.
 5. Open a draft pull request against the default branch. Do not merge it.
 6. Upload the review captures from outside the worktree as GitHub pull request attachments and place the resulting GitHub-hosted URLs in the pull request body.
-7. Update the derived coverage ledger with the shipped surface and `open` status. On every later run, reconcile prior rows to `merged` or `closed`; a closed-unmerged row remains historical but does not update the snapshot's shipped dates.
+7. Add the candidate to the derived coverage ledger's recent-run table with `open` status, leaving the merged-history snapshot dates unchanged. On every later run, reconcile prior rows to `merged` or `closed`; only a merged row advances snapshot dates.
 
 Use this pull request structure:
 
