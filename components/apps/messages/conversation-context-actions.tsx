@@ -5,8 +5,7 @@ import { Slot } from "@radix-ui/react-slot";
 import {
   Bell,
   BellOff,
-  Mail,
-  MailOpen,
+  MessageCircle,
   Pin,
   PinOff,
   Trash2,
@@ -47,6 +46,15 @@ interface TriggerBounds {
   left: number;
   width: number;
   height: number;
+}
+
+function ReadStateMessageIcon() {
+  return (
+    <span className="relative h-5 w-5 shrink-0" aria-hidden>
+      <MessageCircle className="h-5 w-5" />
+      <span className="absolute right-0 top-0 h-1.5 w-1.5 rounded-full border border-current bg-background" />
+    </span>
+  );
 }
 
 interface ConversationContextActionsProps {
@@ -254,11 +262,7 @@ function MobileConversationPreview({
               onClick={() => runAction(onToggleReadState)}
               className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
             >
-              {conversation.unreadCount > 0 ? (
-                <MailOpen className="h-5 w-5 shrink-0" aria-hidden />
-              ) : (
-                <Mail className="h-5 w-5 shrink-0" aria-hidden />
-              )}
+              <ReadStateMessageIcon />
               <span>{readStateLabel}</span>
             </button>
             <div className="mx-5 border-t border-muted-foreground/20" />
