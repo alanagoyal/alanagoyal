@@ -569,9 +569,16 @@ export function Sidebar({
                                     </div>
                                     <div className="w-full text-center">
                                       <div className="relative max-w-full inline-flex justify-center">
-                                        {conversation.unreadCount > 0 &&
-                                          activeConversation !== conversation.id && (
-                                          <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full" />
+                                        {conversation.unreadCount > 0 && (
+                                          <div
+                                            className={`absolute right-full top-1/2 mr-1 h-2.5 w-2.5 -translate-y-1/2 rounded-full ${
+                                              activeConversation ===
+                                                conversation.id &&
+                                              !isMobileView
+                                                ? "bg-white"
+                                                : "bg-[#0A7CFF]"
+                                            }`}
+                                          />
                                         )}
                                         <span className="text-xs truncate max-w-full">
                                           {conversation.name ||

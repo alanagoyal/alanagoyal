@@ -143,9 +143,14 @@ export const ConversationItem = memo(function ConversationItem({
           : ""
       }`}
     >
-      {conversation.unreadCount > 0 &&
-        activeConversation !== conversation.id && (
-        <div className="absolute left-0.5 w-2.5 h-2.5 bg-[#0A7CFF] rounded-full flex-shrink-0" />
+      {conversation.unreadCount > 0 && (
+        <div
+          className={`absolute left-0.5 h-2.5 w-2.5 flex-shrink-0 rounded-full ${
+            activeConversation === conversation.id && !isMobileView
+              ? "bg-white"
+              : "bg-[#0A7CFF]"
+          }`}
+        />
       )}
       <div className="flex items-center gap-2 w-full px-4">
         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 relative">
