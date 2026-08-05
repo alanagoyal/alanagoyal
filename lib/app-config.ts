@@ -107,6 +107,18 @@ export const APPS: AppConfig[] = [
     menuBarTitle: "iTerm",
   },
   {
+    id: "games",
+    name: "Games",
+    icon: "/games.svg",
+    description: "Chess and games",
+    provenance: { agent: "Codex", circa: "August 2026" },
+    accentColor: "#5856D6",
+    defaultPosition: { x: 190, y: 65 },
+    defaultSize: { width: 820, height: 700 },
+    minSize: { width: 520, height: 540 },
+    menuBarTitle: "Games",
+  },
+  {
     id: "settings",
     name: "Settings",
     icon: "/settings.png",

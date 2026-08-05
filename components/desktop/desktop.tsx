@@ -51,6 +51,7 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
+import { getWaitingBadge } from "@/lib/games/api";
 import {
   isFinderViewMode,
   type FinderViewMode,
@@ -63,6 +64,7 @@ const PhotosApp = dynamic(() => import("@/components/apps/photos/photos-app").th
 const CalendarApp = dynamic(() => import("@/components/apps/calendar/calendar-app").then(m => ({ default: m.CalendarApp })));
 const WeatherApp = dynamic(() => import("@/components/apps/weather/weather-app").then(m => ({ default: m.WeatherApp })));
 const MusicApp = dynamic(() => import("@/components/apps/music/music-app").then(m => ({ default: m.MusicApp })));
+const GamesApp = dynamic(() => import("@/components/apps/games").then(m => ({ default: m.GamesApp })));
 const TextEditWindow = dynamic(() => import("@/components/apps/textedit").then(m => ({ default: m.TextEditWindow })));
 const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m => ({ default: m.PreviewWindow })));
 
@@ -765,6 +767,27 @@ function DesktopContent({
     });
   }, []);
 
+  const handleGamesWaitingBadgeChange = useCallback((waiting: boolean) => {
+    setAppBadges((prev) => ({ ...prev, games: waiting ? 1 : 0 }));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      const waiting = await getWaitingBadge().catch(() => false);
+      if (!cancelled) handleGamesWaitingBadgeChange(waiting);
+    };
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), 15_000);
+    const onVisible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [handleGamesWaitingBadgeChange]);
+
   const handleMessagesNotification = useCallback((notification: MessagesNotificationPayload) => {
     setActiveNotification(notification);
     setIsNotificationHovered(false);
@@ -926,6 +949,10 @@ function DesktopContent({
 
           <Window appId="music">
             <MusicApp />
+          </Window>
+
+          <Window appId="games">
+            <GamesApp inShell={true} onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
           </Window>
 
           {visibleFinderWindows.map((windowState) => {

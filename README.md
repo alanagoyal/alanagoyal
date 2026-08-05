@@ -69,6 +69,12 @@ a macos sierra 10.12 themed desktop with:
 - keyboard navigation (arrow keys, escape to close)
 - upload via ios shortcut with ai auto-categorization
 
+**games** - a native games launcher with chess
+- local computer play with easy, medium, and hard opponents
+- anonymous visitor matchmaking with reconnect and expiry handling
+- live waiting-player badge in the dock
+- responsive board and launcher for desktop and mobile
+
 **settings** - system preferences
 - wi-fi and bluetooth panels
 - appearance (light/dark/system theme)
@@ -110,6 +116,11 @@ the app uses next.js app router with a route group for the desktop environment. 
 - embedded camera and exposure metadata is read from each image on demand in the desktop Info panel and mobile swipe-up details; GPS remains unused
 - favorites are per-browser (stored in localstorage)
 - upload via api with ai auto-categorization (openai gpt-4o-mini)
+
+**games** uses a browser-local identity and supabase-backed chess matches:
+- chess rules and computer play use `chess.js`; the computer search runs in a web worker
+- the server validates online moves and uses optimistic versions to reject conflicting updates
+- realtime match state is persisted as FEN, PGN, and move history; heartbeats distinguish reconnects from abandonment
 
 the app is built with:
 - **next.js** with app router
