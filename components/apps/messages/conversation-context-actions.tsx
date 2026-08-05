@@ -36,6 +36,7 @@ import {
   MOBILE_CONVERSATION_LONG_PRESS_DELAY_MS,
 } from "@/lib/messages/mobile-conversation-interactions";
 import type { Conversation } from "@/types/messages";
+import { getConversationReadStateLabel } from "@/lib/messages/read-state";
 
 const MOBILE_CONVERSATION_EXPAND_DURATION_MS = 320;
 
@@ -46,11 +47,32 @@ interface TriggerBounds {
   height: number;
 }
 
+function ReadStateMessageIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5 shrink-0"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M15.7 4.45c-1.2-.36-2.52-.55-3.9-.55-4.86 0-8.4 2.87-8.4 6.67 0 1.62.67 3.1 1.86 4.22l-.82 2.79 3.1-1.17c1.22.49 2.65.76 4.26.76 4.82 0 8.33-2.79 8.33-6.6 0-.89-.19-1.72-.55-2.47"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="19.15" cy="4.8" r="2.7" fill="currentColor" />
+    </svg>
+  );
+}
+
 interface ConversationContextActionsProps {
   conversation: Conversation;
   isMobileView: boolean;
   children: ReactElement;
   onPinToggle: () => void;
+  onToggleReadState: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
   onOpenConversation: () => void;
@@ -65,6 +87,7 @@ function MobileConversationPreview({
   onRestoreFocus,
   onOpenConversation,
   onPinToggle,
+  onToggleReadState,
   onToggleAlerts,
   onDelete,
 }: {
@@ -75,6 +98,7 @@ function MobileConversationPreview({
   onRestoreFocus: () => void;
   onOpenConversation: () => void;
   onPinToggle: () => void;
+  onToggleReadState: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
 }) {
@@ -83,6 +107,7 @@ function MobileConversationPreview({
   const displayName = getConversationDisplayName(conversation);
   const previewMessages = getConversationPreviewMessages(conversation);
   const isGroupConversation = conversation.recipients.length > 1;
+  const readStateLabel = getConversationReadStateLabel(conversation);
 
   useEffect(() => {
     if (open) window.getSelection()?.removeAllRanges();
@@ -166,8 +191,8 @@ function MobileConversationPreview({
             Conversation actions for {displayName}
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Preview or open the conversation, then pin, change alerts, or
-            delete it.
+            Preview or open the conversation, then change its read state, pin,
+            change alerts, or delete it.
           </DialogPrimitive.Description>
 
           <button
@@ -244,6 +269,15 @@ function MobileConversationPreview({
             <div className="mx-5 border-t border-muted-foreground/20" />
             <button
               type="button"
+              onClick={() => runAction(onToggleReadState)}
+              className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+            >
+              <ReadStateMessageIcon />
+              <span>{readStateLabel}</span>
+            </button>
+            <div className="mx-5 border-t border-muted-foreground/20" />
+            <button
+              type="button"
               onClick={() => runAction(onToggleAlerts)}
               className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
             >
@@ -277,6 +311,7 @@ export function ConversationContextActions({
   isMobileView,
   children,
   onPinToggle,
+  onToggleReadState,
   onToggleAlerts,
   onDelete,
   onOpenConversation,
@@ -409,6 +444,12 @@ export function ConversationContextActions({
         <ContextMenuContent>
           <ContextMenuItem
             className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
+            onClick={onToggleReadState}
+          >
+            <span>{getConversationReadStateLabel(conversation)}</span>
+          </ContextMenuItem>
+          <ContextMenuItem
+            className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onPinToggle}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
@@ -457,6 +498,7 @@ export function ConversationContextActions({
         onRestoreFocus={restoreFocus}
         onOpenConversation={onOpenConversation}
         onPinToggle={onPinToggle}
+        onToggleReadState={onToggleReadState}
         onToggleAlerts={onToggleAlerts}
         onDelete={onDelete}
       />
