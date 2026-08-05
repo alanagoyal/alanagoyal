@@ -6,6 +6,7 @@ import { SwipeActions } from "./swipe-actions";
 import { ConversationContextActions } from "./conversation-context-actions";
 import { Icons } from "./icons";
 import { useTheme } from "next-themes";
+import { toggleConversationReadState } from "@/lib/messages/read-state";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -108,6 +109,12 @@ export const ConversationItem = memo(function ConversationItem({
 
   const handleContextMenuDelete = () => {
     onDeleteConversation(conversation.id);
+  };
+
+  const handleContextMenuToggleReadState = () => {
+    onUpdateConversation(
+      toggleConversationReadState(conversations, conversation.id),
+    );
   };
 
   const handleContextMenuHideAlerts = () => {
@@ -298,6 +305,7 @@ export const ConversationItem = memo(function ConversationItem({
       conversation={conversation}
       isMobileView={Boolean(isMobileView)}
       onPinToggle={handleContextMenuPin}
+      onToggleReadState={handleContextMenuToggleReadState}
       onToggleAlerts={handleContextMenuHideAlerts}
       onDelete={handleContextMenuDelete}
       onOpenConversation={() => onSelectConversation(conversation.id)}

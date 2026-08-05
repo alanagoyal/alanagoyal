@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import Image from "next/image";
+import { toggleConversationReadState } from "@/lib/messages/read-state";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -389,6 +390,14 @@ export function Sidebar({
                                   onUpdateConversation(
                                     updatedConversations,
                                     "mute",
+                                  );
+                                }}
+                                onToggleReadState={() => {
+                                  onUpdateConversation(
+                                    toggleConversationReadState(
+                                      conversations,
+                                      conversation.id,
+                                    ),
                                   );
                                 }}
                                 onDelete={() =>

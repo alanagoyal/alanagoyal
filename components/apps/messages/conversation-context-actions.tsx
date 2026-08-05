@@ -5,6 +5,8 @@ import { Slot } from "@radix-ui/react-slot";
 import {
   Bell,
   BellOff,
+  Mail,
+  MailOpen,
   Pin,
   PinOff,
   Trash2,
@@ -36,6 +38,7 @@ import {
   MOBILE_CONVERSATION_LONG_PRESS_DELAY_MS,
 } from "@/lib/messages/mobile-conversation-interactions";
 import type { Conversation } from "@/types/messages";
+import { getConversationReadStateLabel } from "@/lib/messages/read-state";
 
 const MOBILE_CONVERSATION_EXPAND_DURATION_MS = 320;
 
@@ -51,6 +54,7 @@ interface ConversationContextActionsProps {
   isMobileView: boolean;
   children: ReactElement;
   onPinToggle: () => void;
+  onToggleReadState: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
   onOpenConversation: () => void;
@@ -65,6 +69,7 @@ function MobileConversationPreview({
   onRestoreFocus,
   onOpenConversation,
   onPinToggle,
+  onToggleReadState,
   onToggleAlerts,
   onDelete,
 }: {
@@ -75,6 +80,7 @@ function MobileConversationPreview({
   onRestoreFocus: () => void;
   onOpenConversation: () => void;
   onPinToggle: () => void;
+  onToggleReadState: () => void;
   onToggleAlerts: () => void;
   onDelete: () => void;
 }) {
@@ -83,6 +89,7 @@ function MobileConversationPreview({
   const displayName = getConversationDisplayName(conversation);
   const previewMessages = getConversationPreviewMessages(conversation);
   const isGroupConversation = conversation.recipients.length > 1;
+  const readStateLabel = getConversationReadStateLabel(conversation);
 
   useEffect(() => {
     if (open) window.getSelection()?.removeAllRanges();
@@ -166,8 +173,8 @@ function MobileConversationPreview({
             Conversation actions for {displayName}
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Preview or open the conversation, then pin, change alerts, or
-            delete it.
+            Preview or open the conversation, then change its read state, pin,
+            change alerts, or delete it.
           </DialogPrimitive.Description>
 
           <button
@@ -244,6 +251,19 @@ function MobileConversationPreview({
             <div className="mx-5 border-t border-muted-foreground/20" />
             <button
               type="button"
+              onClick={() => runAction(onToggleReadState)}
+              className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
+            >
+              {conversation.unreadCount > 0 ? (
+                <MailOpen className="h-5 w-5 shrink-0" aria-hidden />
+              ) : (
+                <Mail className="h-5 w-5 shrink-0" aria-hidden />
+              )}
+              <span>{readStateLabel}</span>
+            </button>
+            <div className="mx-5 border-t border-muted-foreground/20" />
+            <button
+              type="button"
               onClick={() => runAction(onToggleAlerts)}
               className="flex h-14 w-full items-center gap-3 px-5 text-left text-[17px] outline-none active:bg-muted focus-visible:bg-muted"
             >
@@ -277,6 +297,7 @@ export function ConversationContextActions({
   isMobileView,
   children,
   onPinToggle,
+  onToggleReadState,
   onToggleAlerts,
   onDelete,
   onOpenConversation,
@@ -409,6 +430,12 @@ export function ConversationContextActions({
         <ContextMenuContent>
           <ContextMenuItem
             className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
+            onClick={onToggleReadState}
+          >
+            <span>{getConversationReadStateLabel(conversation)}</span>
+          </ContextMenuItem>
+          <ContextMenuItem
+            className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onPinToggle}
           >
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
@@ -457,6 +484,7 @@ export function ConversationContextActions({
         onRestoreFocus={restoreFocus}
         onOpenConversation={onOpenConversation}
         onPinToggle={onPinToggle}
+        onToggleReadState={onToggleReadState}
         onToggleAlerts={onToggleAlerts}
         onDelete={onDelete}
       />
