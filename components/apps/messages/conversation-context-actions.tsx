@@ -5,7 +5,6 @@ import { Slot } from "@radix-ui/react-slot";
 import {
   Bell,
   BellOff,
-  MessageCircle,
   Pin,
   PinOff,
   Trash2,
@@ -50,10 +49,21 @@ interface TriggerBounds {
 
 function ReadStateMessageIcon() {
   return (
-    <span className="relative h-5 w-5 shrink-0" aria-hidden>
-      <MessageCircle className="h-5 w-5" />
-      <span className="absolute right-0 top-0 h-1.5 w-1.5 rounded-full border border-current bg-background" />
-    </span>
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5 shrink-0"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M15.7 4.45c-1.2-.36-2.52-.55-3.9-.55-4.86 0-8.4 2.87-8.4 6.67 0 1.62.67 3.1 1.86 4.22l-.82 2.79 3.1-1.17c1.22.49 2.65.76 4.26.76 4.82 0 8.33-2.79 8.33-6.6 0-.89-.19-1.72-.55-2.47"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="19.15" cy="4.8" r="2.7" fill="currentColor" />
+    </svg>
   );
 }
 
