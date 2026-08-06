@@ -778,7 +778,7 @@ function DesktopContent({
       if (!cancelled) handleGamesWaitingBadgeChange(waiting);
     };
     void refresh();
-    const interval = window.setInterval(() => void refresh(), 15_000);
+    const interval = window.setInterval(() => void refresh(), 5_000);
     const onVisible = () => { if (!document.hidden) void refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
@@ -952,7 +952,7 @@ function DesktopContent({
           </Window>
 
           <Window appId="games">
-            <GamesApp />
+            <GamesApp onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
           </Window>
 
           {visibleFinderWindows.map((windowState) => {

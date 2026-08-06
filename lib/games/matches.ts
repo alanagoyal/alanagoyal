@@ -1,5 +1,8 @@
+import type { ChessMoveRecord } from "@/lib/games/chess";
+
 export const WAITING_FRESH_MS = 45_000;
 export const PARTICIPANT_ACTIVE_MS = 75_000;
+export const MATCHMAKING_TIMEOUT_MS = 120_000;
 
 export interface GameMatch {
   id: string;
@@ -61,4 +64,3 @@ export function getExpiredParticipant(match: Pick<GameMatch, "status" | "white_h
   if (!participantIsActive(match.black_heartbeat_at, now)) return "black";
   return null;
 }
-import type { ChessMoveRecord } from "@/lib/games/chess";

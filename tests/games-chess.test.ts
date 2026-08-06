@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Chess } from "chess.js";
 import { applyChessMove, chooseComputerMove, legalTargets } from "../lib/games/chess";
-import { getExpiredParticipant, isFreshWaitingMatch, participantIsActive } from "../lib/games/matches";
+import {
+  getExpiredParticipant,
+  isFreshWaitingMatch,
+  MATCHMAKING_TIMEOUT_MS,
+  participantIsActive,
+} from "../lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "../lib/games/authoritative-move";
 
 test("chess rules accept legal moves and reject illegal moves", () => {
@@ -10,6 +15,16 @@ test("chess rules accept legal moves and reject illegal moves", () => {
   assert.ok(legalTargets(initial, "e2").includes("e4"));
   assert.equal(applyChessMove(initial, "e2", "e4").move.san, "e4");
   assert.throws(() => applyChessMove(initial, "e2", "e5"));
+});
+
+test("chess move records distinguish captures for sound playback", () => {
+  const start = new Chess().fen();
+  const white = applyChessMove(start, "e2", "e4");
+  const black = applyChessMove(white.fen, "d7", "d5", "q", white.history);
+  const capture = applyChessMove(black.fen, "e4", "d5", "q", black.history);
+
+  assert.equal(white.move.captured, undefined);
+  assert.equal(capture.move.captured, "p");
 });
 
 test("easy computer play is deterministic with an injected random source", () => {
@@ -28,6 +43,10 @@ test("waiting badges require both a fresh heartbeat and unexpired row", () => {
   assert.equal(isFreshWaitingMatch({ status: "waiting", waiting_heartbeat_at: "2026-08-05T11:59:30Z", expires_at: "2026-08-05T12:00:30Z" }, now), true);
   assert.equal(isFreshWaitingMatch({ status: "waiting", waiting_heartbeat_at: "2026-08-05T11:58:00Z", expires_at: "2026-08-05T12:00:30Z" }, now), false);
   assert.equal(isFreshWaitingMatch({ status: "active", waiting_heartbeat_at: "2026-08-05T11:59:59Z", expires_at: "2026-08-05T12:00:30Z" }, now), false);
+});
+
+test("visitor matchmaking waits for two minutes before fallback", () => {
+  assert.equal(MATCHMAKING_TIMEOUT_MS, 120_000);
 });
 
 test("temporary disconnect and abandonment use different thresholds", () => {

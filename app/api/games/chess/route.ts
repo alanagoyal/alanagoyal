@@ -72,6 +72,24 @@ export async function POST(request: NextRequest) {
     const secretHash = hash(visitorSecret as string);
     const supabase = serviceClient();
 
+    if (action === "resume") {
+      const { data: candidates, error } = await supabase.from("game_matches").select("*")
+        .or(`white_visitor_id.eq.${visitorId},black_visitor_id.eq.${visitorId}`)
+        .in("status", ["waiting", "active"])
+        .gt("expires_at", new Date().toISOString())
+        .order("updated_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      const resumable = candidates?.find((candidate) =>
+        (candidate.white_visitor_id === visitorId && candidate.white_secret_hash === secretHash)
+        || (candidate.black_visitor_id === visitorId && candidate.black_secret_hash === secretHash));
+      if (!resumable) return NextResponse.json({ match: null });
+      const { data: match, error: publicReadError } = await supabase.from("game_matches")
+        .select(PUBLIC_FIELDS).eq("id", resumable.id).single();
+      if (publicReadError) throw publicReadError;
+      return NextResponse.json({ match });
+    }
+
     if (action === "matchmake") {
       const { data, error } = await supabase.rpc("game_matchmake", { visitor_id_arg: visitorId, secret_hash_arg: secretHash });
       if (error) throw error;
@@ -153,7 +171,13 @@ export async function POST(request: NextRequest) {
         throw error;
       }
       const { game, move, result: winner } = validated;
-      const nextHistory = [...(Array.isArray(privateMatch.move_history) ? privateMatch.move_history : []), { from: move.from, to: move.to, promotion: move.promotion, san: move.san }];
+      const nextHistory = [...(Array.isArray(privateMatch.move_history) ? privateMatch.move_history : []), {
+        from: move.from,
+        to: move.to,
+        promotion: move.promotion,
+        captured: move.captured,
+        san: move.san,
+      }];
       const update = { fen: game.fen(), pgn: game.pgn(), move_history: nextHistory, version: privateMatch.version + 1, status: winner ? "completed" : "active", result: winner, completed_at: winner ? new Date().toISOString() : null, updated_at: new Date().toISOString(), expires_at: new Date(Date.now() + 75_000).toISOString(), ...(isWhite ? { white_heartbeat_at: new Date().toISOString() } : { black_heartbeat_at: new Date().toISOString() }) };
       const { data: match, error } = await supabase.from("game_matches").update(update).eq("id", matchId).eq("version", privateMatch.version).eq("status", "active").select(PUBLIC_FIELDS).maybeSingle();
       if (error) throw error;

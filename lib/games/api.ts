@@ -1,6 +1,6 @@
 import { loadVisitorIdentity, type GameMatch, type VisitorIdentity } from "@/lib/games/matches";
 
-interface GamesResponse { match?: GameMatch; waiting?: boolean; error?: string }
+interface GamesResponse { match?: GameMatch | null; waiting?: boolean; error?: string }
 
 async function request(action: string, identity: VisitorIdentity, body: Record<string, unknown> = {}) {
   const response = await fetch("/api/games/chess", {
@@ -14,6 +14,8 @@ async function request(action: string, identity: VisitorIdentity, body: Record<s
 }
 
 export const gamesApi = {
+  waitingBadge: getWaitingBadge,
+  resume: (identity: VisitorIdentity) => request("resume", identity),
   matchmake: (identity: VisitorIdentity) => request("matchmake", identity),
   get: (identity: VisitorIdentity, matchId: string) => request("get", identity, { matchId }),
   heartbeat: (identity: VisitorIdentity, matchId: string) => request("heartbeat", identity, { matchId }),

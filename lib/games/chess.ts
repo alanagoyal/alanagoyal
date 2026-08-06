@@ -7,6 +7,7 @@ export interface ChessMoveRecord {
   from: Square;
   to: Square;
   promotion?: string;
+  captured?: string;
   san: string;
 }
 
@@ -30,7 +31,13 @@ export function applyChessMove(
 ) {
   const game = createChessGame(fen, history);
   const move = game.move({ from, to, promotion });
-  const record = { from: move.from, to: move.to, promotion: move.promotion, san: move.san };
+  const record = {
+    from: move.from,
+    to: move.to,
+    promotion: move.promotion,
+    captured: move.captured,
+    san: move.san,
+  };
   return {
     fen: game.fen(),
     pgn: game.pgn(),
