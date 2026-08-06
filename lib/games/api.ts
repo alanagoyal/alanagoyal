@@ -1,4 +1,4 @@
-import type { GameMatch, VisitorIdentity } from "@/lib/games/matches";
+import { loadVisitorIdentity, type GameMatch, type VisitorIdentity } from "@/lib/games/matches";
 
 interface GamesResponse { match?: GameMatch; waiting?: boolean; error?: string }
 
@@ -23,7 +23,10 @@ export const gamesApi = {
 };
 
 export async function getWaitingBadge(): Promise<boolean> {
-  const response = await fetch("/api/games/chess?badge=1", { cache: "no-store" });
+  const visitorId = typeof window === "undefined" ? "" : loadVisitorIdentity().id;
+  const params = new URLSearchParams({ badge: "1" });
+  if (visitorId) params.set("visitorId", visitorId);
+  const response = await fetch(`/api/games/chess?${params}`, { cache: "no-store" });
   if (!response.ok) return false;
   return Boolean(((await response.json()) as GamesResponse).waiting);
 }

@@ -10,13 +10,32 @@ export interface ChessMoveRecord {
   san: string;
 }
 
-export function applyChessMove(fen: string, from: Square, to: Square, promotion = "q") {
-  const game = new Chess(fen);
+export function createChessGame(fen: string, history: ChessMoveRecord[] = []): Chess {
+  if (!history.length) return new Chess(fen);
+
+  const game = new Chess();
+  for (const move of history) {
+    game.move({ from: move.from, to: move.to, promotion: move.promotion });
+  }
+  if (game.fen() !== fen) throw new Error("Chess history does not match the current position.");
+  return game;
+}
+
+export function applyChessMove(
+  fen: string,
+  from: Square,
+  to: Square,
+  promotion = "q",
+  history: ChessMoveRecord[] = [],
+) {
+  const game = createChessGame(fen, history);
   const move = game.move({ from, to, promotion });
+  const record = { from: move.from, to: move.to, promotion: move.promotion, san: move.san };
   return {
     fen: game.fen(),
     pgn: game.pgn(),
-    move: { from: move.from, to: move.to, promotion: move.promotion, san: move.san },
+    move: record,
+    history: [...history, record],
     outcome: getChessOutcome(game),
   };
 }

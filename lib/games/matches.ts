@@ -8,7 +8,7 @@ export interface GameMatch {
   black_visitor_id: string | null;
   fen: string;
   pgn: string;
-  move_history: Array<{ from: string; to: string; promotion?: string; san: string }>;
+  move_history: ChessMoveRecord[];
   version: number;
   result: string | null;
   waiting_heartbeat_at: string | null;
@@ -61,3 +61,4 @@ export function getExpiredParticipant(match: Pick<GameMatch, "status" | "white_h
   if (!participantIsActive(match.black_heartbeat_at, now)) return "black";
   return null;
 }
+import type { ChessMoveRecord } from "@/lib/games/chess";

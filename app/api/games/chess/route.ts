@@ -3,9 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getExpiredParticipant } from "@/lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "@/lib/games/authoritative-move";
+import {
+  applyRateLimitHeaders,
+  checkRateLimit,
+  getClientIdentity,
+  parseJsonBodyWithLimit,
+} from "@/lib/server/request-security";
 
 const PUBLIC_FIELDS = "id,status,white_visitor_id,black_visitor_id,fen,pgn,move_history,version,result,waiting_heartbeat_at,white_heartbeat_at,black_heartbeat_at,expires_at,created_at,updated_at";
 const WAITING_FRESH_SECONDS = 45;
+const MAX_BODY_BYTES = 4 * 1024;
+const POST_RATE_LIMIT = { scope: "games_chess_ip", limit: 180, windowMs: 60_000 } as const;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,7 +28,7 @@ function hash(secret: string) {
 }
 
 function validIdentity(visitorId: unknown, visitorSecret: unknown): visitorId is string {
-  return typeof visitorId === "string" && /^[0-9a-f-]{36}$/i.test(visitorId) && typeof visitorSecret === "string" && visitorSecret.length >= 32;
+  return typeof visitorId === "string" && UUID_PATTERN.test(visitorId) && typeof visitorSecret === "string" && visitorSecret.length >= 32;
 }
 
 function errorResponse(error: unknown, status = 400) {
@@ -31,8 +40,11 @@ export async function GET(request: NextRequest) {
   if (request.nextUrl.searchParams.get("badge") !== "1") return errorResponse("Not found.", 404);
   try {
     const cutoff = new Date(Date.now() - WAITING_FRESH_SECONDS * 1000).toISOString();
-    const { count, error } = await serviceClient().from("game_matches").select("id", { count: "exact", head: true })
+    const visitorId = request.nextUrl.searchParams.get("visitorId");
+    let query = serviceClient().from("game_matches").select("id", { count: "exact", head: true })
       .eq("status", "waiting").gt("waiting_heartbeat_at", cutoff).gt("expires_at", new Date().toISOString());
+    if (visitorId && UUID_PATTERN.test(visitorId)) query = query.neq("white_visitor_id", visitorId);
+    const { count, error } = await query;
     if (error) throw error;
     return NextResponse.json({ waiting: (count ?? 0) > 0 }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
@@ -41,8 +53,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(getClientIdentity(request).ip, POST_RATE_LIMIT);
+  if (!rateLimit.allowed) {
+    const response = errorResponse("Too many game requests. Try again shortly.", 429);
+    applyRateLimitHeaders(response.headers, rateLimit);
+    response.headers.set("Retry-After", Math.max(1, Math.ceil(rateLimit.retryAfterMs / 1000)).toString());
+    return response;
+  }
+
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = await parseJsonBodyWithLimit<Record<string, unknown>>(request, MAX_BODY_BYTES);
+    if (!parsedBody.ok) {
+      return errorResponse(parsedBody.reason === "too_large" ? "Game request is too large." : "Invalid game request.", parsedBody.reason === "too_large" ? 413 : 400);
+    }
+    const body = parsedBody.body;
     const { action, visitorId, visitorSecret, matchId } = body;
     if (!validIdentity(visitorId, visitorSecret)) return errorResponse("Invalid visitor identity.", 401);
     const secretHash = hash(visitorSecret as string);
@@ -56,7 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ match });
     }
 
-    if (typeof matchId !== "string") return errorResponse("A match is required.");
+    if (typeof matchId !== "string" || !UUID_PATTERN.test(matchId)) return errorResponse("A valid match is required.");
     const { data: privateMatch, error: readError } = await supabase.from("game_matches").select("*").eq("id", matchId).single();
     if (readError || !privateMatch) return errorResponse("Match not found.", 404);
     const isWhite = privateMatch.white_visitor_id === visitorId && privateMatch.white_secret_hash === secretHash;
@@ -97,7 +121,14 @@ export async function POST(request: NextRequest) {
 
     if (action === "leave") {
       if (privateMatch.status === "completed" || privateMatch.status === "expired") return NextResponse.json({ match: privateMatch });
-      const { data: match, error } = await supabase.from("game_matches").update({ status: "completed", result: "abandoned", completed_at: new Date().toISOString(), updated_at: new Date().toISOString(), version: privateMatch.version + 1 }).eq("id", matchId).eq("version", privateMatch.version).select(PUBLIC_FIELDS).single();
+      const waiting = privateMatch.status === "waiting";
+      const { data: match, error } = await supabase.from("game_matches").update({
+        status: waiting ? "expired" : "completed",
+        result: waiting ? null : "abandoned",
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: privateMatch.version + 1,
+      }).eq("id", matchId).eq("version", privateMatch.version).select(PUBLIC_FIELDS).single();
       if (error) throw error;
       return NextResponse.json({ match });
     }
@@ -106,7 +137,17 @@ export async function POST(request: NextRequest) {
       const expectedColor = isWhite ? "w" : "b";
       let validated;
       try {
-        validated = validateMatchMove({ status: privateMatch.status, version: privateMatch.version, expectedVersion: Number(body.version), fen: privateMatch.fen, color: expectedColor, from: String(body.from), to: String(body.to), promotion: String(body.promotion ?? "q") });
+        validated = validateMatchMove({
+          status: privateMatch.status,
+          version: privateMatch.version,
+          expectedVersion: Number(body.version),
+          fen: privateMatch.fen,
+          moveHistory: Array.isArray(privateMatch.move_history) ? privateMatch.move_history : [],
+          color: expectedColor,
+          from: String(body.from),
+          to: String(body.to),
+          promotion: String(body.promotion ?? "q"),
+        });
       } catch (error) {
         if (error instanceof MatchMoveError) return errorResponse(error.message, error.status);
         throw error;

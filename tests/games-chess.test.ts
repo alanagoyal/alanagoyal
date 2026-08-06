@@ -44,3 +44,29 @@ test("authoritative moves reject conflicts, illegal turns, and completed games",
   assert.throws(() => validateMatchMove({ status: "completed", version: 2, expectedVersion: 2, fen, color: "w", from: "e2", to: "e4" }), /not active/);
   assert.equal(validateMatchMove({ status: "active", version: 2, expectedVersion: 2, fen, color: "w", from: "e2", to: "e4" }).move.san, "e4");
 });
+
+test("authoritative moves preserve history and recognize threefold repetition", () => {
+  const game = new Chess();
+  const history = [
+    ["g1", "f3"], ["g8", "f6"], ["f3", "g1"], ["f6", "g8"],
+    ["g1", "f3"], ["g8", "f6"], ["f3", "g1"],
+  ].map(([from, to]) => {
+    const move = game.move({ from, to });
+    return { from: move.from, to: move.to, promotion: move.promotion, san: move.san };
+  });
+
+  const result = validateMatchMove({
+    status: "active",
+    version: 7,
+    expectedVersion: 7,
+    fen: game.fen(),
+    moveHistory: history,
+    color: "b",
+    from: "f6",
+    to: "g8",
+  });
+
+  assert.equal(result.game.isThreefoldRepetition(), true);
+  assert.equal(result.result, "draw");
+  assert.match(result.game.pgn(), /Nf3 Nf6 2\. Ng1 Ng8/);
+});

@@ -1,30 +1,42 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { ChevronLeft, Monitor, RotateCcw, Sparkles, Users, Wifi, WifiOff, X } from "lucide-react";
+import { ChevronLeft, Monitor, RotateCcw, Sparkles, Users, Wifi, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WindowControls } from "@/components/window-controls";
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
-import { GamesIcon } from "@/components/apps/games/games-icon";
 import { gamesApi } from "@/lib/games/api";
-import { applyChessMove, legalTargets, type ChessDifficulty } from "@/lib/games/chess";
+import {
+  applyChessMove,
+  createChessGame,
+  legalTargets,
+  type ChessDifficulty,
+  type ChessMoveRecord,
+} from "@/lib/games/chess";
 import { loadVisitorIdentity, type GameMatch, type VisitorIdentity } from "@/lib/games/matches";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { cn } from "@/lib/utils";
 
-type Screen = "library" | "setup" | "chess";
+type Screen = "library" | "setup" | "difficulty" | "chess";
 type PlayKind = "computer" | "online";
 
 const PIECES: Record<string, string> = {
-  wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
-  bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
+  p: "♟︎", n: "♞︎", b: "♝︎", r: "♜︎", q: "♛︎", k: "♚︎",
 };
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
-interface GamesAppProps {
-  isMobile?: boolean;
-  inShell?: boolean;
-  onWaitingBadgeChange?: (waiting: boolean) => void;
+function ChessTileIcon({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "flex aspect-square items-center justify-center rounded-[22%] bg-[linear-gradient(145deg,#8798b5_0%,#293851_48%,#101827_100%)] text-white shadow-[inset_0_1px_1px_rgba(255,255,255,.45),0_6px_16px_rgba(15,23,42,.25)] ring-1 ring-black/15",
+        className,
+      )}
+    >
+      <span className="-translate-y-[2%] font-serif text-[3.65rem] leading-none drop-shadow-[0_3px_3px_rgba(0,0,0,.4)]">♞︎</span>
+    </div>
+  );
 }
 
 function statusText(game: Chess, playerColor: "w" | "b", thinking: boolean) {
@@ -33,6 +45,28 @@ function statusText(game: Chess, playerColor: "w" | "b", thinking: boolean) {
   if (thinking) return "Thinking…";
   const yours = game.turn() === playerColor;
   return `${yours ? "Your" : "Opponent’s"} turn${game.inCheck() ? " · Check" : ""}`;
+}
+
+function onlineStatusText(match: GameMatch | null, game: Chess, playerColor: "w" | "b") {
+  if (!match || match.status === "waiting") return "Finding another visitor…";
+  if (match.status === "expired") return "No player joined";
+  if (match.status === "completed") {
+    if (match.result === "abandoned") return "Opponent left";
+    if (match.result === "draw") return "Draw";
+    if (match.result === (playerColor === "w" ? "white" : "black")) return "You won";
+    if (match.result) return "You lost";
+  }
+  return statusText(game, playerColor, false);
+}
+
+function OnlineMatchLabel({ status }: { status?: GameMatch["status"] }) {
+  if (!status || status === "waiting") {
+    return <><span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" /> Waiting for a player…</>;
+  }
+  if (status === "active") {
+    return <><Wifi size={15} className="text-emerald-500" /> Online match</>;
+  }
+  return <><WifiOff size={15} className="text-muted-foreground" /> Match ended</>;
 }
 
 function ChessBoard({ fen, orientation, disabled, onMove }: {
@@ -77,13 +111,24 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
             aria-label={`${square}${piece ? ` ${piece.color === "w" ? "white" : "black"} ${piece.type}` : ""}`}
             onClick={() => select(square)}
             className={cn(
-              "relative flex aspect-square items-center justify-center text-[clamp(1.65rem,7.2vw,4.35rem)] leading-none",
+              "relative flex aspect-square items-center justify-center text-[clamp(1.8rem,4vw,3.2rem)] leading-none",
               light ? "bg-[#E8EDF6]" : "bg-[#6685B8]",
               selected === square && "after:absolute after:inset-0 after:bg-[#0A7CFF]/35"
             )}
           >
             {target && <span className="absolute h-[24%] w-[24%] rounded-full bg-[#10254b]/35" />}
-            {piece && <span className={cn("relative z-[1] drop-shadow-sm", piece.color === "b" && "text-[#182238]")}>{PIECES[`${piece.color}${piece.type}`]}</span>}
+            {piece && (
+              <span
+                className={cn(
+                  "relative z-[1] font-serif leading-none",
+                  piece.color === "w"
+                    ? "text-[#FFF8E7] drop-shadow-[0_1px_1px_rgba(15,23,42,.7)]"
+                    : "text-[#172033] drop-shadow-[0_1px_1px_rgba(255,255,255,.2)]",
+                )}
+              >
+                {PIECES[piece.type]}
+              </span>
+            )}
           </button>
         );
       })}
@@ -91,12 +136,13 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
   );
 }
 
-export function GamesApp({ isMobile = false, inShell = false, onWaitingBadgeChange }: GamesAppProps) {
-  const nav = useWindowNavBehavior({ isDesktop: inShell, isMobile, shellEnabled: inShell });
+export function GamesApp() {
+  const nav = useWindowNavBehavior({ isDesktop: true, isMobile: false, shellEnabled: true });
   const [screen, setScreen] = useState<Screen>("library");
   const [kind, setKind] = useState<PlayKind>("computer");
   const [difficulty, setDifficulty] = useState<ChessDifficulty>("medium");
   const [fen, setFen] = useState(() => new Chess().fen());
+  const [computerHistory, setComputerHistory] = useState<ChessMoveRecord[]>([]);
   const [thinking, setThinking] = useState(false);
   const [match, setMatch] = useState<GameMatch | null>(null);
   const [identity, setIdentity] = useState<VisitorIdentity | null>(null);
@@ -106,55 +152,70 @@ export function GamesApp({ isMobile = false, inShell = false, onWaitingBadgeChan
   useEffect(() => setIdentity(loadVisitorIdentity()), []);
   useEffect(() => () => workerRef.current?.terminate(), []);
 
-  const waiting = match?.status === "waiting";
-  useEffect(() => { if (waiting) onWaitingBadgeChange?.(true); }, [onWaitingBadgeChange, waiting]);
-
+  const matchId = match?.id;
   const syncMatch = useCallback(async () => {
-    if (!identity || !match) return;
+    if (!identity || !matchId) return;
     try {
-      const response = await gamesApi.get(identity, match.id);
-      if (response.match) setMatch(response.match);
+      const response = await gamesApi.get(identity, matchId);
+      if (response.match) {
+        setMatch(response.match);
+        setOnlineError(null);
+      }
     } catch (error) {
       setOnlineError(error instanceof Error ? error.message : "Couldn’t reconnect.");
     }
-  }, [identity, match]);
+  }, [identity, matchId]);
 
   useEffect(() => {
-    if (!identity || !match || match.status === "completed" || match.status === "expired") return;
-    const heartbeat = window.setInterval(() => void gamesApi.heartbeat(identity, match.id).then((r) => r.match && setMatch(r.match)).catch(() => undefined), 15_000);
+    if (!identity || !matchId || match?.status === "completed" || match?.status === "expired") return;
+    const heartbeat = window.setInterval(() => void gamesApi.heartbeat(identity, matchId).then((r) => r.match && setMatch(r.match)).catch(() => undefined), 15_000);
     const poll = window.setInterval(() => void syncMatch(), 2_000);
     const onVisible = () => { if (!document.hidden) void syncMatch(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { window.clearInterval(heartbeat); window.clearInterval(poll); document.removeEventListener("visibilitychange", onVisible); };
-  }, [identity, match, syncMatch]);
+  }, [identity, match?.status, matchId, syncMatch]);
 
-  const startComputer = () => {
+  const startComputer = (level: ChessDifficulty) => {
     setKind("computer");
+    setDifficulty(level);
     setFen(new Chess().fen());
+    setComputerHistory([]);
     setMatch(null);
     setScreen("chess");
   };
 
   const findPlayer = async () => {
-    if (!identity) return;
+    const visitor = identity ?? loadVisitorIdentity();
+    if (!visitor.id) return;
+    if (!identity) setIdentity(visitor);
     setOnlineError(null);
     setKind("online");
     setScreen("chess");
     try {
-      const response = await gamesApi.matchmake(identity);
+      const response = await gamesApi.matchmake(visitor);
       if (response.match) setMatch(response.match);
     } catch (error) {
       setOnlineError(error instanceof Error ? error.message : "Online play is unavailable.");
     }
   };
 
-  const runComputerMove = useCallback((nextFen: string) => {
+  const runComputerMove = useCallback((nextFen: string, history: ChessMoveRecord[]) => {
     setThinking(true);
     const worker = new Worker(new URL("./chess-ai.worker.ts", import.meta.url));
     workerRef.current?.terminate();
     workerRef.current = worker;
     worker.onmessage = (event: MessageEvent<{ from: Square; to: Square; promotion?: string } | null>) => {
-      if (event.data) setFen(applyChessMove(nextFen, event.data.from, event.data.to, event.data.promotion).fen);
+      if (event.data) {
+        const result = applyChessMove(
+          nextFen,
+          event.data.from,
+          event.data.to,
+          event.data.promotion,
+          history,
+        );
+        setFen(result.fen);
+        setComputerHistory(result.history);
+      }
       setThinking(false);
       worker.terminate();
     };
@@ -165,9 +226,10 @@ export function GamesApp({ isMobile = false, inShell = false, onWaitingBadgeChan
   const move = async (from: Square, to: Square) => {
     if (kind === "computer") {
       try {
-        const result = applyChessMove(fen, from, to);
+        const result = applyChessMove(fen, from, to, "q", computerHistory);
         setFen(result.fen);
-        if (!result.outcome) runComputerMove(result.fen);
+        setComputerHistory(result.history);
+        if (!result.outcome) runComputerMove(result.fen, result.history);
       } catch { /* illegal selections are ignored */ }
       return;
     }
@@ -189,69 +251,128 @@ export function GamesApp({ isMobile = false, inShell = false, onWaitingBadgeChan
   };
 
   const currentFen = kind === "online" ? match?.fen ?? new Chess().fen() : fen;
-  const game = useMemo(() => new Chess(currentFen), [currentFen]);
+  const game = useMemo(
+    () => createChessGame(
+      currentFen,
+      kind === "online" ? (match?.move_history ?? []) : computerHistory,
+    ),
+    [computerHistory, currentFen, kind, match?.move_history],
+  );
   const onlineColor = match && identity ? (match.white_visitor_id === identity.id ? "w" : "b") : "w";
   const canMove = kind === "computer"
     ? !thinking && game.turn() === "w" && !game.isGameOver()
     : match?.status === "active" && game.turn() === onlineColor && !game.isGameOver();
 
+  const goBack = () => {
+    if (screen === "chess") {
+      void leave();
+      return;
+    }
+    setScreen(screen === "difficulty" ? "setup" : "library");
+  };
+
   const backButton = screen === "library" ? null : (
-    <button onClick={() => void leave()} onMouseDown={(e) => e.stopPropagation()} className="flex items-center gap-0.5 text-sm text-[#0A7CFF]">
-      <ChevronLeft size={21} /> Games
+    <button onClick={goBack} onMouseDown={(e) => e.stopPropagation()} className="flex items-center gap-0.5 text-sm text-[#0A7CFF]">
+      <ChevronLeft size={21} /> {screen === "difficulty" ? "Chess" : "Games"}
     </button>
   );
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <WindowNavShell
-        isMobile={isMobile}
+        isMobile={false}
         onMouseDown={nav.onDragStart}
-        left={isMobile || !inShell ? backButton ?? <div className="w-14" /> : <WindowControls inShell={nav.inShell} onClose={nav.onClose} onMinimize={nav.onMinimize} onToggleMaximize={nav.onToggleMaximize} isMaximized={nav.isMaximized} closeLabel={nav.closeLabel} />}
-        center={<p className="truncate text-center text-sm font-semibold">{screen === "chess" ? "Chess" : "Games"}</p>}
-        right={screen === "library" ? <WindowNavSpacer isMobile={isMobile} /> : <button onClick={() => void leave()} onMouseDown={(e) => e.stopPropagation()} className="rounded-full p-1 text-muted-foreground can-hover:hover:bg-black/5" aria-label="Close game"><X size={17} /></button>}
+        left={(
+          <div className="flex items-center gap-3">
+            <WindowControls inShell={nav.inShell} onClose={nav.onClose} onMinimize={nav.onMinimize} onToggleMaximize={nav.onToggleMaximize} isMaximized={nav.isMaximized} closeLabel={nav.closeLabel} />
+            {backButton}
+          </div>
+        )}
+        center={<p className="truncate text-center text-sm font-semibold">{screen === "library" ? "Games" : "Chess"}</p>}
+        right={<WindowNavSpacer isMobile={false} />}
       />
 
       {screen === "library" && (
-        <div className="relative flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_25%_0%,rgba(104,92,255,.18),transparent_38%),radial-gradient(circle_at_80%_80%,rgba(10,124,255,.16),transparent_40%)] p-6 sm:p-10">
-          <button onClick={() => setScreen("setup")} className="group w-full max-w-[360px] text-left">
-            <div className="overflow-hidden rounded-[28px] border border-white/50 bg-white/55 p-5 shadow-[0_24px_80px_rgba(36,50,100,.2)] backdrop-blur-2xl transition-transform can-hover:group-hover:-translate-y-1 dark:border-white/10 dark:bg-white/10">
-              <GamesIcon className="mb-6 h-24 w-24" />
-              <p className="text-2xl font-semibold tracking-tight">Chess</p>
-              <p className="mt-1 text-sm text-muted-foreground">Play the computer or meet someone online.</p>
-              <div className="mt-6 flex items-center gap-2 text-sm font-medium text-[#0A7CFF]"><Sparkles size={16} /> Open</div>
-            </div>
-          </button>
+        <div className="relative flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_20%_0%,rgba(104,92,255,.2),transparent_42%),radial-gradient(circle_at_85%_90%,rgba(10,124,255,.16),transparent_44%)] p-7">
+          <div className="w-full max-w-[430px] rounded-[30px] border border-white/50 bg-white/45 p-4 shadow-[0_28px_90px_rgba(26,35,76,.22)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[.07]">
+            <p className="mb-3 px-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Library</p>
+            <button
+              onClick={() => setScreen("setup")}
+              className="group flex w-full items-center gap-4 rounded-[22px] bg-background/75 p-3 text-left shadow-sm ring-1 ring-black/[.06] transition-transform can-hover:hover:-translate-y-0.5 can-hover:hover:shadow-lg dark:bg-black/20 dark:ring-white/10"
+            >
+              <ChessTileIcon className="h-[88px] w-[88px] shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xl font-semibold tracking-tight">Chess</p>
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">Play the computer or another visitor.</p>
+                <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[#0A7CFF]"><Sparkles size={15} /> Play</div>
+              </div>
+            </button>
+          </div>
         </div>
       )}
 
       {screen === "setup" && (
-        <div className="flex flex-1 items-center justify-center overflow-auto p-5 sm:p-10">
-          <div className="w-full max-w-xl space-y-4">
-            <div className="rounded-2xl border border-muted-foreground/20 bg-muted/45 p-5">
-              <div className="mb-4 flex items-center gap-3"><Monitor className="text-muted-foreground" /><div><h2 className="font-semibold">Play Computer</h2><p className="text-sm text-muted-foreground">A private game on this device.</p></div></div>
-              <div className="mb-4 grid grid-cols-3 gap-2 rounded-xl bg-black/5 p-1 dark:bg-white/5">
-                {(["easy", "medium", "hard"] as ChessDifficulty[]).map((level) => <button key={level} onClick={() => setDifficulty(level)} className={cn("rounded-lg px-3 py-2 text-sm capitalize", difficulty === level && "bg-background font-medium shadow-sm")}>{level}</button>)}
-              </div>
-              <button onClick={startComputer} className="w-full rounded-xl bg-[#0A7CFF] px-4 py-2.5 text-sm font-semibold text-white">Start Game</button>
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_top,rgba(88,86,214,.13),transparent_48%)] p-8">
+          <div className="w-full max-w-[500px]">
+            <div className="mb-6 text-center">
+              <ChessTileIcon className="mx-auto h-20 w-20" />
+              <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Choose how you want to play.</p>
             </div>
-            <div className="rounded-2xl border border-muted-foreground/20 bg-muted/45 p-5">
-              <div className="mb-4 flex items-center gap-3"><Users className="text-muted-foreground" /><div><h2 className="font-semibold">Play a Visitor</h2><p className="text-sm text-muted-foreground">Match with someone else on the site.</p></div></div>
-              <button onClick={() => void findPlayer()} className="w-full rounded-xl border border-[#0A7CFF]/35 bg-[#0A7CFF]/10 px-4 py-2.5 text-sm font-semibold text-[#0A7CFF]">Find a Player</button>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setScreen("difficulty")} className="rounded-2xl border border-muted-foreground/20 bg-background/80 p-5 text-left shadow-sm transition-colors can-hover:hover:bg-muted/60">
+                <Monitor className="mb-4 text-[#0A7CFF]" size={25} />
+                <h2 className="font-semibold">Play Computer</h2>
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">Play privately on this device.</p>
+              </button>
+              <button onClick={() => void findPlayer()} className="rounded-2xl border border-muted-foreground/20 bg-background/80 p-5 text-left shadow-sm transition-colors can-hover:hover:bg-muted/60">
+                <Users className="mb-4 text-[#0A7CFF]" size={25} />
+                <h2 className="font-semibold">Play a Visitor</h2>
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">Meet someone else on the site.</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {screen === "difficulty" && (
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_top,rgba(88,86,214,.13),transparent_48%)] p-8">
+          <div className="w-full max-w-[440px]">
+            <div className="mb-6 text-center">
+              <Monitor className="mx-auto text-[#0A7CFF]" size={30} />
+              <h1 className="mt-3 text-2xl font-semibold tracking-tight">Play Computer</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Choose a difficulty.</p>
+            </div>
+            <div className="space-y-2">
+              {(["easy", "medium", "hard"] as ChessDifficulty[]).map((level) => (
+                <button key={level} onClick={() => startComputer(level)} className="flex w-full items-center justify-between rounded-2xl border border-muted-foreground/20 bg-background/80 px-5 py-4 text-left shadow-sm transition-colors can-hover:hover:bg-muted/60">
+                  <span className="font-medium capitalize">{level}</span>
+                  <ChevronLeft className="rotate-180 text-muted-foreground" size={19} />
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
       {screen === "chess" && (
-        <div className="flex flex-1 min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_top,rgba(80,112,190,.17),transparent_48%)] p-3 sm:p-6">
-          <div className="flex w-full max-w-[680px] flex-col items-center gap-3">
-            <div className="flex w-full items-center justify-between text-sm">
-              <div className="flex items-center gap-2 font-medium">{kind === "online" ? (match?.status === "waiting" ? <><span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" /> Waiting for a player…</> : <><Wifi size={15} className="text-emerald-500" /> Online match</>) : <><Monitor size={15} /> {difficulty[0].toUpperCase() + difficulty.slice(1)} computer</>}</div>
-              <span className="text-muted-foreground">{statusText(game, kind === "computer" ? "w" : onlineColor, thinking)}</span>
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,rgba(80,112,190,.17),transparent_48%)] p-4">
+          <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center gap-2.5">
+            <div className="flex w-full shrink-0 items-center justify-between text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                {kind === "online"
+                  ? <OnlineMatchLabel status={match?.status} />
+                  : <><Monitor size={15} /> {difficulty[0].toUpperCase() + difficulty.slice(1)} computer</>}
+              </div>
+              <span className="text-muted-foreground">{kind === "online" ? onlineStatusText(match, game, onlineColor) : statusText(game, "w", thinking)}</span>
             </div>
-            <div className="w-full max-w-[min(72vh,620px)]"><ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} /></div>
-            {onlineError && <div className="flex w-full items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
-            {(game.isGameOver() || match?.status === "completed" || match?.status === "expired") && <button onClick={kind === "computer" ? startComputer : () => void findPlayer()} className="flex items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <div className="aspect-square h-full max-h-full max-w-full">
+                <ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} />
+              </div>
+            </div>
+            {onlineError && <div className="flex w-full shrink-0 items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
+            {(game.isGameOver() || match?.status === "completed" || match?.status === "expired") && <button onClick={kind === "computer" ? () => startComputer(difficulty) : () => void findPlayer()} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
           </div>
         </div>
       )}

@@ -73,7 +73,7 @@ a macos sierra 10.12 themed desktop with:
 - local computer play with easy, medium, and hard opponents
 - anonymous visitor matchmaking with reconnect and expiry handling
 - live waiting-player badge in the dock
-- responsive board and launcher for desktop and mobile
+- desktop integration with the dock, finder, and window system
 
 **settings** - system preferences
 - wi-fi and bluetooth panels
@@ -120,7 +120,7 @@ the app uses next.js app router with a route group for the desktop environment. 
 **games** uses a browser-local identity and supabase-backed chess matches:
 - chess rules and computer play use `chess.js`; the computer search runs in a web worker
 - the server validates online moves and uses optimistic versions to reject conflicting updates
-- realtime match state is persisted as FEN, PGN, and move history; heartbeats distinguish reconnects from abandonment
+- synchronized match state is persisted as FEN, PGN, and move history; heartbeats distinguish reconnects from abandonment
 
 the app is built with:
 - **next.js** with app router

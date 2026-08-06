@@ -952,7 +952,7 @@ function DesktopContent({
           </Window>
 
           <Window appId="games">
-            <GamesApp inShell={true} onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
+            <GamesApp />
           </Window>
 
           {visibleFinderWindows.map((windowState) => {
