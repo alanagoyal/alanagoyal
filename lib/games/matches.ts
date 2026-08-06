@@ -8,7 +8,9 @@ export interface GameMatch {
   id: string;
   status: "waiting" | "active" | "completed" | "expired";
   white_visitor_id: string;
+  white_name: string;
   black_visitor_id: string | null;
+  black_name: string | null;
   fen: string;
   pgn: string;
   move_history: ChessMoveRecord[];
@@ -28,6 +30,26 @@ export interface VisitorIdentity {
 }
 
 const IDENTITY_KEY = "games-visitor-identity-v1";
+const PLAYER_NAME_KEY = "games-player-name-v1";
+
+export function normalizePlayerName(name: string) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+export function isValidPlayerName(name: string) {
+  const normalized = normalizePlayerName(name);
+  return normalized.length >= 1 && normalized.length <= 20 && !/[\u0000-\u001f\u007f]/.test(normalized);
+}
+
+export function loadPlayerName() {
+  if (typeof window === "undefined") return "";
+  return normalizePlayerName(window.localStorage.getItem(PLAYER_NAME_KEY) ?? "");
+}
+
+export function savePlayerName(name: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PLAYER_NAME_KEY, normalizePlayerName(name));
+}
 
 export function createVisitorIdentity(): VisitorIdentity {
   return { id: crypto.randomUUID(), secret: `${crypto.randomUUID()}${crypto.randomUUID()}` };

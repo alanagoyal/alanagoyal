@@ -4,8 +4,10 @@ import { Chess } from "chess.js";
 import { applyChessMove, chooseComputerMove, legalTargets } from "../lib/games/chess";
 import {
   getExpiredParticipant,
+  isValidPlayerName,
   isFreshWaitingMatch,
   MATCHMAKING_TIMEOUT_MS,
+  normalizePlayerName,
   participantIsActive,
 } from "../lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "../lib/games/authoritative-move";
@@ -47,6 +49,14 @@ test("waiting badges require both a fresh heartbeat and unexpired row", () => {
 
 test("visitor matchmaking waits for two minutes before fallback", () => {
   assert.equal(MATCHMAKING_TIMEOUT_MS, 120_000);
+});
+
+test("visitor names are normalized and kept deliberately short", () => {
+  assert.equal(normalizePlayerName("  Alana   Goyal  "), "Alana Goyal");
+  assert.equal(isValidPlayerName("Alana"), true);
+  assert.equal(isValidPlayerName(""), false);
+  assert.equal(isValidPlayerName("a".repeat(21)), false);
+  assert.equal(isValidPlayerName("hello\u0000world"), false);
 });
 
 test("temporary disconnect and abandonment use different thresholds", () => {

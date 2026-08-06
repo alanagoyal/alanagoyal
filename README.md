@@ -71,7 +71,7 @@ a macos sierra 10.12 themed desktop with:
 
 **games** - a native games launcher with chess
 - local computer play with easy, medium, and hard opponents
-- anonymous visitor matchmaking with reconnect and expiry handling
+- anonymous visitor matchmaking with temporary display names, reconnect, and expiry handling
 - live waiting-player badge in the dock
 - desktop integration with the dock, finder, and window system
 

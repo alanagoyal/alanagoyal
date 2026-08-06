@@ -1,7 +1,8 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { ChevronLeft, LoaderCircle, Monitor, RotateCcw, Users, Wifi, WifiOff } from "lucide-react";
+import { ChevronLeft, LoaderCircle, RotateCcw, WifiOff } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WindowControls } from "@/components/window-controls";
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
@@ -15,7 +16,10 @@ import {
 } from "@/lib/games/chess";
 import {
   loadVisitorIdentity,
+  loadPlayerName,
   MATCHMAKING_TIMEOUT_MS,
+  normalizePlayerName,
+  savePlayerName,
   type GameMatch,
   type VisitorIdentity,
 } from "@/lib/games/matches";
@@ -58,15 +62,15 @@ function formatElapsedTime(milliseconds: number) {
 
 function ChessTileIcon({ className }: { className?: string }) {
   return (
-    <div
+    <Image
+      src="/chess.png"
+      alt=""
+      width={160}
+      height={160}
       aria-hidden="true"
-      className={cn(
-        "flex aspect-square items-center justify-center rounded-[22%] bg-[linear-gradient(145deg,#8798b5_0%,#293851_48%,#101827_100%)] text-white shadow-[inset_0_1px_1px_rgba(255,255,255,.45),0_6px_16px_rgba(15,23,42,.25)] ring-1 ring-black/15",
-        className,
-      )}
-    >
-      <span className="-translate-y-[2%] font-serif text-[3.65rem] leading-none drop-shadow-[0_3px_3px_rgba(0,0,0,.4)]">♞︎</span>
-    </div>
+      className={cn("aspect-square rounded-[22%] object-cover shadow-[0_6px_16px_rgba(15,23,42,.24)] ring-1 ring-black/10", className)}
+      unoptimized
+    />
   );
 }
 
@@ -78,7 +82,7 @@ function statusText(game: Chess, playerColor: "w" | "b", thinking: boolean) {
   return `${yours ? "Your" : "Opponent’s"} turn${game.inCheck() ? " · Check" : ""}`;
 }
 
-function onlineStatusText(match: GameMatch | null, game: Chess, playerColor: "w" | "b") {
+function matchResultText(match: GameMatch | null, game: Chess, playerColor: "w" | "b") {
   if (!match || match.status === "waiting") return "Finding another visitor…";
   if (match.status === "expired") return "No player joined";
   if (match.status === "completed") {
@@ -88,16 +92,6 @@ function onlineStatusText(match: GameMatch | null, game: Chess, playerColor: "w"
     if (match.result) return "You lost";
   }
   return statusText(game, playerColor, false);
-}
-
-function OnlineMatchLabel({ status }: { status?: GameMatch["status"] }) {
-  if (!status || status === "waiting") {
-    return <><span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" /> Waiting for a player…</>;
-  }
-  if (status === "active") {
-    return <><Wifi size={15} className="text-emerald-500" /> Online match</>;
-  }
-  return <><WifiOff size={15} className="text-muted-foreground" /> Match ended</>;
 }
 
 function ChessBoard({ fen, orientation, disabled, onMove }: {
@@ -173,13 +167,15 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const [kind, setKind] = useState<PlayKind>("computer");
   const [difficulty, setDifficulty] = useState<ChessDifficulty>("medium");
   const [computerOptionsOpen, setComputerOptionsOpen] = useState(false);
+  const [visitorOptionsOpen, setVisitorOptionsOpen] = useState(false);
+  const [playerName, setPlayerName] = useState("");
   const [fen, setFen] = useState(() => new Chess().fen());
   const [computerHistory, setComputerHistory] = useState<ChessMoveRecord[]>([]);
   const [thinking, setThinking] = useState(false);
   const [match, setMatch] = useState<GameMatch | null>(null);
   const [identity, setIdentity] = useState<VisitorIdentity | null>(null);
   const [onlineError, setOnlineError] = useState<string | null>(null);
-  const [visitorWaiting, setVisitorWaiting] = useState(false);
+  const [waitingPlayerName, setWaitingPlayerName] = useState<string | null>(null);
   const [waitingElapsed, setWaitingElapsed] = useState(0);
   const [waitingTimedOut, setWaitingTimedOut] = useState(false);
   const workerRef = useRef<Worker | null>(null);
@@ -191,10 +187,18 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     let cancelled = false;
     const visitor = loadVisitorIdentity();
     setIdentity(visitor);
+    setPlayerName(loadPlayerName());
     void gamesApi.resume(visitor).then((response) => {
       if (cancelled || !response.match) return;
       setKind("online");
       setMatch(response.match);
+      const resumedName = response.match.white_visitor_id === visitor.id
+        ? response.match.white_name
+        : response.match.black_name;
+      if (resumedName) {
+        setPlayerName(resumedName);
+        savePlayerName(resumedName);
+      }
       onWaitingBadgeChange?.(false);
       if (response.match.status === "active") {
         setScreen("chess");
@@ -213,10 +217,10 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     if (screen !== "games" && screen !== "setup") return;
     let cancelled = false;
     const refresh = async () => {
-      const waiting = await gamesApi.waitingBadge().catch(() => false);
+      const waiting = await gamesApi.waitingPlayer().catch(() => ({ waiting: false, name: null }));
       if (cancelled) return;
-      setVisitorWaiting(waiting);
-      onWaitingBadgeChange?.(waiting);
+      setWaitingPlayerName(waiting.waiting ? waiting.name : null);
+      onWaitingBadgeChange?.(waiting.waiting);
     };
     void refresh();
     const interval = window.setInterval(() => void refresh(), 5_000);
@@ -262,9 +266,16 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   };
 
   const findPlayer = async () => {
+    const normalizedName = normalizePlayerName(playerName);
+    if (!normalizedName || normalizedName.length > 20) {
+      setOnlineError("Enter a name between 1 and 20 characters.");
+      return;
+    }
     const visitor = identity ?? loadVisitorIdentity();
     if (!visitor.id) return;
     primeChessSounds();
+    savePlayerName(normalizedName);
+    setPlayerName(normalizedName);
     if (!identity) setIdentity(visitor);
     setOnlineError(null);
     setKind("online");
@@ -275,7 +286,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     waitingStartedAtRef.current = Date.now();
     setScreen("waiting");
     try {
-      const response = await gamesApi.matchmake(visitor);
+      const response = await gamesApi.matchmake(visitor, normalizedName);
       if (response.match) {
         setMatch(response.match);
         if (response.match.status === "active") onWaitingBadgeChange?.(false);
@@ -293,7 +304,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     }
     setMatch(null);
     setWaitingTimedOut(true);
-    setVisitorWaiting(false);
+    setWaitingPlayerName(null);
     onWaitingBadgeChange?.(false);
   }, [identity, match, onWaitingBadgeChange]);
 
@@ -313,7 +324,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   useEffect(() => {
     if (screen !== "waiting" || match?.status !== "active") return;
     playChessSound("notify");
-    setVisitorWaiting(false);
+    setWaitingPlayerName(null);
     onWaitingBadgeChange?.(false);
     setScreen("chess");
   }, [match?.status, onWaitingBadgeChange, screen]);
@@ -406,19 +417,39 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const canMove = kind === "computer"
     ? !thinking && game.turn() === "w" && !game.isGameOver()
     : match?.status === "active" && game.turn() === onlineColor && !game.isGameOver();
+  const ownName = kind === "online"
+    ? ((onlineColor === "w" ? match?.white_name : match?.black_name) ?? playerName) || "You"
+    : "You";
+  const opponentName = kind === "online"
+    ? (onlineColor === "w" ? match?.black_name : match?.white_name) ?? "Opponent"
+    : "Computer";
+  const gameEnded = game.isGameOver() || match?.status === "completed" || match?.status === "expired";
+  const isOwnTurn = !gameEnded && (kind === "computer"
+    ? !thinking && game.turn() === "w"
+    : match?.status === "active" && game.turn() === onlineColor);
+  const isOpponentTurn = !gameEnded && !isOwnTurn;
+  const finalStatus = kind === "online"
+    ? matchResultText(match, game, onlineColor)
+    : statusText(game, "w", thinking);
 
   const goBack = () => {
     if (screen === "chess" || screen === "waiting") {
-      leave(screen === "waiting" ? "setup" : "games");
+      leave("setup");
       return;
     }
     setComputerOptionsOpen(false);
+    setVisitorOptionsOpen(false);
     setScreen("games");
   };
 
   const backButton = screen === "games" ? null : (
-    <button onClick={goBack} onMouseDown={(e) => e.stopPropagation()} className="flex items-center gap-0.5 text-sm text-[#0A7CFF]">
-      <ChevronLeft size={21} /> {screen === "waiting" ? "Chess" : "Games"}
+    <button
+      onClick={goBack}
+      onMouseDown={(event) => event.stopPropagation()}
+      className="flex h-7 w-7 items-center justify-center rounded-md text-[#0A7CFF] can-hover:hover:bg-black/5"
+      aria-label="Go back"
+    >
+      <ChevronLeft size={22} />
     </button>
   );
 
@@ -433,7 +464,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
             {backButton}
           </div>
         )}
-        center={<p className="truncate text-center text-sm font-semibold">{screen === "games" ? "Games" : "Chess"}</p>}
+        center={screen === "games" ? <p className="truncate text-center text-sm font-semibold">Games</p> : <span />}
         right={<WindowNavSpacer isMobile={false} />}
       />
 
@@ -443,11 +474,18 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
             onClick={() => setScreen("setup")}
             className="flex w-[370px] items-center gap-4 rounded-2xl p-3 text-left transition-colors can-hover:hover:bg-muted"
           >
-            <ChessTileIcon className="h-[88px] w-[88px] shrink-0" />
+            <span className="relative shrink-0">
+              <ChessTileIcon className="h-[88px] w-[88px]" />
+              {waitingPlayerName && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white shadow-sm">1</span>
+              )}
+            </span>
             <div className="min-w-0 flex-1">
               <p className="text-xl font-semibold tracking-tight">Chess</p>
-              <p className="mt-1 text-sm leading-snug text-muted-foreground">Play the computer or another visitor.</p>
-              <p className="mt-3 text-sm font-medium text-[#0A7CFF]">Play</p>
+              <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                {waitingPlayerName ? `${waitingPlayerName} is waiting to play.` : "Play the computer or another visitor."}
+              </p>
+              <p className="mt-3 text-sm font-medium text-[#0A7CFF]">{waitingPlayerName ? "Join" : "Play"}</p>
             </div>
           </button>
         </div>
@@ -464,11 +502,13 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
             <div className="grid grid-cols-2 items-start gap-3">
               <div className="rounded-2xl border border-muted-foreground/20 bg-background shadow-sm">
                 <button
-                  onClick={() => setComputerOptionsOpen((open) => !open)}
+                  onClick={() => {
+                    setVisitorOptionsOpen(false);
+                    setComputerOptionsOpen((open) => !open);
+                  }}
                   className="w-full p-5 text-left"
                   aria-expanded={computerOptionsOpen}
                 >
-                  <Monitor className="mb-4 text-[#0A7CFF]" size={25} />
                   <h2 className="font-semibold">Play Computer</h2>
                   <p className="mt-1 text-sm leading-snug text-muted-foreground">Play privately on this device.</p>
                 </button>
@@ -501,14 +541,57 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
                   </div>
                 )}
               </div>
-              <button onClick={() => void findPlayer()} className="rounded-2xl border border-muted-foreground/20 bg-background/80 p-5 text-left shadow-sm transition-colors can-hover:hover:bg-muted/60">
-                <div className="mb-4 flex items-start justify-between">
-                  <Users className="text-[#0A7CFF]" size={25} />
-                  {visitorWaiting && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white">1</span>}
-                </div>
-                <h2 className="font-semibold">{visitorWaiting ? "Join a Visitor" : "Play a Visitor"}</h2>
-                <p className="mt-1 text-sm leading-snug text-muted-foreground">{visitorWaiting ? "Someone is waiting to play." : "Meet someone else on the site."}</p>
-              </button>
+              <div className="rounded-2xl border border-muted-foreground/20 bg-background shadow-sm">
+                <button
+                  onClick={() => {
+                    setComputerOptionsOpen(false);
+                    setVisitorOptionsOpen((open) => !open);
+                    setOnlineError(null);
+                  }}
+                  className="w-full p-5 text-left"
+                  aria-expanded={visitorOptionsOpen}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-semibold">{waitingPlayerName ? `Join ${waitingPlayerName}` : "Play a Visitor"}</h2>
+                      <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                        {waitingPlayerName ? `${waitingPlayerName} is waiting for someone to play.` : "Meet someone else on the site."}
+                      </p>
+                    </div>
+                    {waitingPlayerName && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white">1</span>}
+                  </div>
+                </button>
+                {visitorOptionsOpen && (
+                  <form
+                    className="border-t border-muted-foreground/20 p-3"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void findPlayer();
+                    }}
+                  >
+                    <label htmlFor="chess-player-name" className="mb-2 block text-xs font-medium text-muted-foreground">Your name</label>
+                    <div className="flex gap-2">
+                      <input
+                        id="chess-player-name"
+                        value={playerName}
+                        onChange={(event) => {
+                          setPlayerName(event.target.value);
+                          setOnlineError(null);
+                        }}
+                        maxLength={20}
+                        autoComplete="nickname"
+                        autoFocus
+                        placeholder="Name"
+                        className="min-w-0 flex-1 rounded-lg border border-muted-foreground/25 bg-background px-3 py-2 text-sm outline-none focus:border-[#0A7CFF] focus:ring-2 focus:ring-[#0A7CFF]/15"
+                      />
+                      <button type="submit" className="rounded-lg bg-[#0A7CFF] px-4 py-2 text-sm font-semibold text-white can-hover:hover:bg-[#0870e5]">
+                        {waitingPlayerName ? "Join" : "Play"}
+                      </button>
+                    </div>
+                    {onlineError && <p className="mt-2 text-xs text-red-600">{onlineError}</p>}
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -519,8 +602,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
           <div className="w-full max-w-[390px] text-center">
             {waitingTimedOut ? (
               <>
-                <Users className="mx-auto text-muted-foreground" size={34} />
-                <h1 className="mt-4 text-2xl font-semibold tracking-tight">No other players found</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">No other players found</h1>
                 <p className="mt-2 text-sm text-muted-foreground">Nobody joined this time. You can try again or play the computer.</p>
                 <div className="mt-6 flex justify-center gap-2">
                   <button
@@ -552,23 +634,35 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
       )}
 
       {screen === "chess" && (
-        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-background p-4">
-          <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center gap-2.5">
-            <div className="flex w-full shrink-0 items-center justify-between text-sm">
-              <div className="flex items-center gap-2 font-medium">
-                {kind === "online"
-                  ? <OnlineMatchLabel status={match?.status} />
-                  : <><Monitor size={15} /> {difficulty[0].toUpperCase() + difficulty.slice(1)} computer</>}
-              </div>
-              <span className="text-muted-foreground">{kind === "online" ? onlineStatusText(match, game, onlineColor) : statusText(game, "w", thinking)}</span>
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-background px-5 py-5">
+          <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center gap-2">
+            <div className="flex w-full shrink-0 items-center justify-between px-0.5 text-sm">
+              <span className="font-semibold">{opponentName}</span>
+              {gameEnded ? (
+                <span className="text-muted-foreground">Game over</span>
+              ) : isOpponentTurn ? (
+                <span className="flex items-center gap-1.5 font-medium text-[#0A7CFF]"><span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />{thinking ? "Thinking…" : "Their turn"}</span>
+              ) : (
+                <span className="text-muted-foreground">Waiting</span>
+              )}
             </div>
             <div className="flex min-h-0 flex-1 items-center justify-center">
               <div className="aspect-square h-full max-h-full max-w-full">
                 <ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} />
               </div>
             </div>
+            <div className="flex w-full shrink-0 items-center justify-between px-0.5 text-sm">
+              <span className="font-semibold">{ownName}</span>
+              {gameEnded ? (
+                <span className="font-medium text-foreground">{finalStatus}</span>
+              ) : isOwnTurn ? (
+                <span className="flex items-center gap-1.5 font-medium text-[#0A7CFF]"><span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />Your turn</span>
+              ) : (
+                <span className="text-muted-foreground">Waiting</span>
+              )}
+            </div>
             {onlineError && <div className="flex w-full shrink-0 items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
-            {(game.isGameOver() || match?.status === "completed" || match?.status === "expired") && <button onClick={kind === "computer" ? () => startComputer(difficulty) : () => void findPlayer()} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
+            {gameEnded && <button onClick={kind === "computer" ? () => startComputer(difficulty) : () => void findPlayer()} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
           </div>
         </div>
       )}

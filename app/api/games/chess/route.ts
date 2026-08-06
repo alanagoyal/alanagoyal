@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { getExpiredParticipant } from "@/lib/games/matches";
+import { getExpiredParticipant, isValidPlayerName, normalizePlayerName } from "@/lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "@/lib/games/authoritative-move";
 import {
   applyRateLimitHeaders,
@@ -10,7 +10,7 @@ import {
   parseJsonBodyWithLimit,
 } from "@/lib/server/request-security";
 
-const PUBLIC_FIELDS = "id,status,white_visitor_id,black_visitor_id,fen,pgn,move_history,version,result,waiting_heartbeat_at,white_heartbeat_at,black_heartbeat_at,expires_at,created_at,updated_at";
+const PUBLIC_FIELDS = "id,status,white_visitor_id,white_name,black_visitor_id,black_name,fen,pgn,move_history,version,result,waiting_heartbeat_at,white_heartbeat_at,black_heartbeat_at,expires_at,created_at,updated_at";
 const WAITING_FRESH_SECONDS = 45;
 const MAX_BODY_BYTES = 4 * 1024;
 const POST_RATE_LIMIT = { scope: "games_chess_ip", limit: 180, windowMs: 60_000 } as const;
@@ -41,12 +41,16 @@ export async function GET(request: NextRequest) {
   try {
     const cutoff = new Date(Date.now() - WAITING_FRESH_SECONDS * 1000).toISOString();
     const visitorId = request.nextUrl.searchParams.get("visitorId");
-    let query = serviceClient().from("game_matches").select("id", { count: "exact", head: true })
-      .eq("status", "waiting").gt("waiting_heartbeat_at", cutoff).gt("expires_at", new Date().toISOString());
+    let query = serviceClient().from("game_matches").select("id,white_name")
+      .eq("status", "waiting").gt("waiting_heartbeat_at", cutoff).gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: true }).limit(1);
     if (visitorId && UUID_PATTERN.test(visitorId)) query = query.neq("white_visitor_id", visitorId);
-    const { count, error } = await query;
+    const { data, error } = await query.maybeSingle();
     if (error) throw error;
-    return NextResponse.json({ waiting: (count ?? 0) > 0 }, { headers: { "cache-control": "no-store" } });
+    return NextResponse.json(
+      { waiting: Boolean(data), waitingName: data?.white_name ?? null },
+      { headers: { "cache-control": "no-store" } },
+    );
   } catch (error) {
     return errorResponse(error, 503);
   }
@@ -91,7 +95,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "matchmake") {
-      const { data, error } = await supabase.rpc("game_matchmake", { visitor_id_arg: visitorId, secret_hash_arg: secretHash });
+      if (typeof body.name !== "string" || !isValidPlayerName(body.name)) {
+        return errorResponse("Enter a name between 1 and 20 characters.", 422);
+      }
+      const { data, error } = await supabase.rpc("game_matchmake", {
+        visitor_id_arg: visitorId,
+        secret_hash_arg: secretHash,
+        visitor_name_arg: normalizePlayerName(body.name),
+      });
       if (error) throw error;
       const { data: match, error: readError } = await supabase.from("game_matches").select(PUBLIC_FIELDS).eq("id", data.id).single();
       if (readError) throw readError;
