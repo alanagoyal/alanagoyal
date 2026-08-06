@@ -1,7 +1,7 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { ChevronLeft, LoaderCircle, RotateCcw, WifiOff } from "lucide-react";
+import { ChevronLeft, LoaderCircle, RotateCcw, Wifi, WifiOff } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WindowControls } from "@/components/window-controls";
@@ -431,6 +431,21 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const finalStatus = kind === "online"
     ? matchResultText(match, game, onlineColor)
     : statusText(game, "w", thinking);
+  const connectionIndicator = kind === "online" && (screen === "waiting" || screen === "chess") ? (
+    onlineError ? (
+      <span className="flex h-8 w-8 items-center justify-center text-red-500" title="Disconnected" aria-label="Disconnected">
+        <WifiOff size={16} />
+      </span>
+    ) : match ? (
+      <span className="flex h-8 w-8 items-center justify-center text-emerald-500" title="Connected" aria-label="Connected">
+        <Wifi size={16} />
+      </span>
+    ) : (
+      <span className="flex h-8 w-8 items-center justify-center text-amber-500" title="Connecting" aria-label="Connecting">
+        <LoaderCircle className="animate-spin" size={16} />
+      </span>
+    )
+  ) : <WindowNavSpacer isMobile={false} />;
 
   const goBack = () => {
     if (screen === "chess" || screen === "waiting") {
@@ -465,7 +480,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
           </div>
         )}
         center={screen === "games" ? <p className="truncate text-center text-sm font-semibold">Games</p> : <span />}
-        right={<WindowNavSpacer isMobile={false} />}
+        right={connectionIndicator}
       />
 
       {screen === "games" && (
@@ -483,7 +498,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
             <div className="min-w-0 flex-1">
               <p className="text-xl font-semibold tracking-tight">Chess</p>
               <p className="mt-1 text-sm leading-snug text-muted-foreground">
-                {waitingPlayerName ? `${waitingPlayerName} is waiting to play.` : "Play the computer or another visitor."}
+                {waitingPlayerName ? `${waitingPlayerName} is ready to play.` : "Play the computer or another visitor."}
               </p>
               <p className="mt-3 text-sm font-medium text-[#0A7CFF]">{waitingPlayerName ? "Join" : "Play"}</p>
             </div>
@@ -494,10 +509,9 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
       {screen === "setup" && (
         <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
           <div className="w-full max-w-[500px]">
-            <div className="mb-6 text-center">
+            <div className="mb-7 text-center">
               <ChessTileIcon className="mx-auto h-20 w-20" />
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Choose how you want to play.</p>
             </div>
             <div className="grid grid-cols-2 items-start gap-3">
               <div className="rounded-2xl border border-muted-foreground/20 bg-background shadow-sm">
@@ -555,7 +569,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
                     <div>
                       <h2 className="font-semibold">{waitingPlayerName ? `Join ${waitingPlayerName}` : "Play a Visitor"}</h2>
                       <p className="mt-1 text-sm leading-snug text-muted-foreground">
-                        {waitingPlayerName ? `${waitingPlayerName} is waiting for someone to play.` : "Meet someone else on the site."}
+                        {waitingPlayerName ? `${waitingPlayerName} is ready to play.` : "Meet someone else on the site."}
                       </p>
                     </div>
                     {waitingPlayerName && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white">1</span>}
@@ -623,7 +637,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
             ) : (
               <>
                 <LoaderCircle className="mx-auto animate-spin text-[#0A7CFF]" size={34} />
-                <h1 className="mt-4 text-2xl font-semibold tracking-tight">Waiting for a player…</h1>
+                <h1 className="mt-4 text-2xl font-semibold tracking-tight">Waiting for another player…</h1>
                 <p className="mt-2 text-sm text-muted-foreground">Another visitor can join from Games.</p>
                 <p className="mt-5 font-mono text-2xl tabular-nums text-foreground">{formatElapsedTime(waitingElapsed)}</p>
                 {onlineError && <p className="mt-4 text-sm text-red-600">{onlineError}</p>}
@@ -634,32 +648,21 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
       )}
 
       {screen === "chess" && (
-        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-background px-5 py-5">
-          <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center gap-2">
-            <div className="flex w-full shrink-0 items-center justify-between px-0.5 text-sm">
-              <span className="font-semibold">{opponentName}</span>
-              {gameEnded ? (
-                <span className="text-muted-foreground">Game over</span>
-              ) : isOpponentTurn ? (
-                <span className="flex items-center gap-1.5 font-medium text-[#0A7CFF]"><span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />{thinking ? "Thinking…" : "Their turn"}</span>
-              ) : (
-                <span className="text-muted-foreground">Waiting</span>
-              )}
-            </div>
-            <div className="flex min-h-0 flex-1 items-center justify-center">
-              <div className="aspect-square h-full max-h-full max-w-full">
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-background px-5 py-4">
+          <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center">
+            <div className="flex h-full max-h-full max-w-full flex-col items-center gap-2 aspect-[1/1.12]">
+              <div className="flex h-5 w-full shrink-0 items-center justify-center gap-2 text-sm font-semibold">
+                {isOpponentTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
+                <span>{opponentName}</span>
+              </div>
+              <div className="aspect-square min-h-0 w-full flex-1">
                 <ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} />
               </div>
-            </div>
-            <div className="flex w-full shrink-0 items-center justify-between px-0.5 text-sm">
-              <span className="font-semibold">{ownName}</span>
-              {gameEnded ? (
-                <span className="font-medium text-foreground">{finalStatus}</span>
-              ) : isOwnTurn ? (
-                <span className="flex items-center gap-1.5 font-medium text-[#0A7CFF]"><span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />Your turn</span>
-              ) : (
-                <span className="text-muted-foreground">Waiting</span>
-              )}
+              <div className="flex h-5 w-full shrink-0 items-center justify-center gap-2 text-sm font-semibold">
+                {isOwnTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
+                <span>{ownName}</span>
+                {gameEnded && <span className="font-normal text-muted-foreground">· {finalStatus}</span>}
+              </div>
             </div>
             {onlineError && <div className="flex w-full shrink-0 items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
             {gameEnded && <button onClick={kind === "computer" ? () => startComputer(difficulty) : () => void findPlayer()} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
