@@ -19,19 +19,15 @@ async function request(action: string, identity: VisitorIdentity, body: Record<s
 }
 
 export const gamesApi = {
-  waitingPlayer: getWaitingPlayer,
   resume: (identity: VisitorIdentity) => request("resume", identity),
   matchmake: (identity: VisitorIdentity, name: string) => request("matchmake", identity, { name }),
   get: (identity: VisitorIdentity, matchId: string) => request("get", identity, { matchId }),
   heartbeat: (identity: VisitorIdentity, matchId: string) => request("heartbeat", identity, { matchId }),
+  cancelWaiting: (identity: VisitorIdentity, matchId: string, version: number) => request("cancelWaiting", identity, { matchId, version }),
   leave: (identity: VisitorIdentity, matchId: string) => request("leave", identity, { matchId }),
   move: (identity: VisitorIdentity, matchId: string, version: number, from: string, to: string, promotion = "q") =>
     request("move", identity, { matchId, version, from, to, promotion }),
 };
-
-export async function getWaitingBadge(): Promise<boolean> {
-  return (await getWaitingPlayer()).waiting;
-}
 
 export async function getWaitingPlayer(): Promise<WaitingPlayer> {
   const visitorId = typeof window === "undefined" ? "" : loadVisitorIdentity().id;

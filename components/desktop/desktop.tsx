@@ -51,7 +51,7 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
-import { getWaitingBadge } from "@/lib/games/api";
+import { getWaitingPlayer, type WaitingPlayer } from "@/lib/games/api";
 import {
   isFinderViewMode,
   type FinderViewMode,
@@ -234,6 +234,7 @@ function DesktopContent({
     !(initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile))
   );
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
+  const [gamesWaitingPlayer, setGamesWaitingPlayer] = useState<WaitingPlayer>({ waiting: false, name: null });
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
@@ -768,17 +769,29 @@ function DesktopContent({
   }, []);
 
   const handleGamesWaitingBadgeChange = useCallback((waiting: boolean) => {
-    setAppBadges((prev) => ({ ...prev, games: waiting ? 1 : 0 }));
+    setAppBadges((prev) => {
+      const nextCount = waiting ? 1 : 0;
+      if ((prev.games ?? 0) === nextCount) return prev;
+      return { ...prev, games: nextCount };
+    });
+    if (!waiting) {
+      setGamesWaitingPlayer((prev) => prev.waiting ? { waiting: false, name: null } : prev);
+    }
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
-      const waiting = await getWaitingBadge().catch(() => false);
-      if (!cancelled) handleGamesWaitingBadgeChange(waiting);
+      if (document.hidden) return;
+      const waitingPlayer = await getWaitingPlayer().catch(() => ({ waiting: false, name: null }));
+      if (cancelled) return;
+      setGamesWaitingPlayer((prev) => (
+        prev.waiting === waitingPlayer.waiting && prev.name === waitingPlayer.name ? prev : waitingPlayer
+      ));
+      handleGamesWaitingBadgeChange(waitingPlayer.waiting);
     };
     void refresh();
-    const interval = window.setInterval(() => void refresh(), 5_000);
+    const interval = window.setInterval(() => void refresh(), 15_000);
     const onVisible = () => { if (!document.hidden) void refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
@@ -951,8 +964,8 @@ function DesktopContent({
             <MusicApp />
           </Window>
 
-          <Window appId="games">
-            <GamesApp onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
+          <Window appId="games" keepMountedWhenMinimized={true}>
+            <GamesApp waitingPlayer={gamesWaitingPlayer} onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
           </Window>
 
           {visibleFinderWindows.map((windowState) => {

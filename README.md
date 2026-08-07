@@ -208,7 +208,7 @@ this project uses [supabase](https://supabase.com) as a backend. to set up the d
 3. navigate to the sql editor in the dashboard
 4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations/20240710180237_initial.sql) into the sql editor and press run
 
-alternatively, use the supabase cli to run migrations locally:
+alternatively, use the supabase cli to apply the complete migration history. this is required for online chess because the games migrations create the private match table and its server-only matchmaking function:
 ```bash
 supabase db push
 ```
@@ -235,7 +235,8 @@ REVALIDATE_TOKEN="<your-revalidate-token>"
 
 **notes:**
 - `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration
-- `SUPABASE_SERVICE_ROLE_KEY` is needed for photo uploads (bypasses RLS)
+- `SUPABASE_SERVICE_ROLE_KEY` is needed server-side for photo uploads and online chess; never expose it with a `NEXT_PUBLIC_` prefix
+- online chess keeps completed and expired matches for seven days, then prunes them during subsequent matchmaking
 - `OPENAI_API_KEY` is used for ai photo categorization
 
 ## install dependencies

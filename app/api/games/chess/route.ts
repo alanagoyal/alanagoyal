@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getExpiredParticipant, isValidPlayerName, normalizePlayerName } from "@/lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "@/lib/games/authoritative-move";
+import { redactPrivateMatchFields } from "@/lib/games/public-match";
 import {
   applyRateLimitHeaders,
   checkRateLimit,
@@ -12,6 +13,7 @@ import {
 
 const PUBLIC_FIELDS = "id,status,white_visitor_id,white_name,black_visitor_id,black_name,fen,pgn,move_history,version,result,waiting_heartbeat_at,white_heartbeat_at,black_heartbeat_at,expires_at,created_at,updated_at";
 const WAITING_FRESH_SECONDS = 45;
+const ACTIVE_EXPIRY_MS = 180_000;
 const MAX_BODY_BYTES = 4 * 1024;
 const POST_RATE_LIMIT = { scope: "games_chess_ip", limit: 180, windowMs: 60_000 } as const;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -31,9 +33,17 @@ function validIdentity(visitorId: unknown, visitorSecret: unknown): visitorId is
   return typeof visitorId === "string" && UUID_PATTERN.test(visitorId) && typeof visitorSecret === "string" && visitorSecret.length >= 32;
 }
 
-function errorResponse(error: unknown, status = 400) {
-  const message = error instanceof Error ? error.message : "Games service error.";
+function errorResponse(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
+}
+
+function serviceErrorResponse(context: string, error: unknown) {
+  console.error(`[games/chess] ${context}`, error);
+  return errorResponse("Games service is temporarily unavailable.", 503);
+}
+
+function matchResponse(match: Record<string, unknown> | null) {
+  return NextResponse.json({ match: redactPrivateMatchFields(match) });
 }
 
 export async function GET(request: NextRequest) {
@@ -52,7 +62,7 @@ export async function GET(request: NextRequest) {
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {
-    return errorResponse(error, 503);
+    return serviceErrorResponse("badge lookup failed", error);
   }
 }
 
@@ -87,11 +97,11 @@ export async function POST(request: NextRequest) {
       const resumable = candidates?.find((candidate) =>
         (candidate.white_visitor_id === visitorId && candidate.white_secret_hash === secretHash)
         || (candidate.black_visitor_id === visitorId && candidate.black_secret_hash === secretHash));
-      if (!resumable) return NextResponse.json({ match: null });
+      if (!resumable) return matchResponse(null);
       const { data: match, error: publicReadError } = await supabase.from("game_matches")
         .select(PUBLIC_FIELDS).eq("id", resumable.id).single();
       if (publicReadError) throw publicReadError;
-      return NextResponse.json({ match });
+      return matchResponse(match);
     }
 
     if (action === "matchmake") {
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
       if (error) throw error;
       const { data: match, error: readError } = await supabase.from("game_matches").select(PUBLIC_FIELDS).eq("id", data.id).single();
       if (readError) throw readError;
-      return NextResponse.json({ match });
+      return matchResponse(match);
     }
 
     if (typeof matchId !== "string" || !UUID_PATTERN.test(matchId)) return errorResponse("A valid match is required.");
@@ -115,12 +125,30 @@ export async function POST(request: NextRequest) {
     const isWhite = privateMatch.white_visitor_id === visitorId && privateMatch.white_secret_hash === secretHash;
     const isBlack = privateMatch.black_visitor_id === visitorId && privateMatch.black_secret_hash === secretHash;
     if (!isWhite && !isBlack) return errorResponse("You are not a participant in this match.", 403);
+    const readPublicMatch = async () => {
+      const { data, error } = await supabase.from("game_matches").select(PUBLIC_FIELDS).eq("id", matchId).single();
+      if (error) throw error;
+      return data;
+    };
+
+    if (action === "cancelWaiting") {
+      const expectedVersion = Number(body.version);
+      if (!Number.isInteger(expectedVersion) || expectedVersion < 0) return errorResponse("A valid match version is required.");
+      const { data: cancelledMatch, error } = await supabase.from("game_matches").update({
+        status: "expired",
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: expectedVersion + 1,
+      }).eq("id", matchId).eq("version", expectedVersion).eq("status", "waiting").select(PUBLIC_FIELDS).maybeSingle();
+      if (error) throw error;
+      return matchResponse(cancelledMatch ?? await readPublicMatch());
+    }
 
     if (privateMatch.status === "waiting" && Date.parse(privateMatch.expires_at) <= Date.now()) {
       const { data: expiredMatch, error } = await supabase.from("game_matches").update({ status: "expired", updated_at: new Date().toISOString(), version: privateMatch.version + 1 })
         .eq("id", matchId).eq("version", privateMatch.version).eq("status", "waiting").select(PUBLIC_FIELDS).maybeSingle();
       if (error) throw error;
-      if (expiredMatch) return NextResponse.json({ match: expiredMatch });
+      if (expiredMatch) return matchResponse(expiredMatch);
     }
 
     const expiredParticipant = getExpiredParticipant(privateMatch);
@@ -130,26 +158,25 @@ export async function POST(request: NextRequest) {
         status: "completed", result, completed_at: new Date().toISOString(), updated_at: new Date().toISOString(), version: privateMatch.version + 1,
       }).eq("id", matchId).eq("version", privateMatch.version).eq("status", "active").select(PUBLIC_FIELDS).maybeSingle();
       if (error) throw error;
-      if (expiredMatch) return NextResponse.json({ match: expiredMatch });
+      if (expiredMatch) return matchResponse(expiredMatch);
     }
 
     if (action === "get") {
-      const { data: match } = await supabase.from("game_matches").select(PUBLIC_FIELDS).eq("id", matchId).single();
-      return NextResponse.json({ match });
+      return matchResponse(await readPublicMatch());
     }
 
     if (action === "heartbeat") {
-      if (!(["waiting", "active"] as string[]).includes(privateMatch.status)) return NextResponse.json({ match: privateMatch });
+      if (!(["waiting", "active"] as string[]).includes(privateMatch.status)) return matchResponse(await readPublicMatch());
       const update = isWhite
-        ? { white_heartbeat_at: new Date().toISOString(), waiting_heartbeat_at: privateMatch.status === "waiting" ? new Date().toISOString() : privateMatch.waiting_heartbeat_at, expires_at: new Date(Date.now() + 75_000).toISOString(), updated_at: new Date().toISOString() }
-        : { black_heartbeat_at: new Date().toISOString(), expires_at: new Date(Date.now() + 75_000).toISOString(), updated_at: new Date().toISOString() };
+        ? { white_heartbeat_at: new Date().toISOString(), waiting_heartbeat_at: privateMatch.status === "waiting" ? new Date().toISOString() : privateMatch.waiting_heartbeat_at, expires_at: new Date(Date.now() + ACTIVE_EXPIRY_MS).toISOString(), updated_at: new Date().toISOString() }
+        : { black_heartbeat_at: new Date().toISOString(), expires_at: new Date(Date.now() + ACTIVE_EXPIRY_MS).toISOString(), updated_at: new Date().toISOString() };
       const { data: match, error } = await supabase.from("game_matches").update(update).eq("id", matchId).select(PUBLIC_FIELDS).single();
       if (error) throw error;
-      return NextResponse.json({ match });
+      return matchResponse(match);
     }
 
     if (action === "leave") {
-      if (privateMatch.status === "completed" || privateMatch.status === "expired") return NextResponse.json({ match: privateMatch });
+      if (privateMatch.status === "completed" || privateMatch.status === "expired") return matchResponse(await readPublicMatch());
       const waiting = privateMatch.status === "waiting";
       const { data: match, error } = await supabase.from("game_matches").update({
         status: waiting ? "expired" : "completed",
@@ -159,7 +186,7 @@ export async function POST(request: NextRequest) {
         version: privateMatch.version + 1,
       }).eq("id", matchId).eq("version", privateMatch.version).select(PUBLIC_FIELDS).single();
       if (error) throw error;
-      return NextResponse.json({ match });
+      return matchResponse(match);
     }
 
     if (action === "move") {
@@ -189,15 +216,15 @@ export async function POST(request: NextRequest) {
         captured: move.captured,
         san: move.san,
       }];
-      const update = { fen: game.fen(), pgn: game.pgn(), move_history: nextHistory, version: privateMatch.version + 1, status: winner ? "completed" : "active", result: winner, completed_at: winner ? new Date().toISOString() : null, updated_at: new Date().toISOString(), expires_at: new Date(Date.now() + 75_000).toISOString(), ...(isWhite ? { white_heartbeat_at: new Date().toISOString() } : { black_heartbeat_at: new Date().toISOString() }) };
+      const update = { fen: game.fen(), pgn: game.pgn(), move_history: nextHistory, version: privateMatch.version + 1, status: winner ? "completed" : "active", result: winner, completed_at: winner ? new Date().toISOString() : null, updated_at: new Date().toISOString(), expires_at: new Date(Date.now() + ACTIVE_EXPIRY_MS).toISOString(), ...(isWhite ? { white_heartbeat_at: new Date().toISOString() } : { black_heartbeat_at: new Date().toISOString() }) };
       const { data: match, error } = await supabase.from("game_matches").update(update).eq("id", matchId).eq("version", privateMatch.version).eq("status", "active").select(PUBLIC_FIELDS).maybeSingle();
       if (error) throw error;
       if (!match) return errorResponse("The board changed. Reconnecting…", 409);
-      return NextResponse.json({ match });
+      return matchResponse(match);
     }
 
     return errorResponse("Unknown action.");
   } catch (error) {
-    return errorResponse(error, 503);
+    return serviceErrorResponse("request failed", error);
   }
 }

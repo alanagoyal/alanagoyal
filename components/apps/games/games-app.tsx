@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WindowControls } from "@/components/window-controls";
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
-import { gamesApi } from "@/lib/games/api";
+import { gamesApi, type WaitingPlayer } from "@/lib/games/api";
 import {
   applyChessMove,
   createChessGame,
@@ -31,6 +31,7 @@ type PlayKind = "computer" | "online";
 type ChessSound = "capture" | "move-self" | "notify";
 
 interface GamesAppProps {
+  waitingPlayer?: WaitingPlayer;
   onWaitingBadgeChange?: (waiting: boolean) => void;
 }
 
@@ -162,7 +163,7 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
   );
 }
 
-export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
+export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWaitingBadgeChange }: GamesAppProps) {
   const nav = useWindowNavBehavior({ isDesktop: true, isMobile: false, shellEnabled: true });
   const [screen, setScreen] = useState<Screen>("games");
   const [kind, setKind] = useState<PlayKind>("computer");
@@ -176,7 +177,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const [match, setMatch] = useState<GameMatch | null>(null);
   const [identity, setIdentity] = useState<VisitorIdentity | null>(null);
   const [onlineError, setOnlineError] = useState<string | null>(null);
-  const [waitingPlayerName, setWaitingPlayerName] = useState<string | null>(null);
+  const waitingPlayerName = waitingPlayer.waiting ? waitingPlayer.name : null;
   const [waitingElapsed, setWaitingElapsed] = useState(0);
   const [waitingTimedOut, setWaitingTimedOut] = useState(false);
   const workerRef = useRef<Worker | null>(null);
@@ -224,23 +225,6 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
 
   useEffect(() => () => cancelComputerMove(), [cancelComputerMove]);
 
-  useEffect(() => {
-    if (screen !== "games" && screen !== "setup") return;
-    let cancelled = false;
-    const refresh = async () => {
-      const waiting = await gamesApi.waitingPlayer().catch(() => ({ waiting: false, name: null }));
-      if (cancelled) return;
-      setWaitingPlayerName(waiting.waiting ? waiting.name : null);
-      onWaitingBadgeChange?.(waiting.waiting);
-    };
-    void refresh();
-    const interval = window.setInterval(() => void refresh(), 5_000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [onWaitingBadgeChange, screen]);
-
   const matchId = match?.id;
   const syncMatch = useCallback(async () => {
     if (!identity || !matchId) return;
@@ -257,9 +241,22 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
 
   useEffect(() => {
     if (!identity || !matchId || match?.status === "completed" || match?.status === "expired") return;
-    const heartbeat = window.setInterval(() => void gamesApi.heartbeat(identity, matchId).then((r) => r.match && setMatch(r.match)).catch(() => undefined), 15_000);
-    const poll = window.setInterval(() => void syncMatch(), 2_000);
-    const onVisible = () => { if (!document.hidden) void syncMatch(); };
+    const sendHeartbeat = async () => {
+      if (document.hidden) return;
+      const response = await gamesApi.heartbeat(identity, matchId);
+      if (response.match) setMatch(response.match);
+    };
+    const heartbeat = window.setInterval(() => void sendHeartbeat().catch(() => undefined), 15_000);
+    const poll = window.setInterval(() => { if (!document.hidden) void syncMatch(); }, 2_000);
+    const onVisible = async () => {
+      if (document.hidden) return;
+      try {
+        await sendHeartbeat();
+        await syncMatch();
+      } catch {
+        setOnlineError("Couldn’t reconnect.");
+      }
+    };
     document.addEventListener("visibilitychange", onVisible);
     return () => { window.clearInterval(heartbeat); window.clearInterval(poll); document.removeEventListener("visibilitychange", onVisible); };
   }, [identity, match?.status, matchId, syncMatch]);
@@ -309,17 +306,29 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     }
   };
 
-  const timeoutMatchmaking = useCallback(() => {
+  const timeoutMatchmaking = useCallback(async () => {
     if (timeoutHandledRef.current) return;
     timeoutHandledRef.current = true;
     if (identity && match?.status === "waiting") {
-      void gamesApi.leave(identity, match.id).catch(() => undefined);
+      try {
+        const response = await gamesApi.cancelWaiting(identity, match.id, match.version);
+        if (response.match?.status === "active") {
+          setMatch(response.match);
+          setWaitingTimedOut(false);
+          onWaitingBadgeChange?.(false);
+          return;
+        }
+      } catch {
+        timeoutHandledRef.current = false;
+        setOnlineError("Couldn’t stop matchmaking. Reconnecting…");
+        void syncMatch();
+        return;
+      }
     }
     setMatch(null);
     setWaitingTimedOut(true);
-    setWaitingPlayerName(null);
     onWaitingBadgeChange?.(false);
-  }, [identity, match, onWaitingBadgeChange]);
+  }, [identity, match, onWaitingBadgeChange, syncMatch]);
 
   useEffect(() => {
     if (screen !== "waiting" || waitingTimedOut || match?.status === "active") return;
@@ -337,7 +346,6 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   useEffect(() => {
     if (screen !== "waiting" || match?.status !== "active") return;
     playChessSound("notify");
-    setWaitingPlayerName(null);
     onWaitingBadgeChange?.(false);
     setScreen("chess");
   }, [match?.status, onWaitingBadgeChange, screen]);

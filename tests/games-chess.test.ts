@@ -8,9 +8,11 @@ import {
   isFreshWaitingMatch,
   MATCHMAKING_TIMEOUT_MS,
   normalizePlayerName,
+  PARTICIPANT_ACTIVE_MS,
   participantIsActive,
 } from "../lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "../lib/games/authoritative-move";
+import { redactPrivateMatchFields } from "../lib/games/public-match";
 
 test("chess rules accept legal moves and reject illegal moves", () => {
   const initial = new Chess().fen();
@@ -61,9 +63,23 @@ test("visitor names are normalized and kept deliberately short", () => {
 
 test("temporary disconnect and abandonment use different thresholds", () => {
   const now = Date.parse("2026-08-05T12:00:00Z");
+  assert.equal(PARTICIPANT_ACTIVE_MS, 180_000);
   assert.equal(participantIsActive("2026-08-05T11:59:00Z", now), true);
-  assert.equal(getExpiredParticipant({ status: "active", white_heartbeat_at: "2026-08-05T11:59:00Z", black_heartbeat_at: "2026-08-05T11:58:00Z" }, now), "black");
+  assert.equal(getExpiredParticipant({ status: "active", white_heartbeat_at: "2026-08-05T11:59:00Z", black_heartbeat_at: "2026-08-05T11:56:00Z" }, now), "black");
   assert.equal(getExpiredParticipant({ status: "completed", white_heartbeat_at: "2026-08-05T11:00:00Z", black_heartbeat_at: null }, now), null);
+});
+
+test("public match responses never expose participant credential hashes", () => {
+  const match = redactPrivateMatchFields({
+    id: "match-1",
+    status: "active",
+    white_secret_hash: "private-white-hash",
+    black_secret_hash: "private-black-hash",
+  });
+
+  assert.deepEqual(match, { id: "match-1", status: "active" });
+  assert.equal("white_secret_hash" in (match ?? {}), false);
+  assert.equal("black_secret_hash" in (match ?? {}), false);
 });
 
 test("authoritative moves reject conflicts, illegal turns, and completed games", () => {
