@@ -700,9 +700,14 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
                 </div>
               </div>
               <div className="flex h-5 w-full shrink-0 items-center justify-center gap-2 text-sm font-semibold">
-                <span>{ownName}</span>
-                {isOwnTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
-                {gameEnded && <span className="font-normal text-muted-foreground">· {finalStatus}</span>}
+                {gameEnded ? (
+                  <span className="font-normal text-muted-foreground">{finalStatus}</span>
+                ) : (
+                  <>
+                    <span>{ownName}</span>
+                    {isOwnTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
+                  </>
+                )}
               </div>
             </div>
             {onlineError && <div className="flex w-full shrink-0 items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
