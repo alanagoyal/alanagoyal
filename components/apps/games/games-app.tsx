@@ -39,6 +39,7 @@ const PIECES: Record<string, string> = {
 };
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const DIFFICULTIES: ChessDifficulty[] = ["easy", "medium", "hard"];
+const MIN_COMPUTER_TURN_MS = 250;
 
 function playChessSound(sound: ChessSound) {
   const audio = new Audio(`/sounds/chess/${sound}.mp3`);
@@ -123,7 +124,7 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
   };
 
   return (
-    <div className="grid aspect-square w-full grid-cols-8 overflow-hidden rounded-xl shadow-[0_18px_55px_rgba(15,23,42,.28)] ring-1 ring-black/15">
+    <div className="grid aspect-square w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-xl [container-type:inline-size] shadow-[0_18px_55px_rgba(15,23,42,.28)] ring-1 ring-black/15">
       {squares.map((square) => {
         const piece = game.get(square);
         const fileIndex = square.charCodeAt(0) - 97;
@@ -136,7 +137,7 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
             aria-label={`${square}${piece ? ` ${piece.color === "w" ? "white" : "black"} ${piece.type}` : ""}`}
             onClick={() => select(square)}
             className={cn(
-              "relative flex aspect-square items-center justify-center text-[clamp(1.8rem,4vw,3.2rem)] leading-none",
+              "relative flex min-h-0 min-w-0 items-center justify-center text-[clamp(1.35rem,9.5cqw,3.2rem)] leading-none",
               light ? "bg-[#E8EDF6]" : "bg-[#6685B8]",
               selected === square && "after:absolute after:inset-0 after:bg-[#0A7CFF]/35"
             )}
@@ -179,6 +180,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const [waitingElapsed, setWaitingElapsed] = useState(0);
   const [waitingTimedOut, setWaitingTimedOut] = useState(false);
   const workerRef = useRef<Worker | null>(null);
+  const computerMoveTimerRef = useRef<number | null>(null);
   const waitingStartedAtRef = useRef<number | null>(null);
   const timeoutHandledRef = useRef(false);
   const onlineSoundRef = useRef({ matchId: "", historyLength: 0 });
@@ -211,7 +213,16 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
     }).catch(() => undefined);
     return () => { cancelled = true; };
   }, [onWaitingBadgeChange]);
-  useEffect(() => () => workerRef.current?.terminate(), []);
+  const cancelComputerMove = useCallback(() => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    if (computerMoveTimerRef.current !== null) {
+      window.clearTimeout(computerMoveTimerRef.current);
+      computerMoveTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => cancelComputerMove(), [cancelComputerMove]);
 
   useEffect(() => {
     if (screen !== "games" && screen !== "setup") return;
@@ -254,6 +265,8 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   }, [identity, match?.status, matchId, syncMatch]);
 
   const startComputer = (level: ChessDifficulty) => {
+    cancelComputerMove();
+    setThinking(false);
     primeChessSounds();
     setKind("computer");
     setDifficulty(level);
@@ -347,29 +360,34 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   }, [match, screen]);
 
   const runComputerMove = useCallback((nextFen: string, history: ChessMoveRecord[]) => {
+    cancelComputerMove();
     setThinking(true);
+    const startedAt = performance.now();
     const worker = new Worker(new URL("./chess-ai.worker.ts", import.meta.url));
-    workerRef.current?.terminate();
     workerRef.current = worker;
     worker.onmessage = (event: MessageEvent<{ from: Square; to: Square; promotion?: string } | null>) => {
-      if (event.data) {
-        const result = applyChessMove(
-          nextFen,
-          event.data.from,
-          event.data.to,
-          event.data.promotion,
-          history,
-        );
-        setFen(result.fen);
-        setComputerHistory(result.history);
-        playChessSound(result.move.captured ? "capture" : "move-self");
-      }
+      worker.terminate();
+      if (workerRef.current === worker) workerRef.current = null;
+      const move = event.data;
+      const remainingDelay = Math.max(0, MIN_COMPUTER_TURN_MS - (performance.now() - startedAt));
+      computerMoveTimerRef.current = window.setTimeout(() => {
+        computerMoveTimerRef.current = null;
+        if (move) {
+          const result = applyChessMove(nextFen, move.from, move.to, move.promotion, history);
+          setFen(result.fen);
+          setComputerHistory(result.history);
+          playChessSound(result.move.captured ? "capture" : "move-self");
+        }
+        setThinking(false);
+      }, remainingDelay);
+    };
+    worker.onerror = () => {
+      if (workerRef.current === worker) workerRef.current = null;
       setThinking(false);
       worker.terminate();
     };
-    worker.onerror = () => { setThinking(false); worker.terminate(); };
     worker.postMessage({ fen: nextFen, difficulty });
-  }, [difficulty]);
+  }, [cancelComputerMove, difficulty]);
 
   const move = async (from: Square, to: Square) => {
     if (kind === "computer") {
@@ -393,6 +411,8 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   };
 
   const leave = (destination: Screen = "games") => {
+    cancelComputerMove();
+    setThinking(false);
     if (kind === "online" && identity && match) {
       void gamesApi.leave(identity, match.id).catch(() => undefined);
     }
@@ -650,17 +670,19 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
       {screen === "chess" && (
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-background px-5 py-4">
           <div className="flex h-full min-h-0 w-full max-w-[680px] flex-col items-center">
-            <div className="flex h-full max-h-full max-w-full flex-col items-center gap-2 aspect-[1/1.12]">
+            <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-[13px]">
               <div className="flex h-5 w-full shrink-0 items-center justify-center gap-2 text-sm font-semibold">
-                {isOpponentTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
                 <span>{opponentName}</span>
+                {isOpponentTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
               </div>
-              <div className="aspect-square min-h-0 w-full flex-1">
-                <ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} />
+              <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+                <div className="aspect-square h-full max-h-full max-w-full">
+                  <ChessBoard fen={currentFen} orientation={kind === "online" ? onlineColor : "w"} disabled={!canMove} onMove={(from, to) => void move(from, to)} />
+                </div>
               </div>
               <div className="flex h-5 w-full shrink-0 items-center justify-center gap-2 text-sm font-semibold">
-                {isOwnTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
                 <span>{ownName}</span>
+                {isOwnTurn && <span className="h-2 w-2 rounded-full bg-[#0A7CFF] shadow-[0_0_0_3px_rgba(10,124,255,.12)]" />}
                 {gameEnded && <span className="font-normal text-muted-foreground">· {finalStatus}</span>}
               </div>
             </div>
