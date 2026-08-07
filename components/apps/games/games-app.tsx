@@ -56,8 +56,8 @@ function primeChessSounds() {
   }).catch(() => undefined);
 }
 
-function formatElapsedTime(milliseconds: number) {
-  const seconds = Math.max(0, Math.floor(milliseconds / 1000));
+function formatCountdownTime(elapsedMilliseconds: number) {
+  const seconds = Math.max(0, Math.ceil((MATCHMAKING_TIMEOUT_MS - elapsedMilliseconds) / 1000));
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
@@ -451,18 +451,37 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
   const finalStatus = kind === "online"
     ? matchResultText(match, game, onlineColor)
     : statusText(game, "w", thinking);
-  const connectionIndicator = kind === "online" && (screen === "waiting" || screen === "chess") ? (
+  const startNewGame = () => {
+    if (kind === "computer") {
+      startComputer(difficulty);
+      return;
+    }
+    void findPlayer();
+  };
+  const navAction = screen === "chess" && gameEnded ? (
+    <button
+      type="button"
+      onClick={startNewGame}
+      onMouseDown={(event) => event.stopPropagation()}
+      className="flex h-8 items-center gap-1.5 rounded-md bg-[#0A7CFF] px-2.5 text-xs font-semibold text-white can-hover:hover:bg-[#0870e5]"
+      title="Start a new game"
+      aria-label="New Game"
+    >
+      <RotateCcw size={14} />
+      New Game
+    </button>
+  ) : kind === "online" && (screen === "waiting" || screen === "chess") && !waitingTimedOut ? (
     onlineError ? (
       <span className="flex h-8 w-8 items-center justify-center text-red-500" title="Disconnected" aria-label="Disconnected">
         <WifiOff size={16} />
       </span>
-    ) : match ? (
+    ) : match?.status === "active" ? (
       <span className="flex h-8 w-8 items-center justify-center text-emerald-500" title="Connected" aria-label="Connected">
         <Wifi size={16} />
       </span>
     ) : (
-      <span className="flex h-8 w-8 items-center justify-center text-amber-500" title="Connecting" aria-label="Connecting">
-        <LoaderCircle className="animate-spin" size={16} />
+      <span className="flex h-8 w-8 items-center justify-center text-amber-500" title="Waiting for player" aria-label="Waiting for player">
+        <Wifi size={16} />
       </span>
     )
   ) : <WindowNavSpacer isMobile={false} />;
@@ -500,7 +519,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
           </div>
         )}
         center={screen === "games" ? <p className="truncate text-center text-sm font-semibold">Games</p> : <span />}
-        right={connectionIndicator}
+        right={navAction}
       />
 
       {screen === "games" && (
@@ -659,7 +678,7 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
                 <LoaderCircle className="mx-auto animate-spin text-[#0A7CFF]" size={34} />
                 <h1 className="mt-4 text-2xl font-semibold tracking-tight">Waiting for another player…</h1>
                 <p className="mt-2 text-sm text-muted-foreground">Another visitor can join from Games.</p>
-                <p className="mt-5 font-mono text-2xl tabular-nums text-foreground">{formatElapsedTime(waitingElapsed)}</p>
+                <p className="mt-5 font-mono text-2xl tabular-nums text-foreground">{formatCountdownTime(waitingElapsed)}</p>
                 {onlineError && <p className="mt-4 text-sm text-red-600">{onlineError}</p>}
               </>
             )}
@@ -687,7 +706,6 @@ export function GamesApp({ onWaitingBadgeChange }: GamesAppProps) {
               </div>
             </div>
             {onlineError && <div className="flex w-full shrink-0 items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600"><WifiOff size={16} />{onlineError}</div>}
-            {gameEnded && <button onClick={kind === "computer" ? () => startComputer(difficulty) : () => void findPlayer()} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#0A7CFF] px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw size={16} /> New Game</button>}
           </div>
         </div>
       )}
