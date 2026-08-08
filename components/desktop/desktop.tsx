@@ -582,6 +582,14 @@ function DesktopContent({
     openDocumentAppPicker("textedit");
   }, [openDocumentAppPicker]);
 
+  const handlePreviewOpen = useCallback(() => {
+    openDocumentAppPicker("preview");
+  }, [openDocumentAppPicker]);
+
+  const handlePreviewClose = useCallback((windowId: string) => {
+    closeMultiWindow(windowId);
+  }, [closeMultiWindow]);
+
   const handleTextEditClose = useCallback((windowId: string) => {
     closeMultiWindow(windowId);
   }, [closeMultiWindow]);
@@ -870,6 +878,8 @@ function DesktopContent({
         onTextEditSave={handleTextEditSave}
         onTextEditDuplicate={handleTextEditDuplicate}
         onTextEditRename={handleTextEditRename}
+        onPreviewOpen={handlePreviewOpen}
+        onPreviewClose={handlePreviewClose}
       />
 
       {isActive && (
