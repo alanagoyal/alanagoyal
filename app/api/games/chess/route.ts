@@ -15,7 +15,8 @@ const PUBLIC_FIELDS = "id,status,white_visitor_id,white_name,black_visitor_id,bl
 const WAITING_FRESH_SECONDS = 45;
 const ACTIVE_EXPIRY_MS = 180_000;
 const MAX_BODY_BYTES = 4 * 1024;
-const POST_RATE_LIMIT = { scope: "games_chess_ip", limit: 180, windowMs: 60_000 } as const;
+const IDENTITY_RATE_LIMIT = { scope: "games_chess_identity", limit: 120, windowMs: 60_000 } as const;
+const IP_RATE_LIMIT = { scope: "games_chess_ip", limit: 20_000, windowMs: 60_000 } as const;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function serviceClient() {
@@ -67,14 +68,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(getClientIdentity(request).ip, POST_RATE_LIMIT);
-  if (!rateLimit.allowed) {
-    const response = errorResponse("Too many game requests. Try again shortly.", 429);
-    applyRateLimitHeaders(response.headers, rateLimit);
-    response.headers.set("Retry-After", Math.max(1, Math.ceil(rateLimit.retryAfterMs / 1000)).toString());
-    return response;
-  }
-
   try {
     const parsedBody = await parseJsonBodyWithLimit<Record<string, unknown>>(request, MAX_BODY_BYTES);
     if (!parsedBody.ok) {
@@ -82,8 +75,22 @@ export async function POST(request: NextRequest) {
     }
     const body = parsedBody.body;
     const { action, visitorId, visitorSecret, matchId } = body;
+    const ipRateLimit = checkRateLimit(getClientIdentity(request).ip, IP_RATE_LIMIT);
+    if (!ipRateLimit.allowed) {
+      const response = errorResponse("Too many game requests. Try again shortly.", 429);
+      applyRateLimitHeaders(response.headers, ipRateLimit);
+      response.headers.set("Retry-After", Math.max(1, Math.ceil(ipRateLimit.retryAfterMs / 1000)).toString());
+      return response;
+    }
     if (!validIdentity(visitorId, visitorSecret)) return errorResponse("Invalid visitor identity.", 401);
     const secretHash = hash(visitorSecret as string);
+    const identityRateLimit = checkRateLimit(`${visitorId}:${secretHash}`, IDENTITY_RATE_LIMIT);
+    if (!identityRateLimit.allowed) {
+      const response = errorResponse("Too many game requests. Try again shortly.", 429);
+      applyRateLimitHeaders(response.headers, identityRateLimit);
+      response.headers.set("Retry-After", Math.max(1, Math.ceil(identityRateLimit.retryAfterMs / 1000)).toString());
+      return response;
+    }
     const supabase = serviceClient();
 
     if (action === "resume") {
