@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery, Moon, PanelTop } from "lucide-react";
+import { Settings, Paintbrush, Search, X, ChevronRight, Plane, Wifi, Bluetooth, Radio, Link2, Battery, Moon, PanelTop, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SettingsSwitch } from "./settings-switch";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
@@ -48,6 +48,13 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     icon: <Paintbrush className="w-5 h-5 text-white" />,
     iconBg: "bg-blue-500",
     keywords: ["light", "dark", "auto", "theme", "mode"],
+  },
+  {
+    id: "wallpaper",
+    name: "Wallpaper",
+    icon: <ImageIcon className="w-5 h-5 text-white" />,
+    iconBg: "bg-gradient-to-b from-cyan-400 to-blue-500",
+    keywords: ["wallpaper", "background", "desktop", "photo", "photos", "theme"],
   },
   {
     id: "menu-bar",

@@ -843,7 +843,7 @@ export function PhotoViewer({
                     : "can-hover:hover:bg-foreground/10",
                 )}
               >
-                <PhotosShareIcon className="h-5 w-5" />
+                <PhotosShareIcon className="-m-px h-[22px] w-[22px]" />
               </button>
 
               {isShareOpen && (
