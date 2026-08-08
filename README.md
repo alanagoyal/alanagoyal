@@ -65,6 +65,7 @@ a macos sierra 10.12 themed desktop with:
 - photo library with grid view and full-screen viewer
 - collections: flowers, food, friends
 - favorites (per-browser, stored in localstorage)
+- set a library photo as the persistent desktop and lock-screen wallpaper
 - time filters (today, this week, this month, this year, all)
 - keyboard navigation (arrow keys, escape to close)
 - upload via ios shortcut with ai auto-categorization
