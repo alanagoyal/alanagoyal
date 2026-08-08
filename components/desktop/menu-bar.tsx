@@ -16,6 +16,7 @@ import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { TextEditEditMenu } from "./textedit-edit-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
+import { PreviewFileMenu } from "./preview-file-menu";
 import { AboutDialog } from "./about-dialog";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
@@ -28,7 +29,7 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "finderViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -71,6 +72,8 @@ interface MenuBarProps {
   onTextEditSave?: (windowId: string) => void;
   onTextEditDuplicate?: (windowId: string) => void;
   onTextEditRename?: (windowId: string, fileName: string) => string | null;
+  onPreviewOpen?: () => void;
+  onPreviewClose?: (windowId: string) => void;
 }
 
 export function MenuBar({
@@ -97,6 +100,8 @@ export function MenuBar({
   onTextEditSave,
   onTextEditDuplicate,
   onTextEditRename,
+  onPreviewOpen,
+  onPreviewClose,
 }: MenuBarProps) {
   const fileMenuActions = useFileMenuActions();
   const {
@@ -295,6 +300,19 @@ export function MenuBar({
               className={cn(
                 "rounded px-2 py-0.5 text-sm transition-colors",
                 openMenu === "textEditFileMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              File
+            </button>
+          )}
+          {focusedAppId === "preview" && (
+            <button
+              onClick={() => toggleMenu("previewFileMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "previewFileMenu"
                   ? "bg-blue-500 text-white"
                   : "text-black can-hover:hover:bg-white/10 dark:text-white"
               )}
@@ -514,6 +532,13 @@ export function MenuBar({
         onDuplicate={() => focusedWindowId && onTextEditDuplicate?.(focusedWindowId)}
         onRename={() => setTextEditRenameOpen(true)}
         renameDisabled={focusedTextEditFilePath.startsWith("/Users/alanagoyal/Projects/")}
+      />
+
+      <PreviewFileMenu
+        isOpen={openMenu === "previewFileMenu"}
+        onClose={closeMenu}
+        onOpen={() => onPreviewOpen?.()}
+        onCloseWindow={() => focusedWindowId && onPreviewClose?.(focusedWindowId)}
       />
 
       <TextEditRenameDialog
