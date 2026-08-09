@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Check, ImagePlus, LoaderCircle, X } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Check, ImagePlus, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getThumbnailPath, getWallpaperPath, OS_VERSIONS } from "@/lib/os-versions";
 import { usePhotos } from "@/lib/photos/use-photos";
@@ -139,63 +140,94 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
           <button
             type="button"
             aria-expanded={isPhotoPickerOpen}
+            aria-haspopup="dialog"
             aria-controls="wallpaper-photo-picker"
-            onClick={() => setIsPhotoPickerOpen((open) => !open)}
+            onClick={() => setIsPhotoPickerOpen(true)}
             className="flex aspect-[4/3] w-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-border/70 bg-muted/60 text-muted-foreground transition-colors can-hover:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
           >
-            {isPhotoPickerOpen ? <X className="h-7 w-7" /> : <ImagePlus className="h-8 w-8" />}
-            <span className="text-sm font-medium">{isPhotoPickerOpen ? "Close Photos" : "Add from Photos…"}</span>
+            <ImagePlus className="h-8 w-8" />
+            <span className="text-sm font-medium">Add from Photos…</span>
           </button>
         </div>
+      </section>
 
-        {isPhotoPickerOpen && (
-          <div
+      <Dialog.Root open={isPhotoPickerOpen} onOpenChange={setIsPhotoPickerOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[95] bg-black/35 backdrop-blur-[2px]" />
+          <Dialog.Content
             id="wallpaper-photo-picker"
             data-testid="photo-wallpaper-picker"
-            className="mt-4 rounded-xl border border-border/70 bg-muted/30 p-3"
+            className={cn(
+              "fixed left-1/2 top-1/2 z-[96] flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15",
+              isMobile
+                ? "h-[min(720px,calc(100dvh-24px))] w-[calc(100vw-24px)] rounded-[22px]"
+                : "h-[min(600px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))] rounded-[26px]"
+            )}
           >
-            {loading && (
-              <div className="flex min-h-32 items-center justify-center gap-2 text-sm text-muted-foreground">
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-                Loading Photos…
-              </div>
-            )}
-            {!loading && error && (
-              <p role="alert" className="py-10 text-center text-sm text-muted-foreground">
-                Photos couldn’t be loaded. Try again in a moment.
-              </p>
-            )}
-            {!loading && !error && orderedPhotos.length === 0 && (
-              <p className="py-10 text-center text-sm text-muted-foreground">No photos available.</p>
-            )}
-            {!loading && !error && orderedPhotos.length > 0 && (
-              <div className={cn("grid max-h-[360px] gap-1.5 overflow-y-auto", isMobile ? "grid-cols-3" : "grid-cols-5")}>
-                {orderedPhotos.map((photo) => (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    aria-label={`Use ${photo.filename} as wallpaper`}
-                    onClick={() => {
-                      setWallpaperUrl(photo.url);
-                      setIsPhotoPickerOpen(false);
-                    }}
-                    className="relative aspect-square overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
-                  >
-                    <Image
-                      src={photo.url}
-                      alt=""
-                      fill
-                      sizes={isMobile ? "28vw" : "110px"}
-                      className="object-cover transition-transform can-hover:hover:scale-105"
-                      unoptimized
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+            <div className={cn("border-b border-border/70 text-center", isMobile ? "px-4 py-3.5" : "px-6 py-4")}>
+              <Dialog.Title className="text-lg font-semibold">Choose a Photo</Dialog.Title>
+              <Dialog.Description className="sr-only">
+                Select a photo to use as the desktop and lock-screen wallpaper.
+              </Dialog.Description>
+            </div>
+
+            <div className={cn("min-h-0 flex-1 overflow-y-auto", isMobile ? "p-3" : "p-5")}>
+              {loading && (
+                <div className="flex h-full min-h-40 items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Loading Photos…
+                </div>
+              )}
+              {!loading && error && (
+                <p role="alert" className="flex h-full min-h-40 items-center justify-center text-center text-sm text-muted-foreground">
+                  Photos couldn’t be loaded. Try again in a moment.
+                </p>
+              )}
+              {!loading && !error && orderedPhotos.length === 0 && (
+                <p className="flex h-full min-h-40 items-center justify-center text-center text-sm text-muted-foreground">
+                  No photos available.
+                </p>
+              )}
+              {!loading && !error && orderedPhotos.length > 0 && (
+                <div className={cn("grid gap-2", isMobile ? "grid-cols-3" : "grid-cols-5")}>
+                  {orderedPhotos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      aria-label={`Use ${photo.filename} as wallpaper`}
+                      onClick={() => {
+                        setWallpaperUrl(photo.url);
+                        setIsPhotoPickerOpen(false);
+                      }}
+                      className="relative aspect-square overflow-hidden rounded-lg bg-muted transition-shadow can-hover:hover:ring-2 can-hover:hover:ring-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
+                    >
+                      <Image
+                        src={photo.url}
+                        alt=""
+                        fill
+                        sizes={isMobile ? "28vw" : "120px"}
+                        className="object-cover transition-transform can-hover:hover:scale-105"
+                        unoptimized
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className={cn("flex justify-end border-t border-border/70", isMobile ? "p-3" : "px-5 py-3.5")}>
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="rounded-full border border-border bg-muted/70 px-5 py-2 text-sm font-semibold transition-colors can-hover:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
+                >
+                  Cancel
+                </button>
+              </Dialog.Close>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
