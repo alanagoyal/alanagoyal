@@ -116,7 +116,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
         <h2 id="your-photos-heading" className="mb-3 text-base font-semibold">
           Your Photos
         </h2>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-start gap-3">
           {isPhotoWallpaper && (
             <div className="w-[150px]">
               <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[#0A7CFF] ring-2 ring-[#0A7CFF] ring-offset-2 ring-offset-background">
