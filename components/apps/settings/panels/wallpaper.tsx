@@ -161,7 +161,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
               "fixed left-1/2 top-1/2 z-[96] flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15",
               isMobile
                 ? "h-[min(720px,calc(100dvh-24px))] w-[calc(100vw-24px)] rounded-[22px]"
-                : "h-[min(600px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))] rounded-[26px]"
+                : "h-[min(510px,calc(100vh-90px))] w-[min(600px,calc(100vw-90px))] rounded-[26px]"
             )}
           >
             <div className={cn("border-b border-border/70 text-center", isMobile ? "px-4 py-3.5" : "px-6 py-4")}>
