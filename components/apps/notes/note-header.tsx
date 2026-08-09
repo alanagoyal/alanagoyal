@@ -12,10 +12,54 @@ import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
+import { getPublicNoteUrl } from "@/lib/notes/share-link";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, Link2 } from "lucide-react";
 
 const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
 const PRIVATE_BADGE_CLASS =
   "text-xs justify-center items-center bg-muted-foreground/70 can-hover:hover:bg-muted-foreground/70 text-white/90";
+
+function ShareIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3v12" />
+      <path d="m7.75 7.25 4.25-4.25 4.25 4.25" />
+      <path d="M8.25 10H6.5A2.5 2.5 0 0 0 4 12.5v6A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5v-6a2.5 2.5 0 0 0-2.5-2.5h-1.75" />
+    </svg>
+  );
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  }
+}
 
 export default function NoteHeader({
   note,
@@ -49,9 +93,12 @@ export default function NoteHeader({
   const [emojiData, setEmojiData] = useState<unknown>(null);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
   const [hasMounted, setHasMounted] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const copyStatusTimerRef = useRef<number | null>(null);
 
   const loadEmojiPicker = useCallback(async () => {
     if (emojiPickerLoaded || emojiPickerLoading) return;
@@ -82,6 +129,19 @@ export default function NoteHeader({
     setHasMounted(true);
   }, []);
 
+  useEffect(() => {
+    setShareOpen(false);
+    setCopyStatus("idle");
+  }, [note.slug]);
+
+  useEffect(() => {
+    return () => {
+      if (copyStatusTimerRef.current !== null) {
+        window.clearTimeout(copyStatusTimerRef.current);
+      }
+    };
+  }, []);
+
   const formattedDate = useMemo(() => {
     // Render timestamps only after client mount to avoid SSR/client
     // timezone differences on refresh.
@@ -101,6 +161,19 @@ export default function NoteHeader({
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     saveNote({ title: e.target.value });
+  };
+
+  const handleCopyLink = async () => {
+    const url = getPublicNoteUrl(window.location.origin, note.slug);
+    setCopyStatus((await copyText(url)) ? "copied" : "failed");
+
+    if (copyStatusTimerRef.current !== null) {
+      window.clearTimeout(copyStatusTimerRef.current);
+    }
+    copyStatusTimerRef.current = window.setTimeout(() => {
+      setCopyStatus("idle");
+      copyStatusTimerRef.current = null;
+    }, 5000);
   };
 
   const updatePickerPosition = useCallback(() => {
@@ -198,6 +271,60 @@ export default function NoteHeader({
                 Private
               </Badge>
             </div>
+          )}
+          {note.public && (
+            <>
+              <Popover open={shareOpen} onOpenChange={setShareOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`Share ${note.title}`}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    className={`absolute right-0 z-20 flex items-center justify-center rounded-md outline-none transition-colors active:bg-muted focus-visible:ring-2 focus-visible:ring-[#E2A727] can-hover:hover:bg-muted ${
+                      copyStatus === "copied" ? "text-green-600" : "text-[#E2A727]"
+                    } ${isMobileView ? "h-9 w-9" : "h-7 w-7"}`}
+                  >
+                    {copyStatus === "copied" ? (
+                      <Check className={isMobileView ? "h-6 w-6" : "h-5 w-5"} aria-hidden />
+                    ) : (
+                      <ShareIcon className={isMobileView ? "h-6 w-6" : "h-5 w-5"} />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  sideOffset={6}
+                  className="w-44 rounded-lg border-muted-foreground/20 bg-background/95 p-1 shadow-xl backdrop-blur-xl"
+                >
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyLink()}
+                    className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm outline-none active:bg-muted focus-visible:bg-muted can-hover:hover:bg-muted"
+                  >
+                    {copyStatus === "copied" ? (
+                      <Check className="h-4 w-4 text-green-600" aria-hidden />
+                    ) : (
+                      <Link2 className="h-4 w-4 text-muted-foreground" aria-hidden />
+                    )}
+                    <span>
+                      {copyStatus === "copied"
+                        ? "Copied"
+                        : copyStatus === "failed"
+                          ? "Copy failed"
+                          : "Copy Link"}
+                    </span>
+                  </button>
+                </PopoverContent>
+              </Popover>
+              {copyStatus !== "idle" && (
+                <span
+                  role="status"
+                  className="absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-muted-foreground/15 bg-background/95 px-2 py-1 text-xs font-medium shadow-md backdrop-blur-xl"
+                >
+                  {copyStatus === "copied" ? "Link copied" : "Couldn’t copy link"}
+                </span>
+              )}
+            </>
           )}
         </div>
         <div className="flex items-center relative">
