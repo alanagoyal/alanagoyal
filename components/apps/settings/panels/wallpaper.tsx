@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, ImagePlus, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getThumbnailPath, getWallpaperPath, OS_VERSIONS } from "@/lib/os-versions";
+import { getOptimizedImageUrl } from "@/lib/photos/image-utils";
 import { usePhotos } from "@/lib/photos/use-photos";
 import { useSystemSettings } from "@/lib/system-settings-context";
 
@@ -18,7 +19,13 @@ interface WallpaperPanelProps {
 export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
   const { osVersionId, wallpaperUrl, setWallpaperUrl } = useSystemSettings();
   const [isPhotoPickerOpen, setIsPhotoPickerOpen] = useState(false);
+  const [dialogContainer, setDialogContainer] = useState<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const { photos, loading, error } = usePhotos({ enabled: isPhotoPickerOpen });
+
+  useEffect(() => {
+    setDialogContainer(panelRef.current?.closest<HTMLElement>("[data-app='settings']") ?? null);
+  }, []);
 
   const orderedPhotos = useMemo(
     () => [...photos].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp)),
@@ -37,6 +44,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
 
   return (
     <div
+      ref={panelRef}
       className={cn(
         "mx-auto w-full max-w-5xl",
         isMobile ? "space-y-7 px-4 py-5 pb-10" : "space-y-8 p-6 pb-10"
@@ -152,16 +160,16 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
       </section>
 
       <Dialog.Root open={isPhotoPickerOpen} onOpenChange={setIsPhotoPickerOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[95] bg-black/35 backdrop-blur-[2px]" />
+        <Dialog.Portal container={dialogContainer ?? undefined}>
+          <Dialog.Overlay className="absolute inset-0 z-[95] bg-black/35 backdrop-blur-[2px]" />
           <Dialog.Content
             id="wallpaper-photo-picker"
             data-testid="photo-wallpaper-picker"
             className={cn(
-              "fixed left-1/2 top-1/2 z-[96] flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15",
+              "absolute left-1/2 top-1/2 z-[96] flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15",
               isMobile
-                ? "h-[min(720px,calc(100dvh-24px))] w-[calc(100vw-24px)] rounded-[22px]"
-                : "h-[min(510px,calc(100vh-90px))] w-[min(600px,calc(100vw-90px))] rounded-[26px]"
+                ? "h-[calc(100%_-_24px)] max-h-[720px] w-[calc(100%_-_24px)] rounded-[22px]"
+                : "h-[min(440px,calc(100%_-_48px))] w-[min(560px,calc(100%_-_64px))] rounded-[24px]"
             )}
           >
             <div className={cn("border-b border-border/70 text-center", isMobile ? "px-4 py-3.5" : "px-6 py-4")}>
@@ -202,11 +210,13 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
                       className="relative aspect-square overflow-hidden rounded-lg bg-muted transition-shadow can-hover:hover:ring-2 can-hover:hover:ring-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
                     >
                       <Image
-                        src={photo.url}
+                        src={getOptimizedImageUrl(photo.url, 240, 70)}
                         alt=""
                         fill
                         sizes={isMobile ? "28vw" : "120px"}
                         className="object-cover transition-transform can-hover:hover:scale-105"
+                        decoding="async"
+                        loading="eager"
                         unoptimized
                       />
                     </button>

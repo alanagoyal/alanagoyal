@@ -154,7 +154,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-background" data-app="settings">
+      <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
         {showSidebar ? (
           <Sidebar
             selectedCategory={selectedCategory}
@@ -193,7 +193,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   }
 
   return (
-    <div className="h-full flex flex-col bg-background" data-app="settings">
+    <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           selectedCategory={selectedCategory}
