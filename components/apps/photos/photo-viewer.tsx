@@ -15,6 +15,7 @@ import {
   Heart,
   Info,
   RotateCcwSquare,
+  Share,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
@@ -23,6 +24,7 @@ import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 import { getViewerUrl } from "@/lib/photos/image-utils";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import {
   formatCameraName,
   formatDimensions,
@@ -368,6 +370,7 @@ export function PhotoViewer({
   isDesktop = false,
 }: PhotoViewerProps) {
   const windowFocus = useWindowFocus();
+  const { setWallpaperUrl } = useSystemSettings();
   const inShell = isDesktop && windowFocus;
   const [shouldAnimateRotation, setShouldAnimateRotation] = useState(false);
   const [containerSize, setContainerSize] = useState<{
@@ -379,10 +382,12 @@ export function PhotoViewer({
   const wheelIdleTimerRef = useRef<number | null>(null);
   const reducedMotionRef = useRef(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
   const [metadataError, setMetadataError] = useState(false);
   const infoContainerRef = useRef<HTMLDivElement>(null);
+  const shareContainerRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const wheelGestureStateRef = useRef(createPhotoWheelGestureState());
   // Keep the wheel listener stable while the selected photo changes so the
@@ -400,12 +405,14 @@ export function PhotoViewer({
     onNext,
   };
   const closeInfo = useCallback(() => setIsInfoOpen(false), []);
+  const closeShare = useCallback(() => setIsShareOpen(false), []);
   const rotateLeft = useCallback(() => {
     setShouldAnimateRotation(true);
     onRotate();
   }, [onRotate]);
 
   useClickOutside(infoContainerRef, closeInfo, isInfoOpen);
+  useClickOutside(shareContainerRef, closeShare, isShareOpen);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -584,6 +591,7 @@ export function PhotoViewer({
   useEffect(() => {
     mobileScrollRef.current?.scrollTo({ top: 0 });
     setShouldAnimateRotation(false);
+    setIsShareOpen(false);
   }, [photo.id]);
 
   // Swipe handlers for mobile navigation and direct gesture tracking
@@ -703,7 +711,10 @@ export function PhotoViewer({
                 aria-label={isInfoOpen ? "Hide photo information" : "Show photo information"}
                 aria-expanded={isInfoOpen}
                 aria-controls="photo-info-panel"
-                onClick={() => setIsInfoOpen((open) => !open)}
+                onClick={() => {
+                  setIsInfoOpen((open) => !open);
+                  closeShare();
+                }}
                 className={cn(
                   "rounded-md p-1 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]",
                   isInfoOpen
@@ -787,6 +798,54 @@ export function PhotoViewer({
                     </dl>
                   </div>
                 </aside>
+              )}
+            </div>
+          )}
+
+          {!isMobileView && (
+            <div
+              ref={shareContainerRef}
+              className="relative"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                aria-label="Share photo"
+                aria-haspopup="menu"
+                aria-expanded={isShareOpen}
+                aria-controls="photo-share-menu"
+                onClick={() => {
+                  setIsShareOpen((open) => !open);
+                  closeInfo();
+                }}
+                className={cn(
+                  "rounded-md p-1 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]",
+                  isShareOpen
+                    ? "bg-foreground/10"
+                    : "can-hover:hover:bg-foreground/10",
+                )}
+              >
+                <Share aria-hidden="true" className="h-5 w-5" />
+              </button>
+
+              {isShareOpen && (
+                <div
+                  id="photo-share-menu"
+                  role="menu"
+                  className="absolute right-0 top-[calc(100%+8px)] z-20 w-max min-w-44 rounded-lg border border-black/10 bg-white/95 p-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setWallpaperUrl(photo.url);
+                      closeShare();
+                    }}
+                    className="flex w-full items-center rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
+                  >
+                    Set as Wallpaper
+                  </button>
+                </div>
               )}
             </div>
           )}

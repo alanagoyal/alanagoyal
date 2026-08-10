@@ -10,7 +10,7 @@ interface LockScreenProps {
 }
 
 export function LockScreen({ onUnlock }: LockScreenProps) {
-  const { currentOS } = useSystemSettings();
+  const { currentOS, wallpaperUrl } = useSystemSettings();
   const [currentTime, setCurrentTime] = useState<string>("");
   const [currentDate, setCurrentDate] = useState<string>("");
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -53,7 +53,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       {/* Wallpaper background (not blurred) - covers everything */}
       <div className="absolute inset-0">
         <Image
-          src={getWallpaperPath(currentOS.id)}
+          src={wallpaperUrl ?? getWallpaperPath(currentOS.id)}
           alt="Lock screen wallpaper"
           fill
           className="object-cover"
