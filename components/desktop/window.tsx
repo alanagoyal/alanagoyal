@@ -1,12 +1,18 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import type { Position, Size, WindowState } from "@/types/window";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
-import { useWindowBehavior, CORNER_SIZE, EDGE_SIZE } from "@/lib/use-window-behavior";
+import {
+  useWindowBehavior,
+  CORNER_SIZE,
+  DOCK_HEIGHT,
+  EDGE_SIZE,
+  MENU_BAR_HEIGHT,
+} from "@/lib/use-window-behavior";
 
 interface ControlledWindowHandlers {
   closeWindow: () => void;
@@ -62,6 +68,13 @@ export function Window({
   const wasFocusedBeforeMouseDown = useRef(true);
   // Track recently consumed focus-transfer clicks so dblclick handlers don't fire.
   const suppressDoubleClickUntil = useRef(0);
+  const titleBarRestoreFrameRef = useRef<{ position: Position; size: Size } | null>(null);
+
+  useEffect(() => {
+    if (windowState?.isMaximized) {
+      titleBarRestoreFrameRef.current = null;
+    }
+  }, [windowState?.isMaximized]);
 
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
@@ -212,10 +225,49 @@ export function Window({
           return;
         }
 
-        const isWindowControl = (e.target as HTMLElement).closest(".window-controls");
+        const target = e.target as HTMLElement;
+        const isWindowControl = target.closest(".window-controls");
         if (!isWindowControl && performance.now() < suppressDoubleClickUntil.current) {
           e.stopPropagation();
           e.preventDefault();
+          return;
+        }
+
+        const isTitleBar = target.closest("[data-window-drag-handle='true']");
+        const isInteractive = target.closest(
+          "a, button, input, select, textarea, [contenteditable='true'], [role='button'], [role='menuitem']",
+        );
+        if (isTitleBar && !isInteractive) {
+          e.stopPropagation();
+          e.preventDefault();
+
+          const restoreFrame = titleBarRestoreFrameRef.current;
+          if (restoreFrame) {
+            titleBarRestoreFrameRef.current = null;
+            handleResize(restoreFrame.size, restoreFrame.position);
+            return;
+          }
+
+          if (isMaximized) {
+            if (controlledHandlers) {
+              controlledHandlers.toggleMaximize();
+            } else {
+              toggleMaximize(appId);
+            }
+            return;
+          }
+
+          titleBarRestoreFrameRef.current = { position, size };
+          handleResize(
+            {
+              width: window.innerWidth,
+              height: Math.max(
+                app.minSize.height,
+                window.innerHeight - MENU_BAR_HEIGHT - DOCK_HEIGHT,
+              ),
+            },
+            { x: 0, y: MENU_BAR_HEIGHT },
+          );
         }
       }}
     >
