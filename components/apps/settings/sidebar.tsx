@@ -55,6 +55,7 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     icon: <ImageIcon className="w-5 h-5 text-white" />,
     iconBg: "bg-gradient-to-b from-cyan-400 to-blue-500",
     keywords: ["wallpaper", "background", "desktop", "photo", "photos", "theme"],
+    desktopOnly: true,
   },
   {
     id: "menu-bar",
