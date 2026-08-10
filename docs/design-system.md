@@ -139,7 +139,7 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 </div>
 ```
 
-The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
+The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging. `WindowNavShell` marks that drag surface for the shared window manager, so double-clicking neutral title-bar space fills the area between the menu bar and Dock; double-clicking again restores the prior frame. Nested controls are excluded automatically, so do not add per-app double-click handlers.
 
 ### Hover States
 
