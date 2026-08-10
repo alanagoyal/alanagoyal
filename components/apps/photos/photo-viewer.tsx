@@ -15,6 +15,7 @@ import {
   Heart,
   Info,
   RotateCcwSquare,
+  Share,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
@@ -53,25 +54,6 @@ import type {
   PhotoNavigationDirection,
   PhotoNavigationSource,
 } from "@/lib/photos/photo-transition";
-
-function PhotosShareIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 14.5V2" />
-      <path d="m9 5 3-3 3 3" />
-      <path d="M8.25 7.5H8A2.5 2.5 0 0 0 5.5 10v9A2.5 2.5 0 0 0 8 21.5h8a2.5 2.5 0 0 0 2.5-2.5v-9A2.5 2.5 0 0 0 16 7.5h-.25" />
-    </svg>
-  );
-}
 
 // Preload an image for faster navigation
 function preloadImage(url: string) {
@@ -843,7 +825,7 @@ export function PhotoViewer({
                     : "can-hover:hover:bg-foreground/10",
                 )}
               >
-                <PhotosShareIcon className="-m-px h-[22px] w-[22px]" />
+                <Share aria-hidden="true" className="h-5 w-5" />
               </button>
 
               {isShareOpen && (
