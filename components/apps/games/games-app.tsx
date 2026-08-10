@@ -643,6 +643,9 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                         autoComplete="nickname"
                         autoFocus
                         placeholder="Name"
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") event.currentTarget.blur();
+                        }}
                         className="min-w-0 flex-1 rounded-lg border border-muted-foreground/25 bg-background px-3 py-2 text-sm outline-none focus:border-[#0A7CFF] focus:ring-2 focus:ring-[#0A7CFF]/15"
                       />
                       <button type="submit" className="rounded-lg bg-[#0A7CFF] px-4 py-2 text-sm font-semibold text-white can-hover:hover:bg-[#0870e5]">
