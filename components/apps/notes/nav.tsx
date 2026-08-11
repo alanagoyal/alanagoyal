@@ -53,7 +53,7 @@ interface NavProps {
 type Submenu = "sort" | "group" | null;
 
 const menuItemClass =
-  "flex w-full items-center gap-2 rounded-[5px] px-2 py-1.5 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white";
+  "flex w-full items-center gap-2 rounded-[5px] px-2 py-1.5 text-left text-[13px] leading-5 transition-colors can-hover:hover:bg-[#FFE390] can-hover:hover:text-black dark:can-hover:hover:bg-[#9D7D28] dark:can-hover:hover:text-white focus-visible:bg-[#FFE390] focus-visible:text-black dark:focus-visible:bg-[#9D7D28] dark:focus-visible:text-white focus-visible:outline-none";
 const MENU_CLOSE_FALLBACK_MS = 200;
 
 function MenuCheck({ checked }: { checked: boolean }) {
@@ -303,7 +303,7 @@ export function Nav({
                   className={cn(
                     menuItemClass,
                     groupByDateDisabled &&
-                      "cursor-default opacity-45 can-hover:hover:bg-transparent can-hover:hover:text-inherit",
+                      "cursor-default opacity-45 can-hover:hover:bg-transparent can-hover:hover:text-inherit dark:can-hover:hover:bg-transparent dark:can-hover:hover:text-inherit",
                   )}
                 >
                   <CalendarDays className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />

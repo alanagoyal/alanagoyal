@@ -218,7 +218,7 @@ export const NoteItem = React.memo(function NoteItem({
         <ContextMenuContent>
           <ContextMenuItem
             onClick={handlePinAction}
-            className="cursor-pointer focus:bg-[#0A7CFF] focus:text-white"
+            className="cursor-pointer focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
           >
             {isPinned ? (
               <PinOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
@@ -231,14 +231,14 @@ export const NoteItem = React.memo(function NoteItem({
             <>
               <ContextMenuItem
                 onClick={handleEdit}
-                className="cursor-pointer focus:bg-[#0A7CFF] focus:text-white"
+                className="cursor-pointer focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
               >
                 <Pencil className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                 Edit
               </ContextMenuItem>
               <ContextMenuItem
                 onClick={handleDelete}
-                className="cursor-pointer text-red-600 focus:bg-[#0A7CFF] focus:text-white"
+                className="cursor-pointer text-red-600 focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
               >
                 <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                 Delete

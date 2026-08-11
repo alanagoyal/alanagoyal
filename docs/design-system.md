@@ -133,6 +133,10 @@ text color.
 Touch action sheets may use 20px icons with a 12px gap to match their larger
 row height and tap targets.
 
+App-specific context menus and action popovers use the app accent for their
+highlighted item. Notes uses `#FFE390` with dark text in light mode and
+`#9D7D28` with white text in dark mode.
+
 ## Navigation Bar
 
 Standard nav bar pattern for app windows. Use `select-none` to prevent text selection when dragging the window:

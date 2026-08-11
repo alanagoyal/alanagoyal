@@ -527,7 +527,7 @@ function GalleryCard({
       <ContextMenuContent>
         <ContextMenuItem
           onClick={() => onPinToggle(note.slug)}
-          className="focus:bg-[#0A7CFF] focus:text-white"
+          className="focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
         >
           {isPinned ? (
             <PinOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
@@ -539,7 +539,7 @@ function GalleryCard({
         {canDelete && (
           <ContextMenuItem
             onClick={() => void onDelete(note)}
-            className="text-red-600 focus:bg-[#0A7CFF] focus:text-white"
+            className="text-red-600 focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
           >
             <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
             Delete
