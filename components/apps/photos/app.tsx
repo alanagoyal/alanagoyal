@@ -98,6 +98,7 @@ export default function App({ isDesktop = false }: AppProps) {
 
   const handleViewSelect = useCallback((view: PhotosView) => {
     setActiveView(view);
+    setSelectedPhotoId(null);
     setShowGrid(true);
   }, []);
 
