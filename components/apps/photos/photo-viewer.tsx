@@ -16,6 +16,7 @@ import {
   Info,
   RotateCcwSquare,
   Share,
+  Wallpaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
@@ -841,8 +842,9 @@ export function PhotoViewer({
                       setWallpaperUrl(photo.url);
                       closeShare();
                     }}
-                    className="flex w-full items-center rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
+                    className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
                   >
+                    <Wallpaper className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                     Set as Wallpaper
                   </button>
                 </div>
