@@ -13,6 +13,7 @@ import { Note } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { Dispatch, SetStateAction } from "react";
 import { getNotePreviewText } from "@/lib/notes/note-utils";
+import { Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 
 const SIDEBAR_DATE_PLACEHOLDER = "00/00/0000";
 
@@ -215,18 +216,31 @@ export const NoteItem = React.memo(function NoteItem({
       <ContextMenu>
         <ContextMenuTrigger>{NoteContent}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={handlePinAction} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={handlePinAction}
+            className="cursor-pointer focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
+          >
+            {isPinned ? (
+              <PinOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            ) : (
+              <Pin className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            )}
             {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
           {item.session_id === sessionId && (
             <>
-              <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
+              <ContextMenuItem
+                onClick={handleEdit}
+                className="cursor-pointer focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
+              >
+                <Pencil className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                 Edit
               </ContextMenuItem>
               <ContextMenuItem
                 onClick={handleDelete}
-                className="cursor-pointer"
+                className="cursor-pointer text-red-600 focus:bg-[#FFE390] focus:text-black dark:focus:bg-[#9D7D28] dark:focus:text-white"
               >
+                <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                 Delete
               </ContextMenuItem>
             </>

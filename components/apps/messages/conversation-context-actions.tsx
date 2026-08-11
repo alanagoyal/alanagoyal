@@ -47,18 +47,22 @@ interface TriggerBounds {
   height: number;
 }
 
-function ReadStateMessageIcon() {
+function ReadStateMessageIcon({
+  className = "h-5 w-5 shrink-0",
+}: {
+  className?: string;
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-5 w-5 shrink-0"
+      className={className}
       fill="none"
       aria-hidden
     >
       <path
         d="M15.7 4.45c-1.2-.36-2.52-.55-3.9-.55-4.86 0-8.4 2.87-8.4 6.67 0 1.62.67 3.1 1.86 4.22l-.82 2.79 3.1-1.17c1.22.49 2.65.76 4.26.76 4.82 0 8.33-2.79 8.33-6.6 0-.89-.19-1.72-.55-2.47"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -446,18 +450,29 @@ export function ConversationContextActions({
             className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onToggleReadState}
           >
+            <ReadStateMessageIcon className="h-4 w-4 shrink-0" />
             <span>{getConversationReadStateLabel(conversation)}</span>
           </ContextMenuItem>
           <ContextMenuItem
             className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onPinToggle}
           >
+            {conversation.pinned ? (
+              <PinOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            ) : (
+              <Pin className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            )}
             <span>{conversation.pinned ? "Unpin" : "Pin"}</span>
           </ContextMenuItem>
           <ContextMenuItem
             className="focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onToggleAlerts}
           >
+            {conversation.hideAlerts ? (
+              <Bell className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            ) : (
+              <BellOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+            )}
             <span>
               {conversation.hideAlerts ? "Show Alerts" : "Hide Alerts"}
             </span>
@@ -466,6 +481,7 @@ export function ConversationContextActions({
             className="text-red-600 focus:rounded-md focus:bg-[#0A7CFF] focus:text-white"
             onClick={onDelete}
           >
+            <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
             <span>Delete</span>
           </ContextMenuItem>
         </ContextMenuContent>

@@ -120,6 +120,23 @@ Exception: Back/navigation chevrons can use the app's accent color:
 - Compact (search bars): 14px
 - Prominent (back buttons): 20-24px
 
+### Compact Command Menus
+
+Desktop context menus and compact action popovers use 16px icons with an 8px
+gap between the icon gutter and label (`h-4 w-4 shrink-0` plus `gap-2`). Keep
+the gutter present for every iconized command in a menu so labels align. Toggle
+and radio menus use a checkmark in that gutter when the native surface shows
+selection state; do not force icons onto native text-only system commands such
+as the Dock magnification action. Destructive icons inherit the destructive
+text color.
+
+Touch action sheets may use 20px icons with a 12px gap to match their larger
+row height and tap targets.
+
+App-specific context menus and action popovers use the app accent for their
+highlighted item. Notes uses `#FFE390` with dark text in light mode and
+`#9D7D28` with white text in dark mode.
+
 ## Navigation Bar
 
 Standard nav bar pattern for app windows. Use `select-none` to prevent text selection when dragging the window:
