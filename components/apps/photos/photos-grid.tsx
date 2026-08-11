@@ -137,13 +137,13 @@ export function PhotosGrid({
             <p
               className={cn(
                 "min-h-4 truncate text-xs text-muted-foreground",
-                (loading || error || (!isMobileView && !dateRange)) && "invisible",
+                (loading || error) && "invisible",
               )}
               aria-live="polite"
             >
               {isMobileView
                 ? `${photos.length} ${photos.length === 1 ? "item" : "items"}`
-                : dateRange}
+                : dateRange || "0 photos"}
             </p>
           </div>
         </div>
