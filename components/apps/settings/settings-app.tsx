@@ -6,7 +6,7 @@ import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 import { loadSettingsState, saveSettingsState } from "@/lib/sidebar-persistence";
 
-export type SettingsCategory = "general" | "appearance" | "wifi" | "bluetooth" | "focus" | "menu-bar";
+export type SettingsCategory = "general" | "appearance" | "wallpaper" | "wifi" | "bluetooth" | "focus" | "menu-bar";
 export type SettingsPanel = "about" | "personal-info" | "storage" | null;
 
 interface HistoryEntry {
@@ -22,14 +22,24 @@ interface SettingsAppProps {
   navigationRequestId?: number;
 }
 
+function categoryForPlatform(category: SettingsCategory, isMobile: boolean): SettingsCategory {
+  return isMobile && category === "wallpaper" ? "general" : category;
+}
+
 export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory, navigationRequestId }: SettingsAppProps) {
   // Load persisted state (props take precedence if provided)
   const getInitialState = (): HistoryEntry => {
     if (initialCategory || initialPanel) {
-      return { category: initialCategory || "general", panel: initialPanel || null };
+      return {
+        category: categoryForPlatform(initialCategory || "general", isMobile),
+        panel: initialPanel || null,
+      };
     }
     const saved = loadSettingsState();
-    return { category: saved.category, panel: saved.panel };
+    return {
+      category: categoryForPlatform(saved.category, isMobile),
+      panel: saved.panel,
+    };
   };
 
   const [history, setHistory] = useState<HistoryEntry[]>(() => [getInitialState()]);
@@ -39,10 +49,13 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   // Handle initialPanel/initialCategory changes (e.g., from menu bar)
   useEffect(() => {
     if (initialPanel || initialCategory) {
-      setHistory([{ category: initialCategory || "general", panel: initialPanel || null }]);
+      setHistory([{
+        category: categoryForPlatform(initialCategory || "general", isMobile),
+        panel: initialPanel || null,
+      }]);
       setHistoryIndex(0);
     }
-  }, [initialPanel, initialCategory, navigationRequestId]);
+  }, [initialPanel, initialCategory, navigationRequestId, isMobile]);
   const [showSidebar, setShowSidebar] = useState(true);
 
   // Persist settings state
@@ -66,7 +79,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   }, [history, historyIndex]);
 
   const handleCategorySelect = (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => {
-    navigate(category, null);
+    navigate(categoryForPlatform(category, isMobile), null);
     if (options?.scrollToOSVersion) {
       setScrollToOSVersion(true);
     }
@@ -131,6 +144,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     if (!isMobile) {
       if (selectedCategory === "general") return "General";
       if (selectedCategory === "appearance") return "Appearance";
+      if (selectedCategory === "wallpaper") return "Wallpaper";
       if (selectedCategory === "wifi") return "Wi-Fi";
       if (selectedCategory === "bluetooth") return "Bluetooth";
       if (selectedCategory === "focus") return "Focus";
@@ -153,7 +167,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-background" data-app="settings">
+      <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
         {showSidebar ? (
           <Sidebar
             selectedCategory={selectedCategory}
@@ -192,7 +206,7 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   }
 
   return (
-    <div className="h-full flex flex-col bg-background" data-app="settings">
+    <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           selectedCategory={selectedCategory}
