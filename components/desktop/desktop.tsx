@@ -52,6 +52,7 @@ import type { MessagesNotificationPayload } from "@/types/messages/notification"
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
 import { getWaitingPlayer, type WaitingPlayer } from "@/lib/games/api";
+import { GAMES_BADGE_REFRESH_MS } from "@/lib/games/rate-limits";
 import {
   isFinderViewMode,
   type FinderViewMode,
@@ -791,7 +792,7 @@ function DesktopContent({
       handleGamesWaitingBadgeChange(waitingPlayer.waiting);
     };
     void refresh();
-    const interval = window.setInterval(() => void refresh(), 15_000);
+    const interval = window.setInterval(() => void refresh(), GAMES_BADGE_REFRESH_MS);
     const onVisible = () => { if (!document.hidden) void refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {

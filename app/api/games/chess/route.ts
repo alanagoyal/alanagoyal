@@ -5,6 +5,12 @@ import { getExpiredParticipant, isValidPlayerName, normalizePlayerName } from "@
 import { MatchMoveError, validateMatchMove } from "@/lib/games/authoritative-move";
 import { redactPrivateMatchFields } from "@/lib/games/public-match";
 import {
+  GAMES_BADGE_IP_RATE_LIMIT,
+  getGameActionRateLimitPolicy,
+  isGameChessAction,
+  type DistributedGameRateLimit,
+} from "@/lib/games/rate-limits";
+import {
   applyRateLimitHeaders,
   checkRateLimit,
   getClientIdentity,
@@ -15,9 +21,17 @@ const PUBLIC_FIELDS = "id,status,white_visitor_id,white_name,black_visitor_id,bl
 const WAITING_FRESH_SECONDS = 45;
 const ACTIVE_EXPIRY_MS = 180_000;
 const MAX_BODY_BYTES = 4 * 1024;
-const IDENTITY_RATE_LIMIT = { scope: "games_chess_identity", limit: 120, windowMs: 60_000 } as const;
-const IP_RATE_LIMIT = { scope: "games_chess_ip", limit: 20_000, windowMs: 60_000 } as const;
+const LOCAL_IP_RATE_LIMIT = { scope: "games_chess_local_ip", limit: 1_200, windowMs: 60_000 } as const;
+const LOCAL_BADGE_IP_RATE_LIMIT = { scope: "games_chess_local_badge_ip", limit: 240, windowMs: 60_000 } as const;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+interface DistributedRateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+  scope: string;
+  limit: number;
+}
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -30,12 +44,54 @@ function hash(secret: string) {
   return createHash("sha256").update(secret).digest("hex");
 }
 
+async function consumeDistributedRateLimit(
+  supabase: ReturnType<typeof serviceClient>,
+  identity: string,
+  rule: DistributedGameRateLimit,
+): Promise<DistributedRateLimitResult> {
+  const { data, error } = await supabase.rpc("game_consume_rate_limit", {
+    bucket_key_arg: `${rule.scope}:${hash(identity)}`,
+    request_limit_arg: rule.limit,
+    window_seconds_arg: rule.windowSeconds,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  const remaining = Number(row?.remaining);
+  const resetAt = Date.parse(String(row?.reset_at ?? ""));
+  if (
+    !row
+    || typeof row.allowed !== "boolean"
+    || !Number.isInteger(remaining)
+    || remaining < 0
+    || !Number.isFinite(resetAt)
+  ) {
+    throw new Error("Invalid distributed rate-limit response.");
+  }
+  return {
+    allowed: row.allowed,
+    remaining,
+    resetAt,
+    scope: rule.scope,
+    limit: rule.limit,
+  };
+}
+
 function validIdentity(visitorId: unknown, visitorSecret: unknown): visitorId is string {
   return typeof visitorId === "string" && UUID_PATTERN.test(visitorId) && typeof visitorSecret === "string" && visitorSecret.length >= 32;
 }
 
 function errorResponse(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
+}
+
+function rateLimitResponse(result: DistributedRateLimitResult) {
+  const response = errorResponse("Too many game requests. Try again shortly.", 429);
+  response.headers.set("X-RateLimit-Limit", result.limit.toString());
+  response.headers.set("X-RateLimit-Remaining", Math.max(0, result.remaining).toString());
+  response.headers.set("X-RateLimit-Reset", Math.ceil(result.resetAt / 1000).toString());
+  response.headers.set("X-RateLimit-Scope", result.scope);
+  response.headers.set("Retry-After", Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000)).toString());
+  return response;
 }
 
 function serviceErrorResponse(context: string, error: unknown) {
@@ -50,9 +106,20 @@ function matchResponse(match: Record<string, unknown> | null) {
 export async function GET(request: NextRequest) {
   if (request.nextUrl.searchParams.get("badge") !== "1") return errorResponse("Not found.", 404);
   try {
+    const clientIp = getClientIdentity(request).ip;
+    const localRateLimit = checkRateLimit(clientIp, LOCAL_BADGE_IP_RATE_LIMIT);
+    if (!localRateLimit.allowed) {
+      const response = errorResponse("Too many game requests. Try again shortly.", 429);
+      applyRateLimitHeaders(response.headers, localRateLimit);
+      response.headers.set("Retry-After", Math.max(1, Math.ceil(localRateLimit.retryAfterMs / 1000)).toString());
+      return response;
+    }
+    const supabase = serviceClient();
+    const distributedRateLimit = await consumeDistributedRateLimit(supabase, clientIp, GAMES_BADGE_IP_RATE_LIMIT);
+    if (!distributedRateLimit.allowed) return rateLimitResponse(distributedRateLimit);
     const cutoff = new Date(Date.now() - WAITING_FRESH_SECONDS * 1000).toISOString();
     const visitorId = request.nextUrl.searchParams.get("visitorId");
-    let query = serviceClient().from("game_matches").select("id,white_name")
+    let query = supabase.from("game_matches").select("id,white_name")
       .eq("status", "waiting").gt("waiting_heartbeat_at", cutoff).gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: true }).limit(1);
     if (visitorId && UUID_PATTERN.test(visitorId)) query = query.neq("white_visitor_id", visitorId);
@@ -75,7 +142,9 @@ export async function POST(request: NextRequest) {
     }
     const body = parsedBody.body;
     const { action, visitorId, visitorSecret, matchId } = body;
-    const ipRateLimit = checkRateLimit(getClientIdentity(request).ip, IP_RATE_LIMIT);
+    if (!isGameChessAction(action)) return errorResponse("Unknown action.");
+    const clientIp = getClientIdentity(request).ip;
+    const ipRateLimit = checkRateLimit(clientIp, LOCAL_IP_RATE_LIMIT);
     if (!ipRateLimit.allowed) {
       const response = errorResponse("Too many game requests. Try again shortly.", 429);
       applyRateLimitHeaders(response.headers, ipRateLimit);
@@ -84,7 +153,12 @@ export async function POST(request: NextRequest) {
     }
     if (!validIdentity(visitorId, visitorSecret)) return errorResponse("Invalid visitor identity.", 401);
     const secretHash = hash(visitorSecret as string);
-    const identityRateLimit = checkRateLimit(`${visitorId}:${secretHash}`, IDENTITY_RATE_LIMIT);
+    const actionRateLimitPolicy = getGameActionRateLimitPolicy(action);
+    const identityRateLimit = checkRateLimit(`${visitorId}:${secretHash}`, {
+      scope: `games_chess_identity_${action}`,
+      limit: actionRateLimitPolicy.identityLimit,
+      windowMs: 60_000,
+    });
     if (!identityRateLimit.allowed) {
       const response = errorResponse("Too many game requests. Try again shortly.", 429);
       applyRateLimitHeaders(response.headers, identityRateLimit);
@@ -92,6 +166,12 @@ export async function POST(request: NextRequest) {
       return response;
     }
     const supabase = serviceClient();
+    const distributedRateLimit = await consumeDistributedRateLimit(
+      supabase,
+      clientIp,
+      actionRateLimitPolicy.distributedIp,
+    );
+    if (!distributedRateLimit.allowed) return rateLimitResponse(distributedRateLimit);
 
     if (action === "resume") {
       const { data: candidates, error } = await supabase.from("game_matches").select("*")

@@ -13,6 +13,12 @@ import {
 } from "../lib/games/matches";
 import { MatchMoveError, validateMatchMove } from "../lib/games/authoritative-move";
 import { redactPrivateMatchFields } from "../lib/games/public-match";
+import {
+  GAMES_BADGE_IP_RATE_LIMIT,
+  GAMES_BADGE_REFRESH_MS,
+  getGameActionRateLimitPolicy,
+  isGameChessAction,
+} from "../lib/games/rate-limits";
 
 test("chess rules accept legal moves and reject illegal moves", () => {
   const initial = new Chess().fen();
@@ -51,6 +57,21 @@ test("waiting badges require both a fresh heartbeat and unexpired row", () => {
 
 test("visitor matchmaking waits for two minutes before fallback", () => {
   assert.equal(MATCHMAKING_TIMEOUT_MS, 120_000);
+});
+
+test("waiting badge polling is infrequent and protected by a shared rate limit", () => {
+  assert.equal(GAMES_BADGE_REFRESH_MS, 60_000);
+  assert.equal(GAMES_BADGE_IP_RATE_LIMIT.windowSeconds, 60);
+  assert.equal(GAMES_BADGE_IP_RATE_LIMIT.limit, 120);
+});
+
+test("matchmaking uses a stricter abuse limit than active gameplay", () => {
+  assert.equal(isGameChessAction("matchmake"), true);
+  assert.equal(isGameChessAction("unknown"), false);
+  const matchmaking = getGameActionRateLimitPolicy("matchmake");
+  const moves = getGameActionRateLimitPolicy("move");
+  assert.ok(matchmaking.distributedIp.limit < moves.distributedIp.limit);
+  assert.ok(matchmaking.identityLimit < moves.identityLimit);
 });
 
 test("visitor names are normalized and kept deliberately short", () => {

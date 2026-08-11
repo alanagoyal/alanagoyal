@@ -303,6 +303,12 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
       }
     } catch (error) {
       setOnlineError(error instanceof Error ? error.message : "Online play is unavailable.");
+      setMatch(null);
+      setWaitingElapsed(0);
+      waitingStartedAtRef.current = null;
+      timeoutHandledRef.current = false;
+      setVisitorOptionsOpen(true);
+      setScreen("setup");
     }
   };
 
