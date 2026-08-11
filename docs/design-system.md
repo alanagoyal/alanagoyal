@@ -124,9 +124,11 @@ Exception: Back/navigation chevrons can use the app's accent color:
 
 Desktop context menus and compact action popovers use 16px icons with an 8px
 gap between the icon gutter and label (`h-4 w-4 shrink-0` plus `gap-2`). Keep
-the gutter present for every command in a menu so labels align. Toggle and
-radio menus use a checkmark in that gutter rather than an additional command
-pictogram. Destructive icons inherit the destructive text color.
+the gutter present for every iconized command in a menu so labels align. Toggle
+and radio menus use a checkmark in that gutter when the native surface shows
+selection state; do not force icons onto native text-only system commands such
+as the Dock magnification action. Destructive icons inherit the destructive
+text color.
 
 Touch action sheets may use 20px icons with a 12px gap to match their larger
 row height and tap targets.

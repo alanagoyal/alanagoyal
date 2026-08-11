@@ -7,7 +7,6 @@ import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
-import { Check } from "lucide-react";
 
 interface DockProps {
   onTrashClick?: () => void;
@@ -759,16 +758,11 @@ export function Dock({
                   setMagnificationEnabled((enabled) => !enabled);
                   closeDockMenu();
                 }}
-                className="relative z-[1] flex w-full items-center gap-2 whitespace-nowrap px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
+                className="relative z-[1] flex w-full items-center justify-between whitespace-nowrap px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
               >
-                <Check
-                  aria-hidden
-                  className={cn(
-                    "h-4 w-4 shrink-0",
-                    !magnificationEnabled && "opacity-0",
-                  )}
-                />
-                <span>Magnification</span>
+                {magnificationEnabled
+                  ? "Turn Magnification Off"
+                  : "Turn Magnification On"}
               </button>
             </div>
           )}
