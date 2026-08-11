@@ -24,6 +24,7 @@ export function WindowNavShell({
 }: WindowNavShellProps) {
   return (
     <div
+      data-window-drag-handle={onMouseDown ? "true" : undefined}
       className={cn(
         "px-4 py-2 flex items-center sticky top-0 z-[1] select-none",
         isScrolled && "border-b shadow-[0_2px_4px_-1px_rgba(0,0,0,0.15)]",

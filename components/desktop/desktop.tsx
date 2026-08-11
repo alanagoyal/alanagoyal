@@ -213,7 +213,7 @@ function DesktopContent({
     updateWindowMetadata,
     getWindowsByApp,
   } = useWindowManager();
-  const { focusMode, currentOS } = useSystemSettings();
+  const { focusMode, currentOS, wallpaperUrl } = useSystemSettings();
   const { addRecent, renameRecent, touchRecent } = useRecents();
 
   const [mode, setMode] = useState<DesktopMode>("active");
@@ -847,7 +847,7 @@ function DesktopContent({
   return (
     <div className="fixed inset-0" data-shell="desktop">
       <Image
-        src={getWallpaperPath(currentOS.id)}
+        src={wallpaperUrl ?? getWallpaperPath(currentOS.id)}
         alt="Desktop wallpaper"
         fill
         className="object-cover -z-10"

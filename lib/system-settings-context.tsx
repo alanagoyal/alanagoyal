@@ -37,6 +37,8 @@ interface SystemSettingsContextValue {
   setClockFlashSeparators: (flash: boolean) => void;
   clockShowSeconds: boolean;
   setClockShowSeconds: (show: boolean) => void;
+  wallpaperUrl: string | null;
+  setWallpaperUrl: (url: string | null) => void;
   osVersionId: string;
   setOSVersionId: (id: string) => void;
   currentOS: OSVersion;
@@ -57,6 +59,7 @@ const CLOCK_STYLE_KEY = "menu-bar-clock-style";
 const CLOCK_SHOW_AM_PM_KEY = "menu-bar-clock-show-am-pm";
 const CLOCK_FLASH_SEPARATORS_KEY = "menu-bar-clock-flash-separators";
 const CLOCK_SHOW_SECONDS_KEY = "menu-bar-clock-show-seconds";
+const WALLPAPER_URL_KEY = "desktop-custom-wallpaper";
 const OS_VERSION_KEY = "system-os-version";
 
 // Helper to load settings from localStorage synchronously
@@ -76,6 +79,7 @@ function getInitialSettings() {
       clockShowAmPm: true,
       clockFlashSeparators: false,
       clockShowSeconds: false,
+      wallpaperUrl: null,
       osVersionId: DEFAULT_OS_VERSION_ID,
     };
   }
@@ -88,6 +92,7 @@ function getInitialSettings() {
   const storedFocusEndsAt = localStorage.getItem(FOCUS_ENDS_AT_KEY);
   const storedClockStyle = localStorage.getItem(CLOCK_STYLE_KEY);
   const storedClockShowSeconds = localStorage.getItem(CLOCK_SHOW_SECONDS_KEY);
+  const storedWallpaperUrl = localStorage.getItem(WALLPAPER_URL_KEY);
   const storedOSVersion = localStorage.getItem(OS_VERSION_KEY);
   const parsedFocusEndsAt = storedFocusEndsAt
     ? Number(storedFocusEndsAt)
@@ -110,6 +115,7 @@ function getInitialSettings() {
     clockShowAmPm: localStorage.getItem(CLOCK_SHOW_AM_PM_KEY) !== "false",
     clockFlashSeparators: localStorage.getItem(CLOCK_FLASH_SEPARATORS_KEY) === "true",
     clockShowSeconds: storedClockShowSeconds === "true",
+    wallpaperUrl: storedWallpaperUrl || null,
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
   };
 }
@@ -148,6 +154,9 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   );
   const [clockShowSeconds, setClockShowSecondsState] = useState(
     initial.clockShowSeconds
+  );
+  const [wallpaperUrl, setWallpaperUrlState] = useState<string | null>(
+    initial.wallpaperUrl
   );
   const [osVersionId, setOSVersionIdState] = useState<string>(initial.osVersionId);
 
@@ -251,8 +260,20 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
 
   const setOSVersionId = useCallback((id: string) => {
     setOSVersionIdState(id);
+    setWallpaperUrlState(null);
     if (typeof window !== "undefined") {
       localStorage.setItem(OS_VERSION_KEY, id);
+      localStorage.removeItem(WALLPAPER_URL_KEY);
+    }
+  }, []);
+
+  const setWallpaperUrl = useCallback((url: string | null) => {
+    setWallpaperUrlState(url);
+    if (typeof window === "undefined") return;
+    if (url) {
+      localStorage.setItem(WALLPAPER_URL_KEY, url);
+    } else {
+      localStorage.removeItem(WALLPAPER_URL_KEY);
     }
   }, []);
 
@@ -296,7 +317,7 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, menuBarBackground, setMenuBarBackground, clockShowDate, setClockShowDate, clockShowDayOfWeek, setClockShowDayOfWeek, clockStyle, setClockStyle, clockShowAmPm, setClockShowAmPm, clockFlashSeparators, setClockFlashSeparators, clockShowSeconds, setClockShowSeconds, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, menuBarBackground, setMenuBarBackground, clockShowDate, setClockShowDate, clockShowDayOfWeek, setClockShowDayOfWeek, clockStyle, setClockStyle, clockShowAmPm, setClockShowAmPm, clockFlashSeparators, setClockFlashSeparators, clockShowSeconds, setClockShowSeconds, wallpaperUrl, setWallpaperUrl, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
@@ -347,6 +368,8 @@ const defaultSettings: SystemSettingsContextValue = {
   setClockFlashSeparators: () => {},
   clockShowSeconds: false,
   setClockShowSeconds: () => {},
+  wallpaperUrl: null,
+  setWallpaperUrl: () => {},
   osVersionId: DEFAULT_OS_VERSION_ID,
   setOSVersionId: () => {},
   currentOS: getOSVersion(DEFAULT_OS_VERSION_ID),

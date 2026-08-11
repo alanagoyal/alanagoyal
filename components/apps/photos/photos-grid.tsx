@@ -9,6 +9,7 @@ import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 import { getThumbnailUrl, getViewerUrl } from "@/lib/photos/image-utils";
+import { PhotosHeader } from "./header";
 
 // Preload viewer-size image on hover for faster viewer loading
 function preloadImage(url: string) {
@@ -115,47 +116,41 @@ export function PhotosGrid({
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div
-        className={cn(
-          "px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
-          isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
-        )}
+      <PhotosHeader
+        isMobileView={isMobileView}
+        className="justify-between"
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {isMobileView && (
             <button
               onClick={onBack}
               onMouseDown={(e) => e.stopPropagation()}
               aria-label="Back to Photos albums"
-              className="-ml-2 flex items-center text-muted-foreground"
+              className="-ml-2 flex shrink-0 items-center text-muted-foreground"
             >
               <ChevronLeft className="h-7 w-7" />
             </button>
           )}
-          <div>
-            <h1 className="text-lg font-semibold">{getViewTitle()}</h1>
-            {isMobileView ? (
-              <p
-                className={cn(
-                  "min-h-4 text-xs text-muted-foreground",
-                  (loading || error) && "invisible",
-                )}
-                aria-live="polite"
-              >
-                {photos.length} {photos.length === 1 ? "item" : "items"}
-              </p>
-            ) : (
-              dateRange && (
-                <p className="text-xs text-muted-foreground">{dateRange}</p>
-              )
-            )}
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold">{getViewTitle()}</h1>
+            <p
+              className={cn(
+                "min-h-4 truncate text-xs text-muted-foreground",
+                (loading || error) && "invisible",
+              )}
+              aria-live="polite"
+            >
+              {isMobileView
+                ? `${photos.length} ${photos.length === 1 ? "item" : "items"}`
+                : dateRange || "0 photos"}
+            </p>
           </div>
         </div>
 
         {/* Time Filter Toggle - hidden on mobile */}
         {!isMobileView && (
-          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+          <div className="flex shrink-0 items-center gap-0.5 bg-muted rounded-lg p-0.5">
             {(["years", "months", "all"] as TimeFilter[]).map((filter) => (
               <button
                 key={filter}
@@ -172,7 +167,7 @@ export function PhotosGrid({
             ))}
           </div>
         )}
-      </div>
+      </PhotosHeader>
 
       {/* Photo Grid */}
       <div

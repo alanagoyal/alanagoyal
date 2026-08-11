@@ -120,6 +120,23 @@ Exception: Back/navigation chevrons can use the app's accent color:
 - Compact (search bars): 14px
 - Prominent (back buttons): 20-24px
 
+### Compact Command Menus
+
+Desktop context menus and compact action popovers use 16px icons with an 8px
+gap between the icon gutter and label (`h-4 w-4 shrink-0` plus `gap-2`). Keep
+the gutter present for every iconized command in a menu so labels align. Toggle
+and radio menus use a checkmark in that gutter when the native surface shows
+selection state; do not force icons onto native text-only system commands such
+as the Dock magnification action. Destructive icons inherit the destructive
+text color.
+
+Touch action sheets may use 20px icons with a 12px gap to match their larger
+row height and tap targets.
+
+App-specific context menus and action popovers use the app accent for their
+highlighted item. Notes uses `#FFE390` with dark text in light mode and
+`#9D7D28` with white text in dark mode.
+
 ## Navigation Bar
 
 Standard nav bar pattern for app windows. Use `select-none` to prevent text selection when dragging the window:
@@ -139,7 +156,7 @@ Standard nav bar pattern for app windows. Use `select-none` to prevent text sele
 </div>
 ```
 
-The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging.
+The nav bar acts as the window drag handle on desktop - `select-none` prevents accidental text selection while dragging. `WindowNavShell` marks that drag surface for the shared window manager, so double-clicking neutral title-bar space fills the area between the menu bar and Dock; double-clicking again restores the prior frame. Nested controls are excluded automatically, so do not add per-app double-click handlers.
 
 ### Hover States
 
@@ -157,6 +174,13 @@ Use shared nav primitives instead of hand-rolling spacing and drag behavior:
 - `WindowNavShell` (`components/window-nav-shell.tsx`): slot-based nav row (`left`, optional `center`, `right`) with consistent sticky spacing and mobile/desktop backgrounds.
 - `WindowNavSpacer` (`components/window-nav-shell.tsx`): standard invisible right-side spacer that balances traffic-light controls.
 - `useWindowNavBehavior` (`lib/use-window-nav-behavior.ts`): shared shell/close/minimize/maximize/drag behavior.
+
+Photos uses an app-specific fixed header frame in
+`components/apps/photos/header.tsx`. Every Photos top bar—including the
+sidebar toolbar, grid, viewer, and restored-viewer loading state—must reserve
+the shared 69px height. Keep subtitle and border space mounted when their
+content is hidden so asynchronous data and scroll-state changes cannot move
+the header contents.
 
 ```tsx
 const nav = useWindowNavBehavior({ isDesktop, isMobile: isMobileView });

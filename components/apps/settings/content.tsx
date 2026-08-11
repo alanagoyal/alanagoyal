@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Paintbrush, Bluetooth, Wifi, Moon, PanelTop } from "lucide-react";
+import { Settings, Paintbrush, Bluetooth, Wifi, Moon, PanelTop, ImageIcon } from "lucide-react";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { GeneralPanel } from "./panels/general";
 import { AboutPanel } from "./panels/about";
@@ -11,6 +11,7 @@ import { WifiPanel } from "./panels/wifi";
 import { StoragePanel } from "./panels/storage";
 import { FocusPanel } from "./panels/focus";
 import { MenuBarPanel } from "./panels/menu-bar";
+import { WallpaperPanel } from "./panels/wallpaper";
 import { cn } from "@/lib/utils";
 
 interface ContentProps {
@@ -39,6 +40,12 @@ const categoryInfo: Record<
     title: "Appearance",
     description: "Customize the look and feel of your Mac.",
     iconBg: "bg-blue-500",
+  },
+  wallpaper: {
+    icon: <ImageIcon className="w-8 h-8" />,
+    title: "Wallpaper",
+    description: "Choose a theme wallpaper or use a photo from your library.",
+    iconBg: "bg-gradient-to-b from-cyan-400 to-blue-500",
   },
   wifi: {
     icon: <Wifi className="w-8 h-8" />,
@@ -119,6 +126,14 @@ export function Content({
     return (
       <div className="flex-1 overflow-y-auto bg-background">
         <MenuBarPanel />
+      </div>
+    );
+  }
+
+  if (selectedCategory === "wallpaper") {
+    return (
+      <div className={cn("flex-1 overflow-y-auto", isMobile ? "bg-muted/30" : "bg-background")}>
+        <WallpaperPanel isMobile={isMobile} />
       </div>
     );
   }
