@@ -37,6 +37,7 @@ import {
   loadPhotoMetadata,
 } from "@/lib/photos/photo-metadata";
 import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
+import { PhotosHeader } from "./header";
 import {
   createPhotoWheelGestureState,
   handlePhotoWheelGesture,
@@ -664,11 +665,9 @@ export function PhotoViewer({
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header - matches PhotosGrid header style */}
-      <div
-        className={cn(
-          "relative px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
-          isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
-        )}
+      <PhotosHeader
+        isMobileView={isMobileView}
+        className="justify-between"
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
       >
         {/* Back button */}
@@ -879,7 +878,7 @@ export function PhotoViewer({
             />
           </button>
         </div>
-      </div>
+      </PhotosHeader>
 
       <div
         ref={mobileScrollRef}

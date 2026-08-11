@@ -158,6 +158,13 @@ Use shared nav primitives instead of hand-rolling spacing and drag behavior:
 - `WindowNavSpacer` (`components/window-nav-shell.tsx`): standard invisible right-side spacer that balances traffic-light controls.
 - `useWindowNavBehavior` (`lib/use-window-nav-behavior.ts`): shared shell/close/minimize/maximize/drag behavior.
 
+Photos uses an app-specific fixed header frame in
+`components/apps/photos/header.tsx`. Every Photos top bar—including the
+sidebar toolbar, grid, viewer, and restored-viewer loading state—must reserve
+the shared 69px height. Keep subtitle and border space mounted when their
+content is hidden so asynchronous data and scroll-state changes cannot move
+the header contents.
+
 ```tsx
 const nav = useWindowNavBehavior({ isDesktop, isMobile: isMobileView });
 
