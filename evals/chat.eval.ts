@@ -535,7 +535,7 @@ async function runEval() {
         state.lastSpeaker
       );
 
-      hooks.meta({
+      Object.assign(hooks.metadata, {
         caseId: input.caseId,
         lastSpeaker: state.lastSpeaker,
         messagesSinceHuman: state.messagesSinceHuman,
