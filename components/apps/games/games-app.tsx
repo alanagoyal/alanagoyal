@@ -561,7 +561,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
 
       {screen === "setup" && (
         <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
-          <div className="w-full max-w-[500px]">
+          <div className="w-full max-w-[500px] pb-32">
             <div className="mb-7 text-center">
               <ChessTileIcon className="mx-auto h-20 w-20" />
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
