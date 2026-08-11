@@ -115,7 +115,7 @@ export const APPS: AppConfig[] = [
     accentColor: "#5856D6",
     defaultPosition: { x: 260, y: 90 },
     defaultSize: { width: 680, height: 560 },
-    minSize: { width: 480, height: 480 },
+    minSize: { width: 480, height: 560 },
     menuBarTitle: "Games",
     mobile: {
       supported: false,

@@ -567,7 +567,10 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
             </div>
             <div className="grid grid-cols-2 items-start gap-3">
-              <div className="rounded-2xl border border-muted-foreground/20 bg-background shadow-sm">
+              <div className={cn(
+                "relative border border-muted-foreground/20 bg-background shadow-sm",
+                computerOptionsOpen ? "rounded-t-2xl" : "rounded-2xl",
+              )}>
                 <button
                   onClick={() => {
                     setVisitorOptionsOpen(false);
@@ -580,7 +583,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                   <p className="mt-1 text-sm leading-snug text-muted-foreground">Play privately on this device.</p>
                 </button>
                 {computerOptionsOpen && (
-                  <div className="border-t border-muted-foreground/20 p-3">
+                  <div className="absolute left-[-1px] right-[-1px] top-full z-10 rounded-b-2xl border-x border-b border-muted-foreground/20 bg-background p-3 shadow-sm">
                     <p className="mb-2 text-xs font-medium text-muted-foreground">Difficulty</p>
                     <div className="grid grid-cols-3 rounded-lg bg-muted p-0.5" role="group" aria-label="Computer difficulty">
                       {DIFFICULTIES.map((level) => (
@@ -608,7 +611,10 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                   </div>
                 )}
               </div>
-              <div className="rounded-2xl border border-muted-foreground/20 bg-background shadow-sm">
+              <div className={cn(
+                "relative border border-muted-foreground/20 bg-background shadow-sm",
+                visitorOptionsOpen ? "rounded-t-2xl" : "rounded-2xl",
+              )}>
                 <button
                   onClick={() => {
                     setComputerOptionsOpen(false);
@@ -630,7 +636,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                 </button>
                 {visitorOptionsOpen && (
                   <form
-                    className="border-t border-muted-foreground/20 p-3"
+                    className="absolute left-[-1px] right-[-1px] top-full z-10 rounded-b-2xl border-x border-b border-muted-foreground/20 bg-background p-3 shadow-sm"
                     onSubmit={(event) => {
                       event.preventDefault();
                       void findPlayer();
