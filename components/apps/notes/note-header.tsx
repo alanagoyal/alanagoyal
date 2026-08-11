@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { Lock } from "lucide-react";
+import { Check, Link2, Lock, Share } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,30 +18,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Link2 } from "lucide-react";
 
 const TIMESTAMP_PLACEHOLDER = "September 30, 2026 at 11:59 PM";
 const PRIVATE_BADGE_CLASS =
   "text-xs justify-center items-center bg-muted-foreground/70 can-hover:hover:bg-muted-foreground/70 text-white/90";
-
-function ShareIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3v12" />
-      <path d="m7.75 7.25 4.25-4.25 4.25 4.25" />
-      <path d="M8.25 10H6.5A2.5 2.5 0 0 0 4 12.5v6A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5v-6a2.5 2.5 0 0 0-2.5-2.5h-1.75" />
-    </svg>
-  );
-}
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -228,24 +208,100 @@ export default function NoteHeader({
 
   const isMobileView = isMobile === true;
   const showBackButton = Boolean(onBack) || (isMobileView && pathname !== "/notes");
+  const backControl = showBackButton ? (
+    onBack ? (
+      <button onClick={onBack} className="flex h-10 items-center">
+        <Icons.back />
+        <span className="ml-1 text-base text-[#e2a727]">Notes</span>
+      </button>
+    ) : (
+      <Link href="/notes" className="flex h-10 items-center">
+        <Icons.back />
+        <span className="ml-1 text-base text-[#e2a727]">Notes</span>
+      </Link>
+    )
+  ) : null;
+  const shareControl = note.public ? (
+    <div className="relative z-20">
+      <Popover open={shareOpen} onOpenChange={setShareOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Share ${note.title}`}
+            aria-haspopup="menu"
+            aria-expanded={shareOpen}
+            onMouseDown={(event) => event.stopPropagation()}
+            className={`flex items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E2A727] ${
+              shareOpen
+                ? "bg-foreground/10"
+                : "can-hover:hover:bg-foreground/10"
+            } ${
+              copyStatus === "copied" ? "text-green-600" : "text-[#E2A727]"
+            } ${isMobileView ? "h-10 w-10" : "h-7 w-7"}`}
+          >
+            {copyStatus === "copied" ? (
+              <Check className="h-5 w-5" aria-hidden />
+            ) : (
+              <Share className="h-5 w-5" aria-hidden />
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          sideOffset={6}
+          className="w-44 rounded-xl border border-black/10 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95"
+        >
+          <div role="menu" aria-label={`Share ${note.title}`}>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => void handleCopyLink()}
+              className="flex w-full items-center gap-2 rounded-[5px] px-2 py-1.5 text-left text-[13px] leading-5 outline-none transition-colors can-hover:hover:bg-[#FFE390] can-hover:hover:text-black focus-visible:bg-[#FFE390] focus-visible:text-black focus-visible:outline-none dark:can-hover:hover:bg-[#9D7D28] dark:can-hover:hover:text-white dark:focus-visible:bg-[#9D7D28] dark:focus-visible:text-white"
+            >
+              {copyStatus === "copied" ? (
+                <Check
+                  className="h-4 w-4 shrink-0 text-green-600"
+                  strokeWidth={1.8}
+                  aria-hidden
+                />
+              ) : (
+                <Link2
+                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                  strokeWidth={1.8}
+                  aria-hidden
+                />
+              )}
+              <span>
+                {copyStatus === "copied"
+                  ? "Copied"
+                  : copyStatus === "failed"
+                    ? "Copy failed"
+                    : "Copy Link"}
+              </span>
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
+      {copyStatus !== "idle" && (
+        <span
+          role="status"
+          className="absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-muted-foreground/15 bg-background/95 px-2 py-1 text-xs font-medium shadow-md backdrop-blur-xl"
+        >
+          {copyStatus === "copied" ? "Link copied" : "Couldn’t copy link"}
+        </span>
+      )}
+    </div>
+  ) : null;
 
   return (
     <>
-      {showBackButton && (
-        onBack ? (
-          <button onClick={onBack} className="pt-2 flex items-center">
-            <Icons.back />
-            <span className="text-[#e2a727] text-base ml-1">Notes</span>
-          </button>
-        ) : (
-          <Link href="/notes">
-            <button className="pt-2 flex items-center">
-              <Icons.back />
-              <span className="text-[#e2a727] text-base ml-1">Notes</span>
-            </button>
-          </Link>
-        )
+      {isMobileView && (backControl || shareControl) && (
+        <div className="flex items-center justify-between px-2 pt-2">
+          {backControl ?? <span className="h-10 w-10" aria-hidden />}
+          {shareControl}
+        </div>
       )}
+      {!isMobileView && backControl}
       <div className="px-2 mb-4 relative">
         <div className="relative flex min-h-6 items-center justify-center">
           {!note.public && isMobileView && (
@@ -272,59 +328,10 @@ export default function NoteHeader({
               </Badge>
             </div>
           )}
-          {note.public && (
-            <>
-              <Popover open={shareOpen} onOpenChange={setShareOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={`Share ${note.title}`}
-                    onMouseDown={(event) => event.stopPropagation()}
-                    className={`absolute right-0 z-20 flex items-center justify-center rounded-md outline-none transition-colors active:bg-muted focus-visible:ring-2 focus-visible:ring-[#E2A727] can-hover:hover:bg-muted ${
-                      copyStatus === "copied" ? "text-green-600" : "text-[#E2A727]"
-                    } ${isMobileView ? "h-9 w-9" : "h-7 w-7"}`}
-                  >
-                    {copyStatus === "copied" ? (
-                      <Check className={isMobileView ? "h-6 w-6" : "h-5 w-5"} aria-hidden />
-                    ) : (
-                      <ShareIcon className={isMobileView ? "h-6 w-6" : "h-5 w-5"} />
-                    )}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  sideOffset={6}
-                  className="w-44 rounded-lg border-muted-foreground/20 bg-background/95 p-1 shadow-xl backdrop-blur-xl"
-                >
-                  <button
-                    type="button"
-                    onClick={() => void handleCopyLink()}
-                    className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm outline-none active:bg-muted focus-visible:bg-muted can-hover:hover:bg-muted"
-                  >
-                    {copyStatus === "copied" ? (
-                      <Check className="h-4 w-4 text-green-600" aria-hidden />
-                    ) : (
-                      <Link2 className="h-4 w-4 text-muted-foreground" aria-hidden />
-                    )}
-                    <span>
-                      {copyStatus === "copied"
-                        ? "Copied"
-                        : copyStatus === "failed"
-                          ? "Copy failed"
-                          : "Copy Link"}
-                    </span>
-                  </button>
-                </PopoverContent>
-              </Popover>
-              {copyStatus !== "idle" && (
-                <span
-                  role="status"
-                  className="absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-muted-foreground/15 bg-background/95 px-2 py-1 text-xs font-medium shadow-md backdrop-blur-xl"
-                >
-                  {copyStatus === "copied" ? "Link copied" : "Couldn’t copy link"}
-                </span>
-              )}
-            </>
+          {!isMobileView && shareControl && (
+            <div className="absolute right-0 top-1/2 z-20 -translate-y-1/2">
+              {shareControl}
+            </div>
           )}
         </div>
         <div className="flex items-center relative">
