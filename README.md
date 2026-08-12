@@ -94,10 +94,29 @@ a macos sierra 10.12 themed desktop with:
 
 ### mobile
 
-responsive mobile interface with:
+mobile support is intentionally app-specific. supported apps render as
+touch-optimized, full-screen experiences; every unsupported app route redirects
+to `/notes` on mobile. Unsupported apps are desktop-only components and do not
+retain separate mobile presenters.
+
+| app | in Dock by default | mobile support | mobile route behavior |
+|-----|--------------------|----------------|-----------------------|
+| Finder | yes | no | redirects to `/notes` |
+| Notes | yes | yes | opens Notes |
+| Messages | yes | yes | opens Messages |
+| Photos | yes | yes | opens Photos |
+| Music | yes | yes | opens Music |
+| Calendar | yes | yes | opens Calendar |
+| Weather | no | no | redirects to `/notes` |
+| iTerm | yes | no | redirects to `/notes` |
+| Settings | yes | no | redirects to `/notes` |
+| TextEdit | no | no | redirects to `/notes` |
+| Preview | no | no | redirects to `/notes` |
+
+supported mobile apps include:
 - swipe gestures for navigation
 - touch-optimized controls
-- full app functionality
+- app-specific full-screen layouts
 
 ## how it works
 

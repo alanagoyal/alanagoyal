@@ -12,6 +12,7 @@ This note captures how file-backed document apps launch through Finder in the de
 - Finder opens text files in `TextEdit` windows, and those windows persist edited file contents by file path.
 - On desktop, TextEdit's File menu supports New, Open, Close, Save, Duplicate, and Rename. New and duplicated documents are durable local documents in Finder's `Documents` folder; Open launches a dedicated Finder picker; Rename updates the Finder-visible path without mutating GitHub project files.
 - TextEdit caches edits as they are typed so closing a window does not lose work. Save explicitly commits the current modified date and clears the window's `Edited` status.
+- On mobile, all TextEdit routes redirect to `/notes`; the Finder-picker behavior above is desktop-only.
 
 ### Preview
 
@@ -19,6 +20,7 @@ This note captures how file-backed document apps launch through Finder in the de
 - Navigating to `/preview` without a valid `file` query routes into the same Finder-picker flow as launching Preview from Finder.
 - Choosing `Preview` from Finder's Applications view focuses the topmost open Preview document window if one exists; otherwise it opens a centered, slightly smaller Finder window at `Desktop`.
 - Finder opens images and PDFs in `Preview` windows, each backed by a real file path.
+- On mobile, all Preview routes redirect to `/notes`; the Finder-picker behavior above is desktop-only.
 
 ## Why This Split Exists
 
@@ -52,4 +54,4 @@ Run `npm run build`, then verify:
 12. In TextEdit, use File → New and confirm an `Untitled.txt` document opens and appears in Finder's Documents folder.
 13. Use File → Duplicate and Rename, then confirm the copied content, updated title, and Finder-visible file name persist after closing and reopening the document.
 14. Edit a document and confirm the title shows `Edited`; use File → Save and confirm the marker clears before using File → Close.
-15. In an iPhone viewport with touch/coarse-pointer emulation, confirm `/textedit` still routes to Finder and TextEdit remains absent from Applications.
+15. With an iPhone user agent, confirm `/textedit`, `/textedit/<nested>`, `/preview`, and `/preview/<nested>` redirect to `/notes` while the same routes preserve their existing desktop behavior.

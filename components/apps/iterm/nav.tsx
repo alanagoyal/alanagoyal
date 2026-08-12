@@ -5,17 +5,16 @@ import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 
 interface NavProps {
-  isMobile: boolean;
   isDesktop?: boolean;
   sessionTitle: string;
 }
 
-export function Nav({ isMobile, isDesktop = false, sessionTitle }: NavProps) {
-  const nav = useWindowNavBehavior({ isDesktop, isMobile });
+export function Nav({ isDesktop = false, sessionTitle }: NavProps) {
+  const nav = useWindowNavBehavior({ isDesktop, isMobile: false });
 
   return (
     <WindowNavShell
-      isMobile={isMobile}
+      isMobile={false}
       onMouseDown={nav.onDragStart}
       className="min-w-0"
       left={
@@ -46,7 +45,7 @@ export function Nav({ isMobile, isDesktop = false, sessionTitle }: NavProps) {
         </span>
       }
       centerClassName="px-3"
-      right={<WindowNavSpacer isMobile={isMobile} />}
+      right={<WindowNavSpacer isMobile={false} />}
     />
   );
 }

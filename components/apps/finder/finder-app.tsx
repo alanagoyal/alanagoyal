@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
-import { FinderNav, FinderSidebarMobileNav } from "./nav";
+import { FinderNav } from "./nav";
 import { APPS } from "@/lib/app-config";
 import {
   HOME_DIR,
@@ -69,7 +69,6 @@ const TRASH_FILES: FileItem[] = [
 ];
 
 interface FinderAppProps {
-  isMobile?: boolean;
   inShell?: boolean;
   viewMode?: FinderViewMode;
   onViewModeChange?: (mode: FinderViewMode) => void;
@@ -197,7 +196,6 @@ function SidebarIcon({ icon, className }: { icon: string; className?: string }) 
 }
 
 export function FinderApp({
-  isMobile = false,
   inShell = false,
   viewMode: controlledViewMode,
   onViewModeChange,
@@ -240,7 +238,7 @@ export function FinderApp({
     return "recents";
   };
 
-  // Get initial path - desktop shell windows are path-driven, mobile/standalone can still use persisted Finder state.
+  // Desktop shell windows are path-driven; standalone Finder keeps its persisted path.
   const getInitialPath = (): string => {
     if (initialPath) return initialPath;
     if (!inShell) {
@@ -257,7 +255,6 @@ export function FinderApp({
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
-  const [showSidebar, setShowSidebar] = useState(true); // For mobile
   const [standaloneViewMode, setStandaloneViewMode] = useState<FinderViewMode>("list");
   const viewMode = controlledViewMode ?? standaloneViewMode;
   const setViewMode = useCallback((mode: FinderViewMode) => {
@@ -295,11 +292,7 @@ export function FinderApp({
   }, []);
 
   const canGoForward = historyIndex < pathHistory.length - 1;
-  const finderContext = isMobile ? "mobile" : "desktop";
-  const finderVisibleApps = useMemo(
-    () => getFinderVisibleApps(finderContext),
-    [finderContext]
-  );
+  const finderVisibleApps = useMemo(() => getFinderVisibleApps("desktop"), []);
 
   const handleForward = useCallback(() => {
     if (!canGoForward) return;
@@ -421,7 +414,7 @@ export function FinderApp({
     return () => window.removeEventListener(TEXTEDIT_DOCUMENTS_CHANGED_EVENT, handleTextEditDocumentsChanged);
   }, [loadFiles]);
 
-  // Desktop windows sync path back into window metadata; standalone/mobile Finder keeps the legacy session path.
+  // Desktop windows sync path back into window metadata; standalone Finder keeps the legacy session path.
   useEffect(() => {
     if (lastReportedPathRef.current !== currentPath) {
       onPathChange?.(currentPath);
@@ -654,10 +647,7 @@ export function FinderApp({
     setSelectedSidebar(item);
     setCurrentPath(getPathForSidebarItem(item));
     setSelectedFile(null);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
-  }, [getPathForSidebarItem, isMobile, setCurrentPath]);
+  }, [getPathForSidebarItem, setCurrentPath]);
 
   // Handle file/folder click
   const handleFileClick = useCallback((file: FileItem) => {
@@ -677,7 +667,7 @@ export function FinderApp({
         // Use window manager callback (desktop shell)
         onOpenApp(appId);
       } else {
-        // Fallback to soft navigation (mobile or standalone)
+        // Fallback to soft navigation for standalone Finder.
         router.push(file.path);
       }
     } else if (file.type === "file") {
@@ -745,7 +735,6 @@ export function FinderApp({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (windowFocus && !windowFocus.isFocused) return;
-      if (isMobile) return;
       const target = e.target as HTMLElement | null;
       const isTypingTarget =
         target?.tagName === "INPUT" ||
@@ -800,7 +789,7 @@ export function FinderApp({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [windowFocus, isMobile, searchActive, searchQuery, computedSearchResults, searchHighlightIndex, openSearchResult]);
+  }, [windowFocus, searchActive, searchQuery, computedSearchResults, searchHighlightIndex, openSearchResult]);
 
   useEffect(() => {
     if (!searchActive || computedSearchResults.length === 0 || searchHighlightIndex < 0) return;
@@ -814,24 +803,13 @@ export function FinderApp({
   }, [searchHighlightIndex, searchActive, computedSearchResults.length, viewMode]);
 
   const handleBack = useCallback(() => {
-    if (isMobile && !showSidebar) {
-      const parentPath = currentPath.split("/").slice(0, -1).join("/");
-      const sidebarPath = getPathForSidebarItem(selectedSidebar);
-      if (currentPath !== sidebarPath && (parentPath.startsWith(HOME_DIR) || currentPath.startsWith("trash/"))) {
-        setCurrentPath(parentPath || "trash");
-      } else {
-        setShowSidebar(true);
-      }
-      return;
-    }
-
     if (historyIndex > 0) {
       const prevIndex = historyIndex - 1;
       setHistoryIndex(prevIndex);
       setCurrentPathRaw(pathHistory[prevIndex]);
       setSelectedSidebar(getSidebarForPath(pathHistory[prevIndex]));
     }
-  }, [currentPath, isMobile, showSidebar, selectedSidebar, getPathForSidebarItem, historyIndex, pathHistory, setCurrentPath]);
+  }, [historyIndex, pathHistory]);
 
   // Get breadcrumb parts
   const getBreadcrumbs = useCallback(() => {
@@ -854,87 +832,8 @@ export function FinderApp({
     return historyIndex > 0;
   }, [historyIndex]);
 
-  // Render mobile sidebar nav (traffic lights only, like Settings SidebarNav)
-  const renderMobileSidebarNav = () => <FinderSidebarMobileNav />;
-
-  // Render mobile content nav (back button + title, like Settings Nav)
-  const renderMobileContentNav = (title: string, backTitle: string) => (
-    <div className="flex items-center justify-between px-4 relative min-h-24 py-2 select-none bg-background">
-      {/* Back button */}
-      <div className="absolute left-2 top-1/2 -translate-y-1/2">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors"
-        >
-          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          <span className="text-base">{backTitle}</span>
-        </button>
-      </div>
-      {/* Centered title */}
-      <span className="text-base font-semibold w-full text-center">
-        {title}
-      </span>
-    </div>
-  );
-
-  // Get the back title for mobile navigation
-  const getMobileBackTitle = () => {
-    // Handle trash subdirectories
-    if (currentPath.startsWith("trash/")) {
-      const parentPath = currentPath.split("/").slice(0, -1).join("/");
-      if (parentPath === "trash") {
-        return "Trash";
-      }
-      return currentPath.split("/").slice(-2, -1)[0] || "Back";
-    }
-
-    // If we're in a nested folder within a sidebar section, show parent folder name
-    const sidebarPath = getPathForSidebarItem(selectedSidebar);
-    if (currentPath !== sidebarPath && currentPath.startsWith(HOME_DIR)) {
-      const parentPath = currentPath.split("/").slice(0, -1).join("/");
-      if (parentPath === sidebarPath || parentPath === PROJECTS_DIR) {
-        // Going back to the sidebar section
-        return SIDEBAR_ITEMS.find(item => item.id === selectedSidebar)?.label || "Browse";
-      }
-      // Going back to parent folder
-      return currentPath.split("/").slice(-2, -1)[0] || "Back";
-    }
-    return "Browse";
-  };
-
   // Render sidebar
   const renderSidebar = () => {
-    // Mobile sidebar - iOS Files style with cards
-    if (isMobile) {
-      return (
-        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-8 bg-background">
-          <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
-            {SIDEBAR_ITEMS.map((item, index) => (
-              <button
-                key={item.id}
-                onClick={() => handleSidebarSelect(item.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-3 text-base transition-colors can-hover:hover:bg-zinc-50 dark:can-hover:hover:bg-zinc-700",
-                  index < SIDEBAR_ITEMS.length - 1 && "border-b border-zinc-200 dark:border-zinc-700"
-                )}
-              >
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500">
-                  <SidebarIcon icon={item.icon} className="w-5 h-5 text-white" />
-                </span>
-                <span className="flex-1 text-left text-zinc-900 dark:text-white">{item.label}</span>
-                <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Desktop sidebar
     return (
       <div className="flex flex-col w-48 border-r border-zinc-200 dark:border-zinc-700 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-xl">
         <div className="flex-1 overflow-y-auto py-2">
@@ -1095,29 +994,6 @@ export function FinderApp({
           <div className="h-3 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${40 + (i * 13) % 30}px` }} />
         </div>
       ))}
-    </div>
-  );
-
-  // Skeleton loading for mobile list view
-  const renderMobileListSkeleton = () => (
-    <div className="px-4 pt-2 pb-8 animate-pulse">
-      <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex items-center gap-3 px-3 py-3",
-              i < 5 && "border-b border-zinc-200 dark:border-zinc-700"
-            )}
-          >
-            <div className="w-10 h-10 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${100 + (i * 23) % 60}px` }} />
-              <div className="h-3 w-12 rounded bg-zinc-200 dark:bg-zinc-700" />
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 
@@ -1329,53 +1205,6 @@ export function FinderApp({
       </div>
     );
   };
-
-  // Render file list (mobile)
-  const renderFileList = () => (
-    <div className="px-4 pt-2 pb-8">
-      <div className="rounded-xl bg-white dark:bg-zinc-800 overflow-hidden">
-        {files.map((file, index) => {
-          const isNavigable = file.type === "dir" || file.type === "app";
-          return (
-            <button
-              key={file.path}
-              onClick={() => {
-                handleFileClick(file);
-                if (isNavigable) {
-                  handleFileDoubleClick(file);
-                }
-              }}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 text-left",
-                isNavigable && "transition-colors can-hover:hover:bg-zinc-50 dark:can-hover:hover:bg-zinc-700",
-                index < files.length - 1 && "border-b border-zinc-200 dark:border-zinc-700"
-              )}
-            >
-              <FileIcon type={file.type} name={file.name} icon={file.icon} className="w-10 h-10 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-base text-zinc-900 dark:text-white truncate">
-                  {file.displayName || file.name}
-                </div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {file.type === "dir" ? "Folder" : file.type === "app" ? "Application" : "File"}
-                </div>
-              </div>
-              {isNavigable && (
-                <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      {files.length === 0 && !loading && (
-        <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
-          This folder is empty
-        </div>
-      )}
-    </div>
-  );
 
   const getLocationLabel = (path: string): string => {
     if (path.startsWith(PROJECTS_DIR + "/")) {
@@ -1641,32 +1470,6 @@ export function FinderApp({
     />
   );
 
-  // Mobile view
-  if (isMobile) {
-    return (
-      <div
-        ref={containerRef}
-        className="flex flex-col h-dvh w-full bg-background"
-        data-app="finder"
-      >
-        {showSidebar ? (
-          <>
-            {renderMobileSidebarNav()}
-            {renderSidebar()}
-          </>
-        ) : (
-          <>
-            {renderMobileContentNav(getBreadcrumbs().slice(-1)[0], getMobileBackTitle())}
-            <div className="flex-1 overflow-y-auto">
-              {loading ? renderMobileListSkeleton() : renderFileList()}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  // Desktop view
   return (
     <div
       ref={containerRef}
@@ -1677,7 +1480,7 @@ export function FinderApp({
       <div className="relative flex flex-1 min-h-0">
         {renderSidebar()}
         <div className="flex-1 flex flex-col min-w-0">
-          {searchActive && searchQuery && !isMobile && renderScopeBar()}
+          {searchActive && searchQuery && renderScopeBar()}
           <div
             className={cn(
               "flex-1",
