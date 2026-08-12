@@ -12,6 +12,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 600 },
     minSize: { width: 600, height: 400 },
     menuBarTitle: "Finder",
+    dockOrder: 0,
     mobile: {
       supported: false,
       shellFallbackAppId: "notes",
@@ -134,6 +135,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 980, height: 650 },
     minSize: { width: 560, height: 560 },
     menuBarTitle: "Games",
+    dockOrder: 1,
     dockIconScale: 0.94,
     mobile: {
       supported: false,
@@ -210,4 +212,18 @@ export function getAppById(id: string): AppConfig | undefined {
 
 export function getAppIds(): string[] {
   return APPS.map((app) => app.id);
+}
+
+export function getAppsInDockOrder(): AppConfig[] {
+  return APPS
+    .map((app, registryIndex) => ({ app, registryIndex }))
+    .sort((left, right) => {
+      const leftOrder = left.app.dockOrder;
+      const rightOrder = right.app.dockOrder;
+      if (leftOrder !== undefined && rightOrder !== undefined) return leftOrder - rightOrder;
+      if (leftOrder !== undefined) return -1;
+      if (rightOrder !== undefined) return 1;
+      return left.registryIndex - right.registryIndex;
+    })
+    .map(({ app }) => app);
 }
