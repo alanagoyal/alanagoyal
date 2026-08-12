@@ -650,6 +650,7 @@ export function Dock({
                     width={metrics.icon}
                     height={metrics.icon}
                     className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
+                    style={{ transform: `scale(${app.dockIconScale ?? 1})` }}
                     draggable={false}
                     unoptimized
                   />

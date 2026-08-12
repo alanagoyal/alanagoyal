@@ -134,6 +134,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 980, height: 650 },
     minSize: { width: 560, height: 560 },
     menuBarTitle: "Games",
+    dockIconScale: 0.94,
     mobile: {
       supported: false,
       shellFallbackAppId: "notes",
