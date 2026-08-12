@@ -70,7 +70,9 @@ a macos sierra 10.12 themed desktop with:
 - keyboard navigation (arrow keys, escape to close)
 - upload via ios shortcut with ai auto-categorization
 
-**games** - a native games launcher with chess
+**games** - an Apple Games-inspired library with six playable games
+- library layout with search, sorting, play history, and app-style game artwork
+- snake, 2048, minesweeper, memory match, and breakout run entirely on-device
 - local computer play with easy, medium, and hard opponents
 - anonymous visitor matchmaking with temporary display names, reconnect, and expiry handling
 - live waiting-player badge in the dock

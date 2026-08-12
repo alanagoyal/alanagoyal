@@ -1,9 +1,10 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { ChevronLeft, LoaderCircle, RotateCcw, Wifi, WifiOff } from "lucide-react";
-import Image from "next/image";
+import { ChevronLeft, LoaderCircle, RotateCcw, Search, SlidersHorizontal, Wifi, WifiOff, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GameTileIcon, type LibraryGameId } from "@/components/apps/games/game-icons";
+import { BreakoutGame, MemoryGame, MinesweeperGame, SnakeGame, TwentyFortyEightGame } from "@/components/apps/games/solo-games";
 import { WindowControls } from "@/components/window-controls";
 import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
 import { gamesApi, type WaitingPlayer } from "@/lib/games/api";
@@ -26,7 +27,7 @@ import {
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { cn } from "@/lib/utils";
 
-type Screen = "games" | "setup" | "waiting" | "chess";
+type Screen = "library" | "setup" | "waiting" | LibraryGameId;
 type PlayKind = "computer" | "online";
 type ChessSound = "capture" | "move-self" | "notify";
 
@@ -62,18 +63,30 @@ function formatCountdownTime(elapsedMilliseconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-function ChessTileIcon({ className }: { className?: string }) {
-  return (
-    <Image
-      src="/chess.png"
-      alt=""
-      width={160}
-      height={160}
-      aria-hidden="true"
-      className={cn("aspect-square rounded-[22%] object-cover shadow-[0_6px_16px_rgba(15,23,42,.24)] ring-1 ring-black/10", className)}
-      unoptimized
-    />
-  );
+const LIBRARY_GAMES: Array<{ id: LibraryGameId; name: string; description: string }> = [
+  { id: "chess", name: "Chess", description: "Computer & online play" },
+  { id: "snake", name: "Snake", description: "Classic arcade" },
+  { id: "2048", name: "2048", description: "Number puzzle" },
+  { id: "minesweeper", name: "Minesweeper", description: "Logic puzzle" },
+  { id: "memory", name: "Memory Match", description: "Card matching" },
+  { id: "breakout", name: "Breakout", description: "Classic arcade" },
+];
+
+const LAST_PLAYED_KEY = "games-library-last-played-v1";
+
+function loadLastPlayed() {
+  if (typeof window === "undefined") return {} as Partial<Record<LibraryGameId, number>>;
+  try { return JSON.parse(window.localStorage.getItem(LAST_PLAYED_KEY) ?? "{}") as Partial<Record<LibraryGameId, number>>; }
+  catch { return {}; }
+}
+
+function relativePlayedAt(timestamp?: number) {
+  if (!timestamp) return "Added today";
+  const elapsed = Date.now() - timestamp;
+  if (elapsed < 60_000) return "Played just now";
+  if (elapsed < 3_600_000) return `Played ${Math.max(1, Math.floor(elapsed / 60_000))}m ago`;
+  if (elapsed < 86_400_000) return `Played ${Math.max(1, Math.floor(elapsed / 3_600_000))}h ago`;
+  return `Played ${Math.max(1, Math.floor(elapsed / 86_400_000))}d ago`;
 }
 
 function statusText(game: Chess, playerColor: "w" | "b", thinking: boolean) {
@@ -165,7 +178,7 @@ function ChessBoard({ fen, orientation, disabled, onMove }: {
 
 export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWaitingBadgeChange }: GamesAppProps) {
   const nav = useWindowNavBehavior({ isDesktop: true, isMobile: false, shellEnabled: true });
-  const [screen, setScreen] = useState<Screen>("games");
+  const [screen, setScreen] = useState<Screen>("library");
   const [kind, setKind] = useState<PlayKind>("computer");
   const [difficulty, setDifficulty] = useState<ChessDifficulty>("medium");
   const [computerOptionsOpen, setComputerOptionsOpen] = useState(false);
@@ -180,6 +193,10 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
   const waitingPlayerName = waitingPlayer.waiting ? waitingPlayer.name : null;
   const [waitingElapsed, setWaitingElapsed] = useState(0);
   const [waitingTimedOut, setWaitingTimedOut] = useState(false);
+  const [librarySearchOpen, setLibrarySearchOpen] = useState(false);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
+  const [lastPlayed, setLastPlayed] = useState<Partial<Record<LibraryGameId, number>>>({});
   const workerRef = useRef<Worker | null>(null);
   const computerMoveTimerRef = useRef<number | null>(null);
   const waitingStartedAtRef = useRef<number | null>(null);
@@ -214,6 +231,17 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     }).catch(() => undefined);
     return () => { cancelled = true; };
   }, [onWaitingBadgeChange]);
+
+  useEffect(() => { setLastPlayed(loadLastPlayed()); }, []);
+
+  const openLibraryGame = (gameId: LibraryGameId) => {
+    const nextPlayed = { ...lastPlayed, [gameId]: Date.now() };
+    setLastPlayed(nextPlayed);
+    window.localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(nextPlayed));
+    setLibrarySearchOpen(false);
+    setLibrarySearch("");
+    setScreen(gameId === "chess" ? "setup" : gameId);
+  };
   const cancelComputerMove = useCallback(() => {
     workerRef.current?.terminate();
     workerRef.current = null;
@@ -424,7 +452,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     }
   };
 
-  const leave = (destination: Screen = "games") => {
+  const leave = (destination: Screen = "library") => {
     cancelComputerMove();
     setThinking(false);
     if (kind === "online" && identity && match) {
@@ -472,6 +500,14 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     }
     void findPlayer();
   };
+  const visibleLibraryGames = useMemo(() => {
+    const query = librarySearch.trim().toLowerCase();
+    return LIBRARY_GAMES
+      .filter((libraryGame) => !query || `${libraryGame.name} ${libraryGame.description}`.toLowerCase().includes(query))
+      .sort((left, right) => sortBy === "name"
+        ? left.name.localeCompare(right.name)
+        : (lastPlayed[right.id] ?? 0) - (lastPlayed[left.id] ?? 0));
+  }, [lastPlayed, librarySearch, sortBy]);
   const navAction = screen === "chess" && gameEnded ? (
     <button
       type="button"
@@ -498,6 +534,16 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
         <Wifi size={16} />
       </span>
     )
+  ) : screen === "library" ? (
+    <button
+      type="button"
+      onClick={() => setLibrarySearchOpen((open) => !open)}
+      onMouseDown={(event) => event.stopPropagation()}
+      className={cn("flex h-8 w-8 items-center justify-center rounded-full transition-colors can-hover:hover:bg-muted", librarySearchOpen && "bg-muted")}
+      aria-label={librarySearchOpen ? "Close search" : "Search games"}
+    >
+      {librarySearchOpen ? <X size={16} /> : <Search size={17} />}
+    </button>
   ) : <WindowNavSpacer isMobile={false} />;
 
   const goBack = () => {
@@ -507,10 +553,10 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     }
     setComputerOptionsOpen(false);
     setVisitorOptionsOpen(false);
-    setScreen("games");
+    setScreen("library");
   };
 
-  const backButton = screen === "games" ? null : (
+  const backButton = screen === "library" ? null : (
     <button
       onClick={goBack}
       onMouseDown={(event) => event.stopPropagation()}
@@ -532,30 +578,56 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
             {backButton}
           </div>
         )}
-        center={screen === "games" ? <p className="truncate text-center text-sm font-semibold">Games</p> : <span />}
+        center={screen === "library" ? (
+          <div className="rounded-full border border-muted-foreground/15 bg-muted/70 p-1 shadow-sm">
+            <span className="block rounded-full bg-muted-foreground/20 px-5 py-1 text-xs font-semibold">Library</span>
+          </div>
+        ) : <p className="truncate text-center text-sm font-semibold">{screen === "setup" || screen === "waiting" || screen === "chess" ? "Chess" : LIBRARY_GAMES.find((libraryGame) => libraryGame.id === screen)?.name}</p>}
         right={navAction}
       />
 
-      {screen === "games" && (
-        <div className="flex flex-1 items-start overflow-auto bg-background p-6">
-          <button
-            onClick={() => setScreen("setup")}
-            className="flex w-[370px] items-center gap-4 rounded-2xl p-3 text-left transition-colors can-hover:hover:bg-muted"
-          >
-            <span className="relative shrink-0">
-              <ChessTileIcon className="h-[88px] w-[88px]" />
-              {waitingPlayerName && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white shadow-sm">1</span>
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xl font-semibold tracking-tight">Chess</p>
-              <p className="mt-1 text-sm leading-snug text-muted-foreground">
-                {waitingPlayerName ? `${waitingPlayerName} is ready to play.` : "Play the computer or another visitor."}
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#0A7CFF]">{waitingPlayerName ? "Join" : "Play"}</p>
+      {screen === "library" && (
+        <div className="min-h-0 flex-1 overflow-auto bg-background px-7 pb-7 pt-6">
+          <div className="mx-auto max-w-[1180px]">
+            {librarySearchOpen && (
+              <div className="relative mx-auto mb-5 max-w-[520px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
+                <input value={librarySearch} onChange={(event) => setLibrarySearch(event.target.value)} autoFocus placeholder="Search your games" className="w-full rounded-xl bg-muted py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-[#0A7CFF]/25" />
+              </div>
+            )}
+            <div className="grid grid-cols-1 gap-4 min-[760px]:grid-cols-2">
+              <div className="flex h-[105px] items-center gap-4 rounded-[22px] bg-[linear-gradient(115deg,#b84f47,#49373e)] px-6 text-white shadow-sm">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-3xl shadow-inner">🕹️</span>
+                <div><p className="font-semibold">Game Library</p><p className="text-sm text-white/70">{LIBRARY_GAMES.length} games ready to play</p></div>
+              </div>
+              <div className="flex h-[105px] items-center gap-4 rounded-[22px] bg-[linear-gradient(115deg,#12647f,#2e3b41)] px-6 text-white shadow-sm">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-3xl shadow-inner">🏆</span>
+                <div><p className="font-semibold">Made for Mac</p><p className="text-sm text-white/70">Keyboard and pointer ready</p></div>
+              </div>
             </div>
-          </button>
+            <div className="mb-4 mt-7 flex items-center justify-between">
+              <h1 className="text-xl font-semibold tracking-tight">Your Games</h1>
+              <button type="button" onClick={() => setSortBy((value) => value === "recent" ? "name" : "recent")} className="flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 text-xs font-medium text-muted-foreground can-hover:hover:text-foreground" title={`Sort by ${sortBy === "recent" ? "name" : "recently played"}`}><SlidersHorizontal size={14} />{sortBy === "recent" ? "Recent" : "Name"}</button>
+            </div>
+            {visibleLibraryGames.length ? (
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 min-[620px]:grid-cols-2 min-[1080px]:grid-cols-3">
+                {visibleLibraryGames.map((libraryGame) => (
+                  <div key={libraryGame.id} className="flex min-w-0 items-center gap-3">
+                    <span className="relative shrink-0">
+                      <GameTileIcon game={libraryGame.id} className="h-[82px] w-[82px]" />
+                      {libraryGame.id === "chess" && waitingPlayerName && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white shadow-sm">1</span>}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold">{libraryGame.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{libraryGame.id === "chess" && waitingPlayerName ? `${waitingPlayerName} is ready` : relativePlayedAt(lastPlayed[libraryGame.id])}</p>
+                      <p className="truncate text-xs text-muted-foreground">{libraryGame.description}</p>
+                      <button type="button" aria-label={`${libraryGame.id === "chess" && waitingPlayerName ? "Join" : "Play"} ${libraryGame.name}`} onClick={() => openLibraryGame(libraryGame.id)} className="mt-2 min-w-[68px] rounded-full bg-muted px-4 py-1 text-xs font-semibold transition-colors can-hover:hover:bg-muted-foreground/20">{libraryGame.id === "chess" && waitingPlayerName ? "Join" : "Play"}</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <div className="py-16 text-center text-sm text-muted-foreground">No games match “{librarySearch}”.</div>}
+          </div>
         </div>
       )}
 
@@ -563,7 +635,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
         <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
           <div className="w-full max-w-[500px] pb-32">
             <div className="mb-7 text-center">
-              <ChessTileIcon className="mx-auto h-20 w-20" />
+              <GameTileIcon game="chess" className="mx-auto h-20 w-20" />
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
             </div>
             <div className="grid grid-cols-2 items-start gap-3">
@@ -737,6 +809,12 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
           </div>
         </div>
       )}
+
+      {screen === "snake" && <SnakeGame />}
+      {screen === "2048" && <TwentyFortyEightGame />}
+      {screen === "minesweeper" && <MinesweeperGame />}
+      {screen === "memory" && <MemoryGame />}
+      {screen === "breakout" && <BreakoutGame />}
     </div>
   );
 }
