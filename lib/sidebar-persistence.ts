@@ -42,6 +42,7 @@ const STORAGE_KEYS = {
   CALENDAR_DATE: "calendar-date",
   CALENDAR_SCROLL: "calendar-scroll",
   MUSIC_STATE: "music-state",
+  MUSIC_SHOW_CONTENT: "music-show-content",
   NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
   WEATHER_SELECTED_CITY: "weather-selected-city",
@@ -451,10 +452,38 @@ export function saveMusicState(view: MusicView, playlistId: string | null): void
   }
 }
 
-export function clearMusicState(): void {
-  if (typeof window === "undefined") return;
+export function loadMusicShowContent(storage?: StorageArea): boolean {
   try {
-    sessionStorage.removeItem(STORAGE_KEYS.MUSIC_STATE);
+    const target =
+      storage ?? (typeof window !== "undefined" ? window.sessionStorage : null);
+    if (!target) return true;
+    return target.getItem(STORAGE_KEYS.MUSIC_SHOW_CONTENT) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function saveMusicShowContent(
+  showContent: boolean,
+  storage?: StorageArea,
+): void {
+  try {
+    const target =
+      storage ?? (typeof window !== "undefined" ? window.sessionStorage : null);
+    if (!target) return;
+    target.setItem(STORAGE_KEYS.MUSIC_SHOW_CONTENT, String(showContent));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearMusicState(storage?: StorageArea): void {
+  try {
+    const target =
+      storage ?? (typeof window !== "undefined" ? window.sessionStorage : null);
+    if (!target) return;
+    target.removeItem(STORAGE_KEYS.MUSIC_STATE);
+    target.removeItem(STORAGE_KEYS.MUSIC_SHOW_CONTENT);
   } catch {
     // Ignore storage errors
   }
