@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WindowNavShell } from "@/components/window-nav-shell";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 
 interface NavProps {
@@ -10,44 +9,13 @@ interface NavProps {
   canGoForward: boolean;
   onBack: () => void;
   onForward: () => void;
-  isMobile: boolean;
   isDesktop?: boolean;
   title?: string;
-  backTitle?: string;
 }
 
-export function Nav({ canGoBack, canGoForward, onBack, onForward, isMobile, isDesktop = false, title, backTitle }: NavProps) {
-  const nav = useWindowNavBehavior({ isDesktop, isMobile });
+export function Nav({ canGoBack, canGoForward, onBack, onForward, isDesktop = false, title }: NavProps) {
+  const nav = useWindowNavBehavior({ isDesktop, isMobile: false });
 
-  // Mobile layout
-  if (isMobile) {
-    return (
-      <WindowNavShell
-        isMobile={true}
-        onMouseDown={nav.onDragStart}
-        left={
-          <button
-            onClick={onBack}
-            onMouseDown={(e) => e.stopPropagation()}
-            disabled={!canGoBack}
-            className={cn(
-              "flex items-center gap-1 rounded-lg px-1 py-1 transition-colors text-[#0A7CFF]",
-              canGoBack ? "can-hover:hover:bg-muted-foreground/10" : "opacity-0 pointer-events-none"
-            )}
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-6 h-6" />
-            {backTitle && <span className="text-sm">{backTitle}</span>}
-          </button>
-        }
-        center={<span className="text-sm font-medium text-foreground truncate">{title || ""}</span>}
-        centerClassName="px-2 text-center"
-        right={<div className="w-[56px] shrink-0" aria-hidden />}
-      />
-    );
-  }
-
-  // Desktop layout: back/forward arrows
   return (
     <div
       className={cn(

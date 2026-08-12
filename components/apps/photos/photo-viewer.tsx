@@ -16,6 +16,7 @@ import {
   Info,
   RotateCcwSquare,
   Share,
+  Wallpaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
@@ -37,6 +38,7 @@ import {
   loadPhotoMetadata,
 } from "@/lib/photos/photo-metadata";
 import type { PhotoMetadata } from "@/lib/photos/photo-metadata";
+import { PhotosHeader } from "./header";
 import {
   createPhotoWheelGestureState,
   handlePhotoWheelGesture,
@@ -664,11 +666,9 @@ export function PhotoViewer({
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header - matches PhotosGrid header style */}
-      <div
-        className={cn(
-          "relative px-4 py-3 flex items-center justify-between border-b dark:border-foreground/20 select-none",
-          isMobileView ? "h-[69px] bg-background" : "bg-muted/50"
-        )}
+      <PhotosHeader
+        isMobileView={isMobileView}
+        className="justify-between"
         onMouseDown={inShell && !isMobileView ? windowFocus.onDragStart : undefined}
       >
         {/* Back button */}
@@ -841,8 +841,9 @@ export function PhotoViewer({
                       setWallpaperUrl(photo.url);
                       closeShare();
                     }}
-                    className="flex w-full items-center rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
+                    className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
                   >
+                    <Wallpaper className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                     Set as Wallpaper
                   </button>
                 </div>
@@ -879,7 +880,7 @@ export function PhotoViewer({
             />
           </button>
         </div>
-      </div>
+      </PhotosHeader>
 
       <div
         ref={mobileScrollRef}

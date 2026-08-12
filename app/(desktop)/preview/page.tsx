@@ -1,4 +1,5 @@
 import { AppShellPage } from "@/lib/desktop/app-shell-page";
+import { redirectIfUnsupportedOnMobile } from "@/lib/desktop/route-guards";
 import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
 type PageProps = {
@@ -6,6 +7,8 @@ type PageProps = {
 };
 
 export default async function PreviewPage({ searchParams }: PageProps) {
+  await redirectIfUnsupportedOnMobile("preview");
+
   const { file } = await searchParams;
   if (!file || !getPreviewMetadataFromPath(file)) {
     return <AppShellPage appId="preview" />;

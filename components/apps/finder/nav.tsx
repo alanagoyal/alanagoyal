@@ -2,7 +2,7 @@
 
 import type { MouseEventHandler, RefObject } from "react";
 import { WindowControls } from "@/components/window-controls";
-import { WindowNavShell, WindowNavSpacer } from "@/components/window-nav-shell";
+import { WindowNavShell } from "@/components/window-nav-shell";
 import { useWindowNavBehavior } from "@/lib/use-window-nav-behavior";
 import { cn } from "@/lib/utils";
 import {
@@ -36,21 +36,6 @@ interface FinderNavProps {
 const stopDragPropagation: MouseEventHandler<HTMLElement> = (event) => {
   event.stopPropagation();
 };
-
-export function FinderSidebarMobileNav() {
-  return (
-    <WindowNavShell
-      isMobile={true}
-      left={
-        <WindowControls
-          inShell={false}
-          className="p-2"
-        />
-      }
-      right={<WindowNavSpacer isMobile={true} />}
-    />
-  );
-}
 
 export function FinderNav({
   isDesktopShell,

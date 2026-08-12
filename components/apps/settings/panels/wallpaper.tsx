@@ -12,11 +12,7 @@ import { useSystemSettings } from "@/lib/system-settings-context";
 
 const THEME_WALLPAPERS = [...OS_VERSIONS].reverse();
 
-interface WallpaperPanelProps {
-  isMobile?: boolean;
-}
-
-export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
+export function WallpaperPanel() {
   const { osVersionId, wallpaperUrl, setWallpaperUrl } = useSystemSettings();
   const [isPhotoPickerOpen, setIsPhotoPickerOpen] = useState(false);
   const [dialogContainer, setDialogContainer] = useState<HTMLElement | null>(null);
@@ -45,27 +41,22 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
   return (
     <div
       ref={panelRef}
-      className={cn(
-        "mx-auto w-full max-w-5xl",
-        isMobile ? "space-y-7 px-4 py-5 pb-10" : "space-y-8 p-6 pb-10"
-      )}
+      className="mx-auto w-full max-w-5xl space-y-8 p-6 pb-10"
       data-testid="settings-wallpaper-panel"
     >
-      {isMobile && <h1 className="text-2xl font-bold">Wallpaper</h1>}
-
-      <section className={cn("grid gap-5", !isMobile && "grid-cols-[minmax(220px,0.9fr)_minmax(250px,1.1fr)] items-center")}>
+      <section className="grid grid-cols-[minmax(220px,0.9fr)_minmax(250px,1.1fr)] items-center gap-5">
         <div className="relative aspect-[8/5] overflow-hidden rounded-xl border border-border/70 bg-muted shadow-sm">
           <Image
             src={activeWallpaperUrl}
             alt="Current wallpaper"
             fill
             priority
-            sizes={isMobile ? "calc(100vw - 32px)" : "420px"}
+            sizes="420px"
             className="object-cover"
             unoptimized
           />
         </div>
-        <div className={cn("rounded-2xl bg-muted/50", isMobile ? "p-4" : "p-5")}>
+        <div className="rounded-2xl bg-muted/50 p-5">
           <p className="text-sm text-muted-foreground">Current wallpaper</p>
           <h2 className="mt-1 text-xl font-semibold">
             {isPhotoWallpaper ? "From Photos" : activeTheme?.name ?? "Theme wallpaper"}
@@ -80,7 +71,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
         <h2 id="theme-wallpapers-heading" className="mb-3 text-base font-semibold">
           Theme Wallpapers
         </h2>
-        <div className={cn(isMobile ? "grid grid-cols-2 gap-x-3 gap-y-5" : "flex gap-4 overflow-x-auto pb-3")}>
+        <div className="flex gap-4 overflow-x-auto pb-3">
           {THEME_WALLPAPERS.map((os) => {
             const isSelected = selectedThemeId === os.id;
             return (
@@ -90,7 +81,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
                 aria-label={`Use ${os.name} wallpaper`}
                 aria-pressed={isSelected}
                 onClick={() => selectThemeWallpaper(os.id)}
-                className={cn("group text-left focus-visible:outline-none", !isMobile && "w-[140px] shrink-0")}
+                className="group w-[140px] shrink-0 text-left focus-visible:outline-none"
               >
                 <span
                   className={cn(
@@ -104,7 +95,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
                     src={getThumbnailPath(os.id)}
                     alt=""
                     fill
-                    sizes={isMobile ? "42vw" : "190px"}
+                    sizes="190px"
                     className="object-cover"
                     unoptimized
                   />
@@ -165,21 +156,16 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
           <Dialog.Content
             id="wallpaper-photo-picker"
             data-testid="photo-wallpaper-picker"
-            className={cn(
-              "absolute left-1/2 top-1/2 z-[96] flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15",
-              isMobile
-                ? "h-[calc(100%_-_24px)] max-h-[720px] w-[calc(100%_-_24px)] rounded-[22px]"
-                : "h-[min(440px,calc(100%_-_48px))] w-[min(560px,calc(100%_-_64px))] rounded-[24px]"
-            )}
+            className="absolute left-1/2 top-1/2 z-[96] flex h-[min(440px,calc(100%_-_48px))] w-[min(560px,calc(100%_-_64px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[24px] border border-black/10 bg-background/95 shadow-2xl backdrop-blur-2xl focus:outline-none dark:border-white/15"
           >
-            <div className={cn("border-b border-border/70 text-center", isMobile ? "px-4 py-3.5" : "px-6 py-4")}>
+            <div className="border-b border-border/70 px-6 py-4 text-center">
               <Dialog.Title className="text-lg font-semibold">Choose a Photo</Dialog.Title>
               <Dialog.Description className="sr-only">
                 Select a photo to use as the desktop and lock-screen wallpaper.
               </Dialog.Description>
             </div>
 
-            <div className={cn("min-h-0 flex-1 overflow-y-auto", isMobile ? "p-3" : "p-5")}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-5">
               {loading && (
                 <div className="flex h-full min-h-40 items-center justify-center gap-2 text-sm text-muted-foreground">
                   <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -197,7 +183,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
                 </p>
               )}
               {!loading && !error && orderedPhotos.length > 0 && (
-                <div className={cn("grid gap-2", isMobile ? "grid-cols-3" : "grid-cols-5")}>
+                <div className="grid grid-cols-5 gap-2">
                   {orderedPhotos.map((photo) => (
                     <button
                       key={photo.id}
@@ -213,7 +199,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
                         src={getOptimizedImageUrl(photo.url, 240, 70)}
                         alt=""
                         fill
-                        sizes={isMobile ? "28vw" : "120px"}
+                        sizes="120px"
                         className="object-cover transition-transform can-hover:hover:scale-105"
                         decoding="async"
                         loading="eager"
@@ -225,7 +211,7 @@ export function WallpaperPanel({ isMobile = false }: WallpaperPanelProps) {
               )}
             </div>
 
-            <div className={cn("flex justify-end border-t border-border/70", isMobile ? "p-3" : "px-5 py-3.5")}>
+            <div className="flex justify-end border-t border-border/70 px-5 py-3.5">
               <Dialog.Close asChild>
                 <button
                   type="button"

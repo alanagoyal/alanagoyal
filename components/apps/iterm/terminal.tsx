@@ -153,13 +153,11 @@ function isTextFile(filename: string): boolean {
 }
 
 interface TerminalProps {
-  isMobile?: boolean;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onCurrentDirectoryChange?: (directory: string) => void;
 }
 
 export function Terminal({
-  isMobile = false,
   onOpenTextFile,
   onCurrentDirectoryChange,
 }: TerminalProps) {
@@ -678,9 +676,7 @@ export function Terminal({
   return (
     <div
       ref={terminalRef}
-      className={`h-full w-full max-w-full bg-background font-mono overflow-y-auto overflow-x-hidden cursor-text text-foreground ${
-        isMobile ? "text-base leading-tight pt-2 pb-2 pl-6 pr-2" : "text-xs pt-2 pb-2 px-2"
-      }`}
+      className="h-full w-full max-w-full cursor-text overflow-x-hidden overflow-y-auto bg-background px-2 pb-2 pt-2 font-mono text-xs text-foreground"
       onClick={handleTerminalClick}
     >
       {history.map((entry, i) => (

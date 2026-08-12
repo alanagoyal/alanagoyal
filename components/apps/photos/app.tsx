@@ -5,6 +5,7 @@ import { Sidebar } from "./sidebar";
 import { PhotosGrid } from "./photos-grid";
 import { PhotoViewer } from "./photo-viewer";
 import { Nav } from "./nav";
+import { PhotosHeader } from "./header";
 import { Photo, PhotosView, TimeFilter } from "@/types/photos";
 import { usePhotos } from "@/lib/photos/use-photos";
 import {
@@ -97,6 +98,7 @@ export default function App({ isDesktop = false }: AppProps) {
 
   const handleViewSelect = useCallback((view: PhotosView) => {
     setActiveView(view);
+    setSelectedPhotoId(null);
     setShowGrid(true);
   }, []);
 
@@ -233,7 +235,9 @@ export default function App({ isDesktop = false }: AppProps) {
               role="status"
               aria-label="Loading selected photo"
               className="flex-1 min-h-0 bg-background"
-            />
+            >
+              <PhotosHeader isMobileView={isMobileView} aria-hidden="true" />
+            </div>
           )}
 
           {/* Photo Viewer */}

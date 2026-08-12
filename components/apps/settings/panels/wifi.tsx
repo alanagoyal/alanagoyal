@@ -26,14 +26,9 @@ const otherNetworks = [
   { name: "Xfinity Mobile" },
 ];
 
-interface WifiPanelProps {
-  isMobile?: boolean;
-}
-
-export function WifiPanel({}: WifiPanelProps) {
+export function WifiPanel() {
   const { wifiEnabled, setWifiEnabled } = useSystemSettings();
 
-  // Desktop layout (macOS style)
   return (
     <div className="max-w-2xl">
       {/* Header section with toggle */}
