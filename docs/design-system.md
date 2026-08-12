@@ -332,6 +332,8 @@ support policy:
   `mobile.directRouteRedirectTo`, and `mobile.showInFinderApplications: false`.
 - Guard both the root route and catch-all route for every unsupported app with
   `redirectIfUnsupportedOnMobile(appId)` so direct mobile visits redirect before rendering.
+- Keep unsupported apps out of `MobileShell`, and remove their mobile-only props,
+  render branches, and styles rather than preserving unreachable presenters.
 - Keep desktop behavior unchanged.
 
 ## Layout Structure
@@ -382,9 +384,8 @@ For app-level mobile views, keep base surfaces consistent with semantic tokens:
 
 Use `SettingsSwitch` (`components/apps/settings/settings-switch.tsx`) for
 standalone toggles in System Settings instead of hand-building the track and
-thumb. The desktop variant is the shared 40×24 blue macOS control; pass
-`isMobile` for the existing 48×28 green touch presentation. Controls where the
-entire row is itself the switch, such as Focus modes, may keep the switch visual
+thumb. It is the shared 40×24 blue macOS control. Controls where the entire row
+is itself the switch, such as Focus modes, may keep the switch visual
 non-interactive inside the row to avoid nesting buttons.
 
 ### Desktop Notifications
@@ -496,7 +497,7 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 | Notes | Yes (search) | Yes | `sidebar.tsx` |
 | Messages | Yes (search, message input) | Yes | `sidebar.tsx` |
 | iTerm | Yes (terminal input) | Yes | `terminal.tsx` |
-| TextEdit | Yes (textarea) | Yes | `textedit-app.tsx`, `textedit-window.tsx` |
+| TextEdit | Yes (textarea) | Yes | `textedit-window.tsx` |
 | Photos | No | Not needed | - |
 | Finder | No | Not needed | - |
 | Settings | No | Not needed | - |
@@ -576,3 +577,4 @@ When creating a new app, ensure:
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
 - [ ] `mobile.supported` is explicit; unsupported apps are hidden from Finder Applications on mobile and all mobile route access redirects to `/notes`
+- [ ] Unsupported apps have no mobile-only presenter, prop branches, or styles

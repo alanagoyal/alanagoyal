@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { SettingsSwitch } from "../settings-switch";
 import { Check } from "lucide-react";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import { OS_VERSIONS, getThumbnailPath } from "@/lib/os-versions";
@@ -16,54 +15,6 @@ interface ThemeCardProps {
   label: string;
   isSelected: boolean;
   onClick: () => void;
-  isMobile?: boolean;
-}
-
-// Mobile phone preview component
-function MobilePhonePreview({ isDark }: { isDark: boolean }) {
-  return (
-    <div
-      className={cn(
-        "w-20 h-40 rounded-2xl overflow-hidden border-2 border-gray-300",
-        isDark ? "bg-zinc-900" : "bg-white"
-      )}
-    >
-      {/* Status bar */}
-      <div className={cn(
-        "h-5 flex items-center justify-center text-[8px] font-semibold",
-        isDark ? "text-white" : "text-black"
-      )}>
-        9:41
-      </div>
-      {/* Screen content - gradient wallpaper */}
-      <div className="flex-1 h-28 relative overflow-hidden">
-        <div className={cn(
-          "absolute inset-0",
-          isDark
-            ? "bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-700"
-            : "bg-gradient-to-br from-blue-400 via-cyan-300 to-teal-200"
-        )} />
-        {/* Floating elements to simulate wallpaper */}
-        <div className={cn(
-          "absolute top-4 left-2 w-8 h-8 rounded-full opacity-50",
-          isDark ? "bg-blue-700" : "bg-blue-300"
-        )} />
-        <div className={cn(
-          "absolute bottom-6 right-2 w-12 h-12 rounded-full opacity-40",
-          isDark ? "bg-teal-600" : "bg-teal-200"
-        )} />
-      </div>
-      {/* Dock */}
-      <div className={cn(
-        "h-7 flex items-center justify-center gap-1 px-2",
-        isDark ? "bg-zinc-800/80" : "bg-gray-200/80"
-      )}>
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-zinc-600" : "bg-gray-300")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-zinc-600" : "bg-gray-300")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-zinc-600" : "bg-gray-300")} />
-      </div>
-    </div>
-  );
 }
 
 // Desktop preview component
@@ -155,34 +106,7 @@ function DesktopPreview({ theme }: { theme: ThemeOption }) {
   );
 }
 
-function ThemeCard({ theme, label, isSelected, onClick, isMobile = false }: ThemeCardProps) {
-  const isDark = theme === "dark";
-
-  if (isMobile && theme !== "system") {
-    // Mobile layout: vertical card with phone preview and checkmark
-    return (
-      <button
-        onClick={onClick}
-        className="flex flex-col items-center gap-3"
-      >
-        <MobilePhonePreview isDark={isDark} />
-        <span className="text-base font-medium">{label}</span>
-        {/* Checkmark circle */}
-        <div
-          className={cn(
-            "w-6 h-6 rounded-full flex items-center justify-center",
-            isSelected
-              ? "bg-blue-500"
-              : "border-2 border-gray-300"
-          )}
-        >
-          {isSelected && <Check className="w-4 h-4 text-white" />}
-        </div>
-      </button>
-    );
-  }
-
-  // Desktop layout
+function ThemeCard({ theme, label, isSelected, onClick }: ThemeCardProps) {
   return (
     <button
       onClick={onClick}
@@ -243,12 +167,11 @@ function OSVersionCard({
 }
 
 interface AppearancePanelProps {
-  isMobile?: boolean;
   scrollToOSVersion?: boolean;
   onScrollComplete?: () => void;
 }
 
-export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollComplete }: AppearancePanelProps) {
+export function AppearancePanel({ scrollToOSVersion, onScrollComplete }: AppearancePanelProps) {
   const { theme, setTheme } = useTheme();
   const { osVersionId, setOSVersionId } = useSystemSettings();
   const osVersionRef = useRef<HTMLDivElement>(null);
@@ -268,76 +191,6 @@ export function AppearancePanel({ isMobile = false, scrollToOSVersion, onScrollC
     setTheme(newTheme);
   };
 
-  const isAutomatic = theme === "system";
-
-  if (isMobile) {
-    return (
-      <div className="space-y-4 px-4">
-        {/* Section header */}
-        <p className="text-sm text-muted-foreground uppercase tracking-wide px-2">
-          Appearance
-        </p>
-
-        {/* Theme cards in rounded container */}
-        <div className="rounded-xl bg-background p-6">
-          <div className="flex justify-center gap-12">
-            <ThemeCard
-              theme="light"
-              label="Light"
-              isSelected={theme === "light" || (theme === "system" && typeof window !== "undefined" && !window.matchMedia("(prefers-color-scheme: dark)").matches)}
-              onClick={() => handleThemeChange("light")}
-              isMobile={true}
-            />
-            <ThemeCard
-              theme="dark"
-              label="Dark"
-              isSelected={theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches)}
-              onClick={() => handleThemeChange("dark")}
-              isMobile={true}
-            />
-          </div>
-        </div>
-
-        {/* Automatic toggle */}
-        <div className="rounded-xl bg-background">
-          <div className="flex items-center justify-between p-4">
-            <span className="text-base">Automatic</span>
-            <SettingsSwitch
-              aria-label="Automatic appearance"
-              checked={isAutomatic}
-              onCheckedChange={(checked) =>
-                handleThemeChange(checked ? "system" : "light")
-              }
-              isMobile
-            />
-          </div>
-        </div>
-
-        {/* macOS Version section */}
-        <div ref={osVersionRef} className="pt-4">
-          <p className="text-sm text-muted-foreground uppercase tracking-wide px-2">
-            macOS Version
-          </p>
-        </div>
-        <div className="rounded-xl bg-background p-4">
-          <div className="grid grid-cols-3 gap-2">
-            {OS_VERSIONS.map((os) => (
-              <OSVersionCard
-                key={os.id}
-                osId={os.id}
-                name={os.name}
-                version={os.version}
-                isSelected={os.id === osVersionId}
-                onClick={() => setOSVersionId(os.id)}
-                              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop layout
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-muted/50 p-4">

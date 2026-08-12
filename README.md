@@ -88,7 +88,8 @@ a macos sierra 10.12 themed desktop with:
 
 mobile support is intentionally app-specific. supported apps render as
 touch-optimized, full-screen experiences; every unsupported app route redirects
-to `/notes` on mobile.
+to `/notes` on mobile. Unsupported apps are desktop-only components and do not
+retain separate mobile presenters.
 
 | app | in Dock by default | mobile support | mobile route behavior |
 |-----|--------------------|----------------|-----------------------|

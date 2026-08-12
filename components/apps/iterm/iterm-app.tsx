@@ -3,12 +3,10 @@
 import { useRef, useState } from "react";
 import { Nav } from "./nav";
 import { Terminal } from "./terminal";
-import { cn } from "@/lib/utils";
 
 const HOME_DIR = "/Users/alanagoyal";
 
 interface ITermAppProps {
-  isMobile?: boolean;
   inShell?: boolean;
   onOpenTextFile?: (filePath: string, content: string) => void;
 }
@@ -21,7 +19,7 @@ function formatWorkingDirectory(directory: string): string {
   return directory;
 }
 
-export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: ITermAppProps) {
+export function ITermApp({ inShell = false, onOpenTextFile }: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentDirectory, setCurrentDirectory] = useState(HOME_DIR);
   const sessionTitle = formatWorkingDirectory(currentDirectory);
@@ -32,19 +30,11 @@ export function ITermApp({ isMobile = false, inShell = false, onOpenTextFile }: 
       data-app="iterm"
       tabIndex={-1}
       onMouseDown={() => containerRef.current?.focus()}
-      className={cn(
-        "iterm-app flex flex-col bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white outline-none overflow-hidden",
-        isMobile ? "h-dvh w-full" : "h-full"
-      )}
+      className="iterm-app flex h-full flex-col overflow-hidden bg-white text-zinc-900 outline-none dark:bg-zinc-900 dark:text-white"
     >
-      <Nav
-        isMobile={isMobile}
-        isDesktop={inShell}
-        sessionTitle={sessionTitle}
-      />
+      <Nav isDesktop={inShell} sessionTitle={sessionTitle} />
       <div className="flex-1 min-h-0 overflow-hidden bg-background">
         <Terminal
-          isMobile={isMobile}
           onOpenTextFile={onOpenTextFile}
           onCurrentDirectoryChange={setCurrentDirectory}
         />

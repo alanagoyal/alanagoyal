@@ -51,22 +51,12 @@ function formatFocusStatus(focusEndsAt: number): string {
   }).format(focusEndsAt)}`;
 }
 
-interface FocusPanelProps {
-  isMobile?: boolean;
-}
-
-export function FocusPanel({ isMobile = false }: FocusPanelProps) {
+export function FocusPanel() {
   const { focusMode, setFocusMode, focusEndsAt } =
     useSystemSettings();
 
   return (
-    <div
-      className={cn(
-        "mx-auto w-full max-w-2xl",
-        isMobile ? "space-y-4 p-4" : "space-y-4 p-6"
-      )}
-    >
-      {isMobile && <h1 className="text-xl font-bold">Focus</h1>}
+    <div className="mx-auto w-full max-w-2xl space-y-4 p-6">
 
       <div
         role="group"
@@ -104,22 +94,12 @@ export function FocusPanel({ isMobile = false }: FocusPanelProps) {
                 />
               </span>
 
-              <span
-                className={cn(
-                  "min-w-0 flex-1 font-medium",
-                  isMobile ? "text-base" : "text-sm"
-                )}
-              >
+              <span className="min-w-0 flex-1 text-sm font-medium">
                 {row.name}
               </span>
 
               {isActive && focusEndsAt !== null && (
-                <span
-                  className={cn(
-                    "shrink-0 text-muted-foreground",
-                    isMobile ? "text-sm" : "text-xs"
-                  )}
-                >
+                <span className="shrink-0 text-xs text-muted-foreground">
                   {formatFocusStatus(focusEndsAt)}
                 </span>
               )}
