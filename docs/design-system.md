@@ -322,13 +322,16 @@ className="text-base sm:text-sm"
 className={isMobileView ? "py-3" : "py-1.5"}
 ```
 
-### Non-Dock App Mobile Rules
+### App Mobile Availability
 
-For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
+Every app, including Dock apps and desktop utilities, must declare its mobile
+support policy:
 
-- Define their mobile behavior in `lib/app-config.ts` via `mobile` policy fields.
-- Hide them from Finder Applications on mobile via `mobile.showInFinderApplications: false`.
-- Use a shared route guard (`redirectIfUnsupportedOnMobile(appId)`) so direct mobile visits redirect to policy target (default `/`).
+- Set `mobile.supported` explicitly in `lib/app-config.ts`; there is no implicit support default.
+- Unsupported apps use `notes` as `mobile.shellFallbackAppId`, `/notes` as
+  `mobile.directRouteRedirectTo`, and `mobile.showInFinderApplications: false`.
+- Guard both the root route and catch-all route for every unsupported app with
+  `redirectIfUnsupportedOnMobile(appId)` so direct mobile visits redirect before rendering.
 - Keep desktop behavior unchanged.
 
 ## Layout Structure
@@ -572,4 +575,4 @@ When creating a new app, ensure:
 - [ ] Durable user content/preferences use `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
-- [ ] Non-dock desktop-only apps are hidden from Finder Applications on mobile and mobile route access redirects to `/`
+- [ ] `mobile.supported` is explicit; unsupported apps are hidden from Finder Applications on mobile and all mobile route access redirects to `/notes`

@@ -12,6 +12,12 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 600 },
     minSize: { width: 600, height: 400 },
     menuBarTitle: "Finder",
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/notes",
+      showInFinderApplications: false,
+    },
     multiWindow: true,
     cascadeOffset: 30,
   },
@@ -26,6 +32,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 600 },
     minSize: { width: 600, height: 400 },
     menuBarTitle: "Notes",
+    mobile: { supported: true },
   },
   {
     id: "messages",
@@ -38,6 +45,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 800, height: 550 },
     minSize: { width: 500, height: 400 },
     menuBarTitle: "Messages",
+    mobile: { supported: true },
   },
   {
     id: "photos",
@@ -50,6 +58,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 650 },
     minSize: { width: 600, height: 450 },
     menuBarTitle: "Photos",
+    mobile: { supported: true },
   },
   {
     id: "music",
@@ -62,6 +71,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 650 },
     minSize: { width: 600, height: 450 },
     menuBarTitle: "Music",
+    mobile: { supported: true },
   },
   {
     id: "calendar",
@@ -74,6 +84,7 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 700 },
     minSize: { width: 700, height: 500 },
     menuBarTitle: "Calendar",
+    mobile: { supported: true },
   },
   {
     id: "weather",
@@ -90,7 +101,7 @@ export const APPS: AppConfig[] = [
     mobile: {
       supported: false,
       shellFallbackAppId: "notes",
-      directRouteRedirectTo: "/",
+      directRouteRedirectTo: "/notes",
       showInFinderApplications: false,
     },
   },
@@ -105,6 +116,12 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 800, height: 500 },
     minSize: { width: 500, height: 300 },
     menuBarTitle: "iTerm",
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/notes",
+      showInFinderApplications: false,
+    },
   },
   {
     id: "settings",
@@ -117,6 +134,12 @@ export const APPS: AppConfig[] = [
     defaultSize: { width: 900, height: 600 },
     minSize: { width: 700, height: 400 },
     menuBarTitle: "System Settings",
+    mobile: {
+      supported: false,
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/notes",
+      showInFinderApplications: false,
+    },
   },
   {
     id: "textedit",
@@ -132,8 +155,8 @@ export const APPS: AppConfig[] = [
     showOnDockByDefault: false,
     mobile: {
       supported: false,
-      shellFallbackAppId: "finder",
-      directRouteRedirectTo: "/",
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/notes",
       showInFinderApplications: false,
     },
     multiWindow: true,
@@ -153,8 +176,8 @@ export const APPS: AppConfig[] = [
     showOnDockByDefault: false,
     mobile: {
       supported: false,
-      shellFallbackAppId: "finder",
-      directRouteRedirectTo: "/",
+      shellFallbackAppId: "notes",
+      directRouteRedirectTo: "/notes",
       showInFinderApplications: false,
     },
     multiWindow: true,
