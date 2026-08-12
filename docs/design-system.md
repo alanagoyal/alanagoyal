@@ -365,6 +365,19 @@ preserved.
 └──────────────────┘     └──────────────────┘
 ```
 
+### Mobile Launch Destination
+
+For apps that collapse a desktop sidebar and content pane into separate mobile
+screens, open the app's primary content screen by default. The sidebar is a
+navigation destination on mobile, not the landing screen. Persist whether the
+user is viewing content or the sidebar in `sessionStorage` so refresh preserves
+their current screen; closing and reopening the app resets to primary content.
+
+Photos opens to Library and Music opens to Home. List-first communication and
+capture apps are the exception: Messages must open to the conversation list and
+Notes must open to the notes list so users can choose the item they want before
+entering a detail view.
+
 ### Mobile Surface Consistency
 
 For app-level mobile views, keep base surfaces consistent with semantic tokens:
@@ -566,6 +579,7 @@ When creating a new app, ensure:
 - [ ] List items are 70px height with proper truncation
 - [ ] Dividers use `border-muted-foreground/20`
 - [ ] Responsive patterns use `isMobileView` prop
+- [ ] Mobile split-view apps launch into primary content; only list-first apps such as Messages and Notes launch into their list
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
 - [ ] View/runtime/cache state and desktop window layout use `sessionStorage`

@@ -5,7 +5,12 @@ import { cn } from "@/lib/utils";
 import { useMusic } from "@/lib/music/use-music";
 import { useAudio } from "@/lib/music/audio-context";
 import { useWindowFocus } from "@/lib/window-focus-context";
-import { loadMusicState, saveMusicState } from "@/lib/sidebar-persistence";
+import {
+  loadMusicShowContent,
+  loadMusicState,
+  saveMusicShowContent,
+  saveMusicState,
+} from "@/lib/sidebar-persistence";
 import { MusicView } from "./types";
 import { Sidebar } from "./sidebar";
 import { Nav } from "./nav";
@@ -35,7 +40,7 @@ const getInitialState = () => {
   return {
     view: saved.view,
     playlistId: saved.playlistId,
-    showContent: saved.view !== "home",
+    showContent: loadMusicShowContent(),
   };
 };
 
@@ -67,6 +72,10 @@ export default function App({ isDesktop = false }: AppProps) {
   useEffect(() => {
     saveMusicState(activeView, selectedPlaylistId);
   }, [activeView, selectedPlaylistId]);
+
+  useEffect(() => {
+    saveMusicShowContent(showContent);
+  }, [showContent]);
 
   useEffect(() => {
     try {
