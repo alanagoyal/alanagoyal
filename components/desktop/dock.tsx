@@ -7,6 +7,13 @@ import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
+import {
+  DOCK_KEEP_OVERRIDES_STORAGE_KEY,
+  isAppKeptInDock,
+  parseDockKeepOverrides,
+  setAppKeptInDock,
+} from "@/lib/dock-preferences";
+import type { DockKeepOverrides } from "@/lib/dock-preferences";
 
 interface DockProps {
   onTrashClick?: () => void;
@@ -122,6 +129,7 @@ export function Dock({
   appBadges = {},
 }: DockProps) {
   const {
+    closeApp,
     openWindow,
     focusWindow,
     unminimizeWindow,
@@ -135,6 +143,10 @@ export function Dock({
     getInitialDockMagnification
   );
   const [isDockMenuOpen, setIsDockMenuOpen] = useState(false);
+  const [openAppMenuId, setOpenAppMenuId] = useState<string | null>(null);
+  const [isAppOptionsMenuOpen, setIsAppOptionsMenuOpen] = useState(false);
+  const [appMenuPosition, setAppMenuPosition] = useState({ left: 0, bottom: 0 });
+  const [dockKeepOverrides, setDockKeepOverrides] = useState<DockKeepOverrides>({});
   const [isResizingDock, setIsResizingDock] = useState(false);
   const [magnificationScales, setMagnificationScales] = useState<
     Record<string, number>
@@ -143,12 +155,34 @@ export function Dock({
   const previousUserSelectRef = useRef<string | null>(null);
   const previousCursorRef = useRef<string | null>(null);
   const dockMenuRef = useRef<HTMLDivElement>(null);
+  const appMenuRef = useRef<HTMLDivElement>(null);
   const dockItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const magnificationFrameRef = useRef<number | null>(null);
   const pendingPointerXRef = useRef<number | null>(null);
   const closeDockMenu = useCallback(() => setIsDockMenuOpen(false), []);
+  const closeAppMenu = useCallback(() => {
+    setOpenAppMenuId(null);
+    setIsAppOptionsMenuOpen(false);
+  }, []);
 
   useClickOutside(dockMenuRef, closeDockMenu, isDockMenuOpen);
+  useClickOutside(appMenuRef, closeAppMenu, openAppMenuId !== null);
+
+  useEffect(() => {
+    const loadOverrides = () => {
+      try {
+        setDockKeepOverrides(
+          parseDockKeepOverrides(window.localStorage.getItem(DOCK_KEEP_OVERRIDES_STORAGE_KEY))
+        );
+      } catch {
+        setDockKeepOverrides({});
+      }
+    };
+
+    loadOverrides();
+    window.addEventListener("storage", loadOverrides);
+    return () => window.removeEventListener("storage", loadOverrides);
+  }, []);
 
   // Track which apps are visible and their animation states
   // Initialize with default dock apps so they don't animate on page load
@@ -170,8 +204,7 @@ export function Dock({
 
   // Calculate which apps should currently be in the dock
   const currentAppsToShow = APPS.filter((app) => {
-    const showByDefault = app.showOnDockByDefault !== false;
-    return showByDefault || hasOpenWindows(app.id);
+    return isAppKeptInDock(app, dockKeepOverrides) || hasOpenWindows(app.id);
   }).map((app) => app.id);
 
   // Serialize for stable dependency comparison
@@ -330,6 +363,22 @@ export function Dock({
     }
   };
 
+  const handleAppKeepChange = (appId: string, shouldKeep: boolean) => {
+    const app = getAppById(appId);
+    if (!app) return;
+
+    setDockKeepOverrides((current) => {
+      const next = setAppKeptInDock(current, app, shouldKeep);
+      try {
+        window.localStorage.setItem(DOCK_KEEP_OVERRIDES_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Keep the in-memory choice for this page when storage is unavailable.
+      }
+      return next;
+    });
+    closeAppMenu();
+  };
+
   const handleTrashClick = () => {
     if (onTrashClick) {
       onTrashClick();
@@ -344,6 +393,11 @@ export function Dock({
   const appsToRender = APPS.filter(
     (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
   );
+  const openAppMenuApp = openAppMenuId ? getAppById(openAppMenuId) : undefined;
+  const openAppMenuIsOpen = openAppMenuApp ? hasOpenWindows(openAppMenuApp.id) : false;
+  const openAppMenuIsKept = openAppMenuApp
+    ? isAppKeptInDock(openAppMenuApp, dockKeepOverrides)
+    : false;
 
   const effectiveScale = useMemo(
     () => roundScale(clamp(desiredScale, DOCK_MIN_DESIRED_SCALE, DOCK_MAX_DESIRED_SCALE)),
@@ -583,7 +637,8 @@ export function Dock({
   }, [endDockResize, resetDockMagnification]);
 
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
+    <>
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60]">
       <div
         onPointerMove={handleDockPointerMove}
         onPointerLeave={() => {
@@ -612,13 +667,31 @@ export function Dock({
           const tooltipLift =
             (magnificationScale - 1) * metrics.icon;
 
+          const isAppMenuOpen = openAppMenuId === app.id;
+
           return (
             <button
               key={app.id}
               ref={(item) => {
                 dockItemRefs.current[app.id] = item;
               }}
+              aria-label={app.name}
+              aria-haspopup="menu"
+              aria-expanded={isAppMenuOpen}
               onClick={() => handleAppClick(app.id)}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                const rect = event.currentTarget.getBoundingClientRect();
+                setAppMenuPosition({
+                  left: rect.left + rect.width / 2,
+                  bottom: window.innerHeight - rect.top + 8,
+                });
+                setHoveredApp(null);
+                resetDockMagnification();
+                setIsDockMenuOpen(false);
+                setIsAppOptionsMenuOpen(false);
+                setOpenAppMenuId(app.id);
+              }}
               onMouseEnter={() => setHoveredApp(app.id)}
               onMouseLeave={() => setHoveredApp(null)}
               className={cn(
@@ -824,7 +897,96 @@ export function Dock({
           {/* Trash doesn't show open indicator */}
           <div className="rounded-full mt-1 opacity-0" style={{ width: `${metrics.dot}px`, height: `${metrics.dot}px` }} />
         </button>
+        </div>
       </div>
-    </div>
+
+      {openAppMenuApp && (
+        <div
+          ref={appMenuRef}
+          role="menu"
+          aria-label={`${openAppMenuApp.name} Dock menu`}
+          className="fixed z-[90] min-w-40 -translate-x-1/2 rounded-lg border border-black/10 bg-white/95 py-1 text-xs shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+          style={appMenuPosition}
+        >
+          <span
+            aria-hidden
+            className="absolute left-1/2 top-full h-2 w-3 -translate-x-1/2 bg-white/95 [clip-path:polygon(0_0,100%_0,50%_100%)] dark:bg-zinc-800/95"
+          />
+          {(!openAppMenuIsOpen || openAppMenuApp.id === "finder") && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                handleAppClick(openAppMenuApp.id);
+                closeAppMenu();
+              }}
+              className="relative z-[1] flex w-full items-center px-3 py-1.5 text-left transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+            >
+              Open
+            </button>
+          )}
+          {openAppMenuApp.id !== "finder" && (
+            <div
+              className="relative"
+              onMouseEnter={() => setIsAppOptionsMenuOpen(true)}
+              onMouseLeave={() => setIsAppOptionsMenuOpen(false)}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={isAppOptionsMenuOpen}
+                onClick={() => setIsAppOptionsMenuOpen((isOpen) => !isOpen)}
+                className="relative z-[1] flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+              >
+                <span>Options</span>
+                <span aria-hidden>›</span>
+              </button>
+              {isAppOptionsMenuOpen && (
+                <div
+                  role="menu"
+                  aria-label={`${openAppMenuApp.name} Dock options`}
+                  className="absolute bottom-0 left-[calc(100%-4px)] z-[2] min-w-40 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+                >
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={openAppMenuIsKept}
+                    onClick={() =>
+                      handleAppKeepChange(openAppMenuApp.id, !openAppMenuIsKept)
+                    }
+                    className="flex w-full items-center gap-2 whitespace-nowrap px-3 py-1.5 text-left transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn("w-3 text-center text-sm", !openAppMenuIsKept && "opacity-0")}
+                    >
+                      ✓
+                    </span>
+                    <span>Keep in Dock</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {openAppMenuIsOpen && openAppMenuApp.id !== "finder" && (
+            <>
+              <div className="my-1 border-t border-black/10 dark:border-white/10" />
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  closeApp(openAppMenuApp.id);
+                  closeAppMenu();
+                }}
+                className="relative z-[1] flex w-full items-center px-3 py-1.5 text-left transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+              >
+                Quit
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </>
   );
 }
