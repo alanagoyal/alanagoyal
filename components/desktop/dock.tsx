@@ -19,7 +19,7 @@ import type { DockKeepOverrides } from "@/lib/dock-preferences";
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
-  onDocumentAppClick: (appId: DocumentAppId) => void;
+  onClosedDocumentAppClick: (appId: DocumentAppId) => void;
   appBadges?: Record<string, number>;
 }
 
@@ -129,7 +129,7 @@ function getInitialDockMagnification(): boolean {
 export function Dock({
   onTrashClick,
   onFinderClick,
-  onDocumentAppClick,
+  onClosedDocumentAppClick,
   appBadges = {},
 }: DockProps) {
   const {
@@ -172,22 +172,6 @@ export function Dock({
   useClickOutside(dockMenuRef, closeDockMenu, isDockMenuOpen);
   useClickOutside(appMenuRef, closeAppMenu, openAppMenuId !== null);
 
-  useEffect(() => {
-    const loadOverrides = () => {
-      try {
-        setDockKeepOverrides(
-          parseDockKeepOverrides(window.localStorage.getItem(DOCK_KEEP_OVERRIDES_STORAGE_KEY))
-        );
-      } catch {
-        setDockKeepOverrides({});
-      }
-    };
-
-    loadOverrides();
-    window.addEventListener("storage", loadOverrides);
-    return () => window.removeEventListener("storage", loadOverrides);
-  }, []);
-
   // Track which apps are visible and their animation states
   // Initialize with default dock apps so they don't animate on page load
   const [visibleApps, setVisibleApps] = useState<Set<string>>(
@@ -205,6 +189,40 @@ export function Dock({
   // Track apps that existed on initial mount - these skip enter animation on first appearance
   // but will animate if closed and reopened (removed from this set on exit)
   const initialAppsRef = useRef<Set<string> | null>(null);
+  const initiallyOpenAppsRef = useRef(
+    new Set(DOCK_APPS.filter((app) => hasOpenWindows(app.id)).map((app) => app.id))
+  );
+
+  useEffect(() => {
+    const readOverrides = () => {
+      try {
+        return parseDockKeepOverrides(
+          window.localStorage.getItem(DOCK_KEEP_OVERRIDES_STORAGE_KEY)
+        );
+      } catch {
+        return {};
+      }
+    };
+
+    const overrides = readOverrides();
+    const hydratedApps = DOCK_APPS.filter(
+      (app) => isAppKeptInDock(app, overrides) || initiallyOpenAppsRef.current.has(app.id)
+    ).map((app) => app.id);
+    const hydratedStates = Object.fromEntries(
+      hydratedApps.map((appId) => [appId, "stable" as const])
+    );
+
+    // Persisted Dock membership is already established state, not an app launch.
+    // Hydrate it directly so refreshing never replays enter/exit animations.
+    initialAppsRef.current = new Set(hydratedApps);
+    setVisibleApps(new Set(hydratedApps));
+    setAnimationStates(hydratedStates);
+    setDockKeepOverrides(overrides);
+
+    const syncOverrides = () => setDockKeepOverrides(readOverrides());
+    window.addEventListener("storage", syncOverrides);
+    return () => window.removeEventListener("storage", syncOverrides);
+  }, []);
 
   // Calculate which apps should currently be in the dock
   const currentAppsToShow = DOCK_APPS.filter((app) => {
@@ -351,7 +369,7 @@ export function Dock({
       if (hasOpenWindows(appId)) {
         bringAppToFront(appId);
       } else if (appId === "textedit" || appId === "preview") {
-        onDocumentAppClick(appId);
+        onClosedDocumentAppClick(appId);
       }
       return;
     }

@@ -582,6 +582,15 @@ function DesktopContent({
     openMultiWindow("textedit", filePath, { filePath, content: "", isDirty: false });
   }, [addRecent, openMultiWindow]);
 
+  const handleClosedDocumentAppClick = useCallback((appId: DocumentAppId) => {
+    if (appId === "textedit") {
+      handleTextEditNew();
+      return;
+    }
+
+    openDocumentAppPicker("preview");
+  }, [handleTextEditNew, openDocumentAppPicker]);
+
   const handleTextEditOpen = useCallback(() => {
     openDocumentAppPicker("textedit");
   }, [openDocumentAppPicker]);
@@ -1076,7 +1085,7 @@ function DesktopContent({
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
-            onDocumentAppClick={openDocumentAppPicker}
+            onClosedDocumentAppClick={handleClosedDocumentAppClick}
             appBadges={appBadges}
           />
           <DesktopNotificationBanner
