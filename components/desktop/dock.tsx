@@ -7,6 +7,7 @@ import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
+import type { DocumentAppId } from "@/lib/file-route-utils";
 import {
   DOCK_KEEP_OVERRIDES_STORAGE_KEY,
   isAppKeptInDock,
@@ -18,6 +19,7 @@ import type { DockKeepOverrides } from "@/lib/dock-preferences";
 interface DockProps {
   onTrashClick?: () => void;
   onFinderClick?: () => void;
+  onDocumentAppClick: (appId: DocumentAppId) => void;
   appBadges?: Record<string, number>;
 }
 
@@ -126,6 +128,7 @@ function getInitialDockMagnification(): boolean {
 export function Dock({
   onTrashClick,
   onFinderClick,
+  onDocumentAppClick,
   appBadges = {},
 }: DockProps) {
   const {
@@ -346,6 +349,8 @@ export function Dock({
     if (app?.multiWindow) {
       if (hasOpenWindows(appId)) {
         bringAppToFront(appId);
+      } else if (appId === "textedit" || appId === "preview") {
+        onDocumentAppClick(appId);
       }
       return;
     }

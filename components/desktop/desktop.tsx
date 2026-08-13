@@ -1035,6 +1035,7 @@ function DesktopContent({
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
+            onDocumentAppClick={openDocumentAppPicker}
             appBadges={appBadges}
           />
           <DesktopNotificationBanner
