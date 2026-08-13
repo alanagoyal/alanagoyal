@@ -1,11 +1,16 @@
 import { Position, Size } from "./window";
 
-export interface AppMobilePolicy {
-  supported?: boolean; // defaults to true
-  shellFallbackAppId?: string; // fallback app when unsupported on mobile
-  directRouteRedirectTo?: string; // defaults to "/"
-  showInFinderApplications?: boolean; // defaults to true
-}
+export type AppMobilePolicy =
+  | {
+      supported: true;
+      showInFinderApplications?: boolean;
+    }
+  | {
+      supported: false;
+      shellFallbackAppId: string;
+      directRouteRedirectTo: string;
+      showInFinderApplications: false;
+    };
 
 export interface AppConfig {
   id: string;
@@ -21,9 +26,11 @@ export interface AppConfig {
   defaultSize: Size;
   minSize: Size;
   menuBarTitle: string;
+  dockOrder?: number; // lower values appear first; unspecified apps retain registry order afterward
+  dockIconScale?: number; // optical-size adjustment for assets whose artwork fills more of the canvas
   showOnDockByDefault?: boolean; // defaults to true if not specified
   showInFinderApplications?: boolean; // defaults to true if not specified
-  mobile?: AppMobilePolicy;
+  mobile: AppMobilePolicy;
   multiWindow?: boolean; // defaults to false - allows multiple windows per app
   cascadeOffset?: number; // offset for cascading new windows (default 30)
 }

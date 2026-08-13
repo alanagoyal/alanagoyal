@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
-import { APPS, getAppById } from "@/lib/app-config";
+import { getAppById, getAppsInDockOrder } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
@@ -67,10 +67,11 @@ function DockTooltip({
 
 // Animation states for dock icons
 type AnimationState = "entering" | "exiting" | "stable";
+const DOCK_APPS = getAppsInDockOrder();
 
 // Get default dock apps (those that should show by default)
 const getDefaultDockApps = () => {
-  return APPS.filter((app) => app.showOnDockByDefault !== false).map((app) => app.id);
+  return DOCK_APPS.filter((app) => app.showOnDockByDefault !== false).map((app) => app.id);
 };
 
 function formatBadgeCount(count: number): string {
@@ -206,7 +207,7 @@ export function Dock({
   const initialAppsRef = useRef<Set<string> | null>(null);
 
   // Calculate which apps should currently be in the dock
-  const currentAppsToShow = APPS.filter((app) => {
+  const currentAppsToShow = DOCK_APPS.filter((app) => {
     return isAppKeptInDock(app, dockKeepOverrides) || hasOpenWindows(app.id);
   }).map((app) => app.id);
 
@@ -395,7 +396,7 @@ export function Dock({
   // Using visibleApps instead of animationStates avoids a one-frame flicker where the
   // app would disappear before the useEffect sets the "exiting" state
   const currentAppsSet = new Set(currentAppsToShow);
-  const appsToRender = APPS.filter(
+  const appsToRender = DOCK_APPS.filter(
     (app) => currentAppsSet.has(app.id) || visibleApps.has(app.id)
   );
   const openAppMenuApp = openAppMenuId ? getAppById(openAppMenuId) : undefined;
@@ -728,6 +729,7 @@ export function Dock({
                     width={metrics.icon}
                     height={metrics.icon}
                     className="object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))] pointer-events-none"
+                    style={{ transform: `scale(${app.dockIconScale ?? 1})` }}
                     draggable={false}
                     unoptimized
                   />

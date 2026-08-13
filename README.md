@@ -70,6 +70,14 @@ a macos sierra 10.12 themed desktop with:
 - keyboard navigation (arrow keys, escape to close)
 - upload via ios shortcut with ai auto-categorization
 
+**games** - an Apple Games-inspired library with six playable games
+- library layout with sorting, play history, and app-style game artwork
+- snake, 2048, minesweeper, memory match, and breakout run entirely on-device
+- local computer play with easy, medium, and hard opponents
+- anonymous visitor matchmaking with temporary display names, reconnect, and expiry handling
+- live waiting-player badge in the dock
+- desktop integration with the dock, finder, and window system
+
 **settings** - system preferences
 - wi-fi and bluetooth panels
 - appearance (light/dark/system theme)
@@ -86,10 +94,30 @@ a macos sierra 10.12 themed desktop with:
 
 ### mobile
 
-responsive mobile interface with:
+mobile support is intentionally app-specific. supported apps render as
+touch-optimized, full-screen experiences; every unsupported app route redirects
+to `/notes` on mobile. Unsupported apps are desktop-only components and do not
+retain separate mobile presenters.
+
+| app | in Dock by default | mobile support | mobile route behavior |
+|-----|--------------------|----------------|-----------------------|
+| Finder | yes | no | redirects to `/notes` |
+| Notes | yes | yes | opens Notes |
+| Messages | yes | yes | opens Messages |
+| Photos | yes | yes | opens Photos |
+| Music | yes | yes | opens Music |
+| Calendar | yes | yes | opens Calendar |
+| Weather | no | no | redirects to `/notes` |
+| iTerm | yes | no | redirects to `/notes` |
+| Games | yes | no | redirects to `/notes` |
+| Settings | yes | no | redirects to `/notes` |
+| TextEdit | no | no | redirects to `/notes` |
+| Preview | no | no | redirects to `/notes` |
+
+supported mobile apps include:
 - swipe gestures for navigation
 - touch-optimized controls
-- full app functionality
+- app-specific full-screen layouts
 
 ## how it works
 
@@ -112,6 +140,11 @@ the app uses next.js app router with a route group for the desktop environment. 
 - embedded camera and exposure metadata is read from each image on demand in the desktop Info panel and mobile swipe-up details; GPS remains unused
 - favorites are per-browser (stored in localstorage)
 - upload via api with ai auto-categorization (openai gpt-4o-mini)
+
+**games** uses a browser-local identity and supabase-backed chess matches:
+- chess rules and computer play use `chess.js`; the computer search runs in a web worker
+- the server validates online moves and uses optimistic versions to reject conflicting updates
+- synchronized match state is persisted as FEN, PGN, and move history; heartbeats distinguish reconnects from abandonment
 
 the app is built with:
 - **next.js** with app router
@@ -199,7 +232,7 @@ this project uses [supabase](https://supabase.com) as a backend. to set up the d
 3. navigate to the sql editor in the dashboard
 4. paste the sql from the [migration file](https://github.com/alanagoyal/alanagoyal/blob/main/supabase/migrations/20240710180237_initial.sql) into the sql editor and press run
 
-alternatively, use the supabase cli to run migrations locally:
+alternatively, use the supabase cli to apply the complete migration history. this is required for online chess because the games migrations create the private match table and its server-only matchmaking function:
 ```bash
 supabase db push
 ```
@@ -226,7 +259,8 @@ REVALIDATE_TOKEN="<your-revalidate-token>"
 
 **notes:**
 - `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration
-- `SUPABASE_SERVICE_ROLE_KEY` is needed for photo uploads (bypasses RLS)
+- `SUPABASE_SERVICE_ROLE_KEY` is needed server-side for photo uploads and online chess; never expose it with a `NEXT_PUBLIC_` prefix
+- online chess keeps completed and expired matches for seven days, then prunes them during subsequent matchmaking
 - `OPENAI_API_KEY` is used for ai photo categorization
 
 ## install dependencies

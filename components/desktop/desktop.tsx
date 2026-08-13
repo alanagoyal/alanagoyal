@@ -51,6 +51,8 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
 import type { MessagesConversationSelectRequest } from "@/types/messages/selection";
 import { getAppById } from "@/lib/app-config";
+import { getWaitingPlayer, type WaitingPlayer } from "@/lib/games/api";
+import { GAMES_BADGE_REFRESH_MS } from "@/lib/games/rate-limits";
 import {
   isFinderViewMode,
   type FinderViewMode,
@@ -63,6 +65,7 @@ const PhotosApp = dynamic(() => import("@/components/apps/photos/photos-app").th
 const CalendarApp = dynamic(() => import("@/components/apps/calendar/calendar-app").then(m => ({ default: m.CalendarApp })));
 const WeatherApp = dynamic(() => import("@/components/apps/weather/weather-app").then(m => ({ default: m.WeatherApp })));
 const MusicApp = dynamic(() => import("@/components/apps/music/music-app").then(m => ({ default: m.MusicApp })));
+const GamesApp = dynamic(() => import("@/components/apps/games").then(m => ({ default: m.GamesApp })));
 const TextEditWindow = dynamic(() => import("@/components/apps/textedit").then(m => ({ default: m.TextEditWindow })));
 const PreviewWindow = dynamic(() => import("@/components/apps/preview").then(m => ({ default: m.PreviewWindow })));
 
@@ -232,6 +235,7 @@ function DesktopContent({
     !(initialDocumentRouteAppId && !(initialDocumentRouteAppId === "textedit" ? initialTextEditFile : initialPreviewFile))
   );
   const [appBadges, setAppBadges] = useState<Record<string, number>>({});
+  const [gamesWaitingPlayer, setGamesWaitingPlayer] = useState<WaitingPlayer>({ waiting: false, name: null });
   const [activeNotification, setActiveNotification] = useState<MessagesNotificationPayload | null>(null);
   const [isNotificationHovered, setIsNotificationHovered] = useState(false);
   const [messagesSelectRequest, setMessagesSelectRequest] = useState<MessagesConversationSelectRequest | null>(null);
@@ -765,6 +769,39 @@ function DesktopContent({
     });
   }, []);
 
+  const handleGamesWaitingBadgeChange = useCallback((waiting: boolean) => {
+    setAppBadges((prev) => {
+      const nextCount = waiting ? 1 : 0;
+      if ((prev.games ?? 0) === nextCount) return prev;
+      return { ...prev, games: nextCount };
+    });
+    if (!waiting) {
+      setGamesWaitingPlayer((prev) => prev.waiting ? { waiting: false, name: null } : prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      if (document.hidden) return;
+      const waitingPlayer = await getWaitingPlayer().catch(() => ({ waiting: false, name: null }));
+      if (cancelled) return;
+      setGamesWaitingPlayer((prev) => (
+        prev.waiting === waitingPlayer.waiting && prev.name === waitingPlayer.name ? prev : waitingPlayer
+      ));
+      handleGamesWaitingBadgeChange(waitingPlayer.waiting);
+    };
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), GAMES_BADGE_REFRESH_MS);
+    const onVisible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [handleGamesWaitingBadgeChange]);
+
   const handleMessagesNotification = useCallback((notification: MessagesNotificationPayload) => {
     setActiveNotification(notification);
     setIsNotificationHovered(false);
@@ -926,6 +963,10 @@ function DesktopContent({
 
           <Window appId="music">
             <MusicApp />
+          </Window>
+
+          <Window appId="games" keepMountedWhenMinimized={true}>
+            <GamesApp waitingPlayer={gamesWaitingPlayer} onWaitingBadgeChange={handleGamesWaitingBadgeChange} />
           </Window>
 
           {visibleFinderWindows.map((windowState) => {

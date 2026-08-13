@@ -15,29 +15,24 @@ interface HistoryEntry {
 }
 
 interface SettingsAppProps {
-  isMobile?: boolean;
   inShell?: boolean;
   initialPanel?: SettingsPanel; // Allow opening directly to a panel
   initialCategory?: SettingsCategory; // Allow opening directly to a category
   navigationRequestId?: number;
 }
 
-function categoryForPlatform(category: SettingsCategory, isMobile: boolean): SettingsCategory {
-  return isMobile && category === "wallpaper" ? "general" : category;
-}
-
-export function SettingsApp({ isMobile = false, inShell = false, initialPanel, initialCategory, navigationRequestId }: SettingsAppProps) {
+export function SettingsApp({ inShell = false, initialPanel, initialCategory, navigationRequestId }: SettingsAppProps) {
   // Load persisted state (props take precedence if provided)
   const getInitialState = (): HistoryEntry => {
     if (initialCategory || initialPanel) {
       return {
-        category: categoryForPlatform(initialCategory || "general", isMobile),
+        category: initialCategory || "general",
         panel: initialPanel || null,
       };
     }
     const saved = loadSettingsState();
     return {
-      category: categoryForPlatform(saved.category, isMobile),
+      category: saved.category,
       panel: saved.panel,
     };
   };
@@ -50,13 +45,12 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   useEffect(() => {
     if (initialPanel || initialCategory) {
       setHistory([{
-        category: categoryForPlatform(initialCategory || "general", isMobile),
+        category: initialCategory || "general",
         panel: initialPanel || null,
       }]);
       setHistoryIndex(0);
     }
-  }, [initialPanel, initialCategory, navigationRequestId, isMobile]);
-  const [showSidebar, setShowSidebar] = useState(true);
+  }, [initialPanel, initialCategory, navigationRequestId]);
 
   // Persist settings state
   useEffect(() => {
@@ -79,12 +73,9 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
   }, [history, historyIndex]);
 
   const handleCategorySelect = (category: SettingsCategory, options?: { scrollToOSVersion?: boolean }) => {
-    navigate(categoryForPlatform(category, isMobile), null);
+    navigate(category, null);
     if (options?.scrollToOSVersion) {
       setScrollToOSVersion(true);
-    }
-    if (isMobile) {
-      setShowSidebar(false);
     }
   };
 
@@ -98,30 +89,11 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
 
   const handleAccountClick = () => {
     navigate(selectedCategory, "personal-info");
-    if (isMobile) {
-      setShowSidebar(false);
-    }
   };
 
   const handleBack = () => {
-    if (isMobile) {
-      // On mobile, back behavior is simpler:
-      // If on a sub-panel (like About), go back to the category
-      if (selectedPanel !== null) {
-        // Go back to category page
-        const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ category: selectedCategory, panel: null });
-        setHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
-      } else {
-        // On a main category page, go back to sidebar
-        setShowSidebar(true);
-      }
-    } else {
-      // Desktop uses history navigation
-      if (historyIndex > 0) {
-        setHistoryIndex(historyIndex - 1);
-      }
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
     }
   };
 
@@ -131,79 +103,22 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
     }
   };
 
-  // On mobile, always show back when not on sidebar
-  const canGoBack = isMobile ? !showSidebar : historyIndex > 0;
+  const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
 
   const getNavTitle = () => {
-    // Only show title for sub-panels on mobile, not main categories
     if (selectedPanel === "about") return "About";
     if (selectedPanel === "personal-info") return "Personal Information";
     if (selectedPanel === "storage") return "Storage";
-    // Don't show title for primary categories on mobile (it's in the content card)
-    if (!isMobile) {
-      if (selectedCategory === "general") return "General";
-      if (selectedCategory === "appearance") return "Appearance";
-      if (selectedCategory === "wallpaper") return "Wallpaper";
-      if (selectedCategory === "wifi") return "Wi-Fi";
-      if (selectedCategory === "bluetooth") return "Bluetooth";
-      if (selectedCategory === "focus") return "Focus";
-      if (selectedCategory === "menu-bar") return "Menu Bar";
-    }
+    if (selectedCategory === "general") return "General";
+    if (selectedCategory === "appearance") return "Appearance";
+    if (selectedCategory === "wallpaper") return "Wallpaper";
+    if (selectedCategory === "wifi") return "Wi-Fi";
+    if (selectedCategory === "bluetooth") return "Bluetooth";
+    if (selectedCategory === "focus") return "Focus";
+    if (selectedCategory === "menu-bar") return "Menu Bar";
     return undefined;
   };
-
-  const getBackTitle = () => {
-    if (!isMobile) return "";
-
-    // When on a sub-panel, show the parent category name
-    if (selectedPanel === "about") return "General";
-    if (selectedPanel === "personal-info") return "Settings";
-    if (selectedPanel === "storage") return "General";
-
-    // When on a main category page, show "Settings" to go back to sidebar
-    return "Settings";
-  };
-
-  if (isMobile) {
-    return (
-      <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
-        {showSidebar ? (
-          <Sidebar
-            selectedCategory={selectedCategory}
-            selectedPanel={selectedPanel}
-            onCategorySelect={handleCategorySelect}
-            onAccountClick={handleAccountClick}
-            isMobile={isMobile}
-            isDesktop={inShell}
-          />
-        ) : (
-          <>
-            <Nav
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              onBack={handleBack}
-              onForward={handleForward}
-              isMobile={isMobile}
-              isDesktop={inShell}
-              title={getNavTitle()}
-              backTitle={getBackTitle()}
-            />
-            <Content
-              selectedCategory={selectedCategory}
-              selectedPanel={selectedPanel}
-              onPanelSelect={handlePanelSelect}
-              onCategorySelect={handleCategorySelect}
-              onBack={handleBack}
-              isMobile={isMobile}
-              scrollToOSVersion={scrollToOSVersion}
-              onScrollComplete={handleScrollComplete}
-            />
-          </>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-background" data-app="settings">
@@ -213,7 +128,6 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
           selectedPanel={selectedPanel}
           onCategorySelect={handleCategorySelect}
           onAccountClick={handleAccountClick}
-          isMobile={isMobile}
           isDesktop={inShell}
         />
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -222,18 +136,14 @@ export function SettingsApp({ isMobile = false, inShell = false, initialPanel, i
             canGoForward={canGoForward}
             onBack={handleBack}
             onForward={handleForward}
-            isMobile={isMobile}
             isDesktop={inShell}
             title={getNavTitle()}
-            backTitle={getBackTitle()}
           />
           <Content
             selectedCategory={selectedCategory}
             selectedPanel={selectedPanel}
             onPanelSelect={handlePanelSelect}
             onCategorySelect={handleCategorySelect}
-            onBack={handleBack}
-            isMobile={isMobile}
             scrollToOSVersion={scrollToOSVersion}
             onScrollComplete={handleScrollComplete}
           />

@@ -9,6 +9,7 @@ const APP_ROUTE_SEGMENTS = {
   messages: "messages",
   notes: "notes",
   iterm: "iterm",
+  games: "games",
   finder: "finder",
   photos: "photos",
   calendar: "calendar",

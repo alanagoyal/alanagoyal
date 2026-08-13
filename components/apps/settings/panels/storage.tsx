@@ -2,10 +2,6 @@
 
 import { cn } from "@/lib/utils";
 
-interface StoragePanelProps {
-  isMobile?: boolean;
-}
-
 // Storage categories in rainbow order (left to right)
 // Sizes must sum to usedSize (613.71 GB)
 const storageCategories = [
@@ -21,19 +17,19 @@ const totalSize = 994.66; // GB
 const usedSize = 613.71; // GB (must equal sum of category sizes)
 const availableSize = totalSize - usedSize;
 
-export function StoragePanel({ isMobile = false }: StoragePanelProps) {
+export function StoragePanel() {
   // Calculate width percentages for the bar
   const usedPercent = (usedSize / totalSize) * 100;
 
   return (
-    <div className={cn("py-6", isMobile ? "px-4" : "px-6 max-w-2xl mx-auto")}>
+    <div className="mx-auto max-w-2xl px-6 py-6">
       {/* Macintosh HD Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className={cn("font-medium", isMobile ? "text-base" : "text-sm")}>
+          <span className="text-sm font-medium">
             Macintosh HD
           </span>
-          <span className={cn("text-muted-foreground", isMobile ? "text-base" : "text-sm")}>
+          <span className="text-sm text-muted-foreground">
             {usedSize.toFixed(2)} GB of {totalSize.toFixed(2)} GB used
           </span>
         </div>
@@ -71,7 +67,7 @@ export function StoragePanel({ isMobile = false }: StoragePanelProps) {
         {storageCategories.map((category) => (
           <div key={category.id} className="flex items-center gap-1.5">
             <div className={cn("w-2.5 h-2.5 rounded-full", category.color)} />
-            <span className={cn("text-muted-foreground", isMobile ? "text-sm" : "text-xs")}>
+            <span className="text-xs text-muted-foreground">
               {category.label}
             </span>
           </div>

@@ -42,7 +42,6 @@ import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
 
 interface WeatherAppProps {
-  isMobile?: boolean;
   inShell?: boolean;
 }
 
@@ -475,17 +474,14 @@ function SidebarCityItem({
   weather,
   scene,
   isSelected,
-  isMobileView,
   onSelect,
 }: {
   cityName: string;
   weather: CityWeather | null;
   scene: WeatherScene | null;
   isSelected: boolean;
-  isMobileView: boolean;
   onSelect: () => void;
 }) {
-  const isDesktopSelected = isSelected && !isMobileView;
   const timeLabel = weather ? formatCityClock(weather.currentTime) : "--:--";
   const descriptionLabel = weather ? getWeatherDescription(weather.weatherCode) : "Loading...";
   const temperatureLabel = weather ? `${Math.round(weather.currentTemp)}°` : "--";
@@ -500,7 +496,7 @@ function SidebarCityItem({
       className={cn(
         "relative w-full max-w-full overflow-hidden rounded-lg px-2.5 py-1.5 h-[70px] text-left transition-colors text-white/95 backdrop-blur-sm [text-shadow:0_1px_2px_rgba(6,14,30,0.5)]",
         "bg-white/[0.07]",
-        isDesktopSelected &&
+        isSelected &&
           "bg-white/[0.15] shadow-[inset_0_0_0_2px_rgba(138,186,236,0.42),0_0_0_1px_rgba(76,141,209,0.72),0_8px_18px_rgba(7,31,63,0.22)]"
       )}
       style={{ background: scene?.background ?? DEFAULT_WEATHER_BACKGROUND }}
@@ -512,7 +508,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "text-xs",
-              isDesktopSelected ? "text-white/90" : "text-white/76"
+              isSelected ? "text-white/90" : "text-white/76"
             )}
           >
             {timeLabel}
@@ -520,7 +516,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "text-xs truncate",
-              isDesktopSelected ? "text-white/95" : "text-white/84"
+              isSelected ? "text-white/95" : "text-white/84"
             )}
           >
             {descriptionLabel}
@@ -531,7 +527,7 @@ function SidebarCityItem({
           <p
             className={cn(
               "truncate text-[10px]",
-              isDesktopSelected ? "text-white/90" : "text-white/78"
+              isSelected ? "text-white/90" : "text-white/78"
             )}
           >
             {highLowLabel}
@@ -614,10 +610,9 @@ function WeatherScenePreviewControls({
   );
 }
 
-export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProps) {
-  const isMobileView = isMobile;
+export function WeatherApp({ inShell = false }: WeatherAppProps) {
   const windowFocus = useWindowFocus();
-  const inDesktopShell = !!(inShell && windowFocus && !isMobileView);
+  const inDesktopShell = !!(inShell && windowFocus);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -874,7 +869,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
     return { min, span: Math.max(1, max - min) };
   }, [selectedWeather]);
 
-  const mainContentWidth = Math.max(0, containerWidth - (isMobileView ? 0 : 320));
+  const mainContentWidth = Math.max(0, containerWidth - 320);
   const compactMainContent = mainContentWidth < 700;
   const denseMainContent = mainContentWidth < 560;
   const hourlyGridColsClass =
@@ -908,7 +903,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (windowFocus && !windowFocus.isFocused) return;
-      if (isMobileView) return;
       const target = event.target as HTMLElement | null;
       const isTypingTarget =
         target?.tagName === "INPUT" ||
@@ -941,7 +935,7 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [windowFocus, isMobileView, searchActive, searchQuery]);
+  }, [windowFocus, searchActive, searchQuery]);
 
   return (
     <div ref={containerRef} className="h-full flex bg-background" data-app="weather">
@@ -956,7 +950,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
 
         {(!failed || hasFetchedAnyDataRef.current) && (
           <div className={cn("relative z-[1] h-full flex", bodyTextClass)}>
-          {!isMobileView && (
             <aside
               className={cn(
                 "relative overflow-hidden w-[320px] min-w-[320px] max-w-[320px] shrink-0 flex flex-col",
@@ -979,14 +972,10 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                   left={
                     <WindowControls
                       inShell={inDesktopShell}
-                      showWhenNotInShell={!isMobileView}
+                      showWhenNotInShell={true}
                       className="p-2"
                       onClose={
-                        inDesktopShell
-                          ? windowFocus?.closeWindow
-                          : !isMobileView
-                            ? () => window.close()
-                            : undefined
+                        inDesktopShell ? windowFocus?.closeWindow : () => window.close()
                       }
                       onMinimize={inDesktopShell ? windowFocus?.minimizeWindow : undefined}
                       onToggleMaximize={inDesktopShell ? windowFocus?.toggleMaximize : undefined}
@@ -1097,7 +1086,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                         weather={city.weather}
                         scene={city.scene}
                         isSelected={city.id === selectedCityId}
-                        isMobileView={isMobileView}
                         onSelect={() => setSelectedCityId(city.id)}
                       />
                     ))}
@@ -1105,10 +1093,9 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
                 )}
               </ScrollArea>
             </aside>
-          )}
 
           <main className="flex-1 min-w-0 min-h-0 bg-transparent relative">
-            {!isMobileView && inDesktopShell && (
+            {inDesktopShell && (
               <div
                 className="absolute top-0 left-0 right-0 h-12 z-10 select-none"
                 onMouseDown={windowFocus?.onDragStart}
@@ -1116,37 +1103,6 @@ export function WeatherApp({ isMobile = false, inShell = false }: WeatherAppProp
             )}
             <ScrollArea className="h-full">
               <div className="p-4 space-y-4">
-                {isMobileView && (
-                  <div className="flex gap-4 overflow-x-auto pb-1">
-                    {cityCards.map((city) => (
-                      <button
-                        key={city.id}
-                        type="button"
-                        onClick={() => setSelectedCityId(city.id)}
-                        className={cn(
-                          "shrink-0 pb-1 text-sm",
-                          city.id === selectedCityId
-                            ? "text-[#0A7CFF] font-medium"
-                            : "text-white/82"
-                        )}
-                      >
-                        {city.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {isMobileView && WEATHER_SCENE_PREVIEW_ENABLED && (
-                  <WeatherScenePreviewControls
-                    value={scenePreviewMode}
-                    onChange={setScenePreviewMode}
-                    backgroundOnly={backgroundOnlyPreview}
-                    onToggleBackgroundOnly={() =>
-                      setBackgroundOnlyPreview((current) => !current)
-                    }
-                  />
-                )}
-
                 {!backgroundOnlyPreview && (
                   <>
                 <section className={cn("rounded-2xl overflow-hidden text-white", mainCardClass)}>

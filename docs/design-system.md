@@ -322,13 +322,18 @@ className="text-base sm:text-sm"
 className={isMobileView ? "py-3" : "py-1.5"}
 ```
 
-### Non-Dock App Mobile Rules
+### App Mobile Availability
 
-For non-dock desktop utilities (for example `textedit`, `preview`, `weather`):
+Every app, including Dock apps and desktop utilities, must declare its mobile
+support policy:
 
-- Define their mobile behavior in `lib/app-config.ts` via `mobile` policy fields.
-- Hide them from Finder Applications on mobile via `mobile.showInFinderApplications: false`.
-- Use a shared route guard (`redirectIfUnsupportedOnMobile(appId)`) so direct mobile visits redirect to policy target (default `/`).
+- Set `mobile.supported` explicitly in `lib/app-config.ts`; there is no implicit support default.
+- Unsupported apps use `notes` as `mobile.shellFallbackAppId`, `/notes` as
+  `mobile.directRouteRedirectTo`, and `mobile.showInFinderApplications: false`.
+- Guard both the root route and catch-all route for every unsupported app with
+  `redirectIfUnsupportedOnMobile(appId)` so direct mobile visits redirect before rendering.
+- Keep unsupported apps out of `MobileShell`, and remove their mobile-only props,
+  render branches, and styles rather than preserving unreachable presenters.
 - Keep desktop behavior unchanged.
 
 ## Layout Structure
@@ -365,6 +370,19 @@ preserved.
 └──────────────────┘     └──────────────────┘
 ```
 
+### Mobile Launch Destination
+
+For apps that collapse a desktop sidebar and content pane into separate mobile
+screens, open the app's primary content screen by default. The sidebar is a
+navigation destination on mobile, not the landing screen. Persist whether the
+user is viewing content or the sidebar in `sessionStorage` so refresh preserves
+their current screen; closing and reopening the app resets to primary content.
+
+Photos opens to Library and Music opens to Home. List-first communication and
+capture apps are the exception: Messages must open to the conversation list and
+Notes must open to the notes list so users can choose the item they want before
+entering a detail view.
+
 ### Mobile Surface Consistency
 
 For app-level mobile views, keep base surfaces consistent with semantic tokens:
@@ -379,9 +397,8 @@ For app-level mobile views, keep base surfaces consistent with semantic tokens:
 
 Use `SettingsSwitch` (`components/apps/settings/settings-switch.tsx`) for
 standalone toggles in System Settings instead of hand-building the track and
-thumb. The desktop variant is the shared 40×24 blue macOS control; pass
-`isMobile` for the existing 48×28 green touch presentation. Controls where the
-entire row is itself the switch, such as Focus modes, may keep the switch visual
+thumb. It is the shared 40×24 blue macOS control. Controls where the entire row
+is itself the switch, such as Focus modes, may keep the switch visual
 non-interactive inside the row to avoid nesting buttons.
 
 ### Desktop Notifications
@@ -493,7 +510,7 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 | Notes | Yes (search) | Yes | `sidebar.tsx` |
 | Messages | Yes (search, message input) | Yes | `sidebar.tsx` |
 | iTerm | Yes (terminal input) | Yes | `terminal.tsx` |
-| TextEdit | Yes (textarea) | Yes | `textedit-app.tsx`, `textedit-window.tsx` |
+| TextEdit | Yes (textarea) | Yes | `textedit-window.tsx` |
 | Photos | No | Not needed | - |
 | Finder | No | Not needed | - |
 | Settings | No | Not needed | - |
@@ -566,10 +583,12 @@ When creating a new app, ensure:
 - [ ] List items are 70px height with proper truncation
 - [ ] Dividers use `border-muted-foreground/20`
 - [ ] Responsive patterns use `isMobileView` prop
+- [ ] Mobile split-view apps launch into primary content; only list-first apps such as Messages and Notes launch into their list
 - [ ] ScrollArea used for scrollable content
 - [ ] If app has text inputs, add Escape handler to blur (enables `q` to quit)
 - [ ] View/runtime/cache state and desktop window layout use `sessionStorage`
 - [ ] Durable user content/preferences use `localStorage` and should not be cleared on app close
 - [ ] `clearAppState()` has a case for this app's ID
 - [ ] No manual `clear*Storage()` calls in nav bars or menu bar — handled automatically by `closeWindow`/`closeApp`
-- [ ] Non-dock desktop-only apps are hidden from Finder Applications on mobile and mobile route access redirects to `/`
+- [ ] `mobile.supported` is explicit; unsupported apps are hidden from Finder Applications on mobile and all mobile route access redirects to `/notes`
+- [ ] Unsupported apps have no mobile-only presenter, prop branches, or styles
