@@ -96,6 +96,10 @@ export function getDocumentAppFinderTarget(appId: DocumentAppId): string {
   return DOCUMENT_APP_CONFIGS[appId].finderTargetPath;
 }
 
+export function getDocumentAppPickerInstanceId(appId: DocumentAppId): string {
+  return `finder-document-picker-${appId}`;
+}
+
 export function getLocalTextFileContent(filePath: string): string | null {
   const storedContent = getTextEditContent(filePath);
   if (storedContent !== undefined) return storedContent;

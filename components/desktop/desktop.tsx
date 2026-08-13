@@ -18,6 +18,7 @@ import { getPreviewMetadataFromPath, PREVIEW_TITLE_BAR_HEIGHT } from "@/lib/prev
 import {
   type DocumentAppId,
   getDocumentAppFinderTarget,
+  getDocumentAppPickerInstanceId,
   PROJECTS_DIR,
   getLocalTextFileContent,
   getKnownTextEditDocumentPaths,
@@ -283,15 +284,23 @@ function DesktopContent({
   );
   const openFinderWindow = useCallback((
     initialPath = "recents",
-    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+    options?: {
+      instanceId?: string;
+      size?: { width: number; height: number };
+      position?: { x: number; y: number };
+    }
   ) => {
-    openMultiWindow("finder", createWindowInstanceId("finder"), {
+    openMultiWindow("finder", options?.instanceId ?? createWindowInstanceId("finder"), {
       currentPath: initialPath,
     }, options?.size, options?.position);
   }, [openMultiWindow]);
   const openDedicatedFinderWindow = useCallback((
     initialPath: string,
-    options?: { size?: { width: number; height: number }; position?: { x: number; y: number } }
+    options?: {
+      instanceId?: string;
+      size?: { width: number; height: number };
+      position?: { x: number; y: number };
+    }
   ) => {
     openFinderWindow(initialPath, options);
   }, [openFinderWindow]);
@@ -569,9 +578,13 @@ function DesktopContent({
   }, [focusMultiWindow]);
 
   const openDocumentAppPicker = useCallback((appId: DocumentAppId) => {
+    const placement = getDocumentPickerFinderWindowPlacement();
     openDedicatedFinderWindow(
       getDocumentAppFinderTarget(appId),
-      getDocumentPickerFinderWindowPlacement()
+      {
+        ...placement,
+        instanceId: getDocumentAppPickerInstanceId(appId),
+      }
     );
   }, [openDedicatedFinderWindow]);
 
@@ -581,6 +594,15 @@ function DesktopContent({
     addRecent({ path: filePath, name: filePath.split("/").pop() ?? filePath, type: "file" });
     openMultiWindow("textedit", filePath, { filePath, content: "", isDirty: false });
   }, [addRecent, openMultiWindow]);
+
+  const handleClosedDocumentAppClick = useCallback((appId: DocumentAppId) => {
+    if (appId === "textedit") {
+      handleTextEditNew();
+      return;
+    }
+
+    openDocumentAppPicker("preview");
+  }, [handleTextEditNew, openDocumentAppPicker]);
 
   const handleTextEditOpen = useCallback(() => {
     openDocumentAppPicker("textedit");
@@ -1076,6 +1098,7 @@ function DesktopContent({
           <Dock
             onTrashClick={handleTrashClick}
             onFinderClick={handleFinderDockClick}
+            onClosedDocumentAppClick={handleClosedDocumentAppClick}
             appBadges={appBadges}
           />
           <DesktopNotificationBanner
