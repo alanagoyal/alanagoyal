@@ -89,6 +89,19 @@ function relativePlayedAt(timestamp?: number) {
   return `Played ${Math.max(1, Math.floor(elapsed / 86_400_000))}d ago`;
 }
 
+function CenteredScrollScreen({ children, contentClassName }: {
+  children: React.ReactNode;
+  contentClassName: string;
+}) {
+  return (
+    <div className="min-h-0 flex-1 overflow-auto bg-background">
+      <div className="flex min-h-full w-full items-center justify-center p-8">
+        <div className={contentClassName}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function statusText(game: Chess, playerColor: "w" | "b", thinking: boolean) {
   if (game.isCheckmate()) return game.turn() === playerColor ? "Checkmate — you lost" : "Checkmate — you won";
   if (game.isDraw()) return "Draw";
@@ -593,8 +606,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
       )}
 
       {screen === "setup" && (
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
-          <div className="w-full max-w-[500px] pb-32">
+        <CenteredScrollScreen contentClassName="w-full max-w-[500px] pb-32">
             <div className="mb-7 text-center">
               <GameTileIcon game="chess" className="mx-auto h-20 w-20" />
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">Chess</h1>
@@ -702,13 +714,11 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                 )}
               </div>
             </div>
-          </div>
-        </div>
+        </CenteredScrollScreen>
       )}
 
       {screen === "waiting" && (
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
-          <div className="w-full max-w-[390px] text-center">
+        <CenteredScrollScreen contentClassName="w-full max-w-[390px] text-center">
             {waitingTimedOut ? (
               <>
                 <h1 className="text-2xl font-semibold tracking-tight">No other players found</h1>
@@ -738,8 +748,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                 {onlineError && <p className="mt-4 text-sm text-red-600">{onlineError}</p>}
               </>
             )}
-          </div>
-        </div>
+        </CenteredScrollScreen>
       )}
 
       {screen === "chess" && (

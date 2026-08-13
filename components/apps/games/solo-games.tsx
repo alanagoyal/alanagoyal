@@ -39,7 +39,13 @@ function GameButton({ children, onClick, primary = false, disabled = false }: {
 }
 
 function GameFrame({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-5">{children}</div>;
+  return (
+    <div className="min-h-0 flex-1 overflow-auto bg-background [container-type:size]">
+      <div className="flex min-h-full w-full items-center justify-center p-5">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 const DIRECTION_KEYS: Record<string, GridDirection | undefined> = {
@@ -112,7 +118,7 @@ export function SnakeGame() {
 
   return (
     <GameFrame>
-      <div className="flex w-full max-w-[520px] flex-col items-center gap-4">
+      <div className="flex w-[min(100%,calc(100cqh-132px))] max-w-[420px] flex-col items-center gap-4">
         <div className="flex w-full items-center justify-between">
           <div><p className="text-xs text-muted-foreground">Score</p><p className="text-xl font-semibold tabular-nums">{snake.length - 3}</p></div>
           <div className="flex gap-2">
@@ -173,7 +179,7 @@ export function TwentyFortyEightGame() {
 
   return (
     <GameFrame>
-      <div className="flex w-full max-w-[440px] flex-col gap-4">
+      <div className="flex w-[min(100%,calc(100cqh-136px))] max-w-[440px] flex-col gap-4">
         <div className="flex items-end justify-between"><div><p className="text-xs text-muted-foreground">Score</p><p className="text-2xl font-semibold tabular-nums">{game.score}</p></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
         <div className="relative grid aspect-square grid-cols-4 gap-2 rounded-2xl bg-[#bbada0] p-2 shadow-[0_18px_55px_rgba(15,23,42,.22)]">
           {game.board.map((value, index) => <span key={index} className={cn("flex items-center justify-center rounded-xl font-bold shadow-sm", TILE_COLORS[value] ?? "bg-[#3c3a32] text-white", value >= 1024 ? "text-xl" : value >= 128 ? "text-2xl" : "text-3xl")}>{value || "·"}</span>)}
@@ -220,7 +226,7 @@ export function MinesweeperGame() {
 
   return (
     <GameFrame>
-      <div className="flex w-full max-w-[470px] flex-col gap-4">
+      <div className="flex w-[min(100%,calc(100cqh-148px))] max-w-[470px] flex-col gap-4">
         <div className="flex items-end justify-between"><div className="flex gap-5"><div><p className="text-xs text-muted-foreground">Mines</p><p className="text-xl font-semibold tabular-nums">{Math.max(0, 10 - flags)}</p></div><div><p className="text-xs text-muted-foreground">Time</p><p className="text-xl font-semibold tabular-nums">{seconds}</p></div></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
         <div className="relative grid aspect-square grid-cols-9 gap-[2px] rounded-2xl bg-[#95a2af] p-2 shadow-[0_18px_55px_rgba(15,23,42,.22)]">
           {board.map((cell, index) => (
@@ -261,7 +267,7 @@ export function MemoryGame() {
 
   return (
     <GameFrame>
-      <div className="flex w-full max-w-[470px] flex-col gap-4">
+      <div className="flex w-[min(100%,calc(100cqh-132px))] max-w-[470px] flex-col gap-4">
         <div className="flex items-end justify-between"><div><p className="text-xs text-muted-foreground">Moves</p><p className="text-xl font-semibold tabular-nums">{moves}</p></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
         <div className="relative grid aspect-square grid-cols-4 gap-2 rounded-2xl bg-[linear-gradient(145deg,#35266e,#6f50c9)] p-3 shadow-[0_18px_55px_rgba(15,23,42,.24)]">
           {deck.map((value, index) => {
@@ -371,7 +377,7 @@ export function BreakoutGame() {
   const game = stateRef.current;
   return (
     <GameFrame>
-      <div className="flex w-full max-w-[640px] flex-col gap-3">
+      <div className="flex w-[min(100%,640px,calc(152.38cqh-189px))] flex-col gap-3">
         <div className="flex items-end justify-between"><div className="flex gap-5"><div><p className="text-xs text-muted-foreground">Score</p><p className="text-xl font-semibold tabular-nums">{game.score}</p></div><div><p className="text-xs text-muted-foreground">Lives</p><p className="text-xl font-semibold tabular-nums">{game.lives}</p></div></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
         <div className="relative overflow-hidden rounded-2xl shadow-[0_18px_55px_rgba(15,23,42,.28)] ring-1 ring-black/20">
           <canvas ref={canvasRef} width={640} height={420} className="block aspect-[32/21] w-full" onPointerMove={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); stateRef.current.paddleX = Math.max(0, Math.min(540, ((event.clientX - bounds.left) / bounds.width) * 640 - 50)); }} />
