@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { getAppById, getAppsInDockOrder } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
@@ -15,6 +15,10 @@ import {
   setAppKeptInDock,
 } from "@/lib/dock-preferences";
 import type { DockKeepOverrides } from "@/lib/dock-preferences";
+import {
+  getDockSubmenuSide,
+  type DockSubmenuSide,
+} from "@/lib/desktop/dock-menu";
 
 interface DockProps {
   onTrashClick?: () => void;
@@ -88,6 +92,7 @@ const DOCK_SCALE_STEP = 0.05;
 const DOCK_DRAG_PIXELS_PER_SCALE = 220;
 const DOCK_MAGNIFICATION_SCALE = 1.4;
 const DOCK_MAGNIFICATION_RADIUS = 0.88;
+const DOCK_APP_MENU_WIDTH = 160;
 
 const BASE_ICON_SIZE = 48;
 const BASE_GAP = 4;
@@ -103,6 +108,9 @@ const BASE_BADGE_PADDING_X = 4;
 const BASE_BADGE_FONT_SIZE = 11;
 const BASE_TRASH_HANDLE_HITBOX_WIDTH = 14;
 const BASE_HANDLE_LINE_WIDTH = 1;
+
+const useBrowserLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -149,6 +157,8 @@ export function Dock({
   const [isDockMenuOpen, setIsDockMenuOpen] = useState(false);
   const [openAppMenuId, setOpenAppMenuId] = useState<string | null>(null);
   const [isAppOptionsMenuOpen, setIsAppOptionsMenuOpen] = useState(false);
+  const [appOptionsMenuSide, setAppOptionsMenuSide] =
+    useState<DockSubmenuSide>("right");
   const [appMenuPosition, setAppMenuPosition] = useState({ left: 0, bottom: 0 });
   const [dockKeepOverrides, setDockKeepOverrides] = useState<DockKeepOverrides>({});
   const [isResizingDock, setIsResizingDock] = useState(false);
@@ -167,6 +177,20 @@ export function Dock({
   const closeAppMenu = useCallback(() => {
     setOpenAppMenuId(null);
     setIsAppOptionsMenuOpen(false);
+  }, []);
+  const openAppOptionsMenu = useCallback(() => {
+    const menuRect = appMenuRef.current?.getBoundingClientRect();
+    if (menuRect) {
+      setAppOptionsMenuSide(
+        getDockSubmenuSide({
+          menuLeft: menuRect.left,
+          menuRight: menuRect.right,
+          submenuWidth: DOCK_APP_MENU_WIDTH,
+          viewportWidth: window.innerWidth,
+        })
+      );
+    }
+    setIsAppOptionsMenuOpen(true);
   }, []);
 
   useClickOutside(dockMenuRef, closeDockMenu, isDockMenuOpen);
@@ -193,7 +217,7 @@ export function Dock({
     new Set(DOCK_APPS.filter((app) => hasOpenWindows(app.id)).map((app) => app.id))
   );
 
-  useEffect(() => {
+  useBrowserLayoutEffect(() => {
     const readOverrides = () => {
       try {
         return parseDockKeepOverrides(
@@ -714,6 +738,7 @@ export function Dock({
                 resetDockMagnification();
                 setIsDockMenuOpen(false);
                 setIsAppOptionsMenuOpen(false);
+                setAppOptionsMenuSide("right");
                 setOpenAppMenuId(app.id);
               }}
               onMouseEnter={() => setHoveredApp(app.id)}
@@ -953,7 +978,7 @@ export function Dock({
           {openAppMenuApp.id !== "finder" && (
             <div
               className="relative"
-              onMouseEnter={() => setIsAppOptionsMenuOpen(true)}
+              onMouseEnter={openAppOptionsMenu}
               onMouseLeave={() => setIsAppOptionsMenuOpen(false)}
             >
               <button
@@ -961,7 +986,13 @@ export function Dock({
                 role="menuitem"
                 aria-haspopup="menu"
                 aria-expanded={isAppOptionsMenuOpen}
-                onClick={() => setIsAppOptionsMenuOpen((isOpen) => !isOpen)}
+                onClick={() => {
+                  if (isAppOptionsMenuOpen) {
+                    setIsAppOptionsMenuOpen(false);
+                  } else {
+                    openAppOptionsMenu();
+                  }
+                }}
                 className="relative z-[1] flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left transition-colors can-hover:hover:bg-blue-500 can-hover:hover:text-white"
               >
                 <span>Options</span>
@@ -971,7 +1002,12 @@ export function Dock({
                 <div
                   role="menu"
                   aria-label={`${openAppMenuApp.name} Dock options`}
-                  className="absolute bottom-0 left-[calc(100%-4px)] z-[2] min-w-40 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+                  className={cn(
+                    "absolute bottom-0 z-[2] min-w-40 rounded-lg border border-black/10 bg-white/95 py-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95",
+                    appOptionsMenuSide === "left"
+                      ? "right-[calc(100%-4px)]"
+                      : "left-[calc(100%-4px)]"
+                  )}
                 >
                   <button
                     type="button"

@@ -27,7 +27,7 @@ This note captures how file-backed document apps launch through Finder in the de
 ## Why This Split Exists
 
 - TextEdit can create a valid untitled document, so its closed Dock icon launches one. Preview still requires an image or PDF path, so its closed Dock icon opens Finder without pretending Preview is running.
-- Finder is multi-window, so document-app launches can open a fresh file-picking context when needed without hijacking whatever Finder window the user already has open.
+- Finder is multi-window, so each document app can open its own file-picking context without hijacking an unrelated Finder window. Repeated launches focus that app's existing picker instead of stacking duplicates.
 
 ## Launch Plumbing
 
@@ -58,6 +58,6 @@ Run `npm run build`, then verify:
 13. Use File → Duplicate and Rename, then confirm the copied content, updated title, and Finder-visible file name persist after closing and reopening the document.
 14. Edit a document and confirm the title shows `Edited`; use File → Save and confirm the marker clears before using File → Close.
 15. With an iPhone user agent, confirm `/textedit`, `/textedit/<nested>`, `/preview`, and `/preview/<nested>` redirect to `/notes` while the same routes preserve their existing desktop behavior.
-16. Keep TextEdit and Preview in the desktop Dock, then refresh and confirm neither persisted icon replays its enter animation.
+16. Keep TextEdit and Preview in the desktop Dock, remove Music, then refresh and confirm the persisted membership appears before paint without an enter animation or a flash of the registered defaults.
 17. Quit TextEdit, click its kept Dock icon, and confirm a new untitled TextEdit window opens with a running dot and Quit action.
-18. Quit Preview, click its kept Dock icon, and confirm Finder opens at `Desktop` while Preview remains dotless and offers Open until an image or PDF is selected.
+18. Quit Preview, click its kept Dock icon twice, and confirm one Finder picker opens at `Desktop` and is focused again while Preview remains dotless and offers Open until an image or PDF is selected.

@@ -5,6 +5,8 @@ import {
   parseDockKeepOverrides,
   setAppKeptInDock,
 } from "../lib/dock-preferences";
+import { getDockSubmenuSide } from "../lib/desktop/dock-menu";
+import { getDocumentAppPickerInstanceId } from "../lib/file-route-utils";
 
 test("Dock keep overrides recover from malformed storage", () => {
   assert.deepEqual(parseDockKeepOverrides(null), {});
@@ -35,4 +37,34 @@ test("returning to an app's registered default removes its stored override", () 
   assert.deepEqual(setAppKeptInDock({ weather: true }, weather, false), {});
   assert.deepEqual(setAppKeptInDock({}, music, false), { music: false });
   assert.deepEqual(setAppKeptInDock({ music: false }, music, true), {});
+});
+
+test("Dock submenus choose the side with less viewport overflow", () => {
+  assert.equal(
+    getDockSubmenuSide({
+      menuLeft: 551,
+      menuRight: 711,
+      submenuWidth: 160,
+      viewportWidth: 768,
+    }),
+    "left"
+  );
+  assert.equal(
+    getDockSubmenuSide({
+      menuLeft: 300,
+      menuRight: 460,
+      submenuWidth: 160,
+      viewportWidth: 1024,
+    }),
+    "right"
+  );
+});
+
+test("document apps reuse stable, app-specific Finder picker identities", () => {
+  assert.equal(getDocumentAppPickerInstanceId("textedit"), "finder-document-picker-textedit");
+  assert.equal(getDocumentAppPickerInstanceId("preview"), "finder-document-picker-preview");
+  assert.notEqual(
+    getDocumentAppPickerInstanceId("textedit"),
+    getDocumentAppPickerInstanceId("preview")
+  );
 });
