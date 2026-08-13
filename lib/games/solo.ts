@@ -167,8 +167,30 @@ export function createSnakeFood(snake: SnakePoint[], size = 18, random = Math.ra
   return free[Math.min(free.length - 1, Math.floor(random() * free.length))] ?? { x: 0, y: 0 };
 }
 
+const MEMORY_SYMBOLS = [
+  "😀", "🥸", "🤠", "👻", "🤖", "👽", "💩", "🎃",
+  "🐶", "🐱", "🦊", "🐼", "🐸", "🦁", "🐙", "🦋",
+  "🐳", "🦩", "🦖", "🐝", "🐢", "🦉", "🦀", "🐬",
+  "🌵", "🍄", "🌻", "🌈", "🌙", "⭐️", "⚡️", "❄️",
+  "🔥", "🌊", "🍀", "🌴", "🌸", "☀️", "🪐", "🌋",
+  "🍒", "🍉", "🍋", "🥝", "🥑", "🌮", "🍕", "🍩",
+  "🧁", "🍿", "🍪", "🍓", "🥨", "🧀", "🍭", "🥐",
+  "⚽️", "🏀", "🎾", "🛹", "🎸", "🎨", "🎯", "🪁",
+  "🎲", "🎳", "🧩", "🎮", "🎹", "🥁", "🏆", "⛸️",
+  "🚀", "🚲", "🚂", "🚁", "⛵️", "🛸", "🏰", "🎡",
+  "🗽", "⛺️", "🏝️", "🗿", "🚜", "🚒", "🛶", "🗼",
+  "💎", "🎈", "🎁", "🔮", "🧸", "🪩", "👑", "🕶️",
+  "📷", "💡", "⏰", "🧲", "🔑", "🪴", "🛎️", "🧭",
+  "❤️", "💜", "💚", "💙", "💛", "🧡", "🤍", "🖤",
+] as const;
+
 export function createMemoryDeck(random = Math.random) {
-  const deck = ["🌙", "🍒", "🪐", "🌵", "🎈", "🐳", "🍄", "⚡️"].flatMap((value) => [value, value]);
+  const available = [...MEMORY_SYMBOLS];
+  const symbols = Array.from({ length: 8 }, () => {
+    const index = Math.min(available.length - 1, Math.floor(random() * available.length));
+    return available.splice(index, 1)[0];
+  });
+  const deck = symbols.flatMap((value) => [value, value]);
   for (let index = deck.length - 1; index > 0; index -= 1) {
     const swap = Math.floor(random() * (index + 1));
     [deck[index], deck[swap]] = [deck[swap], deck[index]];

@@ -80,5 +80,12 @@ test("snake grows on food and collides with walls", () => {
 test("memory deck contains eight exact pairs", () => {
   const deck = createMemoryDeck(() => 0.5);
   assert.equal(deck.length, 16);
+  assert.equal(new Set(deck).size, 8);
   for (const symbol of new Set(deck)) assert.equal(deck.filter((value) => value === symbol).length, 2);
+});
+
+test("memory deck draws each game from a varied emoji pool", () => {
+  const firstGame = new Set(createMemoryDeck(() => 0));
+  const nextGame = new Set(createMemoryDeck(() => 0.999));
+  assert.notDeepEqual(firstGame, nextGame);
 });
