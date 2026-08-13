@@ -1,7 +1,7 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { ChevronLeft, LoaderCircle, RotateCcw, Search, SlidersHorizontal, Wifi, WifiOff, X } from "lucide-react";
+import { ChevronLeft, LoaderCircle, RotateCcw, SlidersHorizontal, Wifi, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameTileIcon, type LibraryGameId } from "@/components/apps/games/game-icons";
 import { BreakoutGame, MemoryGame, MinesweeperGame, SnakeGame, TwentyFortyEightGame } from "@/components/apps/games/solo-games";
@@ -193,8 +193,6 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
   const waitingPlayerName = waitingPlayer.waiting ? waitingPlayer.name : null;
   const [waitingElapsed, setWaitingElapsed] = useState(0);
   const [waitingTimedOut, setWaitingTimedOut] = useState(false);
-  const [librarySearchOpen, setLibrarySearchOpen] = useState(false);
-  const [librarySearch, setLibrarySearch] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
   const [lastPlayed, setLastPlayed] = useState<Partial<Record<LibraryGameId, number>>>({});
   const workerRef = useRef<Worker | null>(null);
@@ -238,8 +236,6 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     const nextPlayed = { ...lastPlayed, [gameId]: Date.now() };
     setLastPlayed(nextPlayed);
     window.localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(nextPlayed));
-    setLibrarySearchOpen(false);
-    setLibrarySearch("");
     setScreen(gameId === "chess" ? "setup" : gameId);
   };
   const cancelComputerMove = useCallback(() => {
@@ -500,14 +496,11 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
     }
     void findPlayer();
   };
-  const visibleLibraryGames = useMemo(() => {
-    const query = librarySearch.trim().toLowerCase();
-    return LIBRARY_GAMES
-      .filter((libraryGame) => !query || `${libraryGame.name} ${libraryGame.description}`.toLowerCase().includes(query))
-      .sort((left, right) => sortBy === "name"
+  const sortedLibraryGames = useMemo(() => {
+    return [...LIBRARY_GAMES].sort((left, right) => sortBy === "name"
         ? left.name.localeCompare(right.name)
         : (lastPlayed[right.id] ?? 0) - (lastPlayed[left.id] ?? 0));
-  }, [lastPlayed, librarySearch, sortBy]);
+  }, [lastPlayed, sortBy]);
   const navAction = screen === "chess" && gameEnded ? (
     <button
       type="button"
@@ -534,16 +527,6 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
         <Wifi size={16} />
       </span>
     )
-  ) : screen === "library" ? (
-    <button
-      type="button"
-      onClick={() => setLibrarySearchOpen((open) => !open)}
-      onMouseDown={(event) => event.stopPropagation()}
-      className={cn("flex h-8 w-8 items-center justify-center rounded-full transition-colors can-hover:hover:bg-muted", librarySearchOpen && "bg-muted")}
-      aria-label={librarySearchOpen ? "Close search" : "Search games"}
-    >
-      {librarySearchOpen ? <X size={16} /> : <Search size={17} />}
-    </button>
   ) : <WindowNavSpacer isMobile={false} />;
 
   const goBack = () => {
@@ -578,40 +561,19 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
             {backButton}
           </div>
         )}
-        center={screen === "library" ? (
-          <div className="rounded-full border border-muted-foreground/15 bg-muted/70 p-1 shadow-sm">
-            <span className="block rounded-full bg-muted-foreground/20 px-5 py-1 text-xs font-semibold">Library</span>
-          </div>
-        ) : <p className="truncate text-center text-sm font-semibold">{screen === "setup" || screen === "waiting" || screen === "chess" ? "Chess" : LIBRARY_GAMES.find((libraryGame) => libraryGame.id === screen)?.name}</p>}
+        center={screen === "library" ? <span /> : <p className="truncate text-center text-sm font-semibold">{screen === "setup" || screen === "waiting" || screen === "chess" ? "Chess" : LIBRARY_GAMES.find((libraryGame) => libraryGame.id === screen)?.name}</p>}
         right={navAction}
       />
 
       {screen === "library" && (
-        <div className="min-h-0 flex-1 overflow-auto bg-background px-7 pb-7 pt-6">
+        <div className="min-h-0 flex-1 overflow-auto bg-background px-7 pb-7 pt-5">
           <div className="mx-auto max-w-[1180px]">
-            {librarySearchOpen && (
-              <div className="relative mx-auto mb-5 max-w-[520px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-                <input value={librarySearch} onChange={(event) => setLibrarySearch(event.target.value)} autoFocus placeholder="Search your games" className="w-full rounded-xl bg-muted py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-[#0A7CFF]/25" />
-              </div>
-            )}
-            <div className="grid grid-cols-1 gap-4 min-[760px]:grid-cols-2">
-              <div className="flex h-[105px] items-center gap-4 rounded-[22px] bg-[linear-gradient(115deg,#b84f47,#49373e)] px-6 text-white shadow-sm">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-3xl shadow-inner">🕹️</span>
-                <div><p className="font-semibold">Game Library</p><p className="text-sm text-white/70">{LIBRARY_GAMES.length} games ready to play</p></div>
-              </div>
-              <div className="flex h-[105px] items-center gap-4 rounded-[22px] bg-[linear-gradient(115deg,#12647f,#2e3b41)] px-6 text-white shadow-sm">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-3xl shadow-inner">🏆</span>
-                <div><p className="font-semibold">Made for Mac</p><p className="text-sm text-white/70">Keyboard and pointer ready</p></div>
-              </div>
-            </div>
-            <div className="mb-4 mt-7 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <h1 className="text-xl font-semibold tracking-tight">Your Games</h1>
               <button type="button" onClick={() => setSortBy((value) => value === "recent" ? "name" : "recent")} className="flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 text-xs font-medium text-muted-foreground can-hover:hover:text-foreground" title={`Sort by ${sortBy === "recent" ? "name" : "recently played"}`}><SlidersHorizontal size={14} />{sortBy === "recent" ? "Recent" : "Name"}</button>
             </div>
-            {visibleLibraryGames.length ? (
-              <div className="grid grid-cols-1 gap-x-8 gap-y-5 min-[620px]:grid-cols-2 min-[1080px]:grid-cols-3">
-                {visibleLibraryGames.map((libraryGame) => (
+            <div className="grid grid-cols-1 gap-x-8 gap-y-5 min-[620px]:grid-cols-2 min-[1080px]:grid-cols-3">
+                {sortedLibraryGames.map((libraryGame) => (
                   <div key={libraryGame.id} className="flex min-w-0 items-center gap-3">
                     <span className="relative shrink-0">
                       <GameTileIcon game={libraryGame.id} className="h-[82px] w-[82px]" />
@@ -625,8 +587,7 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : <div className="py-16 text-center text-sm text-muted-foreground">No games match “{librarySearch}”.</div>}
+            </div>
           </div>
         </div>
       )}

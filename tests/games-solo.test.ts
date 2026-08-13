@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  apply2048Move,
   canMove2048,
   create2048Board,
   createMemoryDeck,
   createMinefield,
   createSnakeFood,
+  initializeMinefield,
   move2048,
   revealMinefield,
   stepSnake,
@@ -33,12 +35,36 @@ test("2048 creates two starting tiles and detects a locked board", () => {
   ]), false);
 });
 
+test("2048 applies scoring atomically and deterministically", () => {
+  const state = {
+    board: [
+      2, 2, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+    ],
+    score: 12,
+    over: false,
+  };
+  const result = apply2048Move(state, "left", [0, 0]);
+  assert.equal(result.score, 16);
+  assert.deepEqual(result, apply2048Move(state, "left", [0, 0]));
+});
+
 test("minesweeper keeps the first cell and its neighbors safe", () => {
   const board = createMinefield(40, () => 0.4);
   assert.equal(board.filter((cell) => cell.mine).length, 10);
   const safeIndexes = [30, 31, 32, 39, 40, 41, 48, 49, 50];
   assert.equal(safeIndexes.some((index) => board[index].mine), false);
   assert.equal(revealMinefield(board, 40)[40].revealed, true);
+});
+
+test("minesweeper preserves flags when the minefield starts", () => {
+  const emptyBoard = Array.from({ length: 81 }, () => ({ mine: false, adjacent: 0, revealed: false, flagged: false }));
+  emptyBoard[0].flagged = true;
+  const board = initializeMinefield(emptyBoard, 40, () => 0.4);
+  assert.equal(board[0].flagged, true);
+  assert.strictEqual(revealMinefield(board, 0), board);
 });
 
 test("snake grows on food and collides with walls", () => {

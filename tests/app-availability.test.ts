@@ -15,6 +15,7 @@ const unsupportedAppIds = [
   "finder",
   "weather",
   "iterm",
+  "games",
   "settings",
   "textedit",
   "preview",

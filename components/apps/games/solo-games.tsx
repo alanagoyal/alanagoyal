@@ -3,15 +3,14 @@
 import { Flag, Pause, Play, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  add2048Tile,
-  canMove2048,
+  apply2048Move,
   create2048Board,
   createMemoryDeck,
-  createMinefield,
   createSnakeFood,
+  type Game2048State,
   type GridDirection,
+  initializeMinefield,
   type MineCell,
-  move2048,
   revealMinefield,
   type SnakePoint,
   stepSnake,
@@ -153,22 +152,13 @@ const TILE_COLORS: Record<number, string> = {
 };
 
 export function TwentyFortyEightGame() {
-  const [board, setBoard] = useState(() => create2048Board());
-  const [score, setScore] = useState(0);
-  const [over, setOver] = useState(false);
+  const [game, setGame] = useState<Game2048State>(() => ({ board: create2048Board(), score: 0, over: false }));
 
-  const reset = useCallback(() => { setBoard(create2048Board()); setScore(0); setOver(false); }, []);
+  const reset = useCallback(() => setGame({ board: create2048Board(), score: 0, over: false }), []);
   const playMove = useCallback((direction: GridDirection) => {
-    if (over) return;
-    setBoard((current) => {
-      const result = move2048(current, direction);
-      if (!result.moved) return current;
-      const next = add2048Tile(result.board);
-      setScore((value) => value + result.score);
-      if (!canMove2048(next)) setOver(true);
-      return next;
-    });
-  }, [over]);
+    const randomValues = [Math.random(), Math.random()] as const;
+    setGame((current) => apply2048Move(current, direction, randomValues));
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -184,10 +174,10 @@ export function TwentyFortyEightGame() {
   return (
     <GameFrame>
       <div className="flex w-full max-w-[440px] flex-col gap-4">
-        <div className="flex items-end justify-between"><div><p className="text-xs text-muted-foreground">Score</p><p className="text-2xl font-semibold tabular-nums">{score}</p></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
+        <div className="flex items-end justify-between"><div><p className="text-xs text-muted-foreground">Score</p><p className="text-2xl font-semibold tabular-nums">{game.score}</p></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
         <div className="relative grid aspect-square grid-cols-4 gap-2 rounded-2xl bg-[#bbada0] p-2 shadow-[0_18px_55px_rgba(15,23,42,.22)]">
-          {board.map((value, index) => <span key={index} className={cn("flex items-center justify-center rounded-xl font-bold shadow-sm", TILE_COLORS[value] ?? "bg-[#3c3a32] text-white", value >= 1024 ? "text-xl" : value >= 128 ? "text-2xl" : "text-3xl")}>{value || "·"}</span>)}
-          {over && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-[#eee4da]/80 text-[#776e65] backdrop-blur-[2px]"><p className="text-2xl font-bold">Game Over</p><button onClick={reset} className="mt-3 rounded-lg bg-[#8f7a66] px-4 py-2 text-sm font-semibold text-white">Try Again</button></div>}
+          {game.board.map((value, index) => <span key={index} className={cn("flex items-center justify-center rounded-xl font-bold shadow-sm", TILE_COLORS[value] ?? "bg-[#3c3a32] text-white", value >= 1024 ? "text-xl" : value >= 128 ? "text-2xl" : "text-3xl")}>{value || "·"}</span>)}
+          {game.over && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-[#eee4da]/80 text-[#776e65] backdrop-blur-[2px]"><p className="text-2xl font-bold">Game Over</p><button onClick={reset} className="mt-3 rounded-lg bg-[#8f7a66] px-4 py-2 text-sm font-semibold text-white">Try Again</button></div>}
         </div>
         <div className="grid grid-cols-3 gap-1.5 sm:hidden"><span /><GameButton onClick={() => playMove("up")}>↑</GameButton><span /><GameButton onClick={() => playMove("left")}>←</GameButton><GameButton onClick={() => playMove("down")}>↓</GameButton><GameButton onClick={() => playMove("right")}>→</GameButton></div>
         <p className="text-center text-xs text-muted-foreground">Use arrow keys or WASD to combine matching tiles.</p>
@@ -213,8 +203,8 @@ export function MinesweeperGame() {
   }, [started, status]);
 
   const reveal = (index: number) => {
-    if (status !== "playing") return;
-    const source = started ? board : createMinefield(index);
+    if (status !== "playing" || board[index].flagged || board[index].revealed) return;
+    const source = started ? board : initializeMinefield(board, index);
     if (!started) setStarted(true);
     const next = revealMinefield(source, index);
     if (next[index].mine) setStatus("lost");

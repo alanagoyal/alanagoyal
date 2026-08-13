@@ -26,6 +26,8 @@ export interface AppConfig {
   defaultSize: Size;
   minSize: Size;
   menuBarTitle: string;
+  dockOrder?: number; // lower values appear first; unspecified apps retain registry order afterward
+  dockIconScale?: number; // optical-size adjustment for assets whose artwork fills more of the canvas
   showOnDockByDefault?: boolean; // defaults to true if not specified
   showInFinderApplications?: boolean; // defaults to true if not specified
   mobile: AppMobilePolicy;

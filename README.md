@@ -71,7 +71,7 @@ a macos sierra 10.12 themed desktop with:
 - upload via ios shortcut with ai auto-categorization
 
 **games** - an Apple Games-inspired library with six playable games
-- library layout with search, sorting, play history, and app-style game artwork
+- library layout with sorting, play history, and app-style game artwork
 - snake, 2048, minesweeper, memory match, and breakout run entirely on-device
 - local computer play with easy, medium, and hard opponents
 - anonymous visitor matchmaking with temporary display names, reconnect, and expiry handling
@@ -109,6 +109,7 @@ retain separate mobile presenters.
 | Calendar | yes | yes | opens Calendar |
 | Weather | no | no | redirects to `/notes` |
 | iTerm | yes | no | redirects to `/notes` |
+| Games | yes | no | redirects to `/notes` |
 | Settings | yes | no | redirects to `/notes` |
 | TextEdit | no | no | redirects to `/notes` |
 | Preview | no | no | redirects to `/notes` |

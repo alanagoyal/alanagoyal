@@ -6,6 +6,12 @@ export interface Move2048Result {
   moved: boolean;
 }
 
+export interface Game2048State {
+  board: number[];
+  score: number;
+  over: boolean;
+}
+
 function collapse2048Line(line: number[]) {
   const values = line.filter(Boolean);
   const result: number[] = [];
@@ -59,6 +65,19 @@ export function canMove2048(board: number[]) {
   return (["up", "down", "left", "right"] as GridDirection[]).some((direction) => move2048(board, direction).moved);
 }
 
+export function apply2048Move(
+  state: Game2048State,
+  direction: GridDirection,
+  randomValues: readonly [number, number],
+): Game2048State {
+  if (state.over) return state;
+  const result = move2048(state.board, direction);
+  if (!result.moved) return state;
+  let randomIndex = 0;
+  const board = add2048Tile(result.board, () => randomValues[randomIndex++]);
+  return { board, score: state.score + result.score, over: !canMove2048(board) };
+}
+
 export interface MineCell {
   mine: boolean;
   adjacent: number;
@@ -90,6 +109,13 @@ export function createMinefield(safeIndex: number, random = Math.random, size = 
     }
     return { mine: mines.has(index), adjacent, revealed: false, flagged: false };
   });
+}
+
+export function initializeMinefield(board: MineCell[], safeIndex: number, random = Math.random, size = 9, mineCount = 10) {
+  return createMinefield(safeIndex, random, size, mineCount).map((cell, index) => ({
+    ...cell,
+    flagged: board[index]?.flagged ?? false,
+  }));
 }
 
 export function revealMinefield(board: MineCell[], startIndex: number, size = 9) {
