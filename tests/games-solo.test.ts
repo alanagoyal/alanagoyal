@@ -89,3 +89,18 @@ test("memory deck draws each game from a varied emoji pool", () => {
   const nextGame = new Set(createMemoryDeck(() => 0.999));
   assert.notDeepEqual(firstGame, nextGame);
 });
+
+test("memory levels grow into square boards with exact pairs", () => {
+  const levelTwoDeck = createMemoryDeck(() => 0.5, 5);
+  assert.equal(levelTwoDeck.length, 25);
+  assert.equal(levelTwoDeck[12], null);
+  assert.equal(levelTwoDeck.filter((card) => card === null).length, 1);
+  for (const symbol of new Set(levelTwoDeck.filter((card) => card !== null))) {
+    assert.equal(levelTwoDeck.filter((value) => value === symbol).length, 2);
+  }
+
+  const levelThreeDeck = createMemoryDeck(() => 0.5, 6);
+  assert.equal(levelThreeDeck.length, 36);
+  assert.equal(levelThreeDeck.includes(null), false);
+  assert.equal(new Set(levelThreeDeck).size, 18);
+});

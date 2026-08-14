@@ -10,6 +10,7 @@ import {
   type Game2048State,
   type GridDirection,
   initializeMinefield,
+  MAX_MEMORY_GRID_SIZE,
   type MineCell,
   revealMinefield,
   type SnakePoint,
@@ -243,13 +244,34 @@ export function MinesweeperGame() {
 }
 
 export function MemoryGame() {
-  const [deck, setDeck] = useState(() => createMemoryDeck());
+  const [level, setLevel] = useState(1);
+  const gridSize = level + 3;
+  const [deck, setDeck] = useState(() => createMemoryDeck(Math.random, 4));
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
   const [locked, setLocked] = useState(false);
+  const flipTimerRef = useRef<number | null>(null);
 
-  const reset = useCallback(() => { setDeck(createMemoryDeck()); setFlipped([]); setMatched([]); setMoves(0); setLocked(false); }, []);
+  const startLevel = useCallback((nextLevel: number) => {
+    if (flipTimerRef.current !== null) window.clearTimeout(flipTimerRef.current);
+    flipTimerRef.current = null;
+    const nextGridSize = nextLevel + 3;
+    const nextDeck = createMemoryDeck(Math.random, nextGridSize);
+    const freeIndex = nextDeck.findIndex((card) => card === null);
+    setLevel(nextLevel);
+    setDeck(nextDeck);
+    setFlipped([]);
+    setMatched(freeIndex === -1 ? [] : [freeIndex]);
+    setMoves(0);
+    setLocked(false);
+  }, []);
+  const reset = useCallback(() => startLevel(level), [level, startLevel]);
+
+  useEffect(() => () => {
+    if (flipTimerRef.current !== null) window.clearTimeout(flipTimerRef.current);
+  }, []);
+
   const flip = (index: number) => {
     if (locked || flipped.includes(index) || matched.includes(index)) return;
     if (flipped.length === 0) { setFlipped([index]); return; }
@@ -257,26 +279,39 @@ export function MemoryGame() {
     setFlipped([first, index]);
     setMoves((value) => value + 1);
     setLocked(true);
-    window.setTimeout(() => {
+    flipTimerRef.current = window.setTimeout(() => {
       if (deck[first] === deck[index]) setMatched((current) => [...current, first, index]);
       setFlipped([]);
       setLocked(false);
+      flipTimerRef.current = null;
     }, deck[first] === deck[index] ? 450 : 750);
   };
   const won = matched.length === deck.length;
+  const hasNextLevel = gridSize < MAX_MEMORY_GRID_SIZE;
 
   return (
     <GameFrame>
-      <div className="flex w-[min(100%,calc(100cqh-132px))] max-w-[470px] flex-col gap-4">
-        <div className="flex items-end justify-between"><div><p className="text-xs text-muted-foreground">Moves</p><p className="text-xl font-semibold tabular-nums">{moves}</p></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
-        <div className="relative grid aspect-square grid-cols-4 gap-2 rounded-2xl bg-[linear-gradient(145deg,#35266e,#6f50c9)] p-3 shadow-[0_18px_55px_rgba(15,23,42,.24)]">
+      <div className="flex w-[min(100%,calc(100cqh-132px))] max-w-[500px] flex-col gap-4">
+        <div className="flex items-end justify-between">
+          <div className="flex gap-6">
+            <div><p className="text-xs text-muted-foreground">Level</p><p className="text-xl font-semibold tabular-nums">{level}</p></div>
+            <div><p className="text-xs text-muted-foreground">Board</p><p className="text-xl font-semibold tabular-nums">{gridSize}×{gridSize}</p></div>
+            <div><p className="text-xs text-muted-foreground">Moves</p><p className="text-xl font-semibold tabular-nums">{moves}</p></div>
+          </div>
+          <GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton>
+        </div>
+        <div
+          className="relative grid aspect-square gap-[clamp(3px,1.5cqw,8px)] rounded-2xl bg-[linear-gradient(145deg,#35266e,#6f50c9)] p-[clamp(6px,2.5cqw,12px)] shadow-[0_18px_55px_rgba(15,23,42,.24)] [container-type:inline-size]"
+          style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+        >
           {deck.map((value, index) => {
             const visible = flipped.includes(index) || matched.includes(index);
-            return <button key={index} type="button" onClick={() => flip(index)} aria-label={visible ? value : `Hidden card ${index + 1}`} className={cn("flex items-center justify-center rounded-xl border border-white/20 text-3xl shadow-md transition-all duration-200", visible ? "rotate-0 bg-white dark:bg-[#25242a]" : "bg-white/16 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.22),transparent_45%)] can-hover:hover:bg-white/24", matched.includes(index) && "opacity-70 ring-2 ring-[#7fffc6]")}><span className={visible ? "scale-100" : "scale-0"}>{value}</span></button>;
+            const free = value === null;
+            return <button key={index} type="button" onClick={() => flip(index)} aria-label={free ? "Free space" : visible ? value : `Hidden card ${index + 1}`} className={cn("flex min-h-0 min-w-0 items-center justify-center rounded-[clamp(5px,2.5cqw,12px)] border border-white/20 shadow-md transition-all duration-200", visible ? "rotate-0 bg-white dark:bg-[#25242a]" : "bg-white/16 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.22),transparent_45%)] can-hover:hover:bg-white/24", matched.includes(index) && "opacity-70 ring-2 ring-[#7fffc6]", free && "cursor-default bg-white/25 text-white ring-white/25")}><span className={visible ? "scale-100" : "scale-0"} style={{ fontSize: `clamp(0.75rem, ${28 / gridSize}cqw, 1.875rem)` }}>{free ? "★" : value}</span></button>;
           })}
-          {won && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-[#2f2264]/70 text-white backdrop-blur-[3px]"><p className="text-2xl font-semibold">All matched!</p><p className="mt-1 text-sm text-white/75">Finished in {moves} moves</p><button onClick={reset} className="mt-3 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#35266e]">Play Again</button></div>}
+          {won && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-[#2f2264]/75 px-6 text-center text-white backdrop-blur-[3px]"><p className="text-2xl font-semibold">{hasNextLevel ? `Level ${level} complete!` : "Every level complete!"}</p><p className="mt-1 text-sm text-white/75">Finished in {moves} moves</p><button onClick={() => startLevel(hasNextLevel ? level + 1 : 1)} className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#35266e] can-hover:hover:bg-white/90">{hasNextLevel ? `Continue to ${gridSize + 1}×${gridSize + 1}` : "Play From Level 1"}</button></div>}
         </div>
-        <p className="text-center text-xs text-muted-foreground">Find all eight matching pairs.</p>
+        <p className="text-center text-xs text-muted-foreground">Find all {Math.floor(deck.length / 2)} matching pairs{deck.includes(null) ? " · The star is a free space" : ""}.</p>
       </div>
     </GameFrame>
   );
