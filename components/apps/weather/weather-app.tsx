@@ -552,10 +552,10 @@ function SidebarCityItem({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{cityButton}</ContextMenuTrigger>
-      <ContextMenuContent className="z-[100] min-w-[132px] rounded-lg border-white/10 bg-zinc-900/90 p-1 text-white shadow-2xl backdrop-blur-xl">
+      <ContextMenuContent className="z-[100] min-w-[132px] rounded-lg border-black/70 bg-[rgba(5,24,43,0.65)] p-1 text-white shadow-2xl backdrop-blur-xl">
         <ContextMenuItem
           onSelect={onDelete}
-          className="text-[13px] text-red-400 focus:bg-white/10 focus:text-red-300"
+          className="text-[13px] text-white focus:bg-[#467ED7] focus:text-white"
         >
           <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
           Delete
