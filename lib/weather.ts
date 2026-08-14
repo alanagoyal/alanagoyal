@@ -35,6 +35,23 @@ export interface WeatherScene {
   isDark: boolean;
 }
 
+interface WeatherCityIdentity {
+  id: string;
+}
+
+export function getWeatherCitySelectionAfterRemoval(
+  cities: WeatherCityIdentity[],
+  removedCityId: string,
+  selectedCityId: string
+): string | null {
+  if (selectedCityId !== removedCityId) return selectedCityId;
+
+  const removedIndex = cities.findIndex((city) => city.id === removedCityId);
+  if (removedIndex === -1) return null;
+
+  return cities[removedIndex + 1]?.id ?? cities[removedIndex - 1]?.id ?? null;
+}
+
 interface WeatherThemeDefinition {
   background: string;
   heroGradient: string;

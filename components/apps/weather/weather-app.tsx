@@ -13,6 +13,7 @@ import {
   Sun,
   Sunrise,
   Sunset,
+  Trash2,
   Wind,
   X,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import {
   buildOpenMeteoForecastUrl,
   getWeatherDescription,
   getWeatherIconName,
+  getWeatherCitySelectionAfterRemoval,
   type WeatherMood,
   getWeatherScene,
   type WeatherScene,
@@ -40,6 +42,12 @@ import {
 } from "@/lib/sidebar-persistence";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { cn } from "@/lib/utils";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface WeatherAppProps {
   inShell?: boolean;
@@ -475,12 +483,14 @@ function SidebarCityItem({
   scene,
   isSelected,
   onSelect,
+  onDelete,
 }: {
   cityName: string;
   weather: CityWeather | null;
   scene: WeatherScene | null;
   isSelected: boolean;
   onSelect: () => void;
+  onDelete?: () => void;
 }) {
   const timeLabel = weather ? formatCityClock(weather.currentTime) : "--:--";
   const descriptionLabel = weather ? getWeatherDescription(weather.weatherCode) : "Loading...";
@@ -489,7 +499,7 @@ function SidebarCityItem({
     ? `H:${Math.round(weather.high)}° L:${Math.round(weather.low)}°`
     : "H:-- L:--";
 
-  return (
+  const cityButton = (
     <button
       type="button"
       onClick={onSelect}
@@ -535,6 +545,23 @@ function SidebarCityItem({
         </div>
       </div>
     </button>
+  );
+
+  if (!onDelete) return cityButton;
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{cityButton}</ContextMenuTrigger>
+      <ContextMenuContent className="z-[100] min-w-[132px] rounded-lg border-white/10 bg-zinc-900/90 p-1 text-white shadow-2xl backdrop-blur-xl">
+        <ContextMenuItem
+          onSelect={onDelete}
+          className="text-[13px] text-red-400 focus:bg-white/10 focus:text-red-300"
+        >
+          <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -862,6 +889,32 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
     []
   );
 
+  const handleDeleteCity = useCallback(
+    (cityId: string) => {
+      if (!customCities.some((city) => city.id === cityId)) return;
+
+      const nextSelectedCityId = getWeatherCitySelectionAfterRemoval(
+        allCities,
+        cityId,
+        selectedCityId
+      );
+
+      setCustomCities((previousCities) =>
+        previousCities.filter((city) => city.id !== cityId)
+      );
+      setWeatherByCity((previousWeatherByCity) => {
+        const nextWeatherByCity = { ...previousWeatherByCity };
+        delete nextWeatherByCity[cityId];
+        return nextWeatherByCity;
+      });
+
+      if (nextSelectedCityId) {
+        setSelectedCityId(nextSelectedCityId);
+      }
+    },
+    [allCities, customCities, selectedCityId]
+  );
+
   const dailyRange = useMemo(() => {
     const daily = selectedWeather?.daily ?? [];
     const min = Math.min(...daily.map((d) => d.low), 0);
@@ -1087,6 +1140,11 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                         scene={city.scene}
                         isSelected={city.id === selectedCityId}
                         onSelect={() => setSelectedCityId(city.id)}
+                        onDelete={
+                          customCities.some((customCity) => customCity.id === city.id)
+                            ? () => handleDeleteCity(city.id)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
