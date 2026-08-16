@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, type ReactNode } from "react";
 import Image from "next/image";
 import {
   Calendar,
@@ -31,10 +31,13 @@ import {
   getWeatherScene,
 } from "@/lib/weather";
 import {
-  dismissPodcastNotification,
   getPodcastNotificationPayload,
-  isPodcastNotificationDismissed,
 } from "@/lib/podcast-notification";
+import {
+  dismissNotificationCenterItem,
+  getUnreadMessagesNotification,
+  isNotificationCenterItemDismissed,
+} from "@/lib/notification-center";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
@@ -55,6 +58,60 @@ const clickableCardClass =
 const weatherCardClass = `${notificationCardClass} h-[134px]`;
 const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
+function ClearableCard({
+  children,
+  clearLabel,
+  inverse = false,
+  itemId,
+  signature,
+}: {
+  children: ReactNode;
+  clearLabel: string;
+  inverse?: boolean;
+  itemId: string;
+  signature: string;
+}) {
+  const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsDismissed(
+      isNotificationCenterItemDismissed(
+        window.sessionStorage,
+        itemId,
+        signature
+      )
+    );
+  }, [itemId, signature]);
+
+  if (isDismissed !== false) return null;
+
+  return (
+    <div className="group relative">
+      {children}
+      <button
+        type="button"
+        aria-label={`Clear ${clearLabel}`}
+        className={cn(
+          "absolute right-2.5 top-2.5 z-[2] grid size-5 place-items-center rounded-full opacity-0 transition-opacity focus:opacity-100 can-hover:group-hover:opacity-100",
+          inverse
+            ? "bg-black/20 text-white can-hover:hover:bg-black/30"
+            : "bg-black/10 text-zinc-600 can-hover:hover:bg-black/15 dark:bg-white/15 dark:text-zinc-200 dark:can-hover:hover:bg-white/20"
+        )}
+        onClick={() => {
+          dismissNotificationCenterItem(
+            window.sessionStorage,
+            itemId,
+            signature
+          );
+          setIsDismissed(true);
+        }}
+      >
+        <X className="size-3.5" strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
 function PodcastNotificationWidget({
   onActivate,
   onOpen,
@@ -63,16 +120,13 @@ function PodcastNotificationWidget({
   onOpen?: (notification: PodcastNotificationPayload) => void;
 }) {
   const notification = getPodcastNotificationPayload();
-  const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setIsDismissed(isPodcastNotificationDismissed(window.localStorage));
-  }, []);
-
-  if (isDismissed !== false) return null;
 
   return (
-    <div className="group relative">
+    <ClearableCard
+      clearLabel="podcast notification"
+      itemId="podcast"
+      signature={notification.id}
+    >
       <button
         type="button"
         className={`${clickableCardClass} w-full pr-10`}
@@ -91,18 +145,7 @@ function PodcastNotificationWidget({
           className="rounded-none border-0 bg-transparent p-0 shadow-none dark:bg-transparent"
         />
       </button>
-      <button
-        type="button"
-        aria-label="Clear podcast notification"
-        className="absolute right-2.5 top-2.5 grid size-5 place-items-center rounded-full bg-black/10 text-zinc-600 opacity-0 transition-opacity focus:opacity-100 can-hover:group-hover:opacity-100 can-hover:hover:bg-black/15 dark:bg-white/15 dark:text-zinc-200 dark:can-hover:hover:bg-white/20"
-        onClick={() => {
-          dismissPodcastNotification(window.localStorage);
-          setIsDismissed(true);
-        }}
-      >
-        <X className="size-3.5" strokeWidth={2} />
-      </button>
-    </div>
+    </ClearableCard>
   );
 }
 
@@ -198,50 +241,63 @@ function CalendarWidget({
 
   const displayed = events.slice(0, 4);
   const overflow = events.length - 4;
+  const todaySignature = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
+  const signature = [
+    todaySignature,
+    ...events.map((event) =>
+      [event.id, event.title, event.startTime, event.endTime].join(":")
+    ),
+  ].join("|");
 
   return (
-    <div
-      className={clickableCardClass}
-      onClick={() => {
-        openWindow("calendar");
-        onActivate();
-      }}
+    <ClearableCard
+      clearLabel="Up Next"
+      itemId="calendar"
+      signature={signature}
     >
-      <div className="flex items-center gap-1.5 mb-2">
-        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold">Up Next</span>
-      </div>
-      {displayed.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No events today</p>
-      ) : (
-        <div className="space-y-1.5">
-          {displayed.map((event) => (
-            <div key={event.id} className="flex items-center gap-2">
-              <div
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{
-                  backgroundColor:
-                    calendarColors[event.calendarId] || "#888",
-                }}
-              />
-              <span className="text-xs truncate flex-1">{event.title}</span>
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {event.isAllDay
-                  ? "All Day"
-                  : event.startTime && event.endTime
-                    ? `${formatEventTime(event.startTime)} – ${formatEventTime(event.endTime)}`
-                    : ""}
-              </span>
-            </div>
-          ))}
-          {overflow > 0 && (
-            <p className="text-[10px] text-muted-foreground">
-              +{overflow} more
-            </p>
-          )}
+      <div
+        className={`${clickableCardClass} pr-10`}
+        onClick={() => {
+          openWindow("calendar");
+          onActivate();
+        }}
+      >
+        <div className="flex items-center gap-1.5 mb-2">
+          <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold">Up Next</span>
         </div>
-      )}
-    </div>
+        {displayed.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No events today</p>
+        ) : (
+          <div className="space-y-1.5">
+            {displayed.map((event) => (
+              <div key={event.id} className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{
+                    backgroundColor:
+                      calendarColors[event.calendarId] || "#888",
+                  }}
+                />
+                <span className="text-xs truncate flex-1">{event.title}</span>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  {event.isAllDay
+                    ? "All Day"
+                    : event.startTime && event.endTime
+                      ? `${formatEventTime(event.startTime)} – ${formatEventTime(event.endTime)}`
+                      : ""}
+                </span>
+              </div>
+            ))}
+            {overflow > 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                +{overflow} more
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </ClearableCard>
   );
 }
 
@@ -256,8 +312,9 @@ function MessagesWidget({
   onOpenConversation?: (conversationId: string) => void;
 }) {
   const { openWindow } = useWindowManager();
-  const [totalUnread, setTotalUnread] = useState(0);
-  const [latestConversation, setLatestConversation] = useState<Conversation | null>(null);
+  const [notification, setNotification] = useState<
+    ReturnType<typeof getUnreadMessagesNotification> | undefined
+  >(undefined);
 
   useEffect(() => {
     let conversations: Conversation[] = [];
@@ -268,21 +325,12 @@ function MessagesWidget({
       // ignore
     }
 
-    const total = conversations.reduce(
-      (sum, c) => sum + (c.unreadCount || 0),
-      0
-    );
-
-    const unreadConversations = conversations
-      .filter((c) => (c.unreadCount || 0) > 0)
-      .sort(
-        (a, b) =>
-          new Date(b.lastMessageTime).getTime() -
-          new Date(a.lastMessageTime).getTime()
-      );
-    setTotalUnread(total);
-    setLatestConversation(unreadConversations[0] || null);
+    setNotification(getUnreadMessagesNotification(conversations));
   }, [refreshKey]);
+
+  if (!notification) return null;
+
+  const { latestConversation, signature, totalUnread } = notification;
 
   const senderName = latestConversation?.recipients[0]?.name;
   const lastMessage =
@@ -295,28 +343,32 @@ function MessagesWidget({
         .toUpperCase()
     : "";
 
+  if (!senderName || !lastMessage) return null;
+
   return (
-    <div
-      className={clickableCardClass}
-      onClick={() => {
-        if (latestConversation?.id && onOpenConversation) {
-          onOpenConversation(latestConversation.id);
-        } else {
-          openWindow("messages");
-        }
-        onActivate();
-      }}
+    <ClearableCard
+      clearLabel="Messages notification"
+      itemId="messages"
+      signature={signature}
     >
-      <div className="flex items-center gap-1.5 mb-2">
-        <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold flex-1">Messages</span>
-        {totalUnread > 0 && (
+      <div
+        className={`${clickableCardClass} pr-10`}
+        onClick={() => {
+          if (onOpenConversation) {
+            onOpenConversation(latestConversation.id);
+          } else {
+            openWindow("messages");
+          }
+          onActivate();
+        }}
+      >
+        <div className="flex items-center gap-1.5 mb-2">
+          <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold flex-1">Messages</span>
           <span className="bg-[#0A7CFF] text-white text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
             {totalUnread}
           </span>
-        )}
-      </div>
-      {latestConversation && senderName && lastMessage ? (
+        </div>
         <div className="flex items-start gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-b from-zinc-300 to-zinc-400 dark:from-zinc-500 dark:to-zinc-700 flex items-center justify-center shrink-0">
             <span className="text-[10px] font-semibold text-white">
@@ -330,10 +382,8 @@ function MessagesWidget({
             </p>
           </div>
         </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">No new messages</p>
-      )}
-    </div>
+      </div>
+    </ClearableCard>
   );
 }
 
@@ -386,48 +436,61 @@ function PhotosWidget({
 
   if (loading) {
     return (
-      <div className={cardClass}>
-        <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse mb-2" />
-        <div className="grid grid-cols-3 gap-1.5">
-          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
-          <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+      <ClearableCard
+        clearLabel="Recent Photos"
+        itemId="photos"
+        signature="loading"
+      >
+        <div className={`${cardClass} pr-10`}>
+          <div className="h-4 w-24 rounded bg-black/10 dark:bg-white/15 animate-pulse mb-2" />
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+            <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+            <div className="aspect-square rounded bg-black/10 dark:bg-white/15 animate-pulse" />
+          </div>
         </div>
-      </div>
+      </ClearableCard>
     );
   }
 
   if (recentPhotos.length === 0) return null;
+  const signature = recentPhotos.map((photo) => photo.id).join("|");
 
   return (
-    <div
-      className={clickableCardClass}
-      onClick={() => {
-        openWindow("photos");
-        onActivate();
-      }}
+    <ClearableCard
+      clearLabel="Recent Photos"
+      itemId="photos"
+      signature={signature}
     >
-      <div className="flex items-center gap-1.5 mb-2">
-        <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold">Recent Photos</span>
+      <div
+        className={`${clickableCardClass} pr-10`}
+        onClick={() => {
+          openWindow("photos");
+          onActivate();
+        }}
+      >
+        <div className="flex items-center gap-1.5 mb-2">
+          <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold">Recent Photos</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {recentPhotos.map((photo) => (
+            <div
+              key={photo.id}
+              className="aspect-square rounded overflow-hidden relative"
+            >
+              <Image
+                src={getThumbnailUrl(photo.url)}
+                alt={photo.filename}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-1.5">
-        {recentPhotos.map((photo) => (
-          <div
-            key={photo.id}
-            className="aspect-square rounded overflow-hidden relative"
-          >
-            <Image
-              src={getThumbnailUrl(photo.url)}
-              alt={photo.filename}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    </ClearableCard>
   );
 }
 
@@ -449,43 +512,63 @@ function WeatherWidget({
   const textClassName = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
   const mutedTextClassName = "text-white/78 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]";
   const iconClassName = "text-white/82";
+  const today = new Date();
+  const unavailableSignature = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+  const signature = loading
+    ? "loading"
+    : weather
+      ? [
+          weather.currentTime,
+          weather.temp,
+          weather.code,
+          weather.high,
+          weather.low,
+        ].join(":")
+      : `unavailable:${unavailableSignature}`;
 
   return (
-    <div
-      className={cn(
-        clickableWeatherCardClass,
-        "relative overflow-hidden text-white"
-      )}
-      style={{ background: scene.background }}
-      onClick={() => {
-        openWindow("weather");
-        onActivate();
-      }}
+    <ClearableCard
+      clearLabel="Weather"
+      inverse
+      itemId="weather"
+      signature={signature}
     >
-      <WeatherSceneEffects scene={scene} surface="preview" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
-      <div className={cn("relative z-[1]", textClassName)}>
-        {loading && <WeatherWidgetSkeleton />}
-        {!loading && !weather && (
-          <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
+      <div
+        className={cn(
+          clickableWeatherCardClass,
+          "relative overflow-hidden pr-10 text-white"
         )}
-        {!loading && weather && (
-          <>
-            <p className="text-sm font-medium">San Francisco</p>
-            <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
-            <div className="flex items-center gap-1.5 mt-3">
-              <div className={iconClassName}>{weatherInfo?.icon}</div>
-              <div>
-                <p className="text-xs font-medium">{weatherInfo?.description}</p>
-                <p className={cn("text-[10px]", mutedTextClassName)}>
-                  H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
-                </p>
+        style={{ background: scene.background }}
+        onClick={() => {
+          openWindow("weather");
+          onActivate();
+        }}
+      >
+        <WeatherSceneEffects scene={scene} surface="preview" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
+        <div className={cn("relative z-[1]", textClassName)}>
+          {loading && <WeatherWidgetSkeleton />}
+          {!loading && !weather && (
+            <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
+          )}
+          {!loading && weather && (
+            <>
+              <p className="text-sm font-medium">San Francisco</p>
+              <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <div className={iconClassName}>{weatherInfo?.icon}</div>
+                <div>
+                  <p className="text-xs font-medium">{weatherInfo?.description}</p>
+                  <p className={cn("text-[10px]", mutedTextClassName)}>
+                    H:{Math.round(weather.high)}° L:{Math.round(weather.low)}°
+                  </p>
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </ClearableCard>
   );
 }
 

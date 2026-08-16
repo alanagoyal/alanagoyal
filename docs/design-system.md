@@ -405,10 +405,12 @@ non-interactive inside the row to avoid nesting buttons.
 
 Top-right banners use `DesktopNotificationBanner` for incoming Messages notifications. Keep promotional or long-lived content in Notification Center instead of showing it as a desktop banner.
 
-Notification Center notification cards may expose a macOS-style Clear button on
-hover and focus. Keep that action as a sibling of the card's primary button so
-clearing never activates the notification. Widgets remain persistent and do not
-inherit notification dismissal controls.
+Every visible Notification Center card exposes an independent macOS-style Clear
+button on hover and focus. Keep that action as a sibling of the card's primary
+button so clearing never activates it. Store dismissals in `sessionStorage`
+against a content signature: cleared cards stay hidden for the current tab but
+return when their underlying content changes. Messages renders only when at
+least one conversation is unread; do not show an empty Messages card.
 
 Notification Center cards share the same outer `mb-1.5 rounded-md p-3` geometry. Apply content-specific borders, radii, and backgrounds only inside that shared container; scene-based cards such as Weather may replace the standard `bg-muted` surface.
 
