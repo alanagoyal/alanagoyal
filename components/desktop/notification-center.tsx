@@ -13,6 +13,7 @@ import {
   CloudRain,
   CloudSnow,
   CloudLightning,
+  X,
 } from "lucide-react";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useWindowManager } from "@/lib/window-context";
@@ -29,7 +30,11 @@ import {
   getWeatherIconName,
   getWeatherScene,
 } from "@/lib/weather";
-import { getPodcastNotificationPayload } from "@/lib/podcast-notification";
+import {
+  dismissPodcastNotification,
+  getPodcastNotificationPayload,
+  isPodcastNotificationDismissed,
+} from "@/lib/podcast-notification";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
 import type { Conversation } from "@/types/messages";
@@ -58,26 +63,46 @@ function PodcastNotificationWidget({
   onOpen?: (notification: PodcastNotificationPayload) => void;
 }) {
   const notification = getPodcastNotificationPayload();
+  const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsDismissed(isPodcastNotificationDismissed(window.localStorage));
+  }, []);
+
+  if (isDismissed !== false) return null;
 
   return (
-    <button
-      type="button"
-      className={`${clickableCardClass} w-full`}
-      onClick={() => {
-        if (onOpen) {
-          onOpen(notification);
-        } else {
-          window.open(notification.tweetUrl, "_blank", "noopener,noreferrer");
-        }
-        onActivate();
-      }}
-    >
-      <PodcastTweetCard
-        notification={notification}
-        compact
-        className="rounded-none border-0 bg-transparent p-0 shadow-none dark:bg-transparent"
-      />
-    </button>
+    <div className="group relative">
+      <button
+        type="button"
+        className={`${clickableCardClass} w-full pr-10`}
+        onClick={() => {
+          if (onOpen) {
+            onOpen(notification);
+          } else {
+            window.open(notification.tweetUrl, "_blank", "noopener,noreferrer");
+          }
+          onActivate();
+        }}
+      >
+        <PodcastTweetCard
+          notification={notification}
+          compact
+          className="rounded-none border-0 bg-transparent p-0 shadow-none dark:bg-transparent"
+        />
+      </button>
+      <button
+        type="button"
+        aria-label="Clear podcast notification"
+        className="absolute right-2.5 top-2.5 grid size-5 place-items-center rounded-full bg-black/10 text-zinc-600 opacity-0 transition-opacity focus:opacity-100 can-hover:group-hover:opacity-100 can-hover:hover:bg-black/15 dark:bg-white/15 dark:text-zinc-200 dark:can-hover:hover:bg-white/20"
+        onClick={() => {
+          dismissPodcastNotification(window.localStorage);
+          setIsDismissed(true);
+        }}
+      >
+        <X className="size-3.5" strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 
