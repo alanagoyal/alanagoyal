@@ -94,12 +94,12 @@ function ClearableCard({
   };
 
   return (
-    <div className="group/card relative pl-7">
+    <div className="group/card relative">
       {children}
       <button
         type="button"
         aria-label={clearLabel}
-        className="absolute left-1 top-1 z-[2] grid h-[22px] w-[22px] place-items-center rounded-full border border-white/40 bg-[#c8c8cc]/90 text-[14px] font-normal leading-none text-zinc-500/90 opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-opacity duration-150 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 dark:border-white/10 dark:bg-[#525258]/90 dark:text-zinc-400 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] can-hover:group-hover/card:opacity-100"
+        className="absolute -left-2.5 -top-1.5 z-[2] grid h-[22px] w-[22px] place-items-center rounded-full border border-white/40 bg-[#c8c8cc]/90 text-[14px] font-normal leading-none text-zinc-500/90 opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-opacity duration-150 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 dark:border-white/10 dark:bg-[#525258]/90 dark:text-zinc-400 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] can-hover:group-hover/card:opacity-100"
         onClick={clearCard}
       >
         ✕
@@ -636,11 +636,11 @@ export function NotificationCenter({
   return (
     <div
       ref={menuRef}
-      className="absolute top-7 right-0 z-[70] max-h-[calc(100vh-3rem)] w-80 overflow-hidden rounded-lg border border-muted-foreground/20 bg-white/95 p-2 shadow-2xl backdrop-blur-xl dark:bg-zinc-800/95"
+      className="absolute top-7 right-0 z-[70] max-h-[calc(100vh-3rem)] w-80 overflow-visible rounded-lg border border-muted-foreground/20 bg-white/95 p-2 shadow-2xl backdrop-blur-xl dark:bg-zinc-800/95"
     >
       <ScrollArea
-        className="max-h-[calc(100vh-4rem-2px)]"
-        viewportClassName="max-h-[inherit]"
+        className="max-h-[calc(100vh-4rem-2px)] overflow-visible"
+        viewportClassName="-ml-4 max-h-[inherit] w-[calc(100%+1rem)] pl-4"
       >
         {/* Date Header */}
         <div className="px-1 pt-1 pb-2">
