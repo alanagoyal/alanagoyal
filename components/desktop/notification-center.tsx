@@ -1,9 +1,6 @@
 "use client";
 
 import {
-  createContext,
-  useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -22,7 +19,6 @@ import {
   CloudRain,
   CloudSnow,
   CloudLightning,
-  X,
 } from "lucide-react";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useWindowManager } from "@/lib/window-context";
@@ -41,7 +37,7 @@ import {
 } from "@/lib/weather";
 import { getPodcastNotificationPayload } from "@/lib/podcast-notification";
 import {
-  dismissNotificationCenterItems,
+  dismissNotificationCenterItem,
   getUnreadMessagesNotification,
   isNotificationCenterItemDismissed,
 } from "@/lib/notification-center";
@@ -65,79 +61,17 @@ const clickableCardClass =
 const weatherCardClass = `${notificationCardClass} h-[134px]`;
 const clickableWeatherCardClass = `${weatherCardClass} transition-colors cursor-pointer`;
 
-interface RegisteredClearableItem {
-  itemId: string;
-  onDismiss: () => void;
-  signature: string;
-}
-
-interface NotificationCenterClearAllContextValue {
-  clearAll: () => void;
-  registerItem: (item: RegisteredClearableItem) => () => void;
-}
-
-const NotificationCenterClearAllContext =
-  createContext<NotificationCenterClearAllContextValue | null>(null);
-
-function useNotificationCenterClearAll() {
-  const value = useContext(NotificationCenterClearAllContext);
-  if (!value) {
-    throw new Error(
-      "ClearableCard must be inside NotificationCenterClearAllProvider"
-    );
-  }
-  return value;
-}
-
-function NotificationCenterClearAllProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const itemsRef = useRef(new Map<string, RegisteredClearableItem>());
-
-  const registerItem = useCallback((item: RegisteredClearableItem) => {
-    itemsRef.current.set(item.itemId, item);
-
-    return () => {
-      const registeredItem = itemsRef.current.get(item.itemId);
-      if (registeredItem === item) {
-        itemsRef.current.delete(item.itemId);
-      }
-    };
-  }, []);
-
-  const clearAll = useCallback(() => {
-    const items = [...itemsRef.current.values()];
-    dismissNotificationCenterItems(
-      window.sessionStorage,
-      items.map(({ itemId, signature }) => ({ itemId, signature }))
-    );
-    items.forEach(({ onDismiss }) => onDismiss());
-  }, []);
-
-  const value = useMemo(
-    () => ({ clearAll, registerItem }),
-    [clearAll, registerItem]
-  );
-
-  return (
-    <NotificationCenterClearAllContext.Provider value={value}>
-      {children}
-    </NotificationCenterClearAllContext.Provider>
-  );
-}
-
 function ClearableCard({
   children,
+  clearLabel,
   itemId,
   signature,
 }: {
   children: ReactNode;
+  clearLabel: string;
   itemId: string;
   signature: string;
 }) {
-  const { clearAll, registerItem } = useNotificationCenterClearAll();
   const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -150,34 +84,25 @@ function ClearableCard({
     );
   }, [itemId, signature]);
 
-  useEffect(() => {
-    if (isDismissed !== false) return;
-
-    return registerItem({
-      itemId,
-      signature,
-      onDismiss: () => setIsDismissed(true),
-    });
-  }, [isDismissed, itemId, registerItem, signature]);
-
   if (isDismissed !== false) return null;
+
+  const clearCard = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dismissNotificationCenterItem(window.sessionStorage, itemId, signature);
+    setIsDismissed(true);
+  };
 
   return (
     <div className="group/card relative">
       {children}
       <button
         type="button"
-        aria-label="Clear all notifications"
-        className="group/clear absolute -left-1.5 -top-1.5 z-[2] flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-700/90 text-zinc-200 opacity-0 shadow-md backdrop-blur-md transition-[width,opacity,background-color] duration-150 focus:w-[68px] focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 can-hover:group-hover/card:opacity-100 can-hover:hover:w-[68px] can-hover:hover:bg-zinc-700"
-        onClick={clearAll}
+        aria-label={clearLabel}
+        className="absolute -left-0.5 -top-0.5 z-[2] grid h-[22px] w-[22px] place-items-center rounded-full border border-white/40 bg-[#c8c8cc]/90 text-[14px] font-normal leading-none text-zinc-500/90 opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-opacity duration-150 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 dark:border-white/10 dark:bg-[#525258]/90 dark:text-zinc-400 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] can-hover:group-hover/card:opacity-100"
+        onClick={clearCard}
       >
-        <X
-          className="absolute size-3.5 transition-opacity group-focus/clear:opacity-0 can-hover:group-hover/clear:opacity-0"
-          strokeWidth={2}
-        />
-        <span className="whitespace-nowrap text-[11px] font-medium opacity-0 transition-opacity group-focus/clear:opacity-100 can-hover:group-hover/clear:opacity-100">
-          Clear All
-        </span>
+        ✕
       </button>
     </div>
   );
@@ -194,6 +119,7 @@ function PodcastNotificationWidget({
 
   return (
     <ClearableCard
+      clearLabel="Clear podcast notification"
       itemId="podcast"
       signature={notification.id}
     >
@@ -321,6 +247,7 @@ function CalendarWidget({
 
   return (
     <ClearableCard
+      clearLabel="Clear Up Next"
       itemId="calendar"
       signature={signature}
     >
@@ -416,6 +343,7 @@ function MessagesWidget({
 
   return (
     <ClearableCard
+      clearLabel="Clear Messages notification"
       itemId="messages"
       signature={signature}
     >
@@ -505,6 +433,7 @@ function PhotosWidget({
   if (loading) {
     return (
       <ClearableCard
+        clearLabel="Clear Recent Photos"
         itemId="photos"
         signature="loading"
       >
@@ -525,6 +454,7 @@ function PhotosWidget({
 
   return (
     <ClearableCard
+      clearLabel="Clear Recent Photos"
       itemId="photos"
       signature={signature}
     >
@@ -594,6 +524,7 @@ function WeatherWidget({
 
   return (
     <ClearableCard
+      clearLabel="Clear Weather"
       itemId="weather"
       signature={signature}
     >
@@ -711,35 +642,33 @@ export function NotificationCenter({
         className="max-h-[calc(100vh-4rem-2px)]"
         viewportClassName="max-h-[inherit]"
       >
-        <NotificationCenterClearAllProvider>
-          {/* Date Header */}
-          <div className="px-1 pt-1 pb-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              {weekday}
-            </p>
-            <p className="text-2xl font-bold">{monthDay}</p>
-          </div>
-          <CalendarWidget onActivate={onClose} refreshKey={openRefreshKey} />
-          <PodcastNotificationWidget
-            onActivate={onClose}
-            onOpen={onOpenPodcastNotification}
-          />
-          <MessagesWidget
-            onActivate={onClose}
-            refreshKey={openRefreshKey}
-            onOpenConversation={onOpenMessagesConversation}
-          />
-          <PhotosWidget
-            photos={photos}
-            loading={photosLoading}
-            onActivate={onClose}
-          />
-          <WeatherWidget
-            weather={weather}
-            loading={weatherLoading}
-            onActivate={onClose}
-          />
-        </NotificationCenterClearAllProvider>
+        {/* Date Header */}
+        <div className="px-1 pt-1 pb-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            {weekday}
+          </p>
+          <p className="text-2xl font-bold">{monthDay}</p>
+        </div>
+        <CalendarWidget onActivate={onClose} refreshKey={openRefreshKey} />
+        <PodcastNotificationWidget
+          onActivate={onClose}
+          onOpen={onOpenPodcastNotification}
+        />
+        <MessagesWidget
+          onActivate={onClose}
+          refreshKey={openRefreshKey}
+          onOpenConversation={onOpenMessagesConversation}
+        />
+        <PhotosWidget
+          photos={photos}
+          loading={photosLoading}
+          onActivate={onClose}
+        />
+        <WeatherWidget
+          weather={weather}
+          loading={weatherLoading}
+          onActivate={onClose}
+        />
       </ScrollArea>
     </div>
   );

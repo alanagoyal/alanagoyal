@@ -3,7 +3,6 @@ import test from "node:test";
 
 import {
   dismissNotificationCenterItem,
-  dismissNotificationCenterItems,
   getUnreadMessagesNotification,
   isNotificationCenterItemDismissed,
   NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX,
@@ -41,33 +40,6 @@ test("notification-center dismissal is independent and content-aware", () => {
   );
   assert.equal(
     isNotificationCenterItemDismissed(storage, "weather", "message-1"),
-    false
-  );
-});
-
-test("clear all dismisses every currently visible notification signature", () => {
-  const storage = createStorage();
-
-  dismissNotificationCenterItems(storage, [
-    { itemId: "calendar", signature: "dinner" },
-    { itemId: "messages", signature: "message-1" },
-    { itemId: "weather", signature: "sunny-64" },
-  ]);
-
-  assert.equal(
-    isNotificationCenterItemDismissed(storage, "calendar", "dinner"),
-    true
-  );
-  assert.equal(
-    isNotificationCenterItemDismissed(storage, "messages", "message-1"),
-    true
-  );
-  assert.equal(
-    isNotificationCenterItemDismissed(storage, "weather", "sunny-64"),
-    true
-  );
-  assert.equal(
-    isNotificationCenterItemDismissed(storage, "messages", "message-2"),
     false
   );
 });
