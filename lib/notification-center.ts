@@ -5,6 +5,11 @@ export const NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX =
 
 type NotificationCenterStorage = Pick<Storage, "getItem" | "setItem">;
 
+export interface NotificationCenterDismissal {
+  itemId: string;
+  signature: string;
+}
+
 export function isNotificationCenterItemDismissed(
   storage: NotificationCenterStorage,
   itemId: string,
@@ -32,6 +37,15 @@ export function dismissNotificationCenterItem(
     );
   } catch {
     // The current render still hides the card when browser storage is unavailable.
+  }
+}
+
+export function dismissNotificationCenterItems(
+  storage: NotificationCenterStorage,
+  items: NotificationCenterDismissal[]
+): void {
+  for (const item of items) {
+    dismissNotificationCenterItem(storage, item.itemId, item.signature);
   }
 }
 
