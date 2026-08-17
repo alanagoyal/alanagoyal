@@ -94,12 +94,12 @@ function ClearableCard({
   };
 
   return (
-    <div className="group/card relative">
+    <div className="group/card relative pl-7">
       {children}
       <button
         type="button"
         aria-label={clearLabel}
-        className="absolute -left-0.5 -top-0.5 z-[2] grid h-[22px] w-[22px] place-items-center rounded-full border border-white/40 bg-[#c8c8cc]/90 text-[14px] font-normal leading-none text-zinc-500/90 opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-opacity duration-150 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 dark:border-white/10 dark:bg-[#525258]/90 dark:text-zinc-400 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] can-hover:group-hover/card:opacity-100"
+        className="absolute left-1 top-1 z-[2] grid h-[22px] w-[22px] place-items-center rounded-full border border-white/40 bg-[#c8c8cc]/90 text-[14px] font-normal leading-none text-zinc-500/90 opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-opacity duration-150 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 dark:border-white/10 dark:bg-[#525258]/90 dark:text-zinc-400 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)] can-hover:group-hover/card:opacity-100"
         onClick={clearCard}
       >
         ✕
