@@ -74,6 +74,7 @@ type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarti
 
 const FINDER_STATUS_BAR_STORAGE_KEY = "finder-show-status-bar";
 const FINDER_PATH_BAR_STORAGE_KEY = "finder-show-path-bar";
+const CALENDAR_WEEK_NUMBERS_STORAGE_KEY = "calendar-show-week-numbers";
 
 interface DesktopProps {
   initialAppId?: string;
@@ -229,6 +230,8 @@ function DesktopContent({
   const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
   const [finderPathBarVisible, setFinderPathBarVisible] = useState(false);
   const [hasLoadedFinderPathBarPreference, setHasLoadedFinderPathBarPreference] = useState(false);
+  const [calendarWeekNumbersVisible, setCalendarWeekNumbersVisible] = useState(false);
+  const [hasLoadedCalendarWeekNumbersPreference, setHasLoadedCalendarWeekNumbersPreference] = useState(false);
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -248,6 +251,10 @@ function DesktopContent({
     setHasLoadedFinderStatusBarPreference(true);
     setFinderPathBarVisible(window.localStorage.getItem(FINDER_PATH_BAR_STORAGE_KEY) === "true");
     setHasLoadedFinderPathBarPreference(true);
+    setCalendarWeekNumbersVisible(
+      window.localStorage.getItem(CALENDAR_WEEK_NUMBERS_STORAGE_KEY) === "true"
+    );
+    setHasLoadedCalendarWeekNumbersPreference(true);
   }, []);
 
   useEffect(() => {
@@ -259,6 +266,14 @@ function DesktopContent({
     if (!hasLoadedFinderPathBarPreference) return;
     window.localStorage.setItem(FINDER_PATH_BAR_STORAGE_KEY, String(finderPathBarVisible));
   }, [finderPathBarVisible, hasLoadedFinderPathBarPreference]);
+
+  useEffect(() => {
+    if (!hasLoadedCalendarWeekNumbersPreference) return;
+    window.localStorage.setItem(
+      CALENDAR_WEEK_NUMBERS_STORAGE_KEY,
+      String(calendarWeekNumbersVisible)
+    );
+  }, [calendarWeekNumbersVisible, hasLoadedCalendarWeekNumbersPreference]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
@@ -931,6 +946,8 @@ function DesktopContent({
         onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
         finderPathBarVisible={finderPathBarVisible}
         onFinderPathBarVisibleChange={setFinderPathBarVisible}
+        calendarWeekNumbersVisible={calendarWeekNumbersVisible}
+        onCalendarWeekNumbersVisibleChange={setCalendarWeekNumbersVisible}
         onTextEditNew={handleTextEditNew}
         onTextEditOpen={handleTextEditOpen}
         onTextEditClose={handleTextEditClose}
@@ -976,7 +993,10 @@ function DesktopContent({
           </Window>
 
           <Window appId="calendar">
-            <CalendarApp inShell={true} />
+            <CalendarApp
+              inShell={true}
+              showWeekNumbers={calendarWeekNumbersVisible}
+            />
           </Window>
 
           <Window appId="weather">

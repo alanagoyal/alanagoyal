@@ -148,9 +148,14 @@ function saveUserEvents(events: CalendarEvent[]): void {
 interface CalendarAppProps {
   isMobile?: boolean;
   inShell?: boolean;
+  showWeekNumbers?: boolean;
 }
 
-export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppProps) {
+export function CalendarApp({
+  isMobile = false,
+  inShell = false,
+  showWeekNumbers = false,
+}: CalendarAppProps) {
   const windowFocus = useWindowFocus();
   const containerRef = useRef<HTMLDivElement>(null);
   const dialogContainer =
@@ -444,6 +449,7 @@ export function CalendarApp({ isMobile = false, inShell = false }: CalendarAppPr
             currentDate={currentDate}
             events={events}
             calendars={calendars}
+            showWeekNumbers={showWeekNumbers}
             onCreateEvent={handleCreateEvent}
             onDateClick={handleDateClick}
             onEditEvent={handleEditEvent}
