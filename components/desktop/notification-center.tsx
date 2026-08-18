@@ -39,6 +39,7 @@ import { getPodcastNotificationPayload } from "@/lib/podcast-notification";
 import {
   dismissNotificationCenterItem,
   getUnreadMessagesNotification,
+  getWeatherNotificationSignature,
   isNotificationCenterItemDismissed,
 } from "@/lib/notification-center";
 import { cn } from "@/lib/utils";
@@ -508,19 +509,7 @@ function WeatherWidget({
   const textClassName = "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]";
   const mutedTextClassName = "text-white/78 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]";
   const iconClassName = "text-white/82";
-  const today = new Date();
-  const unavailableSignature = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-  const signature = loading
-    ? "loading"
-    : weather
-      ? [
-          weather.currentTime,
-          weather.temp,
-          weather.code,
-          weather.high,
-          weather.low,
-        ].join(":")
-      : `unavailable:${unavailableSignature}`;
+  const signature = getWeatherNotificationSignature(weather, loading);
 
   return (
     <ClearableCard
@@ -542,11 +531,11 @@ function WeatherWidget({
         <WeatherSceneEffects scene={scene} surface="preview" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/14" />
         <div className={cn("relative z-[1]", textClassName)}>
-          {loading && <WeatherWidgetSkeleton />}
+          {loading && !weather && <WeatherWidgetSkeleton />}
           {!loading && !weather && (
             <p className={cn("text-xs", mutedTextClassName)}>Weather unavailable</p>
           )}
-          {!loading && weather && (
+          {weather && (
             <>
               <p className="text-sm font-medium">San Francisco</p>
               <p className="text-4xl font-light mt-0.5">{Math.round(weather.temp)}°</p>

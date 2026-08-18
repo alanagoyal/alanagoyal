@@ -5,6 +5,14 @@ export const NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX =
 
 type NotificationCenterStorage = Pick<Storage, "getItem" | "setItem">;
 
+interface WeatherNotificationData {
+  temp: number;
+  currentTime: string;
+  code: number;
+  high: number;
+  low: number;
+}
+
 export function isNotificationCenterItemDismissed(
   storage: NotificationCenterStorage,
   itemId: string,
@@ -33,6 +41,26 @@ export function dismissNotificationCenterItem(
   } catch {
     // The current render still hides the card when browser storage is unavailable.
   }
+}
+
+export function getWeatherNotificationSignature(
+  weather: WeatherNotificationData | null,
+  loading: boolean,
+  now = new Date()
+): string {
+  if (weather) {
+    return [
+      weather.currentTime,
+      weather.temp,
+      weather.code,
+      weather.high,
+      weather.low,
+    ].join(":");
+  }
+
+  if (loading) return "loading";
+
+  return `unavailable:${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
 }
 
 export interface UnreadMessagesNotification {

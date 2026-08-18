@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   dismissNotificationCenterItem,
   getUnreadMessagesNotification,
+  getWeatherNotificationSignature,
   isNotificationCenterItemDismissed,
   NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX,
 } from "../lib/notification-center";
@@ -114,4 +115,21 @@ test("dismissal keys remain scoped to Notification Center", () => {
     isNotificationCenterItemDismissed(storage, "photos", "photo-1"),
     true
   );
+});
+
+test("weather dismissal stays stable while a loaded forecast refreshes", () => {
+  const weather = {
+    temp: 62,
+    currentTime: "2026-08-18T09:00",
+    code: 1,
+    high: 68,
+    low: 54,
+  };
+  const loadedSignature = getWeatherNotificationSignature(weather, false);
+
+  assert.equal(
+    getWeatherNotificationSignature(weather, true),
+    loadedSignature
+  );
+  assert.notEqual(getWeatherNotificationSignature(null, true), loadedSignature);
 });
