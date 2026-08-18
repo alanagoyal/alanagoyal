@@ -405,6 +405,17 @@ non-interactive inside the row to avoid nesting buttons.
 
 Top-right banners use `DesktopNotificationBanner` for incoming Messages notifications. Keep promotional or long-lived content in Notification Center instead of showing it as a desktop banner.
 
+Hovering or focusing a Notification Center card reveals a macOS-style circular
+× control across the card's upper-left edge. Keep the card geometry unchanged
+and expand the local scroll viewport's clipping boundary so the control can
+overlap the Notification Center edge without being clipped. The control uses
+the same translucent gray treatment as the incoming Messages banner and clears
+only that card without activating its primary action. Store dismissals in `sessionStorage` against
+each card's content signature: cleared cards stay hidden for the current tab
+but return when their underlying content changes.
+Messages renders only when at least one conversation is unread; do not show an
+empty Messages card.
+
 Notification Center cards share the same outer `mb-1.5 rounded-md p-3` geometry. Apply content-specific borders, radii, and backgrounds only inside that shared container; scene-based cards such as Weather may replace the standard `bg-muted` surface.
 
 ### Status Menu Popovers
