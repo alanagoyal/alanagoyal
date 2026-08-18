@@ -14,6 +14,7 @@ import { NotificationCenter } from "./notification-center";
 import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
+import { CalendarViewMenu } from "./calendar-view-menu";
 import { TextEditEditMenu } from "./textedit-edit-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
 import { PreviewFileMenu } from "./preview-file-menu";
@@ -29,7 +30,7 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -66,6 +67,8 @@ interface MenuBarProps {
   onFinderStatusBarVisibleChange?: (visible: boolean) => void;
   finderPathBarVisible?: boolean;
   onFinderPathBarVisibleChange?: (visible: boolean) => void;
+  calendarWeekNumbersVisible?: boolean;
+  onCalendarWeekNumbersVisibleChange?: (visible: boolean) => void;
   onTextEditNew?: () => void;
   onTextEditOpen?: () => void;
   onTextEditClose?: (windowId: string) => void;
@@ -94,6 +97,8 @@ export function MenuBar({
   onFinderStatusBarVisibleChange,
   finderPathBarVisible = false,
   onFinderPathBarVisibleChange,
+  calendarWeekNumbersVisible = false,
+  onCalendarWeekNumbersVisibleChange,
   onTextEditNew,
   onTextEditOpen,
   onTextEditClose,
@@ -333,6 +338,19 @@ export function MenuBar({
               View
             </button>
           )}
+          {focusedAppId === "calendar" && (
+            <button
+              onClick={() => toggleMenu("calendarViewMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "calendarViewMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              View
+            </button>
+          )}
           {focusedAppId === "textedit" && (
             <button
               onClick={() => toggleMenu("textEditEditMenu")}
@@ -508,6 +526,15 @@ export function MenuBar({
         onStatusBarVisibleChange={(visible) => onFinderStatusBarVisibleChange?.(visible)}
         pathBarVisible={finderPathBarVisible}
         onPathBarVisibleChange={(visible) => onFinderPathBarVisibleChange?.(visible)}
+      />
+
+      <CalendarViewMenu
+        isOpen={openMenu === "calendarViewMenu"}
+        onClose={closeMenu}
+        weekNumbersVisible={calendarWeekNumbersVisible}
+        onWeekNumbersVisibleChange={(visible) =>
+          onCalendarWeekNumbersVisibleChange?.(visible)
+        }
       />
 
       <TextEditEditMenu
