@@ -40,7 +40,7 @@ import {
   dismissNotificationCenterItem,
   getUnreadMessagesNotification,
   getWeatherNotificationSignature,
-  isNotificationCenterItemDismissed,
+  shouldHideNotificationCenterItem,
 } from "@/lib/notification-center";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
@@ -67,23 +67,26 @@ function ClearableCard({
   clearLabel,
   itemId,
   signature,
+  signaturePending = false,
 }: {
   children: ReactNode;
   clearLabel: string;
   itemId: string;
   signature: string;
+  signaturePending?: boolean;
 }) {
   const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
 
   useEffect(() => {
     setIsDismissed(
-      isNotificationCenterItemDismissed(
+      shouldHideNotificationCenterItem(
         window.sessionStorage,
         itemId,
-        signature
+        signature,
+        signaturePending
       )
     );
-  }, [itemId, signature]);
+  }, [itemId, signature, signaturePending]);
 
   if (isDismissed !== false) return null;
 
@@ -516,6 +519,7 @@ function WeatherWidget({
       clearLabel="Clear Weather"
       itemId="weather"
       signature={signature}
+      signaturePending={loading && !weather}
     >
       <div
         className={cn(
@@ -575,7 +579,7 @@ export function NotificationCenter({
   const { photos, loading: photosLoading } = usePhotos({ enabled: isOpen });
 
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherLoading, setWeatherLoading] = useState(true);
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;

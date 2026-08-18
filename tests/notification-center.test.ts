@@ -7,6 +7,7 @@ import {
   getWeatherNotificationSignature,
   isNotificationCenterItemDismissed,
   NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX,
+  shouldHideNotificationCenterItem,
 } from "../lib/notification-center";
 import type { Conversation } from "../types/messages";
 
@@ -132,4 +133,27 @@ test("weather dismissal stays stable while a loaded forecast refreshes", () => {
     loadedSignature
   );
   assert.notEqual(getWeatherNotificationSignature(null, true), loadedSignature);
+});
+
+test("weather loading stays hidden until its dismissed signature resolves", () => {
+  const storage = createStorage();
+  const loadedSignature = "2026-08-18T09:00:62:1:68:54";
+  dismissNotificationCenterItem(storage, "weather", loadedSignature);
+
+  assert.equal(
+    isNotificationCenterItemDismissed(storage, "weather", "loading"),
+    false
+  );
+  assert.equal(
+    shouldHideNotificationCenterItem(storage, "weather", "loading", true),
+    true
+  );
+  assert.equal(
+    shouldHideNotificationCenterItem(
+      storage,
+      "weather",
+      "2026-08-18T10:00:63:1:69:55"
+    ),
+    false
+  );
 });

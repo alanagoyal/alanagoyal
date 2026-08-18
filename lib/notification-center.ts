@@ -28,6 +28,26 @@ export function isNotificationCenterItemDismissed(
   }
 }
 
+export function shouldHideNotificationCenterItem(
+  storage: NotificationCenterStorage,
+  itemId: string,
+  signature: string,
+  signaturePending = false
+): boolean {
+  if (!signaturePending) {
+    return isNotificationCenterItemDismissed(storage, itemId, signature);
+  }
+
+  try {
+    return (
+      storage.getItem(`${NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX}${itemId}`) !==
+      null
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function dismissNotificationCenterItem(
   storage: NotificationCenterStorage,
   itemId: string,
