@@ -4,9 +4,11 @@ import test from "node:test";
 import {
   clearCollapsedSections,
   getCollapsibleSectionKey,
+  getMarkdownHeadingText,
   getPrimaryCollapsibleHeadingLevel,
   loadCollapsedSection,
   saveCollapsedSection,
+  splitMarkdownIntoCollapsibleSections,
 } from "../lib/notes/collapsible-sections";
 
 class MemoryStorage {
@@ -106,4 +108,48 @@ test("ignores malformed persisted collapse state", () => {
   storage.setItem("notes-collapsed-sections", "{bad json");
 
   assert.equal(loadCollapsedSection("about", "3:currently", storage), false);
+});
+
+test("uses rendered heading text for persisted section keys", () => {
+  assert.equal(getMarkdownHeadingText("### currently"), "currently");
+  assert.equal(getMarkdownHeadingText("  ## Heading ##  "), "Heading");
+});
+
+test("splits peer sections into independently rendered bodies", () => {
+  assert.deepEqual(
+    splitMarkdownIntoCollapsibleSections(
+      "Intro\n\n## First\nA\n\n### Nested\nB\n\n# Interlude\nC\n\n## Second\nD",
+      2,
+    ),
+    [
+      { type: "markdown", markdown: "Intro\n" },
+      {
+        type: "section",
+        level: 2,
+        headingMarkdown: "## First",
+        bodyMarkdown: "A\n\n### Nested\nB\n",
+      },
+      { type: "markdown", markdown: "# Interlude\nC\n" },
+      {
+        type: "section",
+        level: 2,
+        headingMarkdown: "## Second",
+        bodyMarkdown: "D",
+      },
+    ],
+  );
+});
+
+test("does not split section-looking headings inside fenced code", () => {
+  const markdown = "```md\n## Code heading\n```\n\n### Real section\nBody";
+
+  assert.deepEqual(splitMarkdownIntoCollapsibleSections(markdown, 3), [
+    { type: "markdown", markdown: "```md\n## Code heading\n```\n" },
+    {
+      type: "section",
+      level: 3,
+      headingMarkdown: "### Real section",
+      bodyMarkdown: "Body",
+    },
+  ]);
 });

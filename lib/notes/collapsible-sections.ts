@@ -39,6 +39,13 @@ export function getCollapsibleSectionKey(level: number, heading: string): string
   return `${level}:${heading.trim().replace(/\s+/g, " ").toLocaleLowerCase()}`;
 }
 
+export function getMarkdownHeadingText(headingMarkdown: string): string {
+  return headingMarkdown
+    .replace(/^ {0,3}#{1,6}(?:[\t ]+|$)/, "")
+    .replace(/[\t ]+#+[\t ]*$/, "")
+    .trim();
+}
+
 export function loadCollapsedSection(
   noteId: string,
   sectionKey: string,
@@ -88,6 +95,86 @@ export function clearCollapsedSections(storage?: StorageArea): void {
   } catch {
     // Ignore storage errors.
   }
+}
+
+export type CollapsibleMarkdownChunk =
+  | { type: "markdown"; markdown: string }
+  | {
+      type: "section";
+      level: number;
+      headingMarkdown: string;
+      bodyMarkdown: string;
+    };
+
+export function splitMarkdownIntoCollapsibleSections(
+  markdown: string,
+  targetLevel: number | null,
+): CollapsibleMarkdownChunk[] {
+  if (!targetLevel) return [{ type: "markdown", markdown }];
+
+  const lines = markdown.split("\n");
+  const boundaries: Array<{ index: number; level: number }> = [];
+  let activeFence: { marker: string; length: number } | null = null;
+
+  lines.forEach((line, index) => {
+    const fenceMatch = line.match(FENCE_PATTERN);
+    if (fenceMatch) {
+      const fence = fenceMatch[1];
+      const marker = fence[0];
+
+      if (!activeFence) activeFence = { marker, length: fence.length };
+      else if (marker === activeFence.marker && fence.length >= activeFence.length) {
+        activeFence = null;
+      }
+      return;
+    }
+
+    if (activeFence) return;
+
+    const headingMatch = line.match(ATX_HEADING_PATTERN);
+    if (headingMatch) {
+      boundaries.push({ index, level: headingMatch[1].length });
+    }
+  });
+
+  const chunks: CollapsibleMarkdownChunk[] = [];
+  let plainStart = 0;
+  let sectionStart: number | null = null;
+
+  const pushMarkdown = (start: number, end: number) => {
+    if (end > start) {
+      chunks.push({ type: "markdown", markdown: lines.slice(start, end).join("\n") });
+    }
+  };
+
+  const pushSection = (start: number, end: number) => {
+    chunks.push({
+      type: "section",
+      level: targetLevel,
+      headingMarkdown: lines[start],
+      bodyMarkdown: lines.slice(start + 1, end).join("\n"),
+    });
+  };
+
+  for (const boundary of boundaries) {
+    if (boundary.level > targetLevel) continue;
+
+    if (sectionStart !== null) {
+      pushSection(sectionStart, boundary.index);
+      sectionStart = null;
+      plainStart = boundary.index;
+    }
+
+    if (boundary.level === targetLevel) {
+      pushMarkdown(plainStart, boundary.index);
+      sectionStart = boundary.index;
+    }
+  }
+
+  if (sectionStart !== null) pushSection(sectionStart, lines.length);
+  else pushMarkdown(plainStart, lines.length);
+
+  return chunks.length > 0 ? chunks : [{ type: "markdown", markdown }];
 }
 
 export function getPrimaryCollapsibleHeadingLevel(
