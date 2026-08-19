@@ -129,7 +129,7 @@ function CollapsibleMarkdownHeading({
     <Heading
       {...props}
       ref={headingRef}
-      className={cn("group flex items-start", props.className)}
+      className={cn("group", props.className)}
       data-collapsible-section-heading
     >
       <button
@@ -137,11 +137,7 @@ function CollapsibleMarkdownHeading({
         aria-expanded={!isCollapsed}
         aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${headingText}`}
         className={cn(
-          "mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
-          "desktop:size-5",
-          isCollapsed
-            ? "desktop:opacity-100"
-            : "desktop:opacity-0 desktop:can-hover:group-hover:opacity-100 desktop:group-focus-within:opacity-100",
+          "flex w-full items-start rounded-md text-left text-inherit",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] focus-visible:ring-offset-1",
         )}
         onClick={(event) => {
@@ -153,16 +149,26 @@ function CollapsibleMarkdownHeading({
           });
         }}
       >
-        <ChevronRight
-          aria-hidden="true"
+        <span
           className={cn(
-            "size-4 transition-transform motion-reduce:transition-none",
-            !isCollapsed && "rotate-90",
+            "mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
+            "desktop:size-5",
+            isCollapsed
+              ? "desktop:opacity-100"
+              : "desktop:opacity-0 desktop:can-hover:group-hover:opacity-100 desktop:group-focus-within:opacity-100",
           )}
-          strokeWidth={2.25}
-        />
+        >
+          <ChevronRight
+            aria-hidden="true"
+            className={cn(
+              "size-4 transition-transform motion-reduce:transition-none",
+              !isCollapsed && "rotate-90",
+            )}
+            strokeWidth={2.25}
+          />
+        </span>
+        <span className="min-w-0">{children}</span>
       </button>
-      <span className="min-w-0">{children}</span>
     </Heading>
   );
 }
