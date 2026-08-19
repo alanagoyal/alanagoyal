@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useCallback, useRef, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ChevronRight } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import { Icons } from "./icons";
 import {
@@ -13,6 +21,7 @@ import {
   uploadNoteImage,
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
+import { getPrimaryCollapsibleHeadingLevel } from "@/lib/notes/collapsible-sections";
 import { cn } from "@/lib/utils";
 
 const SPACE_TAB = "  ";
@@ -51,6 +60,97 @@ function getTaskText(node: React.ReactNode): string {
   return getTaskText(node.props.children);
 }
 
+type MarkdownHeadingProps = React.ComponentPropsWithoutRef<"h2"> & {
+  node?: unknown;
+};
+
+function setSectionContentHidden(
+  heading: HTMLHeadingElement | null,
+  level: number,
+  hidden: boolean,
+) {
+  let sibling = heading?.nextElementSibling;
+
+  while (sibling) {
+    const siblingHeading = sibling.tagName.match(/^H([1-6])$/);
+    if (siblingHeading && Number(siblingHeading[1]) <= level) break;
+
+    (sibling as HTMLElement).hidden = hidden;
+    sibling = sibling.nextElementSibling;
+  }
+}
+
+function CollapsibleMarkdownHeading({
+  children,
+  level,
+  isCollapsible,
+  node: _node,
+  ...props
+}: MarkdownHeadingProps & {
+  level: number;
+  isCollapsible: boolean;
+}) {
+  void _node;
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const Heading = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
+  useLayoutEffect(() => {
+    if (!isCollapsible) return;
+
+    const heading = headingRef.current;
+    setSectionContentHidden(heading, level, isCollapsed);
+    return () => {
+      if (isCollapsed) {
+        setSectionContentHidden(heading, level, false);
+      }
+    };
+  }, [isCollapsed, isCollapsible, level]);
+
+  if (!isCollapsible) {
+    return <Heading {...props}>{children}</Heading>;
+  }
+
+  const headingText = getTaskText(children).trim() || "section";
+
+  return (
+    <Heading
+      {...props}
+      ref={headingRef}
+      className={cn("group flex items-start", props.className)}
+      data-collapsible-section-heading
+    >
+      <button
+        type="button"
+        aria-expanded={!isCollapsed}
+        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${headingText}`}
+        className={cn(
+          "mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
+          "desktop:size-5",
+          isCollapsed
+            ? "desktop:opacity-100"
+            : "desktop:opacity-0 desktop:can-hover:group-hover:opacity-100 desktop:group-focus-within:opacity-100",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] focus-visible:ring-offset-1",
+        )}
+        onClick={(event) => {
+          event.stopPropagation();
+          setIsCollapsed((current) => !current);
+        }}
+      >
+        <ChevronRight
+          aria-hidden="true"
+          className={cn(
+            "size-4 transition-transform motion-reduce:transition-none",
+            !isCollapsed && "rotate-90",
+          )}
+          strokeWidth={2.25}
+        />
+      </button>
+      <span className="min-w-0">{children}</span>
+    </Heading>
+  );
+}
+
 export default function NoteContent({
   note,
   saveNote,
@@ -71,6 +171,10 @@ export default function NoteContent({
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploadFeedbackDismissed, setIsUploadFeedbackDismissed] = useState(false);
+  const collapsibleHeadingLevel = useMemo(
+    () => getPrimaryCollapsibleHeadingLevel(note.content),
+    [note.content],
+  );
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -466,6 +570,48 @@ export default function NoteContent({
               li: renderListItem,
               a: renderLink,
               img: renderImage,
+              h1: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={1}
+                  isCollapsible={collapsibleHeadingLevel === 1}
+                />
+              ),
+              h2: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={2}
+                  isCollapsible={collapsibleHeadingLevel === 2}
+                />
+              ),
+              h3: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={3}
+                  isCollapsible={collapsibleHeadingLevel === 3}
+                />
+              ),
+              h4: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={4}
+                  isCollapsible={collapsibleHeadingLevel === 4}
+                />
+              ),
+              h5: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={5}
+                  isCollapsible={collapsibleHeadingLevel === 5}
+                />
+              ),
+              h6: (props) => (
+                <CollapsibleMarkdownHeading
+                  {...props}
+                  level={6}
+                  isCollapsible={collapsibleHeadingLevel === 6}
+                />
+              ),
             }}
           >
             {note.content || "Start writing..."}
