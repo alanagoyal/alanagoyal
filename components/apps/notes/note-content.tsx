@@ -21,7 +21,12 @@ import {
   uploadNoteImage,
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
-import { getPrimaryCollapsibleHeadingLevel } from "@/lib/notes/collapsible-sections";
+import {
+  getCollapsibleSectionKey,
+  getPrimaryCollapsibleHeadingLevel,
+  loadCollapsedSection,
+  saveCollapsedSection,
+} from "@/lib/notes/collapsible-sections";
 import { cn } from "@/lib/utils";
 
 const SPACE_TAB = "  ";
@@ -84,16 +89,25 @@ function CollapsibleMarkdownHeading({
   children,
   level,
   isCollapsible,
+  noteId,
   node: _node,
   ...props
 }: MarkdownHeadingProps & {
   level: number;
   isCollapsible: boolean;
+  noteId: string;
 }) {
   void _node;
+  const headingText = getTaskText(children).trim() || "section";
+  const sectionKey = getCollapsibleSectionKey(level, headingText);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const Heading = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
+  useLayoutEffect(() => {
+    if (!isCollapsible) return;
+    setIsCollapsed(loadCollapsedSection(noteId, sectionKey));
+  }, [isCollapsible, noteId, sectionKey]);
 
   useLayoutEffect(() => {
     if (!isCollapsible) return;
@@ -110,8 +124,6 @@ function CollapsibleMarkdownHeading({
   if (!isCollapsible) {
     return <Heading {...props}>{children}</Heading>;
   }
-
-  const headingText = getTaskText(children).trim() || "section";
 
   return (
     <Heading
@@ -134,7 +146,11 @@ function CollapsibleMarkdownHeading({
         )}
         onClick={(event) => {
           event.stopPropagation();
-          setIsCollapsed((current) => !current);
+          setIsCollapsed((current) => {
+            const next = !current;
+            saveCollapsedSection(noteId, sectionKey, next);
+            return next;
+          });
         }}
       >
         <ChevronRight
@@ -575,6 +591,7 @@ export default function NoteContent({
                   {...props}
                   level={1}
                   isCollapsible={collapsibleHeadingLevel === 1}
+                  noteId={note.id}
                 />
               ),
               h2: (props) => (
@@ -582,6 +599,7 @@ export default function NoteContent({
                   {...props}
                   level={2}
                   isCollapsible={collapsibleHeadingLevel === 2}
+                  noteId={note.id}
                 />
               ),
               h3: (props) => (
@@ -589,6 +607,7 @@ export default function NoteContent({
                   {...props}
                   level={3}
                   isCollapsible={collapsibleHeadingLevel === 3}
+                  noteId={note.id}
                 />
               ),
               h4: (props) => (
@@ -596,6 +615,7 @@ export default function NoteContent({
                   {...props}
                   level={4}
                   isCollapsible={collapsibleHeadingLevel === 4}
+                  noteId={note.id}
                 />
               ),
               h5: (props) => (
@@ -603,6 +623,7 @@ export default function NoteContent({
                   {...props}
                   level={5}
                   isCollapsible={collapsibleHeadingLevel === 5}
+                  noteId={note.id}
                 />
               ),
               h6: (props) => (
@@ -610,6 +631,7 @@ export default function NoteContent({
                   {...props}
                   level={6}
                   isCollapsible={collapsibleHeadingLevel === 6}
+                  noteId={note.id}
                 />
               ),
             }}
