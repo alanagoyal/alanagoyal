@@ -19,6 +19,7 @@ import { TextEditEditMenu } from "./textedit-edit-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
 import { PreviewFileMenu } from "./preview-file-menu";
 import { AboutDialog } from "./about-dialog";
+import { MenuBarEyes } from "./menu-bar-eyes";
 import { FocusMenu, FOCUS_STATUS_CONFIG } from "./focus-menu";
 import { useFileMenuActions } from "@/lib/file-menu-context";
 import { useSystemSettings } from "@/lib/system-settings-context";
@@ -368,6 +369,9 @@ export function MenuBar({
       </div>
 
       <div className="flex items-center gap-1">
+        {/* Eyes */}
+        <MenuBarEyes />
+
         {/* Battery */}
         <button
           onClick={() => toggleMenu("battery")}
