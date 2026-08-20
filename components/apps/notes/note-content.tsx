@@ -74,47 +74,61 @@ type MarkdownHeadingProps = React.ComponentPropsWithoutRef<"h2"> & {
 function CollapsibleMarkdownHeading({
   children,
   level,
+  isCollapsed,
+  onToggle,
   node: _node,
   ...props
 }: MarkdownHeadingProps & {
   level: number;
+  isCollapsed: boolean;
+  onToggle: () => void;
 }) {
   void _node;
+  const headingText = getTaskText(children).trim() || "section";
   const Heading = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
   return (
-    <summary
-      className={cn(
-        "group/heading list-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] focus-visible:ring-offset-1",
-        "[&::-webkit-details-marker]:hidden",
-      )}
-      onClick={(event) => event.stopPropagation()}
+    <Heading
+      {...props}
+      className={cn("group/heading", props.className)}
+      data-collapsible-section-heading
+      data-collapsed={isCollapsed}
     >
-      <Heading
-        {...props}
+      <button
+        type="button"
+        aria-expanded={!isCollapsed}
+        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${headingText}`}
         className={cn(
-          "flex w-full items-start text-left text-inherit",
-          props.className,
+          "flex w-full items-start rounded-md text-left text-inherit",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] focus-visible:ring-offset-1",
         )}
-        data-collapsible-section-heading
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onToggle();
+        }}
       >
         <span
           className={cn(
             "section-chevron-shell mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
             "desktop:size-5",
-            "desktop:opacity-100 desktop:group-open/section:opacity-0",
-            "desktop:can-hover:group-hover/heading:opacity-100 desktop:group-focus-within/heading:opacity-100",
+            isCollapsed
+              ? "desktop:opacity-100"
+              : "desktop:opacity-0 desktop:can-hover:group-hover/heading:opacity-100 desktop:group-focus-within/heading:opacity-100",
           )}
         >
           <ChevronRight
             aria-hidden="true"
-            className="section-chevron size-4 transition-transform motion-reduce:transition-none group-open/section:rotate-90"
+            className={cn(
+              "section-chevron size-4 transition-transform motion-reduce:transition-none",
+              !isCollapsed && "rotate-90",
+            )}
             strokeWidth={2.25}
           />
         </span>
         <span className="min-w-0">{children}</span>
-      </Heading>
-    </summary>
+      </button>
+    </Heading>
   );
 }
 
@@ -135,48 +149,47 @@ function CollapsibleMarkdownSection({
     level,
     getMarkdownHeadingText(headingMarkdown),
   );
-  const detailsRef = useRef<HTMLDetailsElement>(null);
-  const hasRestoredRef = useRef(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useLayoutEffect(() => {
-    const details = detailsRef.current;
-    if (!details) return;
-
-    hasRestoredRef.current = false;
-    details.open = !loadCollapsedSection(noteId, sectionKey);
-    hasRestoredRef.current = true;
+    setIsCollapsed(loadCollapsedSection(noteId, sectionKey));
   }, [noteId, sectionKey]);
 
   const headingTag = `h${level}` as keyof Components;
-  const headingComponents = {
-    ...components,
-    [headingTag]: (props: MarkdownHeadingProps) => (
+  const toggleSection = useCallback(() => {
+    setIsCollapsed((current) => {
+      const next = !current;
+      saveCollapsedSection(noteId, sectionKey, next);
+      return next;
+    });
+  }, [noteId, sectionKey]);
+  const renderHeading = useCallback(
+    (props: MarkdownHeadingProps) => (
       <CollapsibleMarkdownHeading
         {...props}
         level={level}
+        isCollapsed={isCollapsed}
+        onToggle={toggleSection}
       />
     ),
-  } as Components;
+    [isCollapsed, level, toggleSection],
+  );
+  const headingComponents = useMemo(
+    () => ({ ...components, [headingTag]: renderHeading }) as Components,
+    [components, headingTag, renderHeading],
+  );
 
   return (
-    <details
-      ref={detailsRef}
-      className="group/section"
-      data-collapsible-section
-      onToggle={(event) => {
-        if (!hasRestoredRef.current) return;
-        saveCollapsedSection(noteId, sectionKey, !event.currentTarget.open);
-      }}
-    >
+    <section data-collapsible-section>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={headingComponents}>
         {headingMarkdown}
       </ReactMarkdown>
-      {bodyMarkdown && (
+      {!isCollapsed && bodyMarkdown && (
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
           {bodyMarkdown}
         </ReactMarkdown>
       )}
-    </details>
+    </section>
   );
 }
 
@@ -569,11 +582,14 @@ export default function NoteContent({
     );
   }, []);
 
-  const markdownComponents: Components = {
-    li: renderListItem,
-    a: renderLink,
-    img: renderImage,
-  };
+  const markdownComponents = useMemo<Components>(
+    () => ({
+      li: renderListItem,
+      a: renderLink,
+      img: renderImage,
+    }),
+    [renderImage, renderLink, renderListItem],
+  );
 
   return (
     <div
