@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import {
   clearCollapsedSections,
   getCollapsibleSectionKey,
-  getMarkdownHeadingText,
-  getPrimaryCollapsibleHeadingLevel,
   loadCollapsedSection,
+  remarkCollapsibleSections,
   saveCollapsedSection,
-  splitMarkdownIntoCollapsibleSections,
 } from "../lib/notes/collapsible-sections";
 
 class MemoryStorage {
@@ -27,9 +29,22 @@ class MemoryStorage {
   }
 }
 
-test("uses the most prominent repeated heading level", () => {
-  assert.equal(
-    getPrimaryCollapsibleHeadingLevel(`
+function renderMarkdown(markdown: string): string {
+  return renderToStaticMarkup(
+    React.createElement(
+      ReactMarkdown,
+      { remarkPlugins: [remarkGfm, remarkCollapsibleSections] },
+      markdown,
+    ),
+  );
+}
+
+function countSections(html: string): number {
+  return html.match(/data-collapsible-section=""/g)?.length ?? 0;
+}
+
+test("groups the most prominent repeated heading level", () => {
+  const html = renderMarkdown(`
 # Note title
 
 ## First section
@@ -40,39 +55,95 @@ More content
 
 ## Second section
 Content
-`),
-    2,
-  );
+`);
+
+  assert.equal(countSections(html), 2);
+  assert.match(html, /^<h1>Note title<\/h1>\s*<section/);
+  assert.match(html, /<section[^>]*><h2 data-collapsible-heading=""/);
+  assert.match(html, /<h3>Nested detail<\/h3>/);
 });
 
 test("falls back to a single heading when no level repeats", () => {
-  assert.equal(
-    getPrimaryCollapsibleHeadingLevel("Intro\n\n### One section\nContent"),
-    3,
-  );
+  const html = renderMarkdown("Intro\n\n### One section\nContent");
+
+  assert.equal(countSections(html), 1);
+  assert.match(html, /data-section-key="3:one section"/);
 });
 
 test("ignores heading-like text inside fenced code blocks", () => {
-  assert.equal(
-    getPrimaryCollapsibleHeadingLevel(`
-\`\`\`markdown
-## Not a section
-## Still code
-\`\`\`
-
-### Real section
-Content
-`),
-    3,
+  const html = renderMarkdown(
+    [
+      "```markdown",
+      "## Not a section",
+      "## Still code",
+      "```",
+      "",
+      "### Real section",
+      "Content",
+    ].join("\n"),
   );
+
+  assert.equal(countSections(html), 1);
+  assert.match(html, /data-section-key="3:real section"/);
+  assert.match(html, /<code class="language-markdown">## Not a section/);
 });
 
-test("returns null when the note has no headings", () => {
-  assert.equal(getPrimaryCollapsibleHeadingLevel("Just a paragraph."), null);
+test("leaves notes without headings unchanged", () => {
+  const html = renderMarkdown("Just a paragraph.");
+
+  assert.equal(countSections(html), 0);
+  assert.equal(html, "<p>Just a paragraph.</p>");
+});
+
+test("keeps reference links available across collapsible sections", () => {
+  const html = renderMarkdown(`
+## First
+See [Basecase][base].
+
+## Second
+Other text.
+
+[base]: https://basecase.vc
+`);
+
+  assert.match(html, /<a href="https:\/\/basecase\.vc">Basecase<\/a>/);
+  assert.doesNotMatch(html, /\[Basecase\]\[base\]/);
+});
+
+test("assigns duplicate headings independent persisted keys", () => {
+  const html = renderMarkdown(`
+## Update
+First body
+
+## Update
+Second body
+`);
+
+  assert.match(html, /data-section-key="2:update"/);
+  assert.match(html, /data-section-key="2:update:2"/);
+});
+
+test("ends a section at a more prominent heading", () => {
+  const html = renderMarkdown(`
+## First
+First body
+
+# Interlude
+Outside body
+
+## Second
+Second body
+`);
+
+  assert.match(
+    html,
+    /First body<\/p><\/section>\s*<h1>Interlude<\/h1>\s*<p>Outside body<\/p>\s*<section/,
+  );
 });
 
 test("normalizes heading identity for stable restoration", () => {
   assert.equal(getCollapsibleSectionKey(3, "  Currently\n now  "), "3:currently now");
+  assert.equal(getCollapsibleSectionKey(3, "Currently now", 2), "3:currently now:2");
 });
 
 test("restores collapsed sections independently for each note", () => {
@@ -108,48 +179,4 @@ test("ignores malformed persisted collapse state", () => {
   storage.setItem("notes-collapsed-sections", "{bad json");
 
   assert.equal(loadCollapsedSection("about", "3:currently", storage), false);
-});
-
-test("uses rendered heading text for persisted section keys", () => {
-  assert.equal(getMarkdownHeadingText("### currently"), "currently");
-  assert.equal(getMarkdownHeadingText("  ## Heading ##  "), "Heading");
-});
-
-test("splits peer sections into independently rendered bodies", () => {
-  assert.deepEqual(
-    splitMarkdownIntoCollapsibleSections(
-      "Intro\n\n## First\nA\n\n### Nested\nB\n\n# Interlude\nC\n\n## Second\nD",
-      2,
-    ),
-    [
-      { type: "markdown", markdown: "Intro\n" },
-      {
-        type: "section",
-        level: 2,
-        headingMarkdown: "## First",
-        bodyMarkdown: "A\n\n### Nested\nB\n",
-      },
-      { type: "markdown", markdown: "# Interlude\nC\n" },
-      {
-        type: "section",
-        level: 2,
-        headingMarkdown: "## Second",
-        bodyMarkdown: "D",
-      },
-    ],
-  );
-});
-
-test("does not split section-looking headings inside fenced code", () => {
-  const markdown = "```md\n## Code heading\n```\n\n### Real section\nBody";
-
-  assert.deepEqual(splitMarkdownIntoCollapsibleSections(markdown, 3), [
-    { type: "markdown", markdown: "```md\n## Code heading\n```\n" },
-    {
-      type: "section",
-      level: 3,
-      headingMarkdown: "### Real section",
-      bodyMarkdown: "Body",
-    },
-  ]);
 });

@@ -1,5 +1,5 @@
-const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})/;
-const ATX_HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[\t ]+|$)/;
+import type { Heading, Root, RootContent } from "mdast";
+
 const COLLAPSED_SECTIONS_STORAGE_KEY = "notes-collapsed-sections";
 
 type StorageArea = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -35,15 +35,13 @@ function loadState(storage: StorageArea): CollapsedSectionState {
   }
 }
 
-export function getCollapsibleSectionKey(level: number, heading: string): string {
-  return `${level}:${heading.trim().replace(/\s+/g, " ").toLocaleLowerCase()}`;
-}
-
-export function getMarkdownHeadingText(headingMarkdown: string): string {
-  return headingMarkdown
-    .replace(/^ {0,3}#{1,6}(?:[\t ]+|$)/, "")
-    .replace(/[\t ]+#+[\t ]*$/, "")
-    .trim();
+export function getCollapsibleSectionKey(
+  level: number,
+  heading: string,
+  occurrence = 1,
+): string {
+  const baseKey = `${level}:${heading.trim().replace(/\s+/g, " ").toLowerCase()}`;
+  return occurrence > 1 ? `${baseKey}:${occurrence}` : baseKey;
 }
 
 export function loadCollapsedSection(
@@ -97,116 +95,34 @@ export function clearCollapsedSections(storage?: StorageArea): void {
   }
 }
 
-export type CollapsibleMarkdownChunk =
-  | { type: "markdown"; markdown: string }
-  | {
-      type: "section";
-      level: number;
-      headingMarkdown: string;
-      bodyMarkdown: string;
-    };
-
-export function splitMarkdownIntoCollapsibleSections(
-  markdown: string,
-  targetLevel: number | null,
-): CollapsibleMarkdownChunk[] {
-  if (!targetLevel) return [{ type: "markdown", markdown }];
-
-  const lines = markdown.split("\n");
-  const boundaries: Array<{ index: number; level: number }> = [];
-  let activeFence: { marker: string; length: number } | null = null;
-
-  lines.forEach((line, index) => {
-    const fenceMatch = line.match(FENCE_PATTERN);
-    if (fenceMatch) {
-      const fence = fenceMatch[1];
-      const marker = fence[0];
-
-      if (!activeFence) activeFence = { marker, length: fence.length };
-      else if (marker === activeFence.marker && fence.length >= activeFence.length) {
-        activeFence = null;
-      }
-      return;
-    }
-
-    if (activeFence) return;
-
-    const headingMatch = line.match(ATX_HEADING_PATTERN);
-    if (headingMatch) {
-      boundaries.push({ index, level: headingMatch[1].length });
-    }
-  });
-
-  const chunks: CollapsibleMarkdownChunk[] = [];
-  let plainStart = 0;
-  let sectionStart: number | null = null;
-
-  const pushMarkdown = (start: number, end: number) => {
-    if (end > start) {
-      chunks.push({ type: "markdown", markdown: lines.slice(start, end).join("\n") });
-    }
+type CollapsibleSectionNode = {
+  type: "notesCollapsibleSection";
+  children: RootContent[];
+  data: {
+    hName: "section";
+    hProperties: Record<string, unknown>;
   };
+};
 
-  const pushSection = (start: number, end: number) => {
-    chunks.push({
-      type: "section",
-      level: targetLevel,
-      headingMarkdown: lines[start],
-      bodyMarkdown: lines.slice(start + 1, end).join("\n"),
-    });
-  };
+type TextBearingNode = {
+  type: string;
+  value?: string;
+  alt?: string | null;
+  children?: TextBearingNode[];
+};
 
-  for (const boundary of boundaries) {
-    if (boundary.level > targetLevel) continue;
-
-    if (sectionStart !== null) {
-      pushSection(sectionStart, boundary.index);
-      sectionStart = null;
-      plainStart = boundary.index;
-    }
-
-    if (boundary.level === targetLevel) {
-      pushMarkdown(plainStart, boundary.index);
-      sectionStart = boundary.index;
-    }
-  }
-
-  if (sectionStart !== null) pushSection(sectionStart, lines.length);
-  else pushMarkdown(plainStart, lines.length);
-
-  return chunks.length > 0 ? chunks : [{ type: "markdown", markdown }];
+function getNodeText(node: TextBearingNode): string {
+  if (typeof node.value === "string") return node.value;
+  if (typeof node.alt === "string") return node.alt;
+  return node.children?.map(getNodeText).join("") ?? "";
 }
 
-export function getPrimaryCollapsibleHeadingLevel(
-  markdown: string,
-): number | null {
+function getPrimaryCollapsibleHeadingLevel(children: RootContent[]): number | null {
   const headingCounts = new Map<number, number>();
-  let activeFence: { marker: string; length: number } | null = null;
 
-  for (const line of markdown.split("\n")) {
-    const fenceMatch = line.match(FENCE_PATTERN);
-    if (fenceMatch) {
-      const fence = fenceMatch[1];
-      const marker = fence[0];
-
-      if (!activeFence) {
-        activeFence = { marker, length: fence.length };
-      } else if (
-        marker === activeFence.marker &&
-        fence.length >= activeFence.length
-      ) {
-        activeFence = null;
-      }
-      continue;
-    }
-
-    if (activeFence) continue;
-
-    const headingMatch = line.match(ATX_HEADING_PATTERN);
-    if (!headingMatch) continue;
-
-    const level = headingMatch[1].length;
-    headingCounts.set(level, (headingCounts.get(level) ?? 0) + 1);
+  for (const child of children) {
+    if (child.type !== "heading") continue;
+    headingCounts.set(child.depth, (headingCounts.get(child.depth) ?? 0) + 1);
   }
 
   for (let level = 1; level <= 6; level += 1) {
@@ -218,4 +134,91 @@ export function getPrimaryCollapsibleHeadingLevel(
   }
 
   return null;
+}
+
+function withCollapsibleHeadingData(heading: Heading): Heading {
+  const existingProperties =
+    heading.data?.hProperties && typeof heading.data.hProperties === "object"
+      ? heading.data.hProperties
+      : {};
+
+  return {
+    ...heading,
+    data: {
+      ...heading.data,
+      hProperties: {
+        ...existingProperties,
+        "data-collapsible-heading": "",
+        "data-heading-level": String(heading.depth),
+      },
+    },
+  };
+}
+
+/**
+ * Groups root-level Markdown sections in one syntax tree so document-scoped
+ * constructs, including reference links and footnotes, keep their semantics.
+ */
+export function remarkCollapsibleSections() {
+  return (tree: Root): void => {
+    const targetLevel = getPrimaryCollapsibleHeadingLevel(tree.children);
+    if (!targetLevel) return;
+
+    const output: RootContent[] = [];
+    const occurrences = new Map<string, number>();
+    let activeSection: {
+      heading: Heading;
+      sectionKey: string;
+      children: RootContent[];
+    } | null = null;
+
+    const closeSection = () => {
+      if (!activeSection) return;
+
+      const sectionNode: CollapsibleSectionNode = {
+        type: "notesCollapsibleSection",
+        children: [
+          withCollapsibleHeadingData(activeSection.heading),
+          ...activeSection.children,
+        ],
+        data: {
+          hName: "section",
+          hProperties: {
+            "data-collapsible-section": "",
+            "data-section-key": activeSection.sectionKey,
+          },
+        },
+      };
+
+      output.push(sectionNode as unknown as RootContent);
+      activeSection = null;
+    };
+
+    for (const child of tree.children) {
+      if (child.type === "heading" && child.depth <= targetLevel) {
+        closeSection();
+
+        if (child.depth === targetLevel) {
+          const headingText = getNodeText(child as TextBearingNode).trim() || "section";
+          const baseKey = getCollapsibleSectionKey(child.depth, headingText);
+          const occurrence = (occurrences.get(baseKey) ?? 0) + 1;
+          occurrences.set(baseKey, occurrence);
+          activeSection = {
+            heading: child,
+            sectionKey: getCollapsibleSectionKey(child.depth, headingText, occurrence),
+            children: [],
+          };
+        } else {
+          output.push(child);
+        }
+        continue;
+      }
+
+      if (activeSection) activeSection.children.push(child);
+      else output.push(child);
+    }
+
+    closeSection();
+    tree.children = output;
+  };
 }

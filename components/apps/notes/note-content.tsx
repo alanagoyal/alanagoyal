@@ -1,7 +1,9 @@
 "use client";
 
 import React, {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -22,12 +24,9 @@ import {
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
 import {
-  getCollapsibleSectionKey,
-  getMarkdownHeadingText,
-  getPrimaryCollapsibleHeadingLevel,
   loadCollapsedSection,
+  remarkCollapsibleSections,
   saveCollapsedSection,
-  splitMarkdownIntoCollapsibleSections,
 } from "@/lib/notes/collapsible-sections";
 import { cn } from "@/lib/utils";
 
@@ -69,35 +68,50 @@ function getTaskText(node: React.ReactNode): string {
 
 type MarkdownHeadingProps = React.ComponentPropsWithoutRef<"h2"> & {
   node?: unknown;
+  "data-collapsible-heading"?: string;
+  "data-heading-level"?: string;
 };
+
+type CollapsibleSectionContextValue = {
+  isCollapsed: boolean;
+  toggleSection: () => void;
+};
+
+const CollapsibleNoteIdContext = createContext<string | null>(null);
+const CollapsibleSectionContext = createContext<CollapsibleSectionContextValue | null>(null);
 
 function CollapsibleMarkdownHeading({
   children,
   level,
-  isCollapsed,
-  onToggle,
   node: _node,
+  "data-collapsible-heading": collapsibleHeading,
+  "data-heading-level": _headingLevel,
   ...props
 }: MarkdownHeadingProps & {
   level: number;
-  isCollapsed: boolean;
-  onToggle: () => void;
 }) {
   void _node;
-  const headingText = getTaskText(children).trim() || "section";
+  void _headingLevel;
   const Heading = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  const section = useContext(CollapsibleSectionContext);
+
+  if (collapsibleHeading === undefined || !section) {
+    return <Heading {...props}>{children}</Heading>;
+  }
+
+  const headingText = getTaskText(children).trim() || "section";
 
   return (
     <Heading
       {...props}
       className={cn("group/heading", props.className)}
       data-collapsible-section-heading
-      data-collapsed={isCollapsed}
+      data-collapsed={section.isCollapsed}
     >
       <button
         type="button"
-        aria-expanded={!isCollapsed}
-        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${headingText}`}
+        aria-expanded={!section.isCollapsed}
+        aria-label={`${section.isCollapsed ? "Expand" : "Collapse"} ${headingText}`}
         className={cn(
           "flex w-full items-start rounded-md text-left text-inherit",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] focus-visible:ring-offset-1",
@@ -105,14 +119,14 @@ function CollapsibleMarkdownHeading({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          onToggle();
+          section.toggleSection();
         }}
       >
         <span
           className={cn(
             "section-chevron-shell mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
             "desktop:size-5",
-            isCollapsed
+            section.isCollapsed
               ? "desktop:opacity-100"
               : "desktop:opacity-0 desktop:can-hover:group-hover/heading:opacity-100 desktop:group-focus-within/heading:opacity-100",
           )}
@@ -121,7 +135,7 @@ function CollapsibleMarkdownHeading({
             aria-hidden="true"
             className={cn(
               "section-chevron size-4 transition-transform motion-reduce:transition-none",
-              !isCollapsed && "rotate-90",
+              !section.isCollapsed && "rotate-90",
             )}
             strokeWidth={2.25}
           />
@@ -132,64 +146,82 @@ function CollapsibleMarkdownHeading({
   );
 }
 
+function MarkdownH1(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={1} />;
+}
+
+function MarkdownH2(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={2} />;
+}
+
+function MarkdownH3(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={3} />;
+}
+
+function MarkdownH4(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={4} />;
+}
+
+function MarkdownH5(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={5} />;
+}
+
+function MarkdownH6(props: MarkdownHeadingProps) {
+  return <CollapsibleMarkdownHeading {...props} level={6} />;
+}
+
+type CollapsibleMarkdownSectionProps = React.ComponentPropsWithoutRef<"section"> & {
+  node?: unknown;
+  "data-section-key"?: string;
+};
+
 function CollapsibleMarkdownSection({
-  noteId,
-  level,
-  headingMarkdown,
-  bodyMarkdown,
-  components,
-}: {
-  noteId: string;
-  level: number;
-  headingMarkdown: string;
-  bodyMarkdown: string;
-  components: Components;
-}) {
-  const sectionKey = getCollapsibleSectionKey(
-    level,
-    getMarkdownHeadingText(headingMarkdown),
-  );
+  children,
+  node: _node,
+  "data-section-key": sectionKey,
+  ...props
+}: CollapsibleMarkdownSectionProps) {
+  void _node;
+  const noteId = useContext(CollapsibleNoteIdContext);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useLayoutEffect(() => {
+    if (!noteId || !sectionKey) return;
     setIsCollapsed(loadCollapsedSection(noteId, sectionKey));
   }, [noteId, sectionKey]);
 
-  const headingTag = `h${level}` as keyof Components;
   const toggleSection = useCallback(() => {
+    if (!noteId || !sectionKey) return;
+
     setIsCollapsed((current) => {
       const next = !current;
       saveCollapsedSection(noteId, sectionKey, next);
       return next;
     });
   }, [noteId, sectionKey]);
-  const renderHeading = useCallback(
-    (props: MarkdownHeadingProps) => (
-      <CollapsibleMarkdownHeading
-        {...props}
-        level={level}
-        isCollapsed={isCollapsed}
-        onToggle={toggleSection}
-      />
-    ),
-    [isCollapsed, level, toggleSection],
+  const contextValue = useMemo(
+    () => ({ isCollapsed, toggleSection }),
+    [isCollapsed, toggleSection],
   );
-  const headingComponents = useMemo(
-    () => ({ ...components, [headingTag]: renderHeading }) as Components,
-    [components, headingTag, renderHeading],
+  const childNodes = React.Children.toArray(children);
+  const headingIndex = childNodes.findIndex(
+    (child) =>
+      React.isValidElement<{ "data-collapsible-heading"?: string }>(child) &&
+      child.props["data-collapsible-heading"] !== undefined,
   );
+  const bodyStartIndex = headingIndex >= 0 ? headingIndex + 1 : 1;
 
   return (
-    <section data-collapsible-section>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={headingComponents}>
-        {headingMarkdown}
-      </ReactMarkdown>
-      {!isCollapsed && bodyMarkdown && (
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-          {bodyMarkdown}
-        </ReactMarkdown>
-      )}
-    </section>
+    <CollapsibleSectionContext.Provider value={contextValue}>
+      <section
+        {...props}
+        data-collapsible-section
+        data-section-key={sectionKey}
+      >
+        {childNodes.slice(0, bodyStartIndex)}
+        {!isCollapsed && childNodes.slice(bodyStartIndex)}
+      </section>
+    </CollapsibleSectionContext.Provider>
   );
 }
 
@@ -213,14 +245,6 @@ export default function NoteContent({
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploadFeedbackDismissed, setIsUploadFeedbackDismissed] = useState(false);
-  const collapsibleHeadingLevel = useMemo(
-    () => getPrimaryCollapsibleHeadingLevel(note.content),
-    [note.content],
-  );
-  const markdownChunks = useMemo(
-    () => splitMarkdownIntoCollapsibleSections(note.content, collapsibleHeadingLevel),
-    [collapsibleHeadingLevel, note.content],
-  );
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -587,6 +611,13 @@ export default function NoteContent({
       li: renderListItem,
       a: renderLink,
       img: renderImage,
+      section: CollapsibleMarkdownSection,
+      h1: MarkdownH1,
+      h2: MarkdownH2,
+      h3: MarkdownH3,
+      h4: MarkdownH4,
+      h5: MarkdownH5,
+      h6: MarkdownH6,
     }),
     [renderImage, renderLink, renderListItem],
   );
@@ -621,26 +652,14 @@ export default function NoteContent({
           className="markdown-body text-base desktop:text-sm"
           onClick={handleMarkdownClick}
         >
-          {markdownChunks.map((chunk, index) =>
-            chunk.type === "section" ? (
-              <CollapsibleMarkdownSection
-                key={`${note.id}:section:${index}`}
-                noteId={note.id}
-                level={chunk.level}
-                headingMarkdown={chunk.headingMarkdown}
-                bodyMarkdown={chunk.bodyMarkdown}
-                components={markdownComponents}
-              />
-            ) : (
-              <ReactMarkdown
-                key={`${note.id}:markdown:${index}`}
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {chunk.markdown || "Start writing..."}
-              </ReactMarkdown>
-            ),
-          )}
+          <CollapsibleNoteIdContext.Provider value={note.id}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkCollapsibleSections]}
+              components={markdownComponents}
+            >
+              {note.content || "Start writing..."}
+            </ReactMarkdown>
+          </CollapsibleNoteIdContext.Provider>
         </div>
       )}
     </div>
