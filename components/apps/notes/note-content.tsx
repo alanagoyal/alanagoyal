@@ -161,7 +161,6 @@ function CollapsibleMarkdownSection({
   return (
     <details
       ref={detailsRef}
-      open
       className="group/section"
       data-collapsible-section
       onToggle={(event) => {
