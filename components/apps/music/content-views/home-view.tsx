@@ -19,7 +19,12 @@ export function HomeView({
   onPlaylistSelect,
   isMobileView,
 }: HomeViewProps) {
-  const { playbackState, play, pause } = useAudio();
+  const { playbackState, recentlyPlayedTrackIds, play, pause } = useAudio();
+  const songsById = new Map(songs.map((song) => [song.id, song]));
+  const recentlyPlayed = recentlyPlayedTrackIds.flatMap((trackId) => {
+    const song = songsById.get(trackId);
+    return song ? [song] : [];
+  });
 
   const handlePlayPlaylist = (playlist: Playlist, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,6 +82,58 @@ export function HomeView({
             </div>
           </a>
         </div>
+
+        {recentlyPlayed.length > 0 && (
+          <section className="mb-8" aria-labelledby="recently-played-heading">
+            <h2 id="recently-played-heading" className="mb-4 text-lg font-semibold">
+              Recently Played
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              {recentlyPlayed.map((song, index) => {
+                const isPlaying =
+                  playbackState.isPlaying && playbackState.currentTrack?.id === song.id;
+
+                return (
+                  <button
+                    key={song.id}
+                    type="button"
+                    onClick={() => song.previewUrl && play(song, songs)}
+                    disabled={!song.previewUrl}
+                    aria-label={`Play ${song.name} by ${song.artist}`}
+                    className={cn(
+                      "group w-32 flex-shrink-0 text-left disabled:cursor-default",
+                      song.previewUrl && "cursor-pointer"
+                    )}
+                  >
+                    <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-muted">
+                      <Image
+                        src={song.albumArt}
+                        alt={song.album}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        loading={index === 0 ? "eager" : "lazy"}
+                      />
+                      {song.previewUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors can-hover:group-hover:bg-black/40">
+                          {isPlaying ? (
+                            <Pause className="h-10 w-10 text-white opacity-0 transition-opacity can-hover:group-hover:opacity-100" />
+                          ) : (
+                            <Play className="h-10 w-10 text-white opacity-0 transition-opacity can-hover:group-hover:opacity-100" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p data-recent-track-name className="truncate text-sm font-medium">
+                      {song.name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{song.artist}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Your Playlists - Horizontal Scroll */}
         <div className="mb-8">

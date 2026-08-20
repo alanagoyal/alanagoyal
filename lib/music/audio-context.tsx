@@ -11,9 +11,16 @@ import {
 } from "react";
 import { PlaylistTrack, RepeatMode, PlaybackState } from "@/components/apps/music/types";
 import { useSystemSettingsSafe } from "@/lib/system-settings-context";
+import {
+  MUSIC_RECENTLY_PLAYED_STORAGE_KEY,
+  parseRecentlyPlayedTrackIds,
+  recordRecentlyPlayedTrack,
+  serializeRecentlyPlayedTrackIds,
+} from "@/lib/music/recently-played";
 
 interface AudioContextValue {
   playbackState: PlaybackState;
+  recentlyPlayedTrackIds: string[];
   play: (track: PlaylistTrack, queue: PlaylistTrack[]) => void;
   pause: () => void;
   resume: () => void;
@@ -30,6 +37,17 @@ interface AudioContextValue {
 const AudioContext = createContext<AudioContextValue | null>(null);
 
 const STORAGE_KEY = "music-playback-state";
+
+function loadRecentlyPlayedTrackIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return parseRecentlyPlayedTrackIds(
+      localStorage.getItem(MUSIC_RECENTLY_PLAYED_STORAGE_KEY)
+    );
+  } catch {
+    return [];
+  }
+}
 
 // Persist playback state including queue for next/previous to work after refresh
 interface PersistedState {
@@ -107,15 +125,38 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     ...defaultState,
     ...loadStoredState(),
   }));
+  const [recentlyPlayedTrackIds, setRecentlyPlayedTrackIds] = useState(
+    loadRecentlyPlayedTrackIds
+  );
 
   // Keep a ref to the latest state for callbacks that need fresh values
   const stateRef = useRef(playbackState);
   stateRef.current = playbackState;
   const systemVolumeRef = useRef(systemVolume);
+  const lastTrackedTrackIdRef = useRef(playbackState.currentTrack?.id ?? null);
 
   useEffect(() => {
     systemVolumeRef.current = systemVolume;
   }, [systemVolume]);
+
+  useEffect(() => {
+    const trackId = playbackState.currentTrack?.id;
+    if (!trackId || trackId === lastTrackedTrackIdRef.current) return;
+
+    lastTrackedTrackIdRef.current = trackId;
+    setRecentlyPlayedTrackIds((current) => {
+      const next = recordRecentlyPlayedTrack(current, trackId);
+      try {
+        localStorage.setItem(
+          MUSIC_RECENTLY_PLAYED_STORAGE_KEY,
+          serializeRecentlyPlayedTrackIds(next)
+        );
+      } catch {
+        // Keep listening history available for this render when storage is unavailable.
+      }
+      return next;
+    });
+  }, [playbackState.currentTrack?.id]);
 
   // Debounced save - only saves after 1 second of no changes
   const debouncedSave = useCallback((state: PlaybackState) => {
@@ -555,6 +596,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     <AudioContext.Provider
       value={{
         playbackState,
+        recentlyPlayedTrackIds,
         play,
         pause,
         resume,
