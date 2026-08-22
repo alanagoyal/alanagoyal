@@ -13,14 +13,14 @@ import { PlaylistTrack, RepeatMode, PlaybackState } from "@/components/apps/musi
 import { useSystemSettingsSafe } from "@/lib/system-settings-context";
 import {
   MUSIC_RECENTLY_PLAYED_STORAGE_KEY,
-  parseRecentlyPlayedTrackIds,
+  parseRecentlyPlayedTracks,
   recordRecentlyPlayedTrack,
-  serializeRecentlyPlayedTrackIds,
+  serializeRecentlyPlayedTracks,
 } from "@/lib/music/recently-played";
 
 interface AudioContextValue {
   playbackState: PlaybackState;
-  recentlyPlayedTrackIds: string[];
+  recentlyPlayedTracks: PlaylistTrack[];
   play: (track: PlaylistTrack, queue: PlaylistTrack[]) => void;
   pause: () => void;
   resume: () => void;
@@ -38,10 +38,10 @@ const AudioContext = createContext<AudioContextValue | null>(null);
 
 const STORAGE_KEY = "music-playback-state";
 
-function loadRecentlyPlayedTrackIds(): string[] {
+function loadRecentlyPlayedTracks(): PlaylistTrack[] {
   if (typeof window === "undefined") return [];
   try {
-    return parseRecentlyPlayedTrackIds(
+    return parseRecentlyPlayedTracks(
       localStorage.getItem(MUSIC_RECENTLY_PLAYED_STORAGE_KEY)
     );
   } catch {
@@ -125,38 +125,36 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     ...defaultState,
     ...loadStoredState(),
   }));
-  const [recentlyPlayedTrackIds, setRecentlyPlayedTrackIds] = useState(
-    loadRecentlyPlayedTrackIds
+  const [recentlyPlayedTracks, setRecentlyPlayedTracks] = useState(
+    loadRecentlyPlayedTracks
   );
 
   // Keep a ref to the latest state for callbacks that need fresh values
   const stateRef = useRef(playbackState);
   stateRef.current = playbackState;
   const systemVolumeRef = useRef(systemVolume);
-  const lastTrackedTrackIdRef = useRef(playbackState.currentTrack?.id ?? null);
+  const playbackTrackRef = useRef(playbackState.currentTrack);
 
   useEffect(() => {
     systemVolumeRef.current = systemVolume;
   }, [systemVolume]);
 
-  useEffect(() => {
-    const trackId = playbackState.currentTrack?.id;
-    if (!trackId || trackId === lastTrackedTrackIdRef.current) return;
+  const recordRecentlyPlayed = useCallback((track: PlaylistTrack | null) => {
+    if (!track) return;
 
-    lastTrackedTrackIdRef.current = trackId;
-    setRecentlyPlayedTrackIds((current) => {
-      const next = recordRecentlyPlayedTrack(current, trackId);
+    setRecentlyPlayedTracks((current) => {
+      const next = recordRecentlyPlayedTrack(current, track);
       try {
         localStorage.setItem(
           MUSIC_RECENTLY_PLAYED_STORAGE_KEY,
-          serializeRecentlyPlayedTrackIds(next)
+          serializeRecentlyPlayedTracks(next)
         );
       } catch {
         // Keep listening history available for this render when storage is unavailable.
       }
       return next;
     });
-  }, [playbackState.currentTrack?.id]);
+  }, []);
 
   // Debounced save - only saves after 1 second of no changes
   const debouncedSave = useCallback((state: PlaybackState) => {
@@ -224,8 +222,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         }));
       };
 
+      const handlePlaying = () => {
+        recordRecentlyPlayed(playbackTrackRef.current);
+      };
+
       audio.addEventListener("loadedmetadata", handleLoadedMetadata);
       audio.addEventListener("error", handleError);
+      audio.addEventListener("playing", handlePlaying);
 
       // Restore track from persisted state (but don't auto-play)
       if (initialState.currentTrack?.previewUrl) {
@@ -237,6 +240,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       return () => {
         audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
         audio.removeEventListener("error", handleError);
+        audio.removeEventListener("playing", handlePlaying);
       };
     }
 
@@ -246,7 +250,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [recordRecentlyPlayed]);
 
   // Cleanup save timeout on unmount
   useEffect(() => {
@@ -336,6 +340,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       if (nextIndex < queue.length) {
         const nextTrack = queue[nextIndex];
         if (nextTrack.previewUrl) {
+          playbackTrackRef.current = nextTrack;
           audio.src = nextTrack.previewUrl;
           audio.play().catch(() => {});
           setPlaybackState((prev) => ({
@@ -354,6 +359,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       } else if (repeatMode === "all" && queue.length > 0) {
         const firstTrack = queue[0];
         if (firstTrack.previewUrl) {
+          playbackTrackRef.current = firstTrack;
           audio.src = firstTrack.previewUrl;
           audio.play().catch(() => {});
           setPlaybackState((prev) => ({
@@ -387,6 +393,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    playbackTrackRef.current = track;
     audio.src = track.previewUrl;
     audio.play().catch(console.error);
 
@@ -436,6 +443,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      playbackTrackRef.current = null;
       setPlaybackState((prev) => ({
         ...prev,
         isPlaying: false,
@@ -464,6 +472,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
     const nextTrack = queue[nextIndex];
     if (nextTrack && nextTrack.previewUrl && audioRef.current) {
+      playbackTrackRef.current = nextTrack;
       audioRef.current.src = nextTrack.previewUrl;
       // Only auto-play if we were already playing
       if (isPlaying) {
@@ -494,6 +503,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (prevIndex >= 0) {
       const prevTrack = queue[prevIndex];
       if (prevTrack && prevTrack.previewUrl) {
+        playbackTrackRef.current = prevTrack;
         audio.src = prevTrack.previewUrl;
         // Only auto-play if we were already playing
         if (isPlaying) {
@@ -596,7 +606,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     <AudioContext.Provider
       value={{
         playbackState,
-        recentlyPlayedTrackIds,
+        recentlyPlayedTracks,
         play,
         pause,
         resume,
