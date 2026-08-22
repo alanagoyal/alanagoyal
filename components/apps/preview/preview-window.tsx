@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useId, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
-import { RotateCcwSquare } from "lucide-react";
+import { FileImage, FileText, Info, RotateCcwSquare } from "lucide-react";
 import {
   useWindowBehavior,
   Position,
@@ -16,6 +16,13 @@ import {
 } from "@/lib/use-window-behavior";
 import { MAXIMIZED_Z_INDEX, useWindowManager } from "@/lib/window-context";
 import { PdfViewer } from "@/components/apps/preview/pdf-viewer";
+import { useClickOutside } from "@/lib/hooks/use-click-outside";
+import {
+  formatPreviewDimensions,
+  formatPreviewFileSize,
+  getPreviewFileKind,
+  getPreviewFileLocation,
+} from "@/lib/preview-inspector";
 
 export type PreviewFileType = "image" | "pdf";
 
@@ -64,6 +71,8 @@ export function PreviewWindow({
 }: PreviewWindowProps) {
   const windowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
+  const inspectorId = useId();
   const fileName = filePath?.split("/").pop() || "Untitled";
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
@@ -73,10 +82,45 @@ export function PreviewWindow({
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [isScrollRestored, setIsScrollRestored] = useState(false);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [fileSize, setFileSize] = useState<number | null>(null);
+  const [isFileSizeLoading, setIsFileSizeLoading] = useState(false);
   const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const pendingScrollRef = useRef<{ left: number; top: number } | null>(
     initialZoom > 1 ? { left: initialScrollLeft, top: initialScrollTop } : null
   );
+
+  const closeInspector = useCallback(() => setIsInspectorOpen(false), []);
+  useClickOutside(inspectorRef, closeInspector, isInspectorOpen);
+
+  useEffect(() => {
+    if (!isInspectorOpen) return;
+
+    const controller = new AbortController();
+    setFileSize(null);
+    setIsFileSizeLoading(true);
+
+    fetch(fileUrl, { method: "HEAD", signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Preview file size unavailable");
+        const contentLength = response.headers.get("content-length");
+        const parsed = contentLength ? Number.parseInt(contentLength, 10) : Number.NaN;
+        setFileSize(Number.isFinite(parsed) ? parsed : null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setFileSize(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsFileSizeLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [fileUrl, isInspectorOpen]);
+
+  useEffect(() => {
+    setIsInspectorOpen(false);
+  }, [filePath]);
 
   const { isInteracting, handleDragStart, handleResizeStart } = useWindowBehavior({
     position,
@@ -473,9 +517,101 @@ export function PreviewWindow({
           <div className="flex-1 min-w-0 px-2 text-center">
             <span className="block truncate text-zinc-600 dark:text-zinc-400 text-sm">{fileName}</span>
           </div>
-          {/* Image controls - stopPropagation prevents window drag */}
-          {fileType === "image" && (
-            <div className="flex shrink-0 items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
+          {/* Document controls - stopPropagation prevents window drag */}
+          <div
+            className={cn(
+              "flex shrink-0 items-center justify-end gap-1",
+              fileType === "pdf" && "w-[68px]"
+            )}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div ref={inspectorRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsInspectorOpen((open) => !open)}
+                aria-label={isInspectorOpen ? "Hide document information" : "Show document information"}
+                aria-expanded={isInspectorOpen}
+                aria-controls={inspectorId}
+                className={cn(
+                  "rounded p-1 text-zinc-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] dark:text-zinc-400",
+                  isInspectorOpen
+                    ? "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                    : "can-hover:hover:bg-zinc-300 can-hover:hover:text-zinc-800 can-hover:dark:hover:bg-zinc-700 can-hover:dark:hover:text-zinc-200"
+                )}
+                title="Show Inspector"
+              >
+                <Info aria-hidden="true" className="h-4 w-4" />
+              </button>
+
+              {isInspectorOpen && (
+                <aside
+                  id={inspectorId}
+                  aria-label="Document information"
+                  className="absolute right-0 top-[calc(100%+12px)] z-30 w-[min(320px,calc(100vw-24px))] overflow-hidden rounded-xl border border-black/10 bg-zinc-100/95 text-zinc-900 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-2xl dark:border-white/15 dark:bg-zinc-800/95 dark:text-zinc-100"
+                >
+                  <div className="relative flex h-8 items-center justify-center border-b border-black/10 px-3 dark:border-white/10">
+                    <div className="group absolute left-3 flex gap-1.5">
+                      <button
+                        type="button"
+                        aria-label="Close document information"
+                        onClick={closeInspector}
+                        className="relative flex h-2.5 w-2.5 items-center justify-center rounded-full bg-zinc-400/70 transition-colors can-hover:group-hover:bg-[#FF5F57] focus-visible:bg-[#FF5F57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] dark:bg-zinc-500/80"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 10 10"
+                          className="h-2 w-2 text-black/55 opacity-0 transition-opacity can-hover:group-hover:opacity-100 group-focus-within:opacity-100"
+                          fill="currentColor"
+                        >
+                          <path d="M2.2 1.4 5 4.2l2.8-2.8.8.8L5.8 5l2.8 2.8-.8.8L5 5.8 2.2 8.6l-.8-.8L4.2 5 1.4 2.2z" />
+                        </svg>
+                      </button>
+                      <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-zinc-400/70 dark:bg-zinc-500/80" />
+                      <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-zinc-400/70 dark:bg-zinc-500/80" />
+                    </div>
+                    <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Inspector</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 px-4 py-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white text-[#0A7CFF] shadow-sm ring-1 ring-black/10 dark:bg-zinc-700 dark:ring-white/10">
+                      {fileType === "image" ? (
+                        <FileImage aria-hidden="true" className="h-6 w-6" strokeWidth={1.6} />
+                      ) : (
+                        <FileText aria-hidden="true" className="h-6 w-6" strokeWidth={1.6} />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium" title={fileName}>{fileName}</p>
+                      <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                        {getPreviewFileKind(fileName, fileType)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 gap-y-2 border-t border-black/10 px-4 py-3 text-xs dark:border-white/10">
+                    <dt className="text-zinc-500 dark:text-zinc-400">Name</dt>
+                    <dd className="min-w-0 break-all">{fileName}</dd>
+                    <dt className="text-zinc-500 dark:text-zinc-400">Kind</dt>
+                    <dd>{getPreviewFileKind(fileName, fileType)}</dd>
+                    <dt className="text-zinc-500 dark:text-zinc-400">Size</dt>
+                    <dd aria-live="polite">
+                      {isFileSizeLoading ? "Calculating…" : formatPreviewFileSize(fileSize)}
+                    </dd>
+                    {fileType === "image" && naturalSize && (
+                      <>
+                        <dt className="text-zinc-500 dark:text-zinc-400">Dimensions</dt>
+                        <dd>{formatPreviewDimensions(naturalSize.width, naturalSize.height)}</dd>
+                      </>
+                    )}
+                    <dt className="text-zinc-500 dark:text-zinc-400">Where</dt>
+                    <dd className="min-w-0 break-all">{getPreviewFileLocation(filePath)}</dd>
+                  </dl>
+                </aside>
+              )}
+            </div>
+
+            {fileType === "image" && (
+              <>
               <button
                 onClick={rotateLeft}
                 className="p-1 rounded text-zinc-600 dark:text-zinc-400 transition-colors can-hover:hover:bg-zinc-300 can-hover:dark:hover:bg-zinc-700 can-hover:hover:text-zinc-800 can-hover:dark:hover:text-zinc-200"
@@ -490,7 +626,7 @@ export function PreviewWindow({
               </button>
               <button
                 onClick={zoomOut}
-                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+                className="rounded p-1 text-zinc-600 transition-colors can-hover:hover:bg-zinc-300 can-hover:hover:text-zinc-800 dark:text-zinc-400 can-hover:dark:hover:bg-zinc-700 can-hover:dark:hover:text-zinc-200"
                 title="Zoom out (Cmd -)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -501,7 +637,7 @@ export function PreviewWindow({
               <span className="text-zinc-600 dark:text-zinc-400 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
               <button
                 onClick={zoomIn}
-                className="p-1 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+                className="rounded p-1 text-zinc-600 transition-colors can-hover:hover:bg-zinc-300 can-hover:hover:text-zinc-800 dark:text-zinc-400 can-hover:dark:hover:bg-zinc-700 can-hover:dark:hover:text-zinc-200"
                 title="Zoom in (Cmd +)"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -509,9 +645,9 @@ export function PreviewWindow({
                   <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
                 </svg>
               </button>
-            </div>
-          )}
-          {fileType === "pdf" && <div className="w-[68px] shrink-0" />}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Content */}
