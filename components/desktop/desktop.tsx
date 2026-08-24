@@ -319,6 +319,21 @@ function DesktopContent({
   ) => {
     openFinderWindow(initialPath, options);
   }, [openFinderWindow]);
+  const handleOpenFinderDirectory = useCallback((directoryPath: string) => {
+    const existingWindow = [...finderWindows]
+      .filter(
+        (windowState) =>
+          windowState.isOpen && windowState.metadata?.currentPath === directoryPath
+      )
+      .sort((left, right) => right.zIndex - left.zIndex)[0];
+
+    if (existingWindow) {
+      focusMultiWindow(existingWindow.id);
+      return;
+    }
+
+    openDedicatedFinderWindow(directoryPath);
+  }, [finderWindows, focusMultiWindow, openDedicatedFinderWindow]);
   const focusFinderApp = useCallback(() => {
     if (finderWindows.some((windowState) => windowState.isOpen)) {
       bringAppToFront("finder");
@@ -985,7 +1000,11 @@ function DesktopContent({
           </Window>
 
           <Window appId="iterm">
-            <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
+            <ITermApp
+              inShell={true}
+              onOpenDirectory={handleOpenFinderDirectory}
+              onOpenTextFile={handleOpenTextFile}
+            />
           </Window>
 
           <Window appId="photos">

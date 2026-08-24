@@ -153,11 +153,13 @@ function isTextFile(filename: string): boolean {
 }
 
 interface TerminalProps {
+  onOpenDirectory?: (directoryPath: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onCurrentDirectoryChange?: (directory: string) => void;
 }
 
 export function Terminal({
+  onOpenDirectory,
   onOpenTextFile,
   onCurrentDirectoryChange,
 }: TerminalProps) {
@@ -288,7 +290,7 @@ export function Terminal({
   cd <dir>      - Change directory
   ls [dir]      - List directory contents
   cat <file>    - Display file contents
-  open <file>   - Open file in TextEdit
+  open <path>   - Open a file or folder
   echo <text>   - Print text to terminal
   whoami        - Display current user
   hostname      - Display hostname
@@ -498,6 +500,30 @@ export function Terminal({
 
         const path = resolvePath(args[0]);
 
+        const staticNode = fileSystem[path];
+        const parsed = parseGitHubPath(path);
+        let isDirectory = staticNode?.type === "dir" || path === PROJECTS_DIR;
+
+        if (!isDirectory && parsed) {
+          if (!parsed.filePath) {
+            isDirectory = true;
+          } else {
+            const tree = await fetchGitHubRepoTree(parsed.repo);
+            isDirectory = tree.some(
+              (item) => item.type === "dir" && item.path === parsed.filePath
+            );
+          }
+        }
+
+        if (isDirectory) {
+          if (onOpenDirectory) {
+            onOpenDirectory(path);
+          } else {
+            output = "open: Finder is not available";
+          }
+          break;
+        }
+
         // Check if it's a text file
         const fileName = path.split("/").pop() || "";
         if (!isTextFile(fileName)) {
@@ -509,7 +535,7 @@ export function Terminal({
         let content = "";
 
         // Check static file system first
-        const staticFile = fileSystem[path];
+        const staticFile = staticNode;
         if (staticFile?.type === "file" && staticFile.content) {
           content = staticFile.content;
         } else if (staticFile?.type === "dir") {
@@ -517,7 +543,6 @@ export function Terminal({
           break;
         } else {
           // Check GitHub
-          const parsed = parseGitHubPath(path);
           if (parsed && parsed.filePath) {
             try {
               content = await fetchGitHubFileContent(parsed.repo, parsed.filePath);
@@ -552,7 +577,7 @@ export function Terminal({
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenTextFile]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenDirectory, onOpenTextFile]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {
