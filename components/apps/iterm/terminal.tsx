@@ -9,6 +9,10 @@ import {
   fetchGitHubRepoTree,
   fetchGitHubRepos,
 } from "@/lib/github-client";
+import {
+  getFinderOpenDirectoryTarget,
+  getFinderProjectRootTarget,
+} from "@/lib/finder-path";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -502,22 +506,36 @@ export function Terminal({
 
         const staticNode = fileSystem[path];
         const parsed = parseGitHubPath(path);
-        let isDirectory = staticNode?.type === "dir" || path === PROJECTS_DIR;
+        let finderDirectoryTarget = staticNode?.type === "dir"
+          ? getFinderOpenDirectoryTarget(path)
+          : null;
 
-        if (!isDirectory && parsed) {
+        if (staticNode?.type === "dir" && !finderDirectoryTarget) {
+          output = `open: ${args[0]}: Finder cannot display this folder`;
+          break;
+        }
+
+        if (!finderDirectoryTarget && parsed) {
           if (!parsed.filePath) {
-            isDirectory = true;
+            const repos = await fetchGitHubRepos();
+            const projectRootTarget = getFinderProjectRootTarget(path, repos);
+            if (!projectRootTarget) {
+              output = `open: ${args[0]}: No such file or directory`;
+              break;
+            }
+            finderDirectoryTarget = projectRootTarget;
           } else {
             const tree = await fetchGitHubRepoTree(parsed.repo);
-            isDirectory = tree.some(
+            const isDirectory = tree.some(
               (item) => item.type === "dir" && item.path === parsed.filePath
             );
+            if (isDirectory) finderDirectoryTarget = path;
           }
         }
 
-        if (isDirectory) {
+        if (finderDirectoryTarget) {
           if (onOpenDirectory) {
-            onOpenDirectory(path);
+            onOpenDirectory(finderDirectoryTarget);
           } else {
             output = "open: Finder is not available";
           }
