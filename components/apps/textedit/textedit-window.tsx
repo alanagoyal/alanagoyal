@@ -31,6 +31,7 @@ interface TextEditWindowProps {
   isFocused: boolean;
   isMaximized: boolean;
   isDirty: boolean;
+  wrapToPage: boolean;
   onFocus: () => void;
   onClose: () => void;
   onMinimize: () => void;
@@ -50,6 +51,7 @@ export function TextEditWindow({
   isFocused,
   isMaximized,
   isDirty,
+  wrapToPage,
   onFocus,
   onClose,
   onMinimize,
@@ -321,13 +323,27 @@ export function TextEditWindow({
         )}
 
         {/* Content */}
-        <div className="flex-1 min-h-0">
+        <div
+          data-testid="textedit-document-area"
+          data-wrap-mode={wrapToPage ? "page" : "window"}
+          className={cn(
+            "flex-1 min-h-0",
+            wrapToPage
+              ? "overflow-auto bg-zinc-200/70 p-6 dark:bg-zinc-950"
+              : "overflow-hidden"
+          )}
+        >
           <textarea
             ref={textareaRef}
             aria-label={`Document contents for ${fileName}`}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            className="w-full h-full bg-transparent resize-none outline-none font-mono text-sm leading-relaxed p-4 overflow-auto text-zinc-900 dark:text-white"
+            className={cn(
+              "resize-none outline-none font-mono text-sm leading-relaxed text-zinc-900 dark:text-white",
+              wrapToPage
+                ? "mx-auto block h-[792px] w-[612px] bg-white px-[72px] py-[72px] shadow-[0_1px_4px_rgba(0,0,0,0.24)] dark:bg-zinc-900"
+                : "h-full w-full overflow-auto bg-transparent p-4"
+            )}
             spellCheck={false}
           />
         </div>

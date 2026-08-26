@@ -683,6 +683,10 @@ function DesktopContent({
     return null;
   }, [renameRecent, state.windows, updateWindowMetadata]);
 
+  const handleTextEditWrapToPageChange = useCallback((windowId: string, wrapToPage: boolean) => {
+    updateWindowMetadata(windowId, { wrapToPage });
+  }, [updateWindowMetadata]);
+
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
     if (appId === "textedit" || appId === "preview") {
@@ -954,6 +958,7 @@ function DesktopContent({
         onTextEditSave={handleTextEditSave}
         onTextEditDuplicate={handleTextEditDuplicate}
         onTextEditRename={handleTextEditRename}
+        onTextEditWrapToPageChange={handleTextEditWrapToPageChange}
         onPreviewOpen={handlePreviewOpen}
         onPreviewClose={handlePreviewClose}
       />
@@ -1064,6 +1069,7 @@ function DesktopContent({
                   isFocused={state.focusedWindowId === windowState.id}
                   isMaximized={windowState.isMaximized}
                   isDirty={windowState.metadata?.isDirty === true}
+                  wrapToPage={windowState.metadata?.wrapToPage === true}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
                   onMinimize={() => minimizeMultiWindow(windowState.id)}
