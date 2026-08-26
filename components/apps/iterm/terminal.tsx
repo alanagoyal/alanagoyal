@@ -9,6 +9,10 @@ import {
   fetchGitHubRepoTree,
   fetchGitHubRepos,
 } from "@/lib/github-client";
+import {
+  getFinderOpenDirectoryTarget,
+  getFinderProjectRootTarget,
+} from "@/lib/finder-path";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -153,11 +157,13 @@ function isTextFile(filename: string): boolean {
 }
 
 interface TerminalProps {
+  onOpenDirectory?: (directoryPath: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
   onCurrentDirectoryChange?: (directory: string) => void;
 }
 
 export function Terminal({
+  onOpenDirectory,
   onOpenTextFile,
   onCurrentDirectoryChange,
 }: TerminalProps) {
@@ -288,7 +294,7 @@ export function Terminal({
   cd <dir>      - Change directory
   ls [dir]      - List directory contents
   cat <file>    - Display file contents
-  open <file>   - Open file in TextEdit
+  open <path>   - Open a file or folder
   echo <text>   - Print text to terminal
   whoami        - Display current user
   hostname      - Display hostname
@@ -498,6 +504,44 @@ export function Terminal({
 
         const path = resolvePath(args[0]);
 
+        const staticNode = fileSystem[path];
+        const parsed = parseGitHubPath(path);
+        let finderDirectoryTarget = staticNode?.type === "dir"
+          ? getFinderOpenDirectoryTarget(path)
+          : null;
+
+        if (staticNode?.type === "dir" && !finderDirectoryTarget) {
+          output = `open: ${args[0]}: Finder cannot display this folder`;
+          break;
+        }
+
+        if (!finderDirectoryTarget && parsed) {
+          if (!parsed.filePath) {
+            const repos = await fetchGitHubRepos();
+            const projectRootTarget = getFinderProjectRootTarget(path, repos);
+            if (!projectRootTarget) {
+              output = `open: ${args[0]}: No such file or directory`;
+              break;
+            }
+            finderDirectoryTarget = projectRootTarget;
+          } else {
+            const tree = await fetchGitHubRepoTree(parsed.repo);
+            const isDirectory = tree.some(
+              (item) => item.type === "dir" && item.path === parsed.filePath
+            );
+            if (isDirectory) finderDirectoryTarget = path;
+          }
+        }
+
+        if (finderDirectoryTarget) {
+          if (onOpenDirectory) {
+            onOpenDirectory(finderDirectoryTarget);
+          } else {
+            output = "open: Finder is not available";
+          }
+          break;
+        }
+
         // Check if it's a text file
         const fileName = path.split("/").pop() || "";
         if (!isTextFile(fileName)) {
@@ -509,7 +553,7 @@ export function Terminal({
         let content = "";
 
         // Check static file system first
-        const staticFile = fileSystem[path];
+        const staticFile = staticNode;
         if (staticFile?.type === "file" && staticFile.content) {
           content = staticFile.content;
         } else if (staticFile?.type === "dir") {
@@ -517,7 +561,6 @@ export function Terminal({
           break;
         } else {
           // Check GitHub
-          const parsed = parseGitHubPath(path);
           if (parsed && parsed.filePath) {
             try {
               content = await fetchGitHubFileContent(parsed.repo, parsed.filePath);
@@ -552,7 +595,7 @@ export function Terminal({
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenTextFile]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenDirectory, onOpenTextFile]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {

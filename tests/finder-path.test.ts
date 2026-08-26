@@ -1,6 +1,44 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getFinderPathSegments } from "../lib/finder-path";
+import {
+  getFinderOpenDirectoryTarget,
+  getFinderPathSegments,
+  getFinderProjectRootTarget,
+} from "../lib/finder-path";
+
+test("maps only Finder-supported terminal directories", () => {
+  assert.equal(
+    getFinderOpenDirectoryTarget("/Users/alanagoyal/Desktop"),
+    "/Users/alanagoyal/Desktop"
+  );
+  assert.equal(getFinderOpenDirectoryTarget("/Applications"), "applications");
+  assert.equal(getFinderOpenDirectoryTarget("/"), null);
+  assert.equal(getFinderOpenDirectoryTarget("/System"), null);
+});
+
+test("opens only existing GitHub project roots", () => {
+  assert.equal(
+    getFinderProjectRootTarget(
+      "/Users/alanagoyal/Projects/alanagoyal",
+      ["alanagoyal", "cli-crm"]
+    ),
+    "/Users/alanagoyal/Projects/alanagoyal"
+  );
+  assert.equal(
+    getFinderProjectRootTarget(
+      "/Users/alanagoyal/Projects/not-a-repo",
+      ["alanagoyal", "cli-crm"]
+    ),
+    null
+  );
+  assert.equal(
+    getFinderProjectRootTarget(
+      "/Users/alanagoyal/Projects/alanagoyal/components",
+      ["alanagoyal"]
+    ),
+    null
+  );
+});
 
 test("builds clickable segments from the Finder section root", () => {
   assert.deepEqual(

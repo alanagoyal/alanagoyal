@@ -8,6 +8,7 @@ const HOME_DIR = "/Users/alanagoyal";
 
 interface ITermAppProps {
   inShell?: boolean;
+  onOpenDirectory?: (directoryPath: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
 }
 
@@ -19,7 +20,11 @@ function formatWorkingDirectory(directory: string): string {
   return directory;
 }
 
-export function ITermApp({ inShell = false, onOpenTextFile }: ITermAppProps) {
+export function ITermApp({
+  inShell = false,
+  onOpenDirectory,
+  onOpenTextFile,
+}: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentDirectory, setCurrentDirectory] = useState(HOME_DIR);
   const sessionTitle = formatWorkingDirectory(currentDirectory);
@@ -35,6 +40,7 @@ export function ITermApp({ inShell = false, onOpenTextFile }: ITermAppProps) {
       <Nav isDesktop={inShell} sessionTitle={sessionTitle} />
       <div className="flex-1 min-h-0 overflow-hidden bg-background">
         <Terminal
+          onOpenDirectory={onOpenDirectory}
           onOpenTextFile={onOpenTextFile}
           onCurrentDirectoryChange={setCurrentDirectory}
         />
