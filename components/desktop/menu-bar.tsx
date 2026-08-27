@@ -16,6 +16,7 @@ import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { CalendarViewMenu } from "./calendar-view-menu";
 import { TextEditEditMenu } from "./textedit-edit-menu";
+import { TextEditFormatMenu } from "./textedit-format-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
 import { PreviewFileMenu } from "./preview-file-menu";
 import { AboutDialog } from "./about-dialog";
@@ -30,7 +31,7 @@ import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "textEditEditMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "textEditEditMenu" | "textEditFormatMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -75,6 +76,7 @@ interface MenuBarProps {
   onTextEditSave?: (windowId: string) => void;
   onTextEditDuplicate?: (windowId: string) => void;
   onTextEditRename?: (windowId: string, fileName: string) => string | null;
+  onTextEditWrapToPageChange?: (windowId: string, wrapToPage: boolean) => void;
   onPreviewOpen?: () => void;
   onPreviewClose?: (windowId: string) => void;
 }
@@ -105,6 +107,7 @@ export function MenuBar({
   onTextEditSave,
   onTextEditDuplicate,
   onTextEditRename,
+  onTextEditWrapToPageChange,
   onPreviewOpen,
   onPreviewClose,
 }: MenuBarProps) {
@@ -151,6 +154,9 @@ export function MenuBar({
     ? String(state.windows[focusedWindowId]?.metadata?.filePath ?? "")
     : "";
   const focusedTextEditFileName = focusedTextEditFilePath.split("/").pop() || "Untitled.txt";
+  const focusedTextEditWrapToPage = focusedAppId === "textedit" && focusedWindowId
+    ? state.windows[focusedWindowId]?.metadata?.wrapToPage === true
+    : false;
   const activeFocus =
     focusMode === "off" ? null : FOCUS_STATUS_CONFIG[focusMode];
 
@@ -364,6 +370,19 @@ export function MenuBar({
               Edit
             </button>
           )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditFormatMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditFormatMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              Format
+            </button>
+          )}
         </div>
       </div>
 
@@ -546,6 +565,17 @@ export function MenuBar({
               detail: { windowId: focusedWindowId },
             })
           );
+        }}
+      />
+
+      <TextEditFormatMenu
+        isOpen={openMenu === "textEditFormatMenu"}
+        onClose={closeMenu}
+        wrapToPage={focusedTextEditWrapToPage}
+        onWrapToPageChange={(wrapToPage) => {
+          if (focusedWindowId) {
+            onTextEditWrapToPageChange?.(focusedWindowId, wrapToPage);
+          }
         }}
       />
 
