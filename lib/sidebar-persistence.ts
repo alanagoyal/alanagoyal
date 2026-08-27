@@ -25,6 +25,8 @@
  *    - Guard saves until after first render to avoid overwriting with defaults
  */
 
+import { clearCampaignLevels } from "./games/levels";
+
 // ============================================================================
 // Storage Keys (centralized to avoid conflicts)
 // ============================================================================
@@ -810,6 +812,9 @@ export function clearAppState(appId: string): void {
     case "iterm":
       clearItermStorage();
       break;
+    case "games":
+      clearCampaignLevels();
+      break;
   }
 }
 
@@ -823,4 +828,5 @@ export function clearAllAppState(): void {
   clearMessagesState();
   clearWeatherState();
   clearItermStorage();
+  clearCampaignLevels();
 }

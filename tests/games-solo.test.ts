@@ -12,6 +12,24 @@ import {
   revealMinefield,
   stepSnake,
 } from "../lib/games/solo";
+import {
+  BREAKOUT_LEVELS,
+  CAMPAIGN_LEVEL_COUNT,
+  clearCampaignLevels,
+  loadCampaignLevel,
+  MEMORY_LEVELS,
+  MINESWEEPER_LEVELS,
+  nextCampaignLevel,
+  saveCampaignLevel,
+} from "../lib/games/levels";
+
+class MemoryStorage {
+  private values = new Map<string, string>();
+
+  getItem(key: string) { return this.values.get(key) ?? null; }
+  setItem(key: string, value: string) { this.values.set(key, value); }
+  removeItem(key: string) { this.values.delete(key); }
+}
 
 test("2048 merges each tile only once per move", () => {
   const result = move2048([
@@ -103,4 +121,36 @@ test("memory levels grow into square boards with exact pairs", () => {
   assert.equal(levelThreeDeck.length, 36);
   assert.equal(levelThreeDeck.includes(null), false);
   assert.equal(new Set(levelThreeDeck).size, 18);
+});
+
+test("campaign games share five explicitly tuned levels", () => {
+  assert.equal(CAMPAIGN_LEVEL_COUNT, 5);
+  assert.deepEqual(MEMORY_LEVELS.map((level) => level.gridSize), [4, 5, 6, 7, 8]);
+  assert.deepEqual(MINESWEEPER_LEVELS, [
+    { size: 6, mineCount: 5 },
+    { size: 9, mineCount: 10 },
+    { size: 12, mineCount: 20 },
+    { size: 14, mineCount: 30 },
+    { size: 16, mineCount: 40 },
+  ]);
+  assert.deepEqual(BREAKOUT_LEVELS.map((level) => level.rows), [3, 4, 5, 6, 7]);
+  assert.equal(nextCampaignLevel(1), 2);
+  assert.equal(nextCampaignLevel(5), null);
+
+  const finalMemoryDeck = createMemoryDeck(() => 0.5, MEMORY_LEVELS[4].gridSize);
+  assert.equal(finalMemoryDeck.length, 64);
+  assert.equal(new Set(finalMemoryDeck).size, 32);
+});
+
+test("campaign levels persist per game until Games is closed", () => {
+  const storage = new MemoryStorage();
+  saveCampaignLevel("memory", 4, storage);
+  saveCampaignLevel("breakout", 2, storage);
+  assert.equal(loadCampaignLevel("memory", storage), 4);
+  assert.equal(loadCampaignLevel("breakout", storage), 2);
+  assert.equal(loadCampaignLevel("minesweeper", storage), 1);
+
+  clearCampaignLevels(storage);
+  assert.equal(loadCampaignLevel("memory", storage), 1);
+  assert.equal(loadCampaignLevel("breakout", storage), 1);
 });

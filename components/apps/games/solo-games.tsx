@@ -10,12 +10,22 @@ import {
   type Game2048State,
   type GridDirection,
   initializeMinefield,
-  MAX_MEMORY_GRID_SIZE,
   type MineCell,
   revealMinefield,
   type SnakePoint,
   stepSnake,
 } from "@/lib/games/solo";
+import {
+  BREAKOUT_LEVELS,
+  CAMPAIGN_LEVEL_COUNT,
+  type CampaignLevel,
+  getCampaignConfig,
+  loadCampaignLevel,
+  MEMORY_LEVELS,
+  MINESWEEPER_LEVELS,
+  nextCampaignLevel,
+  saveCampaignLevel,
+} from "@/lib/games/levels";
 import { cn } from "@/lib/utils";
 
 function GameButton({ children, onClick, primary = false, disabled = false }: {
@@ -45,6 +55,61 @@ function GameFrame({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-full w-full items-center justify-center p-5">
         {children}
       </div>
+    </div>
+  );
+}
+
+function GameStat({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="whitespace-nowrap text-xl font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function CampaignHeader({ level, stats, onRestart }: {
+  level: CampaignLevel;
+  stats: Array<{ label: string; value: React.ReactNode }>;
+  onRestart: () => void;
+}) {
+  return (
+    <div className="flex items-end justify-between gap-3">
+      <div className="flex gap-4 sm:gap-6">
+        <GameStat label="Level" value={`${level} of ${CAMPAIGN_LEVEL_COUNT}`} />
+        {stats.map((stat) => <GameStat key={stat.label} label={stat.label} value={stat.value} />)}
+      </div>
+      <GameButton onClick={onRestart}><RotateCcw size={14} />Restart Level</GameButton>
+    </div>
+  );
+}
+
+function CampaignResultOverlay({ level, result, detail, failureTitle, onAction, className, buttonClassName }: {
+  level: CampaignLevel;
+  result: "complete" | "failed";
+  detail: string;
+  failureTitle?: string;
+  onAction: () => void;
+  className?: string;
+  buttonClassName?: string;
+}) {
+  const nextLevel = nextCampaignLevel(level);
+  const title = result === "failed"
+    ? failureTitle ?? "Game Over"
+    : nextLevel
+      ? `Level ${level} complete!`
+      : "All levels complete!";
+  const action = result === "failed"
+    ? "Try Again"
+    : nextLevel
+      ? `Continue to Level ${nextLevel}`
+      : "Play Again";
+
+  return (
+    <div className={cn("absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white backdrop-blur-[3px]", className)}>
+      <p className="text-2xl font-semibold">{title}</p>
+      <p className="mt-1 text-sm text-white/75">{detail}</p>
+      <button type="button" onClick={onAction} className={cn("mt-4 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 can-hover:hover:bg-white/90", buttonClassName)}>{action}</button>
     </div>
   );
 }
@@ -195,14 +260,30 @@ export function TwentyFortyEightGame() {
 
 const NUMBER_COLORS = ["", "text-blue-600", "text-emerald-600", "text-red-600", "text-purple-600", "text-amber-700", "text-cyan-700", "text-foreground", "text-muted-foreground"];
 
+function createEmptyMineBoard(size: number): MineCell[] {
+  return Array.from({ length: size * size }, () => ({ mine: false, adjacent: 0, revealed: false, flagged: false }));
+}
+
 export function MinesweeperGame() {
-  const emptyBoard = () => Array.from({ length: 81 }, (): MineCell => ({ mine: false, adjacent: 0, revealed: false, flagged: false }));
-  const [board, setBoard] = useState<MineCell[]>(emptyBoard);
+  const initialLevelRef = useRef(loadCampaignLevel("minesweeper"));
+  const [level, setLevel] = useState<CampaignLevel>(initialLevelRef.current);
+  const levelConfig = getCampaignConfig(MINESWEEPER_LEVELS, level);
+  const [board, setBoard] = useState<MineCell[]>(() => createEmptyMineBoard(getCampaignConfig(MINESWEEPER_LEVELS, initialLevelRef.current).size));
   const [started, setStarted] = useState(false);
   const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
   const [seconds, setSeconds] = useState(0);
 
-  const reset = useCallback(() => { setBoard(emptyBoard()); setStarted(false); setStatus("playing"); setSeconds(0); }, []);
+  const startLevel = useCallback((nextLevel: CampaignLevel) => {
+    const nextConfig = getCampaignConfig(MINESWEEPER_LEVELS, nextLevel);
+    saveCampaignLevel("minesweeper", nextLevel);
+    setLevel(nextLevel);
+    setBoard(createEmptyMineBoard(nextConfig.size));
+    setStarted(false);
+    setStatus("playing");
+    setSeconds(0);
+  }, []);
+  const reset = useCallback(() => startLevel(level), [level, startLevel]);
+
   useEffect(() => {
     if (!started || status !== "playing") return;
     const timer = window.setInterval(() => setSeconds((value) => Math.min(999, value + 1)), 1000);
@@ -211,9 +292,9 @@ export function MinesweeperGame() {
 
   const reveal = (index: number) => {
     if (status !== "playing" || board[index].flagged || board[index].revealed) return;
-    const source = started ? board : initializeMinefield(board, index);
+    const source = started ? board : initializeMinefield(board, index, Math.random, levelConfig.size, levelConfig.mineCount);
     if (!started) setStarted(true);
-    const next = revealMinefield(source, index);
+    const next = revealMinefield(source, index, levelConfig.size);
     if (next[index].mine) setStatus("lost");
     else if (next.every((cell) => cell.mine || cell.revealed)) setStatus("won");
     setBoard(next);
@@ -228,14 +309,34 @@ export function MinesweeperGame() {
   return (
     <GameFrame>
       <div className="flex w-[min(100%,calc(100cqh-148px))] max-w-[470px] flex-col gap-4">
-        <div className="flex items-end justify-between"><div className="flex gap-5"><div><p className="text-xs text-muted-foreground">Mines</p><p className="text-xl font-semibold tabular-nums">{Math.max(0, 10 - flags)}</p></div><div><p className="text-xs text-muted-foreground">Time</p><p className="text-xl font-semibold tabular-nums">{seconds}</p></div></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
-        <div className="relative grid aspect-square grid-cols-9 gap-[2px] rounded-2xl bg-[#95a2af] p-2 shadow-[0_18px_55px_rgba(15,23,42,.22)]">
+        <CampaignHeader
+          level={level}
+          stats={[
+            { label: "Board", value: `${levelConfig.size}×${levelConfig.size}` },
+            { label: "Mines", value: Math.max(0, levelConfig.mineCount - flags) },
+            { label: "Time", value: seconds },
+          ]}
+          onRestart={reset}
+        />
+        <div
+          className="relative grid aspect-square gap-[clamp(1px,.45cqw,2px)] rounded-2xl bg-[#95a2af] p-[clamp(4px,1.7cqw,8px)] shadow-[0_18px_55px_rgba(15,23,42,.22)] [container-type:inline-size]"
+          style={{ gridTemplateColumns: `repeat(${levelConfig.size}, minmax(0, 1fr))` }}
+        >
           {board.map((cell, index) => (
-            <button key={index} type="button" aria-label={`Cell ${index + 1}${cell.flagged ? ", flagged" : ""}`} onClick={() => reveal(index)} onContextMenu={(event) => { event.preventDefault(); toggleFlag(index); }} className={cn("flex aspect-square items-center justify-center rounded-[4px] text-sm font-bold sm:text-base", cell.revealed ? "bg-[#e8edf1] dark:bg-[#343a40]" : "bg-[#c8d0d8] shadow-[inset_1px_1px_0_rgba(255,255,255,.75),inset_-1px_-1px_0_rgba(50,60,70,.35)] can-hover:hover:bg-[#d5dce2]", NUMBER_COLORS[cell.adjacent])}>
+            <button key={index} type="button" aria-label={`Cell ${index + 1}${cell.flagged ? ", flagged" : ""}`} onClick={() => reveal(index)} onContextMenu={(event) => { event.preventDefault(); toggleFlag(index); }} className={cn("flex aspect-square min-h-0 min-w-0 items-center justify-center rounded-[clamp(2px,1cqw,4px)] font-bold", cell.revealed ? "bg-[#e8edf1] dark:bg-[#343a40]" : "bg-[#c8d0d8] shadow-[inset_1px_1px_0_rgba(255,255,255,.75),inset_-1px_-1px_0_rgba(50,60,70,.35)] can-hover:hover:bg-[#d5dce2]", NUMBER_COLORS[cell.adjacent])} style={{ fontSize: `clamp(0.55rem, ${21 / levelConfig.size}cqw, 1rem)` }}>
               {cell.flagged ? <Flag size={14} className="fill-red-500 text-red-600" /> : cell.revealed && cell.mine ? "💣" : cell.revealed && cell.adjacent ? cell.adjacent : ""}
             </button>
           ))}
-          {status !== "playing" && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/35 text-white backdrop-blur-[2px]"><p className="text-2xl font-semibold">{status === "won" ? "You cleared it!" : "Boom!"}</p><button onClick={reset} className="mt-3 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900">Play Again</button></div>}
+          {status !== "playing" && (
+            <CampaignResultOverlay
+              level={level}
+              result={status === "won" ? "complete" : "failed"}
+              failureTitle="Boom!"
+              detail={status === "won" ? `Cleared in ${seconds} seconds` : `There are ${levelConfig.mineCount} mines on this board`}
+              onAction={() => startLevel(status === "won" ? nextCampaignLevel(level) ?? 1 : level)}
+              className="rounded-2xl bg-black/45"
+            />
+          )}
         </div>
         <p className="text-center text-xs text-muted-foreground">Click to reveal · Right-click to place a flag · Your first click is always safe</p>
       </div>
@@ -244,21 +345,23 @@ export function MinesweeperGame() {
 }
 
 export function MemoryGame() {
-  const [level, setLevel] = useState(1);
-  const gridSize = level + 3;
-  const [deck, setDeck] = useState(() => createMemoryDeck(Math.random, 4));
+  const initialLevelRef = useRef(loadCampaignLevel("memory"));
+  const [level, setLevel] = useState<CampaignLevel>(initialLevelRef.current);
+  const levelConfig = getCampaignConfig(MEMORY_LEVELS, level);
+  const [deck, setDeck] = useState(() => createMemoryDeck(Math.random, getCampaignConfig(MEMORY_LEVELS, initialLevelRef.current).gridSize));
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
   const [locked, setLocked] = useState(false);
   const flipTimerRef = useRef<number | null>(null);
 
-  const startLevel = useCallback((nextLevel: number) => {
+  const startLevel = useCallback((nextLevel: CampaignLevel) => {
     if (flipTimerRef.current !== null) window.clearTimeout(flipTimerRef.current);
     flipTimerRef.current = null;
-    const nextGridSize = nextLevel + 3;
-    const nextDeck = createMemoryDeck(Math.random, nextGridSize);
+    const nextConfig = getCampaignConfig(MEMORY_LEVELS, nextLevel);
+    const nextDeck = createMemoryDeck(Math.random, nextConfig.gridSize);
     const freeIndex = nextDeck.findIndex((card) => card === null);
+    saveCampaignLevel("memory", nextLevel);
     setLevel(nextLevel);
     setDeck(nextDeck);
     setFlipped([]);
@@ -287,29 +390,37 @@ export function MemoryGame() {
     }, deck[first] === deck[index] ? 450 : 750);
   };
   const won = matched.length === deck.length;
-  const hasNextLevel = gridSize < MAX_MEMORY_GRID_SIZE;
 
   return (
     <GameFrame>
       <div className="flex w-[min(100%,calc(100cqh-132px))] max-w-[500px] flex-col gap-4">
-        <div className="flex items-end justify-between">
-          <div className="flex gap-6">
-            <div><p className="text-xs text-muted-foreground">Level</p><p className="text-xl font-semibold tabular-nums">{level}</p></div>
-            <div><p className="text-xs text-muted-foreground">Board</p><p className="text-xl font-semibold tabular-nums">{gridSize}×{gridSize}</p></div>
-            <div><p className="text-xs text-muted-foreground">Moves</p><p className="text-xl font-semibold tabular-nums">{moves}</p></div>
-          </div>
-          <GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton>
-        </div>
+        <CampaignHeader
+          level={level}
+          stats={[
+            { label: "Board", value: `${levelConfig.gridSize}×${levelConfig.gridSize}` },
+            { label: "Moves", value: moves },
+          ]}
+          onRestart={reset}
+        />
         <div
           className="relative grid aspect-square gap-[clamp(3px,1.5cqw,8px)] rounded-2xl bg-[linear-gradient(145deg,#35266e,#6f50c9)] p-[clamp(6px,2.5cqw,12px)] shadow-[0_18px_55px_rgba(15,23,42,.24)] [container-type:inline-size]"
-          style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${levelConfig.gridSize}, minmax(0, 1fr))` }}
         >
           {deck.map((value, index) => {
             const visible = flipped.includes(index) || matched.includes(index);
             const free = value === null;
-            return <button key={index} type="button" onClick={() => flip(index)} aria-label={free ? "Free space" : visible ? value : `Hidden card ${index + 1}`} className={cn("flex min-h-0 min-w-0 items-center justify-center rounded-[clamp(5px,2.5cqw,12px)] border border-white/20 shadow-md transition-all duration-200", visible ? "rotate-0 bg-white dark:bg-[#25242a]" : "bg-white/16 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.22),transparent_45%)] can-hover:hover:bg-white/24", matched.includes(index) && "opacity-70 ring-2 ring-[#7fffc6]", free && "cursor-default bg-white/25 text-white ring-white/25")}><span className={visible ? "scale-100" : "scale-0"} style={{ fontSize: `clamp(0.75rem, ${28 / gridSize}cqw, 1.875rem)` }}>{free ? "★" : value}</span></button>;
+            return <button key={index} type="button" onClick={() => flip(index)} aria-label={free ? "Free space" : visible ? value : `Hidden card ${index + 1}`} className={cn("flex min-h-0 min-w-0 items-center justify-center rounded-[clamp(5px,2.5cqw,12px)] border border-white/20 shadow-md transition-all duration-200", visible ? "rotate-0 bg-white dark:bg-[#25242a]" : "bg-white/16 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.22),transparent_45%)] can-hover:hover:bg-white/24", matched.includes(index) && "opacity-70 ring-2 ring-[#7fffc6]", free && "cursor-default bg-white/25 text-white ring-white/25")}><span className={visible ? "scale-100" : "scale-0"} style={{ fontSize: `clamp(0.75rem, ${28 / levelConfig.gridSize}cqw, 1.875rem)` }}>{free ? "★" : value}</span></button>;
           })}
-          {won && <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-[#2f2264]/75 px-6 text-center text-white backdrop-blur-[3px]"><p className="text-2xl font-semibold">{hasNextLevel ? `Level ${level} complete!` : "Every level complete!"}</p><p className="mt-1 text-sm text-white/75">Finished in {moves} moves</p><button onClick={() => startLevel(hasNextLevel ? level + 1 : 1)} className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#35266e] can-hover:hover:bg-white/90">{hasNextLevel ? `Continue to ${gridSize + 1}×${gridSize + 1}` : "Play From Level 1"}</button></div>}
+          {won && (
+            <CampaignResultOverlay
+              level={level}
+              result="complete"
+              detail={`Finished in ${moves} moves`}
+              onAction={() => startLevel(nextCampaignLevel(level) ?? 1)}
+              className="rounded-2xl bg-[#2f2264]/75"
+              buttonClassName="text-[#35266e]"
+            />
+          )}
         </div>
         <p className="text-center text-xs text-muted-foreground">Find all {Math.floor(deck.length / 2)} matching pairs{deck.includes(null) ? " · The star is a free space" : ""}.</p>
       </div>
@@ -323,20 +434,44 @@ interface BreakoutState {
   mode: "ready" | "playing" | "won" | "lost";
 }
 
-const createBreakoutState = (): BreakoutState => ({ ballX: 320, ballY: 348, ballDX: 3.4, ballDY: -3.4, paddleX: 270, bricks: Array(40).fill(true), lives: 3, score: 0, mode: "ready" });
+function createBreakoutState(config: { rows: number; ballSpeed: number; paddleWidth: number }): BreakoutState {
+  return {
+    ballX: 320,
+    ballY: 348,
+    ballDX: config.ballSpeed,
+    ballDY: -config.ballSpeed,
+    paddleX: (640 - config.paddleWidth) / 2,
+    bricks: Array(config.rows * 8).fill(true),
+    lives: 3,
+    score: 0,
+    mode: "ready",
+  };
+}
 
 export function BreakoutGame() {
+  const initialLevelRef = useRef(loadCampaignLevel("breakout"));
+  const [level, setLevel] = useState<CampaignLevel>(initialLevelRef.current);
+  const levelConfig = getCampaignConfig(BREAKOUT_LEVELS, level);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const stateRef = useRef<BreakoutState>(createBreakoutState());
+  const stateRef = useRef<BreakoutState>(createBreakoutState(getCampaignConfig(BREAKOUT_LEVELS, initialLevelRef.current)));
   const keysRef = useRef({ left: false, right: false });
   const [, render] = useState(0);
 
-  const reset = useCallback(() => { stateRef.current = createBreakoutState(); render((value) => value + 1); }, []);
-  const start = useCallback(() => {
-    if (stateRef.current.mode === "won" || stateRef.current.mode === "lost") reset();
+  const startLevel = useCallback((nextLevel: CampaignLevel, launch = false) => {
+    const nextConfig = getCampaignConfig(BREAKOUT_LEVELS, nextLevel);
+    const nextState = createBreakoutState(nextConfig);
+    if (launch) nextState.mode = "playing";
+    saveCampaignLevel("breakout", nextLevel);
+    setLevel(nextLevel);
+    stateRef.current = nextState;
+    render((value) => value + 1);
+  }, []);
+  const reset = useCallback(() => startLevel(level), [level, startLevel]);
+  const launch = useCallback(() => {
+    if (stateRef.current.mode !== "ready") return;
     stateRef.current.mode = "playing";
     render((value) => value + 1);
-  }, [reset]);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -348,7 +483,7 @@ export function BreakoutGame() {
       if (["ArrowLeft", "ArrowRight", "a", "A", "d", "D", " "].includes(event.key)) event.preventDefault();
       if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") keysRef.current.left = pressed;
       if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") keysRef.current.right = pressed;
-      if (pressed && event.key === " ") start();
+      if (pressed && event.key === " ") launch();
     };
     const down = (event: KeyboardEvent) => key(event, true);
     const up = (event: KeyboardEvent) => key(event, false);
@@ -359,14 +494,14 @@ export function BreakoutGame() {
       const game = stateRef.current;
       if (game.mode === "playing") {
         if (keysRef.current.left) game.paddleX = Math.max(0, game.paddleX - 7);
-        if (keysRef.current.right) game.paddleX = Math.min(540, game.paddleX + 7);
+        if (keysRef.current.right) game.paddleX = Math.min(640 - levelConfig.paddleWidth, game.paddleX + 7);
         game.ballX += game.ballDX;
         game.ballY += game.ballDY;
         if (game.ballX <= 9 || game.ballX >= 631) game.ballDX *= -1;
         if (game.ballY <= 9) game.ballDY = Math.abs(game.ballDY);
-        if (game.ballDY > 0 && game.ballY >= 370 && game.ballY <= 387 && game.ballX >= game.paddleX - 5 && game.ballX <= game.paddleX + 105) {
+        if (game.ballDY > 0 && game.ballY >= 370 && game.ballY <= 387 && game.ballX >= game.paddleX - 5 && game.ballX <= game.paddleX + levelConfig.paddleWidth + 5) {
           game.ballDY = -Math.abs(game.ballDY);
-          game.ballDX = ((game.ballX - (game.paddleX + 50)) / 50) * 4.8;
+          game.ballDX = ((game.ballX - (game.paddleX + levelConfig.paddleWidth / 2)) / (levelConfig.paddleWidth / 2)) * levelConfig.ballSpeed * 1.4;
         }
         for (let index = 0; index < game.bricks.length; index += 1) {
           if (!game.bricks[index]) continue;
@@ -382,11 +517,21 @@ export function BreakoutGame() {
             break;
           }
         }
-        if (game.bricks.every((brick) => !brick)) game.mode = "won";
+        if (game.bricks.every((brick) => !brick)) {
+          game.mode = "won";
+          render((value) => value + 1);
+        }
         if (game.ballY > 430) {
           game.lives -= 1;
           if (game.lives <= 0) game.mode = "lost";
-          else { game.ballX = 320; game.ballY = 348; game.ballDX = game.ballDX < 0 ? -3.4 : 3.4; game.ballDY = -3.4; game.paddleX = 270; game.mode = "ready"; }
+          else {
+            game.ballX = 320;
+            game.ballY = 348;
+            game.ballDX = game.ballDX < 0 ? -levelConfig.ballSpeed : levelConfig.ballSpeed;
+            game.ballDY = -levelConfig.ballSpeed;
+            game.paddleX = (640 - levelConfig.paddleWidth) / 2;
+            game.mode = "ready";
+          }
           render((value) => value + 1);
         }
       }
@@ -394,29 +539,54 @@ export function BreakoutGame() {
       const gradient = context.createLinearGradient(0, 0, 640, 420);
       gradient.addColorStop(0, "#17112e"); gradient.addColorStop(1, "#32194f");
       context.fillStyle = gradient; context.fillRect(0, 0, 640, 420);
-      const colors = ["#ff6685", "#ff9f5b", "#ffe066", "#5ee39c", "#5cc8ff"];
+      const colors = ["#ff6685", "#ff9f5b", "#ffe066", "#5ee39c", "#5cc8ff", "#9b8cff", "#f27ee6"];
       game.bricks.forEach((brick, index) => {
         if (!brick) return;
         const column = index % 8; const row = Math.floor(index / 8);
-        context.fillStyle = colors[row];
+        context.fillStyle = colors[row % colors.length];
         context.beginPath(); context.roundRect(16 + column * 77, 38 + row * 27, 69, 18, 5); context.fill();
       });
-      context.fillStyle = "rgba(255,255,255,.92)"; context.beginPath(); context.roundRect(game.paddleX, 378, 100, 12, 6); context.fill();
+      context.fillStyle = "rgba(255,255,255,.92)"; context.beginPath(); context.roundRect(game.paddleX, 378, levelConfig.paddleWidth, 12, 6); context.fill();
       context.shadowColor = "rgba(255,255,255,.65)"; context.shadowBlur = 12; context.beginPath(); context.arc(game.ballX, game.ballY, 8, 0, Math.PI * 2); context.fill(); context.shadowBlur = 0;
       frame = window.requestAnimationFrame(loop);
     };
     loop();
     return () => { window.cancelAnimationFrame(frame); window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
-  }, [start]);
+  }, [launch, levelConfig]);
 
   const game = stateRef.current;
   return (
     <GameFrame>
       <div className="flex w-[min(100%,640px,calc(152.38cqh-189px))] flex-col gap-3">
-        <div className="flex items-end justify-between"><div className="flex gap-5"><div><p className="text-xs text-muted-foreground">Score</p><p className="text-xl font-semibold tabular-nums">{game.score}</p></div><div><p className="text-xs text-muted-foreground">Lives</p><p className="text-xl font-semibold tabular-nums">{game.lives}</p></div></div><GameButton onClick={reset}><RotateCcw size={14} />New Game</GameButton></div>
+        <CampaignHeader
+          level={level}
+          stats={[
+            { label: "Score", value: game.score },
+            { label: "Lives", value: game.lives },
+          ]}
+          onRestart={reset}
+        />
         <div className="relative overflow-hidden rounded-2xl shadow-[0_18px_55px_rgba(15,23,42,.28)] ring-1 ring-black/20">
-          <canvas ref={canvasRef} width={640} height={420} className="block aspect-[32/21] w-full" onPointerMove={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); stateRef.current.paddleX = Math.max(0, Math.min(540, ((event.clientX - bounds.left) / bounds.width) * 640 - 50)); }} />
-          {game.mode !== "playing" && <button type="button" onClick={start} className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 text-white backdrop-blur-[1px]"><span className="text-2xl font-semibold">{game.mode === "won" ? "You cleared the board!" : game.mode === "lost" ? "Game Over" : "Breakout"}</span><span className="mt-1 text-sm text-white/75">Click or press Space to {game.mode === "ready" ? "launch" : "play again"}</span></button>}
+          <canvas ref={canvasRef} width={640} height={420} className="block aspect-[32/21] w-full" onPointerMove={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); stateRef.current.paddleX = Math.max(0, Math.min(640 - levelConfig.paddleWidth, ((event.clientX - bounds.left) / bounds.width) * 640 - levelConfig.paddleWidth / 2)); }} />
+          {game.mode === "ready" && <button type="button" onClick={launch} className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 text-white backdrop-blur-[1px]"><span className="text-2xl font-semibold">Breakout</span><span className="mt-1 text-sm text-white/75">Click or press Space to launch</span></button>}
+          {game.mode === "won" && (
+            <CampaignResultOverlay
+              level={level}
+              result="complete"
+              detail={`Cleared ${levelConfig.rows * 8} bricks for ${game.score} points`}
+              onAction={() => startLevel(nextCampaignLevel(level) ?? 1)}
+              className="bg-black/45"
+            />
+          )}
+          {game.mode === "lost" && (
+            <CampaignResultOverlay
+              level={level}
+              result="failed"
+              detail={`Final score: ${game.score}`}
+              onAction={() => startLevel(level, true)}
+              className="bg-black/45"
+            />
+          )}
         </div>
         <p className="text-center text-xs text-muted-foreground">Arrow keys or A/D to move · You can also move the pointer over the board</p>
       </div>
