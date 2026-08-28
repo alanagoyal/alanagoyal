@@ -23,20 +23,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { WeatherSceneEffects } from "@/components/apps/weather/weather-scene-effects";
 import {
   buildOpenMeteoForecastUrl,
+  formatWeatherTemperature,
   getWeatherDescription,
   getWeatherIconName,
   getWeatherCitySelectionAfterRemoval,
   type WeatherMood,
   getWeatherScene,
   type WeatherScene,
+  type WeatherTemperatureUnit,
 } from "@/lib/weather";
 import {
   loadWeatherCustomCities,
   loadWeatherDataCache,
   loadWeatherSelectedCity,
+  loadWeatherTemperatureUnit,
   saveWeatherCustomCities,
   saveWeatherDataCache,
   saveWeatherSelectedCity,
+  saveWeatherTemperatureUnit,
   type WeatherDataCache,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
@@ -482,6 +486,7 @@ function SidebarCityItem({
   weather,
   scene,
   isSelected,
+  temperatureUnit,
   onSelect,
   onDelete,
 }: {
@@ -489,14 +494,17 @@ function SidebarCityItem({
   weather: CityWeather | null;
   scene: WeatherScene | null;
   isSelected: boolean;
+  temperatureUnit: WeatherTemperatureUnit;
   onSelect: () => void;
   onDelete?: () => void;
 }) {
   const timeLabel = weather ? formatCityClock(weather.currentTime) : "--:--";
   const descriptionLabel = weather ? getWeatherDescription(weather.weatherCode) : "Loading...";
-  const temperatureLabel = weather ? `${Math.round(weather.currentTemp)}°` : "--";
+  const temperatureLabel = weather
+    ? formatWeatherTemperature(weather.currentTemp, temperatureUnit)
+    : "--";
   const highLowLabel = weather
-    ? `H:${Math.round(weather.high)}° L:${Math.round(weather.low)}°`
+    ? `H:${formatWeatherTemperature(weather.high, temperatureUnit)} L:${formatWeatherTemperature(weather.low, temperatureUnit)}`
     : "H:-- L:--";
 
   const cityButton = (
@@ -562,6 +570,50 @@ function SidebarCityItem({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
+  );
+}
+
+function TemperatureUnitControl({
+  value,
+  onChange,
+}: {
+  value: WeatherTemperatureUnit;
+  onChange: (value: WeatherTemperatureUnit) => void;
+}) {
+  return (
+    <section className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.1] px-3 py-2 backdrop-blur-sm">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/72">
+          Temperature
+        </p>
+        <p className="mt-0.5 text-xs text-white/68">Display units</p>
+      </div>
+      <div
+        role="group"
+        aria-label="Temperature unit"
+        className="flex rounded-lg border border-white/16 bg-black/10 p-0.5"
+      >
+        {(["fahrenheit", "celsius"] as const).map((unit) => {
+          const active = value === unit;
+          return (
+            <button
+              key={unit}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(unit)}
+              className={cn(
+                "min-w-9 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
+                active
+                  ? "bg-white/24 text-white shadow-sm"
+                  : "text-white/68 can-hover:hover:bg-white/10 can-hover:hover:text-white"
+              )}
+            >
+              {unit === "fahrenheit" ? "°F" : "°C"}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -652,6 +704,9 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
   const [selectedCityId, setSelectedCityId] = useState(
     () => loadWeatherSelectedCity() ?? DEFAULT_CITIES[0]?.id ?? "san-francisco"
   );
+  const [temperatureUnit, setTemperatureUnit] = useState<WeatherTemperatureUnit>(
+    () => loadWeatherTemperatureUnit()
+  );
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
   const [searchQuery, setSearchQuery] = useState("");
@@ -686,6 +741,10 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
     if (!selectedCityId) return;
     saveWeatherSelectedCity(selectedCityId);
   }, [selectedCityId]);
+
+  useEffect(() => {
+    saveWeatherTemperatureUnit(temperatureUnit);
+  }, [temperatureUnit]);
 
   useEffect(() => {
     saveWeatherDataCache(serializeWeatherDataForCache(weatherByCity));
@@ -1132,6 +1191,10 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                         }
                       />
                     )}
+                    <TemperatureUnitControl
+                      value={temperatureUnit}
+                      onChange={setTemperatureUnit}
+                    />
                     {cityCards.map((city) => (
                       <SidebarCityItem
                         key={city.id}
@@ -1139,6 +1202,7 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                         weather={city.weather}
                         scene={city.scene}
                         isSelected={city.id === selectedCityId}
+                        temperatureUnit={temperatureUnit}
                         onSelect={() => setSelectedCityId(city.id)}
                         onDelete={
                           customCities.some((customCity) => customCity.id === city.id)
@@ -1181,13 +1245,13 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                                   : "text-[84px]"
                             )}
                           >
-                            {Math.round(selectedWeather.currentTemp)}°
+                            {formatWeatherTemperature(selectedWeather.currentTemp, temperatureUnit)}
                           </p>
                           <p className={cn("font-medium -mt-1", compactMainContent ? "text-xl" : "text-2xl")}>
                             {getWeatherDescription(selectedWeather.weatherCode)}
                           </p>
                           <p className={cn("font-semibold", compactMainContent ? "text-lg" : "text-xl")}>
-                            H:{Math.round(selectedWeather.high)}° L:{Math.round(selectedWeather.low)}°
+                            H:{formatWeatherTemperature(selectedWeather.high, temperatureUnit)} L:{formatWeatherTemperature(selectedWeather.low, temperatureUnit)}
                           </p>
                         </>
                       ) : (
@@ -1239,7 +1303,10 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                               className={cn("w-4 h-4 mx-auto mt-1", mutedTextClass)}
                             />
                             <p className="text-xl font-medium leading-none mt-1">
-                              {Math.round((hour as HourForecast).temperature)}°
+                              {formatWeatherTemperature(
+                                (hour as HourForecast).temperature,
+                                temperatureUnit
+                              )}
                             </p>
                             <p className={cn("text-[10px]", mutedTextClass)}>
                               {Math.round((hour as HourForecast).precipitationChance)}%
@@ -1302,7 +1369,7 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                               className={cn("w-4 h-4", mutedTextClass)}
                             />
                             <p className={cn(mutedTextClass, denseMainContent ? "text-xs" : "text-sm")}>
-                              {Math.round(day.low)}°
+                              {formatWeatherTemperature(day.low, temperatureUnit)}
                             </p>
                             <div className={cn("h-1.5 rounded-full relative overflow-hidden", innerCardClass)}>
                               <div
@@ -1314,7 +1381,7 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                               />
                             </div>
                             <p className={cn("text-right font-semibold", denseMainContent ? "text-xs" : "text-sm")}>
-                              {Math.round(day.high)}°
+                              {formatWeatherTemperature(day.high, temperatureUnit)}
                             </p>
                           </div>
                         );
@@ -1351,7 +1418,9 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                           <span className="text-xs">Feels Like</span>
                         </div>
                         <p className="mt-1 text-2xl font-semibold">
-                          {selectedWeather ? `${Math.round(selectedWeather.feelsLike)}°` : "--"}
+                          {selectedWeather
+                            ? formatWeatherTemperature(selectedWeather.feelsLike, temperatureUnit)
+                            : "--"}
                         </p>
                       </div>
                       <div className={cn("rounded-xl p-3", innerCardClass)}>

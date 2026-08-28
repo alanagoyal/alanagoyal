@@ -1,4 +1,5 @@
 export type DayPhase = "night" | "dawn" | "day" | "dusk";
+export type WeatherTemperatureUnit = "fahrenheit" | "celsius";
 export type WeatherMood = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
 export type WeatherSceneEffect =
   | "sunGlow"
@@ -37,6 +38,20 @@ export interface WeatherScene {
 
 interface WeatherCityIdentity {
   id: string;
+}
+
+export function convertWeatherTemperature(
+  fahrenheit: number,
+  unit: WeatherTemperatureUnit
+): number {
+  return unit === "celsius" ? ((fahrenheit - 32) * 5) / 9 : fahrenheit;
+}
+
+export function formatWeatherTemperature(
+  fahrenheit: number,
+  unit: WeatherTemperatureUnit
+): string {
+  return `${Math.round(convertWeatherTemperature(fahrenheit, unit))}°`;
 }
 
 export function getWeatherCitySelectionAfterRemoval(
