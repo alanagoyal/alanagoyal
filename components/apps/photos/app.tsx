@@ -19,6 +19,13 @@ import {
   savePhotosView,
 } from "@/lib/sidebar-persistence";
 import type { PhotoRotations } from "@/lib/sidebar-persistence";
+import {
+  loadPhotoGridSize,
+  resizePhotoGrid,
+  savePhotoGridSize,
+  type PhotoGridResizeDirection,
+  type PhotoGridSize,
+} from "@/lib/photos/grid-size";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -34,6 +41,7 @@ export default function App({ isDesktop = false }: AppProps) {
   const [activeView, setActiveView] = useState<PhotosView>(() => loadPhotosView() as PhotosView);
   const [isViewLoaded, setIsViewLoaded] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [photoGridSize, setPhotoGridSize] = useState<PhotoGridSize>("standard");
   const [isScrolled, setIsScrolled] = useState(false);
   // First-time mobile visitors open directly into Library. After that, preserve
   // whether the current tab was showing the sidebar or Photos content.
@@ -51,6 +59,7 @@ export default function App({ isDesktop = false }: AppProps) {
   // Mark view as loaded after first render
   useEffect(() => {
     setIsViewLoaded(true);
+    setPhotoGridSize(loadPhotoGridSize());
   }, []);
 
   // Persist active view (only after initial load to avoid overwriting with default)
@@ -115,6 +124,14 @@ export default function App({ isDesktop = false }: AppProps) {
 
   const handleGridSelect = useCallback((photoId: string | null) => {
     setSelectedInGridId(photoId);
+  }, []);
+
+  const handlePhotoGridResize = useCallback((direction: PhotoGridResizeDirection) => {
+    setPhotoGridSize((currentSize) => {
+      const nextSize = resizePhotoGrid(currentSize, direction);
+      if (nextSize !== currentSize) savePhotoGridSize(nextSize);
+      return nextSize;
+    });
   }, []);
 
   const handleCloseViewer = useCallback(() => {
@@ -218,6 +235,8 @@ export default function App({ isDesktop = false }: AppProps) {
               error={error}
               timeFilter={timeFilter}
               onTimeFilterChange={setTimeFilter}
+              gridSize={photoGridSize}
+              onGridResize={handlePhotoGridResize}
               isMobileView={isMobileView}
               onBack={handleBack}
               activeView={activeView}

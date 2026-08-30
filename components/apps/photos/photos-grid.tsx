@@ -2,13 +2,18 @@
 
 import { useMemo, useLayoutEffect, useRef, useState } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
-import { ChevronLeft, Heart } from "lucide-react";
+import { ChevronLeft, Heart, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 import { getThumbnailUrl, getViewerUrl } from "@/lib/photos/image-utils";
+import {
+  getPhotoGridColumnClassName,
+  type PhotoGridResizeDirection,
+  type PhotoGridSize,
+} from "@/lib/photos/grid-size";
 import { PhotosHeader } from "./header";
 
 // Preload viewer-size image on hover for faster viewer loading
@@ -24,6 +29,8 @@ interface PhotosGridProps {
   error?: string | null;
   timeFilter: TimeFilter;
   onTimeFilterChange: (filter: TimeFilter) => void;
+  gridSize: PhotoGridSize;
+  onGridResize: (direction: PhotoGridResizeDirection) => void;
   isMobileView: boolean;
   onBack: () => void;
   activeView: PhotosView;
@@ -41,6 +48,8 @@ export function PhotosGrid({
   error = null,
   timeFilter,
   onTimeFilterChange,
+  gridSize,
+  onGridResize,
   isMobileView,
   onBack,
   activeView,
@@ -113,6 +122,48 @@ export function PhotosGrid({
     return collection?.name || "Photos";
   };
 
+  const gridSizeLabel = {
+    compact: "small",
+    standard: "medium",
+    comfortable: "large",
+  }[gridSize];
+
+  const gridSizeControls = (
+    <div
+      role="group"
+      aria-label="Photo thumbnail size"
+      className="flex shrink-0 items-center rounded-lg bg-muted p-0.5"
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        title="Zoom Out"
+        aria-label={`Make thumbnails smaller. Current size: ${gridSizeLabel}`}
+        disabled={gridSize === "compact"}
+        onClick={() => onGridResize("smaller")}
+        className={cn(
+          "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
+          isMobileView ? "h-11 w-11" : "h-7 w-7",
+        )}
+      >
+        <Minus aria-hidden="true" className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        title="Zoom In"
+        aria-label={`Make thumbnails larger. Current size: ${gridSizeLabel}`}
+        disabled={gridSize === "comfortable"}
+        onClick={() => onGridResize("larger")}
+        className={cn(
+          "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
+          isMobileView ? "h-11 w-11" : "h-7 w-7",
+        )}
+      >
+        <Plus aria-hidden="true" className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
@@ -148,25 +199,28 @@ export function PhotosGrid({
           </div>
         </div>
 
-        {/* Time Filter Toggle - hidden on mobile */}
-        {!isMobileView && (
-          <div className="flex shrink-0 items-center gap-0.5 bg-muted rounded-lg p-0.5">
-            {(["years", "months", "all"] as TimeFilter[]).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => onTimeFilterChange(filter)}
-                className={cn(
-                  "px-3 py-1 text-xs rounded-md transition-colors capitalize",
-                  timeFilter === filter
-                    ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground can-hover:hover:text-foreground"
-                )}
-              >
-                {filter === "all" ? "All Photos" : filter}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Time Filter Toggle - hidden on mobile */}
+          {!isMobileView && (
+            <div className="flex shrink-0 items-center gap-0.5 bg-muted rounded-lg p-0.5">
+              {(["years", "months", "all"] as TimeFilter[]).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => onTimeFilterChange(filter)}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-md transition-colors capitalize",
+                    timeFilter === filter
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground can-hover:hover:text-foreground"
+                  )}
+                >
+                  {filter === "all" ? "All Photos" : filter}
+                </button>
+              ))}
+            </div>
+          )}
+          {gridSizeControls}
+        </div>
       </PhotosHeader>
 
       {/* Photo Grid */}
@@ -207,11 +261,10 @@ export function PhotosGrid({
                   </h2>
                 )}
                 <div
+                  data-photo-grid-size={gridSize}
                   className={cn(
                     "grid gap-2",
-                    isMobileView
-                      ? "grid-cols-3"
-                      : "grid-cols-4 desktop:grid-cols-5"
+                    getPhotoGridColumnClassName(gridSize, isMobileView),
                   )}
                 >
                   {groupPhotos.map((photo) => (
