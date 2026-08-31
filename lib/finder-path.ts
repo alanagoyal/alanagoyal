@@ -12,6 +12,31 @@ const FINDER_ROOTS = [
   { label: "Projects", path: PROJECTS_DIR },
 ];
 
+const FINDER_OPEN_DIRECTORY_TARGETS = new Map<string, string>([
+  [HOME_DIR, HOME_DIR],
+  [`${HOME_DIR}/Desktop`, `${HOME_DIR}/Desktop`],
+  [`${HOME_DIR}/Documents`, `${HOME_DIR}/Documents`],
+  [`${HOME_DIR}/Downloads`, `${HOME_DIR}/Downloads`],
+  [PROJECTS_DIR, PROJECTS_DIR],
+  ["/Applications", "applications"],
+]);
+
+export function getFinderOpenDirectoryTarget(path: string): string | null {
+  return FINDER_OPEN_DIRECTORY_TARGETS.get(path) ?? null;
+}
+
+export function getFinderProjectRootTarget(
+  path: string,
+  repositories: readonly string[]
+): string | null {
+  const prefix = `${PROJECTS_DIR}/`;
+  if (!path.startsWith(prefix)) return null;
+
+  const relativePath = path.slice(prefix.length);
+  if (!relativePath || relativePath.includes("/")) return null;
+  return repositories.includes(relativePath) ? path : null;
+}
+
 export function getFinderPathSegments(path: string): FinderPathSegment[] {
   if (path === "recents") return [{ label: "Recents", path }];
   if (path === "applications") return [{ label: "Applications", path }];

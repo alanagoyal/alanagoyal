@@ -16,6 +16,7 @@ import {
   format,
   formatEventTime,
   getUpcomingEventDefaults,
+  getCalendarWeekNumber,
   prioritizeUserEvents,
 } from "./utils";
 import { CalendarEvent, Calendar } from "./types";
@@ -34,6 +35,7 @@ interface MonthViewProps {
   onMonthChange?: (date: Date) => void;
   onEditEvent?: (eventId: string) => void;
   onViewEvent?: (event: CalendarEvent) => void;
+  showWeekNumbers?: boolean;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -66,6 +68,7 @@ export function MonthView({
   onMonthChange,
   onEditEvent,
   onViewEvent,
+  showWeekNumbers = false,
 }: MonthViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleMonth, setVisibleMonth] = useState(currentDate);
@@ -217,7 +220,15 @@ export function MonthView({
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-border bg-muted/30">
+      <div
+        className={cn(
+          "grid border-b border-border bg-muted/30",
+          showWeekNumbers
+            ? "grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]"
+            : "grid-cols-7"
+        )}
+      >
+        {showWeekNumbers && <div aria-hidden="true" className="border-r border-border" />}
         {WEEKDAYS.map((day) => (
           <div
             key={day}
@@ -240,12 +251,26 @@ export function MonthView({
           {visibleWeeks.map(({ index, days }) => (
             <div
               key={index}
-              className="grid grid-cols-7 absolute left-0 right-0"
+              className={cn(
+                "absolute left-0 right-0 grid",
+                showWeekNumbers
+                  ? "grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]"
+                  : "grid-cols-7"
+              )}
               style={{
                 top: index * WEEK_HEIGHT,
                 height: WEEK_HEIGHT,
               }}
             >
+              {showWeekNumbers && (
+                <div
+                  data-week-number={getCalendarWeekNumber(days[0])}
+                  className="border-b border-r border-border pt-2 text-center text-[11px] font-medium tabular-nums text-muted-foreground/70"
+                  aria-label={`Week ${getCalendarWeekNumber(days[0])}`}
+                >
+                  {getCalendarWeekNumber(days[0])}
+                </div>
+              )}
               {days.map((day, dayIdx) => {
                 const dayEvents = getEventsForDay(events, day);
                 const orderedDayEvents = prioritizeUserEvents(dayEvents, userEventIds);

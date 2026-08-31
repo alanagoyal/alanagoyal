@@ -43,7 +43,12 @@ import {
   getRenamedTextEditPath,
   getUntitledTextEditPath,
 } from "@/lib/textedit-documents";
-import { loadNotesSelectedSlug, saveMessagesConversation } from "@/lib/sidebar-persistence";
+import {
+  loadNotesSelectedSlug,
+  loadWeatherTemperatureUnit,
+  saveMessagesConversation,
+  saveWeatherTemperatureUnit,
+} from "@/lib/sidebar-persistence";
 import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
@@ -58,6 +63,7 @@ import {
   isFinderViewMode,
   type FinderViewMode,
 } from "@/components/apps/finder/view-mode";
+import type { WeatherTemperatureUnit } from "@/lib/weather";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -74,6 +80,7 @@ type DesktopMode = "active" | "locked" | "sleeping" | "shuttingDown" | "restarti
 
 const FINDER_STATUS_BAR_STORAGE_KEY = "finder-show-status-bar";
 const FINDER_PATH_BAR_STORAGE_KEY = "finder-show-path-bar";
+const CALENDAR_WEEK_NUMBERS_STORAGE_KEY = "calendar-show-week-numbers";
 
 interface DesktopProps {
   initialAppId?: string;
@@ -229,6 +236,10 @@ function DesktopContent({
   const [hasLoadedFinderStatusBarPreference, setHasLoadedFinderStatusBarPreference] = useState(false);
   const [finderPathBarVisible, setFinderPathBarVisible] = useState(false);
   const [hasLoadedFinderPathBarPreference, setHasLoadedFinderPathBarPreference] = useState(false);
+  const [calendarWeekNumbersVisible, setCalendarWeekNumbersVisible] = useState(false);
+  const [hasLoadedCalendarWeekNumbersPreference, setHasLoadedCalendarWeekNumbersPreference] = useState(false);
+  const [weatherTemperatureUnit, setWeatherTemperatureUnit] =
+    useState<WeatherTemperatureUnit>(() => loadWeatherTemperatureUnit());
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -248,6 +259,10 @@ function DesktopContent({
     setHasLoadedFinderStatusBarPreference(true);
     setFinderPathBarVisible(window.localStorage.getItem(FINDER_PATH_BAR_STORAGE_KEY) === "true");
     setHasLoadedFinderPathBarPreference(true);
+    setCalendarWeekNumbersVisible(
+      window.localStorage.getItem(CALENDAR_WEEK_NUMBERS_STORAGE_KEY) === "true"
+    );
+    setHasLoadedCalendarWeekNumbersPreference(true);
   }, []);
 
   useEffect(() => {
@@ -259,6 +274,18 @@ function DesktopContent({
     if (!hasLoadedFinderPathBarPreference) return;
     window.localStorage.setItem(FINDER_PATH_BAR_STORAGE_KEY, String(finderPathBarVisible));
   }, [finderPathBarVisible, hasLoadedFinderPathBarPreference]);
+
+  useEffect(() => {
+    if (!hasLoadedCalendarWeekNumbersPreference) return;
+    window.localStorage.setItem(
+      CALENDAR_WEEK_NUMBERS_STORAGE_KEY,
+      String(calendarWeekNumbersVisible)
+    );
+  }, [calendarWeekNumbersVisible, hasLoadedCalendarWeekNumbersPreference]);
+
+  useEffect(() => {
+    saveWeatherTemperatureUnit(weatherTemperatureUnit);
+  }, [weatherTemperatureUnit]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
@@ -304,6 +331,21 @@ function DesktopContent({
   ) => {
     openFinderWindow(initialPath, options);
   }, [openFinderWindow]);
+  const handleOpenFinderDirectory = useCallback((directoryPath: string) => {
+    const existingWindow = [...finderWindows]
+      .filter(
+        (windowState) =>
+          windowState.isOpen && windowState.metadata?.currentPath === directoryPath
+      )
+      .sort((left, right) => right.zIndex - left.zIndex)[0];
+
+    if (existingWindow) {
+      focusMultiWindow(existingWindow.id);
+      return;
+    }
+
+    openDedicatedFinderWindow(directoryPath);
+  }, [finderWindows, focusMultiWindow, openDedicatedFinderWindow]);
   const focusFinderApp = useCallback(() => {
     if (finderWindows.some((windowState) => windowState.isOpen)) {
       bringAppToFront("finder");
@@ -668,6 +710,10 @@ function DesktopContent({
     return null;
   }, [renameRecent, state.windows, updateWindowMetadata]);
 
+  const handleTextEditWrapToPageChange = useCallback((windowId: string, wrapToPage: boolean) => {
+    updateWindowMetadata(windowId, { wrapToPage });
+  }, [updateWindowMetadata]);
+
   // Handler for opening apps from Finder
   const handleOpenApp = useCallback((appId: string) => {
     if (appId === "textedit" || appId === "preview") {
@@ -931,12 +977,17 @@ function DesktopContent({
         onFinderStatusBarVisibleChange={setFinderStatusBarVisible}
         finderPathBarVisible={finderPathBarVisible}
         onFinderPathBarVisibleChange={setFinderPathBarVisible}
+        calendarWeekNumbersVisible={calendarWeekNumbersVisible}
+        onCalendarWeekNumbersVisibleChange={setCalendarWeekNumbersVisible}
+        weatherTemperatureUnit={weatherTemperatureUnit}
+        onWeatherTemperatureUnitChange={setWeatherTemperatureUnit}
         onTextEditNew={handleTextEditNew}
         onTextEditOpen={handleTextEditOpen}
         onTextEditClose={handleTextEditClose}
         onTextEditSave={handleTextEditSave}
         onTextEditDuplicate={handleTextEditDuplicate}
         onTextEditRename={handleTextEditRename}
+        onTextEditWrapToPageChange={handleTextEditWrapToPageChange}
         onPreviewOpen={handlePreviewOpen}
         onPreviewClose={handlePreviewClose}
       />
@@ -968,7 +1019,11 @@ function DesktopContent({
           </Window>
 
           <Window appId="iterm">
-            <ITermApp inShell={true} onOpenTextFile={handleOpenTextFile} />
+            <ITermApp
+              inShell={true}
+              onOpenDirectory={handleOpenFinderDirectory}
+              onOpenTextFile={handleOpenTextFile}
+            />
           </Window>
 
           <Window appId="photos">
@@ -976,11 +1031,17 @@ function DesktopContent({
           </Window>
 
           <Window appId="calendar">
-            <CalendarApp inShell={true} />
+            <CalendarApp
+              inShell={true}
+              showWeekNumbers={calendarWeekNumbersVisible}
+            />
           </Window>
 
           <Window appId="weather">
-            <WeatherApp inShell={true} />
+            <WeatherApp
+              inShell={true}
+              temperatureUnit={weatherTemperatureUnit}
+            />
           </Window>
 
           <Window appId="music">
@@ -1044,6 +1105,7 @@ function DesktopContent({
                   isFocused={state.focusedWindowId === windowState.id}
                   isMaximized={windowState.isMaximized}
                   isDirty={windowState.metadata?.isDirty === true}
+                  wrapToPage={windowState.metadata?.wrapToPage === true}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
                   onMinimize={() => minimizeMultiWindow(windowState.id)}

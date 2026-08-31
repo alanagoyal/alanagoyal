@@ -21,6 +21,13 @@ import {
 } from "date-fns";
 import { CalendarEvent, ViewType } from "./types";
 
+export function getCalendarWeekNumber(date: Date): number {
+  return getWeek(date, {
+    weekStartsOn: 0,
+    firstWeekContainsDate: 1,
+  });
+}
+
 // Date night restaurants (cycled through on Saturdays)
 const DATE_NIGHT_RESTAURANTS = [
   { name: "3rd Cousin", address: "919 Cortland Ave, SF" },
