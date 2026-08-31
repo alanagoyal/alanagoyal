@@ -43,7 +43,12 @@ import {
   getRenamedTextEditPath,
   getUntitledTextEditPath,
 } from "@/lib/textedit-documents";
-import { loadNotesSelectedSlug, saveMessagesConversation } from "@/lib/sidebar-persistence";
+import {
+  loadNotesSelectedSlug,
+  loadWeatherTemperatureUnit,
+  saveMessagesConversation,
+  saveWeatherTemperatureUnit,
+} from "@/lib/sidebar-persistence";
 import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
@@ -58,6 +63,7 @@ import {
   isFinderViewMode,
   type FinderViewMode,
 } from "@/components/apps/finder/view-mode";
+import type { WeatherTemperatureUnit } from "@/lib/weather";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -232,6 +238,8 @@ function DesktopContent({
   const [hasLoadedFinderPathBarPreference, setHasLoadedFinderPathBarPreference] = useState(false);
   const [calendarWeekNumbersVisible, setCalendarWeekNumbersVisible] = useState(false);
   const [hasLoadedCalendarWeekNumbersPreference, setHasLoadedCalendarWeekNumbersPreference] = useState(false);
+  const [weatherTemperatureUnit, setWeatherTemperatureUnit] =
+    useState<WeatherTemperatureUnit>(() => loadWeatherTemperatureUnit());
   const [finderRouteProcessed, setFinderRouteProcessed] = useState(initialAppId !== "finder");
   const initialDocumentRouteAppId =
     initialAppId === "textedit" || initialAppId === "preview" ? initialAppId : null;
@@ -274,6 +282,10 @@ function DesktopContent({
       String(calendarWeekNumbersVisible)
     );
   }, [calendarWeekNumbersVisible, hasLoadedCalendarWeekNumbersPreference]);
+
+  useEffect(() => {
+    saveWeatherTemperatureUnit(weatherTemperatureUnit);
+  }, [weatherTemperatureUnit]);
   const getNotesSlugForRouting = useCallback(
     () => getNotesSelectedSlugMemory() ?? loadNotesSelectedSlug() ?? undefined,
     []
@@ -967,6 +979,8 @@ function DesktopContent({
         onFinderPathBarVisibleChange={setFinderPathBarVisible}
         calendarWeekNumbersVisible={calendarWeekNumbersVisible}
         onCalendarWeekNumbersVisibleChange={setCalendarWeekNumbersVisible}
+        weatherTemperatureUnit={weatherTemperatureUnit}
+        onWeatherTemperatureUnitChange={setWeatherTemperatureUnit}
         onTextEditNew={handleTextEditNew}
         onTextEditOpen={handleTextEditOpen}
         onTextEditClose={handleTextEditClose}
@@ -1024,7 +1038,10 @@ function DesktopContent({
           </Window>
 
           <Window appId="weather">
-            <WeatherApp inShell={true} />
+            <WeatherApp
+              inShell={true}
+              temperatureUnit={weatherTemperatureUnit}
+            />
           </Window>
 
           <Window appId="music">

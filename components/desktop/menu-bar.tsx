@@ -15,6 +15,7 @@ import { AppMenu } from "./app-menu";
 import { FileMenu } from "./file-menu";
 import { FinderViewMenu } from "./finder-view-menu";
 import { CalendarViewMenu } from "./calendar-view-menu";
+import { WeatherViewMenu } from "./weather-view-menu";
 import { TextEditEditMenu } from "./textedit-edit-menu";
 import { TextEditFormatMenu } from "./textedit-format-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
@@ -29,9 +30,10 @@ import {
 } from "@/lib/menu-bar-clock";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { FinderViewMode } from "@/components/apps/finder/view-mode";
+import type { WeatherTemperatureUnit } from "@/lib/weather";
 import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "textEditEditMenu" | "textEditFormatMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "weatherViewMenu" | "textEditEditMenu" | "textEditFormatMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -70,6 +72,8 @@ interface MenuBarProps {
   onFinderPathBarVisibleChange?: (visible: boolean) => void;
   calendarWeekNumbersVisible?: boolean;
   onCalendarWeekNumbersVisibleChange?: (visible: boolean) => void;
+  weatherTemperatureUnit?: WeatherTemperatureUnit;
+  onWeatherTemperatureUnitChange?: (unit: WeatherTemperatureUnit) => void;
   onTextEditNew?: () => void;
   onTextEditOpen?: () => void;
   onTextEditClose?: (windowId: string) => void;
@@ -101,6 +105,8 @@ export function MenuBar({
   onFinderPathBarVisibleChange,
   calendarWeekNumbersVisible = false,
   onCalendarWeekNumbersVisibleChange,
+  weatherTemperatureUnit = "fahrenheit",
+  onWeatherTemperatureUnitChange,
   onTextEditNew,
   onTextEditOpen,
   onTextEditClose,
@@ -357,6 +363,19 @@ export function MenuBar({
               View
             </button>
           )}
+          {focusedAppId === "weather" && (
+            <button
+              onClick={() => toggleMenu("weatherViewMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "weatherViewMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              View
+            </button>
+          )}
           {focusedAppId === "textedit" && (
             <button
               onClick={() => toggleMenu("textEditEditMenu")}
@@ -553,6 +572,15 @@ export function MenuBar({
         weekNumbersVisible={calendarWeekNumbersVisible}
         onWeekNumbersVisibleChange={(visible) =>
           onCalendarWeekNumbersVisibleChange?.(visible)
+        }
+      />
+
+      <WeatherViewMenu
+        isOpen={openMenu === "weatherViewMenu"}
+        onClose={closeMenu}
+        temperatureUnit={weatherTemperatureUnit}
+        onTemperatureUnitChange={(unit) =>
+          onWeatherTemperatureUnitChange?.(unit)
         }
       />
 

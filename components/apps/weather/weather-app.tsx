@@ -36,11 +36,9 @@ import {
   loadWeatherCustomCities,
   loadWeatherDataCache,
   loadWeatherSelectedCity,
-  loadWeatherTemperatureUnit,
   saveWeatherCustomCities,
   saveWeatherDataCache,
   saveWeatherSelectedCity,
-  saveWeatherTemperatureUnit,
   type WeatherDataCache,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
@@ -55,6 +53,7 @@ import {
 
 interface WeatherAppProps {
   inShell?: boolean;
+  temperatureUnit: WeatherTemperatureUnit;
 }
 
 interface OpenMeteoResponse {
@@ -573,50 +572,6 @@ function SidebarCityItem({
   );
 }
 
-function TemperatureUnitControl({
-  value,
-  onChange,
-}: {
-  value: WeatherTemperatureUnit;
-  onChange: (value: WeatherTemperatureUnit) => void;
-}) {
-  return (
-    <section className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.1] px-3 py-2 backdrop-blur-sm">
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/72">
-          Temperature
-        </p>
-        <p className="mt-0.5 text-xs text-white/68">Display units</p>
-      </div>
-      <div
-        role="group"
-        aria-label="Temperature unit"
-        className="flex rounded-lg border border-white/16 bg-black/10 p-0.5"
-      >
-        {(["fahrenheit", "celsius"] as const).map((unit) => {
-          const active = value === unit;
-          return (
-            <button
-              key={unit}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onChange(unit)}
-              className={cn(
-                "min-w-9 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                active
-                  ? "bg-white/24 text-white shadow-sm"
-                  : "text-white/68 can-hover:hover:bg-white/10 can-hover:hover:text-white"
-              )}
-            >
-              {unit === "fahrenheit" ? "°F" : "°C"}
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 function WeatherScenePreviewControls({
   value,
   onChange,
@@ -689,7 +644,10 @@ function WeatherScenePreviewControls({
   );
 }
 
-export function WeatherApp({ inShell = false }: WeatherAppProps) {
+export function WeatherApp({
+  inShell = false,
+  temperatureUnit,
+}: WeatherAppProps) {
   const windowFocus = useWindowFocus();
   const inDesktopShell = !!(inShell && windowFocus);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -703,9 +661,6 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
   );
   const [selectedCityId, setSelectedCityId] = useState(
     () => loadWeatherSelectedCity() ?? DEFAULT_CITIES[0]?.id ?? "san-francisco"
-  );
-  const [temperatureUnit, setTemperatureUnit] = useState<WeatherTemperatureUnit>(
-    () => loadWeatherTemperatureUnit()
   );
   const [failed, setFailed] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
@@ -741,10 +696,6 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
     if (!selectedCityId) return;
     saveWeatherSelectedCity(selectedCityId);
   }, [selectedCityId]);
-
-  useEffect(() => {
-    saveWeatherTemperatureUnit(temperatureUnit);
-  }, [temperatureUnit]);
 
   useEffect(() => {
     saveWeatherDataCache(serializeWeatherDataForCache(weatherByCity));
@@ -1191,10 +1142,6 @@ export function WeatherApp({ inShell = false }: WeatherAppProps) {
                         }
                       />
                     )}
-                    <TemperatureUnitControl
-                      value={temperatureUnit}
-                      onChange={setTemperatureUnit}
-                    />
                     {cityCards.map((city) => (
                       <SidebarCityItem
                         key={city.id}
