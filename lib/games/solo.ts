@@ -184,16 +184,37 @@ const MEMORY_SYMBOLS = [
   "❤️", "💜", "💚", "💙", "💛", "🧡", "🤍", "🖤",
 ] as const;
 
-export function createMemoryDeck(random = Math.random) {
+export type MemoryCard = string | null;
+
+export interface MemoryGameState {
+  deck: MemoryCard[];
+  matched: number[];
+}
+
+export const MAX_MEMORY_GRID_SIZE = Math.floor(Math.sqrt(MEMORY_SYMBOLS.length * 2 + 1));
+
+export function createMemoryDeck(random = Math.random, gridSize = 4): MemoryCard[] {
+  if (!Number.isInteger(gridSize) || gridSize < 2 || gridSize > MAX_MEMORY_GRID_SIZE) {
+    throw new RangeError(`Memory grid size must be between 2 and ${MAX_MEMORY_GRID_SIZE}.`);
+  }
+  const cardCount = gridSize * gridSize;
+  const pairCount = Math.floor(cardCount / 2);
   const available = [...MEMORY_SYMBOLS];
-  const symbols = Array.from({ length: 8 }, () => {
+  const symbols = Array.from({ length: pairCount }, () => {
     const index = Math.min(available.length - 1, Math.floor(random() * available.length));
     return available.splice(index, 1)[0];
   });
-  const deck = symbols.flatMap((value) => [value, value]);
+  const deck: MemoryCard[] = symbols.flatMap((value) => [value, value]);
   for (let index = deck.length - 1; index > 0; index -= 1) {
     const swap = Math.floor(random() * (index + 1));
     [deck[index], deck[swap]] = [deck[swap], deck[index]];
   }
+  if (cardCount % 2 === 1) deck.splice(Math.floor(cardCount / 2), 0, null);
   return deck;
+}
+
+export function createMemoryGameState(random = Math.random, gridSize = 4): MemoryGameState {
+  const deck = createMemoryDeck(random, gridSize);
+  const freeIndex = deck.findIndex((card) => card === null);
+  return { deck, matched: freeIndex === -1 ? [] : [freeIndex] };
 }

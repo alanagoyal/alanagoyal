@@ -526,6 +526,24 @@ const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 | Finder | No | Not needed | - |
 | Settings | No | Not needed | - |
 
+## Game Campaigns
+
+Finite-round games use one five-level campaign pattern. Memory Match,
+Minesweeper, and Breakout share the campaign configuration and progression
+helpers in `lib/games/levels.ts` and the header/result primitives in
+`components/apps/games/solo-games.tsx`.
+
+- Show `Level X of 5` before game-specific metrics.
+- Label the reset action `Restart Level` and keep it on the current level.
+- On success, show `Level X complete!` and `Continue to Level Y`; after level
+  five, show `All levels complete!` and `Play Again`.
+- On failure, use `Try Again` and restart the current level.
+- Save only the current campaign level in `sessionStorage` so returning from
+  the Games library preserves progress. Clear it through `clearAppState()`
+  when Games closes.
+- Keep difficulty settings and endless score milestones distinct from levels.
+  Chess, Snake, and 2048 do not use the campaign pattern.
+
 ## App State Persistence
 
 ### Storage Tiers

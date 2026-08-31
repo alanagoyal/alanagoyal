@@ -25,6 +25,7 @@
  *    - Guard saves until after first render to avoid overwriting with defaults
  */
 
+import { clearCampaignLevels } from "./games/levels";
 import type { WeatherTemperatureUnit } from "./weather";
 
 // ============================================================================
@@ -835,6 +836,9 @@ export function clearAppState(appId: string): void {
     case "iterm":
       clearItermStorage();
       break;
+    case "games":
+      clearCampaignLevels();
+      break;
   }
 }
 
@@ -848,4 +852,5 @@ export function clearAllAppState(): void {
   clearMessagesState();
   clearWeatherState();
   clearItermStorage();
+  clearCampaignLevels();
 }
