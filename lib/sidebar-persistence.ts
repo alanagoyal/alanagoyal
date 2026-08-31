@@ -25,6 +25,8 @@
  *    - Guard saves until after first render to avoid overwriting with defaults
  */
 
+import type { WeatherTemperatureUnit } from "./weather";
+
 // ============================================================================
 // Storage Keys (centralized to avoid conflicts)
 // ============================================================================
@@ -49,6 +51,7 @@ const STORAGE_KEYS = {
   WEATHER_DATA_CACHE: "weather-data-cache",
   // Local storage (durable user content)
   WEATHER_CUSTOM_CITIES: "weather-custom-cities",
+  WEATHER_TEMPERATURE_UNIT: "weather-temperature-unit",
 } as const;
 
 type StorageArea = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -735,6 +738,26 @@ export function saveWeatherSelectedCity(cityId: string): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(STORAGE_KEYS.WEATHER_SELECTED_CITY, cityId);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function loadWeatherTemperatureUnit(): WeatherTemperatureUnit {
+  if (typeof window === "undefined") return "fahrenheit";
+  try {
+    return localStorage.getItem(STORAGE_KEYS.WEATHER_TEMPERATURE_UNIT) === "celsius"
+      ? "celsius"
+      : "fahrenheit";
+  } catch {
+    return "fahrenheit";
+  }
+}
+
+export function saveWeatherTemperatureUnit(unit: WeatherTemperatureUnit): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.WEATHER_TEMPERATURE_UNIT, unit);
   } catch {
     // Ignore storage errors
   }
