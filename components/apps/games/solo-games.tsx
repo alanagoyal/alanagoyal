@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   apply2048Move,
   create2048Board,
-  createMemoryDeck,
+  createMemoryGameState,
   createSnakeFood,
   type Game2048State,
   type GridDirection,
@@ -348,9 +348,10 @@ export function MemoryGame() {
   const initialLevelRef = useRef(loadCampaignLevel("memory"));
   const [level, setLevel] = useState<CampaignLevel>(initialLevelRef.current);
   const levelConfig = getCampaignConfig(MEMORY_LEVELS, level);
-  const [deck, setDeck] = useState(() => createMemoryDeck(Math.random, getCampaignConfig(MEMORY_LEVELS, initialLevelRef.current).gridSize));
+  const [initialGame] = useState(() => createMemoryGameState(Math.random, getCampaignConfig(MEMORY_LEVELS, initialLevelRef.current).gridSize));
+  const [deck, setDeck] = useState(initialGame.deck);
   const [flipped, setFlipped] = useState<number[]>([]);
-  const [matched, setMatched] = useState<number[]>([]);
+  const [matched, setMatched] = useState<number[]>(initialGame.matched);
   const [moves, setMoves] = useState(0);
   const [locked, setLocked] = useState(false);
   const flipTimerRef = useRef<number | null>(null);
@@ -359,13 +360,12 @@ export function MemoryGame() {
     if (flipTimerRef.current !== null) window.clearTimeout(flipTimerRef.current);
     flipTimerRef.current = null;
     const nextConfig = getCampaignConfig(MEMORY_LEVELS, nextLevel);
-    const nextDeck = createMemoryDeck(Math.random, nextConfig.gridSize);
-    const freeIndex = nextDeck.findIndex((card) => card === null);
+    const nextGame = createMemoryGameState(Math.random, nextConfig.gridSize);
     saveCampaignLevel("memory", nextLevel);
     setLevel(nextLevel);
-    setDeck(nextDeck);
+    setDeck(nextGame.deck);
     setFlipped([]);
-    setMatched(freeIndex === -1 ? [] : [freeIndex]);
+    setMatched(nextGame.matched);
     setMoves(0);
     setLocked(false);
   }, []);

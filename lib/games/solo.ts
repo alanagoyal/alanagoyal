@@ -186,6 +186,11 @@ const MEMORY_SYMBOLS = [
 
 export type MemoryCard = string | null;
 
+export interface MemoryGameState {
+  deck: MemoryCard[];
+  matched: number[];
+}
+
 export const MAX_MEMORY_GRID_SIZE = Math.floor(Math.sqrt(MEMORY_SYMBOLS.length * 2 + 1));
 
 export function createMemoryDeck(random = Math.random, gridSize = 4): MemoryCard[] {
@@ -206,4 +211,10 @@ export function createMemoryDeck(random = Math.random, gridSize = 4): MemoryCard
   }
   if (cardCount % 2 === 1) deck.splice(Math.floor(cardCount / 2), 0, null);
   return deck;
+}
+
+export function createMemoryGameState(random = Math.random, gridSize = 4): MemoryGameState {
+  const deck = createMemoryDeck(random, gridSize);
+  const freeIndex = deck.findIndex((card) => card === null);
+  return { deck, matched: freeIndex === -1 ? [] : [freeIndex] };
 }

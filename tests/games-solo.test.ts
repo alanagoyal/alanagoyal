@@ -5,6 +5,7 @@ import {
   canMove2048,
   create2048Board,
   createMemoryDeck,
+  createMemoryGameState,
   createMinefield,
   createSnakeFood,
   initializeMinefield,
@@ -121,6 +122,12 @@ test("memory levels grow into square boards with exact pairs", () => {
   assert.equal(levelThreeDeck.length, 36);
   assert.equal(levelThreeDeck.includes(null), false);
   assert.equal(new Set(levelThreeDeck).size, 18);
+});
+
+test("restored odd memory levels start with the free space matched", () => {
+  const game = createMemoryGameState(() => 0.5, 5);
+  assert.equal(game.deck[12], null);
+  assert.deepEqual(game.matched, [12]);
 });
 
 test("campaign games share five explicitly tuned levels", () => {
