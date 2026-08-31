@@ -1,5 +1,5 @@
 import type { AppConfig } from "@/types/apps";
-import type { Size } from "@/types/window";
+import type { Position, Size } from "@/types/window";
 
 export const APPS: AppConfig[] = [
   {
@@ -218,6 +218,28 @@ export function clampAppWindowSize(appId: string, size: Size): Size {
   return {
     width: Math.max(size.width, minSize.width),
     height: Math.max(size.height, minSize.height),
+  };
+}
+
+export function migrateAppWindowFrame(
+  appId: string,
+  position: Position,
+  size: Size,
+  viewportWidth?: number,
+): { position: Position; size: Size } {
+  const nextSize = clampAppWindowSize(appId, size);
+  const didWidthResize = nextSize.width !== size.width;
+
+  if (!didWidthResize || viewportWidth === undefined) {
+    return { position, size: nextSize };
+  }
+
+  return {
+    position: {
+      ...position,
+      x: Math.min(position.x, Math.max(0, viewportWidth - nextSize.width)),
+    },
+    size: nextSize,
   };
 }
 

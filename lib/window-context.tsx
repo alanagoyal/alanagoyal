@@ -14,7 +14,7 @@ import {
   Position,
   Size,
 } from "@/types/window";
-import { APPS, clampAppWindowSize, getAppById } from "./app-config";
+import { APPS, getAppById, migrateAppWindowFrame } from "./app-config";
 import { clearAppState, clearAllAppState } from "./sidebar-persistence";
 import {
   loadWindowState,
@@ -238,9 +238,19 @@ function deserializeWindowState(serializedState: string): WindowManagerState | n
     // This matters when an app raises its minimum after a narrower frame was saved.
     Object.entries(mergedWindows).forEach(([windowId, windowState]) => {
       if (!windowState?.size) return;
-      const size = clampAppWindowSize(windowState.appId, windowState.size);
-      if (size.width === windowState.size.width && size.height === windowState.size.height) return;
-      mergedWindows[windowId] = { ...windowState, size };
+      const frame = migrateAppWindowFrame(
+        windowState.appId,
+        windowState.position,
+        windowState.size,
+        typeof window === "undefined" ? undefined : window.innerWidth,
+      );
+      if (
+        frame.size.width === windowState.size.width &&
+        frame.size.height === windowState.size.height
+      ) {
+        return;
+      }
+      mergedWindows[windowId] = { ...windowState, ...frame };
     });
 
     return {

@@ -6,6 +6,7 @@ import {
   clampAppWindowSize,
   getAppById,
   getAppsInDockOrder,
+  migrateAppWindowFrame,
 } from "../lib/app-config";
 
 test("Dock order can differ from the shared app registry", () => {
@@ -23,4 +24,45 @@ test("Photos cannot resize narrower than its desktop toolbar", () => {
     width: 960,
     height: 500,
   });
+});
+
+test("expanded restored windows stay inside the viewport's right edge", () => {
+  assert.deepEqual(
+    migrateAppWindowFrame(
+      "photos",
+      { x: 800, y: 60 },
+      { width: 600, height: 500 },
+      1440,
+    ),
+    {
+      position: { x: 480, y: 60 },
+      size: { width: 960, height: 500 },
+    },
+  );
+
+  assert.deepEqual(
+    migrateAppWindowFrame(
+      "photos",
+      { x: 200, y: 60 },
+      { width: 960, height: 500 },
+      1024,
+    ),
+    {
+      position: { x: 200, y: 60 },
+      size: { width: 960, height: 500 },
+    },
+  );
+
+  assert.deepEqual(
+    migrateAppWindowFrame(
+      "photos",
+      { x: 200, y: 60 },
+      { width: 960, height: 200 },
+      1024,
+    ),
+    {
+      position: { x: 200, y: 60 },
+      size: { width: 960, height: 450 },
+    },
+  );
 });
