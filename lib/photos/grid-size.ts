@@ -57,11 +57,7 @@ export function getPhotoGridColumnClassName(
   isMobileView: boolean,
 ): string {
   if (isMobileView) {
-    return {
-      compact: "grid-cols-4",
-      standard: "grid-cols-3",
-      comfortable: "grid-cols-2",
-    }[size];
+    return "grid-cols-3";
   }
 
   return {

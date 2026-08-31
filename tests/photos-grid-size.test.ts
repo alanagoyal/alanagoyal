@@ -37,11 +37,11 @@ test("Photos grid resizing stops at both thumbnail-size limits", () => {
   assert.equal(resizePhotoGrid("comfortable", "larger"), "comfortable");
 });
 
-test("Photos grid sizes map to intentional desktop and mobile densities", () => {
+test("Photos grid sizes change desktop density without changing mobile", () => {
   assert.equal(getPhotoGridColumnClassName("compact", false), "grid-cols-6");
   assert.equal(getPhotoGridColumnClassName("standard", false), "grid-cols-5");
   assert.equal(getPhotoGridColumnClassName("comfortable", false), "grid-cols-4");
-  assert.equal(getPhotoGridColumnClassName("compact", true), "grid-cols-4");
+  assert.equal(getPhotoGridColumnClassName("compact", true), "grid-cols-3");
   assert.equal(getPhotoGridColumnClassName("standard", true), "grid-cols-3");
-  assert.equal(getPhotoGridColumnClassName("comfortable", true), "grid-cols-2");
+  assert.equal(getPhotoGridColumnClassName("comfortable", true), "grid-cols-3");
 });

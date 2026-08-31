@@ -184,10 +184,7 @@ export function PhotosGrid({
         aria-label={`Make thumbnails smaller. Current size: ${gridSizeLabel}`}
         disabled={gridSize === "compact"}
         onClick={() => onGridResize("smaller")}
-        className={cn(
-          "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
-          isMobileView ? "h-11 w-11" : "h-6 w-7",
-        )}
+        className="flex h-6 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35"
       >
         <Minus aria-hidden="true" className="h-4 w-4" />
       </button>
@@ -197,10 +194,7 @@ export function PhotosGrid({
         aria-label={`Make thumbnails larger. Current size: ${gridSizeLabel}`}
         disabled={gridSize === "comfortable"}
         onClick={() => onGridResize("larger")}
-        className={cn(
-          "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
-          isMobileView ? "h-11 w-11" : "h-6 w-7",
-        )}
+        className="flex h-6 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35"
       >
         <Plus aria-hidden="true" className="h-4 w-4" />
       </button>
@@ -407,9 +401,7 @@ export function PhotosGrid({
           </div>
         </div>
 
-        {isMobileView ? (
-          gridSizeControls
-        ) : (
+        {!isMobileView && (
           <>
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="pointer-events-auto relative">
