@@ -186,7 +186,7 @@ export function PhotosGrid({
         onClick={() => onGridResize("smaller")}
         className={cn(
           "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
-          isMobileView ? "h-11 w-11" : "h-7 w-7",
+          isMobileView ? "h-11 w-11" : "h-6 w-7",
         )}
       >
         <Minus aria-hidden="true" className="h-4 w-4" />
@@ -199,7 +199,7 @@ export function PhotosGrid({
         onClick={() => onGridResize("larger")}
         className={cn(
           "flex items-center justify-center rounded-md text-muted-foreground transition-colors enabled:can-hover:hover:bg-background enabled:can-hover:hover:text-foreground disabled:opacity-35",
-          isMobileView ? "h-11 w-11" : "h-7 w-7",
+          isMobileView ? "h-11 w-11" : "h-6 w-7",
         )}
       >
         <Plus aria-hidden="true" className="h-4 w-4" />
