@@ -1,4 +1,5 @@
-import { AppConfig } from "@/types/apps";
+import type { AppConfig } from "@/types/apps";
+import type { Position, Size } from "@/types/window";
 
 export const APPS: AppConfig[] = [
   {
@@ -56,8 +57,8 @@ export const APPS: AppConfig[] = [
     provenance: { agent: "Claude Code", circa: "January 2026" },
     accentColor: "#FF6B6B",
     defaultPosition: { x: 130, y: 60 },
-    defaultSize: { width: 900, height: 650 },
-    minSize: { width: 600, height: 450 },
+    defaultSize: { width: 960, height: 650 },
+    minSize: { width: 960, height: 450 },
     menuBarTitle: "Photos",
     mobile: { supported: true },
   },
@@ -208,6 +209,38 @@ export const APPS: AppConfig[] = [
 
 export function getAppById(id: string): AppConfig | undefined {
   return APPS.find((app) => app.id === id);
+}
+
+export function clampAppWindowSize(appId: string, size: Size): Size {
+  const minSize = getAppById(appId)?.minSize;
+  if (!minSize) return size;
+
+  return {
+    width: Math.max(size.width, minSize.width),
+    height: Math.max(size.height, minSize.height),
+  };
+}
+
+export function migrateAppWindowFrame(
+  appId: string,
+  position: Position,
+  size: Size,
+  viewportWidth?: number,
+): { position: Position; size: Size } {
+  const nextSize = clampAppWindowSize(appId, size);
+  const didWidthResize = nextSize.width !== size.width;
+
+  if (!didWidthResize || viewportWidth === undefined) {
+    return { position, size: nextSize };
+  }
+
+  return {
+    position: {
+      ...position,
+      x: Math.min(position.x, Math.max(0, viewportWidth - nextSize.width)),
+    },
+    size: nextSize,
+  };
 }
 
 export function getAppIds(): string[] {
