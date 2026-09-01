@@ -3,6 +3,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { soundEffects } from "@/lib/messages/sound-effects";
 import { OSVersion, getOSVersion, DEFAULT_OS_VERSION_ID } from "@/lib/os-versions";
+import {
+  DOCK_SHOW_OPEN_INDICATORS_STORAGE_KEY,
+  parseShowDockIndicators,
+} from "@/lib/dock-preferences";
 
 export type AirdropMode = "contacts" | "everyone";
 export type FocusMode = "off" | "doNotDisturb" | "sleep" | "reduceInterruptions";
@@ -37,6 +41,8 @@ interface SystemSettingsContextValue {
   setClockFlashSeparators: (flash: boolean) => void;
   clockShowSeconds: boolean;
   setClockShowSeconds: (show: boolean) => void;
+  showDockIndicators: boolean;
+  setShowDockIndicators: (show: boolean) => void;
   wallpaperUrl: string | null;
   setWallpaperUrl: (url: string | null) => void;
   osVersionId: string;
@@ -79,6 +85,7 @@ function getInitialSettings() {
       clockShowAmPm: true,
       clockFlashSeparators: false,
       clockShowSeconds: false,
+      showDockIndicators: true,
       wallpaperUrl: null,
       osVersionId: DEFAULT_OS_VERSION_ID,
     };
@@ -115,6 +122,9 @@ function getInitialSettings() {
     clockShowAmPm: localStorage.getItem(CLOCK_SHOW_AM_PM_KEY) !== "false",
     clockFlashSeparators: localStorage.getItem(CLOCK_FLASH_SEPARATORS_KEY) === "true",
     clockShowSeconds: storedClockShowSeconds === "true",
+    showDockIndicators: parseShowDockIndicators(
+      localStorage.getItem(DOCK_SHOW_OPEN_INDICATORS_STORAGE_KEY)
+    ),
     wallpaperUrl: storedWallpaperUrl || null,
     osVersionId: storedOSVersion || DEFAULT_OS_VERSION_ID,
   };
@@ -154,6 +164,9 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   );
   const [clockShowSeconds, setClockShowSecondsState] = useState(
     initial.clockShowSeconds
+  );
+  const [showDockIndicators, setShowDockIndicatorsState] = useState(
+    initial.showDockIndicators
   );
   const [wallpaperUrl, setWallpaperUrlState] = useState<string | null>(
     initial.wallpaperUrl
@@ -284,6 +297,13 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
+  const setShowDockIndicators = useCallback((show: boolean) => {
+    setShowDockIndicatorsState(show);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(DOCK_SHOW_OPEN_INDICATORS_STORAGE_KEY, String(show));
+    }
+  }, []);
+
   const setMenuBarBackground = useCallback((show: boolean) => {
     setMenuBarBackgroundState(show);
     localStorage.setItem(MENU_BAR_BACKGROUND_KEY, String(show));
@@ -317,7 +337,7 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   const currentOS = useMemo(() => getOSVersion(osVersionId), [osVersionId]);
 
   return (
-    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, menuBarBackground, setMenuBarBackground, clockShowDate, setClockShowDate, clockShowDayOfWeek, setClockShowDayOfWeek, clockStyle, setClockStyle, clockShowAmPm, setClockShowAmPm, clockFlashSeparators, setClockFlashSeparators, clockShowSeconds, setClockShowSeconds, wallpaperUrl, setWallpaperUrl, osVersionId, setOSVersionId, currentOS }}>
+    <SystemSettingsContext.Provider value={{ brightness, setBrightness, volume, setVolume, wifiEnabled, setWifiEnabled, bluetoothEnabled, setBluetoothEnabled, airdropMode, setAirdropMode, focusMode, setFocusMode, focusEndsAt, scheduleFocusEnd, menuBarBackground, setMenuBarBackground, clockShowDate, setClockShowDate, clockShowDayOfWeek, setClockShowDayOfWeek, clockStyle, setClockStyle, clockShowAmPm, setClockShowAmPm, clockFlashSeparators, setClockFlashSeparators, clockShowSeconds, setClockShowSeconds, showDockIndicators, setShowDockIndicators, wallpaperUrl, setWallpaperUrl, osVersionId, setOSVersionId, currentOS }}>
       {children}
       {/* Brightness overlay - dims everything below system overlays */}
       {brightness < 100 && (
@@ -368,6 +388,8 @@ const defaultSettings: SystemSettingsContextValue = {
   setClockFlashSeparators: () => {},
   clockShowSeconds: false,
   setClockShowSeconds: () => {},
+  showDockIndicators: true,
+  setShowDockIndicators: () => {},
   wallpaperUrl: null,
   setWallpaperUrl: () => {},
   osVersionId: DEFAULT_OS_VERSION_ID,

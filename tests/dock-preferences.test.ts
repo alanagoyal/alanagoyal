@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   isAppKeptInDock,
   parseDockKeepOverrides,
+  parseShowDockIndicators,
   setAppKeptInDock,
 } from "../lib/dock-preferences";
 import { getDockSubmenuSide } from "../lib/desktop/dock-menu";
@@ -16,6 +17,13 @@ test("Dock keep overrides recover from malformed storage", () => {
     parseDockKeepOverrides(JSON.stringify({ weather: true, music: false, bad: "yes", empty: null })),
     { weather: true, music: false }
   );
+});
+
+test("Dock open indicators default on and honor an explicit off preference", () => {
+  assert.equal(parseShowDockIndicators(null), true);
+  assert.equal(parseShowDockIndicators("true"), true);
+  assert.equal(parseShowDockIndicators("false"), false);
+  assert.equal(parseShowDockIndicators("malformed"), true);
 });
 
 test("registered Dock defaults apply until a user overrides them", () => {

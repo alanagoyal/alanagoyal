@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Settings, Paintbrush, Search, X, Wifi, Bluetooth, Moon, PanelTop, ImageIcon } from "lucide-react";
+import { Settings, Paintbrush, Search, X, Wifi, Bluetooth, Moon, PanelBottom, PanelTop, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { SidebarNav } from "./sidebar-nav";
@@ -51,6 +51,13 @@ const categories: { id: SettingsCategory; name: string; icon: React.ReactNode; i
     icon: <ImageIcon className="w-5 h-5 text-white" />,
     iconBg: "bg-gradient-to-b from-cyan-400 to-blue-500",
     keywords: ["wallpaper", "background", "desktop", "photo", "photos", "theme"],
+  },
+  {
+    id: "desktop-dock",
+    name: "Desktop & Dock",
+    icon: <PanelBottom className="w-5 h-5 text-white" />,
+    iconBg: "bg-gray-500",
+    keywords: ["desktop", "dock", "open", "applications", "indicators", "dots"],
   },
   {
     id: "menu-bar",

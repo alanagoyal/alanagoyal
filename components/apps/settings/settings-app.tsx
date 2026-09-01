@@ -6,7 +6,7 @@ import { Sidebar } from "./sidebar";
 import { Content } from "./content";
 import { loadSettingsState, saveSettingsState } from "@/lib/sidebar-persistence";
 
-export type SettingsCategory = "general" | "appearance" | "wallpaper" | "wifi" | "bluetooth" | "focus" | "menu-bar";
+export type SettingsCategory = "general" | "appearance" | "wallpaper" | "wifi" | "bluetooth" | "focus" | "desktop-dock" | "menu-bar";
 export type SettingsPanel = "about" | "personal-info" | "storage" | null;
 
 interface HistoryEntry {
@@ -116,6 +116,7 @@ export function SettingsApp({ inShell = false, initialPanel, initialCategory, na
     if (selectedCategory === "wifi") return "Wi-Fi";
     if (selectedCategory === "bluetooth") return "Bluetooth";
     if (selectedCategory === "focus") return "Focus";
+    if (selectedCategory === "desktop-dock") return "Desktop & Dock";
     if (selectedCategory === "menu-bar") return "Menu Bar";
     return undefined;
   };
