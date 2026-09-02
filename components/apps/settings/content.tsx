@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Paintbrush, Bluetooth, Wifi, Moon, PanelTop, ImageIcon } from "lucide-react";
+import { Settings, Paintbrush, Bluetooth, Wifi, Moon, PanelBottom, PanelTop, ImageIcon } from "lucide-react";
 import { SettingsCategory, SettingsPanel } from "./settings-app";
 import { GeneralPanel } from "./panels/general";
 import { AboutPanel } from "./panels/about";
@@ -12,6 +12,7 @@ import { StoragePanel } from "./panels/storage";
 import { FocusPanel } from "./panels/focus";
 import { MenuBarPanel } from "./panels/menu-bar";
 import { WallpaperPanel } from "./panels/wallpaper";
+import { DesktopDockPanel } from "./panels/desktop-dock";
 
 interface ContentProps {
   selectedCategory: SettingsCategory;
@@ -55,6 +56,11 @@ const categoryInfo: Record<
     icon: <Moon className="w-8 h-8 fill-current" />,
     title: "Focus",
     description: "Choose when notifications and interruptions are allowed.",
+  },
+  "desktop-dock": {
+    icon: <PanelBottom className="w-8 h-8" />,
+    title: "Desktop & Dock",
+    description: "Choose how items appear on the desktop and in the Dock.",
   },
   "menu-bar": {
     icon: <PanelTop className="w-8 h-8" />,
@@ -110,6 +116,14 @@ export function Content({
     return (
       <div className="flex-1 overflow-y-auto bg-background">
         <MenuBarPanel />
+      </div>
+    );
+  }
+
+  if (selectedCategory === "desktop-dock") {
+    return (
+      <div className="flex-1 overflow-y-auto bg-background">
+        <DesktopDockPanel />
       </div>
     );
   }

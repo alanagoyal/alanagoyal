@@ -1,8 +1,13 @@
 import type { AppConfig } from "@/types/apps";
 
 export const DOCK_KEEP_OVERRIDES_STORAGE_KEY = "desktopDockKeepOverrides";
+export const DOCK_SHOW_OPEN_INDICATORS_STORAGE_KEY = "dock-show-open-indicators";
 
 export type DockKeepOverrides = Record<string, boolean>;
+
+export function parseShowDockIndicators(value: string | null): boolean {
+  return value !== "false";
+}
 
 export function parseDockKeepOverrides(value: string | null): DockKeepOverrides {
   if (!value) return {};

@@ -15,6 +15,7 @@ import {
   setAppKeptInDock,
 } from "@/lib/dock-preferences";
 import type { DockKeepOverrides } from "@/lib/dock-preferences";
+import { useSystemSettings } from "@/lib/system-settings-context";
 import {
   getDockSubmenuSide,
   type DockSubmenuSide,
@@ -140,6 +141,7 @@ export function Dock({
   onClosedDocumentAppClick,
   appBadges = {},
 }: DockProps) {
+  const { showDockIndicators } = useSystemSettings();
   const {
     closeApp,
     openWindow,
@@ -796,7 +798,7 @@ export function Dock({
                 className={cn(
                   "rounded-full mt-1 transition-opacity",
                   // Finder always shows dot (can be closed but not quit)
-                  isOpen || app.id === "finder"
+                  showDockIndicators && (isOpen || app.id === "finder")
                     ? "bg-black/60 dark:bg-white/60 opacity-100"
                     : "opacity-0"
                 )}
