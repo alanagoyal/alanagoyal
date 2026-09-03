@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import { useRecents } from "@/lib/recents-context";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,12 @@ import { useRouter } from "next/navigation";
 import { FinderSearchEngine, type EntryInput } from "./search-engine";
 import type { FinderViewMode } from "./view-mode";
 import { getFinderPathSegments } from "@/lib/finder-path";
+import {
+  getNextFinderSort,
+  sortFinderEntries,
+  type FinderSort,
+  type FinderSortKey,
+} from "@/lib/finder-sort";
 
 const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
@@ -252,6 +259,7 @@ export function FinderApp({
   const [historyIndex, setHistoryIndex] = useState(0);
   const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
   const [files, setFiles] = useState<FileItem[]>([]);
+  const [listSort, setListSort] = useState<FinderSort | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
@@ -885,8 +893,8 @@ export function FinderApp({
     }
   };
 
-  // Get file date - uses real modified date if available, otherwise generates pseudo-random
-  const getFileDate = (file: FileItem): string => {
+  // Get file timestamp - uses real modified date if available, otherwise generates pseudo-random
+  const getFileTimestamp = (file: FileItem): number => {
     const textEditDate = getFileModifiedDate(file.path);
 
     // Check if this is a GitHub file
@@ -897,19 +905,19 @@ export function FinderApp({
 
     // Use most recent of TextEdit date or GitHub date
     if (textEditDate && githubDate) {
-      return formatDateString(new Date(Math.max(textEditDate, githubDate)));
+      return Math.max(textEditDate, githubDate);
     }
     if (textEditDate) {
-      return formatDateString(new Date(textEditDate));
+      return textEditDate;
     }
     if (githubDate) {
-      return formatDateString(new Date(githubDate));
+      return githubDate;
     }
 
     // Check local recents for accessedAt
     const recentFile = recents.find(r => r.path === file.path);
     if (recentFile) {
-      return formatDateString(new Date(recentFile.accessedAt));
+      return recentFile.accessedAt;
     }
 
     // Fall back to pseudo-random date based on filename (deterministic)
@@ -933,8 +941,11 @@ export function FinderApp({
     date.setDate(date.getDate() - daysAgo);
     date.setHours(hours24, minutes, 0, 0);
 
-    return formatDateString(date);
+    return date.getTime();
   };
+
+  const getFileDate = (file: FileItem): string =>
+    formatDateString(new Date(getFileTimestamp(file)));
 
   // Get file kind description
   const getFileKind = (file: FileItem): string => {
@@ -954,6 +965,40 @@ export function FinderApp({
       case "pdf": return "PDF Document";
       default: return "Document";
     }
+  };
+
+  const renderSortHeader = (
+    key: FinderSortKey,
+    label: string,
+    className: string
+  ) => {
+    const isActive = listSort?.key === key;
+    const direction = isActive ? listSort.direction : null;
+    const SortIcon = direction === "ascending" ? ChevronUp : ChevronDown;
+
+    return (
+      <button
+        type="button"
+        aria-label={
+          direction
+            ? `Sort by ${label}, ${direction}`
+            : `Sort by ${label}`
+        }
+        aria-pressed={isActive}
+        title={direction ? `${label}, ${direction}` : `Sort by ${label}`}
+        onClick={() =>
+          setListSort((current) => getNextFinderSort(current, key))
+        }
+        className={cn(
+          "flex h-5 min-w-0 items-center gap-1 rounded-sm px-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 can-hover:hover:bg-zinc-200/70 dark:can-hover:hover:bg-zinc-700/70",
+          isActive && "font-medium text-zinc-700 dark:text-zinc-200",
+          className
+        )}
+      >
+        <span className="truncate">{label}</span>
+        {isActive && <SortIcon aria-hidden="true" className="h-3 w-3 shrink-0" />}
+      </button>
+    );
   };
 
   // Skeleton loading for desktop list view
@@ -1030,57 +1075,70 @@ export function FinderApp({
   );
 
   // Render desktop list view
-  const renderDesktopListView = () => (
-    <div className="flex flex-col">
-      {/* Column headers */}
-      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
-        <div className="flex-1 min-w-0">Name</div>
-        <div className="w-32 text-left">Kind</div>
-        <div className="w-52 text-left">Date Modified</div>
+  const renderDesktopListView = () => {
+    const visibleFiles = listSort
+      ? sortFinderEntries(
+          files.map((file) => ({
+            ...file,
+            kind: getFileKind(file),
+            modifiedAt: getFileTimestamp(file),
+          })),
+          listSort
+        )
+      : files;
+
+    return (
+      <div className="flex flex-col">
+        {/* Column headers */}
+        <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+          {renderSortHeader("name", "Name", "flex-1")}
+          {renderSortHeader("kind", "Kind", "w-32")}
+          {renderSortHeader("date", "Date Modified", "w-52")}
+        </div>
+        {/* File rows */}
+        <div className="flex-1">
+          {visibleFiles.map(file => (
+            <button
+              key={file.path}
+              onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
+              onDoubleClick={() => handleFileDoubleClick(file)}
+              className={cn(
+                "w-full flex items-center px-4 py-1 text-left text-sm text-zinc-900 dark:text-zinc-100",
+                selectedFile === file.path && "bg-blue-500 text-white"
+              )}
+            >
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <FileIcon
+                  type={file.type}
+                  name={file.name}
+                  icon={file.icon}
+                  className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && file.type !== "app" && "brightness-0 invert")}
+                />
+                <span className="truncate">{file.displayName || file.name}</span>
+              </div>
+              <div className={cn(
+                "w-32 text-left truncate",
+                selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+              )}>
+                {getFileKind(file)}
+              </div>
+              <div className={cn(
+                "w-52 text-left truncate",
+                selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
+              )}>
+                {getFileDate(file)}
+              </div>
+            </button>
+          ))}
+          {files.length === 0 && !loading && (
+            <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
+              This folder is empty
+            </div>
+          )}
+        </div>
       </div>
-      {/* File rows */}
-      <div className="flex-1">
-        {files.map(file => (
-          <button
-            key={file.path}
-            onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
-            onDoubleClick={() => handleFileDoubleClick(file)}
-            className={cn(
-              "w-full flex items-center px-4 py-1 text-left text-sm text-zinc-900 dark:text-zinc-100",
-              selectedFile === file.path && "bg-blue-500 text-white"
-            )}
-          >
-            <div className="flex-1 min-w-0 flex items-center gap-2">
-              <FileIcon
-                type={file.type}
-                name={file.name}
-                icon={file.icon}
-                className={cn("w-4 h-4 flex-shrink-0", selectedFile === file.path && file.type !== "app" && "brightness-0 invert")}
-              />
-              <span className="truncate">{file.displayName || file.name}</span>
-            </div>
-            <div className={cn(
-              "w-32 text-left truncate",
-              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
-            )}>
-              {getFileKind(file)}
-            </div>
-            <div className={cn(
-              "w-52 text-left truncate",
-              selectedFile === file.path ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"
-            )}>
-              {getFileDate(file)}
-            </div>
-          </button>
-        ))}
-        {files.length === 0 && !loading && (
-          <div className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-8">
-            This folder is empty
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderColumnsView = (
     items: FileItem[],
