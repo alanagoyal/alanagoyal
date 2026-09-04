@@ -440,6 +440,12 @@ Keep the Apple icon visually separated from the focused app, then group the app 
 
 ### Loading State
 
+Finder List view uses the same column-header renderer while loading and after
+rows arrive. Keep its geometry, sort caret, and label styling identical; apply
+the loading pulse only to placeholder rows, never the header. List skeleton rows
+match the loaded rows' 28px height, with centered 12px text bars and 16px icons
+so placeholders align with the visible text rather than filling its line box.
+
 ```tsx
 <div className="flex-1 flex items-center justify-center">
   <Spinner className="text-muted-foreground" />
@@ -574,6 +580,10 @@ machine.
 - Same-tab refresh restores the complete desktop.
 - Separate tabs have independent desktops and cannot overwrite one another.
 - Closing the tab ends its desktop session.
+- Finder's explicit List sort is stored per window in its metadata alongside
+  the folder and view mode. Refresh restores it, closing that window removes it,
+  and a new Finder window uses its folder's default sort. Sorting preserves the
+  selected file; it must not trigger the content area's deselection handler.
 - Durable app content and preferences remain available when a fresh desktop starts.
 - A one-time compatibility migration copies the legacy `localStorage`
   `desktop-window-state` value into the current tab's `sessionStorage`, then
