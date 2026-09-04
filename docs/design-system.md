@@ -442,7 +442,9 @@ Keep the Apple icon visually separated from the focused app, then group the app 
 
 Finder List view uses the same column-header renderer while loading and after
 rows arrive. Keep its geometry, sort caret, and label styling identical; apply
-the loading pulse only to placeholder rows, never the header.
+the loading pulse only to placeholder rows, never the header. List skeleton rows
+match the loaded rows' 28px height, with centered 12px text bars and 16px icons
+so placeholders align with the visible text rather than filling its line box.
 
 ```tsx
 <div className="flex-1 flex items-center justify-center">

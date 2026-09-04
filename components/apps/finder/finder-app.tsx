@@ -1020,16 +1020,16 @@ export function FinderApp({
       {/* Skeleton rows */}
       <div className="flex-1 animate-pulse">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="w-full flex items-center px-4 py-1">
+          <div key={i} className="h-7 w-full flex items-center px-4 py-1">
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
-              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${120 + (i * 17) % 80}px` }} />
+              <div className="h-3 rounded bg-zinc-200 dark:bg-zinc-700" style={{ width: `${120 + (i * 17) % 80}px` }} />
             </div>
             <div className="w-32">
-              <div className="h-4 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
             </div>
             <div className="w-52">
-              <div className="h-4 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-3 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
             </div>
           </div>
         ))}
