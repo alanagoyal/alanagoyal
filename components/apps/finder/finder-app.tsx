@@ -990,7 +990,7 @@ export function FinderApp({
           setListSort((current) => getNextFinderSort(current, key))
         }
         className={cn(
-          "flex h-5 min-w-0 items-center gap-1 rounded-sm px-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 can-hover:hover:bg-zinc-200/70 dark:can-hover:hover:bg-zinc-700/70",
+          "flex h-5 min-w-0 items-center justify-between gap-1 rounded-sm px-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500",
           isActive && "font-medium text-zinc-700 dark:text-zinc-200",
           className
         )}
