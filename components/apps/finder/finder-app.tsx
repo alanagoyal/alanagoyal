@@ -37,6 +37,7 @@ import { FinderSearchEngine, type EntryInput } from "./search-engine";
 import type { FinderViewMode } from "./view-mode";
 import { getFinderPathSegments } from "@/lib/finder-path";
 import {
+  getDefaultFinderSort,
   getNextFinderSort,
   sortFinderEntries,
   type FinderSort,
@@ -260,6 +261,7 @@ export function FinderApp({
   const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
   const [files, setFiles] = useState<FileItem[]>([]);
   const [listSort, setListSort] = useState<FinderSort | null>(null);
+  const activeListSort = listSort ?? getDefaultFinderSort(currentPath);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
@@ -972,8 +974,8 @@ export function FinderApp({
     label: string,
     className: string
   ) => {
-    const isActive = listSort?.key === key;
-    const direction = isActive ? listSort.direction : null;
+    const isActive = activeListSort.key === key;
+    const direction = isActive ? activeListSort.direction : null;
     const SortIcon = direction === "ascending" ? ChevronUp : ChevronDown;
 
     return (
@@ -987,7 +989,9 @@ export function FinderApp({
         aria-pressed={isActive}
         title={direction ? `${label}, ${direction}` : `Sort by ${label}`}
         onClick={() =>
-          setListSort((current) => getNextFinderSort(current, key))
+          setListSort((current) =>
+            getNextFinderSort(current ?? getDefaultFinderSort(currentPath), key)
+          )
         }
         className={cn(
           "flex h-5 min-w-0 items-center justify-between gap-1 rounded-sm px-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500",
@@ -1076,16 +1080,14 @@ export function FinderApp({
 
   // Render desktop list view
   const renderDesktopListView = () => {
-    const visibleFiles = listSort
-      ? sortFinderEntries(
-          files.map((file) => ({
-            ...file,
-            kind: getFileKind(file),
-            modifiedAt: getFileTimestamp(file),
-          })),
-          listSort
-        )
-      : files;
+    const visibleFiles = sortFinderEntries(
+      files.map((file) => ({
+        ...file,
+        kind: getFileKind(file),
+        modifiedAt: getFileTimestamp(file),
+      })),
+      activeListSort
+    );
 
     return (
       <div className="flex flex-col">

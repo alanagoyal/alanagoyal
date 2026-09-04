@@ -18,6 +18,12 @@ const textCollator = new Intl.Collator("en", {
   sensitivity: "base",
 });
 
+export function getDefaultFinderSort(path: string): FinderSort {
+  return path === "recents"
+    ? { key: "date", direction: "descending" }
+    : { key: "name", direction: "ascending" };
+}
+
 export function getNextFinderSort(
   current: FinderSort | null,
   key: FinderSortKey

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  getDefaultFinderSort,
   getNextFinderSort,
   sortFinderEntries,
   type FinderSortableEntry,
@@ -12,6 +13,30 @@ const entries: FinderSortableEntry[] = [
   { name: "Folder 10", kind: "Folder", modifiedAt: 10 },
   { name: "folder 2", kind: "Folder", modifiedAt: 30 },
 ];
+
+test("Finder defaults match the indicated column and reverse on first click", () => {
+  const recentsSort = getDefaultFinderSort("recents");
+  assert.deepEqual(recentsSort, { key: "date", direction: "descending" });
+  assert.deepEqual(
+    sortFinderEntries(entries, recentsSort).map((entry) => entry.name),
+    ["folder 2", "zeta.ts", "Folder 10"]
+  );
+  assert.deepEqual(getNextFinderSort(recentsSort, "date"), {
+    key: "date", direction: "ascending",
+  });
+
+  for (const path of ["applications", "/Users/alana/Documents", "trash"]) {
+    const folderSort = getDefaultFinderSort(path);
+    assert.deepEqual(folderSort, { key: "name", direction: "ascending" });
+    assert.deepEqual(
+      sortFinderEntries(entries, folderSort).map((entry) => entry.name),
+      ["folder 2", "Folder 10", "zeta.ts"]
+    );
+    assert.deepEqual(getNextFinderSort(folderSort, "name"), {
+      key: "name", direction: "descending",
+    });
+  }
+});
 
 test("Finder sort uses native-feeling initial directions and reverses", () => {
   assert.deepEqual(getNextFinderSort(null, "name"), {
