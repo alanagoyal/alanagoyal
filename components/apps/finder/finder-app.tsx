@@ -1005,17 +1005,20 @@ export function FinderApp({
     );
   };
 
-  // Skeleton loading for desktop list view
+  const renderDesktopListHeader = () => (
+    <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+      {renderSortHeader("name", "Name", "flex-1")}
+      {renderSortHeader("kind", "Kind", "w-32")}
+      {renderSortHeader("date", "Date Modified", "w-52")}
+    </div>
+  );
+
+  // Keep the header geometry and active sort stable while only the rows load.
   const renderDesktopListSkeleton = () => (
-    <div className="flex flex-col animate-pulse">
-      {/* Column headers */}
-      <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
-        <div className="flex-1 min-w-0">Name</div>
-        <div className="w-32 text-left">Kind</div>
-        <div className="w-52 text-left">Date Modified</div>
-      </div>
+    <div className="flex flex-col">
+      {renderDesktopListHeader()}
       {/* Skeleton rows */}
-      <div className="flex-1">
+      <div className="flex-1 animate-pulse">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="w-full flex items-center px-4 py-1">
             <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -1091,12 +1094,7 @@ export function FinderApp({
 
     return (
       <div className="flex flex-col">
-        {/* Column headers */}
-        <div className="flex items-center px-4 py-1 border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
-          {renderSortHeader("name", "Name", "flex-1")}
-          {renderSortHeader("kind", "Kind", "w-32")}
-          {renderSortHeader("date", "Date Modified", "w-52")}
-        </div>
+        {renderDesktopListHeader()}
         {/* File rows */}
         <div className="flex-1">
           {visibleFiles.map(file => (

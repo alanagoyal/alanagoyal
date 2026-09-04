@@ -440,6 +440,10 @@ Keep the Apple icon visually separated from the focused app, then group the app 
 
 ### Loading State
 
+Finder List view uses the same column-header renderer while loading and after
+rows arrive. Keep its geometry, sort caret, and label styling identical; apply
+the loading pulse only to placeholder rows, never the header.
+
 ```tsx
 <div className="flex-1 flex items-center justify-center">
   <Spinner className="text-muted-foreground" />
