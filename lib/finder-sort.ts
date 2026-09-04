@@ -6,6 +6,18 @@ export interface FinderSort {
   direction: FinderSortDirection;
 }
 
+export function parseFinderSort(value: unknown): FinderSort | null {
+  if (!value || typeof value !== "object") return null;
+  const { key, direction } = value as Partial<FinderSort>;
+  if (
+    (key !== "name" && key !== "kind" && key !== "date") ||
+    (direction !== "ascending" && direction !== "descending")
+  ) {
+    return null;
+  }
+  return { key, direction };
+}
+
 export interface FinderSortableEntry {
   name: string;
   displayName?: string;

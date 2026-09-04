@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   getDefaultFinderSort,
   getNextFinderSort,
+  parseFinderSort,
   sortFinderEntries,
   type FinderSortableEntry,
 } from "../lib/finder-sort";
@@ -13,6 +14,21 @@ const entries: FinderSortableEntry[] = [
   { name: "Folder 10", kind: "Folder", modifiedAt: 10 },
   { name: "folder 2", kind: "Folder", modifiedAt: 30 },
 ];
+
+test("Finder restores valid sort metadata and rejects invalid saved values", () => {
+  for (const key of ["name", "kind", "date"]) {
+    for (const direction of ["ascending", "descending"]) {
+      assert.deepEqual(parseFinderSort({ key, direction }), { key, direction });
+    }
+  }
+  for (const value of [null, undefined, "name", [], {},
+    { key: "size", direction: "ascending" },
+    { key: "name", direction: "up" },
+    { key: "name" },
+  ]) {
+    assert.equal(parseFinderSort(value), null);
+  }
+});
 
 test("Finder defaults match the indicated column and reverse on first click", () => {
   const recentsSort = getDefaultFinderSort("recents");

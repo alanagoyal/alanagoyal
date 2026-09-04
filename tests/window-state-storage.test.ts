@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { parseFinderSort } from "../lib/finder-sort";
 
 import {
   WINDOW_STATE_STORAGE_KEY,
@@ -29,6 +30,20 @@ class MemoryStorage {
 
 const deserialize = (value: string): string | null =>
   value.startsWith("valid:") ? value : null;
+
+test("restores independent Finder sorts with each window's metadata", () => {
+  const tabStorage = new MemoryStorage();
+  const durableStorage = new MemoryStorage();
+  const windows = {
+    first: { metadata: { currentPath: "recents", listSort: { key: "name", direction: "descending" } } },
+    second: { metadata: { currentPath: "applications", listSort: { key: "date", direction: "ascending" } } },
+  };
+  saveWindowStatePayload(tabStorage, JSON.stringify(windows));
+  const restored = loadWindowState(tabStorage, durableStorage, JSON.parse) as typeof windows;
+  assert.deepEqual(parseFinderSort(restored.first.metadata.listSort), windows.first.metadata.listSort);
+  assert.deepEqual(parseFinderSort(restored.second.metadata.listSort), windows.second.metadata.listSort);
+  assert.equal(loadWindowState(new MemoryStorage(), durableStorage, JSON.parse), null);
+});
 
 test("prefers tab-scoped state and removes a stale durable copy", () => {
   const tabStorage = new MemoryStorage();

@@ -64,6 +64,7 @@ import {
   type FinderViewMode,
 } from "@/components/apps/finder/view-mode";
 import type { WeatherTemperatureUnit } from "@/lib/weather";
+import { parseFinderSort } from "@/lib/finder-sort";
 
 const SettingsApp = dynamic(() => import("@/components/apps/settings/settings-app").then(m => ({ default: m.SettingsApp })));
 const ITermApp = dynamic(() => import("@/components/apps/iterm/iterm-app").then(m => ({ default: m.ITermApp })));
@@ -1076,6 +1077,8 @@ function DesktopContent({
                     inShell={true}
                     viewMode={viewMode}
                     onViewModeChange={(mode) => updateWindowMetadata(windowState.id, { viewMode: mode })}
+                    listSort={parseFinderSort(windowState.metadata?.listSort)}
+                    onListSortChange={(sort) => updateWindowMetadata(windowState.id, { listSort: sort })}
                     showStatusBar={finderStatusBarVisible}
                     showPathBar={finderPathBarVisible}
                     initialPath={currentPath}

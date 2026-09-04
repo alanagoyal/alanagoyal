@@ -80,6 +80,8 @@ interface FinderAppProps {
   inShell?: boolean;
   viewMode?: FinderViewMode;
   onViewModeChange?: (mode: FinderViewMode) => void;
+  listSort?: FinderSort | null;
+  onListSortChange?: (sort: FinderSort) => void;
   showStatusBar?: boolean;
   showPathBar?: boolean;
   onOpenApp?: (appId: string) => void;
@@ -207,6 +209,8 @@ export function FinderApp({
   inShell = false,
   viewMode: controlledViewMode,
   onViewModeChange,
+  listSort: controlledListSort,
+  onListSortChange,
   showStatusBar = false,
   showPathBar = false,
   onOpenApp,
@@ -260,7 +264,8 @@ export function FinderApp({
   const [historyIndex, setHistoryIndex] = useState(0);
   const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [listSort, setListSort] = useState<FinderSort | null>(null);
+  const [standaloneListSort, setStandaloneListSort] = useState<FinderSort | null>(null);
+  const listSort = controlledListSort === undefined ? standaloneListSort : controlledListSort;
   const activeListSort = listSort ?? getDefaultFinderSort(currentPath);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -988,11 +993,15 @@ export function FinderApp({
         }
         aria-pressed={isActive}
         title={direction ? `${label}, ${direction}` : `Sort by ${label}`}
-        onClick={() =>
-          setListSort((current) =>
-            getNextFinderSort(current ?? getDefaultFinderSort(currentPath), key)
-          )
-        }
+        onClick={(event) => {
+          event.stopPropagation();
+          const nextSort = getNextFinderSort(activeListSort, key);
+          if (onListSortChange) {
+            onListSortChange(nextSort);
+          } else {
+            setStandaloneListSort(nextSort);
+          }
+        }}
         className={cn(
           "flex h-5 min-w-0 items-center justify-between gap-1 rounded-sm px-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500",
           isActive && "font-medium text-zinc-700 dark:text-zinc-200",
