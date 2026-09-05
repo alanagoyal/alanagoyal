@@ -33,6 +33,7 @@ interface ChatAreaProps {
   focusModeActive?: boolean;
   isWindowFocused?: boolean;
   justSentMessageId?: string | null;
+  searchTarget?: { messageId: string; requestId: number } | null;
 }
 
 type NavigatorWithVirtualKeyboard = Navigator & {
@@ -63,6 +64,7 @@ export function ChatArea({
   focusModeActive = false,
   isWindowFocused = true,
   justSentMessageId,
+  searchTarget,
 }: ChatAreaProps) {
   const [showCompactNewChat, setShowCompactNewChat] = useState(false);
 
@@ -195,6 +197,7 @@ export function ChatArea({
                 focusModeActive={focusModeActive}
                 isWindowFocused={isWindowFocused}
                 justSentMessageId={justSentMessageId}
+                searchTarget={searchTarget}
               />
               <div className="w-3 bg-background" />
             </div>
