@@ -93,6 +93,11 @@ export default function App({
     recipient: string;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchTarget, setSearchTarget] = useState<{
+    messageId: string;
+    requestId: number;
+  } | null>(null);
+  const searchRequestIdRef = useRef(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const lastHandledExternalRequestIdRef = useRef<number | null>(null);
 
@@ -1045,6 +1050,20 @@ export default function App({
     return total + (conv.unreadCount || 0);
   }, 0);
 
+  const handleSearchChange = useCallback((term: string) => {
+    setSearchTerm(term);
+    if (!term) setSearchTarget(null);
+  }, []);
+
+  const handleSelectMessageResult = useCallback(
+    (conversationId: string, messageId: string) => {
+      searchRequestIdRef.current += 1;
+      setSearchTarget({ messageId, requestId: searchRequestIdRef.current });
+      selectConversation(conversationId);
+    },
+    [selectConversation],
+  );
+
   useEffect(() => {
     if (!onUnreadBadgeCountChange) return;
     onUnreadBadgeCountChange(totalUnreadCount);
@@ -1078,13 +1097,15 @@ export default function App({
               conversations={conversations}
               activeConversation={activeConversation}
               onSelectConversation={(id) => {
+                setSearchTarget(null);
                 selectConversation(id);
               }}
+              onSelectMessageResult={handleSelectMessageResult}
               onDeleteConversation={handleDeleteConversation}
               onUpdateConversation={handleUpdateConversation}
               isMobileView={isMobileView}
               searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
+              onSearchChange={handleSearchChange}
               typingStatus={typingStatus}
               onScroll={setIsScrolled}
               onSoundToggle={handleSoundToggle}
@@ -1124,8 +1145,12 @@ export default function App({
                 setIsNewConversation(false);
                 selectConversation(null);
               }}
-              onSendMessage={handleSendMessage}
+              onSendMessage={(message, conversationId) => {
+                setSearchTarget(null);
+                handleSendMessage(message, conversationId);
+              }}
               justSentMessageId={justSentMessageId}
+              searchTarget={searchTarget}
               onReaction={handleReaction}
               typingStatus={typingStatus}
               conversationId={activeConversation || ""}
