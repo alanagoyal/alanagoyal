@@ -193,7 +193,7 @@ export function AppearancePanel({ scrollToOSVersion, onScrollComplete }: Appeara
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-muted/50 p-4">
+      <div data-setting-search-id="appearance" className="rounded-xl bg-muted/50 p-4">
         <div className="flex items-center justify-between">
           <span className="text-xs">Appearance</span>
           <div className="flex gap-2">
@@ -220,7 +220,7 @@ export function AppearancePanel({ scrollToOSVersion, onScrollComplete }: Appeara
       </div>
 
       {/* macOS Version section */}
-      <div ref={osVersionRef} className="rounded-xl bg-muted/50 p-4">
+      <div ref={osVersionRef} data-setting-search-id="macos-version" className="rounded-xl bg-muted/50 p-4">
         <h3 className="text-xs font-medium mb-3">macOS Version</h3>
         <div className="grid grid-cols-4 gap-3">
           {OS_VERSIONS.map((os) => (

@@ -100,7 +100,7 @@ export function BluetoothPanel() {
   return (
     <div className="max-w-2xl">
       {/* Header section with toggle */}
-      <div className="flex items-start gap-4 pb-4 border-b border-border/50">
+      <div data-setting-search-id="bluetooth" className="flex items-start gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500 shrink-0">
           <Bluetooth className="w-7 h-7 text-white" />
         </div>

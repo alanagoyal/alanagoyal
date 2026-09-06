@@ -15,7 +15,7 @@ export function AboutPanel({ onCategorySelect }: AboutPanelProps) {
   const thumbnailPath = getThumbnailPath(osVersionId);
 
   return (
-    <div className="max-w-lg mx-auto py-6 px-4">
+    <div data-setting-search-id="about" className="max-w-lg mx-auto py-6 px-4">
       {/* MacBook Image */}
       <div className="flex flex-col items-center mb-8">
         <div className="relative w-32 h-24 mb-4">

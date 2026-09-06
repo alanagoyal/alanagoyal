@@ -59,6 +59,7 @@ export function FocusPanel() {
     <div className="mx-auto w-full max-w-2xl space-y-4 p-6">
 
       <div
+        data-setting-search-id="focus-modes"
         role="group"
         aria-label="Focus modes"
         className="overflow-hidden rounded-xl bg-muted/60"

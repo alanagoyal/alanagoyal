@@ -32,7 +32,7 @@ export function WifiPanel() {
   return (
     <div className="max-w-2xl">
       {/* Header section with toggle */}
-      <div className="flex items-start gap-4 pb-4 border-b border-border/50">
+      <div data-setting-search-id="wifi" className="flex items-start gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500 shrink-0">
           <Wifi className="w-7 h-7 text-white" />
         </div>
