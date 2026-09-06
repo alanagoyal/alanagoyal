@@ -29,6 +29,7 @@ export function NotesApp({
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<NotesViewMode>("list");
   const [viewModeLoaded, setViewModeLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const windowFocus = useWindowFocus();
   const {
     loading,
@@ -98,6 +99,8 @@ export function NotesApp({
           showSidebar={showSidebar}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
       </SessionNotesProvider>
     );
@@ -124,6 +127,8 @@ export function NotesApp({
         windowFocus={windowFocus}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
       />
     </SessionNotesProvider>
   );

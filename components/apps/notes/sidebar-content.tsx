@@ -50,6 +50,7 @@ interface SidebarContentProps {
   useCallbackNavigation?: boolean;
   isMobile?: boolean;
   viewMode: NotesViewMode;
+  searchQuery: string;
 }
 
 interface GalleryCardProps {
@@ -611,6 +612,7 @@ export function SidebarContent({
   useCallbackNavigation = false,
   isMobile = false,
   viewMode,
+  searchQuery,
 }: SidebarContentProps) {
   const router = useRouter();
 
@@ -769,6 +771,7 @@ export function SidebarContent({
               setOpenSwipeItemSlug={setOpenSwipeItemSlug}
               showDivider={index < localSearchResults.length - 1}
               useCallbackNavigation={useCallbackNavigation}
+              searchQuery={searchQuery}
             />
           ))}
         </ul>

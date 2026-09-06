@@ -12,10 +12,39 @@ import {
 import { Note } from "@/lib/notes/types";
 import { getDisplayCreatedAt } from "@/lib/notes/display-created-at";
 import { Dispatch, SetStateAction } from "react";
-import { getNotePreviewText } from "@/lib/notes/note-utils";
+import {
+  getNotePreviewText,
+  getNoteSearchPreviewText,
+} from "@/lib/notes/note-utils";
 import { Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 
 const SIDEBAR_DATE_PLACEHOLDER = "00/00/0000";
+
+function HighlightedSearchPreview({
+  content,
+  query,
+}: {
+  content: string;
+  query: string;
+}) {
+  const preview = getNoteSearchPreviewText(content, query);
+  const trimmedQuery = query.trim();
+  const matchIndex = preview
+    .toLocaleLowerCase()
+    .indexOf(trimmedQuery.toLocaleLowerCase());
+
+  if (!trimmedQuery || matchIndex < 0) return preview;
+
+  return (
+    <>
+      {preview.slice(0, matchIndex)}
+      <strong className="font-semibold text-foreground">
+        {preview.slice(matchIndex, matchIndex + trimmedQuery.length)}
+      </strong>
+      {preview.slice(matchIndex + trimmedQuery.length)}
+    </>
+  );
+}
 
 interface NoteItemProps {
   item: Note;
@@ -32,6 +61,7 @@ interface NoteItemProps {
   setOpenSwipeItemSlug: Dispatch<SetStateAction<string | null>>;
   showDivider?: boolean;
   useCallbackNavigation?: boolean;
+  searchQuery?: string;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -49,6 +79,7 @@ export const NoteItem = React.memo(function NoteItem({
   setOpenSwipeItemSlug,
   showDivider = false,
   useCallbackNavigation = false,
+  searchQuery = "",
 }: NoteItemProps) {
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
@@ -123,7 +154,14 @@ export const NoteItem = React.memo(function NoteItem({
           </span>
         </span>
         <span className="block w-0 min-w-0 flex-1 truncate">
-          {getNotePreviewText(item.content)}
+          {isSearching ? (
+            <HighlightedSearchPreview
+              content={item.content}
+              query={searchQuery}
+            />
+          ) : (
+            getNotePreviewText(item.content)
+          )}
         </span>
       </p>
     </>

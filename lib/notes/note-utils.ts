@@ -142,8 +142,36 @@ export function getNotePreviewText(content: string): string {
     .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/\[[ x]\]/g, "")
-    .replace(/[#*_~`>+\-]/g, "")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*>+\s?/gm, "")
+    .replace(/^\s*[-+*]\s+/gm, "")
+    .replace(/[*_~`]/g, "")
     .replace(/\n+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function getNoteSearchPreviewText(
+  content: string,
+  searchQuery: string,
+  contextLength = 84,
+): string {
+  const preview = getNotePreviewText(content);
+  const query = searchQuery.trim().toLocaleLowerCase();
+  if (!query) return preview;
+
+  const matchIndex = preview.toLocaleLowerCase().indexOf(query);
+  if (matchIndex < 0) return preview;
+
+  const leadingContextLength = Math.min(18, Math.floor(contextLength / 4));
+  const contextStart = Math.max(0, matchIndex - leadingContextLength);
+  const contextEnd = Math.min(
+    preview.length,
+    Math.max(contextStart + contextLength, matchIndex + query.length),
+  );
+  const leadingText = preview.slice(contextStart, contextEnd).trim();
+
+  return `${contextStart > 0 ? "…" : ""}${leadingText}${
+    contextEnd < preview.length ? "…" : ""
+  }`;
 }

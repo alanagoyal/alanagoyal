@@ -18,6 +18,8 @@ interface NotesMobilePresenterProps {
   showSidebar: boolean;
   viewMode: NotesViewMode;
   onViewModeChange: (viewMode: NotesViewMode) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
 }
 
 export function NotesMobilePresenter({
@@ -32,6 +34,8 @@ export function NotesMobilePresenter({
   showSidebar,
   viewMode,
   onViewModeChange,
+  searchQuery,
+  onSearchQueryChange,
 }: NotesMobilePresenterProps) {
   return (
     <div
@@ -54,6 +58,8 @@ export function NotesMobilePresenter({
             onNoteCreated={handleNoteCreated}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
+            controlledSearchQuery={searchQuery}
+            onSearchQueryChange={onSearchQueryChange}
           />
         )
       ) : (
