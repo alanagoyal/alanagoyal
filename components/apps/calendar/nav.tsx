@@ -16,6 +16,7 @@ interface NavProps {
   onNewEvent: () => void;
   inShell?: boolean;
   isMobile?: boolean;
+  search?: React.ReactNode;
 }
 
 const VIEW_OPTIONS: { value: ViewType; label: string }[] = [
@@ -33,6 +34,7 @@ export function Nav({
   onNewEvent,
   inShell = false,
   isMobile = false,
+  search,
 }: NavProps) {
   const nav = useWindowNavBehavior({ isDesktop: inShell, isMobile });
 
@@ -70,7 +72,7 @@ export function Nav({
   return (
     <div
       className={cn(
-        "px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted"
+        "relative px-4 py-2 flex items-center gap-2 sticky top-0 z-[1] select-none bg-muted"
       )}
       onMouseDown={nav.onDragStart}
     >
@@ -118,8 +120,13 @@ export function Nav({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Right section - navigation (hidden on mobile, shown in view header instead) */}
-      <div className="flex items-center gap-0.5 desktop:gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+      {/* Search stays at the far right of the top toolbar. */}
+      <div className="shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        {search}
+      </div>
+
+      {/* Date navigation sits directly below Search in the view header. */}
+      <div className="absolute right-4 top-[calc(100%+0.625rem)] z-[2] flex items-center gap-0.5 desktop:gap-1" onMouseDown={(e) => e.stopPropagation()}>
         <Button
           variant="ghost"
           size="icon"

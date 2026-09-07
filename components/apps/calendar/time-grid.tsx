@@ -124,6 +124,7 @@ interface TimeGridProps {
   hourHeight?: number;
   showDayHeaders?: boolean;
   initialScrollTop?: number;
+  scrollRequest?: { id: number; top: number } | null;
   onScrollChange?: (scrollTop: number) => void;
   selectedEventId?: string | null;
   onSelectEvent?: (eventId: string | null) => void;
@@ -167,6 +168,7 @@ export function TimeGrid({
   hourHeight = 60,
   showDayHeaders = false,
   initialScrollTop,
+  scrollRequest,
   onScrollChange,
   selectedEventId,
   onSelectEvent,
@@ -178,6 +180,7 @@ export function TimeGrid({
   const now = useCurrentTime();
   const gridRef = useRef<HTMLDivElement>(null);
   const hasRestoredScroll = useRef(false);
+  const handledScrollRequestId = useRef<number | null>(null);
   const [dragState, setDragState] = useState<{
     columnIndex: number;
     startY: number;
@@ -191,6 +194,19 @@ export function TimeGrid({
       hasRestoredScroll.current = true;
     }
   }, [initialScrollTop]);
+
+  useEffect(() => {
+    if (
+      !gridRef.current ||
+      !scrollRequest ||
+      handledScrollRequestId.current === scrollRequest.id
+    ) {
+      return;
+    }
+
+    gridRef.current.scrollTop = scrollRequest.top;
+    handledScrollRequestId.current = scrollRequest.id;
+  }, [scrollRequest]);
 
   // Handle scroll events
   const handleScroll = useCallback(() => {
