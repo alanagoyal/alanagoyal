@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Conversation } from "@/types/messages";
 import { SearchBar } from "./search-bar";
 import { format, isToday, isYesterday, isThisWeek, parseISO } from "date-fns";
@@ -10,12 +10,21 @@ import { cn } from "@/lib/utils";
 import { useWindowFocus } from "@/lib/window-focus-context";
 import Image from "next/image";
 import { toggleConversationReadState } from "@/lib/messages/read-state";
+import {
+  getConversationNameMatches,
+  getConversationSearchName,
+  getMessageSearchPreviewText,
+  getMessageSearchResults,
+  getNextMessageSearchResultIndex,
+  type MessageSearchResult,
+} from "@/lib/messages/search";
 
 interface SidebarProps {
   children: React.ReactNode;
   conversations: Conversation[];
   activeConversation: string | null;
   onSelectConversation: (id: string) => void;
+  onSelectMessageResult: (conversationId: string, messageId: string) => void;
   onDeleteConversation: (id: string) => void;
   onUpdateConversation: (
     conversations: Conversation[],
@@ -29,11 +38,178 @@ interface SidebarProps {
   onSoundToggle: () => void;
 }
 
+function SearchResultAvatar({ conversation }: { conversation: Conversation }) {
+  const recipient = conversation.recipients[0];
+  const names = recipient.name.split(" ");
+  const initials =
+    names.length >= 2
+      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+      : recipient.name[0].toUpperCase();
+
+  return (
+    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+      {recipient.avatar ? (
+        <Image
+          src={recipient.avatar}
+          alt={`${recipient.name} avatar`}
+          fill
+          sizes="40px"
+          className="object-cover"
+          unoptimized
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-[#9BA1AA] to-[#7D828A] text-sm font-medium text-white">
+          {initials}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HighlightedMatch({
+  content,
+  query,
+  isHighlighted,
+}: {
+  content: string;
+  query: string;
+  isHighlighted: boolean;
+}) {
+  const index = content
+    .toLocaleLowerCase()
+    .indexOf(query.trim().toLocaleLowerCase());
+  if (index < 0) return content;
+
+  return (
+    <>
+      {content.slice(0, index)}
+      <strong className={cn("font-semibold", isHighlighted ? "text-white" : "text-foreground")}>
+        {content.slice(index, index + query.trim().length)}
+      </strong>
+      {content.slice(index + query.trim().length)}
+    </>
+  );
+}
+
+function MessageSearchResults({
+  conversationMatches,
+  messageMatches,
+  query,
+  formatTime,
+  highlightedIndex,
+  isMobileView,
+  onSelectResult,
+}: {
+  conversationMatches: Conversation[];
+  messageMatches: MessageSearchResult[];
+  query: string;
+  formatTime: (timestamp: string | undefined) => string;
+  highlightedIndex: number;
+  isMobileView: boolean;
+  onSelectResult: (index: number) => void;
+}) {
+  if (conversationMatches.length === 0 && messageMatches.length === 0) {
+    return (
+      <p className="mt-4 px-2 py-2 text-sm text-muted-foreground">
+        No results found
+      </p>
+    );
+  }
+
+  return (
+    <div className="pb-4">
+      {conversationMatches.length > 0 && (
+        <section aria-labelledby="messages-conversation-results">
+          <h2
+            id="messages-conversation-results"
+            className="px-2 pb-1 pt-3 text-xs font-semibold text-muted-foreground"
+          >
+            Conversations
+          </h2>
+          {conversationMatches.map((conversation, index) => {
+            const isHighlighted = index === highlightedIndex;
+            return (
+              <button
+                key={conversation.id}
+                type="button"
+                onClick={() => onSelectResult(index)}
+                data-message-search-result-index={index}
+                aria-current={isHighlighted ? "true" : undefined}
+                className={cn(
+                  "flex h-[62px] w-full items-center gap-3 rounded-lg px-2 text-left",
+                  isHighlighted && !isMobileView
+                    ? "bg-[#0A7CFF] text-white"
+                    : "can-hover:hover:bg-muted-foreground/10",
+                )}
+              >
+                <SearchResultAvatar conversation={conversation} />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {getConversationSearchName(conversation)}
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
+
+      {messageMatches.length > 0 && (
+        <section aria-labelledby="messages-message-results">
+          <h2
+            id="messages-message-results"
+            className="px-2 pb-1 pt-3 text-xs font-semibold text-muted-foreground"
+          >
+            Messages
+          </h2>
+          {messageMatches.map(({ conversation, message }, index) => {
+            const resultIndex = conversationMatches.length + index;
+            const isHighlighted = resultIndex === highlightedIndex;
+            const preview = getMessageSearchPreviewText(message.content, query);
+            return (
+              <button
+                key={`${conversation.id}-${message.id}`}
+                type="button"
+                onClick={() => onSelectResult(resultIndex)}
+                data-message-search-result-index={resultIndex}
+                aria-current={isHighlighted ? "true" : undefined}
+                aria-label={`Open matching message in ${getConversationSearchName(
+                  conversation
+                )}`}
+                className={cn(
+                  "flex min-h-[70px] w-full items-center gap-3 rounded-lg px-2 py-2 text-left",
+                  isHighlighted && !isMobileView
+                    ? "bg-[#0A7CFF] text-white"
+                    : "can-hover:hover:bg-muted-foreground/10",
+                )}
+              >
+                <SearchResultAvatar conversation={conversation} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="truncate text-sm font-medium">
+                      {getConversationSearchName(conversation)}
+                    </span>
+                    <span className={cn("shrink-0 text-xs", isHighlighted && !isMobileView ? "text-white/80" : "text-muted-foreground")}>
+                      {formatTime(message.timestamp)}
+                    </span>
+                  </span>
+                  <span className={cn("mt-0.5 block line-clamp-2 text-xs", isHighlighted && !isMobileView ? "text-white/80" : "text-muted-foreground")}>
+                    <HighlightedMatch content={preview} query={query} isHighlighted={isHighlighted && !isMobileView} />
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
+    </div>
+  );
+}
+
 export function Sidebar({
   children,
   conversations,
   activeConversation,
   onSelectConversation,
+  onSelectMessageResult,
   onDeleteConversation,
   onUpdateConversation,
   isMobileView,
@@ -46,8 +222,11 @@ export function Sidebar({
   const { theme, systemTheme } = useTheme();
   const effectiveTheme = theme === "system" ? systemTheme : theme;
   const windowFocus = useWindowFocus();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [openSwipedConvo, setOpenSwipedConvo] = useState<string | null>(null);
+  const [highlightedSearchIndex, setHighlightedSearchIndex] = useState(0);
   const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return "";
 
@@ -97,23 +276,65 @@ export function Sidebar({
     return timeB - timeA; // Most recent first
   }), [conversations]);
 
-  const filteredConversations = useMemo(() => sortedConversations.filter((conversation) => {
-    if (!searchTerm) return true;
+  const conversationMatches = useMemo(
+    () => getConversationNameMatches(sortedConversations, searchTerm),
+    [sortedConversations, searchTerm],
+  );
+  const messageMatches = useMemo(
+    () => getMessageSearchResults(sortedConversations, searchTerm),
+    [sortedConversations, searchTerm],
+  );
+  const searchResults = useMemo(
+    () => [
+      ...conversationMatches.map((conversation) => ({
+        kind: "conversation" as const,
+        conversation,
+      })),
+      ...messageMatches.map(({ conversation, message }) => ({
+        kind: "message" as const,
+        conversation,
+        message,
+      })),
+    ],
+    [conversationMatches, messageMatches],
+  );
+  const filteredConversations = useMemo(() => {
+    if (!searchTerm) return sortedConversations;
+    const matchingIds = new Set([
+      ...conversationMatches.map(({ id }) => id),
+      ...messageMatches.map(({ conversation }) => conversation.id),
+    ]);
+    return sortedConversations.filter(({ id }) => matchingIds.has(id));
+  }, [conversationMatches, messageMatches, searchTerm, sortedConversations]);
 
-    // Search in non-system messages content only
-    const hasMatchInMessages = conversation.messages
-      .filter((message) => message.sender !== "system")
-      .some((message) =>
-        message.content.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const handleSearchChange = useCallback((term: string) => {
+    setHighlightedSearchIndex(0);
+    onSearchChange(term);
+  }, [onSearchChange]);
 
-    // Search in recipient names
-    const hasMatchInNames = conversation.recipients.some((recipient) =>
-      recipient.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const selectSearchResult = useCallback((index: number) => {
+    const result = searchResults[index];
+    if (!result) return;
 
-    return hasMatchInMessages || hasMatchInNames;
-  }), [sortedConversations, searchTerm]);
+    setHighlightedSearchIndex(index);
+    if (result.kind === "conversation") {
+      onSelectConversation(result.conversation.id);
+    } else {
+      onSelectMessageResult(result.conversation.id, result.message.id);
+    }
+  }, [onSelectConversation, onSelectMessageResult, searchResults]);
+
+  useEffect(() => {
+    if (!searchTerm || searchResults.length === 0) return;
+    setHighlightedSearchIndex((index) => Math.min(index, searchResults.length - 1));
+  }, [searchResults.length, searchTerm]);
+
+  useEffect(() => {
+    if (!searchTerm) return;
+    sidebarRef.current
+      ?.querySelector(`[data-message-search-result-index="${highlightedSearchIndex}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [highlightedSearchIndex, searchTerm]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -185,12 +406,26 @@ export function Sidebar({
         !document.activeElement?.closest(".ProseMirror")
       ) {
         e.preventDefault();
-        const searchInput = document.querySelector(
-          'input[type="text"][placeholder="Search"]'
-        ) as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (
+        searchTerm &&
+        searchResults.length > 0 &&
+        ["ArrowDown", "ArrowUp", "j", "k"].includes(e.key)
+      ) {
+        e.preventDefault();
+        const direction: 1 | -1 = ["ArrowDown", "j"].includes(e.key) ? 1 : -1;
+        setHighlightedSearchIndex((index) =>
+          getNextMessageSearchResultIndex(index, searchResults.length, direction),
+        );
+        return;
+      }
+
+      if (searchTerm && e.key === "Enter" && searchResults.length > 0) {
+        e.preventDefault();
+        selectSearchResult(highlightedSearchIndex);
         return;
       }
 
@@ -297,10 +532,15 @@ export function Sidebar({
     onDeleteConversation,
     windowFocus,
     onSoundToggle,
+    searchTerm,
+    searchResults.length,
+    highlightedSearchIndex,
+    selectSearchResult,
   ]);
 
   return (
     <div
+      ref={sidebarRef}
       className={cn(
         "flex flex-col h-full",
         isMobileView ? "bg-background" : "bg-muted"
@@ -322,22 +562,30 @@ export function Sidebar({
           withVerticalMargins={false}
         >
           <div className={`${isMobileView ? "w-full" : "w-[320px]"} px-2`}>
-            <SearchBar value={searchTerm} onChange={onSearchChange} />
+            <SearchBar
+              inputRef={searchInputRef}
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
             <div className="w-full">
-              {filteredConversations.length === 0 && searchTerm ? (
-                <div className="py-2">
-                  <p className="text-sm text-muted-foreground px-2 mt-4">
-                    No results found
-                  </p>
-                </div>
+              {searchTerm ? (
+                <MessageSearchResults
+                  conversationMatches={conversationMatches}
+                  messageMatches={messageMatches}
+                  query={searchTerm}
+                  formatTime={formatTime}
+                  highlightedIndex={highlightedSearchIndex}
+                  isMobileView={isMobileView}
+                  onSelectResult={selectSearchResult}
+                />
               ) : (
                 <>
                   {/* Pinned Conversations Grid */}
-                  {filteredConversations.some((conv) => conv.pinned) && (
+                  {sortedConversations.some((conv) => conv.pinned) && (
                     <div className="p-2">
                       <div
                         className={`flex flex-wrap gap-1 ${
-                          filteredConversations.filter((c) => c.pinned)
+                          sortedConversations.filter((c) => c.pinned)
                             .length <= 2
                             ? "justify-center"
                             : ""
@@ -346,7 +594,7 @@ export function Sidebar({
                           display: "grid",
                           gap: "1rem",
                           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                          ...(filteredConversations.filter((c) => c.pinned)
+                          ...(sortedConversations.filter((c) => c.pinned)
                             .length <= 2 && {
                             display: "flex",
                             maxWidth: "fit-content",
@@ -354,7 +602,7 @@ export function Sidebar({
                           }),
                         }}
                       >
-                        {filteredConversations
+                        {sortedConversations
                           .filter((conv) => conv.pinned)
                           .map((conversation) => (
                             <div
@@ -595,7 +843,7 @@ export function Sidebar({
                   )}
 
                   {/* Regular Conversation List */}
-                  {filteredConversations
+                  {sortedConversations
                     .filter((conv) => !conv.pinned)
                     .map((conversation, index, array) => {
                       const isActive = conversation.id === activeConversation;
