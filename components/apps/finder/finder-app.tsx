@@ -758,12 +758,13 @@ export function FinderApp({
 
       if (e.key === "Escape" && searchActive) {
         e.preventDefault();
-        if (searchQuery) {
+        if (document.activeElement === searchInputRef.current) {
+          searchInputRef.current?.blur();
+        } else if (searchQuery) {
           setSearchQuery("");
         } else {
           setSearchActive(false);
         }
-        (document.activeElement as HTMLElement)?.blur();
         return;
       }
 

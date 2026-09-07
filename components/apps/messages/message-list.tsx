@@ -22,6 +22,7 @@ interface MessageListProps {
   focusModeActive?: boolean;
   isWindowFocused?: boolean;
   justSentMessageId?: string | null;
+  searchTarget?: { messageId: string; requestId: number } | null;
 }
 
 export function MessageList({
@@ -36,6 +37,7 @@ export function MessageList({
   focusModeActive = false,
   isWindowFocused = true,
   justSentMessageId,
+  searchTarget,
 }: MessageListProps) {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [isAnyReactionMenuOpen, setIsAnyReactionMenuOpen] = useState(false);
@@ -43,6 +45,9 @@ export function MessageList({
   const prevMessageCountRef = useRef(0);
   const messageListRef = useRef<HTMLDivElement>(null);
   const [wasAtBottom, setWasAtBottom] = useState(true);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
 
   const lastUserMessageIndex = messages.findLastIndex(
     (msg) => msg.sender === "me"
@@ -125,6 +130,7 @@ export function MessageList({
     };
 
     const resizeObserver = new ResizeObserver(() => {
+      if (searchTarget) return;
       if (isFirstScroll || shouldAutoScrollRef.current) {
         scrollToBottom();
       }
@@ -137,7 +143,39 @@ export function MessageList({
     }
 
     return () => resizeObserver.disconnect();
-  }, [conversationId]);
+  }, [conversationId, searchTarget]);
+
+  useEffect(() => {
+    if (!searchTarget) {
+      setHighlightedMessageId(null);
+      return;
+    }
+
+    const targetMessage = Array.from(
+      messageListRef.current?.querySelectorAll<HTMLElement>(
+        "[data-message-id]"
+      ) ?? []
+    ).find((element) => element.dataset.messageId === searchTarget.messageId);
+    if (!targetMessage) return;
+
+    setHighlightedMessageId(searchTarget.messageId);
+    shouldAutoScrollRef.current = false;
+    setWasAtBottom(false);
+
+    const animationFrame = requestAnimationFrame(() => {
+      targetMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    const highlightTimer = window.setTimeout(() => {
+      setHighlightedMessageId((current) =>
+        current === searchTarget.messageId ? null : current
+      );
+    }, 4000);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      clearTimeout(highlightTimer);
+    };
+  }, [conversationId, searchTarget]);
 
   // Reset tracking when conversation changes (must be defined before the message effect)
   useEffect(() => {
@@ -181,7 +219,11 @@ export function MessageList({
           <div
             key={message.id}
             data-message-id={message.id}
-            className="relative"
+            className={cn(
+              "relative rounded-2xl transition-[background-color,box-shadow] duration-300",
+              message.id === highlightedMessageId &&
+                "bg-[#0A7CFF]/10 ring-2 ring-inset ring-[#0A7CFF]/35"
+            )}
           >
             {/* Overlay for non-active messages */}
             {isAnyReactionMenuOpen && message.id !== activeMessageId && (

@@ -1,13 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { Icons } from "./icons";
 import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface SearchBarProps {
+  inputRef: RefObject<HTMLInputElement>;
   value: string;
   onChange: (value: string) => void;
 }
 
-export function SearchBar({ value, onChange }: SearchBarProps) {
+export function SearchBar({ inputRef, value, onChange }: SearchBarProps) {
   const justBlurred = useRef(false);
   const windowFocus = useWindowFocus();
 
@@ -24,11 +25,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       }
 
       if (e.key === "Escape") {
-        const searchInput = document.querySelector(
-          'input[placeholder="Search"]'
-        );
         if (
-          document.activeElement !== searchInput &&
+          document.activeElement !== inputRef.current &&
           value &&
           !justBlurred.current
         ) {
@@ -40,13 +38,14 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
 
     window.addEventListener("keydown", handleGlobalEscape);
     return () => window.removeEventListener("keydown", handleGlobalEscape);
-  }, [value, onChange, windowFocus]);
+  }, [inputRef, value, onChange, windowFocus]);
 
   return (
     <div className="p-2">
       <div className="relative">
         <Icons.search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -63,12 +62,18 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
             }
           }}
           placeholder="Search"
+          aria-label="Search messages"
           className="w-full pl-8 pr-8 py-0.5 rounded-lg text-base desktop:text-sm placeholder:text-sm placeholder:text-muted-foreground focus:outline-none bg-[#E8E8E7] dark:bg-[#353533]"
         />
         {value && (
           <button
-            onClick={() => onChange("")}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              onChange("");
+              inputRef.current?.focus();
+            }}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
             aria-label="Clear search"
           >
             <Icons.close className="h-4 w-4" />

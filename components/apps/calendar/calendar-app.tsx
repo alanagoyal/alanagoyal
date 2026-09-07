@@ -11,6 +11,11 @@ import { EventForm } from "./event-form";
 import { ViewType, CalendarEvent, Calendar } from "./types";
 import { getUpcomingEventDefaults, navigateDate } from "./utils";
 import { loadCalendars } from "./data";
+import { EventSearch } from "./event-search";
+import {
+  getCalendarEventDate,
+  getCalendarEventSearchScrollTop,
+} from "./search-utils";
 
 // Valid view types for type guard
 const VALID_VIEW_TYPES: ViewType[] = ["day", "week", "month", "year"];
@@ -158,6 +163,8 @@ export function CalendarApp({
 }: CalendarAppProps) {
   const windowFocus = useWindowFocus();
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const nextScrollRequestId = useRef(0);
   const dialogContainer =
     windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
@@ -168,6 +175,10 @@ export function CalendarApp({
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [timeGridScrollTop, setTimeGridScrollTop] = useState(0);
+  const [timeGridScrollRequest, setTimeGridScrollRequest] = useState<{
+    id: number;
+    top: number;
+  } | null>(null);
 
   // Event form state
   const [eventFormOpen, setEventFormOpen] = useState(false);
@@ -295,6 +306,28 @@ export function CalendarApp({
     setEventFormOpen(true);
   }, []);
 
+  const handleSearchResultSelect = useCallback((event: CalendarEvent) => {
+    const eventScrollTop = getCalendarEventSearchScrollTop(
+      event,
+      DEFAULT_HOUR_HEIGHT,
+    );
+    if (eventScrollTop !== null) {
+      nextScrollRequestId.current += 1;
+      setTimeGridScrollTop(eventScrollTop);
+      setTimeGridScrollRequest({
+        id: nextScrollRequestId.current,
+        top: eventScrollTop,
+      });
+      saveScrollPosition(eventScrollTop);
+    } else {
+      setTimeGridScrollRequest(null);
+    }
+    setCurrentDate(getCalendarEventDate(event));
+    setView(isMobile ? "week" : "day");
+    setSelectedEventId(event.id);
+    handleViewEvent(event);
+  }, [handleViewEvent, isMobile]);
+
   // Event deletion (only user events can be deleted)
   const handleDeleteEvent = useCallback((eventId: string) => {
     // Only delete if it's a user event (exists in our events state)
@@ -355,6 +388,12 @@ export function CalendarApp({
         return;
       }
 
+      if (e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
       switch (e.key.toLowerCase()) {
         case "d":
           setView("day");
@@ -407,7 +446,29 @@ export function CalendarApp({
           onNewEvent={handleNewEvent}
           inShell={inShell}
           isMobile={false}
+          search={
+            <EventSearch
+              events={events}
+              calendars={calendars}
+              currentDate={currentDate}
+              onSelect={handleSearchResultSelect}
+              inputRef={searchInputRef}
+            />
+          }
         />
+      )}
+
+      {isMobile && (
+        <div className="relative z-20 border-b border-border bg-background px-3 py-2">
+          <EventSearch
+            events={events}
+            calendars={calendars}
+            currentDate={currentDate}
+            onSelect={handleSearchResultSelect}
+            isMobile
+            inputRef={searchInputRef}
+          />
+        </div>
       )}
 
       {/* Calendar view */}
@@ -419,6 +480,7 @@ export function CalendarApp({
             calendars={calendars}
             onCreateEvent={handleCreateEvent}
             initialScrollTop={timeGridScrollTop}
+            scrollRequest={timeGridScrollRequest}
             onScrollChange={handleTimeGridScroll}
             selectedEventId={selectedEventId}
             onSelectEvent={handleSelectEvent}
@@ -433,6 +495,7 @@ export function CalendarApp({
             calendars={calendars}
             onCreateEvent={isMobile ? undefined : handleCreateEvent}
             initialScrollTop={timeGridScrollTop}
+            scrollRequest={timeGridScrollRequest}
             onScrollChange={handleTimeGridScroll}
             selectedEventId={isMobile ? null : selectedEventId}
             onSelectEvent={isMobile ? undefined : handleSelectEvent}

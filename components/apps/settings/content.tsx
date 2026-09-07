@@ -147,7 +147,10 @@ export function Content({
 
   return (
     <div className="flex-1 overflow-y-auto bg-background">
-      <div className="flex flex-col items-center py-8 px-4 border-b border-border/50">
+      <div
+        data-setting-search-id={selectedCategory}
+        className="flex flex-col items-center py-8 px-4 border-b border-border/50"
+      >
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted mb-3">
           {info.icon}
         </div>

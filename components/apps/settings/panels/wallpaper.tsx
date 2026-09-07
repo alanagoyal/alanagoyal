@@ -41,6 +41,7 @@ export function WallpaperPanel() {
   return (
     <div
       ref={panelRef}
+      data-setting-search-id="wallpaper"
       className="mx-auto w-full max-w-5xl space-y-8 p-6 pb-10"
       data-testid="settings-wallpaper-panel"
     >

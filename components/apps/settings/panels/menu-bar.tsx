@@ -161,7 +161,7 @@ export function MenuBarPanel() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-7 p-6">
       <div className="rounded-xl bg-muted/60 text-sm">
-        <div className="flex items-center justify-between gap-4 px-4 py-3">
+        <div data-setting-search-id="menu-bar-background" className="flex items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
             <PanelTop className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -187,7 +187,7 @@ export function MenuBarPanel() {
           System controls can be configured to appear in the menu bar.
         </div>
         <div className="rounded-xl bg-muted/60">
-          <div className="flex items-center justify-between gap-4 px-4 py-3">
+          <div data-setting-search-id="clock" className="flex items-center justify-between gap-4 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-400 text-white shadow-sm">
                 <Clock3 className="h-5 w-5" />

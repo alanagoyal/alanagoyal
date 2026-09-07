@@ -22,6 +22,8 @@ interface NotesDesktopPresenterProps {
   windowFocus: WindowFocusValue;
   viewMode: NotesViewMode;
   onViewModeChange: (viewMode: NotesViewMode) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
 }
 
 export function NotesDesktopPresenter({
@@ -36,6 +38,8 @@ export function NotesDesktopPresenter({
   windowFocus,
   viewMode,
   onViewModeChange,
+  searchQuery,
+  onSearchQueryChange,
 }: NotesDesktopPresenterProps) {
   const [isGalleryDetailOpen, setIsGalleryDetailOpen] = useState(
     () => viewMode === "gallery" && Boolean(initialSlug),
@@ -91,6 +95,8 @@ export function NotesDesktopPresenter({
         onViewModeChange={onViewModeChange}
         galleryDetailNote={isGalleryDetailOpen ? selectedNote : null}
         onGalleryBack={handleBackToGallery}
+        controlledSearchQuery={searchQuery}
+        onSearchQueryChange={onSearchQueryChange}
       />
       {viewMode === "list" && (
         <div className="flex-grow h-full overflow-hidden relative">

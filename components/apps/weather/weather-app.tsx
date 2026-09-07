@@ -27,6 +27,7 @@ import {
   getWeatherDescription,
   getWeatherIconName,
   getWeatherCitySelectionAfterRemoval,
+  getNextWeatherSearchResultIndex,
   type WeatherMood,
   getWeatherScene,
   type WeatherScene,
@@ -652,6 +653,7 @@ export function WeatherApp({
   const inDesktopShell = !!(inShell && windowFocus);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
 
   const [customCities, setCustomCities] = useState<CityConfig[]>(() =>
     loadWeatherCustomCities()
@@ -667,6 +669,7 @@ export function WeatherApp({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
   const [searchResults, setSearchResults] = useState<CityConfig[]>([]);
+  const [highlightedSearchIndex, setHighlightedSearchIndex] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
   const [scenePreviewMode, setScenePreviewMode] =
@@ -879,6 +882,19 @@ export function WeatherApp({
     [allCities, searchResults]
   );
 
+  useEffect(() => {
+    setHighlightedSearchIndex((index) =>
+      Math.min(index, Math.max(0, searchResultItems.length - 1)),
+    );
+  }, [searchResultItems.length]);
+
+  useEffect(() => {
+    if (!trimmedSearchQuery || searchResultItems.length === 0) return;
+    searchResultsRef.current
+      ?.querySelector(`[data-weather-search-result-index="${highlightedSearchIndex}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [highlightedSearchIndex, searchResultItems.length, trimmedSearchQuery]);
+
   const handleSelectSearchResult = useCallback(
     (result: CityConfig, existingCityId: string | null) => {
       const targetCityId = existingCityId ?? result.id;
@@ -893,6 +909,7 @@ export function WeatherApp({
 
       setSelectedCityId(targetCityId);
       setSearchQuery("");
+      setHighlightedSearchIndex(0);
       setSearchActive(false);
       searchInputRef.current?.blur();
     },
@@ -975,11 +992,16 @@ export function WeatherApp({
 
       if (event.key === "Escape" && (isSearchFocused || searchActive || !!searchQuery)) {
         event.preventDefault();
-        if (searchQuery) {
+        if (isSearchFocused) {
+          searchInputRef.current?.blur();
+        } else if (searchQuery) {
           setSearchQuery("");
+          setSearchResults([]);
+          setHighlightedSearchIndex(0);
+          setSearchActive(false);
+        } else {
+          setSearchActive(false);
         }
-        setSearchActive(false);
-        (document.activeElement as HTMLElement | null)?.blur();
         return;
       }
 
@@ -993,12 +1015,38 @@ export function WeatherApp({
         event.preventDefault();
         setSearchActive(true);
         window.setTimeout(() => searchInputRef.current?.focus(), 0);
+        return;
+      }
+
+      if (!trimmedSearchQuery || searchResultItems.length === 0) return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction: 1 | -1 = event.key === "ArrowDown" ? 1 : -1;
+        setHighlightedSearchIndex((index) =>
+          getNextWeatherSearchResultIndex(index, searchResultItems.length, direction),
+        );
+        return;
+      }
+
+      if (event.key === "Enter") {
+        const item = searchResultItems[highlightedSearchIndex];
+        if (!item) return;
+        event.preventDefault();
+        handleSelectSearchResult(item.city, item.existingCityId);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [windowFocus, searchActive, searchQuery]);
+  }, [
+    handleSelectSearchResult,
+    highlightedSearchIndex,
+    searchActive,
+    searchQuery,
+    searchResultItems,
+    trimmedSearchQuery,
+    windowFocus,
+  ]);
 
   return (
     <div ref={containerRef} className="h-full flex bg-background" data-app="weather">
@@ -1064,7 +1112,10 @@ export function WeatherApp({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onChange={(event) => {
+                        setSearchQuery(event.target.value);
+                        setHighlightedSearchIndex(0);
+                      }}
                       onFocus={() => setSearchActive(true)}
                       onBlur={() => setSearchActive(false)}
                       onMouseDown={(event) => event.stopPropagation()}
@@ -1084,6 +1135,8 @@ export function WeatherApp({
                         }}
                         onClick={() => {
                           setSearchQuery("");
+                          setSearchResults([]);
+                          setHighlightedSearchIndex(0);
                           searchInputRef.current?.focus();
                         }}
                         className={cn(
@@ -1107,17 +1160,25 @@ export function WeatherApp({
                     {!searchLoading && searchResultItems.length === 0 && (
                       <p className="px-1 py-2 text-sm text-white/76">No matching locations</p>
                     )}
-                    <div className="space-y-1">
-                      {searchResultItems.map(({ city, existingCityId }) => {
+                    <div ref={searchResultsRef} className="space-y-1">
+                      {searchResultItems.map(({ city, existingCityId }, index) => {
                         const [primaryName, ...secondaryParts] = city.name.split(", ");
                         const secondaryName = secondaryParts.join(", ");
+                        const isHighlighted = index === highlightedSearchIndex;
 
                         return (
                           <button
                             key={city.id}
                             type="button"
+                            data-weather-search-result-index={index}
+                            aria-current={isHighlighted ? "true" : undefined}
                             onClick={() => handleSelectSearchResult(city, existingCityId)}
-                            className="w-full rounded-md px-1.5 py-1.5 text-left text-white/90 transition-colors"
+                            className={cn(
+                              "w-full rounded-md px-1.5 py-1.5 text-left text-white/90 transition-colors",
+                              isHighlighted
+                                ? "bg-white/20"
+                                : "can-hover:hover:bg-white/10",
+                            )}
                           >
                             <p className="truncate text-sm [text-shadow:0_1px_2px_rgba(5,14,31,0.45)]">
                               <span className="font-medium text-white/95">{primaryName}</span>

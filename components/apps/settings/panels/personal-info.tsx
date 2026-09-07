@@ -79,7 +79,7 @@ function DeviceIcon({ type }: { type: Device["type"] }) {
 
 export function PersonalInfoPanel() {
   return (
-    <div className="max-w-2xl mx-auto py-4 px-4 space-y-6">
+    <div data-setting-search-id="personal-info" className="max-w-2xl mx-auto py-4 px-4 space-y-6">
       {/* Personal Information Card */}
       <div className="rounded-xl bg-muted/50 overflow-hidden">
         <div className="divide-y divide-border/50">

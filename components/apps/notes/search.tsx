@@ -1,12 +1,8 @@
 import { RefObject, Dispatch, SetStateAction, useEffect } from "react";
-import { Note } from "@/lib/notes/types";
 import { Icons } from "./icons";
 import { useWindowFocus } from "@/lib/window-focus-context";
 
 interface SearchBarProps {
-  notes: Note[];
-  onSearchResults: (results: Note[] | null) => void;
-  sessionId: string;
   inputRef: RefObject<HTMLInputElement>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -15,9 +11,6 @@ interface SearchBarProps {
 }
 
 export function SearchBar({
-  notes,
-  onSearchResults,
-  sessionId,
   inputRef,
   searchQuery,
   setSearchQuery,
@@ -54,15 +47,6 @@ export function SearchBar({
       clearSearch();
       return;
     }
-
-    const filteredNotes = notes.filter(
-      (note) =>
-        (note.public || note.session_id === sessionId) &&
-        (note.title.toLowerCase().includes(query.trim().toLowerCase()) ||
-          note.content.toLowerCase().includes(query.trim().toLowerCase()))
-    );
-
-    onSearchResults(filteredNotes);
     setHighlightedIndex(0);
   };
 
@@ -85,8 +69,13 @@ export function SearchBar({
         />
         {searchQuery && (
           <button
-            onClick={clearSearch}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              clearSearch();
+              inputRef.current?.focus();
+            }}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
             aria-label="Clear search"
           >
             <Icons.close className="h-4 w-4 text-muted-foreground" />

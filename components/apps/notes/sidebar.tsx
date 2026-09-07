@@ -39,6 +39,7 @@ import {
   saveNotesSortPreferences,
 } from "@/lib/notes/display-preferences";
 import NoteDocument from "./note";
+import { searchNotes } from "@/lib/notes/search";
 
 const labels = {
   pinned: "Pinned",
@@ -64,6 +65,8 @@ export default function Sidebar({
   onViewModeChange,
   galleryDetailNote,
   onGalleryBack,
+  controlledSearchQuery,
+  onSearchQueryChange,
 }: {
   notes: Note[];
   onNoteSelect: (note: Note) => void;
@@ -75,6 +78,8 @@ export default function Sidebar({
   onViewModeChange: (viewMode: NotesViewMode) => void;
   galleryDetailNote?: Note | null;
   onGalleryBack?: () => void;
+  controlledSearchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -84,9 +89,6 @@ export default function Sidebar({
   const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [localSearchResults, setLocalSearchResults] = useState<Note[] | null>(
-    null
-  );
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [groupedNotes, setGroupedNotes] = useState<GroupedNotes>({});
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -94,7 +96,9 @@ export default function Sidebar({
     null
   );
   const [highlightedNote, setHighlightedNote] = useState<Note | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+  const searchQuery = controlledSearchQuery ?? internalSearchQuery;
+  const setSearchQuery = onSearchQueryChange ?? setInternalSearchQuery;
   const [groupMode, setGroupMode] = useState<NotesGroupMode>("edited");
   const [sortField, setSortField] = useState<NotesSortField>("default");
   const [sortDirection, setSortDirection] =
@@ -263,12 +267,28 @@ export default function Sidebar({
   ]);
 
   const orderedSearchResults = useMemo(
-    () =>
-      localSearchResults === null
-        ? null
-        : sortNotes(localSearchResults, sortField, sortDirection),
-    [localSearchResults, sortDirection, sortField],
+    () => {
+      if (!searchQuery.trim()) return null;
+      return sortNotes(
+        searchNotes(notes, searchQuery, sessionId),
+        sortField,
+        sortDirection,
+      );
+    },
+    [notes, searchQuery, sessionId, sortDirection, sortField],
   );
+
+  useEffect(() => {
+    if (!orderedSearchResults || !selectedNoteSlug) return;
+
+    const selectedResultIndex = orderedSearchResults.findIndex(
+      (note) => note.slug === selectedNoteSlug,
+    );
+
+    if (selectedResultIndex >= 0) {
+      setHighlightedIndex(selectedResultIndex);
+    }
+  }, [orderedSearchResults, selectedNoteSlug]);
 
   useEffect(() => {
     if (orderedSearchResults && orderedSearchResults.length > 0) {
@@ -279,13 +299,12 @@ export default function Sidebar({
   }, [orderedSearchResults, highlightedIndex, selectedNote]);
 
   const clearSearch = useCallback(() => {
-    setLocalSearchResults(null);
     setSearchQuery("");
     setHighlightedIndex(0);
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
-  }, [setLocalSearchResults, setHighlightedIndex]);
+  }, [setHighlightedIndex, setSearchQuery]);
 
   const flattenedNotes = useCallback(() => {
     return activeCategoryOrder.flatMap((category) =>
@@ -458,9 +477,8 @@ export default function Sidebar({
         const selectedElement = document.querySelector(`[data-note-slug="${selectedNote.slug}"]`);
         selectedElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 0);
-      clearSearch();
     }
-  }, [orderedSearchResults, highlightedIndex, router, clearSearch, useCallbackNavigation, selectNoteInApp]);
+  }, [orderedSearchResults, highlightedIndex, router, useCallbackNavigation, selectNoteInApp]);
 
   // Register file menu actions for desktop menubar
   useEffect(() => {
@@ -531,7 +549,20 @@ export default function Sidebar({
         target.isContentEditable;
 
       if (isTyping) {
-        if (event.key === "Escape") {
+        if (
+          target === searchInputRef.current &&
+          orderedSearchResults &&
+          orderedSearchResults.length > 0 &&
+          (event.key === "ArrowDown" || event.key === "ArrowUp")
+        ) {
+          event.preventDefault();
+          const direction = event.key === "ArrowDown" ? 1 : -1;
+          setHighlightedIndex(
+            (prevIndex) =>
+              (prevIndex + direction + orderedSearchResults.length) %
+              orderedSearchResults.length,
+          );
+        } else if (event.key === "Escape") {
           shortcuts["Escape"]();
         } else if (
           event.key === "Enter" &&
@@ -591,10 +622,8 @@ export default function Sidebar({
       if (!isMobile && !useCallbackNavigation) {
         router.push(`/notes/${note.slug}`);
       }
-      clearSearch();
     },
     [
-      clearSearch,
       selectNoteInApp,
       isMobile,
       router,
@@ -675,9 +704,6 @@ export default function Sidebar({
                   )}
                 >
                   <SearchBar
-                    notes={notes}
-                    onSearchResults={setLocalSearchResults}
-                    sessionId={sessionId}
                     inputRef={searchInputRef}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -704,6 +730,7 @@ export default function Sidebar({
                   useCallbackNavigation={useCallbackNavigation}
                   isMobile={isMobile}
                   viewMode={viewMode}
+                  searchQuery={searchQuery}
                 />
               </div>
             </div>

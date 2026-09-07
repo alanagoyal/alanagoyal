@@ -22,7 +22,7 @@ export function StoragePanel() {
   const usedPercent = (usedSize / totalSize) * 100;
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-6">
+    <div data-setting-search-id="storage" className="mx-auto max-w-2xl px-6 py-6">
       {/* Macintosh HD Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
