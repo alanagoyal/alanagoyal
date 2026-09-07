@@ -67,6 +67,15 @@ export function getWeatherCitySelectionAfterRemoval(
   return cities[removedIndex + 1]?.id ?? cities[removedIndex - 1]?.id ?? null;
 }
 
+export function getNextWeatherSearchResultIndex(
+  currentIndex: number,
+  resultCount: number,
+  direction: 1 | -1,
+): number {
+  if (resultCount <= 0) return 0;
+  return (currentIndex + direction + resultCount) % resultCount;
+}
+
 interface WeatherThemeDefinition {
   background: string;
   heroGradient: string;

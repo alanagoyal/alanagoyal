@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getWeatherCitySelectionAfterRemoval } from "../lib/weather";
+import {
+  getNextWeatherSearchResultIndex,
+  getWeatherCitySelectionAfterRemoval,
+} from "../lib/weather";
 
 const cities = [
   { id: "san-francisco" },
@@ -28,4 +31,11 @@ test("falls back to the previous Weather city at the end of the list", () => {
     getWeatherCitySelectionAfterRemoval(cities, "tokyo", "tokyo"),
     "seattle"
   );
+});
+
+test("wraps Weather search keyboard navigation", () => {
+  assert.equal(getNextWeatherSearchResultIndex(0, 3, 1), 1);
+  assert.equal(getNextWeatherSearchResultIndex(2, 3, 1), 0);
+  assert.equal(getNextWeatherSearchResultIndex(0, 3, -1), 2);
+  assert.equal(getNextWeatherSearchResultIndex(0, 0, 1), 0);
 });
