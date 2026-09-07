@@ -13,6 +13,7 @@ import {
   getFinderOpenDirectoryTarget,
   getFinderProjectRootTarget,
 } from "@/lib/finder-path";
+import { getPreviewMetadataFromPath } from "@/lib/preview-utils";
 
 const USERNAME = "alanagoyal";
 const HOSTNAME = "Alanas-MacBook-Air";
@@ -159,12 +160,18 @@ function isTextFile(filename: string): boolean {
 interface TerminalProps {
   onOpenDirectory?: (directoryPath: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
+  onOpenPreviewFile?: (
+    filePath: string,
+    fileUrl: string,
+    fileType: "image" | "pdf"
+  ) => void;
   onCurrentDirectoryChange?: (directory: string) => void;
 }
 
 export function Terminal({
   onOpenDirectory,
   onOpenTextFile,
+  onOpenPreviewFile,
   onCurrentDirectoryChange,
 }: TerminalProps) {
   const { currentOS } = useSystemSettings();
@@ -506,6 +513,7 @@ export function Terminal({
 
         const staticNode = fileSystem[path];
         const parsed = parseGitHubPath(path);
+        let githubTree: Awaited<ReturnType<typeof fetchGitHubRepoTree>> | null = null;
         let finderDirectoryTarget = staticNode?.type === "dir"
           ? getFinderOpenDirectoryTarget(path)
           : null;
@@ -525,8 +533,8 @@ export function Terminal({
             }
             finderDirectoryTarget = projectRootTarget;
           } else {
-            const tree = await fetchGitHubRepoTree(parsed.repo);
-            const isDirectory = tree.some(
+            githubTree = await fetchGitHubRepoTree(parsed.repo);
+            const isDirectory = githubTree.some(
               (item) => item.type === "dir" && item.path === parsed.filePath
             );
             if (isDirectory) finderDirectoryTarget = path;
@@ -538,6 +546,29 @@ export function Terminal({
             onOpenDirectory(finderDirectoryTarget);
           } else {
             output = "open: Finder is not available";
+          }
+          break;
+        }
+
+        const previewMetadata = getPreviewMetadataFromPath(path);
+        if (previewMetadata) {
+          const githubFileExists = !parsed?.filePath || githubTree?.some(
+            (item) => item.type === "file" && item.path === parsed.filePath
+          );
+          if (!githubFileExists) {
+            output = `open: ${args[0]}: No such file or directory`;
+            break;
+          }
+
+          if (onOpenPreviewFile) {
+            onOpenPreviewFile(
+              path,
+              previewMetadata.fileUrl,
+              previewMetadata.fileType
+            );
+            addRecent({ path, name: path.split("/").pop() || path, type: "file" });
+          } else {
+            output = "open: Preview is not available";
           }
           break;
         }
@@ -595,7 +626,7 @@ export function Terminal({
       { type: "input", content: input, prompt },
       ...(output ? [{ type: "output" as const, content: output }] : []),
     ]);
-  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenDirectory, onOpenTextFile]);
+  }, [currentDir, commandHistory, getPrompt, resolvePath, fileSystem, isGitHubPath, parseGitHubPath, currentOS, addRecent, onOpenDirectory, onOpenTextFile, onOpenPreviewFile]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {

@@ -22,6 +22,7 @@ This note captures how file-backed document apps launch through Finder in the de
 - Choosing `Preview` from Finder's Applications view focuses the topmost open Preview document window if one exists; otherwise it opens a centered, slightly smaller Finder window at `Desktop`.
 - When Preview is explicitly kept in the desktop Dock, clicking its closed icon opens that same Finder picker at `Desktop`; clicking it with documents open brings its windows forward.
 - Finder opens images and PDFs in `Preview` windows, each backed by a real file path.
+- iTerm's `open` command sends supported repository-backed images and PDFs to Preview, matching its existing Finder-folder and TextEdit-file handoffs.
 - On mobile, all Preview routes redirect to `/notes`; the Finder-picker behavior above is desktop-only.
 
 ## Why This Split Exists
@@ -35,6 +36,7 @@ This note captures how file-backed document apps launch through Finder in the de
 - `lib/app-config.ts` marks Finder as a multi-window app.
 - `lib/file-route-utils.ts` is the source of truth for local sample document paths, Finder fallback targets, and local file metadata shared across Finder, TextEdit, and Preview.
 - `components/desktop/desktop.tsx` focuses an existing TextEdit/Preview document window first, and only falls back to opening a centered, slightly smaller Finder window at `Documents` for TextEdit and `Desktop` for Preview when that app has no open documents.
+- `components/apps/iterm/terminal.tsx` resolves `open` targets and delegates supported image/PDF paths to the desktop shell's existing Preview launcher.
 - `components/desktop/dock.tsx` delegates closed document-app launches to the desktop shell: TextEdit creates an untitled document, while Preview opens its shared Finder picker.
 - `components/desktop/window.tsx` provides the shared desktop window shell, while `components/apps/finder/finder-app.tsx` owns per-window Finder browsing state.
 - `lib/shell-routing.ts` only generates desktop URLs for these apps when a `filePath` is present.
@@ -57,7 +59,9 @@ Run `npm run build`, then verify:
 12. In TextEdit, use File → New and confirm an `Untitled.txt` document opens and appears in Finder's Documents folder.
 13. Use File → Duplicate and Rename, then confirm the copied content, updated title, and Finder-visible file name persist after closing and reopening the document.
 14. Edit a document and confirm the title shows `Edited`; use File → Save and confirm the marker clears before using File → Close.
-15. With an iPhone user agent, confirm `/textedit`, `/textedit/<nested>`, `/preview`, and `/preview/<nested>` redirect to `/notes` while the same routes preserve their existing desktop behavior.
-16. Keep TextEdit and Preview in the desktop Dock, remove Music, then refresh and confirm the persisted membership appears before paint without an enter animation or a flash of the registered defaults.
-17. Quit TextEdit, click its kept Dock icon, and confirm a new untitled TextEdit window opens with a running dot and Quit action.
-18. Quit Preview, click its kept Dock icon twice, and confirm one Finder picker opens at `Desktop` and is focused again while Preview remains dotless and offers Open until an image or PDF is selected.
+15. In iTerm, run `open` for a repository-backed image or PDF and confirm Preview opens the exact file; repeat the command and confirm the existing Preview window is focused.
+16. Replay iTerm `open` with a directory, a text file, and an unsupported path; confirm Finder, TextEdit, and the existing error path remain unchanged.
+17. With an iPhone user agent, confirm `/textedit`, `/textedit/<nested>`, `/preview`, `/preview/<nested>`, and `/iterm` redirect to `/notes` while the same routes preserve their existing desktop behavior.
+18. Keep TextEdit and Preview in the desktop Dock, remove Music, then refresh and confirm the persisted membership appears before paint without an enter animation or a flash of the registered defaults.
+19. Quit TextEdit, click its kept Dock icon, and confirm a new untitled TextEdit window opens with a running dot and Quit action.
+20. Quit Preview, click its kept Dock icon twice, and confirm one Finder picker opens at `Desktop` and is focused again while Preview remains dotless and offers Open until an image or PDF is selected.

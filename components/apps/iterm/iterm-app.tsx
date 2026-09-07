@@ -10,6 +10,11 @@ interface ITermAppProps {
   inShell?: boolean;
   onOpenDirectory?: (directoryPath: string) => void;
   onOpenTextFile?: (filePath: string, content: string) => void;
+  onOpenPreviewFile?: (
+    filePath: string,
+    fileUrl: string,
+    fileType: "image" | "pdf"
+  ) => void;
 }
 
 function formatWorkingDirectory(directory: string): string {
@@ -24,6 +29,7 @@ export function ITermApp({
   inShell = false,
   onOpenDirectory,
   onOpenTextFile,
+  onOpenPreviewFile,
 }: ITermAppProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentDirectory, setCurrentDirectory] = useState(HOME_DIR);
@@ -42,6 +48,7 @@ export function ITermApp({
         <Terminal
           onOpenDirectory={onOpenDirectory}
           onOpenTextFile={onOpenTextFile}
+          onOpenPreviewFile={onOpenPreviewFile}
           onCurrentDirectoryChange={setCurrentDirectory}
         />
       </div>
