@@ -185,6 +185,7 @@ export function FinderNav({
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search"
+                aria-label="Search files and folders"
                 value={searchQuery}
                 onChange={(event) => onSearchQueryChange(event.target.value)}
                 onBlur={onSearchBlur}
@@ -192,9 +193,11 @@ export function FinderNav({
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={onSearchClear}
                   onMouseDown={(event) => event.preventDefault()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground can-hover:hover:text-foreground"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12" />
@@ -204,8 +207,10 @@ export function FinderNav({
             </div>
           ) : (
             <button
+              type="button"
               onClick={onSearchActivate}
-              className="p-1 rounded text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              aria-label="Search"
+              className="p-1 rounded text-muted-foreground can-hover:hover:bg-zinc-200 dark:can-hover:hover:bg-zinc-700"
               title="Search (/)"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
