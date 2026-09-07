@@ -1024,6 +1024,7 @@ function DesktopContent({
               inShell={true}
               onOpenDirectory={handleOpenFinderDirectory}
               onOpenTextFile={handleOpenTextFile}
+              onOpenPreviewFile={handleOpenPreviewFile}
             />
           </Window>
 
