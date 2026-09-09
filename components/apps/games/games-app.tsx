@@ -511,9 +511,16 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
   };
   const sortedLibraryGames = useMemo(() => {
     return [...LIBRARY_GAMES].sort((left, right) => sortBy === "name"
-        ? left.name.localeCompare(right.name)
-        : (lastPlayed[right.id] ?? 0) - (lastPlayed[left.id] ?? 0));
+      ? left.name.localeCompare(right.name)
+      : (lastPlayed[right.id] ?? 0) - (lastPlayed[left.id] ?? 0));
   }, [lastPlayed, sortBy]);
+  const continueGame = useMemo(() => {
+    return LIBRARY_GAMES.reduce<(typeof LIBRARY_GAMES)[number] | null>((latest, game) => {
+      if (!lastPlayed[game.id]) return latest;
+      if (!latest || (lastPlayed[game.id] ?? 0) > (lastPlayed[latest.id] ?? 0)) return game;
+      return latest;
+    }, null);
+  }, [lastPlayed]);
   const navAction = screen === "chess" && gameEnded ? (
     <button
       type="button"
@@ -581,6 +588,26 @@ export function GamesApp({ waitingPlayer = { waiting: false, name: null }, onWai
       {screen === "library" && (
         <div className="min-h-0 flex-1 overflow-auto bg-background px-7 pb-7 pt-5">
           <div className="mx-auto max-w-[1180px]">
+            {continueGame && (
+              <section className="mb-7" aria-labelledby="continue-playing-heading">
+                <h1 id="continue-playing-heading" className="mb-3 text-xl font-semibold tracking-tight">Continue Playing</h1>
+                <button
+                  type="button"
+                  data-continue-game={continueGame.id}
+                  onClick={() => openLibraryGame(continueGame.id)}
+                  className="flex w-full max-w-[520px] items-center gap-4 rounded-2xl bg-muted/80 p-3 text-left ring-1 ring-muted-foreground/10 transition-colors can-hover:hover:bg-muted-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]"
+                  aria-label={`Continue playing ${continueGame.name}`}
+                >
+                  <GameTileIcon game={continueGame.id} className="h-[76px] w-[76px] shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-semibold">{continueGame.name}</span>
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">{relativePlayedAt(lastPlayed[continueGame.id])}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{continueGame.description}</span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#0A7CFF] px-4 py-1.5 text-xs font-semibold text-white">Play</span>
+                </button>
+              </section>
+            )}
             <div className="mb-5 flex items-center justify-between">
               <h1 className="text-xl font-semibold tracking-tight">Your Games</h1>
               <button type="button" onClick={() => setSortBy((value) => value === "recent" ? "name" : "recent")} className="flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 text-xs font-medium text-muted-foreground can-hover:hover:text-foreground" title={`Sort by ${sortBy === "recent" ? "name" : "recently played"}`}><SlidersHorizontal size={14} />{sortBy === "recent" ? "Recent" : "Name"}</button>
