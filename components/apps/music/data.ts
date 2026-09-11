@@ -1,4 +1,4 @@
-import { Playlist } from "./types";
+import { Playlist, PlaylistTrack } from "./types";
 
 // Default playlists with hardcoded track data
 export const DEFAULT_PLAYLISTS: Playlist[] = [
@@ -1068,10 +1068,18 @@ export function getAlbumsFromPlaylists(): {
   artist: string;
   albumArt: string;
   trackCount: number;
+  tracks: PlaylistTrack[];
 }[] {
   const albumMap = new Map<
     string,
-    { id: string; name: string; artist: string; albumArt: string; trackCount: number }
+    {
+      id: string;
+      name: string;
+      artist: string;
+      albumArt: string;
+      trackCount: number;
+      tracks: PlaylistTrack[];
+    }
   >();
 
   for (const playlist of DEFAULT_PLAYLISTS) {
@@ -1084,11 +1092,16 @@ export function getAlbumsFromPlaylists(): {
           artist: track.artist,
           albumArt: track.albumArt,
           trackCount: 1,
+          tracks: [track],
         });
       } else {
         const album = albumMap.get(albumKey);
-        if (album) {
+        const alreadyIncluded = album?.tracks.some(
+          (albumTrack) => albumTrack.name === track.name
+        );
+        if (album && !alreadyIncluded) {
           album.trackCount++;
+          album.tracks.push(track);
         }
       }
     }
