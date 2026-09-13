@@ -11,6 +11,12 @@ import { MenuBar } from "./menu-bar";
 import { Dock } from "./dock";
 import { Window } from "./window";
 import { DesktopNotificationBanner } from "./messages-notification-banner";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { NotesApp } from "@/components/apps/notes/notes-app";
 import { MessagesApp } from "@/components/apps/messages/messages-app";
 import type { PreviewFileType } from "@/components/apps/preview";
@@ -765,6 +771,28 @@ function DesktopContent({
     }
   }, [openWindow]);
 
+  const handleOpenWallpaperSettings = useCallback(() => {
+    setSettingsCategory("wallpaper");
+    setSettingsPanel(null);
+    setSettingsNavigationRequestId((requestId) => requestId + 1);
+
+    const settingsWindow = getWindow("settings");
+    if (settingsWindow?.isOpen) {
+      if (settingsWindow.isMinimized) {
+        restoreWindow("settings");
+      } else {
+        focusWindow("settings");
+      }
+    } else {
+      openWindow("settings");
+    }
+
+    const nextUrl = getShellUrlForApp("settings", { context: "desktop" });
+    if (nextUrl) {
+      setUrl(nextUrl);
+    }
+  }, [focusWindow, getWindow, openWindow, restoreWindow]);
+
   const handleOpenWifiSettings = useCallback(() => {
     setSettingsCategory("wifi");
     setSettingsPanel(null);
@@ -952,14 +980,25 @@ function DesktopContent({
 
   return (
     <div className="fixed inset-0" data-shell="desktop">
-      <Image
-        src={wallpaperUrl ?? getWallpaperPath(currentOS.id)}
-        alt="Desktop wallpaper"
-        fill
-        className="object-cover -z-10"
-        priority
-        quality={75}
-      />
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div className="absolute inset-0" data-desktop-wallpaper>
+            <Image
+              src={wallpaperUrl ?? getWallpaperPath(currentOS.id)}
+              alt="Desktop wallpaper"
+              fill
+              className="object-cover"
+              priority
+              quality={75}
+            />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent data-desktop-context-menu>
+          <ContextMenuItem onSelect={handleOpenWallpaperSettings}>
+            Change Wallpaper…
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
       <MenuBar
         onOpenSettings={handleOpenSettings}
         onOpenWifiSettings={handleOpenWifiSettings}
