@@ -993,8 +993,14 @@ function DesktopContent({
             />
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent data-desktop-context-menu>
-          <ContextMenuItem onSelect={handleOpenWallpaperSettings}>
+        <ContextMenuContent
+          data-desktop-context-menu
+          className="min-w-0 w-max rounded-lg border-black/10 bg-white/95 p-0 py-1 text-xs shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
+        >
+          <ContextMenuItem
+            onSelect={handleOpenWallpaperSettings}
+            className="rounded-none px-3 py-1.5 text-xs focus:bg-blue-500 focus:text-white can-hover:hover:bg-blue-500 can-hover:hover:text-white"
+          >
             Change Wallpaper…
           </ContextMenuItem>
         </ContextMenuContent>
