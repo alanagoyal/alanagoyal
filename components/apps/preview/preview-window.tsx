@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef, useEffect, useId, useLayoutEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { WindowControls } from "@/components/window-controls";
-import { FileImage, FileText, Info, RotateCcwSquare } from "lucide-react";
+import { FileImage, FileText, FlipHorizontal2, Info, RotateCcwSquare } from "lucide-react";
 import {
   useWindowBehavior,
   Position,
@@ -77,6 +77,7 @@ export function PreviewWindow({
   const { isMenuOpenRef } = useWindowManager();
   const [zoom, setZoom] = useState(initialZoom);
   const [rotation, setRotation] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [imageError, setImageError] = useState<"network" | "unknown" | null>(null);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
@@ -252,6 +253,13 @@ export function PreviewWindow({
     }, 0);
   }, []);
 
+  const flipHorizontal = useCallback(() => {
+    // Reflect the current view horizontally, including after a quarter-turn.
+    // Negating rotation keeps Rotate Left working in the viewer's coordinates.
+    setRotation((currentRotation) => -currentRotation);
+    setIsFlipped((flipped) => !flipped);
+  }, []);
+
   // Pan handlers for drag-to-scroll when zoomed in
   const handlePanStart = useCallback((e: React.MouseEvent) => {
     const fitSize = getFitSize();
@@ -326,6 +334,7 @@ export function PreviewWindow({
     setImageError(null);
     setNaturalSize(null);
     setRotation(0);
+    setIsFlipped(false);
   }, [filePath, fileUrl, fileType]);
 
   const windowStyle: React.CSSProperties = isMaximized
@@ -455,7 +464,9 @@ export function PreviewWindow({
               height: imageHeight,
               flexShrink: hasExplicitSize ? 0 : undefined,
               pointerEvents: "none",
-              transform: rotation ? `rotate(${rotation}deg)` : undefined,
+              transform: rotation || isFlipped
+                ? `rotate(${rotation}deg) scaleX(${isFlipped ? -1 : 1})`
+                : undefined,
               transition: hasExplicitSize
                 ? "width 0.15s ease-out, height 0.15s ease-out, transform 0.2s ease-out"
                 : undefined,
@@ -612,6 +623,22 @@ export function PreviewWindow({
 
             {fileType === "image" && (
               <>
+              <button
+                type="button"
+                onClick={flipHorizontal}
+                disabled={!naturalSize || !!imageError}
+                aria-label="Flip horizontal"
+                aria-pressed={isFlipped}
+                title="Flip Horizontal"
+                className={cn(
+                  "rounded p-1 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] disabled:opacity-40 disabled:pointer-events-none",
+                  isFlipped
+                    ? "bg-zinc-300 text-foreground dark:bg-zinc-700"
+                    : "can-hover:hover:bg-zinc-300 can-hover:hover:text-foreground can-hover:dark:hover:bg-zinc-700"
+                )}
+              >
+                <FlipHorizontal2 aria-hidden="true" className="h-4 w-4" />
+              </button>
               <button
                 onClick={rotateLeft}
                 className="p-1 rounded text-zinc-600 dark:text-zinc-400 transition-colors can-hover:hover:bg-zinc-300 can-hover:dark:hover:bg-zinc-700 can-hover:hover:text-zinc-800 can-hover:dark:hover:text-zinc-200"
