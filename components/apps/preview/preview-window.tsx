@@ -630,12 +630,7 @@ export function PreviewWindow({
                 aria-label="Flip horizontal"
                 aria-pressed={isFlipped}
                 title="Flip Horizontal"
-                className={cn(
-                  "rounded p-1 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] disabled:opacity-40 disabled:pointer-events-none",
-                  isFlipped
-                    ? "bg-zinc-300 text-foreground dark:bg-zinc-700"
-                    : "can-hover:hover:bg-zinc-300 can-hover:hover:text-foreground can-hover:dark:hover:bg-zinc-700"
-                )}
+                className="rounded p-1 text-zinc-600 dark:text-zinc-400 transition-colors can-hover:hover:bg-zinc-300 can-hover:dark:hover:bg-zinc-700 can-hover:hover:text-zinc-800 can-hover:dark:hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF] disabled:opacity-40 disabled:pointer-events-none"
               >
                 <FlipHorizontal2 aria-hidden="true" className="h-4 w-4" />
               </button>
