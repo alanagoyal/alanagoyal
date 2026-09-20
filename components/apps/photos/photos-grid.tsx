@@ -131,7 +131,7 @@ export function PhotosGrid({
   }, [photos]);
 
   const getViewTitle = () => {
-    if (isSearchActive) return "Search Results";
+    if (isSearchActive && !searchError) return "Search Results";
     if (activeView === "library") return "Library";
     if (activeView === "favorites") return "Favorites";
     const collection = collections.find((c) => c.id === activeView);
@@ -219,11 +219,13 @@ export function PhotosGrid({
             <p
               className={cn(
                 "min-h-4 truncate text-xs text-muted-foreground",
-                (loading || error || searchLoading || searchError) && "invisible",
+                (loading || error || searchLoading) && "invisible",
               )}
               aria-live="polite"
             >
-              {isSearchActive
+              {searchError
+                ? "Showing all photos"
+                : isSearchActive
                 ? `${photos.length} ${photos.length === 1 ? "result" : "results"}`
                 : isMobileView
                 ? `${photos.length} ${photos.length === 1 ? "item" : "items"}`
@@ -243,7 +245,7 @@ export function PhotosGrid({
               </div>
             </div>
             <div
-              className="relative z-10 ml-auto w-[220px] shrink-0"
+              className="relative z-10 ml-auto w-[clamp(180px,15vw,300px)] shrink-0"
               onMouseDown={(event) => event.stopPropagation()}
             >
               <PhotoSearchBar
@@ -266,6 +268,12 @@ export function PhotosGrid({
         </div>
       )}
 
+      {searchError && (
+        <div className="flex min-h-8 items-center border-b border-muted-foreground/20 px-4 text-xs text-muted-foreground">
+          Search is unavailable. Showing all photos.
+        </div>
+      )}
+
       {/* Photo Grid */}
       <div
         ref={scrollContainerRef}
@@ -275,11 +283,7 @@ export function PhotosGrid({
         )}
       >
         <div className="p-4" onClick={() => onGridSelect?.(null)}>
-          {searchError ? (
-            <div className="flex h-64 items-center justify-center text-center text-sm text-red-500">
-              {searchError}
-            </div>
-          ) : searchLoading ? (
+          {searchLoading ? (
             <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
               Searching…
             </div>

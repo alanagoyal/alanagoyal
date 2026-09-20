@@ -52,29 +52,31 @@ export async function POST(request: NextRequest) {
 
   const indexed: string[] = [];
   const failed: Array<{ id: string; error: string }> = [];
-  for (const photo of (data ?? []) as PhotoToIndex[]) {
-    try {
-      const analysis = await analyzePhoto(photo.url);
-      if (!analysis) throw new Error("Image analysis failed");
-      const collections = (photo.collections ?? []).length > 0
-        ? photo.collections
-        : analysis.collections;
-      const { error: updateError } = await supabase
-        .from("photos")
-        .update({
-          search_text: analysis.searchText,
-          collections,
-        })
-        .eq("id", photo.id);
-      if (updateError) throw updateError;
-      indexed.push(photo.id);
-    } catch (indexError) {
-      failed.push({
-        id: photo.id,
-        error: indexError instanceof Error ? indexError.message : "Unknown indexing error",
-      });
-    }
-  }
+  await Promise.all(
+    ((data ?? []) as PhotoToIndex[]).map(async (photo) => {
+      try {
+        const analysis = await analyzePhoto(photo.url);
+        if (!analysis) throw new Error("Image analysis failed");
+        const collections = (photo.collections ?? []).length > 0
+          ? photo.collections
+          : analysis.collections;
+        const { error: updateError } = await supabase
+          .from("photos")
+          .update({
+            search_text: analysis.searchText,
+            collections,
+          })
+          .eq("id", photo.id);
+        if (updateError) throw updateError;
+        indexed.push(photo.id);
+      } catch (indexError) {
+        failed.push({
+          id: photo.id,
+          error: indexError instanceof Error ? indexError.message : "Unknown indexing error",
+        });
+      }
+    }),
+  );
 
   const { count: remaining } = await supabase
     .from("photos")

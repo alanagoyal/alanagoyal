@@ -40,7 +40,7 @@ export function usePhotoSearch(
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    setResultIds([]);
+    setResultIds(null);
     const timeoutId = window.setTimeout(async () => {
       try {
         const collection = activeView !== "library" && activeView !== "favorites"
@@ -58,7 +58,7 @@ export function usePhotoSearch(
         setReranked(Boolean(data.reranked));
       } catch (searchError) {
         if (controller.signal.aborted) return;
-        setResultIds([]);
+        setResultIds(null);
         setError(searchError instanceof Error ? searchError.message : "Search failed");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
