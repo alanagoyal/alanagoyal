@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import OpenAI from "openai";
+import { analyzeAndEmbedPhoto, PHOTO_COLLECTIONS } from "@/lib/photos/ai";
+
+export const maxDuration = 60;
 
 // Create a Supabase client with service role for uploads
 function getServiceClient() {
@@ -11,10 +13,9 @@ function getServiceClient() {
 }
 
 // Available collections for categorization
-const COLLECTIONS = ["flowers", "food", "friends"] as const;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB decoded
 const MAX_FILENAME_LENGTH = 255;
-const COLLECTION_SET = new Set<string>(COLLECTIONS);
+const COLLECTION_SET = new Set<string>(PHOTO_COLLECTIONS);
 
 type ParsedImagePayload = {
   base64Data: string;
@@ -81,60 +82,6 @@ function normalizeCollections(value: unknown): string[] | null {
   }
 
   return normalized;
-}
-
-// Use OpenAI Vision to categorize the image
-async function categorizeImage(base64Image: string): Promise<string[]> {
-  if (!process.env.OPENAI_API_KEY) {
-    console.warn("OPENAI_API_KEY not set, skipping categorization");
-    return [];
-  }
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Analyze this image and determine which single category best describes it. The available categories are: flowers, food, friends (photos of people/social gatherings).
-
-Choose ONLY ONE category - the one that best fits the primary subject of the image.
-Return ONLY the category name as a string, e.g. "flowers" or "food" or "friends".
-If no categories match, return "none".
-Do not include any other text, just the category name.`,
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 20,
-    });
-
-    let content = response.choices[0]?.message?.content?.trim() || "none";
-
-    // Strip markdown code blocks and quotes if present
-    content = content.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-    content = content.replace(/^["']|["']$/g, "").toLowerCase();
-
-    // Return as array with single category if valid, otherwise empty
-    if (COLLECTIONS.includes(content as typeof COLLECTIONS[number])) {
-      return [content];
-    }
-    return [];
-  } catch (error) {
-    console.error("Error categorizing image:", error);
-    return [];
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -316,10 +263,15 @@ export async function POST(request: NextRequest) {
       .from("photos")
       .getPublicUrl(uploadData.path);
 
-    // Use AI to categorize the image if no collections provided
-    const detectedCollections = collections.length > 0
-      ? collections
-      : await categorizeImage(parsedImage.base64Data);
+    const aiMetadata = await analyzeAndEmbedPhoto(
+      `data:${parsedImage.contentType};base64,${parsedImage.base64Data}`,
+      {
+        filename: finalFilename,
+        collections,
+        timestamp: photoTimestamp.toISOString(),
+      },
+    );
+    const detectedCollections = aiMetadata?.analysis.collections ?? collections;
 
     // Insert metadata into database using RPC
     const { data: photoId, error: insertError } = await supabase.rpc(
@@ -329,6 +281,10 @@ export async function POST(request: NextRequest) {
         url_arg: publicUrl,
         timestamp_arg: photoTimestamp.toISOString(),
         collections_arg: detectedCollections,
+        caption_arg: aiMetadata?.analysis.caption ?? "",
+        tags_arg: aiMetadata?.analysis.tags ?? [],
+        ocr_text_arg: aiMetadata?.analysis.ocrText ?? "",
+        embedding_arg: aiMetadata?.embedding ?? null,
       }
     );
 

@@ -5,6 +5,10 @@ export interface Photo {
   timestamp: string;
   isFavorite: boolean;
   collections: string[];
+  caption?: string;
+  tags?: string[];
+  ocrText?: string;
+  analyzedAt?: string | null;
 }
 
 export interface Collection {

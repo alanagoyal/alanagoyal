@@ -26,6 +26,8 @@ import {
   type PhotoGridSize,
 } from "@/lib/photos/grid-size";
 import { PhotosHeader } from "./header";
+import { PhotoSearchBar } from "./search-bar";
+import { normalizePhotoSearchQuery } from "@/lib/photos/search";
 
 // Preload viewer-size image on hover for faster viewer loading
 function preloadImage(url: string) {
@@ -53,6 +55,10 @@ interface PhotosGridProps {
   onRotatePhoto?: (photoId: string) => void;
   selectedInGridId?: string | null;
   onGridSelect?: (photoId: string | null) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  searchLoading: boolean;
+  searchError: string | null;
 }
 
 export function PhotosGrid({
@@ -74,6 +80,10 @@ export function PhotosGrid({
   onRotatePhoto,
   selectedInGridId,
   onGridSelect,
+  searchQuery,
+  onSearchQueryChange,
+  searchLoading,
+  searchError,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
   const { setWallpaperUrl } = useSystemSettings();
@@ -85,6 +95,7 @@ export function PhotosGrid({
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const prevPhotosRef = useRef<Photo[]>();
+  const isSearchActive = normalizePhotoSearchQuery(searchQuery) !== null;
 
   const selectedPhoto = useMemo(
     () => photos.find((photo) => photo.id === selectedInGridId) ?? null,
@@ -120,16 +131,18 @@ export function PhotosGrid({
 
     if (photos.length > 0 && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      if (container.scrollHeight > container.clientHeight) {
+      if (isSearchActive) {
+        container.scrollTop = 0;
+      } else if (container.scrollHeight > container.clientHeight) {
         container.scrollTop = container.scrollHeight;
       }
       setIsPositioned(true);
     }
-  }, [photos]);
+  }, [isSearchActive, photos]);
 
   const groupedPhotos = useMemo(() => {
-    // Photos are already sorted oldest first from parent
-    if (timeFilter === "all") {
+    // Search results stay in relevance order rather than being regrouped by date.
+    if (isSearchActive || timeFilter === "all") {
       return { all: photos };
     }
 
@@ -146,7 +159,7 @@ export function PhotosGrid({
     });
 
     return groups;
-  }, [photos, timeFilter]);
+  }, [isSearchActive, photos, timeFilter]);
 
   const dateRange = useMemo(() => {
     if (photos.length === 0) return "";
@@ -159,6 +172,7 @@ export function PhotosGrid({
   }, [photos]);
 
   const getViewTitle = () => {
+    if (isSearchActive) return "Search Results";
     if (activeView === "library") return "Library";
     if (activeView === "favorites") return "Favorites";
     const collection = collections.find((c) => c.id === activeView);
@@ -390,11 +404,13 @@ export function PhotosGrid({
             <p
               className={cn(
                 "min-h-4 truncate text-xs text-muted-foreground",
-                (loading || error) && "invisible",
+                (loading || error || searchLoading || searchError) && "invisible",
               )}
               aria-live="polite"
             >
-              {isMobileView
+              {isSearchActive
+                ? `${photos.length} ${photos.length === 1 ? "result" : "results"}`
+                : isMobileView
                 ? `${photos.length} ${photos.length === 1 ? "item" : "items"}`
                 : dateRange || "0 photos"}
             </p>
@@ -416,6 +432,14 @@ export function PhotosGrid({
         )}
       </PhotosHeader>
 
+      <div className="flex min-h-11 items-center border-b border-muted-foreground/20 bg-background px-4 py-2">
+        <PhotoSearchBar
+          value={searchQuery}
+          onChange={onSearchQueryChange}
+          loading={searchLoading}
+        />
+      </div>
+
       {/* Photo Grid */}
       <div
         ref={scrollContainerRef}
@@ -425,12 +449,24 @@ export function PhotosGrid({
         )}
       >
         <div className="p-4" onClick={() => onGridSelect?.(null)}>
-          {error ? (
+          {searchError ? (
+            <div className="flex h-64 items-center justify-center text-center text-sm text-red-500">
+              {searchError}
+            </div>
+          ) : searchLoading ? (
+            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+              Searching…
+            </div>
+          ) : error ? (
             <div className="flex items-center justify-center h-64 text-red-500">
               Failed to load photos
             </div>
           ) : !loading && photos.length === 0 ? (
-            activeView === "favorites" ? (
+            isSearchActive ? (
+              <div className="flex h-64 items-center justify-center text-center text-sm text-muted-foreground">
+                No photos found for “{searchQuery.trim()}”
+              </div>
+            ) : activeView === "favorites" ? (
               <div className="flex h-64 flex-col items-center justify-center text-center text-muted-foreground">
                 <div className="relative mb-3 h-[94px] w-[116px]" aria-hidden="true">
                   <div className="absolute left-0 top-0 h-[76px] w-[100px] border-[4px] border-current" />

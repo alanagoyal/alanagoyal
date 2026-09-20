@@ -26,6 +26,10 @@ interface PhotoRow {
   url: string;
   timestamp: string;
   collections: string[];
+  caption: string | null;
+  tags: string[] | null;
+  ocr_text: string | null;
+  analyzed_at: string | null;
 }
 
 // Static collections (these don't change often)
@@ -82,6 +86,10 @@ export function usePhotos(options?: UsePhotosOptions): UsePhotosResult {
         timestamp: row.timestamp,
         isFavorite: currentFavorites.has(row.id),
         collections: row.collections || [],
+        caption: row.caption ?? "",
+        tags: row.tags ?? [],
+        ocrText: row.ocr_text ?? "",
+        analyzedAt: row.analyzed_at ?? null,
       }));
 
       setPhotos(transformedPhotos);

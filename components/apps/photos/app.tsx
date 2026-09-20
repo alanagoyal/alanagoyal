@@ -26,6 +26,7 @@ import {
   type PhotoGridResizeDirection,
   type PhotoGridSize,
 } from "@/lib/photos/grid-size";
+import { usePhotoSearch } from "@/lib/photos/use-photo-search";
 
 interface AppProps {
   isDesktop?: boolean;
@@ -53,6 +54,7 @@ export default function App({ isDesktop = false }: AppProps) {
   const [photoRotations, setPhotoRotations] = useState<PhotoRotations>(() =>
     loadPhotosRotations(),
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,9 +106,12 @@ export default function App({ isDesktop = false }: AppProps) {
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   }, [photos, activeView]);
+  const photoSearch = usePhotoSearch(searchQuery, activeView, photos);
+  const displayedPhotos = photoSearch.results ?? filteredPhotos;
 
   const handleViewSelect = useCallback((view: PhotosView) => {
     setActiveView(view);
+    setSearchQuery("");
     setSelectedPhotoId(null);
     setShowGrid(true);
   }, []);
@@ -147,10 +152,10 @@ export default function App({ isDesktop = false }: AppProps) {
 
   // Get the selected photo and its index in the filtered list
   const selectedPhoto = selectedPhotoId
-    ? filteredPhotos.find((p) => p.id === selectedPhotoId)
+    ? displayedPhotos.find((p) => p.id === selectedPhotoId)
     : null;
   const selectedPhotoIndex = selectedPhoto
-    ? filteredPhotos.findIndex((p) => p.id === selectedPhotoId)
+    ? displayedPhotos.findIndex((p) => p.id === selectedPhotoId)
     : -1;
   const selectedPhotoCollectionNames = selectedPhoto
     ? collections
@@ -162,25 +167,25 @@ export default function App({ isDesktop = false }: AppProps) {
 
   const handlePreviousPhoto = useCallback(() => {
     setSelectedPhotoId((currentPhotoId) => {
-      const currentIndex = filteredPhotos.findIndex(
+      const currentIndex = displayedPhotos.findIndex(
         (currentPhoto) => currentPhoto.id === currentPhotoId,
       );
       if (currentIndex <= 0) return currentPhotoId;
-      return filteredPhotos[currentIndex - 1].id;
+      return displayedPhotos[currentIndex - 1].id;
     });
-  }, [filteredPhotos]);
+  }, [displayedPhotos]);
 
   const handleNextPhoto = useCallback(() => {
     setSelectedPhotoId((currentPhotoId) => {
-      const currentIndex = filteredPhotos.findIndex(
+      const currentIndex = displayedPhotos.findIndex(
         (currentPhoto) => currentPhoto.id === currentPhotoId,
       );
-      if (currentIndex < 0 || currentIndex >= filteredPhotos.length - 1) {
+      if (currentIndex < 0 || currentIndex >= displayedPhotos.length - 1) {
         return currentPhotoId;
       }
-      return filteredPhotos[currentIndex + 1].id;
+      return displayedPhotos[currentIndex + 1].id;
     });
-  }, [filteredPhotos]);
+  }, [displayedPhotos]);
 
   // Mobile: show either sidebar or grid
   // Desktop: show both side by side
@@ -230,7 +235,7 @@ export default function App({ isDesktop = false }: AppProps) {
             }`}
           >
             <PhotosGrid
-              photos={filteredPhotos}
+              photos={displayedPhotos}
               loading={loading}
               error={error}
               timeFilter={timeFilter}
@@ -248,6 +253,10 @@ export default function App({ isDesktop = false }: AppProps) {
               onRotatePhoto={handleRotatePhoto}
               selectedInGridId={selectedInGridId}
               onGridSelect={handleGridSelect}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              searchLoading={photoSearch.loading}
+              searchError={photoSearch.error}
             />
           </div>
 
@@ -266,9 +275,9 @@ export default function App({ isDesktop = false }: AppProps) {
             <div className="flex-1 min-h-0 overflow-hidden">
               <PhotoViewer
                 photo={selectedPhoto}
-                photos={filteredPhotos}
+                photos={displayedPhotos}
                 currentIndex={selectedPhotoIndex}
-                totalPhotos={filteredPhotos.length}
+                totalPhotos={displayedPhotos.length}
                 onBack={handleCloseViewer}
                 onPrevious={handlePreviousPhoto}
                 onNext={handleNextPhoto}
