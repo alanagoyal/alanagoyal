@@ -1,21 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useLayoutEffect, useRef, useState } from "react";
+import { useMemo, useLayoutEffect, useRef, useState } from "react";
 import { Photo, TimeFilter, PhotosView, Collection } from "@/types/photos";
-import {
-  ChevronLeft,
-  Heart,
-  Info,
-  Minus,
-  Plus,
-  RotateCcwSquare,
-  Share,
-  Wallpaper,
-} from "lucide-react";
+import { ChevronLeft, Heart, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { useWindowFocus } from "@/lib/window-focus-context";
-import { useSystemSettings } from "@/lib/system-settings-context";
 import { toZonedTime } from "date-fns-tz";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
@@ -52,7 +41,6 @@ interface PhotosGridProps {
   onToggleFavorite?: (photoId: string) => void;
   onPhotoSelect?: (photoId: string) => void;
   photoRotations: Record<string, number>;
-  onRotatePhoto?: (photoId: string) => void;
   selectedInGridId?: string | null;
   onGridSelect?: (photoId: string | null) => void;
   searchQuery: string;
@@ -77,7 +65,6 @@ export function PhotosGrid({
   onToggleFavorite,
   onPhotoSelect,
   photoRotations,
-  onRotatePhoto,
   selectedInGridId,
   onGridSelect,
   searchQuery,
@@ -86,39 +73,11 @@ export function PhotosGrid({
   searchError,
 }: PhotosGridProps) {
   const windowFocus = useWindowFocus();
-  const { setWallpaperUrl } = useSystemSettings();
   const inShell = isDesktop && windowFocus;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const infoContainerRef = useRef<HTMLDivElement>(null);
-  const shareContainerRef = useRef<HTMLDivElement>(null);
   const [isPositioned, setIsPositioned] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
   const prevPhotosRef = useRef<Photo[]>();
   const isSearchActive = normalizePhotoSearchQuery(searchQuery) !== null;
-
-  const selectedPhoto = useMemo(
-    () => photos.find((photo) => photo.id === selectedInGridId) ?? null,
-    [photos, selectedInGridId],
-  );
-  const selectedPhotoDate = selectedPhoto
-    ? format(
-        toZonedTime(parseISO(selectedPhoto.timestamp), "America/Los_Angeles"),
-        "MMMM d, yyyy 'at' h:mm:ss a",
-      )
-    : null;
-  const selectedCollectionNames = selectedPhoto
-    ? collections
-        .filter((collection) => selectedPhoto.collections.includes(collection.id))
-        .map((collection) => collection.name)
-    : [];
-
-  useClickOutside(infoContainerRef, () => setIsInfoOpen(false), isInfoOpen);
-  useClickOutside(shareContainerRef, () => setIsShareOpen(false), isShareOpen);
-
-  useEffect(() => {
-    if (!selectedPhoto) setIsShareOpen(false);
-  }, [selectedPhoto]);
 
   // Scroll to bottom only if content overflows, otherwise stay at top
   // useLayoutEffect ensures scroll happens before paint to prevent flash
@@ -236,150 +195,6 @@ export function PhotosGrid({
     </div>
   );
 
-  const desktopActionButtonClassName =
-    "rounded-md p-1 text-foreground transition-colors enabled:can-hover:hover:bg-foreground/10 disabled:cursor-default disabled:text-muted-foreground/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A7CFF]";
-
-  const desktopPhotoActions = (
-    <div
-      className="ml-auto flex shrink-0 items-center gap-1"
-      onMouseDown={(event) => event.stopPropagation()}
-    >
-      <div ref={infoContainerRef} className="relative">
-        <button
-          type="button"
-          aria-label={isInfoOpen ? "Hide photo information" : "Show photo information"}
-          aria-expanded={isInfoOpen}
-          aria-controls="grid-photo-info-panel"
-          onClick={() => {
-            setIsInfoOpen((open) => !open);
-            setIsShareOpen(false);
-          }}
-          className={cn(
-            desktopActionButtonClassName,
-            isInfoOpen && "bg-foreground/10",
-          )}
-        >
-          <Info aria-hidden="true" className="h-5 w-5" />
-        </button>
-
-        {isInfoOpen && (
-          <aside
-            id="grid-photo-info-panel"
-            aria-label="Photo information"
-            className="absolute right-0 top-[calc(100%+12px)] z-20 w-[min(300px,calc(100vw-24px))] overflow-hidden rounded-xl border border-black/10 bg-muted/95 text-foreground shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-2xl dark:border-white/15"
-          >
-            <div className="flex h-8 items-center justify-center border-b border-black/10 px-3 dark:border-white/10">
-              <p className="text-xs font-medium text-muted-foreground">Info</p>
-            </div>
-            {selectedPhoto ? (
-              <div className="space-y-3 px-3 py-3">
-                <div className="min-w-0">
-                  <p className="break-all text-sm font-medium leading-5">
-                    {selectedPhoto.filename}
-                  </p>
-                  <time
-                    dateTime={selectedPhoto.timestamp}
-                    className="mt-0.5 block text-xs leading-4 text-muted-foreground"
-                  >
-                    {selectedPhotoDate}
-                  </time>
-                </div>
-                <dl className="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-2 border-t border-black/10 pt-3 text-xs dark:border-white/10">
-                  <dt className="text-muted-foreground">Favorite</dt>
-                  <dd>{selectedPhoto.isFavorite ? "Yes" : "No"}</dd>
-                  <dt className="text-muted-foreground">Collections</dt>
-                  <dd className="min-w-0 break-words">
-                    {selectedCollectionNames.length > 0
-                      ? selectedCollectionNames.join(", ")
-                      : "None"}
-                  </dd>
-                </dl>
-              </div>
-            ) : (
-              <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                Select a photo to see its information.
-              </p>
-            )}
-          </aside>
-        )}
-      </div>
-
-      <div ref={shareContainerRef} className="relative">
-        <button
-          type="button"
-          aria-label="Share selected photo"
-          aria-haspopup="menu"
-          aria-expanded={isShareOpen}
-          aria-controls="grid-photo-share-menu"
-          disabled={!selectedPhoto}
-          onClick={() => {
-            setIsShareOpen((open) => !open);
-            setIsInfoOpen(false);
-          }}
-          className={cn(
-            desktopActionButtonClassName,
-            isShareOpen && "bg-foreground/10",
-          )}
-        >
-          <Share aria-hidden="true" className="h-5 w-5" />
-        </button>
-
-        {selectedPhoto && isShareOpen && (
-          <div
-            id="grid-photo-share-menu"
-            role="menu"
-            className="absolute right-0 top-[calc(100%+8px)] z-20 w-max min-w-44 rounded-lg border border-black/10 bg-white/95 p-1 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-800/95"
-          >
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setWallpaperUrl(selectedPhoto.url);
-                setIsShareOpen(false);
-              }}
-              className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs transition-colors can-hover:hover:bg-[#0A7CFF] can-hover:hover:text-white focus-visible:bg-[#0A7CFF] focus-visible:text-white focus-visible:outline-none"
-            >
-              <Wallpaper aria-hidden="true" className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-              Set as Wallpaper
-            </button>
-          </div>
-        )}
-      </div>
-
-      <button
-        type="button"
-        disabled={!selectedPhoto}
-        onClick={() => selectedPhoto && onRotatePhoto?.(selectedPhoto.id)}
-        className={desktopActionButtonClassName}
-        aria-label="Rotate selected photo left"
-        title="Rotate Left"
-      >
-        <RotateCcwSquare aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
-      </button>
-
-      <button
-        type="button"
-        disabled={!selectedPhoto}
-        onClick={() => selectedPhoto && onToggleFavorite?.(selectedPhoto.id)}
-        className={desktopActionButtonClassName}
-        aria-label={
-          selectedPhoto?.isFavorite
-            ? "Remove selected photo from favorites"
-            : "Add selected photo to favorites"
-        }
-        title={selectedPhoto?.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-      >
-        <Heart
-          aria-hidden="true"
-          className={cn(
-            "h-5 w-5",
-            selectedPhoto?.isFavorite && "fill-foreground",
-          )}
-        />
-      </button>
-    </div>
-  );
-
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
@@ -427,18 +242,29 @@ export function PhotosGrid({
                 {timeFilterControls}
               </div>
             </div>
-            {desktopPhotoActions}
+            <div
+              className="relative z-10 ml-auto w-[220px] shrink-0"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <PhotoSearchBar
+                value={searchQuery}
+                onChange={onSearchQueryChange}
+                loading={searchLoading}
+              />
+            </div>
           </>
         )}
       </PhotosHeader>
 
-      <div className="flex min-h-11 items-center border-b border-muted-foreground/20 bg-background px-4 py-2">
-        <PhotoSearchBar
-          value={searchQuery}
-          onChange={onSearchQueryChange}
-          loading={searchLoading}
-        />
-      </div>
+      {isMobileView && (
+        <div className="flex min-h-11 items-center border-b border-muted-foreground/20 bg-background px-4 py-2">
+          <PhotoSearchBar
+            value={searchQuery}
+            onChange={onSearchQueryChange}
+            loading={searchLoading}
+          />
+        </div>
+      )}
 
       {/* Photo Grid */}
       <div

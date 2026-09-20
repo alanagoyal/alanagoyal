@@ -250,7 +250,6 @@ export default function App({ isDesktop = false }: AppProps) {
               onToggleFavorite={toggleFavorite}
               onPhotoSelect={handlePhotoSelect}
               photoRotations={photoRotations}
-              onRotatePhoto={handleRotatePhoto}
               selectedInGridId={selectedInGridId}
               onGridSelect={handleGridSelect}
               searchQuery={searchQuery}

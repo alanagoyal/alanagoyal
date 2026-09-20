@@ -25,7 +25,7 @@ export function PhotoSearchBar({ value, onChange, loading }: PhotoSearchBarProps
         }}
         placeholder="Search photos"
         aria-label="Search photos"
-        className="w-full rounded-lg bg-[#E8E8E7] py-1 pl-8 pr-8 text-sm placeholder:text-muted-foreground focus:outline-none dark:bg-[#353533]"
+        className="w-full rounded-full bg-[#E8E8E7] py-1.5 pl-8 pr-8 text-sm placeholder:text-muted-foreground focus:outline-none dark:bg-[#353533]"
       />
       {loading ? (
         <LoaderCircle
