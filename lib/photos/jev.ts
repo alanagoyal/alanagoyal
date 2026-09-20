@@ -3,14 +3,11 @@ import "server-only";
 import type { PhotoSearchCandidate } from "./search";
 
 const JEV_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
-const JEV_TIMEOUT_MS = 4_000;
+const JEV_TIMEOUT_MS = 8_000;
+const MAX_CANDIDATES = 250;
 
 function boundedText(value: string, maxLength: number): string {
   return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
-}
-
-function boundedList(values: string[], maxItems: number): string[] {
-  return values.slice(0, maxItems).map((value) => boundedText(value, 80)).filter(Boolean);
 }
 
 interface JevResponse {
@@ -28,13 +25,13 @@ export async function scorePhotoCandidatesWithJev(
   const apiKey = process.env.TYPESAFE_API_KEY;
   if (!apiKey || candidates.length === 0) return new Map();
 
-  const shortlist = candidates.slice(0, 20);
+  const shortlist = candidates.slice(0, MAX_CANDIDATES);
   const questions = Object.fromEntries(
     shortlist.map((_, index) => [
       `candidate_${index}`,
       {
         type: "noul",
-        instructions: `Candidate ${index} is a strong visual match for the user's photo search. Judge visible subject matter and scene first; use filename or collection only as supporting evidence.`,
+        instructions: `Photo candidate ${index} satisfies the user's search. A direct visual match should score near 1; an unrelated photo should score near 0. Use filename, collection, and date only as supporting evidence.`,
       },
     ]),
   );
@@ -42,11 +39,10 @@ export async function scorePhotoCandidatesWithJev(
     query,
     candidates: shortlist.map((candidate, index) => ({
       index,
-      caption: boundedText(candidate.caption, 600),
-      tags: boundedList(candidate.tags, 24),
-      visible_text: boundedText(candidate.ocrText, 1_000),
+      description: boundedText(candidate.searchText, 600),
       filename: boundedText(candidate.filename, 255),
-      collections: boundedList(candidate.collections, 10),
+      collections: candidate.collections.slice(0, 10),
+      captured_at: candidate.timestamp,
     })),
   });
 
@@ -80,7 +76,7 @@ export async function scorePhotoCandidatesWithJev(
     });
     return scores;
   } catch (error) {
-    console.warn("Jev photo reranking unavailable; using vector order:", error);
+    console.warn("Jev photo ranking unavailable; using text matching:", error);
     return new Map();
   } finally {
     clearTimeout(timeoutId);

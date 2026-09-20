@@ -1,19 +1,12 @@
 import "server-only";
 
 import OpenAI from "openai";
-import {
-  PHOTO_EMBEDDING_DIMENSIONS,
-  buildPhotoSearchDocument,
-  normalizePhotoAnalysis,
-  type PhotoSearchMetadata,
-} from "./search";
+import { normalizePhotoAnalysis } from "./search";
 
 export const PHOTO_COLLECTIONS = ["flowers", "food", "friends"] as const;
 
 export interface PhotoAnalysis {
-  caption: string;
-  tags: string[];
-  ocrText: string;
+  searchText: string;
   collections: string[];
 }
 
@@ -50,18 +43,13 @@ export async function analyzePhoto(imageUrl: string): Promise<PhotoAnalysis | nu
             type: "object",
             additionalProperties: false,
             properties: {
-              caption: { type: "string" },
-              tags: {
-                type: "array",
-                items: { type: "string" },
-              },
-              ocr_text: { type: "string" },
+              search_text: { type: "string" },
               collections: {
                 type: "array",
                 items: { type: "string", enum: [...PHOTO_COLLECTIONS] },
               },
             },
-            required: ["caption", "tags", "ocr_text", "collections"],
+            required: ["search_text", "collections"],
           },
         },
       },
@@ -73,7 +61,7 @@ export async function analyzePhoto(imageUrl: string): Promise<PhotoAnalysis | nu
               type: "text",
               text: `Create metadata that will make this personal photo easy to find later.
 
-Describe only visible details. Include the main subjects, setting, activity, objects, colors, food, plants, weather, and photographic context when useful. Transcribe clearly visible text into ocr_text. Use concise, concrete search tags. Do not identify unknown people or infer sensitive traits.
+Write one concise search_text description using only visible details. Include the main subjects, setting, activity, objects, colors, food, plants, weather, and clearly visible text when useful. Add concrete alternative words someone might search for. Do not identify unknown people or infer sensitive traits.
 
 Choose zero or one collection: flowers, food, or friends. Use friends for people or social gatherings. Return an empty collections array when none fits.`,
             },
@@ -94,43 +82,4 @@ Choose zero or one collection: flowers, food, or friends. Use friends for people
     console.error("Photo analysis failed:", error);
     return null;
   }
-}
-
-export async function createPhotoEmbedding(metadata: PhotoSearchMetadata): Promise<number[] | null> {
-  const client = getOpenAIClient();
-  if (!client) return null;
-  const input = buildPhotoSearchDocument(metadata);
-  if (!input) return null;
-
-  try {
-    const response = await client.embeddings.create({
-      model: process.env.PHOTO_EMBEDDING_MODEL || "text-embedding-3-small",
-      input,
-      dimensions: PHOTO_EMBEDDING_DIMENSIONS,
-      encoding_format: "float",
-    });
-    return response.data[0]?.embedding ?? null;
-  } catch (error) {
-    console.error("Photo embedding failed:", error);
-    return null;
-  }
-}
-
-export async function analyzeAndEmbedPhoto(
-  imageUrl: string,
-  baseMetadata: Pick<PhotoSearchMetadata, "filename" | "collections" | "timestamp">,
-): Promise<{ analysis: PhotoAnalysis; embedding: number[] | null } | null> {
-  const analysis = await analyzePhoto(imageUrl);
-  if (!analysis) return null;
-  const collections = baseMetadata.collections.length > 0
-    ? baseMetadata.collections
-    : analysis.collections;
-  const embedding = await createPhotoEmbedding({
-    ...baseMetadata,
-    collections,
-    caption: analysis.caption,
-    tags: analysis.tags,
-    ocrText: analysis.ocrText,
-  });
-  return { analysis: { ...analysis, collections }, embedding };
 }

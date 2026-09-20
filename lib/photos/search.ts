@@ -1,28 +1,17 @@
-export const PHOTO_EMBEDDING_DIMENSIONS = 512;
 export const PHOTO_SEARCH_MIN_QUERY_LENGTH = 2;
 export const PHOTO_SEARCH_MAX_QUERY_LENGTH = 200;
-
-export interface PhotoSearchMetadata {
-  filename: string;
-  caption: string;
-  tags: string[];
-  ocrText: string;
-  collections: string[];
-  timestamp?: string;
-}
 
 export interface PhotoSearchCandidate {
   id: string;
   filename: string;
-  caption: string;
-  tags: string[];
-  ocrText: string;
+  searchText: string;
   collections: string[];
-  similarity: number;
+  timestamp: string;
 }
 
 export interface RankedPhotoSearchCandidate extends PhotoSearchCandidate {
   jevScore: number | null;
+  fallbackScore: number;
   score: number;
 }
 
@@ -49,34 +38,17 @@ function cleanStringList(value: unknown, maxItems: number): string[] {
 export function normalizePhotoAnalysis(
   value: unknown,
   allowedCollections: readonly string[],
-): Pick<PhotoSearchMetadata, "caption" | "tags" | "ocrText" | "collections"> | null {
+): { searchText: string; collections: string[] } | null {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
   const allowed = new Set(allowedCollections);
   const collections = cleanStringList(input.collections, allowed.size).filter((item) =>
     allowed.has(item),
   );
-  const caption = cleanText(input.caption, 600);
-  const tags = cleanStringList(input.tags, 24);
-  const ocrText = cleanText(input.ocr_text, 1000);
+  const searchText = cleanText(input.search_text, 1_200);
 
-  if (!caption && tags.length === 0 && !ocrText) return null;
-  return { caption, tags, ocrText, collections };
-}
-
-export function buildPhotoSearchDocument(metadata: PhotoSearchMetadata): string {
-  const parts = [
-    metadata.caption,
-    metadata.tags.length > 0 ? `Tags: ${metadata.tags.join(", ")}` : "",
-    metadata.ocrText ? `Visible text: ${metadata.ocrText}` : "",
-    metadata.collections.length > 0
-      ? `Collections: ${metadata.collections.join(", ")}`
-      : "",
-    metadata.filename ? `Filename: ${metadata.filename}` : "",
-    metadata.timestamp ? `Captured: ${metadata.timestamp}` : "",
-  ];
-
-  return parts.filter(Boolean).join("\n").slice(0, 4000);
+  if (!searchText) return null;
+  return { searchText, collections };
 }
 
 export function normalizePhotoSearchQuery(value: unknown): string | null {
@@ -84,7 +56,24 @@ export function normalizePhotoSearchQuery(value: unknown): string | null {
   return query.length >= PHOTO_SEARCH_MIN_QUERY_LENGTH ? query : null;
 }
 
+function tokenize(value: string): string[] {
+  return value.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+}
+
+export function scorePhotoTextMatch(query: string, candidate: PhotoSearchCandidate): number {
+  const queryTokens = [...new Set(tokenize(query))];
+  if (queryTokens.length === 0) return 0;
+  const candidateTokens = new Set(
+    tokenize(
+      `${candidate.searchText} ${candidate.filename} ${candidate.collections.join(" ")} ${candidate.timestamp}`,
+    ),
+  );
+  const matched = queryTokens.filter((token) => candidateTokens.has(token)).length;
+  return matched / queryTokens.length;
+}
+
 export function rankPhotoSearchCandidates(
+  query: string,
   candidates: PhotoSearchCandidate[],
   jevScores: ReadonlyMap<string, number>,
 ): RankedPhotoSearchCandidate[] {
@@ -95,9 +84,9 @@ export function rankPhotoSearchCandidates(
         typeof rawJevScore === "number" && Number.isFinite(rawJevScore)
           ? Math.min(1, Math.max(0, rawJevScore))
           : null;
-      const similarity = Math.min(1, Math.max(0, candidate.similarity));
-      const score = jevScore === null ? similarity : similarity * 0.45 + jevScore * 0.55;
-      return { ...candidate, similarity, jevScore, score };
+      const fallbackScore = scorePhotoTextMatch(query, candidate);
+      const score = jevScore ?? fallbackScore;
+      return { ...candidate, fallbackScore, jevScore, score };
     })
-    .sort((a, b) => b.score - a.score || b.similarity - a.similarity);
+    .sort((a, b) => b.score - a.score || b.fallbackScore - a.fallbackScore);
 }

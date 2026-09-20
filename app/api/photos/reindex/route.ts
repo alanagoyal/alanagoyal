@@ -1,14 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeAndEmbedPhoto, isPhotoAIConfigured } from "@/lib/photos/ai";
+import { analyzePhoto, isPhotoAIConfigured } from "@/lib/photos/ai";
 
 export const maxDuration = 60;
 
 interface PhotoToIndex {
   id: string;
-  filename: string;
   url: string;
-  timestamp: string;
   collections: string[] | null;
 }
 
@@ -44,8 +42,8 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("photos")
-    .select("id, filename, url, timestamp, collections")
-    .is("embedding", null)
+    .select("id, url, collections")
+    .is("search_text", null)
     .order("timestamp", { ascending: true })
     .limit(limit);
   if (error) {
@@ -56,21 +54,16 @@ export async function POST(request: NextRequest) {
   const failed: Array<{ id: string; error: string }> = [];
   for (const photo of (data ?? []) as PhotoToIndex[]) {
     try {
-      const result = await analyzeAndEmbedPhoto(photo.url, {
-        filename: photo.filename,
-        collections: photo.collections ?? [],
-        timestamp: photo.timestamp,
-      });
-      if (!result?.embedding) throw new Error("Image analysis or embedding failed");
+      const analysis = await analyzePhoto(photo.url);
+      if (!analysis) throw new Error("Image analysis failed");
+      const collections = (photo.collections ?? []).length > 0
+        ? photo.collections
+        : analysis.collections;
       const { error: updateError } = await supabase
         .from("photos")
         .update({
-          caption: result.analysis.caption,
-          tags: result.analysis.tags,
-          ocr_text: result.analysis.ocrText,
-          collections: result.analysis.collections,
-          embedding: result.embedding,
-          analyzed_at: new Date().toISOString(),
+          search_text: analysis.searchText,
+          collections,
         })
         .eq("id", photo.id);
       if (updateError) throw updateError;
@@ -86,7 +79,7 @@ export async function POST(request: NextRequest) {
   const { count: remaining } = await supabase
     .from("photos")
     .select("id", { count: "exact", head: true })
-    .is("embedding", null);
+    .is("search_text", null);
 
   return NextResponse.json({ indexed, failed, remaining: remaining ?? null });
 }

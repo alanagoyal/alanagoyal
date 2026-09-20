@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { analyzeAndEmbedPhoto, PHOTO_COLLECTIONS } from "@/lib/photos/ai";
+import { analyzePhoto, PHOTO_COLLECTIONS } from "@/lib/photos/ai";
 
 export const maxDuration = 60;
 
@@ -263,15 +263,12 @@ export async function POST(request: NextRequest) {
       .from("photos")
       .getPublicUrl(uploadData.path);
 
-    const aiMetadata = await analyzeAndEmbedPhoto(
+    const analysis = await analyzePhoto(
       `data:${parsedImage.contentType};base64,${parsedImage.base64Data}`,
-      {
-        filename: finalFilename,
-        collections,
-        timestamp: photoTimestamp.toISOString(),
-      },
     );
-    const detectedCollections = aiMetadata?.analysis.collections ?? collections;
+    const detectedCollections = collections.length > 0
+      ? collections
+      : analysis?.collections ?? [];
 
     // Insert metadata into database using RPC
     const { data: photoId, error: insertError } = await supabase.rpc(
@@ -281,10 +278,6 @@ export async function POST(request: NextRequest) {
         url_arg: publicUrl,
         timestamp_arg: photoTimestamp.toISOString(),
         collections_arg: detectedCollections,
-        caption_arg: aiMetadata?.analysis.caption ?? "",
-        tags_arg: aiMetadata?.analysis.tags ?? [],
-        ocr_text_arg: aiMetadata?.analysis.ocrText ?? "",
-        embedding_arg: aiMetadata?.embedding ?? null,
       }
     );
 
@@ -296,6 +289,16 @@ export async function POST(request: NextRequest) {
         { error: `Database insert failed: ${insertError.message}` },
         { status: 500 }
       );
+    }
+
+    if (analysis?.searchText) {
+      const { error: searchTextError } = await supabase
+        .from("photos")
+        .update({ search_text: analysis.searchText })
+        .eq("id", photoId);
+      if (searchTextError) {
+        console.error("Photo search metadata update failed:", searchTextError);
+      }
     }
 
     return NextResponse.json({

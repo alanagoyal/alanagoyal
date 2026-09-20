@@ -1,46 +1,39 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  buildPhotoSearchDocument,
   normalizePhotoAnalysis,
   normalizePhotoSearchQuery,
   rankPhotoSearchCandidates,
+  scorePhotoTextMatch,
   type PhotoSearchCandidate,
 } from "../lib/photos/search";
 
 test("normalizes bounded photo metadata from model output", () => {
   const result = normalizePhotoAnalysis(
     {
-      caption: "  Friends eating pizza outside  ",
-      tags: ["Pizza", "friends", "pizza", 12],
-      ocr_text: "  Tony's Pizza  ",
+      search_text: "  Friends eating pizza outside at Tony's Pizza  ",
       collections: ["friends", "unknown"],
     },
     ["flowers", "food", "friends"],
   );
 
   assert.deepEqual(result, {
-    caption: "Friends eating pizza outside",
-    tags: ["pizza", "friends"],
-    ocrText: "Tony's Pizza",
+    searchText: "Friends eating pizza outside at Tony's Pizza",
     collections: ["friends"],
   });
 });
 
-test("builds a single search document from image metadata", () => {
-  const document = buildPhotoSearchDocument({
+test("scores a direct text match without an external ranker", () => {
+  const candidate: PhotoSearchCandidate = {
+    id: "pizza",
     filename: "IMG_1001.jpeg",
-    caption: "A red flower in a ceramic vase",
-    tags: ["flower", "vase"],
-    ocrText: "",
-    collections: ["flowers"],
+    searchText: "Friends making pizza together at a restaurant",
+    collections: ["friends"],
     timestamp: "2026-09-20T12:00:00.000Z",
-  });
+  };
 
-  assert.match(document, /red flower/);
-  assert.match(document, /Tags: flower, vase/);
-  assert.match(document, /Collections: flowers/);
-  assert.match(document, /IMG_1001\.jpeg/);
+  assert.equal(scorePhotoTextMatch("friends pizza", candidate), 1);
+  assert.equal(scorePhotoTextMatch("flowers", candidate), 0);
 });
 
 test("accepts useful search queries and rejects one-character input", () => {
@@ -49,35 +42,32 @@ test("accepts useful search queries and rejects one-character input", () => {
   assert.equal(normalizePhotoSearchQuery(null), null);
 });
 
-test("Jev relevance reranks vector candidates without losing the fallback score", () => {
+test("Jev relevance ranks candidates and text matching remains the fallback", () => {
   const candidates: PhotoSearchCandidate[] = [
     {
-      id: "vector-first",
+      id: "text-first",
       filename: "one.jpg",
-      caption: "A restaurant table",
-      tags: ["restaurant"],
-      ocrText: "",
+      searchText: "A restaurant table with pizza",
       collections: ["food"],
-      similarity: 0.9,
+      timestamp: "2026-09-20T12:00:00.000Z",
     },
     {
       id: "jev-first",
       filename: "two.jpg",
-      caption: "Friends making pizza together",
-      tags: ["friends", "pizza"],
-      ocrText: "",
+      searchText: "Friends cooking dinner together",
       collections: ["friends"],
-      similarity: 0.72,
+      timestamp: "2026-09-19T12:00:00.000Z",
     },
   ];
 
   const ranked = rankPhotoSearchCandidates(
+    "pizza",
     candidates,
     new Map([
-      ["vector-first", 0.2],
+      ["text-first", 0.2],
       ["jev-first", 0.98],
     ]),
   );
-  assert.deepEqual(ranked.map((candidate) => candidate.id), ["jev-first", "vector-first"]);
-  assert.equal(rankPhotoSearchCandidates(candidates, new Map())[0].id, "vector-first");
+  assert.deepEqual(ranked.map((candidate) => candidate.id), ["jev-first", "text-first"]);
+  assert.equal(rankPhotoSearchCandidates("pizza", candidates, new Map())[0].id, "text-first");
 });

@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { createPhotoEmbedding, isPhotoAIConfigured, PHOTO_COLLECTIONS } from "@/lib/photos/ai";
+import { PHOTO_COLLECTIONS } from "@/lib/photos/ai";
 import { isJevConfigured, scorePhotoCandidatesWithJev } from "@/lib/photos/jev";
 import {
   normalizePhotoSearchQuery,
@@ -34,11 +34,9 @@ const ALLOWED_COLLECTIONS = new Set<string>(PHOTO_COLLECTIONS);
 interface PhotoSearchRow {
   id: string;
   filename: string;
-  caption: string | null;
-  tags: string[] | null;
-  ocr_text: string | null;
+  search_text: string;
   collections: string[] | null;
-  similarity: number;
+  timestamp: string;
 }
 
 function getServiceClient() {
@@ -97,50 +95,40 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = getServiceClient();
-  if (!supabase || !isPhotoAIConfigured()) {
+  if (!supabase || !isJevConfigured()) {
     return jsonResponse({ error: "Photo search is not configured" }, { status: 503 });
   }
 
   try {
-    const embedding = await createPhotoEmbedding({
-      filename: "",
-      caption: query,
-      tags: [],
-      ocrText: "",
-      collections: [],
-    });
-    if (!embedding) {
-      return jsonResponse({ error: "Could not understand this search" }, { status: 502 });
-    }
+    let photoQuery = supabase
+      .from("photos")
+      .select("id, filename, search_text, collections, timestamp")
+      .not("search_text", "is", null)
+      .order("timestamp", { ascending: false })
+      .limit(250);
+    if (collection) photoQuery = photoQuery.contains("collections", [collection]);
 
-    const { data, error } = await supabase.rpc("search_photos", {
-      query_embedding_arg: embedding,
-      match_threshold_arg: 0.08,
-      match_count_arg: 40,
-      collection_filter_arg: collection,
-    });
+    const { data, error } = await photoQuery;
     if (error) throw error;
 
     const candidates: PhotoSearchCandidate[] = ((data ?? []) as PhotoSearchRow[]).map((row) => ({
       id: row.id,
       filename: row.filename,
-      caption: row.caption ?? "",
-      tags: row.tags ?? [],
-      ocrText: row.ocr_text ?? "",
+      searchText: row.search_text,
       collections: row.collections ?? [],
-      similarity: Number(row.similarity) || 0,
+      timestamp: row.timestamp,
     }));
-    const jevScores = isJevConfigured()
-      ? await scorePhotoCandidatesWithJev(query, candidates)
-      : new Map<string, number>();
-    const ranked = rankPhotoSearchCandidates(candidates, jevScores);
+    const jevScores = await scorePhotoCandidatesWithJev(query, candidates);
+    const ranked = rankPhotoSearchCandidates(query, candidates, jevScores)
+      .filter((candidate) => candidate.score >= 0.2)
+      .slice(0, 60);
 
     return jsonResponse({
-      results: ranked.map(({ id, score, similarity, jevScore }) => ({
+      results: ranked.map(({ id, score, jevScore, fallbackScore }) => ({
         id,
         score,
-        similarity,
         jevScore,
+        fallbackScore,
       })),
       reranked: jevScores.size > 0,
     });
