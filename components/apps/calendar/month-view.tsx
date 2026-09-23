@@ -75,9 +75,6 @@ export function MonthView({
   const visibleMonthRef = useRef(visibleMonth);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const [selectedDateKey, setSelectedDateKey] = useState(() =>
-    format(currentDate, "yyyy-MM-dd")
-  );
   const initialScrollDone = useRef(false);
   const lastCurrentDate = useRef(currentDate);
 
@@ -85,10 +82,6 @@ export function MonthView({
   useEffect(() => {
     visibleMonthRef.current = visibleMonth;
   }, [visibleMonth]);
-
-  useEffect(() => {
-    setSelectedDateKey(format(currentDate, "yyyy-MM-dd"));
-  }, [currentDate]);
 
   // Base date for all week calculations
   const baseDate = useMemo(() => getBaseDate(), []);
@@ -286,18 +279,15 @@ export function MonthView({
                 const monthOfDay = getMonth(day);
                 const isCurrentViewMonth = monthOfDay === getMonth(visibleMonth);
                 const dateStr = format(day, "yyyy-MM-dd");
-                const isSelected = selectedDateKey === dateStr;
 
                 return (
                   <div
                     key={dayIdx}
                     className={cn(
-                      "border-b border-r border-border p-1 cursor-default can-hover:hover:bg-muted/30 transition-colors overflow-hidden",
-                      isSelected && "bg-[#FF3B30]/[0.06] ring-1 ring-inset ring-[#FF3B30]/25"
+                      "border-b border-r border-border p-1 cursor-default can-hover:hover:bg-muted/30 transition-colors overflow-hidden"
                     )}
                     style={{ height: WEEK_HEIGHT }}
                     onDoubleClick={() => handleDoubleClick(day)}
-                    onClick={() => setSelectedDateKey(dateStr)}
                   >
                     {/* Day number */}
                     <div className="mb-1 flex items-center justify-end gap-1">
@@ -305,11 +295,6 @@ export function MonthView({
                         type="button"
                         data-month-date-control
                         aria-label={format(day, "MMMM d, yyyy")}
-                        aria-pressed={isSelected}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelectedDateKey(dateStr);
-                        }}
                         onDoubleClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
@@ -317,12 +302,12 @@ export function MonthView({
                         }}
                         className={cn(
                           "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/65",
-                          !isCurrentViewMonth && !isSelected && "text-muted-foreground",
-                          (dayIsToday || isSelected) && "bg-red-500 text-white",
-                          !(dayIsToday || isSelected) && "can-hover:hover:bg-muted"
+                          !isCurrentViewMonth && !dayIsToday && "text-muted-foreground",
+                          dayIsToday && "bg-red-500 text-white",
+                          !dayIsToday && "can-hover:hover:bg-muted"
                         )}
                       >
-                        <span className={cn((dayIsToday || isSelected) && "pr-px")}>
+                        <span className={cn(dayIsToday && "pr-px")}>
                           {isFirstOfMonth && !dayIsToday
                             ? `${format(day, "MMM")} ${format(day, "d")}`
                             : format(day, "d")}
