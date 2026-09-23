@@ -278,51 +278,44 @@ export function MonthView({
                 const isFirstOfMonth = day.getDate() === 1;
                 const monthOfDay = getMonth(day);
                 const isCurrentViewMonth = monthOfDay === getMonth(visibleMonth);
+                const dateStr = format(day, "yyyy-MM-dd");
 
                 return (
                   <div
                     key={dayIdx}
                     className={cn(
-                      "border-b border-r border-border p-1 cursor-pointer can-hover:hover:bg-muted/30 transition-colors overflow-hidden"
+                      "border-b border-r border-border p-1 cursor-default can-hover:hover:bg-muted/30 transition-colors overflow-hidden"
                     )}
                     style={{ height: WEEK_HEIGHT }}
                     onDoubleClick={() => handleDoubleClick(day)}
-                    onClick={() => onDateClick?.(day)}
                   >
                     {/* Day number */}
-                    <div className="flex justify-end mb-1">
-                      {isFirstOfMonth ? (
-                        <span
-                          className={cn(
-                            "text-sm flex items-center gap-1",
-                            dayIsToday ? "font-medium" : "text-muted-foreground"
-                          )}
-                        >
-                          <span className={cn(
-                            dayIsToday && "bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                          )}>
-                            {dayIsToday ? <span className="pr-px">{format(day, "d")}</span> : null}
-                          </span>
-                          {!dayIsToday && (
-                            <>
-                              {format(day, "MMM")} {format(day, "d")}
-                            </>
-                          )}
-                          {dayIsToday && (
-                            <span className="text-muted-foreground">
-                              {format(day, "MMM")}
-                            </span>
-                          )}
+                    <div className="mb-1 flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        data-month-date-control
+                        aria-label={format(day, "MMMM d, yyyy")}
+                        onDoubleClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onDateClick?.(day);
+                        }}
+                        className={cn(
+                          "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/65",
+                          !isCurrentViewMonth && !dayIsToday && "text-muted-foreground",
+                          dayIsToday && "bg-red-500 text-white",
+                          !dayIsToday && "can-hover:hover:bg-muted"
+                        )}
+                      >
+                        <span className={cn(dayIsToday && "pr-px")}>
+                          {isFirstOfMonth && !dayIsToday
+                            ? `${format(day, "MMM")} ${format(day, "d")}`
+                            : format(day, "d")}
                         </span>
-                      ) : (
-                        <span
-                          className={cn(
-                            "text-sm font-medium w-6 h-6 flex items-center justify-center",
-                            !isCurrentViewMonth && "text-muted-foreground",
-                            dayIsToday && "bg-red-500 text-white rounded-full"
-                          )}
-                        >
-                          <span className={cn(dayIsToday && "pr-px")}>{format(day, "d")}</span>
+                      </button>
+                      {isFirstOfMonth && dayIsToday && (
+                        <span className="text-sm text-muted-foreground">
+                          {format(day, "MMM")}
                         </span>
                       )}
                     </div>
@@ -331,7 +324,6 @@ export function MonthView({
                     <div className="space-y-0.5 overflow-hidden">
                       {orderedDayEvents.slice(0, 3).map((event) => {
                         const color = getCalendarColor(event.calendarId);
-                        const dateStr = format(day, "yyyy-MM-dd");
                         const isStart = event.startDate === dateStr;
                         const isUserEvent = events.some((item) => item.id === event.id);
 
@@ -351,6 +343,7 @@ export function MonthView({
                                 onViewEvent?.(event);
                               }
                             }}
+                            onDoubleClick={(event) => event.stopPropagation()}
                           >
                             <span
                               className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -370,9 +363,18 @@ export function MonthView({
                         );
                       })}
                       {orderedDayEvents.length > 3 && (
-                        <div className="text-xs text-muted-foreground pl-1">
+                        <button
+                          type="button"
+                          aria-label={`Show all ${orderedDayEvents.length} events on ${format(day, "MMMM d, yyyy")}`}
+                          className="block pl-1 text-left text-xs text-muted-foreground can-hover:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/65"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onDateClick?.(day);
+                          }}
+                          onDoubleClick={(event) => event.stopPropagation()}
+                        >
                           +{orderedDayEvents.length - 3} more
-                        </div>
+                        </button>
                       )}
                     </div>
                   </div>
