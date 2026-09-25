@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import type { DocumentAppId } from "@/lib/file-route-utils";
+import type { WindowState } from "@/types/window";
 import {
   DOCK_KEEP_OVERRIDES_STORAGE_KEY,
   isAppKeptInDock,
@@ -110,6 +111,33 @@ const BASE_BADGE_FONT_SIZE = 11;
 const BASE_TRASH_HANDLE_HITBOX_WIDTH = 14;
 const BASE_HANDLE_LINE_WIDTH = 1;
 
+// Minimized-window Dock thumbnails (macOS default: minimize-to-application is off)
+const MINIMIZED_THUMB_MIN_RATIO = 0.6;
+const MINIMIZED_THUMB_MAX_RATIO = 1.8;
+
+function getMinimizedWindowLabel(window: WindowState): string {
+  const metadata = window.metadata ?? {};
+  if (typeof metadata.filePath === "string" && metadata.filePath) {
+    const fileName = metadata.filePath.split("/").pop();
+    if (fileName) return fileName;
+  }
+  if (typeof metadata.currentPath === "string" && metadata.currentPath) {
+    const segment =
+      metadata.currentPath.split("/").filter(Boolean).pop() ?? metadata.currentPath;
+    if (segment) return segment.charAt(0).toUpperCase() + segment.slice(1);
+  }
+  return getAppById(window.appId)?.name ?? window.appId;
+}
+
+function getMinimizedThumbRatio(window: WindowState): number {
+  if (window.size.height <= 0) return 1;
+  return clamp(
+    window.size.width / window.size.height,
+    MINIMIZED_THUMB_MIN_RATIO,
+    MINIMIZED_THUMB_MAX_RATIO
+  );
+}
+
 const useBrowserLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -147,6 +175,8 @@ export function Dock({
     openWindow,
     focusWindow,
     unminimizeWindow,
+    unminimizeMultiWindow,
+    state,
     getWindow,
     hasOpenWindows,
     bringAppToFront,
@@ -254,6 +284,12 @@ export function Dock({
   const currentAppsToShow = DOCK_APPS.filter((app) => {
     return isAppKeptInDock(app, dockKeepOverrides) || hasOpenWindows(app.id);
   }).map((app) => app.id);
+  // Open windows that are currently minimized render as Dock thumbnails
+  // next to Trash, mirroring macOS's default minimize behavior.
+  const minimizedWindows = useMemo(
+    () => Object.values(state.windows).filter((w) => w.isOpen && w.isMinimized),
+    [state.windows]
+  );
 
   // Serialize for stable dependency comparison
   const currentAppsKey = currentAppsToShow.join(",");
@@ -892,6 +928,103 @@ export function Dock({
             </div>
           )}
         </div>
+
+        {/* Minimized-window thumbnails (macOS shows these beside the divider, before Trash) */}
+        {minimizedWindows.map((window) => {
+          const itemKey = `minimized:${window.id}`;
+          const app = getAppById(window.appId);
+          const label = getMinimizedWindowLabel(window);
+          const magnificationScale =
+            magnificationEnabled && !isResizingDock
+              ? magnificationScales[itemKey] ?? 1
+              : 1;
+          const thumbWidth = Math.round(metrics.icon * getMinimizedThumbRatio(window));
+          const titleBarHeight = Math.max(4, Math.round(metrics.icon * 0.22));
+          const dotSize = Math.max(2, Math.round(metrics.icon * 0.06));
+          const dotGap = Math.max(1, Math.round(dotSize * 0.5));
+          const contentIconSize = Math.round(metrics.icon * 0.5);
+
+          return (
+            <button
+              key={window.id}
+              ref={(item) => {
+                dockItemRefs.current[itemKey] = item;
+              }}
+              aria-label={`Show ${label}`}
+              onClick={() => {
+                if (app?.multiWindow) {
+                  unminimizeMultiWindow(window.id);
+                } else {
+                  unminimizeWindow(window.appId);
+                }
+              }}
+              onMouseEnter={() => setHoveredApp(itemKey)}
+              onMouseLeave={() => setHoveredApp(null)}
+              className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 animate-dock-enter active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
+              style={{ width: `${thumbWidth * magnificationScale}px` }}
+            >
+              {hoveredApp === itemKey && !isResizingDock && (
+                <DockTooltip
+                  label={label}
+                  lift={(magnificationScale - 1) * metrics.icon}
+                />
+              )}
+              <div
+                aria-hidden
+                className="relative overflow-hidden rounded-[5px] border border-black/10 bg-white/95 shadow-md transition-transform duration-100 ease-out dark:border-white/15 dark:bg-zinc-800/95"
+                style={{
+                  width: `${thumbWidth}px`,
+                  height: `${metrics.icon}px`,
+                  transform: `scale(${magnificationScale})`,
+                  transformOrigin: "bottom center",
+                }}
+              >
+                <div
+                  className="absolute inset-x-0 top-0 flex items-center border-b border-black/10 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]"
+                  style={{
+                    height: `${titleBarHeight}px`,
+                    gap: `${dotGap}px`,
+                    paddingLeft: `${dotGap}px`,
+                  }}
+                >
+                  <span
+                    className="rounded-full bg-[#ff5f57]"
+                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
+                  />
+                  <span
+                    className="rounded-full bg-[#febc2e]"
+                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
+                  />
+                  <span
+                    className="rounded-full bg-[#28c840]"
+                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
+                  />
+                </div>
+                {app && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ paddingTop: `${titleBarHeight}px` }}
+                  >
+                    <Image
+                      src={app.icon}
+                      alt=""
+                      width={contentIconSize}
+                      height={contentIconSize}
+                      className="pointer-events-none object-contain"
+                      draggable={false}
+                      unoptimized
+                    />
+                  </div>
+                )}
+              </div>
+              <div
+                aria-hidden
+                className="mt-1 rounded-full opacity-0"
+                style={{ width: `${metrics.dot}px`, height: `${metrics.dot}px` }}
+              />
+            </button>
+          );
+        })}
 
         {/* Trash icon */}
         <button
