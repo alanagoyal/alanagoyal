@@ -1,11 +1,16 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import type { Position, Size, WindowState } from "@/types/window";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
+import {
+  getDockThumbnailContainer,
+  subscribeDockThumbnail,
+} from "@/lib/desktop/dock-thumbnails";
 import {
   useWindowBehavior,
   CORNER_SIZE,
@@ -76,6 +81,23 @@ export function Window({
     }
   }, [windowState?.isMaximized]);
 
+  // When minimized, the window's live tree portals into its Dock thumbnail
+  // container so the thumbnail mirrors the real window content. The container
+  // appears once the Dock renders the thumbnail; until then the previous
+  // minimize behavior (hidden mount or unmount) applies.
+  const [thumbnailContainer, setThumbnailContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const minimized = windowState?.isMinimized;
+    const windowId = windowState?.id;
+    if (!minimized || !windowId) {
+      setThumbnailContainer(null);
+      return;
+    }
+    const update = (container: HTMLElement | null) => setThumbnailContainer(container);
+    update(getDockThumbnailContainer(windowId));
+    return subscribeDockThumbnail(windowId, update);
+  }, [windowState?.isMinimized, windowState?.id]);
+
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
     (position: Position) => {
@@ -123,18 +145,31 @@ export function Window({
     return null;
   }
 
-  if (windowState.isMinimized && !keepMountedWhenMinimized) {
+  if (windowState.isMinimized && !keepMountedWhenMinimized && !thumbnailContainer) {
     return null;
   }
 
   // When minimized with keepMountedWhenMinimized, we render the SAME tree
   // structure but hidden via CSS. This preserves React's component identity
   // so children (e.g. Messages and its MessageQueue) are never unmounted.
-  const isHiddenMinimized = windowState.isMinimized && keepMountedWhenMinimized;
+  const isDockThumbnail = windowState.isMinimized && thumbnailContainer !== null;
+  const isHiddenMinimized =
+    windowState.isMinimized && !isDockThumbnail && keepMountedWhenMinimized;
 
   const { position, size, isMaximized, zIndex } = windowState;
 
-  const windowStyle: React.CSSProperties = isHiddenMinimized
+  const windowStyle: React.CSSProperties = isDockThumbnail
+    ? {
+        // Scaled live mirror inside the Dock thumbnail container. The Dock
+        // sets --dock-thumb-scale from the thumbnail and window dimensions.
+        width: size.width,
+        height: size.height,
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%) scale(var(--dock-thumb-scale, 1))",
+        transformOrigin: "center",
+      }
+    : isHiddenMinimized
     ? { width: 0, height: 0, overflow: "hidden" }
     : isMaximized
       ? {
@@ -160,16 +195,16 @@ export function Window({
             : undefined,
         };
 
-  return (
+  const windowNode = (
     <div
       ref={windowRef}
       className={cn(
-        "fixed",
+        isDockThumbnail ? "absolute pointer-events-none" : "fixed",
         isHiddenMinimized && "invisible pointer-events-none",
-        !isFocused && !isMaximized && !isHiddenMinimized && "opacity-95",
+        !isFocused && !isMaximized && !isHiddenMinimized && !isDockThumbnail && "opacity-95",
       )}
       style={windowStyle}
-      aria-hidden={isHiddenMinimized || undefined}
+      aria-hidden={isHiddenMinimized || isDockThumbnail || undefined}
       onMouseDownCapture={(e) => {
         if (isHiddenMinimized) return;
         // Don't focus window or propagate click if a menu bar dropdown is open
@@ -284,7 +319,7 @@ export function Window({
       >
         <div className="flex-1 min-h-0">
           <WindowFocusProvider
-            isFocused={isHiddenMinimized ? false : isFocused}
+            isFocused={isHiddenMinimized || isDockThumbnail ? false : isFocused}
             appId={appId}
             closeWindow={controlledHandlers ? controlledHandlers.closeWindow : () => closeWindow(appId)}
             minimizeWindow={controlledHandlers ? controlledHandlers.minimizeWindow : () => minimizeWindow(appId)}
@@ -299,7 +334,7 @@ export function Window({
       </div>
 
       {/* Resize handles */}
-      {!isMaximized && !isHiddenMinimized && (
+      {!isMaximized && !isHiddenMinimized && !isDockThumbnail && (
         <>
           <div
             className="absolute cursor-nw-resize"
@@ -353,4 +388,12 @@ export function Window({
       )}
     </div>
   );
+
+  // A minimized window renders its live tree into the Dock thumbnail so the
+  // thumbnail is a scaled mirror of the real window, like macOS.
+  if (isDockThumbnail && thumbnailContainer) {
+    return createPortal(windowNode, thumbnailContainer);
+  }
+
+  return windowNode;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, forwardRef } from "react";
 import Image from "next/image";
 import { getAppById, getAppsInDockOrder } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
@@ -15,6 +15,10 @@ import {
   parseDockKeepOverrides,
   setAppKeptInDock,
 } from "@/lib/dock-preferences";
+import {
+  registerDockThumbnail,
+  unregisterDockThumbnail,
+} from "@/lib/desktop/dock-thumbnails";
 import type { DockKeepOverrides } from "@/lib/dock-preferences";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import {
@@ -137,6 +141,99 @@ function getMinimizedThumbRatio(window: WindowState): number {
     MINIMIZED_THUMB_MAX_RATIO
   );
 }
+
+// One Dock thumbnail for a minimized window. The container registers with the
+// dock-thumbnail registry so the Window component portals its live tree here,
+// making the thumbnail a scaled mirror of the real window.
+const MinimizedWindowThumbnail = forwardRef<
+  HTMLButtonElement,
+  {
+    window: WindowState;
+    height: number;
+    magnificationScale: number;
+    isResizing: boolean;
+    isHovered: boolean;
+    onHoverChange: (hovered: boolean) => void;
+    onRestore: () => void;
+  }
+>(function MinimizedWindowThumbnail(
+  {
+    window,
+    height,
+    magnificationScale,
+    isResizing,
+    isHovered,
+    onHoverChange,
+    onRestore,
+  },
+  ref
+) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Stable ref callback so the registry entry survives Dock re-renders
+  // (magnification updates re-render the Dock every pointer-move frame).
+  const setContainer = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (element) {
+        containerRef.current = element;
+        registerDockThumbnail(window.id, element);
+      } else {
+        const previous = containerRef.current;
+        containerRef.current = null;
+        if (previous) unregisterDockThumbnail(window.id, previous);
+      }
+    },
+    [window.id]
+  );
+
+  const label = getMinimizedWindowLabel(window);
+  const thumbWidth = Math.round(height * getMinimizedThumbRatio(window));
+  // Fit the window inside the thumbnail; the portaled window reads this via
+  // var(--dock-thumb-scale) and scales itself around its center.
+  const thumbScale = Math.min(
+    height / window.size.height,
+    thumbWidth / window.size.width
+  );
+
+  return (
+    <button
+      type="button"
+      ref={ref}
+      aria-label={`Show ${label}`}
+      onClick={onRestore}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+      className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 animate-dock-enter active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
+      style={{ width: `${thumbWidth * magnificationScale}px` }}
+    >
+      {isHovered && !isResizing && (
+        <DockTooltip
+          label={label}
+          lift={(magnificationScale - 1) * height}
+        />
+      )}
+      <div
+        ref={setContainer}
+        aria-hidden
+        className="relative flex items-center justify-center overflow-hidden rounded-[5px] transition-transform duration-100 ease-out"
+        style={
+          {
+            width: `${thumbWidth}px`,
+            height: `${height}px`,
+            transform: `scale(${magnificationScale})`,
+            transformOrigin: "bottom center",
+            "--dock-thumb-scale": String(thumbScale),
+          } as React.CSSProperties
+        }
+      />
+      <div
+        aria-hidden
+        className="mt-1 rounded-full opacity-0"
+        style={{ width: "4px", height: "4px" }}
+      />
+    </button>
+  );
+});
 
 const useBrowserLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -933,98 +1030,33 @@ export function Dock({
         {minimizedWindows.map((window) => {
           const itemKey = `minimized:${window.id}`;
           const app = getAppById(window.appId);
-          const label = getMinimizedWindowLabel(window);
           const magnificationScale =
             magnificationEnabled && !isResizingDock
               ? magnificationScales[itemKey] ?? 1
               : 1;
-          const thumbWidth = Math.round(metrics.icon * getMinimizedThumbRatio(window));
-          const titleBarHeight = Math.max(4, Math.round(metrics.icon * 0.22));
-          const dotSize = Math.max(2, Math.round(metrics.icon * 0.06));
-          const dotGap = Math.max(1, Math.round(dotSize * 0.5));
-          const contentIconSize = Math.round(metrics.icon * 0.5);
 
           return (
-            <button
+            <MinimizedWindowThumbnail
               key={window.id}
-              ref={(item) => {
+              ref={(item: HTMLButtonElement | null) => {
                 dockItemRefs.current[itemKey] = item;
               }}
-              aria-label={`Show ${label}`}
-              onClick={() => {
+              window={window}
+              height={metrics.icon}
+              magnificationScale={magnificationScale}
+              isResizing={isResizingDock}
+              isHovered={hoveredApp === itemKey}
+              onHoverChange={(hovered) => setHoveredApp(hovered ? itemKey : null)}
+              onRestore={() => {
                 if (app?.multiWindow) {
                   unminimizeMultiWindow(window.id);
                 } else {
                   unminimizeWindow(window.appId);
                 }
               }}
-              onMouseEnter={() => setHoveredApp(itemKey)}
-              onMouseLeave={() => setHoveredApp(null)}
-              className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 animate-dock-enter active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
-              style={{ width: `${thumbWidth * magnificationScale}px` }}
-            >
-              {hoveredApp === itemKey && !isResizingDock && (
-                <DockTooltip
-                  label={label}
-                  lift={(magnificationScale - 1) * metrics.icon}
-                />
-              )}
-              <div
-                aria-hidden
-                className="relative overflow-hidden rounded-[5px] border border-black/10 bg-white/95 shadow-md transition-transform duration-100 ease-out dark:border-white/15 dark:bg-zinc-800/95"
-                style={{
-                  width: `${thumbWidth}px`,
-                  height: `${metrics.icon}px`,
-                  transform: `scale(${magnificationScale})`,
-                  transformOrigin: "bottom center",
-                }}
-              >
-                <div
-                  className="absolute inset-x-0 top-0 flex items-center border-b border-black/10 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]"
-                  style={{
-                    height: `${titleBarHeight}px`,
-                    gap: `${dotGap}px`,
-                    paddingLeft: `${dotGap}px`,
-                  }}
-                >
-                  <span
-                    className="rounded-full bg-[#ff5f57]"
-                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
-                  />
-                  <span
-                    className="rounded-full bg-[#febc2e]"
-                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
-                  />
-                  <span
-                    className="rounded-full bg-[#28c840]"
-                    style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
-                  />
-                </div>
-                {app && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ paddingTop: `${titleBarHeight}px` }}
-                  >
-                    <Image
-                      src={app.icon}
-                      alt=""
-                      width={contentIconSize}
-                      height={contentIconSize}
-                      className="pointer-events-none object-contain"
-                      draggable={false}
-                      unoptimized
-                    />
-                  </div>
-                )}
-              </div>
-              <div
-                aria-hidden
-                className="mt-1 rounded-full opacity-0"
-                style={{ width: `${metrics.dot}px`, height: `${metrics.dot}px` }}
-              />
-            </button>
+            />
           );
-        })}
+})}
 
         {/* Trash icon */}
         <button
