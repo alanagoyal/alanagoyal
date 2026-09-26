@@ -1,11 +1,16 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useWindowManager, MAXIMIZED_Z_INDEX } from "@/lib/window-context";
 import { getAppById } from "@/lib/app-config";
 import type { Position, Size, WindowState } from "@/types/window";
 import { cn } from "@/lib/utils";
 import { WindowFocusProvider } from "@/lib/window-focus-context";
+import {
+  getDockThumbnailContainer,
+  subscribeDockThumbnail,
+} from "@/lib/desktop/dock-thumbnails";
 import {
   useWindowBehavior,
   CORNER_SIZE,
@@ -32,6 +37,16 @@ interface WindowProps {
   windowStateOverride?: WindowState;
   controlledHandlers?: ControlledWindowHandlers;
 }
+
+// Minimize/restore flight, mirroring the macOS scale effect: the window
+// shrinks into its Dock thumbnail slot and grows back out on restore.
+type FlightTransform = { tx: number; ty: number; scale: number };
+type MinimizePhase = "normal" | "shrinking" | "docked" | "expanding";
+
+const MINIMIZE_FLIGHT_MS = 320;
+const FLIGHT_SETTLE_MS = 80;
+const SHRINK_TRANSITION = `transform ${MINIMIZE_FLIGHT_MS}ms cubic-bezier(0.4, 0, 1, 1)`;
+const EXPAND_TRANSITION = `transform ${MINIMIZE_FLIGHT_MS}ms cubic-bezier(0, 0, 0.2, 1)`;
 
 export function Window({
   appId,
@@ -75,6 +90,192 @@ export function Window({
       titleBarRestoreFrameRef.current = null;
     }
   }, [windowState?.isMaximized]);
+
+  // When minimized, the window's live tree portals into its Dock thumbnail
+  // container so the thumbnail mirrors the real window content. The container
+  // appears once the Dock renders the thumbnail; until then the previous
+  // minimize behavior (hidden mount or unmount) applies.
+  const [thumbnailContainer, setThumbnailContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const minimized = windowState?.isMinimized;
+    const windowId = windowState?.id;
+    if (!minimized || !windowId) {
+      setThumbnailContainer(null);
+      return;
+    }
+    const update = (container: HTMLElement | null) => setThumbnailContainer(container);
+    update(getDockThumbnailContainer(windowId));
+    return subscribeDockThumbnail(windowId, update);
+  }, [windowState?.isMinimized, windowState?.id]);
+
+  // --- Minimize/restore flight (macOS scale effect) ---
+  // Phases: normal → shrinking (desktop window animates into the Dock slot)
+  // → docked (live portal thumbnail) → expanding (desktop window animates out
+  // of the Dock slot) → normal. Windows already minimized at mount (session
+  // restore) dock directly without a flight.
+  const [minimizePhase, setMinimizePhase] = useState<MinimizePhase>("normal");
+  const [shrinkTarget, setShrinkTarget] = useState<FlightTransform | null>(null);
+  const [expandReady, setExpandReady] = useState(false);
+  const lastThumbMetricsRef = useRef<{
+    cx: number;
+    cy: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const flightTimerRef = useRef<number | null>(null);
+  const initialMinimizedRef = useRef<boolean | null>(null);
+
+  // A minimized window rendered as a Dock thumbnail must be fully inert:
+  // no pointer events, no tab focus into the scaled content, and removed
+  // from the accessibility tree (the thumbnail button carries the semantics).
+  const isMinimizedWithThumbnail =
+    windowState?.isMinimized === true && thumbnailContainer !== null;
+  useEffect(() => {
+    const element = windowRef.current;
+    if (!element) return;
+    if (isMinimizedWithThumbnail) {
+      element.setAttribute("inert", "");
+    } else {
+      element.removeAttribute("inert");
+    }
+    // Re-run across minimize phases: the DOM root is recreated when the
+    // window moves between the desktop and the Dock portal, and the new
+    // root must get (or drop) inert accordingly.
+  }, [isMinimizedWithThumbnail, minimizePhase]);
+
+
+  if (windowState && initialMinimizedRef.current === null) {
+    initialMinimizedRef.current = windowState.isMinimized;
+  }
+  {
+    const minimized = windowState?.isMinimized ?? false;
+    const open = windowState?.isOpen ?? false;
+    if (!open) {
+      // A closed window resets its flight bookkeeping; the next open starts clean.
+      initialMinimizedRef.current = false;
+      if (minimizePhase !== "normal") {
+        setMinimizePhase("normal");
+        setShrinkTarget(null);
+        setExpandReady(false);
+      }
+    } else if (minimized) {
+      if (initialMinimizedRef.current === true && minimizePhase === "normal") {
+        // Minimized before this mount (session restore): dock without a flight.
+        initialMinimizedRef.current = false;
+        setMinimizePhase("docked");
+      } else if (
+        initialMinimizedRef.current === false &&
+        (minimizePhase === "normal" || minimizePhase === "expanding")
+      ) {
+        setMinimizePhase("shrinking");
+        setShrinkTarget(null);
+        setExpandReady(false);
+      }
+    } else if (minimizePhase === "docked" || minimizePhase === "shrinking") {
+      setMinimizePhase("expanding");
+      setShrinkTarget(null);
+      setExpandReady(false);
+    }
+  }
+
+  useEffect(() => {
+    if (minimizePhase === "shrinking") {
+      // Double rAF guarantees the full-size position paints before the
+      // shrink transition starts, so the flight always animates from rest.
+      let cancelled = false;
+      let raf2 = 0;
+      const raf1 = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        raf2 = window.requestAnimationFrame(() => {
+          if (cancelled) return;
+          const windowId = windowState?.id;
+          const container = windowId ? getDockThumbnailContainer(windowId) : null;
+          const element = windowRef.current;
+          if (!container || !element) {
+            // No thumbnail slot to fly into; dock (or hide) immediately.
+            setMinimizePhase("docked");
+            return;
+          }
+          const cRect = container.getBoundingClientRect();
+          const wRect = element.getBoundingClientRect();
+          if (wRect.width <= 0 || wRect.height <= 0) {
+            setMinimizePhase("docked");
+            return;
+          }
+          const scale = Math.max(
+            Math.min(cRect.width / wRect.width, cRect.height / wRect.height),
+            0.01
+          );
+          setShrinkTarget({
+            tx: cRect.left + cRect.width / 2 - (wRect.left + wRect.width / 2),
+            ty: cRect.top + cRect.height / 2 - (wRect.top + wRect.height / 2),
+            scale,
+          });
+        });
+      });
+      flightTimerRef.current = window.setTimeout(() => {
+        flightTimerRef.current = null;
+        setMinimizePhase("docked");
+        setShrinkTarget(null);
+      }, MINIMIZE_FLIGHT_MS + FLIGHT_SETTLE_MS);
+      return () => {
+        cancelled = true;
+        window.cancelAnimationFrame(raf1);
+        window.cancelAnimationFrame(raf2);
+        if (flightTimerRef.current !== null) {
+          window.clearTimeout(flightTimerRef.current);
+          flightTimerRef.current = null;
+        }
+      };
+    }
+    if (minimizePhase === "expanding") {
+      // Paint the shrunken start position first, then expand with a transition.
+      let cancelled = false;
+      let raf2 = 0;
+      const raf1 = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        raf2 = window.requestAnimationFrame(() => {
+          if (cancelled) return;
+          setExpandReady(true);
+        });
+      });
+      flightTimerRef.current = window.setTimeout(() => {
+        flightTimerRef.current = null;
+        setMinimizePhase("normal");
+        setExpandReady(false);
+      }, MINIMIZE_FLIGHT_MS + FLIGHT_SETTLE_MS);
+      return () => {
+        cancelled = true;
+        window.cancelAnimationFrame(raf1);
+        window.cancelAnimationFrame(raf2);
+        if (flightTimerRef.current !== null) {
+          window.clearTimeout(flightTimerRef.current);
+          flightTimerRef.current = null;
+        }
+      };
+    }
+  }, [minimizePhase, windowState?.id]);
+
+  // Remember the Dock thumbnail geometry while docked so the restore flight
+  // can start from the slot even though the container unmounts on restore.
+  useLayoutEffect(() => {
+    if (minimizePhase !== "docked" || !thumbnailContainer) return;
+    const capture = () => {
+      const rect = thumbnailContainer.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        lastThumbMetricsRef.current = {
+          cx: rect.left + rect.width / 2,
+          cy: rect.top + rect.height / 2,
+          w: rect.width,
+          h: rect.height,
+        };
+      }
+    };
+    capture();
+    const observer = new ResizeObserver(capture);
+    observer.observe(thumbnailContainer);
+    return () => observer.disconnect();
+  }, [minimizePhase, thumbnailContainer]);
 
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
@@ -123,18 +324,61 @@ export function Window({
     return null;
   }
 
-  if (windowState.isMinimized && !keepMountedWhenMinimized) {
+  if (
+    windowState.isMinimized &&
+    !keepMountedWhenMinimized &&
+    !thumbnailContainer &&
+    minimizePhase !== "shrinking"
+  ) {
     return null;
   }
 
   // When minimized with keepMountedWhenMinimized, we render the SAME tree
   // structure but hidden via CSS. This preserves React's component identity
   // so children (e.g. Messages and its MessageQueue) are never unmounted.
-  const isHiddenMinimized = windowState.isMinimized && keepMountedWhenMinimized;
+  // A window mid-flight (shrinking into or expanding out of the Dock) keeps
+  // rendering on the desktop so the scale animation can play.
+  const isDockThumbnail =
+    windowState.isMinimized &&
+    minimizePhase === "docked" &&
+    thumbnailContainer !== null;
+  const isFlightActive =
+    minimizePhase === "shrinking" || minimizePhase === "expanding";
+  const isHiddenMinimized =
+    windowState.isMinimized &&
+    !isDockThumbnail &&
+    !isFlightActive &&
+    keepMountedWhenMinimized;
 
   const { position, size, isMaximized, zIndex } = windowState;
 
-  const windowStyle: React.CSSProperties = isHiddenMinimized
+  // Base layout box for flight transforms: maximized windows fill the
+  // viewport (inset positioning), everything else uses its stored frame.
+  const flightBaseLeft = isMaximized ? 0 : position.x;
+  const flightBaseTop = isMaximized ? 0 : position.y;
+  const flightTransformFor = (flight: FlightTransform): string =>
+    usesTransformPositioning
+      ? `translate(${flightBaseLeft + flight.tx}px, ${flightBaseTop +
+          flight.ty}px) scale(${flight.scale})`
+      : `translate(${flight.tx}px, ${flight.ty}px) scale(${flight.scale})`;
+
+  // Restore flights start from the last known Dock slot geometry.
+  let expandFrom: FlightTransform | null = null;
+  if (minimizePhase === "expanding" && !expandReady) {
+    const metrics = lastThumbMetricsRef.current;
+    const baseWidth = isMaximized && typeof window !== "undefined" ? window.innerWidth : size.width;
+    const baseHeight = isMaximized && typeof window !== "undefined" ? window.innerHeight : size.height;
+    if (metrics && baseWidth > 0 && baseHeight > 0) {
+      const scale = Math.max(Math.min(metrics.w / baseWidth, metrics.h / baseHeight), 0.01);
+      expandFrom = {
+        tx: metrics.cx - (flightBaseLeft + baseWidth / 2),
+        ty: metrics.cy - (flightBaseTop + baseHeight / 2),
+        scale,
+      };
+    }
+  }
+
+  const normalStyle: React.CSSProperties = isHiddenMinimized
     ? { width: 0, height: 0, overflow: "hidden" }
     : isMaximized
       ? {
@@ -160,16 +404,60 @@ export function Window({
             : undefined,
         };
 
-  return (
+  let windowStyle: React.CSSProperties;
+  if (isDockThumbnail) {
+    windowStyle = {
+      // Scaled live mirror inside the Dock thumbnail container. The Dock
+      // sets --dock-thumb-scale from the thumbnail and window dimensions.
+      width: size.width,
+      height: size.height,
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%) scale(var(--dock-thumb-scale, 1))",
+      transformOrigin: "center",
+    };
+  } else if (minimizePhase === "shrinking" && shrinkTarget) {
+    // Shrink into the Dock slot (macOS scale minimize).
+    windowStyle = {
+      ...normalStyle,
+      transform: flightTransformFor(shrinkTarget),
+      transition: SHRINK_TRANSITION,
+      willChange: "transform",
+    };
+  } else if (minimizePhase === "expanding" && !expandReady && expandFrom) {
+    // First expanding paint: start shrunken at the Dock slot, no transition.
+    windowStyle = {
+      ...normalStyle,
+      transform: flightTransformFor(expandFrom),
+      willChange: "transform",
+    };
+  } else if (minimizePhase === "expanding" && expandReady) {
+    // Expand back to the resting frame.
+    windowStyle = {
+      ...normalStyle,
+      transition: EXPAND_TRANSITION,
+      willChange: "transform",
+    };
+  } else {
+    windowStyle = normalStyle;
+  }
+
+  const windowNode = (
     <div
       ref={windowRef}
       className={cn(
-        "fixed",
+        isDockThumbnail ? "absolute pointer-events-none" : "fixed",
         isHiddenMinimized && "invisible pointer-events-none",
-        !isFocused && !isMaximized && !isHiddenMinimized && "opacity-95",
+        isFlightActive && "pointer-events-none",
+        !isFocused &&
+          !isMaximized &&
+          !isHiddenMinimized &&
+          !isDockThumbnail &&
+          !isFlightActive &&
+          "opacity-95",
       )}
       style={windowStyle}
-      aria-hidden={isHiddenMinimized || undefined}
+      aria-hidden={isHiddenMinimized || isDockThumbnail || undefined}
       onMouseDownCapture={(e) => {
         if (isHiddenMinimized) return;
         // Don't focus window or propagate click if a menu bar dropdown is open
@@ -284,7 +572,7 @@ export function Window({
       >
         <div className="flex-1 min-h-0">
           <WindowFocusProvider
-            isFocused={isHiddenMinimized ? false : isFocused}
+            isFocused={isHiddenMinimized || isDockThumbnail ? false : isFocused}
             appId={appId}
             closeWindow={controlledHandlers ? controlledHandlers.closeWindow : () => closeWindow(appId)}
             minimizeWindow={controlledHandlers ? controlledHandlers.minimizeWindow : () => minimizeWindow(appId)}
@@ -299,7 +587,7 @@ export function Window({
       </div>
 
       {/* Resize handles */}
-      {!isMaximized && !isHiddenMinimized && (
+      {!isMaximized && !isHiddenMinimized && !isDockThumbnail && (
         <>
           <div
             className="absolute cursor-nw-resize"
@@ -353,4 +641,12 @@ export function Window({
       )}
     </div>
   );
+
+  // A minimized window renders its live tree into the Dock thumbnail so the
+  // thumbnail is a scaled mirror of the real window, like macOS.
+  if (isDockThumbnail && thumbnailContainer) {
+    return createPortal(windowNode, thumbnailContainer);
+  }
+
+  return windowNode;
 }

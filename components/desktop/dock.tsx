@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, forwardRef } from "react";
 import Image from "next/image";
 import { getAppById, getAppsInDockOrder } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
@@ -8,12 +8,17 @@ import { cn } from "@/lib/utils";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import type { DocumentAppId } from "@/lib/file-route-utils";
+import type { WindowState } from "@/types/window";
 import {
   DOCK_KEEP_OVERRIDES_STORAGE_KEY,
   isAppKeptInDock,
   parseDockKeepOverrides,
   setAppKeptInDock,
 } from "@/lib/dock-preferences";
+import {
+  registerDockThumbnail,
+  unregisterDockThumbnail,
+} from "@/lib/desktop/dock-thumbnails";
 import type { DockKeepOverrides } from "@/lib/dock-preferences";
 import { useSystemSettings } from "@/lib/system-settings-context";
 import {
@@ -110,6 +115,126 @@ const BASE_BADGE_FONT_SIZE = 11;
 const BASE_TRASH_HANDLE_HITBOX_WIDTH = 14;
 const BASE_HANDLE_LINE_WIDTH = 1;
 
+// Minimized-window Dock thumbnails (macOS default: minimize-to-application is off)
+const MINIMIZED_THUMB_MIN_RATIO = 0.6;
+const MINIMIZED_THUMB_MAX_RATIO = 1.8;
+
+function getMinimizedWindowLabel(window: WindowState): string {
+  const metadata = window.metadata ?? {};
+  if (typeof metadata.filePath === "string" && metadata.filePath) {
+    const fileName = metadata.filePath.split("/").pop();
+    if (fileName) return fileName;
+  }
+  if (typeof metadata.currentPath === "string" && metadata.currentPath) {
+    const segment =
+      metadata.currentPath.split("/").filter(Boolean).pop() ?? metadata.currentPath;
+    if (segment) return segment.charAt(0).toUpperCase() + segment.slice(1);
+  }
+  return getAppById(window.appId)?.name ?? window.appId;
+}
+
+function getMinimizedThumbRatio(window: WindowState): number {
+  if (window.size.height <= 0) return 1;
+  return clamp(
+    window.size.width / window.size.height,
+    MINIMIZED_THUMB_MIN_RATIO,
+    MINIMIZED_THUMB_MAX_RATIO
+  );
+}
+
+// One Dock thumbnail for a minimized window. The container registers with the
+// dock-thumbnail registry so the Window component portals its live tree here,
+// making the thumbnail a scaled mirror of the real window.
+const MinimizedWindowThumbnail = forwardRef<
+  HTMLButtonElement,
+  {
+    window: WindowState;
+    height: number;
+    magnificationScale: number;
+    isResizing: boolean;
+    isHovered: boolean;
+    onHoverChange: (hovered: boolean) => void;
+    onRestore: () => void;
+  }
+>(function MinimizedWindowThumbnail(
+  {
+    window,
+    height,
+    magnificationScale,
+    isResizing,
+    isHovered,
+    onHoverChange,
+    onRestore,
+  },
+  ref
+) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Stable ref callback so the registry entry survives Dock re-renders
+  // (magnification updates re-render the Dock every pointer-move frame).
+  const setContainer = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (element) {
+        containerRef.current = element;
+        registerDockThumbnail(window.id, element);
+      } else {
+        const previous = containerRef.current;
+        containerRef.current = null;
+        if (previous) unregisterDockThumbnail(window.id, previous);
+      }
+    },
+    [window.id]
+  );
+
+  const label = getMinimizedWindowLabel(window);
+  const thumbWidth = Math.round(height * getMinimizedThumbRatio(window));
+  // Fit the window inside the thumbnail; the portaled window reads this via
+  // var(--dock-thumb-scale) and scales itself around its center.
+  const thumbScale = Math.min(
+    height / window.size.height,
+    thumbWidth / window.size.width
+  );
+
+  return (
+    <button
+      type="button"
+      ref={ref}
+      aria-label={`Show ${label}`}
+      onClick={onRestore}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+      className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
+      style={{ width: `${thumbWidth * magnificationScale}px` }}
+    >
+      {isHovered && !isResizing && (
+        <DockTooltip
+          label={label}
+          lift={(magnificationScale - 1) * height}
+        />
+      )}
+      <div
+        ref={setContainer}
+        aria-hidden
+        className="relative flex items-center justify-center overflow-hidden rounded-[5px] transition-transform duration-100 ease-out"
+        style={
+          {
+            width: `${thumbWidth}px`,
+            height: `${height}px`,
+            transform: `scale(${magnificationScale})`,
+            transformOrigin: "bottom center",
+            "--dock-thumb-scale": String(thumbScale),
+          } as React.CSSProperties
+        }
+      />
+      <div
+        aria-hidden
+        className="mt-1 rounded-full opacity-0"
+        style={{ width: "4px", height: "4px" }}
+      />
+    </button>
+  );
+});
+
 const useBrowserLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -147,6 +272,8 @@ export function Dock({
     openWindow,
     focusWindow,
     unminimizeWindow,
+    unminimizeMultiWindow,
+    state,
     getWindow,
     hasOpenWindows,
     bringAppToFront,
@@ -254,6 +381,20 @@ export function Dock({
   const currentAppsToShow = DOCK_APPS.filter((app) => {
     return isAppKeptInDock(app, dockKeepOverrides) || hasOpenWindows(app.id);
   }).map((app) => app.id);
+  // Open windows that are currently minimized render as Dock thumbnails
+  // next to Trash, mirroring macOS's default minimize behavior.
+  const minimizedWindows = useMemo(
+    () => Object.values(state.windows).filter((w) => w.isOpen && w.isMinimized),
+    [state.windows]
+  );
+
+  // When a thumbnail mounts or unmounts, the Dock panel must resize
+  // instantly (like macOS) so the minimize/restore flight lands exactly in
+  // the slot instead of chasing a 300ms width animation.
+  const prevThumbCountRef = useRef(0);
+  const thumbnailsChangedCount =
+    minimizedWindows.length !== prevThumbCountRef.current;
+  prevThumbCountRef.current = minimizedWindows.length;
 
   // Serialize for stable dependency comparison
   const currentAppsKey = currentAppsToShow.join(",");
@@ -697,7 +838,9 @@ export function Dock({
         }}
         className={cn(
           "flex items-end bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg w-max",
-          isResizingDock ? "transition-none" : "transition-all duration-300"
+          isResizingDock || thumbnailsChangedCount
+            ? "transition-none"
+            : "transition-all duration-300"
         )}
         style={{
           gap: `${metrics.gap}px`,
@@ -892,6 +1035,38 @@ export function Dock({
             </div>
           )}
         </div>
+
+        {/* Minimized-window thumbnails (macOS shows these beside the divider, before Trash) */}
+        {minimizedWindows.map((window) => {
+          const itemKey = `minimized:${window.id}`;
+          const app = getAppById(window.appId);
+          const magnificationScale =
+            magnificationEnabled && !isResizingDock
+              ? magnificationScales[itemKey] ?? 1
+              : 1;
+
+          return (
+            <MinimizedWindowThumbnail
+              key={window.id}
+              ref={(item: HTMLButtonElement | null) => {
+                dockItemRefs.current[itemKey] = item;
+              }}
+              window={window}
+              height={metrics.icon}
+              magnificationScale={magnificationScale}
+              isResizing={isResizingDock}
+              isHovered={hoveredApp === itemKey}
+              onHoverChange={(hovered) => setHoveredApp(hovered ? itemKey : null)}
+              onRestore={() => {
+                if (app?.multiWindow) {
+                  unminimizeMultiWindow(window.id);
+                } else {
+                  unminimizeWindow(window.appId);
+                }
+              }}
+            />
+          );
+})}
 
         {/* Trash icon */}
         <button
