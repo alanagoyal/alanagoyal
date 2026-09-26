@@ -98,6 +98,21 @@ export function Window({
     return subscribeDockThumbnail(windowId, update);
   }, [windowState?.isMinimized, windowState?.id]);
 
+  // A minimized window rendered as a Dock thumbnail must be fully inert:
+  // no pointer events, no tab focus into the scaled content, and removed
+  // from the accessibility tree (the thumbnail button carries the semantics).
+  const isMinimizedWithThumbnail =
+    windowState?.isMinimized === true && thumbnailContainer !== null;
+  useEffect(() => {
+    const element = windowRef.current;
+    if (!element) return;
+    if (isMinimizedWithThumbnail) {
+      element.setAttribute("inert", "");
+    } else {
+      element.removeAttribute("inert");
+    }
+  }, [isMinimizedWithThumbnail]);
+
   // Wrap WindowManager callbacks for the hook
   const handleMove = useCallback(
     (position: Position) => {

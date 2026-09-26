@@ -46,5 +46,8 @@ export function subscribeDockThumbnail(
   const subscribed = windowListeners;
   return () => {
     subscribed.delete(listener);
+    if (subscribed.size === 0) {
+      listeners.delete(windowId);
+    }
   };
 }
