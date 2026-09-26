@@ -48,6 +48,7 @@ const STORAGE_KEYS = {
   MUSIC_SHOW_CONTENT: "music-show-content",
   NOTES_SELECTED: "notes-selected-slug",
   MESSAGES_CONVERSATION: "messages-conversation",
+  MESSAGES_INITIAL_SCROLL_PLAYED: "messages-initial-scroll-played",
   WEATHER_SELECTED_CITY: "weather-selected-city",
   WEATHER_DATA_CACHE: "weather-data-cache",
   // Local storage (durable user content)
@@ -560,9 +561,29 @@ export function saveMessagesConversation(id: string | null): void {
   }
 }
 
+export function hasPlayedMessagesInitialScroll(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(STORAGE_KEYS.MESSAGES_INITIAL_SCROLL_PLAYED) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function markMessagesInitialScrollPlayed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEYS.MESSAGES_INITIAL_SCROLL_PLAYED, "true");
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function clearMessagesState(): void {
   if (typeof window === "undefined") return;
   try {
+    sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
+    sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_INITIAL_SCROLL_PLAYED);
     sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
   } catch {
     // Ignore storage errors
