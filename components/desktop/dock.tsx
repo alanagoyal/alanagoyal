@@ -203,7 +203,7 @@ const MinimizedWindowThumbnail = forwardRef<
       onClick={onRestore}
       onMouseEnter={() => onHoverChange(true)}
       onMouseLeave={() => onHoverChange(false)}
-      className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 animate-dock-enter active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
+      className="group relative flex flex-col items-center rounded-md outline-none transition-[width,transform] duration-100 ease-out flex-shrink-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
       style={{ width: `${thumbWidth * magnificationScale}px` }}
     >
       {isHovered && !isResizing && (
@@ -387,6 +387,14 @@ export function Dock({
     () => Object.values(state.windows).filter((w) => w.isOpen && w.isMinimized),
     [state.windows]
   );
+
+  // When a thumbnail mounts or unmounts, the Dock panel must resize
+  // instantly (like macOS) so the minimize/restore flight lands exactly in
+  // the slot instead of chasing a 300ms width animation.
+  const prevThumbCountRef = useRef(0);
+  const thumbnailsChangedCount =
+    minimizedWindows.length !== prevThumbCountRef.current;
+  prevThumbCountRef.current = minimizedWindows.length;
 
   // Serialize for stable dependency comparison
   const currentAppsKey = currentAppsToShow.join(",");
@@ -830,7 +838,9 @@ export function Dock({
         }}
         className={cn(
           "flex items-end bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 dark:border-white/10 shadow-lg w-max",
-          isResizingDock ? "transition-none" : "transition-all duration-300"
+          isResizingDock || thumbnailsChangedCount
+            ? "transition-none"
+            : "transition-all duration-300"
         )}
         style={{
           gap: `${metrics.gap}px`,
