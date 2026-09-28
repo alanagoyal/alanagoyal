@@ -627,6 +627,8 @@ export interface WeatherCachedCity {
   feelsLike: number;
   humidity: number;
   windMph: number;
+  uvIndex?: number | null;
+  visibilityMeters?: number | null;
   sunrise?: string;
   sunset?: string;
   hourly: WeatherCachedHourForecast[];
@@ -701,6 +703,12 @@ function isValidWeatherCacheEntry(value: unknown): value is WeatherCachedCity {
     isFiniteNumber(candidate.feelsLike) &&
     isFiniteNumber(candidate.humidity) &&
     isFiniteNumber(candidate.windMph) &&
+    (candidate.uvIndex === undefined ||
+      candidate.uvIndex === null ||
+      isFiniteNumber(candidate.uvIndex)) &&
+    (candidate.visibilityMeters === undefined ||
+      candidate.visibilityMeters === null ||
+      isFiniteNumber(candidate.visibilityMeters)) &&
     (candidate.sunrise === undefined || typeof candidate.sunrise === "string") &&
     (candidate.sunset === undefined || typeof candidate.sunset === "string") &&
     typeof candidate.updatedAt === "string" &&
