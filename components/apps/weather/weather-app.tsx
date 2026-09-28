@@ -9,8 +9,10 @@ import {
   CloudRain,
   CloudSnow,
   Droplets,
+  Eye,
   Search,
   Sun,
+  SunMedium,
   Sunrise,
   Sunset,
   Trash2,
@@ -24,6 +26,8 @@ import { WeatherSceneEffects } from "@/components/apps/weather/weather-scene-eff
 import {
   buildOpenMeteoForecastUrl,
   formatWeatherTemperature,
+  formatWeatherVisibility,
+  getUvIndexLabel,
   getWeatherDescription,
   getWeatherIconName,
   getWeatherCitySelectionAfterRemoval,
@@ -65,6 +69,8 @@ interface OpenMeteoResponse {
     apparent_temperature: number;
     relative_humidity_2m: number;
     wind_speed_10m: number;
+    uv_index?: number;
+    visibility?: number;
   };
   daily: {
     time: string[];
@@ -121,6 +127,8 @@ interface CityWeather {
   feelsLike: number;
   humidity: number;
   windMph: number;
+  uvIndex: number | null;
+  visibilityMeters: number | null;
   sunrise: string;
   sunset: string;
   hourly: HourForecast[];
@@ -148,6 +156,8 @@ function restoreWeatherDataFromCache(cache: WeatherDataCache): Record<string, Ci
       feelsLike: weather.feelsLike,
       humidity: weather.humidity,
       windMph: weather.windMph,
+      uvIndex: weather.uvIndex ?? null,
+      visibilityMeters: weather.visibilityMeters ?? null,
       sunrise: weather.sunrise ?? "",
       sunset: weather.sunset ?? "",
       hourly: weather.hourly,
@@ -174,6 +184,8 @@ function serializeWeatherDataForCache(weatherByCity: Record<string, CityWeather>
       feelsLike: weather.feelsLike,
       humidity: weather.humidity,
       windMph: weather.windMph,
+      uvIndex: weather.uvIndex,
+      visibilityMeters: weather.visibilityMeters,
       sunrise: weather.sunrise,
       sunset: weather.sunset,
       hourly: weather.hourly,
@@ -394,6 +406,8 @@ async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
       "apparent_temperature",
       "relative_humidity_2m",
       "wind_speed_10m",
+      "uv_index",
+      "visibility",
     ],
     dailyFields: [
       "weather_code",
@@ -473,6 +487,8 @@ async function fetchCityWeather(city: CityConfig): Promise<CityWeather> {
     feelsLike: data.current.apparent_temperature,
     humidity: data.current.relative_humidity_2m,
     windMph: data.current.wind_speed_10m,
+    uvIndex: data.current.uv_index ?? null,
+    visibilityMeters: data.current.visibility ?? null,
     sunrise: data.daily.sunrise?.[0] ?? "",
     sunset: data.daily.sunset?.[0] ?? "",
     hourly,
@@ -1433,12 +1449,41 @@ export function WeatherApp({
                       </div>
                       <div className={cn("rounded-xl p-3", innerCardClass)}>
                         <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
+                          <SunMedium size={14} />
+                          <span className="text-xs">UV Index</span>
+                        </div>
+                        <p className="mt-1 text-2xl font-semibold">
+                          {selectedWeather && selectedWeather.uvIndex !== null ? (
+                            <>
+                              {Math.round(selectedWeather.uvIndex)}{" "}
+                              <span className={cn("text-sm font-medium", mutedTextClass)}>
+                                {getUvIndexLabel(selectedWeather.uvIndex)}
+                              </span>
+                            </>
+                          ) : (
+                            "--"
+                          )}
+                        </p>
+                      </div>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
+                        <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
                           <CloudRain size={14} />
                           <span className="text-xs">Max Rain</span>
                         </div>
                         <p className="mt-1 text-2xl font-semibold">
                           {selectedWeather
                             ? `${Math.round(selectedWeather.daily[0]?.precipitationChance ?? 0)}%`
+                            : "--"}
+                        </p>
+                      </div>
+                      <div className={cn("rounded-xl p-3", innerCardClass)}>
+                        <div className={cn("flex items-center gap-1.5", mutedTextClass)}>
+                          <Eye size={14} />
+                          <span className="text-xs">Visibility</span>
+                        </div>
+                        <p className="mt-1 text-2xl font-semibold">
+                          {selectedWeather && selectedWeather.visibilityMeters !== null
+                            ? formatWeatherVisibility(selectedWeather.visibilityMeters)
                             : "--"}
                         </p>
                       </div>

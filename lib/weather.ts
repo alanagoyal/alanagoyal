@@ -54,6 +54,20 @@ export function formatWeatherTemperature(
   return `${Math.round(convertWeatherTemperature(fahrenheit, unit))}°`;
 }
 
+export function getUvIndexLabel(uvIndex: number): string {
+  if (uvIndex < 3) return "Low";
+  if (uvIndex < 6) return "Moderate";
+  if (uvIndex < 8) return "High";
+  if (uvIndex < 11) return "Very High";
+  return "Extreme";
+}
+
+export function formatWeatherVisibility(visibilityMeters: number): string {
+  const miles = visibilityMeters / 1609.344;
+  if (miles >= 10) return `${Math.round(miles)} mi`;
+  return `${Math.max(miles, 0.1).toFixed(1)} mi`;
+}
+
 export function getWeatherCitySelectionAfterRemoval(
   cities: WeatherCityIdentity[],
   removedCityId: string,
