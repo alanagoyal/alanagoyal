@@ -430,6 +430,11 @@ The Control Center Focus tile should stay generic only while Focus is off. When 
 
 Keep the Apple icon visually separated from the focused app, then group the app title and its commands with `gap-1`. Each command already has `px-2`, so this produces a consistent roughly 20px text-to-text rhythm between the app title, File, Edit, View, and any future command menus. Do not add per-app margins between menu labels.
 
+TextEdit’s View dropdown uses a fixed portal at the existing overlay layer
+(`z-[90]`) so reading-scale commands remain visible above maximized document
+windows. It still participates in the menu bar’s mutually exclusive menu state
+and uses `useClickOutside()` for dismissal.
+
 ### Empty State
 
 ```tsx

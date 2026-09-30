@@ -17,6 +17,8 @@ import { FinderViewMenu } from "./finder-view-menu";
 import { CalendarViewMenu } from "./calendar-view-menu";
 import { WeatherViewMenu } from "./weather-view-menu";
 import { TextEditEditMenu } from "./textedit-edit-menu";
+import { TextEditViewMenu } from "./textedit-view-menu";
+import { getTextEditZoom } from "@/lib/textedit-zoom";
 import { TextEditFormatMenu } from "./textedit-format-menu";
 import { TextEditFileMenu, TextEditRenameDialog } from "./textedit-file-menu";
 import { PreviewFileMenu } from "./preview-file-menu";
@@ -33,7 +35,7 @@ import type { FinderViewMode } from "@/components/apps/finder/view-mode";
 import type { WeatherTemperatureUnit } from "@/lib/weather";
 import { TEXTEDIT_OPEN_FIND_EVENT } from "@/lib/textedit-find";
 
-type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "weatherViewMenu" | "textEditEditMenu" | "textEditFormatMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
+type OpenMenu = "apple" | "appMenu" | "fileMenu" | "textEditFileMenu" | "previewFileMenu" | "finderViewMenu" | "calendarViewMenu" | "weatherViewMenu" | "textEditEditMenu" | "textEditFormatMenu" | "textEditViewMenu" | "battery" | "wifi" | "focusMenu" | "controlCenter" | "notificationCenter" | null;
 
 const LOW_POWER_MODE_STORAGE_KEY = "desktop-low-power-mode";
 
@@ -80,6 +82,7 @@ interface MenuBarProps {
   onTextEditSave?: (windowId: string) => void;
   onTextEditDuplicate?: (windowId: string) => void;
   onTextEditRename?: (windowId: string, fileName: string) => string | null;
+  onTextEditZoomChange?: (windowId: string, zoom: number) => void;
   onTextEditWrapToPageChange?: (windowId: string, wrapToPage: boolean) => void;
   onPreviewOpen?: () => void;
   onPreviewClose?: (windowId: string) => void;
@@ -114,6 +117,7 @@ export function MenuBar({
   onTextEditDuplicate,
   onTextEditRename,
   onTextEditWrapToPageChange,
+  onTextEditZoomChange,
   onPreviewOpen,
   onPreviewClose,
 }: MenuBarProps) {
@@ -163,6 +167,9 @@ export function MenuBar({
   const focusedTextEditWrapToPage = focusedAppId === "textedit" && focusedWindowId
     ? state.windows[focusedWindowId]?.metadata?.wrapToPage === true
     : false;
+  const focusedTextEditZoom = getTextEditZoom(
+    focusedWindowId ? state.windows[focusedWindowId]?.metadata?.zoom : undefined
+  );
   const activeFocus =
     focusMode === "off" ? null : FOCUS_STATUS_CONFIG[focusMode];
 
@@ -402,6 +409,19 @@ export function MenuBar({
               Format
             </button>
           )}
+          {focusedAppId === "textedit" && (
+            <button
+              onClick={() => toggleMenu("textEditViewMenu")}
+              className={cn(
+                "rounded px-2 py-0.5 text-sm transition-colors",
+                openMenu === "textEditViewMenu"
+                  ? "bg-blue-500 text-white"
+                  : "text-black can-hover:hover:bg-white/10 dark:text-white"
+              )}
+            >
+              View
+            </button>
+          )}
         </div>
       </div>
 
@@ -593,6 +613,15 @@ export function MenuBar({
               detail: { windowId: focusedWindowId },
             })
           );
+        }}
+      />
+
+      <TextEditViewMenu
+        isOpen={openMenu === "textEditViewMenu"}
+        onClose={closeMenu}
+        zoom={focusedTextEditZoom}
+        onZoomChange={(zoom) => {
+          if (focusedWindowId) onTextEditZoomChange?.(focusedWindowId, zoom);
         }}
       />
 

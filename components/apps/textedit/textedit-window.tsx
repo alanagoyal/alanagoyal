@@ -32,6 +32,7 @@ interface TextEditWindowProps {
   isMaximized: boolean;
   isDirty: boolean;
   wrapToPage: boolean;
+  zoom: number;
   onFocus: () => void;
   onClose: () => void;
   onMinimize: () => void;
@@ -52,6 +53,7 @@ export function TextEditWindow({
   isMaximized,
   isDirty,
   wrapToPage,
+  zoom,
   onFocus,
   onClose,
   onMinimize,
@@ -326,6 +328,7 @@ export function TextEditWindow({
         <div
           data-testid="textedit-document-area"
           data-wrap-mode={wrapToPage ? "page" : "window"}
+          data-zoom={zoom}
           className={cn(
             "flex-1 min-h-0",
             wrapToPage
@@ -338,6 +341,14 @@ export function TextEditWindow({
             aria-label={`Document contents for ${fileName}`}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
+            style={{
+              fontSize: `${14 * zoom / 100}px`,
+              ...(wrapToPage ? {
+                width: `${612 * zoom / 100}px`,
+                height: `${792 * zoom / 100}px`,
+                padding: `${72 * zoom / 100}px`,
+              } : {}),
+            }}
             className={cn(
               "resize-none outline-none font-mono text-sm leading-relaxed text-zinc-900 dark:text-white",
               wrapToPage

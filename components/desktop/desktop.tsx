@@ -1,5 +1,6 @@
 "use client";
 
+import { getTextEditZoom } from "@/lib/textedit-zoom";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { WindowManagerProvider, useWindowManager, DESKTOP_DEFAULT_FOCUSED_APP, getAppIdFromWindowId } from "@/lib/window-context";
@@ -1034,6 +1035,7 @@ function DesktopContent({
         onTextEditDuplicate={handleTextEditDuplicate}
         onTextEditRename={handleTextEditRename}
         onTextEditWrapToPageChange={handleTextEditWrapToPageChange}
+        onTextEditZoomChange={(windowId, zoom) => updateWindowMetadata(windowId, { zoom })}
         onPreviewOpen={handlePreviewOpen}
         onPreviewClose={handlePreviewClose}
       />
@@ -1155,6 +1157,7 @@ function DesktopContent({
                   isMaximized={windowState.isMaximized}
                   isDirty={windowState.metadata?.isDirty === true}
                   wrapToPage={windowState.metadata?.wrapToPage === true}
+                  zoom={getTextEditZoom(windowState.metadata?.zoom)}
                   onFocus={() => focusMultiWindow(windowState.id)}
                   onClose={() => closeMultiWindow(windowState.id)}
                   onMinimize={() => minimizeMultiWindow(windowState.id)}

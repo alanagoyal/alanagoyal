@@ -13,6 +13,7 @@ This note captures how file-backed document apps launch through Finder in the de
 - Finder opens text files in `TextEdit` windows, and those windows persist edited file contents by file path.
 - On desktop, TextEdit's File menu supports New, Open, Close, Save, Duplicate, and Rename. New and duplicated documents are durable local documents in Finder's `Documents` folder; Open launches a dedicated Finder picker; Rename updates the Finder-visible path without mutating GitHub project files.
 - TextEdit caches edits as they are typed so closing a window does not lose work. Save explicitly commits the current modified date and clears the window's `Edited` status.
+- TextEdit’s View menu offers Zoom In, Zoom Out, and Actual Size (50–200%). Reading scale belongs to the document window and survives refresh in session storage; it resets when the window closes. It changes neither document text nor the Edited marker. Page wrapping scales the page and margins with the text; window wrapping continues to fit the window.
 - On mobile, all TextEdit routes redirect to `/notes`; the Finder-picker behavior above is desktop-only.
 
 ### Preview
