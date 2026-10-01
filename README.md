@@ -410,3 +410,9 @@ you can also manually add images:
 ## license
 
 licensed under the [mit license](https://github.com/alanagoyal/alanagoyal/blob/main/LICENSE.md).
+
+### Optional Walgit repository browsing
+
+Finder supports a public Walgit source alongside GitHub. Set the two Walgit
+variables in `.env.example` and configure the server's allowed site origins.
+See [setup and project findings](docs/walgit.md).

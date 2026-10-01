@@ -1,3 +1,4 @@
+import { WALGIT_DIR } from "./walgit-path";
 import { HOME_DIR, PROJECTS_DIR } from "@/lib/file-route-utils";
 
 export interface FinderPathSegment {
@@ -62,7 +63,7 @@ export function getFinderPathSegments(path: string): FinderPathSegment[] {
   let currentPath = root.path;
   for (const part of path.slice(root.path.length).split("/").filter(Boolean)) {
     currentPath += `/${part}`;
-    segments.push({ label: part, path: currentPath });
+    segments.push({ label: currentPath === WALGIT_DIR ? "Walgit" : part, path: currentPath });
   }
   return segments;
 }

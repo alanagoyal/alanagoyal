@@ -44,6 +44,9 @@ import {
   type FinderSortKey,
 } from "@/lib/finder-sort";
 
+import { fetchWalgitDirectory, fetchWalgitText, isWalgitConfigured, walgitErrorMessage } from "@/lib/walgit-client";
+import { isWalgitPath, WALGIT_DIR } from "@/lib/walgit-path";
+
 const USERNAME = HOME_DIR.split("/").pop() ?? "alanagoyal";
 
 interface FileItem {
@@ -268,6 +271,10 @@ export function FinderApp({
   const listSort = controlledListSort === undefined ? standaloneListSort : controlledListSort;
   const activeListSort = listSort ?? getDefaultFinderSort(currentPath);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadProgress, setLoadProgress] = useState<string | null>(null);
+  const loadControllerRef = useRef<AbortController | null>(null);
+  const fileControllerRef = useRef<AbortController | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [standaloneViewMode, setStandaloneViewMode] = useState<FinderViewMode>("list");
@@ -321,7 +328,22 @@ export function FinderApp({
 
   // Load files for current path
   const loadFiles = useCallback(async (path: string) => {
+    fileControllerRef.current?.abort();
+    loadControllerRef.current?.abort();
+    const controller = new AbortController();
+    loadControllerRef.current = controller;
+    const timeout = isWalgitPath(path) ? setTimeout(() => {
+      if (!controller.signal.aborted) {
+        controller.abort();
+        setLoading(false);
+        setLoadProgress(null);
+        setLoadError("Walgit took too long to respond. Reload the folder to try again.");
+      }
+    }, 120_000) : undefined;
+    controller.signal.addEventListener("abort", () => clearTimeout(timeout), { once: true });
     setLoading(true);
+    setLoadError(null);
+    setLoadProgress(null);
     setPreviewContent(null);
 
     try {
@@ -359,14 +381,38 @@ export function FinderApp({
         return;
       }
 
+      if (isWalgitPath(path)) {
+        try {
+          const items = await fetchWalgitDirectory(path, {
+            signal: controller.signal,
+            onProgress: progress => {
+              if (!controller.signal.aborted && progress.kind === "notice") setLoadProgress(progress.text);
+            },
+          });
+          if (!controller.signal.aborted) setFiles(items);
+        } catch (error) {
+          if (!controller.signal.aborted) {
+            setFiles([]);
+            setLoadError(walgitErrorMessage(error));
+          }
+        } finally {
+          clearTimeout(timeout);
+          if (!controller.signal.aborted) { setLoading(false); setLoadProgress(null); }
+        }
+        return;
+      }
+
+      clearTimeout(timeout);
+
       // Projects directory - fetch from GitHub
       if (path === PROJECTS_DIR) {
         const repos = await fetchGitHubRepos();
-        setFiles(repos.map(repo => ({
+        if (controller.signal.aborted) return;
+        setFiles([...(isWalgitConfigured() ? [{ name: "Walgit", type: "dir" as const, path: WALGIT_DIR }] : []), ...repos.map(repo => ({
           name: repo,
           type: "dir" as const,
           path: `${PROJECTS_DIR}/${repo}`,
-        })));
+        }))]);
         setLoading(false);
         return;
       }
@@ -379,6 +425,8 @@ export function FinderApp({
         const repoPath = parts.slice(1).join("/");
 
         const tree = await fetchGitHubRepoTree(repo);
+
+        if (controller.signal.aborted) return;
 
         // Filter to show only items at current level
         const items = tree.filter(item => {
@@ -416,7 +464,8 @@ export function FinderApp({
 
   // Load files when path changes
   useEffect(() => {
-    loadFiles(currentPath);
+    void loadFiles(currentPath);
+    return () => { loadControllerRef.current?.abort(); fileControllerRef.current?.abort(); };
   }, [currentPath, loadFiles]);
 
   useEffect(() => {
@@ -657,6 +706,12 @@ export function FinderApp({
     setSearchHighlightIndex(-1);
   }, [searchQuery, searchScope, selectedSidebar]);
 
+  useEffect(() => {
+    if (!isWalgitPath(currentPath)) return;
+    searchEngine.addEntries(files.map(file => ({ ...file, section: "projects" })));
+    setSearchIndexSize(searchEngine.version);
+  }, [currentPath, files, searchEngine]);
+
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
     setSelectedSidebar(item);
@@ -694,6 +749,34 @@ export function FinderApp({
 
       // Add to recents when viewing a file
       addRecent({ path: file.path, name: file.name, type: file.type });
+
+      if (isWalgitPath(file.path)) {
+        fileControllerRef.current?.abort();
+        const controller = new AbortController();
+        fileControllerRef.current = controller;
+        const timeout = setTimeout(() => {
+          if (!controller.signal.aborted) {
+            controller.abort();
+            setLoadProgress(null);
+            setLoadError("Walgit took too long to respond. Open the file again to retry.");
+          }
+        }, 120_000);
+        controller.signal.addEventListener("abort", () => clearTimeout(timeout), { once: true });
+        setLoadError(null);
+        setLoadProgress("Reading Walgit file…");
+        try {
+          const content = await fetchWalgitText(file.path, {
+            signal: controller.signal,
+            onProgress: progress => { if (!controller.signal.aborted && progress.kind === "notice") setLoadProgress(progress.text); },
+          });
+          if (controller.signal.aborted) return;
+          if (onOpenTextFile) onOpenTextFile(file.path, content);
+          else setPreviewContent(content);
+        } catch (error) {
+          if (!controller.signal.aborted) setLoadError(walgitErrorMessage(error));
+        } finally { clearTimeout(timeout); if (!controller.signal.aborted) setLoadProgress(null); }
+        return;
+      }
 
       // Check if it's a preview file (image or PDF)
       if (isPreviewFile(file.name) && onOpenPreviewFile) {
@@ -840,6 +923,7 @@ export function FinderApp({
     }
 
     const parts = currentPath.replace(HOME_DIR, USERNAME).split("/").filter(Boolean);
+    if (isWalgitPath(currentPath)) parts[2] = "Walgit";
     return parts;
   }, [currentPath]);
 
@@ -902,8 +986,9 @@ export function FinderApp({
   };
 
   // Get file timestamp - uses real modified date if available, otherwise generates pseudo-random
-  const getFileTimestamp = (file: FileItem): number => {
+  const getFileTimestamp = (file: FileItem): number | undefined => {
     const textEditDate = getFileModifiedDate(file.path);
+    if (isWalgitPath(file.path)) return textEditDate ?? undefined;
 
     // Check if this is a GitHub file
     const githubFile = githubRecentFiles.find(gf =>
@@ -952,8 +1037,10 @@ export function FinderApp({
     return date.getTime();
   };
 
-  const getFileDate = (file: FileItem): string =>
-    formatDateString(new Date(getFileTimestamp(file)));
+  const getFileDate = (file: FileItem): string => {
+    const timestamp = getFileTimestamp(file);
+    return timestamp === undefined ? "—" : formatDateString(new Date(timestamp));
+  };
 
   // Get file kind description
   const getFileKind = (file: FileItem): string => {
@@ -1097,7 +1184,7 @@ export function FinderApp({
       files.map((file) => ({
         ...file,
         kind: getFileKind(file),
-        modifiedAt: getFileTimestamp(file),
+        modifiedAt: getFileTimestamp(file) ?? 0,
       })),
       activeListSort
     );
@@ -1558,6 +1645,13 @@ export function FinderApp({
             )}
             onClick={() => setSelectedFile(null)}
           >
+          {loadError && (
+            <div role="alert" className="p-4 text-sm text-muted-foreground">
+              {loadError}
+              <button className="ml-3 text-blue-500" onClick={() => { void loadFiles(currentPath); }}>Reload folder</button>
+            </div>
+          )}
+          {loadProgress && <p role="status" className="px-4 py-2 text-sm text-muted-foreground">{loadProgress}</p>}
           {searchActive && searchQuery ? (
             renderSearchResults()
           ) : loading ? (

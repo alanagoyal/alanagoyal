@@ -26,6 +26,18 @@ This note captures how file-backed document apps launch through Finder in the de
 - iTerm's `open` command sends supported repository-backed images and PDFs to Preview, matching its existing Finder-folder and TextEdit-file handoffs.
 - On mobile, all Preview routes redirect to `/notes`; the Finder-picker behavior above is desktop-only.
 
+## Walgit Projects
+
+With `NEXT_PUBLIC_WALGIT_URL` and `NEXT_PUBLIC_WALGIT_REPOS` configured, Finder's
+Projects folder includes **Walgit → owner → repository**. Folders load on demand,
+text opens in TextEdit, and TextEdit deep links reload through the same adapter.
+Edits stay in local browser storage, just like GitHub files; there is no push API.
+Binary and oversized files show an explanatory message in Finder. Walgit's
+current blob API does not return binary bytes, so Preview cannot open those files.
+Search includes Walgit entries from folders visited in that Finder window; it does
+not recursively scan the remote repository. GitHub continues supplying Recents.
+See [Walgit setup and findings](walgit.md) for configuration and limitations.
+
 ## Why This Split Exists
 
 - TextEdit can create a valid untitled document, so its closed Dock icon launches one. Preview still requires an image or PDF path, so its closed Dock icon opens Finder without pretending Preview is running.

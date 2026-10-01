@@ -59,6 +59,8 @@ import {
 import { getNotesSelectedSlugMemory } from "@/lib/notes/selection-state";
 import { setUrl } from "@/lib/set-url";
 import { getShellUrlForApp } from "@/lib/shell-routing";
+import { fetchWalgitText } from "@/lib/walgit-client";
+import { isWalgitPath } from "@/lib/walgit-path";
 import { fetchGitHubFileContent } from "@/lib/github-client";
 import type { PodcastNotificationPayload } from "@/types/desktop-notification";
 import type { MessagesNotificationPayload } from "@/types/messages/notification";
@@ -108,6 +110,13 @@ async function fetchFileContentFromGitHub(repo: string, path: string): Promise<s
 
 // Fetch file content given a full path
 async function fetchFileContent(filePath: string): Promise<string | null> {
+  if (isWalgitPath(filePath)) {
+    try {
+      return await fetchWalgitText(filePath, { signal: AbortSignal.timeout(120_000) });
+    } catch {
+      return null;
+    }
+  }
   if (filePath.startsWith(PROJECTS_DIR + "/")) {
     const relativePath = filePath.slice(PROJECTS_DIR.length + 1);
     const parts = relativePath.split("/");

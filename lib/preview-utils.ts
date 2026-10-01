@@ -1,5 +1,7 @@
 import { getLocalPreviewAssetUrl, PROJECTS_DIR } from "@/lib/file-route-utils";
 
+import { isWalgitPath } from "./walgit-path";
+
 export const PREVIEW_TITLE_BAR_HEIGHT = 44;
 
 export function getPdfProxyUrl(fileUrl: string): string {
@@ -13,6 +15,7 @@ const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ic
 export function getPreviewMetadataFromPath(
   filePath: string
 ): { fileUrl: string; fileType: "image" | "pdf" } | null {
+  if (isWalgitPath(filePath)) return null;
   const ext = filePath.split(".").pop()?.toLowerCase() || "";
   const fileType: "image" | "pdf" | null = ext === "pdf" ? "pdf" : IMAGE_EXTENSIONS.includes(ext) ? "image" : null;
   if (!fileType) return null;
