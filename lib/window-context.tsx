@@ -282,26 +282,6 @@ function saveSerializedStateToStorage(serializedState: string): void {
   }
 }
 
-/**
- * Get the topmost (highest z-index) open window for a specific app
- * Used by MobileShell to display the correct window when switching from desktop
- * Reads directly from tab-scoped storage to work outside WindowManagerProvider.
- */
-export function getTopmostWindowForApp(appId: string): WindowState | null {
-  const savedState = loadStateFromStorage();
-  if (!savedState) return null;
-
-  const appWindows = Object.values(savedState.windows)
-    .filter((w) => {
-      // Only match windows where appId explicitly matches
-      // This prevents returning windows from different apps that might have similar instanceIds
-      return w.appId === appId && w.isOpen && !w.isMinimized;
-    })
-    .sort((a, b) => b.zIndex - a.zIndex);
-
-  return appWindows[0] || null;
-}
-
 // Max z-index before we normalize (windows stay in 1-50 range)
 // See lib/desktop/z-index.ts for the full layering system
 const MAX_Z_INDEX = 50;
