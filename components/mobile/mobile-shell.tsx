@@ -43,7 +43,7 @@ export function MobileShell({ initialApp, initialNoteSlug, initialNote }: Mobile
   );
   const [activeNoteSlug, setActiveNoteSlug] = useState<string | undefined>(initialNoteSlug);
 
-  // Determine active app from URL and load topmost windows on hydration
+  // Sync the active app and note from the URL on hydration and navigation.
   useEffect(() => {
     const syncFromLocation = () => {
       const path = window.location.pathname;
