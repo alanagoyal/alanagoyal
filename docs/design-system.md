@@ -338,6 +338,23 @@ support policy:
 
 ## Layout Structure
 
+### Desktop Z-Index Layers
+
+The desktop uses this stacking order, from back to front:
+
+| Layer | Z-index |
+|-------|---------|
+| Normal windows | 1–50, normalized by `lib/window-context.tsx` |
+| Dock | 60 |
+| Menu bar and its dropdowns | 70 |
+| Maximized/fullscreen windows | 80, shared through `MAXIMIZED_Z_INDEX` in `lib/window-context.tsx` |
+| Brightness overlay | 90 |
+| System overlays (lock, sleep, restart, shutdown) | 100 |
+
+Fixed shell layers are declared by their components. Portal menus that must
+appear above maximized windows use the overlay layer, as documented below for
+TextEdit’s View menu.
+
 ### Default Window Placement
 
 App window presets are normalized in `lib/window-context.tsx` when a window is

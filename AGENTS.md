@@ -16,7 +16,7 @@ this file captures the patterns and conventions that matter most when working in
 | `lib/app-config.ts` | app registry (all apps defined here) |
 | `lib/window-context.tsx` | window state machine (open/close/focus/minimize/drag/resize) |
 | `lib/sidebar-persistence.ts` | view state persistence + `clearAppState()` |
-| `lib/desktop/z-index.ts` | z-index layers: windows 1-50, dock 60, menu bar 70, fullscreen 80, overlays 90-100 |
+| `docs/design-system.md` | UI conventions and desktop z-index layer guide |
 | `components/desktop/` | desktop shell (dock, menu bar, window, notification center) |
 | `components/apps/` | all app implementations |
 
