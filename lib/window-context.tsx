@@ -283,7 +283,7 @@ function saveSerializedStateToStorage(serializedState: string): void {
 }
 
 // Max z-index before we normalize (windows stay in 1-50 range)
-// See lib/desktop/z-index.ts for the full layering system
+// See docs/design-system.md for the full layering system
 const MAX_Z_INDEX = 50;
 
 // Z-index for maximized/fullscreen windows - always above normal windows
