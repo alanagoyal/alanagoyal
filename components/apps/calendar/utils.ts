@@ -378,10 +378,6 @@ export function formatHour(hour: number): string {
   return `${hour - 12} PM`;
 }
 
-export function formatWeekDayHeader(date: Date): string {
-  return format(date, "EEE d");
-}
-
 // Event helpers - merges user events with on-demand generated sample events and holidays
 export function getEventsForDay(
   userEvents: CalendarEvent[],
@@ -401,20 +397,6 @@ export function getEventsForDay(
   const holidays = getHolidaysForDay(day);
 
   return [...holidays, ...sampleEvents, ...userEventsForDay];
-}
-
-export function getEventsForDateRange(
-  events: CalendarEvent[],
-  start: Date,
-  end: Date
-): CalendarEvent[] {
-  const startStr = format(start, "yyyy-MM-dd");
-  const endStr = format(end, "yyyy-MM-dd");
-
-  return events.filter((event) => {
-    // Event overlaps with range if event starts before range ends AND event ends after range starts
-    return event.startDate <= endStr && event.endDate >= startStr;
-  });
 }
 
 // Month cells have room for only a few rows. Keep user-created events visible
@@ -541,12 +523,6 @@ export function formatTimeValue(hour: number, minute: number): string {
   return `${hour.toString().padStart(2, "0")}:${minute
     .toString()
     .padStart(2, "0")}`;
-}
-
-// Parse HH:mm to hour and minute
-export function parseTimeValue(time: string): { hour: number; minute: number } {
-  const [hour, minute] = time.split(":").map(Number);
-  return { hour, minute };
 }
 
 // Check if a date is today
