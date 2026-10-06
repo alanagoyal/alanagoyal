@@ -6,13 +6,10 @@
  *
  * ## Design Patterns
  *
- * 1. **Simple enum-like values** (e.g., Finder sidebar):
- *    Use `createSidebarPersistence()` factory with validation.
- *
- * 2. **Dynamic values** (e.g., Photos with collection IDs):
+ * 1. **Dynamic values** (e.g., Photos with collection IDs):
  *    Use simple load/save functions that accept any string.
  *
- * 3. **Compound state** (e.g., Settings with category + panel):
+ * 2. **Compound state** (e.g., Settings with category + panel):
  *    Use JSON serialization with validation on load.
  *
  * ## Adding Persistence to a New App
@@ -59,86 +56,8 @@ const STORAGE_KEYS = {
 type StorageArea = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 // ============================================================================
-// Generic Factory (for simple enum-like sidebar values)
-// ============================================================================
-
-interface SidebarPersistence<T extends string> {
-  load: () => T;
-  save: (value: T) => void;
-  clear: () => void;
-}
-
-/**
- * Creates a type-safe persistence manager for sidebar state.
- * Use this when sidebar items are a fixed set of known values.
- *
- * @param key - sessionStorage key
- * @param defaultValue - fallback when no saved state exists
- * @param validValues - array of valid values for validation
- */
-export function createSidebarPersistence<T extends string>(
-  key: string,
-  defaultValue: T,
-  validValues: readonly T[]
-): SidebarPersistence<T> {
-  const isValid = (value: string | null): value is T => {
-    return value !== null && validValues.includes(value as T);
-  };
-
-  return {
-    load: (): T => {
-      if (typeof window === "undefined") return defaultValue;
-      try {
-        const saved = sessionStorage.getItem(key);
-        return isValid(saved) ? saved : defaultValue;
-      } catch {
-        return defaultValue;
-      }
-    },
-
-    save: (value: T): void => {
-      if (typeof window === "undefined") return;
-      try {
-        sessionStorage.setItem(key, value);
-      } catch {
-        // Ignore storage errors (e.g., quota exceeded, private browsing)
-      }
-    },
-
-    clear: (): void => {
-      if (typeof window === "undefined") return;
-      try {
-        sessionStorage.removeItem(key);
-      } catch {
-        // Ignore storage errors
-      }
-    },
-  };
-}
-
-// ============================================================================
 // Finder Persistence
 // ============================================================================
-
-// Note: SidebarItem type is defined in finder-app.tsx as the source of truth.
-// This array must match that type.
-const FINDER_SIDEBAR_ITEMS = [
-  "recents",
-  "applications",
-  "desktop",
-  "documents",
-  "downloads",
-  "projects",
-  "trash",
-] as const;
-
-type FinderSidebarItem = (typeof FINDER_SIDEBAR_ITEMS)[number];
-
-export const finderSidebarPersistence = createSidebarPersistence<FinderSidebarItem>(
-  STORAGE_KEYS.FINDER_SIDEBAR,
-  "recents",
-  FINDER_SIDEBAR_ITEMS
-);
 
 // Path persistence for full navigation path (e.g., /Users/alanagoyal/Projects/repo/folder)
 export function loadFinderPath(): string | null {
@@ -160,8 +79,13 @@ export function saveFinderPath(path: string): void {
 }
 
 export function clearFinderState(): void {
-  finderSidebarPersistence.clear();
   if (typeof window === "undefined") return;
+  try {
+    // Continue clearing the legacy sidebar key alongside the current path.
+    sessionStorage.removeItem(STORAGE_KEYS.FINDER_SIDEBAR);
+  } catch {
+    // Ignore storage errors
+  }
   try {
     sessionStorage.removeItem(STORAGE_KEYS.FINDER_PATH);
   } catch {
@@ -173,7 +97,7 @@ export function clearFinderState(): void {
 // Photos Persistence
 // ============================================================================
 
-// Photos accepts dynamic collection IDs, so we can't use the factory.
+// Photos accepts dynamic collection IDs.
 // Any non-empty string is valid (library, favorites, or collection IDs).
 
 export function loadPhotosView(): string {
