@@ -50,11 +50,3 @@ export function BootSequence({ onComplete, autoStart = true }: BootSequenceProps
     </div>
   );
 }
-
-// Hook for manual start control
-export function useBootSequence() {
-  const [isBooting, setIsBooting] = useState(false);
-  const start = () => setIsBooting(true);
-  const reset = () => setIsBooting(false);
-  return { isBooting, start, reset };
-}
