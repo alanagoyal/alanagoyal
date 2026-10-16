@@ -59,17 +59,6 @@ export function loadCalendars(): Calendar[] {
   return DEFAULT_CALENDARS;
 }
 
-// Save calendars to localStorage
-export function saveCalendars(calendars: Calendar[]): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(CALENDARS_STORAGE_KEY, JSON.stringify(calendars));
-  } catch {
-    // ignore storage errors
-  }
-}
-
 // Generate a unique ID for new events
 export function generateEventId(): string {
   return `event-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
