@@ -243,10 +243,6 @@ export function migrateAppWindowFrame(
   };
 }
 
-export function getAppIds(): string[] {
-  return APPS.map((app) => app.id);
-}
-
 export function getAppsInDockOrder(): AppConfig[] {
   return APPS
     .map((app, registryIndex) => ({ app, registryIndex }))
