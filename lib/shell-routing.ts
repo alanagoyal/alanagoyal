@@ -1,7 +1,6 @@
 import { getMobileShellFallbackAppId } from "@/lib/app-availability";
 
 export const SHELL_DEFAULT_APP_ID = "notes";
-export const SHELL_DEFAULT_NOTE_SLUG = "about-me";
 export const SHELL_NOTES_ROOT_PATH = "/notes";
 
 const APP_ROUTE_SEGMENTS = {
