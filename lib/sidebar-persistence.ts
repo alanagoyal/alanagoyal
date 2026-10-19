@@ -508,7 +508,6 @@ export function clearMessagesState(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
     sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_INITIAL_SCROLL_PLAYED);
-    sessionStorage.removeItem(STORAGE_KEYS.MESSAGES_CONVERSATION);
   } catch {
     // Ignore storage errors
   }
