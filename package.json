@@ -53,7 +53,6 @@
     "react-dom": "18.2.0",
     "react-markdown": "^9.0.1",
     "react-swipeable": "^7.0.2",
-    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
