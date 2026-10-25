@@ -13,7 +13,6 @@ import {
   subMonths,
   subYears,
   format,
-  isSameDay,
   isSameMonth,
   isToday,
   parseISO,
@@ -526,7 +525,7 @@ export function formatTimeValue(hour: number, minute: number): string {
 }
 
 // Check if a date is today
-export { isToday, isSameDay, isSameMonth, format, parseISO };
+export { isToday, isSameMonth, format, parseISO };
 
 // Get all months in a year
 export function getYearMonths(year: number): Date[] {
