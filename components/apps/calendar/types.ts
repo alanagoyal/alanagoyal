@@ -17,10 +17,3 @@ export interface Calendar {
 }
 
 export type ViewType = "day" | "week" | "month" | "year";
-
-export interface CalendarState {
-  currentDate: Date;
-  view: ViewType;
-  events: CalendarEvent[];
-  calendars: Calendar[];
-}
