@@ -1,7 +1,6 @@
 import { Chess, type Color, type Move, type Square } from "chess.js";
 
 export type ChessDifficulty = "easy" | "medium" | "hard";
-export type GameMode = "computer" | "online";
 
 export interface ChessMoveRecord {
   from: Square;
