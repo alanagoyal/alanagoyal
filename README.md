@@ -27,7 +27,7 @@ a macos sierra 10.12 themed desktop with:
 - group chats and one-on-one conversations
 - pinned conversations and swipe gestures
 - @mentions and contact management
-- command menu (⌘K) with keyboard shortcuts
+- command menu (⌘k) with keyboard shortcuts
 - focus mode integration (mutes notifications)
 
 **iterm** - terminal emulator
@@ -37,19 +37,19 @@ a macos sierra 10.12 themed desktop with:
 
 **textedit** - plain text editor
 - opens existing text files in their own windows
-- direct opens without a file use the same Finder picker flow
-- launching from Finder focuses an open TextEdit document window first, otherwise opens a smaller Finder window at Documents
+- direct opens without a file use the same finder picker flow
+- launching from finder focuses an open textedit document window first, otherwise opens a smaller finder window at documents
 
 **preview** - image and pdf viewer
 - opens images and pdfs in their own windows
-- direct opens without a file use the same Finder picker flow
-- launching from Finder focuses an open Preview document window first, otherwise opens a smaller Finder window at Desktop
+- direct opens without a file use the same finder picker flow
+- launching from finder focuses an open preview document window first, otherwise opens a smaller finder window at desktop
 - document-app launch behavior is documented in `docs/document-apps.md`
 
 **finder** - file browser
 - sidebar navigation (recents, applications, desktop, documents, downloads, projects)
 - browse local files and github repositories
-- multiple Finder windows on desktop
+- multiple finder windows on desktop
 - launch apps from applications folder
 
 **calendar** - apple calendar clone
@@ -70,7 +70,7 @@ a macos sierra 10.12 themed desktop with:
 - keyboard navigation (arrow keys, escape to close)
 - upload via ios shortcut with ai auto-categorization
 
-**games** - an Apple Games-inspired library with six playable games
+**games** - an apple games-inspired library with six playable games
 - library layout with sorting, play history, and app-style game artwork
 - snake, 2048, minesweeper, memory match, and breakout run entirely on-device
 - local computer play with easy, medium, and hard opponents
@@ -96,23 +96,23 @@ a macos sierra 10.12 themed desktop with:
 
 mobile support is intentionally app-specific. supported apps render as
 touch-optimized, full-screen experiences; every unsupported app route redirects
-to `/notes` on mobile. Unsupported apps are desktop-only components and do not
+to `/notes` on mobile. unsupported apps are desktop-only components and do not
 retain separate mobile presenters.
 
-| app | in Dock by default | mobile support | mobile route behavior |
+| app | in dock by default | mobile support | mobile route behavior |
 |-----|--------------------|----------------|-----------------------|
-| Finder | yes | no | redirects to `/notes` |
-| Notes | yes | yes | opens Notes |
-| Messages | yes | yes | opens Messages |
-| Photos | yes | yes | opens Photos |
-| Music | yes | yes | opens Music |
-| Calendar | yes | yes | opens Calendar |
-| Weather | no | no | redirects to `/notes` |
-| iTerm | yes | no | redirects to `/notes` |
-| Games | yes | no | redirects to `/notes` |
-| Settings | yes | no | redirects to `/notes` |
-| TextEdit | no | no | redirects to `/notes` |
-| Preview | no | no | redirects to `/notes` |
+| finder | yes | no | redirects to `/notes` |
+| notes | yes | yes | opens notes |
+| messages | yes | yes | opens messages |
+| photos | yes | yes | opens photos |
+| music | yes | yes | opens music |
+| calendar | yes | yes | opens calendar |
+| weather | no | no | redirects to `/notes` |
+| iterm | yes | no | redirects to `/notes` |
+| games | yes | no | redirects to `/notes` |
+| settings | yes | no | redirects to `/notes` |
+| textedit | no | no | redirects to `/notes` |
+| preview | no | no | redirects to `/notes` |
 
 supported mobile apps include:
 - swipe gestures for navigation
@@ -137,14 +137,14 @@ the app uses next.js app router with a route group for the desktop environment. 
 **photos** use supabase storage:
 - images stored in supabase storage bucket
 - metadata (filename, timestamp, collections) in database
-- embedded camera and exposure metadata is read from each image on demand in the desktop Info panel and mobile swipe-up details; GPS remains unused
+- embedded camera and exposure metadata is read from each image on demand in the desktop info panel and mobile swipe-up details; gps remains unused
 - favorites are per-browser (stored in localstorage)
 - upload via api with ai auto-categorization (openai gpt-4o-mini)
 
 **games** uses a browser-local identity and supabase-backed chess matches:
 - chess rules and computer play use `chess.js`; the computer search runs in a web worker
 - the server validates online moves and uses optimistic versions to reject conflicting updates
-- synchronized match state is persisted as FEN, PGN, and move history; heartbeats distinguish reconnects from abandonment
+- synchronized match state is persisted as fen, pgn, and move history; heartbeats distinguish reconnects from abandonment
 
 the app is built with:
 - **next.js** with app router
@@ -211,7 +211,7 @@ upload photos directly from your iphone using the share sheet:
    - **format date** → iso 8601
    - **get contents of url**:
      - url: `https://yourdomain.com/api/photos/upload`
-     - method: POST
+     - method: `POST`
      - headers: `x-api-key: <your-PHOTOS_UPLOAD_API_KEY>`
      - body: json `{ "image": [base64], "timestamp": [formatted date] }`
 3. name it "add to website"
@@ -275,7 +275,7 @@ run the application in the command line and it will be available at http://local
 
 ## run the messages eval
 
-with `BRAINTRUST_API_KEY` configured in `.env.local`, run the Messages group-chat behavior eval:
+with `BRAINTRUST_API_KEY` configured in `.env.local`, run the messages group-chat behavior eval:
 
 `npm run eval:chat`
 
