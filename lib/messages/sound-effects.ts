@@ -88,14 +88,6 @@ class SoundEffectPlayer {
     }
   }
 
-  public isEnabled(): boolean {
-    return this.enabled;
-  }
-
-  public setEnabled(enabled: boolean) {
-    this.enabled = enabled;
-  }
-
   public getVolume(): number {
     return this.volume;
   }
