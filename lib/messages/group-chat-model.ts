@@ -71,12 +71,12 @@ Pick the best action(s).`;
 }
 
 export function buildGroupTools(participantNames: string[], lastSpeaker: string | null) {
-  const eligibleSpeakers = lastSpeaker && lastSpeaker !== "me"
+  const eligibleParticipants = lastSpeaker && lastSpeaker !== "me"
     ? participantNames.filter((name) => name !== lastSpeaker)
     : participantNames;
 
-  const eligibleReactors = lastSpeaker && lastSpeaker !== "me"
-    ? participantNames.filter((name) => name !== lastSpeaker)
+  const participantOptions = eligibleParticipants.length > 0
+    ? eligibleParticipants
     : participantNames;
 
   return [
@@ -90,7 +90,7 @@ export function buildGroupTools(participantNames: string[], lastSpeaker: string 
           properties: {
             participant: {
               type: "string",
-              enum: eligibleReactors.length > 0 ? eligibleReactors : participantNames,
+              enum: participantOptions,
             },
             reaction: {
               type: "string",
@@ -111,7 +111,7 @@ export function buildGroupTools(participantNames: string[], lastSpeaker: string 
           properties: {
             participant: {
               type: "string",
-              enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
+              enum: participantOptions,
             },
             messages: {
               type: "array",
@@ -151,7 +151,7 @@ export function buildGroupTools(participantNames: string[], lastSpeaker: string 
           properties: {
             participant: {
               type: "string",
-              enum: eligibleSpeakers.length > 0 ? eligibleSpeakers : participantNames,
+              enum: participantOptions,
             },
             message: {
               type: "string",
