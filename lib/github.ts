@@ -246,7 +246,6 @@ interface GitHubPushEvent {
       distinct: boolean;
     }>;
   };
-  created_at: string;
 }
 
 interface GitHubCommitDetail {
@@ -299,7 +298,6 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
     const commitInfos: Array<{
       repo: string;
       sha: string;
-      createdAt: string;
     }> = [];
 
     const seenShas = new Set<string>();
@@ -316,7 +314,6 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
             commitInfos.push({
               repo: repoName,
               sha: commit.sha,
-              createdAt: event.created_at,
             });
           }
         }
@@ -326,7 +323,6 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
         commitInfos.push({
           repo: repoName,
           sha: event.payload.head,
-          createdAt: event.created_at,
         });
       }
     }
