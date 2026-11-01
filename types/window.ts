@@ -53,5 +53,4 @@ export type WindowAction =
   | { type: "UPDATE_WINDOW_METADATA"; windowId: string; metadata: Record<string, unknown> }
   | { type: "CLOSE_APP"; appId: string }
   // State management
-  | { type: "RESTORE_STATE"; state: WindowManagerState }
-  | { type: "INCREMENT_Z_INDEX" };
+  | { type: "RESTORE_STATE"; state: WindowManagerState };
