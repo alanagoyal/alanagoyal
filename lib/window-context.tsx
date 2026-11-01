@@ -508,13 +508,6 @@ function windowReducer(
       return action.state;
     }
 
-    case "INCREMENT_Z_INDEX": {
-      return {
-        ...state,
-        nextZIndex: state.nextZIndex + 1,
-      };
-    }
-
     // ==========================================================================
     // Multi-Window Actions
     // ==========================================================================
@@ -883,7 +876,6 @@ interface WindowManagerContextValue {
   getFocusedAppId: () => string | null;
   // State management
   restoreDesktopDefault: () => void;
-  claimZIndex: () => number;
   // Menu bar state (prevents window focus when menu is open)
   // Uses a ref for synchronous checks in event handlers
   isMenuOpenRef: React.MutableRefObject<boolean>;
@@ -957,18 +949,10 @@ export function WindowManagerProvider({
     isMenuOpenRef.current = isOpen;
   }, []);
 
-  // Ref to track z-index synchronously for external callers
-  const zIndexRef = React.useRef(state.nextZIndex);
-
   // Mark as hydrated on mount
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-
-  // Keep z-index ref in sync with state
-  useEffect(() => {
-    zIndexRef.current = state.nextZIndex;
-  }, [state.nextZIndex]);
 
   // Keep latest state available for cleanup flush
   useEffect(() => {
@@ -1089,14 +1073,6 @@ export function WindowManagerProvider({
   const restoreDesktopDefault = useCallback(() => {
     clearAllAppState();
     dispatch({ type: "RESTORE_STATE", state: getDesktopDefaultState() });
-  }, []);
-
-  // Claim a z-index for external windows
-  const claimZIndex = useCallback(() => {
-    const zIndex = zIndexRef.current;
-    zIndexRef.current += 1;
-    dispatch({ type: "INCREMENT_Z_INDEX" });
-    return zIndex;
   }, []);
 
   // ==========================================================================
@@ -1227,7 +1203,6 @@ export function WindowManagerProvider({
     getFocusedAppId,
     // State management
     restoreDesktopDefault,
-    claimZIndex,
     // Menu bar state
     isMenuOpenRef,
     setMenuOpen,
