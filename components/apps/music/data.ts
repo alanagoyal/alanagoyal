@@ -7,7 +7,6 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
     name: "🪐",
     description: "Essential hip hop tracks",
     coverArt: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/e1/cb/32/e1cb3268-1ba1-2c11-2f47-92ee469fac6a/09UMGIM33420.rgb.jpg/600x600bb.jpg",
-    is_featured: true,
     tracks: [
       {
         id: "hh1",
@@ -1156,11 +1155,6 @@ export function getAllSongs() {
   }
 
   return Array.from(songs.values());
-}
-
-// Get the featured playlist
-export function getFeaturedPlaylist() {
-  return DEFAULT_PLAYLISTS.find((p) => p.is_featured) || DEFAULT_PLAYLISTS[0];
 }
 
 // Default track for media widget when nothing has been played

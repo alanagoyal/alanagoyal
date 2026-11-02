@@ -15,7 +15,6 @@ export interface Playlist {
   description?: string;
   coverArt: string;
   tracks: PlaylistTrack[];
-  is_featured?: boolean;
 }
 
 // View types
