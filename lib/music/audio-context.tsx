@@ -24,7 +24,6 @@ interface AudioContextValue {
   play: (track: PlaylistTrack, queue: PlaylistTrack[]) => void;
   pause: () => void;
   resume: () => void;
-  stop: () => void;
   next: () => void;
   previous: () => void;
   seek: (progress: number) => void;
@@ -439,24 +438,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [playbackState.currentTrack]);
 
-  const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      playbackTrackRef.current = null;
-      setPlaybackState((prev) => ({
-        ...prev,
-        isPlaying: false,
-        currentTrack: null,
-        progress: 0,
-        queue: [],
-        originalQueue: [],
-        queueIndex: -1,
-        error: null,
-      }));
-    }
-  }, []);
-
   const next = useCallback(() => {
     const { queue, queueIndex, repeatMode, isPlaying } = stateRef.current;
     if (queue.length === 0) return;
@@ -610,7 +591,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         play,
         pause,
         resume,
-        stop,
         next,
         previous,
         seek,
