@@ -10,7 +10,6 @@ export interface Photo {
 export interface Collection {
   id: string;
   name: string;
-  coverPhotoId: string;
 }
 
 export type PhotosView = "library" | "favorites" | string;
