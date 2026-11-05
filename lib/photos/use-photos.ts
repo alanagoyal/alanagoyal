@@ -12,7 +12,6 @@ interface UsePhotosResult {
   loading: boolean;
   error: string | null;
   toggleFavorite: (photoId: string) => void;
-  refetch: () => Promise<void>;
 }
 
 interface UsePhotosOptions {
@@ -126,6 +125,5 @@ export function usePhotos(options?: UsePhotosOptions): UsePhotosResult {
     loading,
     error,
     toggleFavorite,
-    refetch: fetchPhotos,
   };
 }
