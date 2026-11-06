@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChartAlbum, ChartSong, PlaylistTrack } from "../types";
+import type { ChartItem, PlaylistTrack } from "../types";
 import { useAudio } from "@/lib/music/audio-context";
 import { ChevronLeft, ChevronRight, Play, Pause, Loader2 } from "lucide-react";
 
@@ -14,12 +14,12 @@ interface BrowseViewProps {
 
 interface ChartGridProps {
   title: string;
-  items: (ChartAlbum | ChartSong)[];
+  items: ChartItem[];
   isMobileView: boolean;
   loadingTrack: string | null;
-  isItemPlaying: (item: ChartAlbum | ChartSong) => boolean;
-  isItemActive: (item: ChartAlbum | ChartSong) => boolean;
-  onPlay: (item: ChartAlbum | ChartSong) => void;
+  isItemPlaying: (item: ChartItem) => boolean;
+  isItemActive: (item: ChartItem) => boolean;
+  onPlay: (item: ChartItem) => void;
 }
 
 function SkeletonGrid({ isMobileView, count = 10 }: { isMobileView: boolean; count?: number }) {
@@ -134,8 +134,8 @@ function ChartGrid({
 
 export function BrowseView({ isMobileView }: BrowseViewProps) {
   const { play, pause, playbackState } = useAudio();
-  const [topAlbums, setTopAlbums] = useState<ChartAlbum[]>([]);
-  const [topSongs, setTopSongs] = useState<ChartSong[]>([]);
+  const [topAlbums, setTopAlbums] = useState<ChartItem[]>([]);
+  const [topSongs, setTopSongs] = useState<ChartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [loadingTrack, setLoadingTrack] = useState<string | null>(null);
@@ -180,15 +180,15 @@ export function BrowseView({ isMobileView }: BrowseViewProps) {
   }, [playbackState.currentTrack]);
 
   // Check if an item is currently playing (or paused but selected)
-  const isItemPlaying = (item: ChartAlbum | ChartSong) => {
+  const isItemPlaying = (item: ChartItem) => {
     return playingItemId === item.id && playbackState.isPlaying;
   };
 
-  const isItemActive = (item: ChartAlbum | ChartSong) => {
+  const isItemActive = (item: ChartItem) => {
     return playingItemId === item.id && !!playbackState.currentTrack;
   };
 
-  const handlePlayItem = async (item: ChartAlbum | ChartSong) => {
+  const handlePlayItem = async (item: ChartItem) => {
     // If this item is already playing, pause it
     if (playingItemId === item.id && playbackState.isPlaying) {
       pause();

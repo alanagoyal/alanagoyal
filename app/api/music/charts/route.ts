@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ChartItem } from "@/components/apps/music/types";
 
 interface ITunesRSSEntry {
   "im:name": { label: string };
@@ -28,7 +29,7 @@ function parseLimit(rawLimit: string | null): number | null {
   return parsed;
 }
 
-function transformEntry(entry: ITunesRSSEntry) {
+function transformEntry(entry: ITunesRSSEntry): ChartItem {
   // Get the largest image and upscale to 600x600
   const imageUrl = entry["im:image"][2]?.label || entry["im:image"][0]?.label;
   const albumArt = imageUrl?.replace(/\d+x\d+bb/, "600x600bb") || "";
