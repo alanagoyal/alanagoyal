@@ -27,18 +27,7 @@ export type MusicView =
   | "playlist";
 
 // iTunes Chart types
-export interface ChartAlbum {
-  id: string;
-  name: string;
-  artist: string;
-  artistUrl: string;
-  albumArt: string;
-  url: string;
-  releaseDate: string;
-  genre: string;
-}
-
-export interface ChartSong {
+export interface ChartItem {
   id: string;
   name: string;
   artist: string;
