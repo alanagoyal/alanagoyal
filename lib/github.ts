@@ -24,42 +24,8 @@ interface GitHubTreeItem {
   sha: string;
 }
 
-// In-memory cache with sessionStorage persistence
-const STORAGE_KEY = "github_cache";
+// In-memory cache for the GitHub API route.
 const cache = new Map<string, CacheEntry<unknown>>();
-
-// Load cache from sessionStorage on init
-function loadCache(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      Object.entries(parsed).forEach(([key, value]) => {
-        cache.set(key, value as CacheEntry<unknown>);
-      });
-    }
-  } catch {
-    // Silently ignore sessionStorage errors (quota exceeded, private browsing, etc.)
-  }
-}
-
-// Save cache to sessionStorage
-function saveCache(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const obj: Record<string, CacheEntry<unknown>> = {};
-    cache.forEach((value, key) => {
-      obj[key] = value;
-    });
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-  } catch {
-    // Silently ignore sessionStorage errors (quota exceeded, private browsing, etc.)
-  }
-}
-
-// Initialize cache from storage
-loadCache();
 
 function getCached<T>(key: string, ttl: number): T | null {
   const entry = cache.get(key) as CacheEntry<T> | undefined;
@@ -71,7 +37,6 @@ function getCached<T>(key: string, ttl: number): T | null {
 
 function setCache<T>(key: string, data: T): void {
   cache.set(key, { data, timestamp: Date.now() });
-  saveCache();
 }
 
 export async function fetchUserRepos(): Promise<GitHubRepo[]> {
