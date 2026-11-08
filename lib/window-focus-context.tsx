@@ -28,16 +28,8 @@ export function WindowFocusProvider({
   isMaximized,
   onDragStart,
   dialogContainerRef,
-}: {
+}: WindowFocusContextValue & {
   children: React.ReactNode;
-  isFocused: boolean;
-  appId: string;
-  closeWindow: () => void;
-  minimizeWindow: () => void;
-  toggleMaximize: () => void;
-  isMaximized: boolean;
-  onDragStart: (e: React.MouseEvent) => void;
-  dialogContainerRef: RefObject<HTMLDivElement | null>;
 }) {
   return (
     <WindowFocusContext.Provider
