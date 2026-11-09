@@ -43,11 +43,7 @@ export function FileMenuProvider({ children }: { children: ReactNode }) {
 
   const getActions = useCallback(() => actionsRef.current, []);
 
-  const registerNotesActions = useCallback((notesActions: {
-    onNewNote: () => void;
-    onPinNote: () => void;
-    onDeleteNote: () => void;
-  }) => {
+  const registerNotesActions = useCallback<FileMenuContextValue["registerNotesActions"]>((notesActions) => {
     actionsRef.current = {
       ...actionsRef.current,
       onNewNote: notesActions.onNewNote,
@@ -65,19 +61,14 @@ export function FileMenuProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const updateNotesState = useCallback((state: { noteIsPinned: boolean }) => {
+  const updateNotesState = useCallback<FileMenuContextValue["updateNotesState"]>((state) => {
     actionsRef.current = {
       ...actionsRef.current,
       noteIsPinned: state.noteIsPinned,
     };
   }, []);
 
-  const registerMessagesActions = useCallback((messagesActions: {
-    onNewChat: () => void;
-    onPinChat: () => void;
-    onHideAlerts: () => void;
-    onDeleteChat: () => void;
-  }) => {
+  const registerMessagesActions = useCallback<FileMenuContextValue["registerMessagesActions"]>((messagesActions) => {
     actionsRef.current = {
       ...actionsRef.current,
       onNewChat: messagesActions.onNewChat,
@@ -99,7 +90,7 @@ export function FileMenuProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const updateMessagesState = useCallback((state: { chatIsPinned: boolean; hideAlertsActive: boolean }) => {
+  const updateMessagesState = useCallback<FileMenuContextValue["updateMessagesState"]>((state) => {
     actionsRef.current = {
       ...actionsRef.current,
       chatIsPinned: state.chatIsPinned,
