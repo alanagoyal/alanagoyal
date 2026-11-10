@@ -49,16 +49,17 @@ function loadRecentlyPlayedTracks(): PlaylistTrack[] {
 }
 
 // Persist playback state including queue for next/previous to work after refresh
-interface PersistedState {
-  volume: number;
-  isShuffle: boolean;
-  repeatMode: RepeatMode;
-  currentTrack: PlaylistTrack | null;
-  progress: number;
-  queue: PlaylistTrack[];
-  originalQueue: PlaylistTrack[];
-  queueIndex: number;
-}
+type PersistedState = Pick<
+  PlaybackState,
+  | "volume"
+  | "isShuffle"
+  | "repeatMode"
+  | "currentTrack"
+  | "progress"
+  | "queue"
+  | "originalQueue"
+  | "queueIndex"
+>;
 
 function loadStoredState(): Partial<PlaybackState> {
   if (typeof window === "undefined") return {};
