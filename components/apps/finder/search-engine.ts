@@ -19,7 +19,6 @@ interface SearchOptions {
 export interface SearchResult {
   entry: IndexEntry;
   score: number;
-  matchPositions: number[];
 }
 
 export type EntryInput = { name: string; type: "file" | "dir" | "app"; path: string; icon?: string; section: SidebarItem };
@@ -32,7 +31,7 @@ function charBitmap(s: string): number {
 
 const SEPARATORS = new Set(["/", ".", "-", "_", " "]);
 
-function fuzzyMatch(query: string, target: string): { score: number; positions: number[] } | null {
+function fuzzyMatch(query: string, target: string): number | null {
   if (query.length > target.length) return null;
 
   const positions: number[] = [];
@@ -59,7 +58,7 @@ function fuzzyMatch(query: string, target: string): { score: number; positions: 
 
   score += Math.max(0, 50 - (positions[positions.length - 1] - positions[0]));
   score += Math.max(0, 30 - target.length);
-  return { score, positions };
+  return score;
 }
 
 function toIndexEntry(e: EntryInput): IndexEntry {
@@ -108,9 +107,9 @@ export class FinderSearchEngine {
       const entry = candidates[i];
       if ((qBitmap & entry.charBitmap) !== qBitmap) continue;
 
-      const m = fuzzyMatch(q, entry.nameLower);
-      if (m) {
-        results.push({ entry, score: m.score, matchPositions: m.positions });
+      const score = fuzzyMatch(q, entry.nameLower);
+      if (score !== null) {
+        results.push({ entry, score });
       }
     }
 
