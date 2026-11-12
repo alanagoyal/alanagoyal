@@ -1,3 +1,4 @@
+// Public repository browsing deliberately uses unauthenticated requests.
 const GITHUB_USERNAME = "alanagoyal";
 const CACHE_TTL_REPOS = 60 * 60 * 1000; // 1 hour
 const CACHE_TTL_TREES = 2 * 60 * 60 * 1000; // 2 hours
@@ -49,9 +50,6 @@ export async function fetchUserRepos(): Promise<GitHubRepo[]> {
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...(process.env.GITHUB_TOKEN && {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        }),
       },
       next: { revalidate: 3600 }, // Next.js cache for 1 hour
     }
@@ -85,9 +83,6 @@ export async function fetchRepoTree(
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...(process.env.GITHUB_TOKEN && {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        }),
       },
     }
   );
@@ -111,9 +106,6 @@ export async function fetchRepoTree(
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...(process.env.GITHUB_TOKEN && {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        }),
       },
     }
   );
@@ -152,9 +144,6 @@ export async function fetchFileContent(
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...(process.env.GITHUB_TOKEN && {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        }),
       },
     }
   );
@@ -239,9 +228,6 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
-          ...(process.env.GITHUB_TOKEN && {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          }),
         },
       }
     );
@@ -306,9 +292,6 @@ export async function fetchRecentlyModifiedFiles(): Promise<RecentlyModifiedFile
             {
               headers: {
                 Accept: "application/vnd.github.v3+json",
-                ...(process.env.GITHUB_TOKEN && {
-                  Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-                }),
               },
             }
           );

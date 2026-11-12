@@ -258,7 +258,7 @@ REVALIDATE_TOKEN="<your-revalidate-token>"
 ```
 
 **notes:**
-- `GITHUB_TOKEN` is optional but helps avoid rate limits when using iterm/finder github integration
+- Finder and iTerm browse public GitHub repositories without a token. Requests are cached and subject to GitHub’s unauthenticated rate limits; any configured `GITHUB_TOKEN` is ignored.
 - `SUPABASE_SERVICE_ROLE_KEY` is needed server-side for photo uploads and online chess; never expose it with a `NEXT_PUBLIC_` prefix
 - online chess keeps completed and expired matches for seven days, then prunes them during subsequent matchmaking
 - `OPENAI_API_KEY` is used for ai photo categorization
