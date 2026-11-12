@@ -2,6 +2,7 @@ import { Eval, type EvalScorer, wrapOpenAI } from "braintrust";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
+import { getFunctionToolCalls } from "../lib/messages/function-tool-calls";
 import {
   GROUP_CHAT_MODEL,
   buildGroupPrompt,
@@ -188,7 +189,7 @@ function findPrimaryAction(
 function parseActions(toolCalls: ChatCompletionMessageToolCall[] | undefined): GroupChatAction[] {
   if (!toolCalls?.length) return [];
 
-  return toolCalls.map((toolCall) => {
+  return getFunctionToolCalls(toolCalls).map((toolCall) => {
     const args = parseToolCallArguments(toolCall.function.arguments);
     return {
       action: toolCall.function.name as GroupChatActionName,
