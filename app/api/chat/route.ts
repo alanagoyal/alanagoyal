@@ -6,6 +6,7 @@ import { Recipient, Message } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
 import { wrapOpenAI } from "braintrust";
 import { initLogger } from "braintrust";
+import { getFunctionToolCalls } from "@/lib/messages/function-tool-calls";
 import {
   formatConversation,
   formatConversationReversed,
@@ -302,8 +303,8 @@ export async function POST(req: NextRequest) {
       throw new Error("Unexpected streaming response from chat completions API");
     }
 
-    const toolCalls = response.choices[0]?.message?.tool_calls;
-    if (!toolCalls || toolCalls.length === 0) {
+    const toolCalls = getFunctionToolCalls(response.choices[0]?.message?.tool_calls);
+    if (toolCalls.length === 0) {
       console.error(
         "No tool calls in response. Message:",
         JSON.stringify(response.choices[0]?.message, null, 2)
@@ -312,7 +313,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Return all actions (supports react + respond in same turn)
-    const actions = toolCalls.map((tc: ChatCompletionMessageToolCall) => {
+    const actions = toolCalls.map((tc) => {
       const args = parseToolCallArguments(
         tc.function.arguments,
         tc.function.name
