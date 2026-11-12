@@ -13,7 +13,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Mention from "@tiptap/extension-mention";
 import { SuggestionProps } from "@tiptap/suggestion";
-import Placeholder from "@tiptap/extension-placeholder";
+import { Placeholder } from "@tiptap/extensions";
 import { soundEffects } from "@/lib/messages/sound-effects";
 
 interface MessageInputProps {
@@ -148,7 +148,13 @@ export const MessageInput = forwardRef<
   // Tiptap editor definition
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Keep the v2 composer schema; v3 enables these extensions by default.
+        link: false,
+        listKeymap: false,
+        underline: false,
+        trailingNode: false,
+      }),
       Placeholder.configure({
         placeholder: "Type a message...",
       }),
@@ -156,7 +162,6 @@ export const MessageInput = forwardRef<
         HTMLAttributes: {
           class: "mention-node",
           style: "color: #0A7CFF !important; font-weight: 500 !important;",
-          onanimationend: 'this.classList.add("shimmer-done")',
         },
         renderText: ({ node }) => {
           const recipient = recipients.find((r) => r.id === node.attrs.id);
@@ -269,6 +274,19 @@ export const MessageInput = forwardRef<
         enterKeyHint: "send",
         style: "min-height: 32px; max-height: 200px; overflow-y: hidden;",
       },
+      handleDOMEvents: {
+        animationend: (_view, event) => {
+          // Keep animation behavior out of serialized mention HTML.
+          if (
+            event.animationName === "shimmer" &&
+            event.target instanceof HTMLElement &&
+            event.target.classList.contains("mention-node")
+          ) {
+            event.target.classList.add("shimmer-done");
+          }
+          return false;
+        },
+      },
       handleKeyDown: (view, event) => {
         if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
@@ -282,6 +300,8 @@ export const MessageInput = forwardRef<
       },
     },
     immediatelyRender: false,
+    // The mobile send button reads editor state during render.
+    shouldRerenderOnTransaction: true,
   });
 
   const handleSubmit = () => {
@@ -308,7 +328,7 @@ export const MessageInput = forwardRef<
   // Update editor content when message changes
   useEffect(() => {
     if (editor && message !== editor.getHTML()) {
-      editor.commands.setContent(message);
+      editor.commands.setContent(message, { emitUpdate: false });
     }
   }, [message, editor, isMobileView, disabled, conversationId]);
 
