@@ -1,14 +1,10 @@
-export interface GroupConversationReversed {
-  mostRecent: string | null;
-  history: string;
-}
+import type {
+  formatConversationReversed,
+  getConversationState,
+} from "./temporal-context";
 
-export interface GroupConversationState {
-  messagesSinceHuman: number;
-  lastHumanMessage: string | null;
-  lastHumanTime: string | null;
-  lastSpeaker: string | null;
-}
+export type GroupConversationReversed = ReturnType<typeof formatConversationReversed>;
+export type GroupConversationState = ReturnType<typeof getConversationState>;
 
 export interface NamedParticipant {
   name: string;
