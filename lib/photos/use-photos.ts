@@ -18,14 +18,8 @@ interface UsePhotosOptions {
   enabled?: boolean;
 }
 
-// Database row type (snake_case from Supabase)
-interface PhotoRow {
-  id: string;
-  filename: string;
-  url: string;
-  timestamp: string;
-  collections: string[];
-}
+// Favorites are stored locally rather than returned by Supabase.
+type PhotoRow = Omit<Photo, "isFavorite">;
 
 // Static collections (these don't change often)
 const COLLECTIONS: Collection[] = [
