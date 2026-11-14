@@ -1,16 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import type { Position, Size } from "@/types/window";
 
-export interface Position {
-  x: number;
-  y: number;
-}
-
-export interface Size {
-  width: number;
-  height: number;
-}
+export type { Position, Size } from "@/types/window";
 
 export type ResizeDirection = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw" | null;
 
