@@ -44,6 +44,8 @@ import {
   saveWeatherCustomCities,
   saveWeatherDataCache,
   saveWeatherSelectedCity,
+  type WeatherCachedHourForecast as HourForecast,
+  type WeatherCachedDailyForecast as DailyForecast,
   type WeatherDataCache,
   type WeatherCustomCity,
 } from "@/lib/sidebar-persistence";
@@ -99,21 +101,6 @@ interface OpenMeteoGeocodingResponse {
     latitude: number;
     longitude: number;
   }>;
-}
-
-interface HourForecast {
-  time: string;
-  temperature: number;
-  weatherCode: number;
-  precipitationChance: number;
-}
-
-interface DailyForecast {
-  date: string;
-  high: number;
-  low: number;
-  weatherCode: number;
-  precipitationChance: number;
 }
 
 interface CityWeather {
