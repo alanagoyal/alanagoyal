@@ -1,4 +1,4 @@
-import { Playlist, PlaylistTrack } from "./types";
+import { Album, Playlist, PlaylistTrack } from "./types";
 
 // Default playlists with hardcoded track data
 export const DEFAULT_PLAYLISTS: Playlist[] = [
@@ -1061,25 +1061,8 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
 ];
 
 // Get all unique albums from playlists
-export function getAlbumsFromPlaylists(): {
-  id: string;
-  name: string;
-  artist: string;
-  albumArt: string;
-  trackCount: number;
-  tracks: PlaylistTrack[];
-}[] {
-  const albumMap = new Map<
-    string,
-    {
-      id: string;
-      name: string;
-      artist: string;
-      albumArt: string;
-      trackCount: number;
-      tracks: PlaylistTrack[];
-    }
-  >();
+export function getAlbumsFromPlaylists(): Album[] {
+  const albumMap = new Map<string, Album>();
 
   for (const playlist of DEFAULT_PLAYLISTS) {
     for (const track of playlist.tracks) {
