@@ -5,16 +5,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pause, Play } from "lucide-react";
 import { useAudio } from "@/lib/music/audio-context";
-import type { PlaylistTrack } from "../types";
-
-interface Album {
-  id: string;
-  name: string;
-  artist: string;
-  albumArt: string;
-  trackCount: number;
-  tracks: PlaylistTrack[];
-}
+import type { Album } from "../types";
 
 interface AlbumsViewProps {
   albums: Album[];
