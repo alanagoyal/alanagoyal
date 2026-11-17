@@ -26,6 +26,13 @@ export interface Album {
   tracks: PlaylistTrack[];
 }
 
+export interface Artist {
+  id: string;
+  name: string;
+  image: string;
+  trackCount: number;
+}
+
 // View types
 export type MusicView =
   | "home"

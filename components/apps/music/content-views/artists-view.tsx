@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Artist } from "../types";
 
 interface ArtistsViewProps {
-  artists: { id: string; name: string; image: string; trackCount: number }[];
+  artists: Artist[];
   isMobileView: boolean;
 }
 
