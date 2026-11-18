@@ -1,3 +1,5 @@
+import type { RecentlyModifiedFile } from "@/lib/github";
+
 const CACHE_TTL_REPOS = 5 * 60 * 1000; // 5 minutes
 
 export interface GitHubTreeItem {
@@ -6,11 +8,7 @@ export interface GitHubTreeItem {
   path: string;
 }
 
-export interface GitHubRecentFile {
-  path: string;
-  repo: string;
-  modifiedAt: string;
-}
+export type GitHubRecentFile = RecentlyModifiedFile;
 
 interface GitHubClientCache {
   repos: string[] | null;
