@@ -1,12 +1,8 @@
-import type { RecentlyModifiedFile } from "@/lib/github";
+import type { fetchRepoTree, RecentlyModifiedFile } from "@/lib/github";
 
 const CACHE_TTL_REPOS = 5 * 60 * 1000; // 5 minutes
 
-export interface GitHubTreeItem {
-  name: string;
-  type: "file" | "dir";
-  path: string;
-}
+export type GitHubTreeItem = Awaited<ReturnType<typeof fetchRepoTree>>[number];
 
 export type GitHubRecentFile = RecentlyModifiedFile;
 
