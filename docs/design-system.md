@@ -355,6 +355,15 @@ Fixed shell layers are declared by their components. Portal menus that must
 appear above maximized windows use the overlay layer, as documented below for
 TextEdit’s View menu.
 
+### Dock Magnification
+
+Calculate hover magnification from resting item widths centered on the viewport,
+including the resize divider and variable-width minimized thumbnails. Never feed
+animated DOM bounds back into the calculation: expanding icons move those bounds
+and make hover jitter. Coalesce pointer updates to one animation frame and let
+magnification continue across the divider; reset when leaving the Dock, opening
+its menus, or resizing it.
+
 ### Default Window Placement
 
 App window presets are normalized in `lib/window-context.tsx` when a window is
