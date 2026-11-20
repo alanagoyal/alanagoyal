@@ -41,6 +41,7 @@ import {
   getUnreadMessagesNotification,
   getWeatherNotificationSignature,
   shouldHideNotificationCenterItem,
+  type WeatherNotificationData,
 } from "@/lib/notification-center";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/components/apps/calendar/types";
@@ -388,14 +389,6 @@ function MessagesWidget({
 }
 
 // --- Weather Widget ---
-interface WeatherData {
-  temp: number;
-  currentTime: string;
-  code: number;
-  high: number;
-  low: number;
-}
-
 function WeatherWidgetSkeleton() {
   const skeletonClass = "bg-white/20";
   return (
@@ -499,7 +492,7 @@ function WeatherWidget({
   loading,
   onActivate,
 }: {
-  weather: WeatherData | null;
+  weather: WeatherNotificationData | null;
   loading: boolean;
   onActivate: () => void;
 }) {
@@ -578,7 +571,7 @@ export function NotificationCenter({
 
   const { photos, loading: photosLoading } = usePhotos({ enabled: isOpen });
 
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weather, setWeather] = useState<WeatherNotificationData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   useEffect(() => {
     if (!isOpen) return;
