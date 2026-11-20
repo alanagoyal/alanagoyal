@@ -5,7 +5,7 @@ export const NOTIFICATION_CENTER_DISMISSAL_KEY_PREFIX =
 
 type NotificationCenterStorage = Pick<Storage, "getItem" | "setItem">;
 
-interface WeatherNotificationData {
+export interface WeatherNotificationData {
   temp: number;
   currentTime: string;
   code: number;
