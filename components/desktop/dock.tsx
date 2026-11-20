@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, forwardRef } from "react";
 import Image from "next/image";
+import { getDockMagnificationScales } from "@/lib/desktop/dock-magnification";
 import { getAppById, getAppsInDockOrder } from "@/lib/app-config";
 import { useWindowManager } from "@/lib/window-context";
 import { cn } from "@/lib/utils";
@@ -96,8 +97,6 @@ const DOCK_MAX_DESIRED_SCALE = 1.6;
 const DOCK_DEFAULT_SCALE = 1;
 const DOCK_SCALE_STEP = 0.05;
 const DOCK_DRAG_PIXELS_PER_SCALE = 220;
-const DOCK_MAGNIFICATION_SCALE = 1.4;
-const DOCK_MAGNIFICATION_RADIUS = 0.88;
 const DOCK_APP_MENU_WIDTH = 160;
 
 const BASE_ICON_SIZE = 48;
@@ -299,7 +298,6 @@ export function Dock({
   const previousCursorRef = useRef<string | null>(null);
   const dockMenuRef = useRef<HTMLDivElement>(null);
   const appMenuRef = useRef<HTMLDivElement>(null);
-  const dockItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const magnificationFrameRef = useRef<number | null>(null);
   const pendingPointerXRef = useRef<number | null>(null);
   const closeDockMenu = useCallback(() => setIsDockMenuOpen(false), []);
@@ -632,7 +630,8 @@ export function Dock({
         event.pointerType !== "mouse" ||
         !magnificationEnabled ||
         isResizingDock ||
-        (event.target as Element).closest('[data-dock-static="true"]')
+        isDockMenuOpen ||
+        openAppMenuId !== null
       ) {
         resetDockMagnification();
         return;
@@ -646,19 +645,28 @@ export function Dock({
         const pointerX = pendingPointerXRef.current;
         if (pointerX === null) return;
 
-        const radius = metrics.icon * DOCK_MAGNIFICATION_RADIUS;
-        const nextScales: Record<string, number> = {};
-
-        Object.entries(dockItemRefs.current).forEach(([itemId, item]) => {
-          if (!item) return;
-          const rect = item.getBoundingClientRect();
-          const distance = Math.abs(pointerX - (rect.left + rect.width / 2));
-          const influence = Math.exp(
-            -(distance * distance) / (2 * radius * radius)
-          );
-          nextScales[itemId] =
-            1 + (DOCK_MAGNIFICATION_SCALE - 1) * influence;
-        });
+        const nextScales = getDockMagnificationScales(
+          [
+            ...appsToRender.map((app) => ({
+              id: app.id,
+              width: metrics.icon,
+              magnifies: (animationStates[app.id] ?? "stable") === "stable",
+            })),
+            {
+              id: "divider",
+              width: metrics.handleHitboxWidth + 2 * metrics.dividerMarginX,
+              magnifies: false,
+            },
+            ...minimizedWindows.map((window) => ({
+              id: `minimized:${window.id}`,
+              width: Math.round(metrics.icon * getMinimizedThumbRatio(window)),
+            })),
+            { id: "trash", width: metrics.icon },
+          ],
+          metrics.gap,
+          pointerX - window.innerWidth / 2,
+          metrics.icon,
+        );
 
         setMagnificationScales(nextScales);
       });
@@ -666,7 +674,12 @@ export function Dock({
     [
       isResizingDock,
       magnificationEnabled,
-      metrics.icon,
+      metrics,
+      appsToRender,
+      animationStates,
+      minimizedWindows,
+      isDockMenuOpen,
+      openAppMenuId,
       resetDockMagnification,
     ]
   );
@@ -865,9 +878,6 @@ export function Dock({
           return (
             <button
               key={app.id}
-              ref={(item) => {
-                dockItemRefs.current[app.id] = item;
-              }}
               aria-label={app.name}
               aria-haspopup="menu"
               aria-expanded={isAppMenuOpen}
@@ -982,10 +992,7 @@ export function Dock({
               resetDockMagnification();
               setIsDockMenuOpen(true);
             }}
-            onMouseEnter={() => {
-              setHoveredApp(null);
-              resetDockMagnification();
-            }}
+            onMouseEnter={() => setHoveredApp(null)}
             className="relative rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
             style={{
               width: `${metrics.handleHitboxWidth}px`,
@@ -1048,9 +1055,6 @@ export function Dock({
           return (
             <MinimizedWindowThumbnail
               key={window.id}
-              ref={(item: HTMLButtonElement | null) => {
-                dockItemRefs.current[itemKey] = item;
-              }}
               window={window}
               height={metrics.icon}
               magnificationScale={magnificationScale}
@@ -1070,9 +1074,6 @@ export function Dock({
 
         {/* Trash icon */}
         <button
-          ref={(item) => {
-            dockItemRefs.current.trash = item;
-          }}
           onClick={handleTrashClick}
           onMouseEnter={() => setHoveredApp("trash")}
           onMouseLeave={() => setHoveredApp(null)}

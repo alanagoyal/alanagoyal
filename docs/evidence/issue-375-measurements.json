@@ -1,0 +1,6525 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "pointerY": 748,
+  "stepPixels": 2,
+  "settleMs": 120,
+  "beforeCommit": "e6b916e6",
+  "afterCommit": "2ec8b8e3",
+  "runs": [
+    {
+      "name": "before",
+      "output": [
+        {
+          "x": 790,
+          "width": 602.921875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0009,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0998,
+              "actual": 48.09375
+            },
+            {
+              "name": "Calendar",
+              "target": 50.535,
+              "actual": 50.484375
+            },
+            {
+              "name": "iTerm",
+              "target": 62.1503,
+              "actual": 61.921875
+            },
+            {
+              "name": "Settings",
+              "target": 65.3527,
+              "actual": 65.078125
+            },
+            {
+              "name": null,
+              "target": 49.3746,
+              "actual": 49.34375
+            }
+          ]
+        },
+        {
+          "x": 792,
+          "width": 597.21875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0197,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.961,
+              "actual": 48.984375
+            },
+            {
+              "name": "iTerm",
+              "target": 59.4251,
+              "actual": 59.453125
+            },
+            {
+              "name": "Settings",
+              "target": 64.182,
+              "actual": 64.1875
+            },
+            {
+              "name": null,
+              "target": 48.569,
+              "actual": 48.578125
+            }
+          ]
+        },
+        {
+          "x": 794,
+          "width": 597.625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0218,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.9781,
+              "actual": 48.96875
+            },
+            {
+              "name": "iTerm",
+              "target": 58.9177,
+              "actual": 58.921875
+            },
+            {
+              "name": "Settings",
+              "target": 64.9851,
+              "actual": 64.96875
+            },
+            {
+              "name": null,
+              "target": 48.7631,
+              "actual": 48.75
+            }
+          ]
+        },
+        {
+          "x": 796,
+          "width": 597.375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0179,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.858,
+              "actual": 48.859375
+            },
+            {
+              "name": "iTerm",
+              "target": 58.2364,
+              "actual": 58.234375
+            },
+            {
+              "name": "Settings",
+              "target": 65.4313,
+              "actual": 65.421875
+            },
+            {
+              "name": null,
+              "target": 48.8517,
+              "actual": 48.84375
+            }
+          ]
+        },
+        {
+          "x": 798,
+          "width": 597.171875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0152,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.7649,
+              "actual": 48.765625
+            },
+            {
+              "name": "iTerm",
+              "target": 57.6082,
+              "actual": 57.609375
+            },
+            {
+              "name": "Settings",
+              "target": 65.8507,
+              "actual": 65.84375
+            },
+            {
+              "name": null,
+              "target": 48.9675,
+              "actual": 48.953125
+            }
+          ]
+        },
+        {
+          "x": 800,
+          "width": 596.953125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0128,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.6794,
+              "actual": 48.671875
+            },
+            {
+              "name": "iTerm",
+              "target": 56.9932,
+              "actual": 57
+            },
+            {
+              "name": "Settings",
+              "target": 66.2169,
+              "actual": 66.203125
+            },
+            {
+              "name": null,
+              "target": 49.0952,
+              "actual": 49.078125
+            }
+          ]
+        },
+        {
+          "x": 802,
+          "width": 596.734375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0107,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.6025,
+              "actual": 48.59375
+            },
+            {
+              "name": "iTerm",
+              "target": 56.4002,
+              "actual": 56.40625
+            },
+            {
+              "name": "Settings",
+              "target": 66.5273,
+              "actual": 66.515625
+            },
+            {
+              "name": null,
+              "target": 49.2364,
+              "actual": 49.21875
+            }
+          ]
+        },
+        {
+          "x": 804,
+          "width": 596.515625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.009,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.5337,
+              "actual": 48.53125
+            },
+            {
+              "name": "iTerm",
+              "target": 55.8292,
+              "actual": 55.828125
+            },
+            {
+              "name": "Settings",
+              "target": 66.7808,
+              "actual": 66.765625
+            },
+            {
+              "name": null,
+              "target": 49.3934,
+              "actual": 49.390625
+            }
+          ]
+        },
+        {
+          "x": 806,
+          "width": 596.28125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0076,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.472,
+              "actual": 48.46875
+            },
+            {
+              "name": "iTerm",
+              "target": 55.2834,
+              "actual": 55.28125
+            },
+            {
+              "name": "Settings",
+              "target": 66.9751,
+              "actual": 66.96875
+            },
+            {
+              "name": null,
+              "target": 49.5668,
+              "actual": 49.5625
+            }
+          ]
+        },
+        {
+          "x": 808,
+          "width": 596.015625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0063,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.4168,
+              "actual": 48.40625
+            },
+            {
+              "name": "iTerm",
+              "target": 54.7604,
+              "actual": 54.765625
+            },
+            {
+              "name": "Settings",
+              "target": 67.11,
+              "actual": 67.09375
+            },
+            {
+              "name": null,
+              "target": 49.7585,
+              "actual": 49.75
+            }
+          ]
+        },
+        {
+          "x": 810,
+          "width": 595.75,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0053,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.3677,
+              "actual": 48.359375
+            },
+            {
+              "name": "iTerm",
+              "target": 54.2629,
+              "actual": 54.265625
+            },
+            {
+              "name": "Settings",
+              "target": 67.1844,
+              "actual": 67.171875
+            },
+            {
+              "name": null,
+              "target": 49.9705,
+              "actual": 49.953125
+            }
+          ]
+        },
+        {
+          "x": 812,
+          "width": 595.484375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0044,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.3239,
+              "actual": 48.3125
+            },
+            {
+              "name": "iTerm",
+              "target": 53.793,
+              "actual": 53.796875
+            },
+            {
+              "name": "Settings",
+              "target": 67.1975,
+              "actual": 67.1875
+            },
+            {
+              "name": null,
+              "target": 50.2038,
+              "actual": 50.1875
+            }
+          ]
+        },
+        {
+          "x": 814,
+          "width": 595.21875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0037,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2847,
+              "actual": 48.28125
+            },
+            {
+              "name": "iTerm",
+              "target": 53.3474,
+              "actual": 53.34375
+            },
+            {
+              "name": "Settings",
+              "target": 67.1499,
+              "actual": 67.140625
+            },
+            {
+              "name": null,
+              "target": 50.4586,
+              "actual": 50.453125
+            }
+          ]
+        },
+        {
+          "x": 816,
+          "width": 594.921875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0031,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2499,
+              "actual": 48.25
+            },
+            {
+              "name": "iTerm",
+              "target": 52.9294,
+              "actual": 52.921875
+            },
+            {
+              "name": "Settings",
+              "target": 67.0429,
+              "actual": 67.03125
+            },
+            {
+              "name": null,
+              "target": 50.7361,
+              "actual": 50.71875
+            }
+          ]
+        },
+        {
+          "x": 818,
+          "width": 594.65625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0026,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2191,
+              "actual": 48.21875
+            },
+            {
+              "name": "iTerm",
+              "target": 52.534,
+              "actual": 52.53125
+            },
+            {
+              "name": "Settings",
+              "target": 66.8763,
+              "actual": 66.875
+            },
+            {
+              "name": null,
+              "target": 51.0405,
+              "actual": 51.03125
+            }
+          ]
+        },
+        {
+          "x": 820,
+          "width": 594.359375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0021,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1916,
+              "actual": 48.1875
+            },
+            {
+              "name": "iTerm",
+              "target": 52.1654,
+              "actual": 52.15625
+            },
+            {
+              "name": "Settings",
+              "target": 66.6546,
+              "actual": 66.65625
+            },
+            {
+              "name": null,
+              "target": 51.3678,
+              "actual": 51.359375
+            }
+          ]
+        },
+        {
+          "x": 822,
+          "width": 594.0625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0018,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1675,
+              "actual": 48.15625
+            },
+            {
+              "name": "iTerm",
+              "target": 51.8201,
+              "actual": 51.8125
+            },
+            {
+              "name": "Settings",
+              "target": 66.3764,
+              "actual": 66.375
+            },
+            {
+              "name": null,
+              "target": 51.7256,
+              "actual": 51.71875
+            }
+          ]
+        },
+        {
+          "x": 824,
+          "width": 593.765625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0015,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.146,
+              "actual": 48.140625
+            },
+            {
+              "name": "iTerm",
+              "target": 51.495,
+              "actual": 51.484375
+            },
+            {
+              "name": "Settings",
+              "target": 66.0456,
+              "actual": 66.046875
+            },
+            {
+              "name": null,
+              "target": 52.1091,
+              "actual": 52.09375
+            }
+          ]
+        },
+        {
+          "x": 826,
+          "width": 593.5,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0012,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1272,
+              "actual": 48.125
+            },
+            {
+              "name": "iTerm",
+              "target": 51.1955,
+              "actual": 51.1875
+            },
+            {
+              "name": "Settings",
+              "target": 65.6666,
+              "actual": 65.671875
+            },
+            {
+              "name": null,
+              "target": 52.5227,
+              "actual": 52.515625
+            }
+          ]
+        },
+        {
+          "x": 828,
+          "width": 593.203125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1104,
+              "actual": 48.109375
+            },
+            {
+              "name": "iTerm",
+              "target": 50.914,
+              "actual": 50.90625
+            },
+            {
+              "name": "Settings",
+              "target": 65.2401,
+              "actual": 65.234375
+            },
+            {
+              "name": null,
+              "target": 52.9625,
+              "actual": 52.953125
+            }
+          ]
+        },
+        {
+          "x": 830,
+          "width": 592.9375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0008,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0957,
+              "actual": 48.09375
+            },
+            {
+              "name": "iTerm",
+              "target": 50.6531,
+              "actual": 50.65625
+            },
+            {
+              "name": "Settings",
+              "target": 64.7712,
+              "actual": 64.765625
+            },
+            {
+              "name": null,
+              "target": 53.4316,
+              "actual": 53.421875
+            }
+          ]
+        },
+        {
+          "x": 832,
+          "width": 592.671875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0007,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0828,
+              "actual": 48.078125
+            },
+            {
+              "name": "iTerm",
+              "target": 50.411,
+              "actual": 50.40625
+            },
+            {
+              "name": "Settings",
+              "target": 64.2621,
+              "actual": 64.265625
+            },
+            {
+              "name": null,
+              "target": 53.9299,
+              "actual": 53.921875
+            }
+          ]
+        },
+        {
+          "x": 834,
+          "width": 592.40625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0005,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0714,
+              "actual": 48.0625
+            },
+            {
+              "name": "iTerm",
+              "target": 50.1868,
+              "actual": 50.1875
+            },
+            {
+              "name": "Settings",
+              "target": 63.7187,
+              "actual": 63.71875
+            },
+            {
+              "name": null,
+              "target": 54.4552,
+              "actual": 54.4375
+            }
+          ]
+        },
+        {
+          "x": 836,
+          "width": 592.15625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0615,
+              "actual": 48.046875
+            },
+            {
+              "name": "iTerm",
+              "target": 49.9791,
+              "actual": 49.96875
+            },
+            {
+              "name": "Settings",
+              "target": 63.1417,
+              "actual": 63.140625
+            },
+            {
+              "name": null,
+              "target": 55.0084,
+              "actual": 55
+            }
+          ]
+        },
+        {
+          "x": 838,
+          "width": 591.9375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0528,
+              "actual": 48.046875
+            },
+            {
+              "name": "iTerm",
+              "target": 49.7871,
+              "actual": 49.78125
+            },
+            {
+              "name": "Settings",
+              "target": 62.5412,
+              "actual": 62.546875
+            },
+            {
+              "name": null,
+              "target": 55.5827,
+              "actual": 55.5625
+            }
+          ]
+        },
+        {
+          "x": 840,
+          "width": 591.71875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0003,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0452,
+              "actual": 48.03125
+            },
+            {
+              "name": "iTerm",
+              "target": 49.6114,
+              "actual": 49.609375
+            },
+            {
+              "name": "Settings",
+              "target": 61.9201,
+              "actual": 61.921875
+            },
+            {
+              "name": null,
+              "target": 56.1797,
+              "actual": 56.15625
+            }
+          ]
+        },
+        {
+          "x": 842,
+          "width": 568.328125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48.015625
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48.203125
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48.109375
+            }
+          ]
+        },
+        {
+          "x": 844,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 846,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 848,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 850,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 852,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 854,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 856,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 858,
+          "width": 568,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Settings",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "x": 860,
+          "width": 593.875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0229,
+              "actual": 48.015625
+            },
+            {
+              "name": "iTerm",
+              "target": 48.9821,
+              "actual": 48.96875
+            },
+            {
+              "name": "Settings",
+              "target": 57.2629,
+              "actual": 57.25
+            },
+            {
+              "name": null,
+              "target": 63.6523,
+              "actual": 63.640625
+            }
+          ]
+        },
+        {
+          "x": 862,
+          "width": 590.1875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0059,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.4025,
+              "actual": 48.390625
+            },
+            {
+              "name": "Settings",
+              "target": 54.924,
+              "actual": 54.921875
+            },
+            {
+              "name": null,
+              "target": 62.8905,
+              "actual": 62.875
+            }
+          ]
+        },
+        {
+          "x": 864,
+          "width": 590.5625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0058,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.3905,
+              "actual": 48.375
+            },
+            {
+              "name": "Settings",
+              "target": 54.4835,
+              "actual": 54.46875
+            },
+            {
+              "name": null,
+              "target": 63.7334,
+              "actual": 63.71875
+            }
+          ]
+        },
+        {
+          "x": 866,
+          "width": 590.5,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0047,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.3373,
+              "actual": 48.328125
+            },
+            {
+              "name": "Settings",
+              "target": 53.9467,
+              "actual": 53.9375
+            },
+            {
+              "name": null,
+              "target": 64.2448,
+              "actual": 64.234375
+            }
+          ]
+        },
+        {
+          "x": 868,
+          "width": 590.46875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0039,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2946,
+              "actual": 48.28125
+            },
+            {
+              "name": "Settings",
+              "target": 53.4668,
+              "actual": 53.453125
+            },
+            {
+              "name": null,
+              "target": 64.7372,
+              "actual": 64.734375
+            }
+          ]
+        },
+        {
+          "x": 870,
+          "width": 590.4375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0032,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2565,
+              "actual": 48.25
+            },
+            {
+              "name": "Settings",
+              "target": 53.0125,
+              "actual": 53
+            },
+            {
+              "name": null,
+              "target": 65.1895,
+              "actual": 65.1875
+            }
+          ]
+        },
+        {
+          "x": 872,
+          "width": 590.390625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0026,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.223,
+              "actual": 48.21875
+            },
+            {
+              "name": "Settings",
+              "target": 52.5884,
+              "actual": 52.578125
+            },
+            {
+              "name": null,
+              "target": 65.5993,
+              "actual": 65.59375
+            }
+          ]
+        },
+        {
+          "x": 874,
+          "width": 590.328125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0021,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1935,
+              "actual": 48.1875
+            },
+            {
+              "name": "Settings",
+              "target": 52.1924,
+              "actual": 52.1875
+            },
+            {
+              "name": null,
+              "target": 65.9657,
+              "actual": 65.953125
+            }
+          ]
+        },
+        {
+          "x": 876,
+          "width": 590.25,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0018,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1676,
+              "actual": 48.15625
+            },
+            {
+              "name": "Settings",
+              "target": 51.8239,
+              "actual": 51.8125
+            },
+            {
+              "name": null,
+              "target": 66.2867,
+              "actual": 66.28125
+            }
+          ]
+        },
+        {
+          "x": 878,
+          "width": 590.15625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0014,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1449,
+              "actual": 48.140625
+            },
+            {
+              "name": "Settings",
+              "target": 51.4807,
+              "actual": 51.46875
+            },
+            {
+              "name": null,
+              "target": 66.5617,
+              "actual": 66.546875
+            }
+          ]
+        },
+        {
+          "x": 880,
+          "width": 590.0625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0012,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1252,
+              "actual": 48.125
+            },
+            {
+              "name": "Settings",
+              "target": 51.1654,
+              "actual": 51.15625
+            },
+            {
+              "name": null,
+              "target": 66.7874,
+              "actual": 66.78125
+            }
+          ]
+        },
+        {
+          "x": 882,
+          "width": 589.90625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.001,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.108,
+              "actual": 48.09375
+            },
+            {
+              "name": "Settings",
+              "target": 50.8734,
+              "actual": 50.859375
+            },
+            {
+              "name": null,
+              "target": 66.9642,
+              "actual": 66.953125
+            }
+          ]
+        },
+        {
+          "x": 884,
+          "width": 589.75,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0008,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.093,
+              "actual": 48.078125
+            },
+            {
+              "name": "Settings",
+              "target": 50.6046,
+              "actual": 50.59375
+            },
+            {
+              "name": null,
+              "target": 67.0925,
+              "actual": 67.078125
+            }
+          ]
+        },
+        {
+          "x": 886,
+          "width": 589.578125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0006,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0801,
+              "actual": 48.078125
+            },
+            {
+              "name": "Settings",
+              "target": 50.3587,
+              "actual": 50.34375
+            },
+            {
+              "name": null,
+              "target": 67.1707,
+              "actual": 67.15625
+            }
+          ]
+        },
+        {
+          "x": 888,
+          "width": 589.375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0005,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0688,
+              "actual": 48.0625
+            },
+            {
+              "name": "Settings",
+              "target": 50.1342,
+              "actual": 50.125
+            },
+            {
+              "name": null,
+              "target": 67.1998,
+              "actual": 67.1875
+            }
+          ]
+        },
+        {
+          "x": 890,
+          "width": 589.140625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0591,
+              "actual": 48.046875
+            },
+            {
+              "name": "Settings",
+              "target": 49.9281,
+              "actual": 49.921875
+            },
+            {
+              "name": null,
+              "target": 67.1805,
+              "actual": 67.171875
+            }
+          ]
+        },
+        {
+          "x": 892,
+          "width": 588.890625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0003,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0507,
+              "actual": 48.046875
+            },
+            {
+              "name": "Settings",
+              "target": 49.74,
+              "actual": 49.734375
+            },
+            {
+              "name": null,
+              "target": 67.1134,
+              "actual": 67.109375
+            }
+          ]
+        },
+        {
+          "x": 894,
+          "width": 588.59375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0003,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0435,
+              "actual": 48.03125
+            },
+            {
+              "name": "Settings",
+              "target": 49.5694,
+              "actual": 49.5625
+            },
+            {
+              "name": null,
+              "target": 67.0002,
+              "actual": 67
+            }
+          ]
+        },
+        {
+          "x": 896,
+          "width": 588.265625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0373,
+              "actual": 48.03125
+            },
+            {
+              "name": "Settings",
+              "target": 49.4136,
+              "actual": 49.40625
+            },
+            {
+              "name": null,
+              "target": 66.8413,
+              "actual": 66.828125
+            }
+          ]
+        },
+        {
+          "x": 898,
+          "width": 587.921875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0319,
+              "actual": 48.03125
+            },
+            {
+              "name": "Settings",
+              "target": 49.2733,
+              "actual": 49.265625
+            },
+            {
+              "name": null,
+              "target": 66.6396,
+              "actual": 66.625
+            }
+          ]
+        },
+        {
+          "x": 900,
+          "width": 587.546875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0273,
+              "actual": 48.015625
+            },
+            {
+              "name": "Settings",
+              "target": 49.1456,
+              "actual": 49.140625
+            },
+            {
+              "name": null,
+              "target": 66.3964,
+              "actual": 66.390625
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "before",
+      "paths": [
+        {
+          "width": 607.03125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48.0916,
+              "actual": 48.078125
+            },
+            {
+              "name": "Messages",
+              "target": 50.4854,
+              "actual": 50.484375
+            },
+            {
+              "name": "Photos",
+              "target": 62.0458,
+              "actual": 62.03125
+            },
+            {
+              "name": "Music",
+              "target": 65.4257,
+              "actual": 65.421875
+            },
+            {
+              "name": "Calendar",
+              "target": 52.7496,
+              "actual": 52.734375
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2844,
+              "actual": 48.28125
+            },
+            {
+              "name": "Settings",
+              "target": 48.0037,
+              "actual": 48
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "width": 607.046875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48.0272,
+              "actual": 48.015625
+            },
+            {
+              "name": "Messages",
+              "target": 49.101,
+              "actual": 49.09375
+            },
+            {
+              "name": "Photos",
+              "target": 57.7969,
+              "actual": 57.796875
+            },
+            {
+              "name": "Music",
+              "target": 67.1516,
+              "actual": 67.140625
+            },
+            {
+              "name": "Calendar",
+              "target": 56.2252,
+              "actual": 56.21875
+            },
+            {
+              "name": "iTerm",
+              "target": 48.7761,
+              "actual": 48.765625
+            },
+            {
+              "name": "Settings",
+              "target": 48.0161,
+              "actual": 48.015625
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "after",
+      "output": [
+        {
+          "x": 790,
+          "width": 603.46875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0009,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0998,
+              "actual": 48.09375
+            },
+            {
+              "name": "Calendar",
+              "target": 50.535,
+              "actual": 50.53125
+            },
+            {
+              "name": "iTerm",
+              "target": 62.1503,
+              "actual": 62.140625
+            },
+            {
+              "name": "Settings",
+              "target": 65.3527,
+              "actual": 65.34375
+            },
+            {
+              "name": null,
+              "target": 49.3746,
+              "actual": 49.359375
+            }
+          ]
+        },
+        {
+          "x": 792,
+          "width": 603.203125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0007,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0855,
+              "actual": 48.078125
+            },
+            {
+              "name": "Calendar",
+              "target": 50.3021,
+              "actual": 50.296875
+            },
+            {
+              "name": "iTerm",
+              "target": 61.6211,
+              "actual": 61.609375
+            },
+            {
+              "name": "Settings",
+              "target": 65.7063,
+              "actual": 65.703125
+            },
+            {
+              "name": null,
+              "target": 49.5308,
+              "actual": 49.515625
+            }
+          ]
+        },
+        {
+          "x": 794,
+          "width": 602.921875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0006,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0731,
+              "actual": 48.0625
+            },
+            {
+              "name": "Calendar",
+              "target": 50.0858,
+              "actual": 50.078125
+            },
+            {
+              "name": "iTerm",
+              "target": 61.0824,
+              "actual": 61.078125
+            },
+            {
+              "name": "Settings",
+              "target": 66.0268,
+              "actual": 66.015625
+            },
+            {
+              "name": null,
+              "target": 49.7009,
+              "actual": 49.6875
+            }
+          ]
+        },
+        {
+          "x": 796,
+          "width": 602.625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0005,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0623,
+              "actual": 48.046875
+            },
+            {
+              "name": "Calendar",
+              "target": 49.8857,
+              "actual": 49.875
+            },
+            {
+              "name": "iTerm",
+              "target": 60.5369,
+              "actual": 60.53125
+            },
+            {
+              "name": "Settings",
+              "target": 66.3119,
+              "actual": 66.296875
+            },
+            {
+              "name": null,
+              "target": 49.8857,
+              "actual": 49.875
+            }
+          ]
+        },
+        {
+          "x": 798,
+          "width": 602.34375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.053,
+              "actual": 48.046875
+            },
+            {
+              "name": "Calendar",
+              "target": 49.7009,
+              "actual": 49.6875
+            },
+            {
+              "name": "iTerm",
+              "target": 59.9872,
+              "actual": 59.984375
+            },
+            {
+              "name": "Settings",
+              "target": 66.5599,
+              "actual": 66.546875
+            },
+            {
+              "name": null,
+              "target": 50.0858,
+              "actual": 50.078125
+            }
+          ]
+        },
+        {
+          "x": 800,
+          "width": 602.03125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0003,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.045,
+              "actual": 48.03125
+            },
+            {
+              "name": "Calendar",
+              "target": 49.5308,
+              "actual": 49.515625
+            },
+            {
+              "name": "iTerm",
+              "target": 59.4359,
+              "actual": 59.421875
+            },
+            {
+              "name": "Settings",
+              "target": 66.7691,
+              "actual": 66.765625
+            },
+            {
+              "name": null,
+              "target": 50.3021,
+              "actual": 50.296875
+            }
+          ]
+        },
+        {
+          "x": 802,
+          "width": 601.734375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0381,
+              "actual": 48.03125
+            },
+            {
+              "name": "Calendar",
+              "target": 49.3746,
+              "actual": 49.359375
+            },
+            {
+              "name": "iTerm",
+              "target": 58.8855,
+              "actual": 58.875
+            },
+            {
+              "name": "Settings",
+              "target": 66.9382,
+              "actual": 66.9375
+            },
+            {
+              "name": null,
+              "target": 50.535,
+              "actual": 50.53125
+            }
+          ]
+        },
+        {
+          "x": 804,
+          "width": 601.421875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0322,
+              "actual": 48.03125
+            },
+            {
+              "name": "Calendar",
+              "target": 49.2316,
+              "actual": 49.21875
+            },
+            {
+              "name": "iTerm",
+              "target": 58.3385,
+              "actual": 58.328125
+            },
+            {
+              "name": "Settings",
+              "target": 67.066,
+              "actual": 67.0625
+            },
+            {
+              "name": null,
+              "target": 50.7853,
+              "actual": 50.78125
+            }
+          ]
+        },
+        {
+          "x": 806,
+          "width": 601.09375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0272,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 49.101,
+              "actual": 49.09375
+            },
+            {
+              "name": "iTerm",
+              "target": 57.7969,
+              "actual": 57.796875
+            },
+            {
+              "name": "Settings",
+              "target": 67.1516,
+              "actual": 67.140625
+            },
+            {
+              "name": null,
+              "target": 51.0535,
+              "actual": 51.046875
+            }
+          ]
+        },
+        {
+          "x": 808,
+          "width": 600.75,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0229,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.9821,
+              "actual": 48.96875
+            },
+            {
+              "name": "iTerm",
+              "target": 57.2629,
+              "actual": 57.25
+            },
+            {
+              "name": "Settings",
+              "target": 67.1946,
+              "actual": 67.1875
+            },
+            {
+              "name": null,
+              "target": 51.34,
+              "actual": 51.328125
+            }
+          ]
+        },
+        {
+          "x": 810,
+          "width": 600.4375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0192,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.874,
+              "actual": 48.859375
+            },
+            {
+              "name": "iTerm",
+              "target": 56.7384,
+              "actual": 56.734375
+            },
+            {
+              "name": "Settings",
+              "target": 67.1946,
+              "actual": 67.1875
+            },
+            {
+              "name": null,
+              "target": 51.6452,
+              "actual": 51.640625
+            }
+          ]
+        },
+        {
+          "x": 812,
+          "width": 600.109375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0161,
+              "actual": 48.015625
+            },
+            {
+              "name": "Calendar",
+              "target": 48.7761,
+              "actual": 48.765625
+            },
+            {
+              "name": "iTerm",
+              "target": 56.2252,
+              "actual": 56.21875
+            },
+            {
+              "name": "Settings",
+              "target": 67.1516,
+              "actual": 67.140625
+            },
+            {
+              "name": null,
+              "target": 51.9693,
+              "actual": 51.96875
+            }
+          ]
+        },
+        {
+          "x": 814,
+          "width": 599.78125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0134,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.6876,
+              "actual": 48.6875
+            },
+            {
+              "name": "iTerm",
+              "target": 55.7247,
+              "actual": 55.71875
+            },
+            {
+              "name": "Settings",
+              "target": 67.066,
+              "actual": 67.0625
+            },
+            {
+              "name": null,
+              "target": 52.3126,
+              "actual": 52.3125
+            }
+          ]
+        },
+        {
+          "x": 816,
+          "width": 599.4375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0112,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.6078,
+              "actual": 48.59375
+            },
+            {
+              "name": "iTerm",
+              "target": 55.2385,
+              "actual": 55.234375
+            },
+            {
+              "name": "Settings",
+              "target": 66.9382,
+              "actual": 66.9375
+            },
+            {
+              "name": null,
+              "target": 52.6751,
+              "actual": 52.671875
+            }
+          ]
+        },
+        {
+          "x": 818,
+          "width": 599.109375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0093,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.5361,
+              "actual": 48.53125
+            },
+            {
+              "name": "iTerm",
+              "target": 54.7677,
+              "actual": 54.765625
+            },
+            {
+              "name": "Settings",
+              "target": 66.7691,
+              "actual": 66.765625
+            },
+            {
+              "name": null,
+              "target": 53.0567,
+              "actual": 53.046875
+            }
+          ]
+        },
+        {
+          "x": 820,
+          "width": 598.78125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0077,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.4718,
+              "actual": 48.46875
+            },
+            {
+              "name": "iTerm",
+              "target": 54.3133,
+              "actual": 54.3125
+            },
+            {
+              "name": "Settings",
+              "target": 66.5599,
+              "actual": 66.546875
+            },
+            {
+              "name": null,
+              "target": 53.4572,
+              "actual": 53.453125
+            }
+          ]
+        },
+        {
+          "x": 822,
+          "width": 598.453125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0064,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.4143,
+              "actual": 48.40625
+            },
+            {
+              "name": "iTerm",
+              "target": 53.8762,
+              "actual": 53.875
+            },
+            {
+              "name": "Settings",
+              "target": 66.3119,
+              "actual": 66.296875
+            },
+            {
+              "name": null,
+              "target": 53.8762,
+              "actual": 53.875
+            }
+          ]
+        },
+        {
+          "x": 824,
+          "width": 598.140625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0053,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.3629,
+              "actual": 48.359375
+            },
+            {
+              "name": "iTerm",
+              "target": 53.4572,
+              "actual": 53.453125
+            },
+            {
+              "name": "Settings",
+              "target": 66.0268,
+              "actual": 66.015625
+            },
+            {
+              "name": null,
+              "target": 54.3133,
+              "actual": 54.3125
+            }
+          ]
+        },
+        {
+          "x": 826,
+          "width": 597.828125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0044,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.3173,
+              "actual": 48.3125
+            },
+            {
+              "name": "iTerm",
+              "target": 53.0567,
+              "actual": 53.046875
+            },
+            {
+              "name": "Settings",
+              "target": 65.7063,
+              "actual": 65.703125
+            },
+            {
+              "name": null,
+              "target": 54.7677,
+              "actual": 54.765625
+            }
+          ]
+        },
+        {
+          "x": 828,
+          "width": 597.515625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0036,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2767,
+              "actual": 48.265625
+            },
+            {
+              "name": "iTerm",
+              "target": 52.6751,
+              "actual": 52.671875
+            },
+            {
+              "name": "Settings",
+              "target": 65.3527,
+              "actual": 65.34375
+            },
+            {
+              "name": null,
+              "target": 55.2385,
+              "actual": 55.234375
+            }
+          ]
+        },
+        {
+          "x": 830,
+          "width": 597.21875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.003,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2408,
+              "actual": 48.234375
+            },
+            {
+              "name": "iTerm",
+              "target": 52.3126,
+              "actual": 52.3125
+            },
+            {
+              "name": "Settings",
+              "target": 64.968,
+              "actual": 64.953125
+            },
+            {
+              "name": null,
+              "target": 55.7247,
+              "actual": 55.71875
+            }
+          ]
+        },
+        {
+          "x": 832,
+          "width": 596.9375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0024,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.2091,
+              "actual": 48.203125
+            },
+            {
+              "name": "iTerm",
+              "target": 51.9693,
+              "actual": 51.96875
+            },
+            {
+              "name": "Settings",
+              "target": 64.5546,
+              "actual": 64.546875
+            },
+            {
+              "name": null,
+              "target": 56.2252,
+              "actual": 56.21875
+            }
+          ]
+        },
+        {
+          "x": 834,
+          "width": 596.65625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.002,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1811,
+              "actual": 48.171875
+            },
+            {
+              "name": "iTerm",
+              "target": 51.6452,
+              "actual": 51.640625
+            },
+            {
+              "name": "Settings",
+              "target": 64.1152,
+              "actual": 64.109375
+            },
+            {
+              "name": null,
+              "target": 56.7384,
+              "actual": 56.734375
+            }
+          ]
+        },
+        {
+          "x": 836,
+          "width": 596.375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0016,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1566,
+              "actual": 48.15625
+            },
+            {
+              "name": "iTerm",
+              "target": 51.34,
+              "actual": 51.328125
+            },
+            {
+              "name": "Settings",
+              "target": 63.6523,
+              "actual": 63.640625
+            },
+            {
+              "name": null,
+              "target": 57.2629,
+              "actual": 57.25
+            }
+          ]
+        },
+        {
+          "x": 838,
+          "width": 596.125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0013,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.135,
+              "actual": 48.125
+            },
+            {
+              "name": "iTerm",
+              "target": 51.0535,
+              "actual": 51.046875
+            },
+            {
+              "name": "Settings",
+              "target": 63.1687,
+              "actual": 63.15625
+            },
+            {
+              "name": null,
+              "target": 57.7969,
+              "actual": 57.796875
+            }
+          ]
+        },
+        {
+          "x": 840,
+          "width": 595.875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0011,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.1162,
+              "actual": 48.109375
+            },
+            {
+              "name": "iTerm",
+              "target": 50.7853,
+              "actual": 50.78125
+            },
+            {
+              "name": "Settings",
+              "target": 62.6671,
+              "actual": 62.65625
+            },
+            {
+              "name": null,
+              "target": 58.3385,
+              "actual": 58.328125
+            }
+          ]
+        },
+        {
+          "x": 842,
+          "width": 595.640625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0009,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0998,
+              "actual": 48.09375
+            },
+            {
+              "name": "iTerm",
+              "target": 50.535,
+              "actual": 50.53125
+            },
+            {
+              "name": "Settings",
+              "target": 62.1503,
+              "actual": 62.140625
+            },
+            {
+              "name": null,
+              "target": 58.8855,
+              "actual": 58.875
+            }
+          ]
+        },
+        {
+          "x": 844,
+          "width": 595.40625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0007,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0855,
+              "actual": 48.078125
+            },
+            {
+              "name": "iTerm",
+              "target": 50.3021,
+              "actual": 50.296875
+            },
+            {
+              "name": "Settings",
+              "target": 61.6211,
+              "actual": 61.609375
+            },
+            {
+              "name": null,
+              "target": 59.4359,
+              "actual": 59.421875
+            }
+          ]
+        },
+        {
+          "x": 846,
+          "width": 595.203125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0006,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0731,
+              "actual": 48.0625
+            },
+            {
+              "name": "iTerm",
+              "target": 50.0858,
+              "actual": 50.078125
+            },
+            {
+              "name": "Settings",
+              "target": 61.0824,
+              "actual": 61.078125
+            },
+            {
+              "name": null,
+              "target": 59.9872,
+              "actual": 59.984375
+            }
+          ]
+        },
+        {
+          "x": 848,
+          "width": 594.984375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0005,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0623,
+              "actual": 48.046875
+            },
+            {
+              "name": "iTerm",
+              "target": 49.8857,
+              "actual": 49.875
+            },
+            {
+              "name": "Settings",
+              "target": 60.5369,
+              "actual": 60.53125
+            },
+            {
+              "name": null,
+              "target": 60.5369,
+              "actual": 60.53125
+            }
+          ]
+        },
+        {
+          "x": 850,
+          "width": 594.796875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0004,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.053,
+              "actual": 48.046875
+            },
+            {
+              "name": "iTerm",
+              "target": 49.7009,
+              "actual": 49.6875
+            },
+            {
+              "name": "Settings",
+              "target": 59.9872,
+              "actual": 59.984375
+            },
+            {
+              "name": null,
+              "target": 61.0824,
+              "actual": 61.078125
+            }
+          ]
+        },
+        {
+          "x": 852,
+          "width": 594.578125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0003,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.045,
+              "actual": 48.03125
+            },
+            {
+              "name": "iTerm",
+              "target": 49.5308,
+              "actual": 49.515625
+            },
+            {
+              "name": "Settings",
+              "target": 59.4359,
+              "actual": 59.421875
+            },
+            {
+              "name": null,
+              "target": 61.6211,
+              "actual": 61.609375
+            }
+          ]
+        },
+        {
+          "x": 854,
+          "width": 594.40625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0381,
+              "actual": 48.03125
+            },
+            {
+              "name": "iTerm",
+              "target": 49.3746,
+              "actual": 49.359375
+            },
+            {
+              "name": "Settings",
+              "target": 58.8855,
+              "actual": 58.875
+            },
+            {
+              "name": null,
+              "target": 62.1503,
+              "actual": 62.140625
+            }
+          ]
+        },
+        {
+          "x": 856,
+          "width": 594.234375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0002,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0322,
+              "actual": 48.03125
+            },
+            {
+              "name": "iTerm",
+              "target": 49.2316,
+              "actual": 49.21875
+            },
+            {
+              "name": "Settings",
+              "target": 58.3385,
+              "actual": 58.328125
+            },
+            {
+              "name": null,
+              "target": 62.6671,
+              "actual": 62.65625
+            }
+          ]
+        },
+        {
+          "x": 858,
+          "width": 594.0625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0272,
+              "actual": 48.015625
+            },
+            {
+              "name": "iTerm",
+              "target": 49.101,
+              "actual": 49.09375
+            },
+            {
+              "name": "Settings",
+              "target": 57.7969,
+              "actual": 57.796875
+            },
+            {
+              "name": null,
+              "target": 63.1687,
+              "actual": 63.15625
+            }
+          ]
+        },
+        {
+          "x": 860,
+          "width": 593.875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0229,
+              "actual": 48.015625
+            },
+            {
+              "name": "iTerm",
+              "target": 48.9821,
+              "actual": 48.96875
+            },
+            {
+              "name": "Settings",
+              "target": 57.2629,
+              "actual": 57.25
+            },
+            {
+              "name": null,
+              "target": 63.6523,
+              "actual": 63.640625
+            }
+          ]
+        },
+        {
+          "x": 862,
+          "width": 593.71875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0192,
+              "actual": 48.015625
+            },
+            {
+              "name": "iTerm",
+              "target": 48.874,
+              "actual": 48.859375
+            },
+            {
+              "name": "Settings",
+              "target": 56.7384,
+              "actual": 56.734375
+            },
+            {
+              "name": null,
+              "target": 64.1152,
+              "actual": 64.109375
+            }
+          ]
+        },
+        {
+          "x": 864,
+          "width": 593.546875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0161,
+              "actual": 48.015625
+            },
+            {
+              "name": "iTerm",
+              "target": 48.7761,
+              "actual": 48.765625
+            },
+            {
+              "name": "Settings",
+              "target": 56.2252,
+              "actual": 56.21875
+            },
+            {
+              "name": null,
+              "target": 64.5546,
+              "actual": 64.546875
+            }
+          ]
+        },
+        {
+          "x": 866,
+          "width": 593.359375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0134,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.6876,
+              "actual": 48.6875
+            },
+            {
+              "name": "Settings",
+              "target": 55.7247,
+              "actual": 55.71875
+            },
+            {
+              "name": null,
+              "target": 64.968,
+              "actual": 64.953125
+            }
+          ]
+        },
+        {
+          "x": 868,
+          "width": 593.171875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0112,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.6078,
+              "actual": 48.59375
+            },
+            {
+              "name": "Settings",
+              "target": 55.2385,
+              "actual": 55.234375
+            },
+            {
+              "name": null,
+              "target": 65.3527,
+              "actual": 65.34375
+            }
+          ]
+        },
+        {
+          "x": 870,
+          "width": 593,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0093,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.5361,
+              "actual": 48.53125
+            },
+            {
+              "name": "Settings",
+              "target": 54.7677,
+              "actual": 54.765625
+            },
+            {
+              "name": null,
+              "target": 65.7063,
+              "actual": 65.703125
+            }
+          ]
+        },
+        {
+          "x": 872,
+          "width": 592.796875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0077,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.4718,
+              "actual": 48.46875
+            },
+            {
+              "name": "Settings",
+              "target": 54.3133,
+              "actual": 54.3125
+            },
+            {
+              "name": null,
+              "target": 66.0268,
+              "actual": 66.015625
+            }
+          ]
+        },
+        {
+          "x": 874,
+          "width": 592.578125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0064,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.4143,
+              "actual": 48.40625
+            },
+            {
+              "name": "Settings",
+              "target": 53.8762,
+              "actual": 53.875
+            },
+            {
+              "name": null,
+              "target": 66.3119,
+              "actual": 66.296875
+            }
+          ]
+        },
+        {
+          "x": 876,
+          "width": 592.359375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0053,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.3629,
+              "actual": 48.359375
+            },
+            {
+              "name": "Settings",
+              "target": 53.4572,
+              "actual": 53.453125
+            },
+            {
+              "name": null,
+              "target": 66.5599,
+              "actual": 66.546875
+            }
+          ]
+        },
+        {
+          "x": 878,
+          "width": 592.125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0044,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.3173,
+              "actual": 48.3125
+            },
+            {
+              "name": "Settings",
+              "target": 53.0567,
+              "actual": 53.046875
+            },
+            {
+              "name": null,
+              "target": 66.7691,
+              "actual": 66.765625
+            }
+          ]
+        },
+        {
+          "x": 880,
+          "width": 591.875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0036,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2767,
+              "actual": 48.265625
+            },
+            {
+              "name": "Settings",
+              "target": 52.6751,
+              "actual": 52.671875
+            },
+            {
+              "name": null,
+              "target": 66.9382,
+              "actual": 66.9375
+            }
+          ]
+        },
+        {
+          "x": 882,
+          "width": 591.609375,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.003,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2408,
+              "actual": 48.234375
+            },
+            {
+              "name": "Settings",
+              "target": 52.3126,
+              "actual": 52.3125
+            },
+            {
+              "name": null,
+              "target": 67.066,
+              "actual": 67.0625
+            }
+          ]
+        },
+        {
+          "x": 884,
+          "width": 591.3125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0024,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.2091,
+              "actual": 48.203125
+            },
+            {
+              "name": "Settings",
+              "target": 51.9693,
+              "actual": 51.96875
+            },
+            {
+              "name": null,
+              "target": 67.1516,
+              "actual": 67.140625
+            }
+          ]
+        },
+        {
+          "x": 886,
+          "width": 591,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.002,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1811,
+              "actual": 48.171875
+            },
+            {
+              "name": "Settings",
+              "target": 51.6452,
+              "actual": 51.640625
+            },
+            {
+              "name": null,
+              "target": 67.1946,
+              "actual": 67.1875
+            }
+          ]
+        },
+        {
+          "x": 888,
+          "width": 590.671875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0016,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1566,
+              "actual": 48.15625
+            },
+            {
+              "name": "Settings",
+              "target": 51.34,
+              "actual": 51.328125
+            },
+            {
+              "name": null,
+              "target": 67.1946,
+              "actual": 67.1875
+            }
+          ]
+        },
+        {
+          "x": 890,
+          "width": 590.3125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0013,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.135,
+              "actual": 48.125
+            },
+            {
+              "name": "Settings",
+              "target": 51.0535,
+              "actual": 51.046875
+            },
+            {
+              "name": null,
+              "target": 67.1516,
+              "actual": 67.140625
+            }
+          ]
+        },
+        {
+          "x": 892,
+          "width": 589.953125,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0011,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.1162,
+              "actual": 48.109375
+            },
+            {
+              "name": "Settings",
+              "target": 50.7853,
+              "actual": 50.78125
+            },
+            {
+              "name": null,
+              "target": 67.066,
+              "actual": 67.0625
+            }
+          ]
+        },
+        {
+          "x": 894,
+          "width": 589.5625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0009,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0998,
+              "actual": 48.09375
+            },
+            {
+              "name": "Settings",
+              "target": 50.535,
+              "actual": 50.53125
+            },
+            {
+              "name": null,
+              "target": 66.9382,
+              "actual": 66.9375
+            }
+          ]
+        },
+        {
+          "x": 896,
+          "width": 589.140625,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0007,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0855,
+              "actual": 48.078125
+            },
+            {
+              "name": "Settings",
+              "target": 50.3021,
+              "actual": 50.296875
+            },
+            {
+              "name": null,
+              "target": 66.7691,
+              "actual": 66.765625
+            }
+          ]
+        },
+        {
+          "x": 898,
+          "width": 588.6875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0006,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0731,
+              "actual": 48.0625
+            },
+            {
+              "name": "Settings",
+              "target": 50.0858,
+              "actual": 50.078125
+            },
+            {
+              "name": null,
+              "target": 66.5599,
+              "actual": 66.546875
+            }
+          ]
+        },
+        {
+          "x": 900,
+          "width": 588.21875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Messages",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Photos",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Music",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Calendar",
+              "target": 48.0005,
+              "actual": 48
+            },
+            {
+              "name": "iTerm",
+              "target": 48.0623,
+              "actual": 48.046875
+            },
+            {
+              "name": "Settings",
+              "target": 49.8857,
+              "actual": 49.875
+            },
+            {
+              "name": null,
+              "target": 66.3119,
+              "actual": 66.296875
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "after",
+      "paths": [
+        {
+          "width": 607.046875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48.0272,
+              "actual": 48.015625
+            },
+            {
+              "name": "Messages",
+              "target": 49.101,
+              "actual": 49.09375
+            },
+            {
+              "name": "Photos",
+              "target": 57.7969,
+              "actual": 57.796875
+            },
+            {
+              "name": "Music",
+              "target": 67.1516,
+              "actual": 67.140625
+            },
+            {
+              "name": "Calendar",
+              "target": 56.2252,
+              "actual": 56.21875
+            },
+            {
+              "name": "iTerm",
+              "target": 48.7761,
+              "actual": 48.765625
+            },
+            {
+              "name": "Settings",
+              "target": 48.0161,
+              "actual": 48.015625
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        },
+        {
+          "width": 607.046875,
+          "items": [
+            {
+              "name": "Finder",
+              "target": 48,
+              "actual": 48
+            },
+            {
+              "name": "Games",
+              "target": 48.0001,
+              "actual": 48
+            },
+            {
+              "name": "Notes",
+              "target": 48.0272,
+              "actual": 48.015625
+            },
+            {
+              "name": "Messages",
+              "target": 49.101,
+              "actual": 49.09375
+            },
+            {
+              "name": "Photos",
+              "target": 57.7969,
+              "actual": 57.796875
+            },
+            {
+              "name": "Music",
+              "target": 67.1516,
+              "actual": 67.140625
+            },
+            {
+              "name": "Calendar",
+              "target": 56.2252,
+              "actual": 56.21875
+            },
+            {
+              "name": "iTerm",
+              "target": 48.7761,
+              "actual": 48.765625
+            },
+            {
+              "name": "Settings",
+              "target": 48.0161,
+              "actual": 48.015625
+            },
+            {
+              "name": null,
+              "target": 48,
+              "actual": 48
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
