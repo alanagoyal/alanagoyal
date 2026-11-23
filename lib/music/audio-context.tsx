@@ -194,61 +194,54 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   // Create audio element on mount and restore track if available
   useEffect(() => {
-    if (typeof window !== "undefined" && !audioRef.current) {
-      const audio = new Audio();
-      const initialState = stateRef.current;
-      audio.volume = (systemVolumeRef.current / 100) * initialState.volume;
+    const audio = new Audio();
+    const initialState = stateRef.current;
+    audio.volume = (systemVolumeRef.current / 100) * initialState.volume;
 
-      // Handle metadata load - update duration and seek to saved progress
-      const handleLoadedMetadata = () => {
-        if (audio.duration && isFinite(audio.duration)) {
-          // Seek to saved progress on initial load (side effect outside setState)
-          const state = stateRef.current;
-          if (state.progress > 0 && !state.isPlaying) {
-            audio.currentTime = state.progress * audio.duration;
-          }
-          setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
+    // Handle metadata load - update duration and seek to saved progress
+    const handleLoadedMetadata = () => {
+      if (audio.duration && isFinite(audio.duration)) {
+        // Seek to saved progress on initial load (side effect outside setState)
+        const state = stateRef.current;
+        if (state.progress > 0 && !state.isPlaying) {
+          audio.currentTime = state.progress * audio.duration;
         }
-      };
-
-      // Handle playback errors
-      const handleError = () => {
-        const errorMessage = audio.error?.message || "Failed to load audio";
-        console.error("Audio error:", errorMessage);
-        setPlaybackState((prev) => ({
-          ...prev,
-          isPlaying: false,
-          error: errorMessage,
-        }));
-      };
-
-      const handlePlaying = () => {
-        recordRecentlyPlayed(playbackTrackRef.current);
-      };
-
-      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.addEventListener("error", handleError);
-      audio.addEventListener("playing", handlePlaying);
-
-      // Restore track from persisted state (but don't auto-play)
-      if (initialState.currentTrack?.previewUrl) {
-        audio.src = initialState.currentTrack.previewUrl;
+        setPlaybackState((prev) => ({ ...prev, duration: audio.duration }));
       }
+    };
 
-      audioRef.current = audio;
+    // Handle playback errors
+    const handleError = () => {
+      const errorMessage = audio.error?.message || "Failed to load audio";
+      console.error("Audio error:", errorMessage);
+      setPlaybackState((prev) => ({
+        ...prev,
+        isPlaying: false,
+        error: errorMessage,
+      }));
+    };
 
-      return () => {
-        audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        audio.removeEventListener("error", handleError);
-        audio.removeEventListener("playing", handlePlaying);
-      };
+    const handlePlaying = () => {
+      recordRecentlyPlayed(playbackTrackRef.current);
+    };
+
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("error", handleError);
+    audio.addEventListener("playing", handlePlaying);
+
+    // Restore track from persisted state (but don't auto-play)
+    if (initialState.currentTrack?.previewUrl) {
+      audio.src = initialState.currentTrack.previewUrl;
     }
 
+    audioRef.current = audio;
+
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("error", handleError);
+      audio.removeEventListener("playing", handlePlaying);
+      audio.pause();
+      audioRef.current = null;
     };
   }, [recordRecentlyPlayed]);
 
