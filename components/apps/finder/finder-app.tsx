@@ -262,7 +262,7 @@ export function FinderApp({
   const [currentPath, setCurrentPathRaw] = useState(getInitialPath);
   const [pathHistory, setPathHistory] = useState<string[]>(() => [getInitialPath()]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [selectedSidebar, setSelectedSidebar] = useState<SidebarItem>(() => getSidebarForPath(currentPath));
+  const selectedSidebar = getSidebarForPath(currentPath);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [standaloneListSort, setStandaloneListSort] = useState<FinderSort | null>(null);
   const listSort = controlledListSort === undefined ? standaloneListSort : controlledListSort;
@@ -314,7 +314,6 @@ export function FinderApp({
     const nextIndex = historyIndex + 1;
     setHistoryIndex(nextIndex);
     setCurrentPathRaw(pathHistory[nextIndex]);
-    setSelectedSidebar(getSidebarForPath(pathHistory[nextIndex]));
   }, [canGoForward, historyIndex, pathHistory]);
 
   const inDesktopShell = !!(inShell && windowFocus);
@@ -659,7 +658,6 @@ export function FinderApp({
 
   // Handle sidebar selection
   const handleSidebarSelect = useCallback((item: SidebarItem) => {
-    setSelectedSidebar(item);
     setCurrentPath(getPathForSidebarItem(item));
     setSelectedFile(null);
   }, [getPathForSidebarItem, setCurrentPath]);
@@ -740,7 +738,6 @@ export function FinderApp({
     setSearchQuery("");
     if (file.type === "dir") {
       setCurrentPath(file.path);
-      setSelectedSidebar(getSidebarForPath(file.path));
       setSelectedFile(null);
     } else {
       handleFileDoubleClick(file);
@@ -823,7 +820,6 @@ export function FinderApp({
       const prevIndex = historyIndex - 1;
       setHistoryIndex(prevIndex);
       setCurrentPathRaw(pathHistory[prevIndex]);
-      setSelectedSidebar(getSidebarForPath(pathHistory[prevIndex]));
     }
   }, [historyIndex, pathHistory]);
 
@@ -1431,7 +1427,6 @@ export function FinderApp({
     setSearchQuery("");
     setPreviewContent(null);
     setSelectedFile(null);
-    setSelectedSidebar(getSidebarForPath(path));
     setCurrentPath(path);
   };
 
